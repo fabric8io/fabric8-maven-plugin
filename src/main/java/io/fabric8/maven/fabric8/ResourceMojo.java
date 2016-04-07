@@ -46,7 +46,7 @@ import org.apache.maven.project.MavenProjectHelper;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import static org.json.zip.JSONzip.probe;
+import static io.fabric8.maven.fabric8.config.ResourceType.yaml;
 
 /**
  * Generates or copies the Kubernetes JSON file and attaches it to the build so its
@@ -61,32 +61,35 @@ public class ResourceMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project}", readonly = true)
     private MavenProject project;
 
-    @Parameter(property = "fabric8.skip", defaultValue = "false")
-    private boolean skip;
+    /**
+     * Whether to skip the run or not
+     */
+    @Parameter(property = "fabric8.skip")
+    private boolean skip = false;
 
     /**
      * Folder where to find project specific files
      */
-    @Parameter(property = "fabric8.dir", defaultValue = "${basedir}/src/main/fabric8")
-    private File fabric8Dir;
+    @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
+    private File resourceDir;
 
     /**
-     * The artifact type for attaching the generated resourec file to the project.
-     * Can be either JSON or YAML
+     * The artifact type for attaching the generated resource file to the project.
+     * Can be either 'json' or 'yaml'
      */
-    @Parameter(property = "fabric8.kubernetes.artifactType", defaultValue = "json")
-    private String artifactType = "json";
+    @Parameter(property = "fabric8.resourceType")
+    private ResourceType resourceType = yaml;
 
     /**
-     * The artifact classifier for attaching the generated kubernetes json file to the project
+     * The artifact classifier for attaching the generated kubernetes resource file to the project
      */
-    @Parameter(property = "fabric8.kubernetes.artifactClassifier", defaultValue = "kubernetes")
-    private String artifactClassifier = "kubernetes";
+    @Parameter(property = "fabric8.resourceClassifier")
+    private String resourceClassifier = "kubernetes";
 
     /**
      * The generated kubernetes JSON file
      */
-    @Parameter(property = "fabric8.json.target", defaultValue = "${basedir}/target/classes/kubernetes.json")
+    @Parameter(property = "fabric8.targetDir", defaultValue = "${project.build.outputDirectory}")
     private File target;
 
     // Kubernetes specific configuration for this plugin
@@ -105,8 +108,8 @@ public class ResourceMojo extends AbstractMojo {
         initEnrichers();
 
         if (!skip && !kubernetes.isSkip() &&  (!isPomProject() || hasConfigDir())) {
-            KubernetesList resources = generateKubernetesJson();
-            writeResourceDescriptor(resources, target);
+            KubernetesList resources = generateResourceDescriptor();
+            writeResourceDescriptor(resources, new File(target,"fabric8"));
         }
     }
 
@@ -118,20 +121,17 @@ public class ResourceMojo extends AbstractMojo {
         Collections.reverse(enrichers);
     }
 
-    private KubernetesList generateKubernetesJson() throws MojoExecutionException {
+    private KubernetesList generateResourceDescriptor() throws MojoExecutionException {
 
         Map<String,String> labelMap = extractLabels();
         AnnotationConfiguration annoConfig = kubernetes.getAnnotations();
 
         KubernetesListBuilder builder = new KubernetesListBuilder();
-
-        // @formatter:off
         builder
             .addNewReplicationControllerItem()
               .withMetadata(createRcMetaData(labelMap,annoConfig))
               .withSpec(createRcSpec(labelMap,annoConfig))
             .endReplicationControllerItem();
-        // @formatter:on
 
         addServices(builder, labelMap);
 
@@ -167,8 +167,6 @@ public class ResourceMojo extends AbstractMojo {
                 servicePorts.add(servicePort);
             }
 
-            getLog().info("Generated ports: " + servicePorts);
-
             if (!servicePorts.isEmpty()) {
                 serviceSpecBuilder.withPorts(servicePorts);
             }
@@ -190,12 +188,14 @@ public class ResourceMojo extends AbstractMojo {
 
     private void writeResourceDescriptor(KubernetesList kubernetesList, File target) {
         try {
-            ObjectMapper mapper = new ObjectMapper()
-                .enable(SerializationFeature.INDENT_OUTPUT);
-            String generated = mapper.writeValueAsString(kubernetesList);
-            Files.writeToFile(target, generated, Charset.defaultCharset());
+            ObjectMapper mapper = resourceType.getObjectMapper()
+                .enable(SerializationFeature.INDENT_OUTPUT)
+                .disable(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS)
+                .disable(SerializationFeature.WRITE_NULL_MAP_VALUES);
+            String serialized = mapper.writeValueAsString(kubernetesList);
+            Files.writeToFile(resourceType.addExtension(target), serialized, Charset.defaultCharset());
         } catch (Exception e) {
-            throw new IllegalArgumentException("Failed to generate Kubernetes JSON.", e);
+            throw new IllegalArgumentException("Failed to generate fabric8 descriptor", e);
         }
     }
 
@@ -286,7 +286,6 @@ public class ResourceMojo extends AbstractMojo {
             ret.putAll(labels);
         }
     }
-
 
     private Probe getLivenessProbe() {
         return getProbe(kubernetes.getLiveness());
@@ -440,8 +439,6 @@ public class ResourceMojo extends AbstractMojo {
 
         Map<String, String> envs = getExportedEnvironmentVariables();
         Map<String, EnvVar> envMap = convertToEnvVarMap(envs);
-        getLog().info("Generated env mappings: " + envMap);
-        getLog().debug("from envs: " + envs);
         ret.addAll(envMap.values());
 
         ret.add(
@@ -531,7 +528,7 @@ public class ResourceMojo extends AbstractMojo {
     }
 
     private boolean hasConfigDir() {
-        return fabric8Dir.isDirectory();
+        return resourceDir.isDirectory();
     }
 
     private boolean isPomProject() {
