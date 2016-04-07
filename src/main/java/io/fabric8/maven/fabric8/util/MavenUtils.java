@@ -19,11 +19,21 @@ package io.fabric8.maven.fabric8.util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
 import io.fabric8.utils.Zips;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
+
+import static java.rmi.server.RemoteServer.getLog;
 
 /**
  * @author roland
@@ -56,4 +66,41 @@ public class MavenUtils {
         }
         return null;
     }
+
+    public static URLClassLoader getCompileClassLoader(MavenProject project) throws MojoExecutionException {
+        try {
+            List<String> classpathElements = project.getCompileClasspathElements();
+            return createClassLoader(classpathElements, project.getBuild().getOutputDirectory());
+        } catch (Exception e) {
+            throw new MojoExecutionException("Failed to resolve classpath: " + e, e);
+        }
+    }
+
+    // ====================================================
+
+    private static URLClassLoader createClassLoader(List<String> classpathElements, String... paths) throws MalformedURLException {
+        List<URL> urls = new ArrayList<>();
+        for (String path : paths) {
+            URL url = pathToUrl(path);
+            urls.add(url);
+        }
+        for (Object object : classpathElements) {
+            if (object != null) {
+                String path = object.toString();
+                URL url = pathToUrl(path);
+                urls.add(url);
+            }
+        }
+        return createURLClassLoader(urls);
+    }
+
+    private static URLClassLoader createURLClassLoader(Collection<URL> jars) {
+        return new URLClassLoader(jars.toArray(new URL[jars.size()]));
+    }
+
+    private static URL pathToUrl(String path) throws MalformedURLException {
+        File file = new File(path);
+        return file.toURI().toURL();
+    }
+
 }

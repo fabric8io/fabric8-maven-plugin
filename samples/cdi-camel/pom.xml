@@ -118,7 +118,6 @@
         <version>${fabric8-maven-plugin.version}</version>
 
         <configuration>
-          <mode>openshift</mode>
           <images>
             <image>
               <name>${image.user}/${project.artifactId}:${project.version}</name>
@@ -134,21 +133,29 @@
                   <JAVA_MAIN_CLASS>org.apache.camel.cdi.Main</JAVA_MAIN_CLASS>
                 </env>
               </build>
+              <run>
+                <ports>
+                  <port>${jolokia.port}:8778</port>
+                </ports>
+              </run>
             </image>
           </images>
-          <rc>
-            <containers>
-              <!-- If not alias is given, all images configured will be included in pods -->
-              <aliases>
-                <alias>camel-service</alias>
-              </aliases>
+          <kubernetes>
 
-            </containers>
-          </rc>
-          <service>
-            <name>${project.artifactId}</name>
+            <rcName>${project.artifactId}</rcName>
 
-          </service>
+            <labels>
+              <group>quickstarts</group>
+            </labels>
+
+            <services>
+              <service>
+                <name>${project.artifactId}</name>
+                <headless>true</headless>
+              </service>
+            </services>
+
+          </kubernetes>
         </configuration>
       </plugin>
 

@@ -25,7 +25,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
- * Proxy to d-m-p's build MoJo
+ * Proxy to d-m-p's build Mojo
  *
  * @author roland
  * @since 16/03/16

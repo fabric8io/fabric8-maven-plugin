@@ -26,11 +26,11 @@ public class ProbeConfiguration {
 
     // Initial delay in seconds before the probe is started.
     @Parameter
-    int initialDelaySeconds;
+    Integer initialDelaySeconds;
 
     // Timeout in seconds how long the probe might take
     @Parameter
-    int timeoutSeconds;
+    Integer timeoutSeconds;
 
     // Command to execute for probing
     @Parameter
@@ -42,5 +42,25 @@ public class ProbeConfiguration {
 
     // TCP port to probe
     @Parameter
-    int tcpPort;
+    String tcpPort;
+
+    public Integer getInitialDelaySeconds() {
+        return initialDelaySeconds;
+    }
+
+    public Integer getTimeoutSeconds() {
+        return timeoutSeconds;
+    }
+
+    public String getExec() {
+        return exec;
+    }
+
+    public String getGetUrl() {
+        return getUrl;
+    }
+
+    public String getTcpPort() {
+        return tcpPort;
+    }
 }

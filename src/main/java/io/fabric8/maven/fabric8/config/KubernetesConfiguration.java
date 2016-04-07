@@ -16,6 +16,7 @@ package io.fabric8.maven.fabric8.config;
  * limitations under the License.
  */
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -42,9 +43,6 @@ public class KubernetesConfiguration {
 
     @Parameter
     private List<VolumeConfiguration> volumes;
-
-    @Parameter
-    private List<VolumeMountConfiguration> volumeMounts;
 
     @Parameter(defaultValue = "${project.artifactId}")
     private String rcName;
@@ -90,7 +88,7 @@ public class KubernetesConfiguration {
     }
 
     public Map<String, String> getEnv() {
-        return env;
+        return env != null ? env : Collections.<String, String>emptyMap();
     }
 
     public Map<String, String> getLabels() {
@@ -103,10 +101,6 @@ public class KubernetesConfiguration {
 
     public List<VolumeConfiguration> getVolumes() {
         return volumes;
-    }
-
-    public List<VolumeMountConfiguration> getVolumeMounts() {
-        return volumeMounts;
     }
 
     public List<ServiceConfiguration> getServices() {

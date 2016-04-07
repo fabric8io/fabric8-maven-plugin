@@ -16,6 +16,8 @@ package io.fabric8.maven.fabric8.config;
  * limitations under the License.
  */
 
+import java.util.List;
+
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
@@ -30,6 +32,10 @@ public class VolumeConfiguration {
 
     @Parameter
     private String name;
+
+    // List of mount paths of this volume
+    @Parameter
+    private List<String> mounts;
 
     @Parameter
     private String path;
@@ -121,6 +127,10 @@ public class VolumeConfiguration {
 
     public String getClaimRef() {
         return claimRef;
+    }
+
+    public List<String> getMounts() {
+        return mounts;
     }
 
     // TODO: Change to rich configuration as described in http://blog.sonatype.com/2011/03/configuring-plugin-goals-in-maven-3/

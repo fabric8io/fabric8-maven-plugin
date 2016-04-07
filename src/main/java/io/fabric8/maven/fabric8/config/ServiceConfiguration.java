@@ -16,6 +16,7 @@ package io.fabric8.maven.fabric8.config;
  * limitations under the License.
  */
 
+import java.util.Collections;
 import java.util.List;
 
 import io.fabric8.utils.Ports;
@@ -31,13 +32,38 @@ public class ServiceConfiguration {
     @Parameter
     private String name;
 
-    // Ports to expos
+    // Ports to expose
     @Parameter
     List<Port> ports;
 
+    // Whether this is a headless service
+    @Parameter
+    private boolean headless = false;
+
+    // Service type
+    @Parameter
+    private String type;
+
+    public String getName() {
+        return name;
+    }
+
+    public List<Port> getPorts() {
+        return ports != null ? ports : Collections.<Port>emptyList();
+    }
+
+    public boolean isHeadless() {
+        return headless;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+
     // =============================================================
 
-    private class Port {
+    public static class Port {
 
         // Protocol to use. Can be either "tcp" or "udp"
         @Parameter
@@ -50,5 +76,25 @@ public class ServiceConfiguration {
         // Target port to expose
         @Parameter
         int targetPort;
+
+        @Parameter
+        Integer nodePort;
+
+        public ServiceProtocol getProtocol() {
+            return protocol;
+        }
+
+        public int getPort() {
+            return port;
+        }
+
+        public int getTargetPort() {
+            return targetPort;
+        }
+
+        public Integer getNodePort() {
+            return nodePort;
+        }
+
     }
 }

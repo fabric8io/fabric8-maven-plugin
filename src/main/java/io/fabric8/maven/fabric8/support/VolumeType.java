@@ -108,9 +108,7 @@ public enum VolumeType {
     };
 
     private final String type;
-
     public abstract Volume fromConfig(VolumeConfiguration config);
-
     VolumeType(String type) {
         this.type = type;
     }
@@ -119,56 +117,14 @@ public enum VolumeType {
         return type;
     }
 
-
     private static final Map<String, VolumeType> VOLUME_TYPES = new HashMap<>();
-
-    private static final String VOLUME_PREFIX = "fabric8.volume";
-    private static final String VOLUME_NAME_PREFIX = VOLUME_PREFIX + ".%s";
-    public static final String VOLUME_PROPERTY = VOLUME_NAME_PREFIX + ".%s";
-
-    private static final String VOLUME_GIT_REV = "revision";
-    private static final String VOLUME_SECRET_NAME = "secret";
-
-    private static final String VOLUME_NFS_SERVER = "nfsServer";
-    private static final String VOLUME_GCE_FS_TYPE = "gceFsType";
-    private static final String VOLUME_GLUSTERFS_ENDPOINTS = "endpoints";
-    public static final String VOLUME_PVC_REQUEST_STORAGE = "requestStorage";
-
-    private static final String READONLY = "readOnly";
-
-
     static {
         for (VolumeType volumeType : VolumeType.values()) {
             VOLUME_TYPES.put(volumeType.getType(), volumeType);
         }
     }
 
-    public static final VolumeType typeFor(String type) {
+    public static VolumeType typeFor(String type) {
         return VOLUME_TYPES.get(type);
     }
-
-    private static Boolean toBool(Object obj) {
-        if (obj == null) {
-            return false;
-        } else if (obj instanceof Boolean) {
-            return (Boolean) obj;
-        } else if (obj instanceof String) {
-            return Boolean.parseBoolean((String) obj);
-        } else {
-            return false;
-        }
-    }
-
-    private static Integer toInt(Object obj) {
-        if (obj == null) {
-            return 0;
-        } else if (obj instanceof Integer) {
-            return (Integer) obj;
-        } else if (obj instanceof String) {
-            return Integer.parseInt((String) obj);
-        } else {
-            return 0;
-        }
-    }
-
 }
