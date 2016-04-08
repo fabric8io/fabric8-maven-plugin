@@ -16,9 +16,9 @@ package io.fabric8.maven.fabric8.enricher;
  * limitations under the License.
  */
 
-import java.util.HashMap;
 import java.util.Map;
 
+import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.maven.fabric8.util.MavenBuildContext;
 import org.apache.maven.project.MavenProject;
 
@@ -26,29 +26,24 @@ import org.apache.maven.project.MavenProject;
  * @author roland
  * @since 01/04/16
  */
-public class DefaultProjectInfoEnricher extends BaseEnricher {
+abstract class BaseEnricher implements Enricher {
 
-    public DefaultProjectInfoEnricher(MavenBuildContext buildContext) {
-        super(buildContext);
+    private MavenBuildContext buildContext;
+
+    protected BaseEnricher(MavenBuildContext buildContext) {
+        this.buildContext = buildContext;
+    }
+
+    protected MavenProject getProject() {
+        return buildContext.getProject();
     }
 
     @Override
-    public String getName() {
-        return "project-info";
-    }
+    public Map<String, String> getLabels(Kind kind) { return null; }
 
-    // For the moment return labels for all objects
     @Override
-    public Map<String, String> getLabels(Kind kind) {
+    public Map<String, String> getAnnotations(Kind kind) { return null; }
 
-        MavenProject project = getProject();
-
-        Map<String, String> ret = new HashMap<>();
-
-        ret.put("version", project.getVersion());
-        ret.put("project", project.getArtifactId());
-        ret.put("group", project.getGroupId());
-        ret.put("provider","fabric8");
-        return ret;
-    }
+    @Override
+    public void customize(KubernetesList descriptor) { }
 }

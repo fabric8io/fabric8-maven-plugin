@@ -228,9 +228,88 @@
       </build>
     </profile>
 
+    <profile>
+      <id>new</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.fabric8</groupId>
+            <artifactId>fabric9-maven-plugin</artifactId>
+            <version>${fabric8-maven-plugin.version}</version>
+
+            <configuration>
+              <images>
+                <image>
+                  <name>${image.user}/${project.artifactId}:${project.version}</name>
+                  <alias>camel-cdi</alias>
+                  <build>
+                    <from>fabric8/java</from>
+                    <assembly>
+                      <basedir>/deployments</basedir>
+                      <descriptorRef>artifact-with-dependencies</descriptorRef>
+                    </assembly>
+                    <env>
+                      <JAVA_LIB_DIR>/deployments</JAVA_LIB_DIR>
+                      <JAVA_MAIN_CLASS>org.apache.camel.cdi.Main</JAVA_MAIN_CLASS>
+                    </env>
+                  </build>
+                  <run>
+                    <ports>
+                      <port>${jolokia.port}:8778</port>
+                    </ports>
+                  </run>
+                </image>
+              </images>
+
+              <kubernetes>
+
+                <enricher>
+                  <project-info>
+                    <skip>false</skip>
+                  </project-info>
+                </enricher>
+
+                <labels>
+                  <group>quickstarts</group>
+                </labels>
+
+                <services>
+                  <service>
+                    <name>${project.artifactId}</name>
+                    <headless>true</headless>
+                  </service>
+                </services>
+
+                <rc>
+                  <name>${project.artifactId}</name>
+
+                  <volumes>
+
+                  </volumes>
+
+                  <container>
+                    <name>camel-cdi</name>
+                    <env>
+                      <EXTRA_CONTAINER_ENV>bla</EXTRA_CONTAINER_ENV>
+                    </env>
+                    <ports>
+                      <port>8778</port>
+                    </ports>
+                  </container>
+
+                </rc>
+
+              </kubernetes>
+
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
 
     <profile>
       <id>full</id>
+
 
       <build>
         <plugins>

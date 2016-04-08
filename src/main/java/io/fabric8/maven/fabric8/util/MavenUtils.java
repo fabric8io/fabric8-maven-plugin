@@ -30,6 +30,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
 import io.fabric8.utils.Zips;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
@@ -67,12 +68,12 @@ public class MavenUtils {
         return null;
     }
 
-    public static URLClassLoader getCompileClassLoader(MavenProject project) throws MojoExecutionException {
+    public static URLClassLoader getCompileClassLoader(MavenProject project) throws IOException {
         try {
             List<String> classpathElements = project.getCompileClasspathElements();
             return createClassLoader(classpathElements, project.getBuild().getOutputDirectory());
-        } catch (Exception e) {
-            throw new MojoExecutionException("Failed to resolve classpath: " + e, e);
+        } catch (DependencyResolutionRequiredException e) {
+            throw new IOException("Cannot resolve artifact from compile classpath");
         }
     }
 

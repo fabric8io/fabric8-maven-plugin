@@ -16,22 +16,14 @@ package io.fabric8.maven.fabric8.enricher;
  * limitations under the License.
  */
 
-import io.fabric8.maven.fabric8.util.MavenBuildContext;
-import org.apache.maven.project.MavenProject;
-
 /**
+ * Enum describing the object types which are created
+ *
  * @author roland
- * @since 01/04/16
+ * @since 07/04/16
  */
-abstract class AbstractEnricher implements Enricher {
-
-    private MavenBuildContext buildContext;
-
-    public AbstractEnricher(MavenBuildContext buildContext) {
-        this.buildContext = buildContext;
-    }
-
-    public MavenProject getProject() {
-        return buildContext.getProject();
-    }
+public enum Kind {
+    SERVICE,
+    REPLICATION_CONTROLLER,
+    POD
 }

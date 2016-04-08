@@ -18,6 +18,8 @@ package io.fabric8.maven.fabric8.enricher;
 
 import java.util.Map;
 
+import io.fabric8.kubernetes.api.model.KubernetesList;
+
 /**
  * Interface describing enrichers which add to kubernetes descriptors
  *
@@ -36,7 +38,24 @@ public interface Enricher {
     /**
      * Get labels to add too objects
      *
+     * @param kind for which type to get the labels
      * @return map of additional labels
      */
-    Map<String, String> getLabels();
+    Map<String, String> getLabels(Kind kind);
+
+    /**
+     * Return annotations to add
+     *
+     * @param kind the kind of object to add
+     * @return map of annotations
+     */
+    Map<String, String> getAnnotations(Kind kind);
+
+    /**
+     * Final customization of the overall resource
+     * descriptor
+     *
+     * @param descriptor used to customize
+     */
+    void customize(KubernetesList descriptor);
 }
