@@ -135,7 +135,7 @@
               </build>
               <run>
                 <ports>
-                  <port>${jolokia.port}:8778</port>
+                  <port>8778</port>
                 </ports>
               </run>
             </image>
