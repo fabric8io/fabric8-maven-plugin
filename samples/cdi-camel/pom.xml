@@ -234,14 +234,16 @@
         <plugins>
           <plugin>
             <groupId>io.fabric8</groupId>
-            <artifactId>fabric9-maven-plugin</artifactId>
+            <artifactId>fabric8-maven-plugin</artifactId>
             <version>${fabric8-maven-plugin.version}</version>
 
             <configuration>
+              <!-- Standard d-m-p configuration which defines how images are build, i.e. how the docker.tar is created -->
               <images>
                 <image>
                   <name>${image.user}/${project.artifactId}:${project.version}</name>
-                  <alias>camel-cdi</alias>
+                  <!-- "alias" is used to correlate to the containers in the pod spec -->
+                  <alias>camel-service</alias>
                   <build>
                     <from>fabric8/java</from>
                     <assembly>
@@ -253,26 +255,67 @@
                       <JAVA_MAIN_CLASS>org.apache.camel.cdi.Main</JAVA_MAIN_CLASS>
                     </env>
                   </build>
-                  <run>
-                    <ports>
-                      <port>${jolokia.port}:8778</port>
-                    </ports>
-                  </run>
                 </image>
               </images>
 
+              <!-- Instead of "kubernetes", "openshift" can be used to switch on openshift mode (create templates,
+                   use image stream, use binary builds). When "openshift" is used, it has additional configuration to switch
+                   off openshift features, too) -->
               <kubernetes>
 
+                <!-- Resource directory from where to pick up k8s resource templates which are filled in with
+                     maven properties and enriched by 'enrichers'-->
+                <resourceDir>src/main/fabric8</resourceDir>
+
+                <!-- Labels that are applied to all created objects -->
+                <labels>
+                  <group>quickstarts</group>
+                </labels>
+
+                <!-- Configuration of enrichers, which can be switched off with `<skip>true</skip>`-->
                 <enricher>
+                  <!-- Default enrichers for adding labels, annos, etc. are provided by the plugin but
+                       can be switched off, too -->
                   <project-info>
                     <skip>false</skip>
                   </project-info>
                 </enricher>
 
-                <labels>
-                  <group>quickstarts</group>
-                </labels>
+                <!-- Definition of the ReplicationController / ReplicaSet. Any better name than "containers" ? -->
+                <replicaSet>
+                  <!-- Name of the replication controller, which will have a sane default (container alisa, mvn coords, ..) -->
+                  <name>${project.artifactId}</name>
+                  <!-- Replica count-->
+                  <replicas>1</replicas>
 
+                  <!-- Container to include in the POD template. By default all with a "build" section in the
+                       "images" configuration will be add to the POD. However, they can be configured separately, too.
+                      -->
+                  <containers>
+                    <container>
+                      <!-- Alias name correlating with the same named "image" configuration above. Can be ommitted
+                           if there is only a single image added -->
+                      <alias>camel-service</alias>
+                      <ports>
+                        <!-- Ports to ex[ose in the pod specs -->
+                        <port>8778</port>
+                      </ports>
+                      <mounts>
+                        <scratch>/var/scratch</scratch>
+                      </mounts>
+                    </container>
+                  </containers>
+
+                  <!-- Volumes used in the replicaSet -->
+                  <volumes>
+                    <volume>
+                      <name>scratch</name>
+                      <type>emptyDir</type>
+                    </volume>
+                  </volumes>
+                </replicaSet>
+
+                <!-- Dedicated section for (multiple) services to define -->
                 <services>
                   <service>
                     <name>${project.artifactId}</name>
@@ -280,27 +323,7 @@
                   </service>
                 </services>
 
-                <rc>
-                  <name>${project.artifactId}</name>
-
-                  <volumes>
-
-                  </volumes>
-
-                  <container>
-                    <name>camel-cdi</name>
-                    <env>
-                      <EXTRA_CONTAINER_ENV>bla</EXTRA_CONTAINER_ENV>
-                    </env>
-                    <ports>
-                      <port>8778</port>
-                    </ports>
-                  </container>
-
-                </rc>
-
               </kubernetes>
-
             </configuration>
           </plugin>
         </plugins>
