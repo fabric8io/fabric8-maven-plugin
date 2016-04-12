@@ -1,1 +1,1 @@
-io.fabric8.maven.fabric8.enricher.DefaultProjectInfoEnricher
+io.fabric8.maven.fabric8.enricher.impl.ProjectInfoEnricher

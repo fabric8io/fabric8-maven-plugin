@@ -1,4 +1,4 @@
-package io.fabric8.maven.fabric8.enricher;
+package io.fabric8.maven.fabric8.enricher.impl;
 /*
  * 
  * Copyright 2016 Roland Huss
@@ -19,6 +19,8 @@ package io.fabric8.maven.fabric8.enricher;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.fabric8.maven.fabric8.enricher.BaseEnricher;
+import io.fabric8.maven.fabric8.enricher.Kind;
 import io.fabric8.maven.fabric8.util.MavenBuildContext;
 import org.apache.maven.project.MavenProject;
 
@@ -26,9 +28,9 @@ import org.apache.maven.project.MavenProject;
  * @author roland
  * @since 01/04/16
  */
-public class DefaultProjectInfoEnricher extends BaseEnricher {
+public class ProjectInfoEnricher extends BaseEnricher {
 
-    public DefaultProjectInfoEnricher(MavenBuildContext buildContext) {
+    public ProjectInfoEnricher(MavenBuildContext buildContext) {
         super(buildContext);
     }
 
@@ -48,7 +50,7 @@ public class DefaultProjectInfoEnricher extends BaseEnricher {
         ret.put("version", project.getVersion());
         ret.put("project", project.getArtifactId());
         ret.put("group", project.getGroupId());
-        ret.put("provider","fabric8");
+        ret.put("provider", "fabric8");
         return ret;
     }
 }

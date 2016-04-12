@@ -33,7 +33,7 @@ public class EnricherManager {
 
     public EnricherManager(MavenBuildContext buildContext) {
         enrichers = PluginServiceFactory.createServiceObjects(buildContext,
-                                                              "fabric8-enricher-default", "fabric8-enricher");
+                                                              "META-INF/fabric8-enricher-default", "META-INF/fabric8-enricher");
         Collections.reverse(enrichers);
     }
 

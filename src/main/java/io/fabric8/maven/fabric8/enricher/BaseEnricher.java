@@ -26,7 +26,7 @@ import org.apache.maven.project.MavenProject;
  * @author roland
  * @since 01/04/16
  */
-abstract class BaseEnricher implements Enricher {
+public abstract class BaseEnricher implements Enricher {
 
     private MavenBuildContext buildContext;
 

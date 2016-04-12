@@ -95,9 +95,7 @@ public class ResourceMojo extends AbstractMojo {
             EnricherManager enricher = new EnricherManager(new MavenBuildContext(project));
             handlerHub = new HandlerHub(project, enricher);
 
-            if (!skip &&
-                !kubernetes.isSkip() &&
-                (!isPomProject() || hasConfigDir())) {
+            if (!skip && !kubernetes.isSkip() && (!isPomProject() || hasConfigDir())) {
                 KubernetesList resources = generateResourceDescriptor();
                 writeResourceDescriptor(resources, new File(target,"fabric8"));
             }
