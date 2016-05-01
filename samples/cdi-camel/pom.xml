@@ -143,7 +143,6 @@
           <kubernetes>
 
             <rcName>${project.artifactId}</rcName>
-
             <labels>
               <group>quickstarts</group>
             </labels>
@@ -257,21 +256,17 @@
                   </build>
                 </image>
               </images>
-
               <!-- Instead of "kubernetes", "openshift" can be used to switch on openshift mode (create templates,
-                   use image stream, use binary builds). When "openshift" is used, it has additional configuration to switch
-                   off openshift features, too) -->
+                  use image stream, use binary builds). When "openshift" is used, it has additional configuration to switch
+                  off openshift features, too) -->
               <kubernetes>
-
                 <!-- Resource directory from where to pick up k8s resource templates which are filled in with
                      maven properties and enriched by 'enrichers'-->
                 <resourceDir>src/main/fabric8</resourceDir>
-
                 <!-- Labels that are applied to all created objects -->
                 <labels>
                   <group>quickstarts</group>
                 </labels>
-
                 <!-- Configuration of enrichers, which can be switched off with `<skip>true</skip>`-->
                 <enricher>
                   <!-- Default enrichers for adding labels, annos, etc. are provided by the plugin but
@@ -280,14 +275,12 @@
                     <skip>false</skip>
                   </project-info>
                 </enricher>
-
                 <!-- Definition of the ReplicationController / ReplicaSet. Any better name than "containers" ? -->
                 <replicaSet>
                   <!-- Name of the replication controller, which will have a sane default (container alisa, mvn coords, ..) -->
                   <name>${project.artifactId}</name>
                   <!-- Replica count-->
                   <replicas>1</replicas>
-
                   <!-- Container to include in the POD template. By default all with a "build" section in the
                        "images" configuration will be add to the POD. However, they can be configured separately, too.
                       -->
@@ -305,7 +298,6 @@
                       </mounts>
                     </container>
                   </containers>
-
                   <!-- Volumes used in the replicaSet -->
                   <volumes>
                     <volume>
@@ -314,7 +306,6 @@
                     </volume>
                   </volumes>
                 </replicaSet>
-
                 <!-- Dedicated section for (multiple) services to define -->
                 <services>
                   <service>
@@ -322,7 +313,6 @@
                     <headless>true</headless>
                   </service>
                 </services>
-
               </kubernetes>
             </configuration>
           </plugin>
