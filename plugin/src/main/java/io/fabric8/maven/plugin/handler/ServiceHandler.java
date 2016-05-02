@@ -31,33 +31,20 @@ import io.fabric8.utils.Strings;
  */
 public class ServiceHandler {
 
-    private final LabelHandler labelHandler;
-
-    public ServiceHandler(LabelHandler labelHandler) {
-        this.labelHandler = labelHandler;
-    }
-
-    public Service[] getServices(KubernetesConfiguration config) {
+    public Service[] getServices(List<ServiceConfiguration> services, Map<String, String> annotations) {
 
         ArrayList<Service> ret = new ArrayList<>();
 
-        List<ServiceConfiguration> services = config.getServices();
         for (ServiceConfiguration service : services) {
-            AnnotationConfiguration annos = config.getAnnotations();
-            Map<String, String> serviceAnnotations = annos != null ? annos.getService() : null;
-
-            Map<String, String> labels = labelHandler.extractLabels(Kind.SERVICE, config);
-            Map<String, String> selector = new HashMap<>(labels);
 
             ServiceBuilder serviceBuilder = new ServiceBuilder()
                 .withNewMetadata()
                   .withName(service.getName())
-                  .withLabels(labels)
-                  .withAnnotations(serviceAnnotations)
+                  .withAnnotations(annotations)
                 .endMetadata();
 
             ServiceFluent.SpecNested<ServiceBuilder> serviceSpecBuilder =
-                serviceBuilder.withNewSpec().withSelector(selector);
+                serviceBuilder.withNewSpec();
 
             List<ServicePort> servicePorts = new ArrayList<>();
             for (ServiceConfiguration.Port port : service.getPorts()) {
@@ -89,5 +76,4 @@ public class ServiceHandler {
         }
         return ret.toArray(new Service[ret.size()]);
     }
-
 }

@@ -16,7 +16,6 @@
 
 package io.fabric8.maven.plugin.handler;
 
-import io.fabric8.maven.plugin.util.EnricherManager;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -26,25 +25,24 @@ import org.apache.maven.project.MavenProject;
 public class HandlerHub {
 
     private final ServiceHandler serviceHandler;
-    private final ReplicationControllerHandler replicationControllerHandler;
+    private final ReplicaSetHandler replicaSetHandler;
 
-    public HandlerHub(MavenProject project, EnricherManager enricher) {
-        LabelHandler labelHandler = new LabelHandler(enricher);
+    public HandlerHub(MavenProject project) {
         ProbeHandler probeHandler = new ProbeHandler();
         EnvVarHandler envVarHandler = new EnvVarHandler(project);
         ContainerHandler containerHandler = new ContainerHandler(project, envVarHandler, probeHandler);
-        PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler, labelHandler);
+        PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
-        replicationControllerHandler = new ReplicationControllerHandler(podTemplateHandler, labelHandler);
-        serviceHandler = new ServiceHandler(labelHandler);
+        replicaSetHandler = new ReplicaSetHandler(podTemplateHandler);
+        serviceHandler = new ServiceHandler();
     }
 
     public ServiceHandler getServiceHandler() {
         return serviceHandler;
     }
 
-    public ReplicationControllerHandler getReplicationControllerHandler() {
-        return replicationControllerHandler;
+    public ReplicaSetHandler getReplicaSetHandler() {
+        return replicaSetHandler;
     }
 
 }

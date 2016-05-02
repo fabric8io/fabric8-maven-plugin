@@ -58,4 +58,12 @@ public interface Enricher {
      * @param descriptor used to customize
      */
     void customize(KubernetesList descriptor);
+
+    /**
+     * Get the selector for a service or replica set / replication controller
+     *
+     * @param kind get the selector map
+     * @return selector
+     */
+    Map<String,String> getSelector(Kind kind);
 }

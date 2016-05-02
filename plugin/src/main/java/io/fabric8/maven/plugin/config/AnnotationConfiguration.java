@@ -30,7 +30,7 @@ public class AnnotationConfiguration {
     private Map<String, String> pod;
 
     @Parameter
-    private Map<String, String> rc;
+    private Map<String, String> replicaSet;
 
     @Parameter
     private Map<String, String> service;
@@ -42,8 +42,8 @@ public class AnnotationConfiguration {
         return pod;
     }
 
-    public Map<String, String> getRc() {
-        return rc;
+    public Map<String, String> getReplicaSet() {
+        return replicaSet;
     }
 
     public Map<String, String> getService() {

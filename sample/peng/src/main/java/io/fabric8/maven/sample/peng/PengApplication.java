@@ -14,16 +14,15 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.enricher.api;
-/**
- * Enum describing the object types which are created
- *
- * @author roland
- * @since 07/04/16
- */
-public enum Kind {
-    SERVICE,
-    REPLICA_SET,
-    REPLICATION_CONTROLLER,
-    POD_TEMPLATE
+package io.fabric8.maven.sample.peng;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class PengApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(PengApplication.class, args);
+	}
 }

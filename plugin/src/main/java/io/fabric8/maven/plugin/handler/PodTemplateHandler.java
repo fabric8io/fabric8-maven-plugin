@@ -33,11 +33,9 @@ import io.fabric8.maven.plugin.support.VolumeType;
  */
 public class PodTemplateHandler {
 
-    private final LabelHandler labelHandler;
     private final ContainerHandler containerHandler;
 
-    PodTemplateHandler(ContainerHandler containerHandler, LabelHandler labelHandler) {
-        this.labelHandler = labelHandler;
+    PodTemplateHandler(ContainerHandler containerHandler) {
         this.containerHandler = containerHandler;
     }
 
@@ -50,7 +48,6 @@ public class PodTemplateHandler {
 
     private ObjectMeta createPodMetaData(KubernetesConfiguration config) {
         return new ObjectMetaBuilder()
-            .withLabels(labelHandler.extractLabels(Kind.POD, config))
             .withAnnotations(config.getAnnotations().getPod())
             .build();
     }

@@ -14,16 +14,18 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.enricher.api;
-/**
- * Enum describing the object types which are created
- *
- * @author roland
- * @since 07/04/16
- */
-public enum Kind {
-    SERVICE,
-    REPLICA_SET,
-    REPLICATION_CONTROLLER,
-    POD_TEMPLATE
+package io.fabric8.maven.sample.peng;
+
+import javax.ws.rs.ApplicationPath;
+
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.stereotype.Component;
+
+
+@Component
+@ApplicationPath("/")
+public class JerseyConfig extends ResourceConfig {
+    public JerseyConfig() {
+        register(PengEndpoint.class);
+    }
 }

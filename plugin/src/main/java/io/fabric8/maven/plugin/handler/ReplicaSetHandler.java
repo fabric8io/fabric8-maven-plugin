@@ -18,9 +18,11 @@ package io.fabric8.maven.plugin.handler;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.extensions.*;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.plugin.config.KubernetesConfiguration;
 import io.fabric8.maven.enricher.api.Kind;
@@ -29,39 +31,41 @@ import io.fabric8.maven.enricher.api.Kind;
  * @author roland
  * @since 08/04/16
  */
-public class ReplicationControllerHandler {
+public class ReplicaSetHandler {
 
     private final PodTemplateHandler podTemplateHandler;
-    private LabelHandler labelHandler;
 
-    ReplicationControllerHandler(PodTemplateHandler podTemplateHandler, LabelHandler labelHandler) {
-        this.labelHandler = labelHandler;
+    ReplicaSetHandler(PodTemplateHandler podTemplateHandler) {
         this.podTemplateHandler = podTemplateHandler;
     }
 
-    public ReplicationController getReplicationControllers(KubernetesConfiguration config, List<ImageConfiguration> images) throws IOException {
-        return new ReplicationControllerBuilder()
-            .withMetadata(createRcMetaData(config))
-            .withSpec(createRcSpec(config, images))
+    public ReplicaSet getReplicaSet(KubernetesConfiguration config,
+                                    List<ImageConfiguration> images) throws IOException {
+        return new ReplicaSetBuilder()
+            .withMetadata(createRsMetaData(config))
+            .withSpec(createRsSpec(config, images))
             .build();
     }
 
     // ===========================================================
 
-    private ObjectMeta createRcMetaData(KubernetesConfiguration config) {
+    private ObjectMeta createRsMetaData(KubernetesConfiguration config) {
         return new ObjectMetaBuilder()
-            .withName(KubernetesHelper.validateKubernetesId(config.getRcName(), "replication controller name"))
-            .withLabels(labelHandler.extractLabels(Kind.REPLICATION_CONTROLLER, config))
-            .withAnnotations(config.getAnnotations().getRc())
+            .withName(KubernetesHelper.validateKubernetesId(config.getReplicaSetName(), "replication controller name"))
+            .withAnnotations(config.getAnnotations().getReplicaSet())
             .build();
     }
 
-    private ReplicationControllerSpec createRcSpec(KubernetesConfiguration config, List<ImageConfiguration> images) throws IOException {
-        return new ReplicationControllerSpecBuilder()
+    private ReplicaSetSpec createRsSpec(KubernetesConfiguration config, List<ImageConfiguration> images) throws IOException {
+        return new ReplicaSetSpecBuilder()
             .withReplicas(config.getReplicas())
-            .withSelector(labelHandler.extractLabels(Kind.REPLICATION_CONTROLLER, config))
             .withTemplate(podTemplateHandler.getPodTemplate(config,images))
             .build();
     }
 
+    private LabelSelector createLabelSelector(Map<String, String> labelMap) {
+        LabelSelectorBuilder builder = new LabelSelectorBuilder();
+        builder.withMatchLabels(labelMap);
+        return builder.build();
+    }
 }

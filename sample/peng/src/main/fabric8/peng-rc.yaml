@@ -1,0 +1,10 @@
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - image: "rhuss/jax2016-pong:1"
+        name: pong
+        ports:
+        - containerPort: 8080
+

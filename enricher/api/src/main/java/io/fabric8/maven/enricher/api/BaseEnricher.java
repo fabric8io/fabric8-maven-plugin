@@ -45,4 +45,7 @@ public abstract class BaseEnricher implements Enricher {
 
     @Override
     public void customize(KubernetesList descriptor) { }
+
+    @Override
+    public Map<String, String> getSelector(Kind kind) { return null; }
 }

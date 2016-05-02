@@ -53,4 +53,14 @@ public class ProjectInfoEnricher extends BaseEnricher {
         ret.put("provider", "fabric8");
         return ret;
     }
+
+    @Override
+    public Map<String, String> getSelector(Kind kind) {
+        Map ret = getLabels(kind);
+        if  (kind == Kind.SERVICE) {
+            // We don't use the version as part of the selector
+            ret.remove("version");
+        }
+        return ret;
+    }
 }

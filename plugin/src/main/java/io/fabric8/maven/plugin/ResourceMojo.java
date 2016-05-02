@@ -17,27 +17,29 @@ package io.fabric8.maven.plugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.plugin.config.KubernetesConfiguration;
-import io.fabric8.maven.plugin.util.ResourceFileType;
-import io.fabric8.maven.plugin.util.EnricherManager;
-import io.fabric8.maven.plugin.handler.HandlerHub;
-import io.fabric8.maven.plugin.handler.ReplicationControllerHandler;
-import io.fabric8.maven.plugin.handler.ServiceHandler;
 import io.fabric8.maven.enricher.api.MavenBuildContext;
-import io.fabric8.maven.plugin.util.KubernetesResourceUtil;
+import io.fabric8.maven.plugin.config.KubernetesConfiguration;
+import io.fabric8.maven.plugin.config.ServiceConfiguration;
+import io.fabric8.maven.plugin.enricher.EnricherManager;
+import io.fabric8.maven.plugin.handler.HandlerHub;
+import io.fabric8.maven.plugin.handler.ReplicaSetHandler;
+import io.fabric8.maven.plugin.handler.ServiceHandler;
+import io.fabric8.maven.plugin.util.*;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.loadJson;
 import static io.fabric8.maven.plugin.util.ResourceFileType.yaml;
-import static io.fabric8.maven.plugin.util.KubernetesResourceUtil.writeResourceDescriptor;
 
 /**
  * Generates or copies the Kubernetes JSON file and attaches it to the build so its
@@ -89,11 +91,11 @@ public class ResourceMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
             EnricherManager enricher = new EnricherManager(new MavenBuildContext(project));
-            handlerHub = new HandlerHub(project, enricher);
+            handlerHub = new HandlerHub(project);
 
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
-                KubernetesList resources = generateResourceDescriptor();
-                writeResourceDescriptor(resources, new File(target,"fabric8"), resourceFileType);
+                KubernetesList resources = generateResourceDescriptor(enricher, images);
+                KubernetesResourceUtil.writeResourceDescriptor(resources, new File(target,"fabric8"), resourceFileType);
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
@@ -102,17 +104,56 @@ public class ResourceMojo extends AbstractMojo {
 
     // ==================================================================================
 
-    private KubernetesList generateResourceDescriptor() throws IOException {
-        KubernetesListBuilder builder = hasFabric8Dir() ?
-            KubernetesResourceUtil.readResourceFragmentsFrom("v1", resourceDir) :
-            new KubernetesListBuilder();
+    private KubernetesList generateResourceDescriptor(final EnricherManager enricher, List<ImageConfiguration> images) throws IOException {
+        List<KubernetesList> lists = new ArrayList<>();
+        File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
+        KubernetesListBuilder builder;
 
-        ServiceHandler serviceHandler = handlerHub.getServiceHandler();
-        ReplicationControllerHandler rcHandler = handlerHub.getReplicationControllerHandler();
+        // Add resource files found in the fabric8 directory
+        if (resourceFiles != null && resourceFiles.length > 0) {
+            builder = KubernetesResourceUtil.readResourceFragmentsFrom("v1", resourceFiles);
+        } else {
+            builder = new KubernetesListBuilder();
+        }
 
-        builder.addToReplicationControllerItems(rcHandler.getReplicationControllers(kubernetes, images));
-        builder.addToServiceItems(serviceHandler.getServices(kubernetes));
+        // Add services + replicaSet if configured
+        if (kubernetes != null) {
+            addServices(builder, kubernetes.getServices(), kubernetes.getAnnotations().getService());
+            ReplicaSetHandler rsHandler = handlerHub.getReplicaSetHandler();
+            builder.addToReplicaSetItems(rsHandler.getReplicaSet(kubernetes, images));
+        }
+
+        // Check if at least a replica set is added. If not add a default one
+        if (hasPodControllers(builder)) {
+            // TODO: Add a default RC from the
+        }
+
+        // Enrich labels
+        enricher.enrichLabels(builder);
+
+        // Add missing selectors
+        enricher.addMissingSelectors(builder);
+
+        // Final customization hook
+
+        // done
         return builder.build();
+    }
+
+    private boolean hasPodControllers(KubernetesListBuilder builder) {
+        for (HasMetadata item : builder.getItems()) {
+            if (item.getKind().equals("ReplicationController") || item.getKind().equals("ReplicaSet")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void addServices(KubernetesListBuilder builder, List<ServiceConfiguration> serviceConfig, Map<String, String> annotations) {
+        if (serviceConfig != null) {
+            ServiceHandler serviceHandler = handlerHub.getServiceHandler();
+            builder.addToServiceItems(serviceHandler.getServices(serviceConfig ,annotations));
+        }
     }
 
 

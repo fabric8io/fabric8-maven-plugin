@@ -95,7 +95,7 @@ public class KubernetesResourceUtilTest {
     @Test
     public void readWholeDir() throws IOException {
         KubernetesListBuilder builder =
-            KubernetesResourceUtil.readResourceFragmentsFrom("v2", new File(fabric8Dir, "read-dir"));
+            KubernetesResourceUtil.readResourceFragmentsFrom("v2", new File(fabric8Dir, "read-dir").listFiles());
         KubernetesList list = builder.build();
         assertEquals(2,list.getItems().size());
         for (HasMetadata item : list.getItems() ) {

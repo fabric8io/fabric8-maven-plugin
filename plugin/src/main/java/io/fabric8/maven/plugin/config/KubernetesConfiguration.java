@@ -45,7 +45,7 @@ public class KubernetesConfiguration {
     private List<VolumeConfiguration> volumes;
 
     @Parameter(defaultValue = "${project.artifactId}")
-    private String rcName;
+    private String replicaSetName;
 
     @Parameter
     private List<ServiceConfiguration> services;
@@ -123,8 +123,8 @@ public class KubernetesConfiguration {
         return imagePullPolicy;
     }
 
-    public String getRcName() {
-        return rcName;
+    public String getReplicaSetName() {
+        return replicaSetName;
     }
 
     public Map<String, Integer> getPorts() {

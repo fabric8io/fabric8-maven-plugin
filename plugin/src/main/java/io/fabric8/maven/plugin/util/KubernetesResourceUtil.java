@@ -17,9 +17,11 @@
 package io.fabric8.maven.plugin.util;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,7 +30,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.utils.Files;
 import org.apache.maven.shared.utils.StringUtils;
 
@@ -45,12 +49,11 @@ public class KubernetesResourceUtil {
      * can be adapted later.
      *
      * @param apiVersion the api version to use
-     * @param resourceDir director from where to read the resource fragments
+     * @param resourceFiles files to add.
      * @return the list builder
      * @throws IOException
      */
-    public static KubernetesListBuilder readResourceFragmentsFrom(String apiVersion, File resourceDir) throws IOException {
-        File[] resourceFiles = resourceDir.listFiles();
+    public static KubernetesListBuilder readResourceFragmentsFrom(String apiVersion, File[] resourceFiles) throws IOException {
         KubernetesListBuilder k8sBuilder = new KubernetesListBuilder();
         if (resourceFiles != null) {
             for (File file : resourceFiles) {
@@ -90,6 +93,18 @@ public class KubernetesResourceUtil {
         String serialized = mapper.writeValueAsString(kubernetesList);
         Files.writeToFile(resourceFileType.addExtension(target), serialized, Charset.defaultCharset());
     }
+
+
+    public static File[] listResourceFragments(File resourceDir) {
+        final Pattern filenamePattern = Pattern.compile(FILENAME_PATTERN);
+        return resourceDir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return filenamePattern.matcher(name).matches();
+            }
+        });
+    }
+
 
     // ========================================================================================================
 
