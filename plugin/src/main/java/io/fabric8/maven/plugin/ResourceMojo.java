@@ -17,29 +17,27 @@ package io.fabric8.maven.plugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.plugin.config.KubernetesConfiguration;
-import io.fabric8.maven.plugin.config.ResourceType;
+import io.fabric8.maven.plugin.util.ResourceFileType;
 import io.fabric8.maven.plugin.util.EnricherManager;
 import io.fabric8.maven.plugin.handler.HandlerHub;
 import io.fabric8.maven.plugin.handler.ReplicationControllerHandler;
 import io.fabric8.maven.plugin.handler.ServiceHandler;
 import io.fabric8.maven.enricher.api.MavenBuildContext;
-import io.fabric8.utils.Files;
+import io.fabric8.maven.plugin.util.KubernetesResourceUtil;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
 
-import static io.fabric8.maven.plugin.config.ResourceType.yaml;
+import static io.fabric8.kubernetes.api.KubernetesHelper.loadJson;
+import static io.fabric8.maven.plugin.util.ResourceFileType.yaml;
+import static io.fabric8.maven.plugin.util.KubernetesResourceUtil.writeResourceDescriptor;
 
 /**
  * Generates or copies the Kubernetes JSON file and attaches it to the build so its
@@ -52,12 +50,6 @@ public class ResourceMojo extends AbstractMojo {
     private MavenProject project;
 
     /**
-     * Whether to skip the run or not
-     */
-    @Parameter(property = "fabric8.skip")
-    private boolean skip = false;
-
-    /**
      * Folder where to find project specific files
      */
     @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
@@ -68,13 +60,19 @@ public class ResourceMojo extends AbstractMojo {
      * Can be either 'json' or 'yaml'
      */
     @Parameter(property = "fabric8.resourceType")
-    private ResourceType resourceType = yaml;
+    private ResourceFileType resourceFileType = yaml;
 
     /**
      * The generated kubernetes JSON file
      */
     @Parameter(property = "fabric8.targetDir", defaultValue = "${project.build.outputDirectory}")
     private File target;
+
+    /**
+     * Whether to skip the execution of this plugin. Best used as property "fabric8.skip"
+     */
+    @Parameter(property = "fabric8.skip", defaultValue = "false")
+    private boolean skip;
 
     // Kubernetes specific configuration for this plugin
     @Parameter
@@ -93,9 +91,9 @@ public class ResourceMojo extends AbstractMojo {
             EnricherManager enricher = new EnricherManager(new MavenBuildContext(project));
             handlerHub = new HandlerHub(project, enricher);
 
-            if (!skip && !kubernetes.isSkip() && (!isPomProject() || hasConfigDir())) {
+            if (!skip && (!isPomProject() || hasFabric8Dir())) {
                 KubernetesList resources = generateResourceDescriptor();
-                writeResourceDescriptor(resources, new File(target,"fabric8"));
+                writeResourceDescriptor(resources, new File(target,"fabric8"), resourceFileType);
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
@@ -105,7 +103,9 @@ public class ResourceMojo extends AbstractMojo {
     // ==================================================================================
 
     private KubernetesList generateResourceDescriptor() throws IOException {
-        KubernetesListBuilder builder = new KubernetesListBuilder();
+        KubernetesListBuilder builder = hasFabric8Dir() ?
+            KubernetesResourceUtil.readResourceFragmentsFrom("v1", resourceDir) :
+            new KubernetesListBuilder();
 
         ServiceHandler serviceHandler = handlerHub.getServiceHandler();
         ReplicationControllerHandler rcHandler = handlerHub.getReplicationControllerHandler();
@@ -115,18 +115,8 @@ public class ResourceMojo extends AbstractMojo {
         return builder.build();
     }
 
-    private void writeResourceDescriptor(KubernetesList kubernetesList, File target) throws IOException {
-        ObjectMapper mapper = resourceType.getObjectMapper()
-                                          .enable(SerializationFeature.INDENT_OUTPUT)
-                                          .disable(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS)
-                                          .disable(SerializationFeature.WRITE_NULL_MAP_VALUES);
-        String serialized = mapper.writeValueAsString(kubernetesList);
-        Files.writeToFile(resourceType.addExtension(target), serialized, Charset.defaultCharset());
-    }
 
-
-
-    private boolean hasConfigDir() {
+    private boolean hasFabric8Dir() {
         return resourceDir.isDirectory();
     }
 

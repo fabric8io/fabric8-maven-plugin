@@ -63,10 +63,6 @@ public class KubernetesConfiguration {
     @Parameter
     private boolean containerPrivileged = false;
 
-    // Whether to skip the generation of this descriptor
-    @Parameter
-    private boolean skip = false;
-
     // How images should be pulled (maps to ImagePullPolicy)
     @Parameter
     private String imagePullPolicy;
@@ -121,10 +117,6 @@ public class KubernetesConfiguration {
 
     public boolean isContainerPrivileged() {
         return containerPrivileged;
-    }
-
-    public boolean isSkip() {
-        return skip;
     }
 
     public String getImagePullPolicy() {

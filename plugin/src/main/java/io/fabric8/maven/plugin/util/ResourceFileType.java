@@ -1,4 +1,4 @@
-package io.fabric8.maven.plugin.config;
+package io.fabric8.maven.plugin.util;
 /*
  * 
  * Copyright 2016 Roland Huss
@@ -22,11 +22,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 /**
- * Type od resource supported
+ * Type of resources supported
+ *
  * @author roland
  * @since 07/04/16
  */
-public enum ResourceType {
+public enum ResourceFileType {
 
     json {
         @Override

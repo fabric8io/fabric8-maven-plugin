@@ -24,7 +24,7 @@ import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.maven.plugin.support.JsonSchema;
 import io.fabric8.maven.plugin.support.JsonSchemaProperty;
 import io.fabric8.maven.plugin.support.JsonSchemas;
-import io.fabric8.maven.plugin.util.MavenUtils;
+import io.fabric8.maven.plugin.util.MavenUtil;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -97,7 +97,7 @@ class EnvVarHandler {
     }
 
     private JsonSchema getEnvironmentVariableJsonSchema(Map<String, String> envVars) throws IOException {
-        JsonSchema schema = JsonSchemas.loadEnvironmentSchemas(MavenUtils.getCompileClassLoader(project),
+        JsonSchema schema = JsonSchemas.loadEnvironmentSchemas(MavenUtil.getCompileClassLoader(project),
                                                                project.getBuild().getOutputDirectory());
         if (schema == null) {
             schema = new JsonSchema();

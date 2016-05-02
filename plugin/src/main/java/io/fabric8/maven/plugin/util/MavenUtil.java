@@ -37,7 +37,7 @@ import org.apache.maven.project.MavenProject;
  * @author roland
  * @since 31/03/16
  */
-public class MavenUtils {
+public class MavenUtil {
 
     private static final String DEFAULT_CONFIG_FILE_NAME = "kubernetes.json";
 
