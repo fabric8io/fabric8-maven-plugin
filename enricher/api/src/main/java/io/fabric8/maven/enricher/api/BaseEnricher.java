@@ -18,7 +18,7 @@ package io.fabric8.maven.enricher.api;
 
 import java.util.Map;
 
-import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -44,7 +44,7 @@ public abstract class BaseEnricher implements Enricher {
     public Map<String, String> getAnnotations(Kind kind) { return null; }
 
     @Override
-    public void customize(KubernetesList descriptor) { }
+    public void customize(KubernetesListBuilder builder) { }
 
     @Override
     public Map<String, String> getSelector(Kind kind) { return null; }

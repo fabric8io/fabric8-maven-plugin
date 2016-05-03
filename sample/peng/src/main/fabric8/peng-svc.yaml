@@ -1,3 +1,6 @@
+metadata:
+  labels:
+    buildDir: "${project.build.directory}"
 spec:
   ports:
   - port: 8080

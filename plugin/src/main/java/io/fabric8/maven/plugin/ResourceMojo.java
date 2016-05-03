@@ -17,7 +17,6 @@ package io.fabric8.maven.plugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -31,13 +30,14 @@ import io.fabric8.maven.plugin.handler.HandlerHub;
 import io.fabric8.maven.plugin.handler.ReplicaSetHandler;
 import io.fabric8.maven.plugin.handler.ServiceHandler;
 import io.fabric8.maven.plugin.util.*;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.filtering.MavenFileFilter;
+import org.apache.maven.shared.filtering.MavenFilteringException;
 
 import static io.fabric8.maven.plugin.util.ResourceFileType.yaml;
 
@@ -48,8 +48,14 @@ import static io.fabric8.maven.plugin.util.ResourceFileType.yaml;
 @Mojo(name = "resource", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public class ResourceMojo extends AbstractMojo {
 
+    @Component(role = MavenFileFilter.class, hint = "default")
+    private MavenFileFilter mavenFileFilter;
+
     @Parameter(defaultValue = "${project}", readonly = true)
     private MavenProject project;
+
+    @Parameter(defaultValue = "${session}", readonly = true)
+    private MavenSession session;
 
     /**
      * Folder where to find project specific files
@@ -69,6 +75,12 @@ public class ResourceMojo extends AbstractMojo {
      */
     @Parameter(property = "fabric8.targetDir", defaultValue = "${project.build.outputDirectory}")
     private File target;
+
+    /**
+     * The fabric8 working directory
+     */
+    @Parameter(property = "fabric8.workDir", defaultValue = "${project.build.directory}/fabric8")
+    private File workDir;
 
     /**
      * Whether to skip the execution of this plugin. Best used as property "fabric8.skip"
@@ -95,7 +107,7 @@ public class ResourceMojo extends AbstractMojo {
 
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
                 KubernetesList resources = generateResourceDescriptor(enricher, images);
-                KubernetesResourceUtil.writeResourceDescriptor(resources, new File(target,"fabric8"), resourceFileType);
+                KubernetesResourceUtil.writeResourceDescriptor(resources, new File(target, "fabric8"), resourceFileType);
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
@@ -104,19 +116,20 @@ public class ResourceMojo extends AbstractMojo {
 
     // ==================================================================================
 
-    private KubernetesList generateResourceDescriptor(final EnricherManager enricher, List<ImageConfiguration> images) throws IOException {
-        List<KubernetesList> lists = new ArrayList<>();
+    private KubernetesList generateResourceDescriptor(final EnricherManager enricher, List<ImageConfiguration> images)
+        throws IOException, MojoExecutionException {
         File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
         KubernetesListBuilder builder;
 
         // Add resource files found in the fabric8 directory
         if (resourceFiles != null && resourceFiles.length > 0) {
-            builder = KubernetesResourceUtil.readResourceFragmentsFrom("v1", resourceFiles);
+
+            builder = KubernetesResourceUtil.readResourceFragmentsFrom("v1", filterFiles(resourceFiles));
         } else {
             builder = new KubernetesListBuilder();
         }
 
-        // Add services + replicaSet if configured
+        // Add services + replicaSet if configured in plugin config
         if (kubernetes != null) {
             addServices(builder, kubernetes.getServices(), kubernetes.getAnnotations().getService());
             ReplicaSetHandler rsHandler = handlerHub.getReplicaSetHandler();
@@ -135,9 +148,31 @@ public class ResourceMojo extends AbstractMojo {
         enricher.addMissingSelectors(builder);
 
         // Final customization hook
+        enricher.customize(builder);
 
-        // done
         return builder.build();
+    }
+
+    private File[] filterFiles(File[] resourceFiles) throws MojoExecutionException {
+        if (!workDir.exists()) {
+            if (!workDir.mkdirs()) {
+                throw new MojoExecutionException("Cannot create working dir " + workDir);
+            }
+        }
+        File[] ret = new File[resourceFiles.length];
+        int i = 0;
+        for (File resource : resourceFiles) {
+            File targetFile = new File(workDir, resource.getName());
+            try {
+                mavenFileFilter.copyFile(resource, targetFile, true,
+                                         project, null, false, "utf8", session);
+                ret[i++] = targetFile;
+            } catch (MavenFilteringException exp) {
+                throw new MojoExecutionException(
+                    String.format("Cannot filter %s to %s", resource, targetFile), exp);
+            }
+        }
+        return ret;
     }
 
     private boolean hasPodControllers(KubernetesListBuilder builder) {
@@ -152,7 +187,7 @@ public class ResourceMojo extends AbstractMojo {
     private void addServices(KubernetesListBuilder builder, List<ServiceConfiguration> serviceConfig, Map<String, String> annotations) {
         if (serviceConfig != null) {
             ServiceHandler serviceHandler = handlerHub.getServiceHandler();
-            builder.addToServiceItems(serviceHandler.getServices(serviceConfig ,annotations));
+            builder.addToServiceItems(serviceHandler.getServices(serviceConfig, annotations));
         }
     }
 

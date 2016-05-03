@@ -18,7 +18,7 @@ package io.fabric8.maven.enricher.api;
 
 import java.util.Map;
 
-import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 
 /**
  * Interface describing enrichers which add to kubernetes descriptors
@@ -52,18 +52,18 @@ public interface Enricher {
     Map<String, String> getAnnotations(Kind kind);
 
     /**
-     * Final customization of the overall resource
-     * descriptor
-     *
-     * @param descriptor used to customize
-     */
-    void customize(KubernetesList descriptor);
-
-    /**
      * Get the selector for a service or replica set / replication controller
      *
      * @param kind get the selector map
      * @return selector
      */
     Map<String,String> getSelector(Kind kind);
+
+    /**
+     * Final customization of the overall resource
+     * descriptor
+     *
+     * @param builder list to customer used to customize
+     */
+    void customize(KubernetesListBuilder builder);
 }

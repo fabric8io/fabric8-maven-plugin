@@ -41,7 +41,8 @@ public class EnricherManager {
 
     public EnricherManager(MavenBuildContext buildContext) {
         enrichers = PluginServiceFactory.createServiceObjects(buildContext,
-                                                              "META-INF/fabric8-enricher-default", "META-INF/fabric8-enricher");
+                                                              "META-INF/fabric8-enricher-default",
+                                                              "META-INF/fabric8-enricher");
         Collections.reverse(enrichers);
 
         labelEnricherVisitors = Arrays.asList(
@@ -77,7 +78,26 @@ public class EnricherManager {
         }
     }
 
-    public Map<String, String> extractLabels(Kind kind) {
+    /**
+     * Allow enricher to do customizations on their own
+     *
+     * @param builder builder to customize
+     */
+    public void customize(KubernetesListBuilder builder) {
+        for (Enricher enricher : enrichers) {
+            enricher.customize(builder);
+        }
+    }
+
+    // =============================================================================================
+
+    /**
+     * Get all labels from all enrichers for a certain
+     *
+     * @param kind resource type for which labels should be extracted
+     * @return extracted labels
+     */
+    Map<String, String> extractLabels(Kind kind) {
         Map <String, String> ret = new HashMap<>();
         for (Enricher enricher : enrichers) {
             putAllIfNotNull(ret, enricher.getLabels(kind));
