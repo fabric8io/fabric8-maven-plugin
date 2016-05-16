@@ -28,22 +28,28 @@ import io.fabric8.maven.enricher.api.Kind;
  * @author roland
  * @since 02/05/16
  */
-public abstract class LabelEnricherVisitor<T> implements Visitor<T> {
+public abstract class MetadataEnricherVisitor<T> implements Visitor<T> {
 
     private final EnricherManager enricher;
 
-    private LabelEnricherVisitor(EnricherManager enricher) {
+
+    private MetadataEnricherVisitor(EnricherManager enricher) {
         this.enricher = enricher;
     }
 
     @Override
     public void visit(T item) {
         ObjectMeta metadata = getOrCreateMetadata(item);
-        Map<String, String> labels = getOrCreateMap(metadata.getLabels());
-        Map<String, String> enricherLabels = getOrCreateMap(enricher.extractLabels(getKind()));
-        for (Map.Entry<String, String> entry : enricherLabels.entrySet()) {
-            if (!labels.containsKey(entry.getKey())) {
-                labels.put(entry.getKey(), entry.getValue());
+        overlayMap(metadata.getLabels(), enricher.extractLabels(getKind()));
+        overlayMap(metadata.getAnnotations(), enricher.extractAnnotations(getKind()));
+    }
+
+    private void overlayMap(Map<String, String> targetMap, Map<String, String> enrichMap) {
+        targetMap = getOrCreateMap(targetMap);
+        enrichMap = getOrCreateMap(enrichMap);
+        for (Map.Entry<String, String> entry : enrichMap.entrySet()) {
+            if (!targetMap.containsKey(entry.getKey())) {
+                targetMap.put(entry.getKey(), entry.getValue());
             }
         }
     }
@@ -58,7 +64,7 @@ public abstract class LabelEnricherVisitor<T> implements Visitor<T> {
 
     // =======================================================================================
 
-    public static class PodTemplate extends LabelEnricherVisitor<PodTemplateSpecBuilder> {
+    public static class PodTemplate extends MetadataEnricherVisitor<PodTemplateSpecBuilder> {
 
         public PodTemplate(EnricherManager enricher) {
             super(enricher);
@@ -76,7 +82,7 @@ public abstract class LabelEnricherVisitor<T> implements Visitor<T> {
         }
     }
 
-    public static class Service extends LabelEnricherVisitor<ServiceBuilder> {
+    public static class Service extends MetadataEnricherVisitor<ServiceBuilder> {
 
         public Service(EnricherManager enricher) {
             super(enricher);
@@ -94,7 +100,7 @@ public abstract class LabelEnricherVisitor<T> implements Visitor<T> {
         }
     }
 
-    public static class ReplicaSet extends LabelEnricherVisitor<ReplicaSetBuilder> {
+    public static class ReplicaSet extends MetadataEnricherVisitor<ReplicaSetBuilder> {
         public ReplicaSet(EnricherManager enricher) {
             super(enricher);
         }
@@ -111,7 +117,7 @@ public abstract class LabelEnricherVisitor<T> implements Visitor<T> {
         }
     }
 
-    public static class ReplicationController extends LabelEnricherVisitor<ReplicationControllerBuilder> {
+    public static class ReplicationController extends MetadataEnricherVisitor<ReplicationControllerBuilder> {
         public ReplicationController(EnricherManager enricher) {
             super(enricher);
         }

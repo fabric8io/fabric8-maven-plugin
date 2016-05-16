@@ -21,7 +21,7 @@ import java.util.Map;
 
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.Kind;
-import io.fabric8.maven.enricher.api.MavenBuildContext;
+import io.fabric8.maven.enricher.api.MavenEnrichContext;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -30,7 +30,7 @@ import org.apache.maven.project.MavenProject;
  */
 public class ProjectInfoEnricher extends BaseEnricher {
 
-    public ProjectInfoEnricher(MavenBuildContext buildContext) {
+    public ProjectInfoEnricher(MavenEnrichContext buildContext) {
         super(buildContext);
     }
 

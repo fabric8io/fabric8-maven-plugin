@@ -14,25 +14,24 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.enricher.icon;
+package io.fabric8.maven.customizer.api;
 
-import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.MavenEnrichContext;
+import org.apache.maven.project.MavenProject;
 
 /**
- * Enrichre for adding icons to descriptors
- *
  * @author roland
- * @since 01/05/16
+ * @since 15/05/16
  */
-public class IconEnricher extends BaseEnricher {
+public class MavenCustomizeContext {
+    private final MavenProject project;
 
-    public IconEnricher(MavenEnrichContext buildContext) {
-        super(buildContext);
+    public MavenCustomizeContext(MavenProject project) {
+        this.project = project;
     }
 
-    @Override
-    public String getName() {
-        return "icon";
+    protected MavenProject getProject() {
+        return project;
     }
+
+
 }

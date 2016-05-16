@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
 <!--
   ~ Copyright 2016 Red Hat, Inc.
   ~
@@ -13,28 +15,26 @@
   ~ implied.  See the License for the specific language governing
   ~ permissions and limitations under the License.
   -->
-
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>io.fabric8</groupId>
-  <artifactId>fabric8-maven-plugin-build</artifactId>
+  <parent>
+    <groupId>io.fabric8</groupId>
+    <artifactId>fabric8-maven-parent</artifactId>
+    <version>3.0.0-SNAPSHOT</version>
+    <relativePath>../../parent/pom.xml</relativePath>
+  </parent>
+
+  <artifactId>fabric8-maven-customizer-spring-boot</artifactId>
   <version>3.0.0-SNAPSHOT</version>
-  <packaging>pom</packaging>
 
-  <name>Fabric8 Maven :: Build</name>
+  <name>Fabric8 Maven :: Customizer :: Spring Boot</name>
 
-  <prerequisites>
-    <maven>3.0.3</maven>
-  </prerequisites>
-
-  <modules>
-    <module>parent</module>
-    <module>plugin</module>
-    <module>enricher/api</module>
-    <module>enricher/icon</module>
-    <module>customizer/api</module>
-    <module>customizer/spring-boot</module>
-  </modules>
+  <dependencies>
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>fabric8-maven-customizer-api</artifactId>
+    </dependency>
+  </dependencies>
 
 </project>

@@ -18,12 +18,13 @@ package io.fabric8.maven.plugin.enricher;
 
 import java.util.*;
 
-import io.fabric8.kubernetes.api.builder.BaseFluent;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.enricher.api.Enricher;
 import io.fabric8.maven.enricher.api.Kind;
-import io.fabric8.maven.enricher.api.MavenBuildContext;
+import io.fabric8.maven.enricher.api.MavenEnrichContext;
 import io.fabric8.maven.plugin.util.PluginServiceFactory;
+
+import static io.fabric8.maven.plugin.enricher.EnricherManager.Extractor.*;
 
 
 /**
@@ -36,20 +37,20 @@ public class EnricherManager {
     private List<Enricher> enrichers;
 
     // List of visitors used to enrich with labels
-    private List<? extends LabelEnricherVisitor<?>> labelEnricherVisitors;
+    private final List<? extends MetadataEnricherVisitor<?>> metaDataEnricherVisitors;
     private final List<? extends SelectorVisitor<?>> selectorVisitors;
 
-    public EnricherManager(MavenBuildContext buildContext) {
-        enrichers = PluginServiceFactory.createServiceObjects(buildContext,
-                                                              "META-INF/fabric8-enricher-default",
-                                                              "META-INF/fabric8-enricher");
+    public EnricherManager(MavenEnrichContext buildContext) {
+        PluginServiceFactory<MavenEnrichContext> pluginFactory = new PluginServiceFactory<>(buildContext);
+        enrichers = pluginFactory.createServiceObjects("META-INF/fabric8-enricher-default",
+                                                       "META-INF/fabric8-enricher");
         Collections.reverse(enrichers);
 
-        labelEnricherVisitors = Arrays.asList(
-            new LabelEnricherVisitor.ReplicaSet(this),
-            new LabelEnricherVisitor.ReplicationController(this),
-            new LabelEnricherVisitor.Service(this),
-            new LabelEnricherVisitor.PodTemplate(this));
+        metaDataEnricherVisitors = Arrays.asList(
+            new MetadataEnricherVisitor.ReplicaSet(this),
+            new MetadataEnricherVisitor.ReplicationController(this),
+            new MetadataEnricherVisitor.Service(this),
+            new MetadataEnricherVisitor.PodTemplate(this));
 
         selectorVisitors = Arrays.asList(
             new SelectorVisitor.ReplicaSet(this),
@@ -64,7 +65,7 @@ public class EnricherManager {
      * @param builder the build to enrich with labels
      */
     public void enrichLabels(KubernetesListBuilder builder) {
-        visit(builder, labelEnricherVisitors);
+        visit(builder, metaDataEnricherVisitors);
     }
 
     /**
@@ -98,20 +99,46 @@ public class EnricherManager {
      * @return extracted labels
      */
     Map<String, String> extractLabels(Kind kind) {
+        return extract(LABEL_EXTRACTOR, kind);
+    }
+
+    Map<String, String> extractAnnotations(Kind kind) {
+        return extract(ANNOTATION_EXTRACTOR, kind);
+    }
+
+    Map<String, String> extractSelector(Kind kind) {
+        return extract(SELECTOR_EXTRACTOR, kind);
+    }
+
+    private Map<String, String> extract(Extractor extractor, Kind kind) {
         Map <String, String> ret = new HashMap<>();
         for (Enricher enricher : enrichers) {
-            putAllIfNotNull(ret, enricher.getLabels(kind));
+            putAllIfNotNull(ret, extractor.extract(enricher, kind));
         }
         return ret;
     }
 
-    Map<String, String> extractSelector(Kind kind) {
-        Map <String, String> ret = new HashMap<>();
-        for (Enricher enricher : enrichers) {
-            putAllIfNotNull(ret, enricher.getSelector(kind));
-        }
-        return ret;
+    // ========================================================================================================
+    // Simple extractors
+    enum Extractor {
+        LABEL_EXTRACTOR {
+            public Map<String, String> extract(Enricher enricher, Kind kind) {
+                return enricher.getLabels(kind);
+            }
+        },
+        ANNOTATION_EXTRACTOR {
+            public Map<String, String> extract(Enricher enricher, Kind kind) {
+                return enricher.getAnnotations(kind);
+            }
+        },
+        SELECTOR_EXTRACTOR {
+            public Map<String, String> extract(Enricher enricher, Kind kind) {
+                return enricher.getSelector(kind);
+            }
+        };
+        abstract Map<String, String> extract(Enricher enricher, Kind kind);
     }
+
 
     private void putAllIfNotNull(Map<String, String> ret, Map<String, String> labels) {
         if (labels != null) {
@@ -119,8 +146,8 @@ public class EnricherManager {
         }
     }
 
-    private void visit(KubernetesListBuilder builder, List<? extends LabelEnricherVisitor<?>> visitors) {
-        for (LabelEnricherVisitor visitor : visitors) {
+    private void visit(KubernetesListBuilder builder, List<? extends MetadataEnricherVisitor<?>> visitors) {
+        for (MetadataEnricherVisitor visitor : visitors) {
             builder.accept(visitor);
         }
     }

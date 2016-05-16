@@ -24,12 +24,18 @@
   <version>3.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>Fabric8 Maven :: Samples :: Spring Boot Web</name>
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>1.3.5.RELEASE</version>
+  </parent>
+
+  <name>Fabric8 Maven :: Sample :: Spring Boot Web</name>
   <description>Minimal Example with Spring Boot</description>
 
-   <dependencies>
+  <dependencies>
 
-     <!-- Boot starters, wildfly fractions, fabric8 enricher:  -->
+    <!-- Boot starter  -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
@@ -50,8 +56,8 @@
         <executions>
           <execution>
             <goals>
-              <goal>fabric8:build</goal>
-              <goal>fabric8:deploy</goal>
+              <goal>resource</goal>
+              <goal>build</goal>
             </goals>
           </execution>
         </executions>
@@ -59,15 +65,4 @@
     </plugins>
   </build>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-dependencies</artifactId>
-        <version>1.3.3.RELEASE</version>
-        <type>pom</type>
-        <scope>import</scope>
-       </dependency>
-    </dependencies>
-  </dependencyManagement>
 </project>

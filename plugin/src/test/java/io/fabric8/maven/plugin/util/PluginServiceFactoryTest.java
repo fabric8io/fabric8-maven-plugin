@@ -19,7 +19,9 @@ package io.fabric8.maven.plugin.util;
 import java.util.Iterator;
 import java.util.List;
 
-import io.fabric8.maven.enricher.api.MavenBuildContext;
+import io.fabric8.maven.enricher.api.Enricher;
+import io.fabric8.maven.enricher.api.MavenEnrichContext;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -30,10 +32,17 @@ import static org.junit.Assert.*;
  */
 public class PluginServiceFactoryTest {
 
+    private PluginServiceFactory<MavenEnrichContext> pluginServiceFactory;
+
+    @Before
+    public void setup() {
+        pluginServiceFactory = new PluginServiceFactory<>(new MavenEnrichContext(null));
+    }
+
     @Test
     public void testOrder() {
         List<TestService> services =
-                PluginServiceFactory.createServiceObjects(null,"service/test-services-default", "service/test-services");
+                pluginServiceFactory.createServiceObjects("service/test-services-default", "service/test-services");
         String[] orderExpected = new String[] { "three", "two", "five", "one"};
         assertEquals(services.size(), 4);
         Iterator<TestService> it = services.iterator();
@@ -45,7 +54,7 @@ public class PluginServiceFactoryTest {
     @Test
     public void errorHandling() {
         try {
-            PluginServiceFactory.createServiceObjects(null,"service/error-services");
+            pluginServiceFactory.createServiceObjects("service/error-services");
             fail();
         } catch (IllegalStateException exp) {
             assertTrue(exp.getMessage().matches(".*bla\\.blub\\.NotExist.*"));
@@ -54,14 +63,14 @@ public class PluginServiceFactoryTest {
 
     @Test(expected = ClassCastException.class)
     public void classCastException() {
-        List<String> services = PluginServiceFactory.createServiceObjects(null,"service/test-services");
+        List<String> services = pluginServiceFactory.createServiceObjects("service/test-services");
         String bla = services.get(0);
     }
 
     interface TestService { String getName(); }
-    public static class Test1 implements TestService { public Test1(MavenBuildContext ctx) { } public String getName() { return "one"; } }
-    public static class Test2 implements TestService { public Test2(MavenBuildContext ctx) { } public String getName() { return "two"; } }
-    public static class Test3 implements TestService { public Test3(MavenBuildContext ctx) { } public String getName() { return "three"; } }
-    public static class Test4 implements TestService { public Test4(MavenBuildContext ctx) { } public String getName() { return "four"; } }
-    public static class Test5 implements TestService { public Test5(MavenBuildContext ctx) { } public String getName() { return "five"; } }
+    public static class Test1 implements TestService { public Test1(MavenEnrichContext ctx) { } public String getName() { return "one"; } }
+    public static class Test2 implements TestService { public Test2(MavenEnrichContext ctx) { } public String getName() { return "two"; } }
+    public static class Test3 implements TestService { public Test3(MavenEnrichContext ctx) { } public String getName() { return "three"; } }
+    public static class Test4 implements TestService { public Test4(MavenEnrichContext ctx) { } public String getName() { return "four"; } }
+    public static class Test5 implements TestService { public Test5(MavenEnrichContext ctx) { } public String getName() { return "five"; } }
 }

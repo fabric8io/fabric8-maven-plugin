@@ -22,7 +22,7 @@ import java.util.Map;
 
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.MavenBuildContext;
+import io.fabric8.maven.enricher.api.MavenEnrichContext;
 import io.fabric8.maven.plugin.config.KubernetesConfiguration;
 import io.fabric8.maven.plugin.config.ServiceConfiguration;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
@@ -102,7 +102,7 @@ public class ResourceMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
-            EnricherManager enricher = new EnricherManager(new MavenBuildContext(project));
+            EnricherManager enricher = new EnricherManager(new MavenEnrichContext(project));
             handlerHub = new HandlerHub(project);
 
             if (!skip && (!isPomProject() || hasFabric8Dir())) {

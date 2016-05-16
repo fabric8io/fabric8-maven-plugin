@@ -35,7 +35,7 @@
     <version.maven>3.2.3</version.maven>
     <version.kubernetes-client>1.3.90</version.kubernetes-client>
     <version.fabric8>2.2.101</version.fabric8>
-    <version.docker-maven-plugin>0.15.1</version.docker-maven-plugin>
+    <version.docker-maven-plugin>0.15.2-SNAPSHOT</version.docker-maven-plugin>
   </properties>
 
   <dependencyManagement>
@@ -60,6 +60,18 @@
       <dependency>
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-enricher-icon</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-customizer-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-customizer-spring-boot</artifactId>
         <version>${project.version}</version>
       </dependency>
 

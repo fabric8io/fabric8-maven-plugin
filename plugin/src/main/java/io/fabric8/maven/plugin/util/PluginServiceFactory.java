@@ -23,8 +23,6 @@ import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.*;
 
-import io.fabric8.maven.enricher.api.MavenBuildContext;
-
 /**
  * A simple factory for creating services with no-arg constructors from a textual
  * descriptor. This descriptor, which must be a resource loadable by this class'
@@ -42,9 +40,13 @@ import io.fabric8.maven.enricher.api.MavenBuildContext;
  * @author roland
  * @since 05.11.10
  */
-public final class PluginServiceFactory {
+public final class PluginServiceFactory<C> {
 
-    private PluginServiceFactory() {}
+    private C context;
+
+    public PluginServiceFactory(C context) {
+        this.context = context;
+    }
 
     /**
      * Create a list of services ordered according to the ordering given in the
@@ -59,12 +61,12 @@ public final class PluginServiceFactory {
      * @param <T> type of the service objects to create
      * @return a ordered list of created services or an empty list.
      */
-    public static <T> List<T> createServiceObjects(MavenBuildContext context, String... descriptorPaths) {
+    public <T> List<T> createServiceObjects(String... descriptorPaths) {
         try {
             ServiceEntry.initDefaultOrder();
             TreeMap<ServiceEntry,T> extractorMap = new TreeMap<ServiceEntry,T>();
             for (String descriptor : descriptorPaths) {
-                readServiceDefinitions(context, extractorMap, descriptor);
+                readServiceDefinitions(extractorMap, descriptor);
             }
             ArrayList<T> ret = new ArrayList<T>();
             for (T service : extractorMap.values()) {
@@ -76,10 +78,10 @@ public final class PluginServiceFactory {
         }
     }
 
-    private static <T> void readServiceDefinitions(MavenBuildContext context, Map<ServiceEntry, T> extractorMap, String defPath) {
+    private <T> void readServiceDefinitions(Map<ServiceEntry, T> extractorMap, String defPath) {
         try {
             for (String url : getResources(defPath)) {
-                readServiceDefinitionFromUrl(context, extractorMap, url);
+                readServiceDefinitionFromUrl(extractorMap, url);
             }
         } catch (IOException e) {
             throw new IllegalStateException("Cannot load service from " + defPath + ": " + e, e);
@@ -110,12 +112,12 @@ public final class PluginServiceFactory {
         return ret;
     }
 
-    private static <T> void readServiceDefinitionFromUrl(MavenBuildContext context, Map<ServiceEntry, T> extractorMap, String url) {
+    private <T> void readServiceDefinitionFromUrl(Map<ServiceEntry, T> extractorMap, String url) {
         String line = null;
         try (LineNumberReader reader = new LineNumberReader(new InputStreamReader(new URL(url).openStream(), "UTF8"))) {
             line = reader.readLine();
             while (line != null) {
-                createOrRemoveService(context, extractorMap, line);
+                createOrRemoveService(extractorMap, line);
                 line = reader.readLine();
             }
         } catch (ReflectiveOperationException|IOException e) {
@@ -124,7 +126,7 @@ public final class PluginServiceFactory {
         }
     }
 
-    private static <T> void createOrRemoveService(MavenBuildContext context, Map<ServiceEntry, T> extractorMap, String line)
+    private <T> void createOrRemoveService(Map<ServiceEntry, T> extractorMap, String line)
         throws ReflectiveOperationException {
         if (line.length() > 0) {
             ServiceEntry entry = new ServiceEntry(line);
@@ -146,7 +148,7 @@ public final class PluginServiceFactory {
                 if (clazz == null) {
                     throw new ClassNotFoundException("Class " + entry.getClassName() + " could not be found");
                 }
-                Constructor<T> constructor = clazz.getConstructor(MavenBuildContext.class);
+                Constructor<T> constructor = clazz.getConstructor(context.getClass());
                 T ext = constructor.newInstance(context);
                 extractorMap.put(entry, ext);
             }

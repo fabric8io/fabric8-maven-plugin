@@ -14,25 +14,23 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.enricher.icon;
+package io.fabric8.maven.sample.spring.boot;
 
-import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.MavenEnrichContext;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMapping;
+
 
 /**
- * Enrichre for adding icons to descriptors
- *
  * @author roland
- * @since 01/05/16
+ * @since 16/05/16
  */
-public class IconEnricher extends BaseEnricher {
 
-    public IconEnricher(MavenEnrichContext buildContext) {
-        super(buildContext);
+@RestController
+public class HelloController {
+
+    @RequestMapping("/")
+    public String index() {
+        return "Greetings from Spring Boot!";
     }
 
-    @Override
-    public String getName() {
-        return "icon";
-    }
 }

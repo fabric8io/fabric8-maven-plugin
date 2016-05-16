@@ -14,25 +14,27 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.enricher.icon;
+package io.fabric8.maven.customizer.api;
 
-import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.MavenEnrichContext;
+import java.util.List;
+
+import io.fabric8.maven.docker.config.ImageConfiguration;
 
 /**
- * Enrichre for adding icons to descriptors
- *
  * @author roland
- * @since 01/05/16
+ * @since 15/05/16
  */
-public class IconEnricher extends BaseEnricher {
-
-    public IconEnricher(MavenEnrichContext buildContext) {
-        super(buildContext);
-    }
-
-    @Override
-    public String getName() {
-        return "icon";
-    }
+public interface Customizer {
+      /**
+     * Provide additional image configurations
+     *
+     * @param existingConfigs the already detected and resolved configuration
+     * @return list of image configurations
+     */
+    List<ImageConfiguration> customize(List<ImageConfiguration> existingConfigs);
 }
+
+
+
+
+

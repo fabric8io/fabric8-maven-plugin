@@ -17,8 +17,14 @@
 package io.fabric8.maven.plugin.docker;
 
 
+import java.util.List;
+
+import io.fabric8.maven.customizer.api.Customizer;
+import io.fabric8.maven.customizer.api.MavenCustomizeContext;
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.plugin.util.PluginServiceFactory;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -35,5 +41,18 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
         super.executeInternal(hub);
+    }
+
+    @Override
+    protected List<ImageConfiguration> customizeImageConfigurations(List<ImageConfiguration> configs) {
+        List<ImageConfiguration> ret = configs;
+
+        PluginServiceFactory<MavenCustomizeContext> pluginFactory = new PluginServiceFactory<>(new MavenCustomizeContext(project));
+        List<Customizer> customizers =
+            pluginFactory.createServiceObjects("META-INF/fabric8-customizer-default", "META-INF/fabric8-customizer");
+        for (Customizer customizer : customizers) {
+            ret = customizer.customize(ret);
+        }
+        return ret;
     }
 }

@@ -50,6 +50,16 @@
       <artifactId>fabric8-maven-enricher-icon</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>fabric8-maven-customizer-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>fabric8-maven-customizer-spring-boot</artifactId>
+    </dependency>
+
     <!-- == Fabric8 ===================================== -->
 
     <dependency>
