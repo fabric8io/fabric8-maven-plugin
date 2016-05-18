@@ -24,9 +24,9 @@ import org.apache.maven.project.MavenProject;
  */
 abstract public class BaseCustomizer implements Customizer {
 
-    private final MavenCustomizeContext context;
+    private final MavenCustomizerContext context;
 
-    public BaseCustomizer(MavenCustomizeContext context) {
+    public BaseCustomizer(MavenCustomizerContext context) {
         this.context = context;
     }
 

@@ -72,8 +72,8 @@ public class KubernetesConfiguration {
     private Map<String,Integer> ports;
 
     // Number of replicas to create
-    @Parameter(defaultValue = "1")
-    private int replicas;
+    @Parameter
+    private int replicas = 1;
 
     // Service account to use
     @Parameter
@@ -139,6 +139,20 @@ public class KubernetesConfiguration {
         return serviceAccount;
     }
 
+    // =============================================================================================
+
+    public static class Builder {
+        private KubernetesConfiguration config = new KubernetesConfiguration();
+
+        public Builder replicaSetName(String name) {
+            config.replicaSetName = name;
+            return this;
+        }
+
+        public KubernetesConfiguration build() {
+            return config;
+        }
+    }
 
     // TODO: SCC
 

@@ -14,24 +14,23 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.customizer.api;
+package io.fabric8.maven.enricher.api;
 
 import org.apache.maven.project.MavenProject;
 
 /**
  * @author roland
- * @since 15/05/16
+ * @since 01/04/16
  */
-public class MavenCustomizeContext {
-    private final MavenProject project;
+public class MavenEnricherContext {
 
-    public MavenCustomizeContext(MavenProject project) {
+    MavenProject project;
+
+    public MavenEnricherContext(MavenProject project) {
         this.project = project;
     }
 
-    protected MavenProject getProject() {
+    public MavenProject getProject() {
         return project;
     }
-
-
 }

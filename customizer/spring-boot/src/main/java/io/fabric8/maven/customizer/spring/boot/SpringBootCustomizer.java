@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import io.fabric8.maven.customizer.api.BaseCustomizer;
-import io.fabric8.maven.customizer.api.MavenCustomizeContext;
+import io.fabric8.maven.customizer.api.MavenCustomizerContext;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -33,7 +33,7 @@ import org.apache.maven.project.MavenProject;
  */
 public class SpringBootCustomizer extends BaseCustomizer {
 
-    public SpringBootCustomizer(MavenCustomizeContext context) {
+    public SpringBootCustomizer(MavenCustomizerContext context) {
         super(context);
     }
 
@@ -65,9 +65,21 @@ public class SpringBootCustomizer extends BaseCustomizer {
 
     private String extractImageName() {
         MavenProject project = getProject();
-        return project.getGroupId().toLowerCase() + "/" +
+        return prepareUserName(project.getGroupId()) + "/" +
                project.getArtifactId().toLowerCase() + ":" +
                project.getVersion();
+    }
+
+    private String prepareUserName(String groupId) {
+        int idx = groupId.lastIndexOf(".");
+        String last = groupId.substring(idx != -1 ? idx : 0);
+        StringBuilder ret = new StringBuilder();
+        for (char c : last.toCharArray()) {
+            if (Character.isLetter(c) || Character.isDigit(c)) {
+                ret.append(c);
+            }
+        }
+        return ret.toString();
     }
 
     private List<String> extractPorts() {

@@ -19,6 +19,7 @@ package io.fabric8.maven.plugin.config;
 import java.util.Collections;
 import java.util.List;
 
+import io.fabric8.maven.plugin.enricher.SelectorVisitor;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
@@ -59,6 +60,36 @@ public class ServiceConfiguration {
         return type;
     }
 
+    // =============================================================
+
+    public static class Builder {
+        private ServiceConfiguration config = new ServiceConfiguration();
+
+        public Builder name(String name) {
+            config.name = name;
+            return this;
+        }
+
+        public Builder ports(List<Port> ports) {
+            config.ports = ports;
+            return this;
+        }
+
+        public Builder headless(boolean headless) {
+            config.headless = headless;
+            return this;
+        }
+
+        public Builder type(String type) {
+            config.type = type;
+            return this;
+        }
+
+        public ServiceConfiguration build() {
+            return config;
+        }
+    }
+
 
     // =============================================================
 
@@ -76,8 +107,13 @@ public class ServiceConfiguration {
         @Parameter
         int targetPort;
 
+        // Port to expose from the port
         @Parameter
         Integer nodePort;
+
+        // Name of the port
+        @Parameter
+        String name;
 
         public ServiceProtocol getProtocol() {
             return protocol;
@@ -95,5 +131,43 @@ public class ServiceConfiguration {
             return nodePort;
         }
 
+        public String getName() {
+            return name;
+        }
+
+        // =====================================================================================
+
+        public static class Builder {
+            Port config = new Port();
+
+            public Builder name(String name) {
+                config.name = name;
+                return this;
+            }
+
+            public Builder protocol(ServiceProtocol protocol) {
+                config.protocol = protocol;
+                return this;
+            }
+
+            public Builder port(int port) {
+                config.port = port;
+                return this;
+            }
+
+            public Builder targetPort(int targetPort) {
+                config.targetPort = targetPort;
+                return this;
+            }
+
+            public Builder nodePort(Integer nodePort) {
+                config.nodePort = nodePort;
+                return this;
+            }
+
+            public Port build() {
+                return config;
+            }
+        }
     }
 }

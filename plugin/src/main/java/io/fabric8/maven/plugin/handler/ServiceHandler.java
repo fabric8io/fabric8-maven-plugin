@@ -49,6 +49,7 @@ public class ServiceHandler {
             List<ServicePort> servicePorts = new ArrayList<>();
             for (ServiceConfiguration.Port port : service.getPorts()) {
                 ServicePort servicePort = new ServicePortBuilder()
+                    .withName(port.getName())
                     .withProtocol(port.getProtocol().name())
                     .withTargetPort(new IntOrString(port.getTargetPort()))
                     .withPort(port.getPort())

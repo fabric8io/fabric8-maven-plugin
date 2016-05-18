@@ -17,7 +17,7 @@
 package io.fabric8.maven.enricher.icon;
 
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.MavenEnrichContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 
 /**
  * Enrichre for adding icons to descriptors
@@ -27,7 +27,7 @@ import io.fabric8.maven.enricher.api.MavenEnrichContext;
  */
 public class IconEnricher extends BaseEnricher {
 
-    public IconEnricher(MavenEnrichContext buildContext) {
+    public IconEnricher(MavenEnricherContext buildContext) {
         super(buildContext);
     }
 

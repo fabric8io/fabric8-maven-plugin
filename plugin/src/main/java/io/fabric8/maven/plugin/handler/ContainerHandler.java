@@ -22,6 +22,7 @@ import java.util.List;
 
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.docker.access.PortMapping;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.plugin.config.KubernetesConfiguration;
@@ -132,8 +133,8 @@ class ContainerHandler {
     }
 
     private List<ContainerPort> getContainerPorts(ImageConfiguration imageConfig) {
-        RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
-        List<String> ports = runConfig.getPorts();
+        BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+        List<String> ports = buildConfig.getPorts();
         if (ports != null) {
             List<ContainerPort> ret = new ArrayList<>();
             PortMapping portMapping = new PortMapping(ports, project.getProperties());

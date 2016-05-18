@@ -27,9 +27,9 @@ import org.apache.maven.project.MavenProject;
  */
 public abstract class BaseEnricher implements Enricher {
 
-    private MavenEnrichContext buildContext;
+    private MavenEnricherContext buildContext;
 
-    public BaseEnricher(MavenEnrichContext buildContext) {
+    public BaseEnricher(MavenEnricherContext buildContext) {
         this.buildContext = buildContext;
     }
 

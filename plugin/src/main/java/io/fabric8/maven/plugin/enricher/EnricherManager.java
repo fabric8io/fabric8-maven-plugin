@@ -21,7 +21,7 @@ import java.util.*;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.enricher.api.Enricher;
 import io.fabric8.maven.enricher.api.Kind;
-import io.fabric8.maven.enricher.api.MavenEnrichContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.plugin.util.PluginServiceFactory;
 
 import static io.fabric8.maven.plugin.enricher.EnricherManager.Extractor.*;
@@ -40,8 +40,8 @@ public class EnricherManager {
     private final List<? extends MetadataEnricherVisitor<?>> metaDataEnricherVisitors;
     private final List<? extends SelectorVisitor<?>> selectorVisitors;
 
-    public EnricherManager(MavenEnrichContext buildContext) {
-        PluginServiceFactory<MavenEnrichContext> pluginFactory = new PluginServiceFactory<>(buildContext);
+    public EnricherManager(MavenEnricherContext buildContext) {
+        PluginServiceFactory<MavenEnricherContext> pluginFactory = new PluginServiceFactory<>(buildContext);
         enrichers = pluginFactory.createServiceObjects("META-INF/fabric8-enricher-default",
                                                        "META-INF/fabric8-enricher");
         Collections.reverse(enrichers);

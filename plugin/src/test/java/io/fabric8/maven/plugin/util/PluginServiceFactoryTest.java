@@ -19,8 +19,7 @@ package io.fabric8.maven.plugin.util;
 import java.util.Iterator;
 import java.util.List;
 
-import io.fabric8.maven.enricher.api.Enricher;
-import io.fabric8.maven.enricher.api.MavenEnrichContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -32,11 +31,11 @@ import static org.junit.Assert.*;
  */
 public class PluginServiceFactoryTest {
 
-    private PluginServiceFactory<MavenEnrichContext> pluginServiceFactory;
+    private PluginServiceFactory<MavenEnricherContext> pluginServiceFactory;
 
     @Before
     public void setup() {
-        pluginServiceFactory = new PluginServiceFactory<>(new MavenEnrichContext(null));
+        pluginServiceFactory = new PluginServiceFactory<>(new MavenEnricherContext(null));
     }
 
     @Test
@@ -68,9 +67,9 @@ public class PluginServiceFactoryTest {
     }
 
     interface TestService { String getName(); }
-    public static class Test1 implements TestService { public Test1(MavenEnrichContext ctx) { } public String getName() { return "one"; } }
-    public static class Test2 implements TestService { public Test2(MavenEnrichContext ctx) { } public String getName() { return "two"; } }
-    public static class Test3 implements TestService { public Test3(MavenEnrichContext ctx) { } public String getName() { return "three"; } }
-    public static class Test4 implements TestService { public Test4(MavenEnrichContext ctx) { } public String getName() { return "four"; } }
-    public static class Test5 implements TestService { public Test5(MavenEnrichContext ctx) { } public String getName() { return "five"; } }
+    public static class Test1 implements TestService { public Test1(MavenEnricherContext ctx) { } public String getName() { return "one"; } }
+    public static class Test2 implements TestService { public Test2(MavenEnricherContext ctx) { } public String getName() { return "two"; } }
+    public static class Test3 implements TestService { public Test3(MavenEnricherContext ctx) { } public String getName() { return "three"; } }
+    public static class Test4 implements TestService { public Test4(MavenEnricherContext ctx) { } public String getName() { return "four"; } }
+    public static class Test5 implements TestService { public Test5(MavenEnricherContext ctx) { } public String getName() { return "five"; } }
 }
