@@ -28,7 +28,7 @@
   </prerequisites>
 
   <name>Fabric8 Maven :: Parent</name>
-<url>http://github.com/fabric8io/fabric8-maven-plugin</url>
+  <url>http://github.com/fabric8io/fabric8-maven-plugin</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -37,6 +37,33 @@
     <version.fabric8>2.2.101</version.fabric8>
     <version.docker-maven-plugin>0.15.2-SNAPSHOT</version.docker-maven-plugin>
   </properties>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>maven-central-plugin-snapshots</id>
+      <name>Maven Central Plugin Snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus Snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    </snapshotRepository>
+    <repository>
+      <id>sonatype-nexus-staging</id>
+      <name>Nexus Release Repository</name>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
 
   <dependencyManagement>
     <dependencies>
