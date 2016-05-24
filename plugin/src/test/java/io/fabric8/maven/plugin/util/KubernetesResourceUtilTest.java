@@ -25,6 +25,7 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static io.fabric8.maven.plugin.util.KubernetesResourceUtil.getKubernetesResource;
 import static org.junit.Assert.*;
 
 /**
@@ -44,7 +45,7 @@ public class KubernetesResourceUtilTest {
     @Test
     public void simple() throws IOException {
         for (String ext : new String[] { "yaml", "json" }) {
-            HasMetadata ret = KubernetesResourceUtil.getKubernetesResource("v1", new File(fabric8Dir, "simple-rc." + ext));
+            HasMetadata ret = getKubernetesResource("v1", new File(fabric8Dir, "simple-rc." + ext));
             assertEquals("v1", ret.getApiVersion());
             assertEquals("ReplicationController", ret.getKind());
             assertEquals("simple", ret.getMetadata().getName());
@@ -53,7 +54,7 @@ public class KubernetesResourceUtilTest {
 
     @Test
     public void withValue() throws IOException {
-        HasMetadata ret = KubernetesResourceUtil.getKubernetesResource("v1", new File(fabric8Dir, "named-svc.yaml"));
+        HasMetadata ret = getKubernetesResource("v1", new File(fabric8Dir, "named-svc.yaml"));
         assertEquals("v1", ret.getApiVersion());
         assertEquals("Service", ret.getKind());
         assertEquals("pong", ret.getMetadata().getName());
@@ -62,7 +63,7 @@ public class KubernetesResourceUtilTest {
     @Test
     public void invalidType() throws IOException {
         try {
-            KubernetesResourceUtil.getKubernetesResource("v1", new File(fabric8Dir, "simple-bla.yaml"));
+            getKubernetesResource("v1", new File(fabric8Dir, "simple-bla.yaml"));
             fail();
         } catch (IllegalArgumentException exp) {
             assertTrue(exp.getMessage().contains("bla"));
@@ -73,7 +74,7 @@ public class KubernetesResourceUtilTest {
     @Test
     public void invalidPattern() throws IOException {
         try {
-            KubernetesResourceUtil.getKubernetesResource("v1", new File(fabric8Dir, "blubber.yaml"));
+            getKubernetesResource("v1", new File(fabric8Dir, "blubber.yaml"));
             fail();
         } catch (IllegalArgumentException exp) {
             assertTrue(exp.getMessage().contains("blubber"));
@@ -81,9 +82,25 @@ public class KubernetesResourceUtilTest {
     }
 
     @Test
+    public void noNameInFile() throws IOException {
+        HasMetadata ret = KubernetesResourceUtil.getKubernetesResource("v1", new File(fabric8Dir, "rc.yml"));
+        assertEquals("flipper",ret.getMetadata().getName());
+    }
+
+    @Test
+    public void noNameInFileAndNotInMetadata() throws IOException {
+        try {
+            getKubernetesResource("v1", new File(fabric8Dir, "svc.yml"));
+            fail();
+        } catch (IllegalArgumentException exp) {
+            assertTrue(exp.getMessage().contains("svc.yml"));
+        }
+    }
+
+    @Test
     public void invalidExtension() throws IOException {
         try {
-            KubernetesResourceUtil.getKubernetesResource("v1", new File(fabric8Dir, "simple-rc.txt"));
+            getKubernetesResource("v1", new File(fabric8Dir, "simple-rc.txt"));
             fail();
         } catch (IllegalArgumentException exp) {
             assertTrue(exp.getMessage().contains("txt"));

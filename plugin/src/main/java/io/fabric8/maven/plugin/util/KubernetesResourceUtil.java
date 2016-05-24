@@ -122,7 +122,7 @@ public class KubernetesResourceUtil {
         }
     }
 
-    private static final String FILENAME_PATTERN = "^(.*)-([^-]+)\\.(yaml|yml|json)$";
+    private static final String FILENAME_PATTERN = "^(.*?)-?([^-]+)\\.(yaml|yml|json)$";
 
     // Read fragment and add default values
     private static Map<String, Object> readAndEnrichFragment(String defaultApiVersion, File file) throws IOException {
@@ -145,7 +145,13 @@ public class KubernetesResourceUtil {
         addIfNotExistent(fragment, "kind", kind);
         addIfNotExistent(fragment, "apiVersion", defaultApiVersion);
         Map<String, Object> metaMap = getMetadata(fragment);
-        addIfNotExistent(metaMap, "name", name);
+        if (StringUtils.isNotBlank(name)) {
+            addIfNotExistent(metaMap, "name", name);
+        }
+        if (metaMap.get("name") == null) {
+            throw new IllegalArgumentException(
+                String.format("No name given as part of the filename in and no name in the metadata section of '%s'",file.getName()));
+        }
         return fragment;
     }
 
