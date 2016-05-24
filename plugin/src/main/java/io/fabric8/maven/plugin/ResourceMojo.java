@@ -198,6 +198,14 @@ public class ResourceMojo extends AbstractMojo {
             Function<HasMetadata, Void> enrichFunction = new Function<HasMetadata, Void>() {
                 @Override
                 public Void apply(HasMetadata hasMeta) {
+                    ObjectMeta metadata = hasMeta.getMetadata();
+                    if (metadata == null) {
+                        metadata = new ObjectMeta() ;
+                        hasMeta.setMetadata(metadata);
+                    }
+                    if (Strings.isNullOrBlank(metadata.getName())) {
+                        metadata.setName(project.getArtifactId());
+                    }
                     Function<List<Container>, Void> fn = new Function<List<Container>, Void>() {
                         @Override
                         public Void apply(List<Container> containers) {

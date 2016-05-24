@@ -16,17 +16,19 @@
 
 package io.fabric8.maven.plugin.util;
 
-import java.io.File;
-import java.io.IOException;
-
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.IOException;
+
 import static io.fabric8.maven.plugin.util.KubernetesResourceUtil.getKubernetesResource;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author roland
@@ -89,12 +91,9 @@ public class KubernetesResourceUtilTest {
 
     @Test
     public void noNameInFileAndNotInMetadata() throws IOException {
-        try {
-            getKubernetesResource("v1", new File(fabric8Dir, "svc.yml"));
-            fail();
-        } catch (IllegalArgumentException exp) {
-            assertTrue(exp.getMessage().contains("svc.yml"));
-        }
+        getKubernetesResource("v1", new File(fabric8Dir, "svc.yml"));
+        // lets not fail here as we can default it later on based on the artifact id
+        //fail();
     }
 
     @Test

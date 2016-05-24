@@ -153,10 +153,6 @@ public class KubernetesResourceUtil {
         if (StringUtils.isNotBlank(name)) {
             addIfNotExistent(metaMap, "name", name);
         }
-        if (metaMap.get("name") == null) {
-            throw new IllegalArgumentException(
-                String.format("No name given as part of the filename in and no name in the metadata section of '%s'",file.getName()));
-        }
         return fragment;
     }
 
