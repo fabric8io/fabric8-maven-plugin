@@ -34,6 +34,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.utils.Files;
+import io.fabric8.utils.Function;
 import org.apache.maven.shared.utils.StringUtils;
 
 /**
@@ -53,11 +54,15 @@ public class KubernetesResourceUtil {
      * @return the list builder
      * @throws IOException
      */
-    public static KubernetesListBuilder readResourceFragmentsFrom(String apiVersion, File[] resourceFiles) throws IOException {
+    public static KubernetesListBuilder readResourceFragmentsFrom(String apiVersion, File[] resourceFiles, Function<HasMetadata, Void> fn) throws IOException {
         KubernetesListBuilder k8sBuilder = new KubernetesListBuilder();
         if (resourceFiles != null) {
             for (File file : resourceFiles) {
-                k8sBuilder.withItems(getKubernetesResource(apiVersion, file));
+                HasMetadata resource = getKubernetesResource(apiVersion, file);
+                if (fn != null) {
+                    fn.apply(resource);
+                }
+                k8sBuilder.withItems(resource);
             }
         }
         return k8sBuilder;
