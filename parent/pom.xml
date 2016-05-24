@@ -38,8 +38,9 @@
     <version.docker-maven-plugin>0.15-SNAPSHOT</version.docker-maven-plugin>
   </properties>
 
-  <pluginRepositories>
-    <pluginRepository>
+
+  <repositories>
+    <repository>
       <id>maven-central-plugin-snapshots</id>
       <name>Maven Central Plugin Snapshots</name>
       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
@@ -49,8 +50,8 @@
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
-    </pluginRepository>
-  </pluginRepositories>
+    </repository>
+  </repositories>
 
   <distributionManagement>
     <snapshotRepository>
