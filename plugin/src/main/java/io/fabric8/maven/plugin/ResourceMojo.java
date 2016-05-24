@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.*;
 
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -35,6 +37,8 @@ import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.handler.*;
 import io.fabric8.maven.plugin.util.KubernetesResourceUtil;
 import io.fabric8.maven.plugin.util.ResourceFileType;
+import io.fabric8.utils.Function;
+import io.fabric8.utils.Strings;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -45,6 +49,7 @@ import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.apache.maven.shared.utils.StringUtils;
 
+import static io.fabric8.maven.plugin.handler.Containers.getKubernetesContainerName;
 import static io.fabric8.maven.plugin.util.ResourceFileType.yaml;
 
 /**
@@ -185,11 +190,32 @@ public class ResourceMojo extends AbstractMojo {
         ServiceHandler serviceHandler = handlerHub.getServiceHandler();
 
         KubernetesListBuilder builder;
+        final String imagePullPolicy = "IfNotPresent";
 
         // Add resource files found in the fabric8 directory
         if (resourceFiles != null && resourceFiles.length > 0) {
             log.info("Using resource templates from %s", resourceDir);
-            builder = KubernetesResourceUtil.readResourceFragmentsFrom("v1", filterFiles(resourceFiles));
+            Function<HasMetadata, Void> enrichFunction = new Function<HasMetadata, Void>() {
+                @Override
+                public Void apply(HasMetadata hasMeta) {
+                    Function<List<Container>, Void> fn = new Function<List<Container>, Void>() {
+                        @Override
+                        public Void apply(List<Container> containers) {
+                            defaultContainerImages(imagePullPolicy, containers);
+                            return null;
+                        }
+                    };
+                    if (hasMeta instanceof ReplicaSet) {
+                        ReplicaSet rs = (ReplicaSet) hasMeta;
+                        getOrCreateContainerList(rs, fn);
+                    } else if (hasMeta instanceof ReplicationController) {
+                        ReplicationController rc = (ReplicationController) hasMeta;
+                        getOrCreateContainerList(rc, fn);
+                    }
+                    return null;
+                }
+            };
+            builder = KubernetesResourceUtil.readResourceFragmentsFrom("v1", filterFiles(resourceFiles), enrichFunction);
         } else {
             builder = new KubernetesListBuilder();
         }
@@ -237,6 +263,78 @@ public class ResourceMojo extends AbstractMojo {
         enricher.customize(builder);
 
         return builder.build();
+    }
+
+    private void defaultContainerImages(String imagePullPolicy, List<Container> containers) {
+        int idx = 0;
+        if (resolvedImages.isEmpty()) {
+            getLog().warn("No resolved images!");
+        }
+        for (ImageConfiguration imageConfiguration : resolvedImages) {
+            Container container;
+            if (idx < containers.size()) {
+                container = containers.get(idx);
+            } else {
+                container = new Container();
+                containers.add(container);
+            }
+            if (Strings.isNullOrBlank(container.getImagePullPolicy())) {
+                container.setImagePullPolicy(imagePullPolicy);
+            }
+            if (Strings.isNullOrBlank(container.getImage())) {
+                container.setImage(imageConfiguration.getName());
+            }
+            if (Strings.isNullOrBlank(container.getName())) {
+                container.setName(getKubernetesContainerName(project, imageConfiguration));
+            }
+            idx++;
+        }
+    }
+
+    private List<Container> getOrCreateContainerList(ReplicaSet rs, Function<List<Container>,Void> fn) {
+        ReplicaSetSpec spec = rs.getSpec();
+        if (spec == null) {
+            spec = new ReplicaSetSpec();
+            rs.setSpec(spec);
+        }
+        PodTemplateSpec template = spec.getTemplate();
+        if (template == null) {
+            template = new PodTemplateSpec();
+            spec.setTemplate(template);
+        }
+        return getOrCreateContainerList(template, fn);
+    }
+
+    private List<Container> getOrCreateContainerList(ReplicationController rc, Function<List<Container>,Void> fn) {
+        ReplicationControllerSpec spec = rc.getSpec();
+        if (spec == null) {
+            spec = new ReplicationControllerSpec();
+            rc.setSpec(spec);
+        }
+        PodTemplateSpec template = spec.getTemplate();
+        if (template == null) {
+            template = new PodTemplateSpec();
+            spec.setTemplate(template);
+        }
+        return getOrCreateContainerList(template, fn);
+    }
+
+    private List<Container> getOrCreateContainerList(PodTemplateSpec template, Function<List<Container>, Void> fn) {
+        PodSpec podSpec = template.getSpec();
+        if (podSpec == null) {
+            podSpec = new PodSpec();
+            template.setSpec(podSpec);
+        }
+        List<Container> containers = podSpec.getContainers();
+        if (containers == null) {
+            containers = new ArrayList<Container>();
+            podSpec.setContainers(containers);
+        }
+        if (fn != null) {
+            fn.apply(containers);
+        }
+        podSpec.setContainers(containers);
+        return containers;
     }
 
     // Check for all build configs, extract the exposed ports and create a single service for all of them
@@ -329,6 +427,10 @@ public class ResourceMojo extends AbstractMojo {
         return checkForKind(builder, "ReplicationController", "ReplicaSet");
     }
 
+    private HasMetadata getPodController(KubernetesListBuilder builder) {
+        return getForKind(builder, "ReplicationController", "ReplicaSet");
+    }
+
     private boolean hasServices(KubernetesListBuilder builder) {
         return checkForKind(builder, "Service");
     }
@@ -341,6 +443,16 @@ public class ResourceMojo extends AbstractMojo {
             }
         }
         return false;
+    }
+
+    private HasMetadata getForKind(KubernetesListBuilder builder, String ... kinds) {
+        Set<String> kindSet = new HashSet<>(Arrays.asList(kinds));
+        for (HasMetadata item : builder.getItems()) {
+            if (kindSet.contains(item.getKind())) {
+                return item;
+            }
+        }
+        return null;
     }
 
     private void addServices(KubernetesListBuilder builder, List<ServiceConfiguration> serviceConfig, Map<String, String> annotations) {

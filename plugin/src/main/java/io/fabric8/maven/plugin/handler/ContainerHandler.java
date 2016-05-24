@@ -24,7 +24,6 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.plugin.config.KubernetesConfiguration;
 import io.fabric8.maven.plugin.config.VolumeConfiguration;
 import io.fabric8.utils.Strings;
@@ -54,7 +53,7 @@ class ContainerHandler {
         for (ImageConfiguration imageConfig : images) {
             if (imageConfig.getBuildConfiguration() != null) {
                 Container container = new ContainerBuilder()
-                    .withName(getKubernetesContainerName(imageConfig))
+                    .withName(Containers.getKubernetesContainerName(project, imageConfig))
                     .withImage(imageConfig.getName())
                     .withImagePullPolicy(getImagePullPolicy(config))
                     .withEnv(envVarHandler.getEnvironmentVariables(config.getEnv()))
@@ -88,29 +87,6 @@ class ContainerHandler {
             .build();
     }
 
-
-    private String getKubernetesContainerName(ImageConfiguration imageConfig) {
-        String alias = imageConfig.getAlias();
-        if (alias != null) {
-            return alias;
-        }
-
-        // lets generate it from the docker user and the camelCase artifactId
-        String groupPrefix = null;
-        String imageName = imageConfig.getName();
-        if (Strings.isNotBlank(imageName)) {
-            String[] paths = imageName.split("/");
-            if (paths.length == 2) {
-                groupPrefix = paths[0];
-            } else if (paths.length == 3) {
-                groupPrefix = paths[1];
-            }
-        }
-        if (Strings.isNullOrBlank(groupPrefix)) {
-            groupPrefix = project.getGroupId();
-        }
-        return groupPrefix + "-" + project.getArtifactId();
-    }
 
     private List<VolumeMount> getVolumeMounts(KubernetesConfiguration config) {
         List<VolumeConfiguration> volumeConfigs = config.getVolumes();
