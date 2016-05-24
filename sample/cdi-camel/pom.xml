@@ -60,6 +60,7 @@
   <dependencies>
 
     <!-- == .:.:. Camel .:.:. == -->
+
     <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-core</artifactId>
@@ -113,53 +114,6 @@
     <finalName>${project.artifactId}</finalName>
 
     <plugins>
-
-      <plugin>
-        <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-plugin</artifactId>
-        <version>${fabric8-maven-plugin.version}</version>
-
-        <configuration>
-          <images>
-            <image>
-              <name>${image.user}/${project.artifactId}:${project.version}</name>
-              <alias>camel-service</alias>
-              <build>
-                <from>fabric8/java</from>
-                <assembly>
-                  <basedir>/deployments</basedir>
-                  <descriptorRef>artifact-with-dependencies</descriptorRef>
-                </assembly>
-                <env>
-                  <JAVA_LIB_DIR>/deployments</JAVA_LIB_DIR>
-                  <JAVA_MAIN_CLASS>org.apache.camel.cdi.Main</JAVA_MAIN_CLASS>
-                </env>
-              </build>
-              <run>
-                <ports>
-                  <port>8778</port>
-                </ports>
-              </run>
-            </image>
-          </images>
-          <kubernetes>
-
-            <rcName>${project.artifactId}</rcName>
-            <labels>
-              <group>quickstarts</group>
-            </labels>
-
-            <services>
-              <service>
-                <name>${project.artifactId}</name>
-                <headless>true</headless>
-              </service>
-            </services>
-
-          </kubernetes>
-        </configuration>
-      </plugin>
-
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.3</version>
@@ -192,43 +146,7 @@
     </plugins>
   </build>
 
-
-  <!--
-  Default sample commands:
-
-  mvn -Pf8-build         ... build Docker images and create OpenShift deployment configs
-  mvn -Pf8-deploy        ... f8-build + push to Docker registry + applying deployment config to OpenShift
-  mvn -Pf8-local-deploy ... deployment for a single node setup without pushing to a registry
-
-  For individual goal usage please consult the fabric8 documentation
-  -->
   <profiles>
-    <profile>
-      <id>f8-build</id>
-      <build>
-        <defaultGoal>clean install fabric8:build</defaultGoal>
-      </build>
-    </profile>
-    <profile>
-      <id>f8-deploy</id>
-      <properties>
-        <fabric8.imagePullPolicySnapshot>Always</fabric8.imagePullPolicySnapshot>
-        <fabric8.recreate>true</fabric8.recreate>
-      </properties>
-      <build>
-        <defaultGoal>clean install docker:build docker:push fabric8:json fabric8:apply</defaultGoal>
-      </build>
-    </profile>
-    <profile>
-      <id>f8-local-deploy</id>
-      <properties>
-        <fabric8.recreate>true</fabric8.recreate>
-      </properties>
-      <build>
-        <defaultGoal>clean install docker:build fabric8:json fabric8:apply</defaultGoal>
-      </build>
-    </profile>
-
     <profile>
       <id>new</id>
       <build>
@@ -323,14 +241,13 @@
     </profile>
 
     <profile>
-      <id>full</id>
-
+      <id>external</id>
 
       <build>
         <plugins>
           <plugin>
             <groupId>io.fabric8</groupId>
-            <artifactId>fabric9-maven-plugin</artifactId>
+            <artifactId>fabric8-maven-plugin</artifactId>
             <version>${fabric8-maven-plugin.version}</version>
 
             <configuration>
@@ -339,7 +256,7 @@
                   <name>${image.user}/${project.artifactId}:${project.version}</name>
                   <alias>camel-service</alias>
                   <build>
-                    <from>fabric8/java:1.8</from>
+                    <from>fabric8/s2i-java:1.2</from>
                     <assembly>
                       <basedir>/deployments</basedir>
                       <descriptorRef>artifact-with-dependencies</descriptorRef>
@@ -355,17 +272,9 @@
 
             <executions>
               <execution>
-                <id>json</id>
-                <phase>generate-resources</phase>
                 <goals>
-                  <goal>json</goal>
-                </goals>
-              </execution>
-              <execution>
-                <id>attach</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>attach</goal>
+                  <goal>resource</goal>
+                  <goal>build</goal>
                 </goals>
               </execution>
             </executions>

@@ -16,6 +16,8 @@
 
 package io.fabric8.maven.customizer.api;
 
+import java.util.Map;
+
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -25,9 +27,11 @@ import org.apache.maven.project.MavenProject;
 abstract public class BaseCustomizer implements Customizer {
 
     private final MavenCustomizerContext context;
+    private final Map<String, String> config;
 
-    public BaseCustomizer(MavenCustomizerContext context) {
+    public BaseCustomizer(Map<String,  String> config, MavenCustomizerContext context) {
         this.context = context;
+        this.config = config;
     }
 
     protected MavenProject getProject() {

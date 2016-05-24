@@ -17,6 +17,7 @@
 package io.fabric8.maven.plugin.customizer;
 
 import java.util.List;
+import java.util.Map;
 
 import io.fabric8.maven.customizer.api.Customizer;
 import io.fabric8.maven.customizer.api.MavenCustomizerContext;
@@ -30,10 +31,13 @@ import org.apache.maven.project.MavenProject;
  */
 public class ImageConfigCustomizerManager {
 
-    public static List<ImageConfiguration> customize(List<ImageConfiguration> configs, MavenProject project) {
+    public static List<ImageConfiguration> customize(List<ImageConfiguration> imageConfigs,
+                                                     Map<String, String> customizerConfigs,
+                                                     MavenProject project) {
 
-        List<ImageConfiguration> ret = configs;
-        PluginServiceFactory<MavenCustomizerContext> pluginFactory = new PluginServiceFactory<>(new MavenCustomizerContext(project));
+        List<ImageConfiguration> ret = imageConfigs;
+        PluginServiceFactory<MavenCustomizerContext> pluginFactory = new PluginServiceFactory<>(customizerConfigs,
+                                                                                                new MavenCustomizerContext(project));
         List<Customizer> customizers =
             pluginFactory.createServiceObjects("META-INF/fabric8-customizer-default", "META-INF/fabric8-customizer");
         for (Customizer customizer : customizers) {

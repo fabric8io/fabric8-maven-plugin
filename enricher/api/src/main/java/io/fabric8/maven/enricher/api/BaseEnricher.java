@@ -16,9 +16,11 @@
 
 package io.fabric8.maven.enricher.api;
 
+import java.util.Collections;
 import java.util.Map;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -27,14 +29,25 @@ import org.apache.maven.project.MavenProject;
  */
 public abstract class BaseEnricher implements Enricher {
 
+    private final EnricherConfiguration config;
     private MavenEnricherContext buildContext;
 
-    public BaseEnricher(MavenEnricherContext buildContext) {
+    public BaseEnricher(Map<String, String> config, MavenEnricherContext buildContext) {
         this.buildContext = buildContext;
+        // Pick the configuration which is for us
+        this.config = new EnricherConfiguration(getName(), config);
     }
 
     protected MavenProject getProject() {
         return buildContext.getProject();
+    }
+
+    protected Log getLog() {
+        return buildContext.getLog();
+    }
+
+    protected EnricherConfiguration getConfig() {
+        return config;
     }
 
     @Override

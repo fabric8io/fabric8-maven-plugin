@@ -16,9 +16,7 @@
 
 package io.fabric8.maven.customizer.spring.boot;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import io.fabric8.maven.customizer.api.BaseCustomizer;
 import io.fabric8.maven.customizer.api.MavenCustomizerContext;
@@ -33,8 +31,8 @@ import org.apache.maven.project.MavenProject;
  */
 public class SpringBootCustomizer extends BaseCustomizer {
 
-    public SpringBootCustomizer(MavenCustomizerContext context) {
-        super(context);
+    public SpringBootCustomizer(Map<String, String> config, MavenCustomizerContext context) {
+        super(config, context);
     }
 
     @Override

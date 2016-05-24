@@ -40,8 +40,8 @@ public class EnricherManager {
     private final List<? extends MetadataEnricherVisitor<?>> metaDataEnricherVisitors;
     private final List<? extends SelectorVisitor<?>> selectorVisitors;
 
-    public EnricherManager(MavenEnricherContext buildContext) {
-        PluginServiceFactory<MavenEnricherContext> pluginFactory = new PluginServiceFactory<>(buildContext);
+    public EnricherManager(Map<String,String> enricherConfig, MavenEnricherContext buildContext) {
+        PluginServiceFactory<MavenEnricherContext> pluginFactory = new PluginServiceFactory<>(enricherConfig, buildContext);
         enrichers = pluginFactory.createServiceObjects("META-INF/fabric8-enricher-default",
                                                        "META-INF/fabric8-enricher");
         Collections.reverse(enrichers);
@@ -140,9 +140,9 @@ public class EnricherManager {
     }
 
 
-    private void putAllIfNotNull(Map<String, String> ret, Map<String, String> labels) {
-        if (labels != null) {
-            ret.putAll(labels);
+    private void putAllIfNotNull(Map<String, String> ret, Map<String, String> toPut) {
+        if (toPut != null) {
+            ret.putAll(toPut);
         }
     }
 

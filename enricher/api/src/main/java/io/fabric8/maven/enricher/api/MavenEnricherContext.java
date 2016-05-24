@@ -16,6 +16,7 @@
 
 package io.fabric8.maven.enricher.api;
 
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -24,13 +25,19 @@ import org.apache.maven.project.MavenProject;
  */
 public class MavenEnricherContext {
 
-    MavenProject project;
+    private final MavenProject project;
+    private final Log log;
 
-    public MavenEnricherContext(MavenProject project) {
+    public MavenEnricherContext(MavenProject project, Log log) {
+        this.log = log;
         this.project = project;
     }
 
     public MavenProject getProject() {
         return project;
+    }
+
+    public Log getLog() {
+        return log;
     }
 }

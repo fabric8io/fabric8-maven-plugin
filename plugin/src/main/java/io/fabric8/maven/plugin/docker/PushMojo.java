@@ -29,4 +29,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 @Mojo(name = "push", defaultPhase = LifecyclePhase.INSTALL)
 public class PushMojo extends io.fabric8.maven.docker.PushMojo {
 
+    @Override
+    protected String getLogPrefix() {
+        return "F8> ";
+    }
 }

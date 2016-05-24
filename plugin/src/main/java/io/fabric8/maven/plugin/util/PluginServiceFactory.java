@@ -42,10 +42,13 @@ import java.util.*;
  */
 public final class PluginServiceFactory<C> {
 
+    // Parameters for service constructors
+    private final Map<String, String> config;
     private C context;
 
-    public PluginServiceFactory(C context) {
+    public PluginServiceFactory(Map<String, String> config, C context) {
         this.context = context;
+        this.config = config;
     }
 
     /**
@@ -64,12 +67,12 @@ public final class PluginServiceFactory<C> {
     public <T> List<T> createServiceObjects(String... descriptorPaths) {
         try {
             ServiceEntry.initDefaultOrder();
-            TreeMap<ServiceEntry,T> extractorMap = new TreeMap<ServiceEntry,T>();
+            TreeMap<ServiceEntry,T> serviceMap = new TreeMap<ServiceEntry,T>();
             for (String descriptor : descriptorPaths) {
-                readServiceDefinitions(extractorMap, descriptor);
+                readServiceDefinitions(serviceMap, descriptor);
             }
             ArrayList<T> ret = new ArrayList<T>();
-            for (T service : extractorMap.values()) {
+            for (T service : serviceMap.values()) {
                 ret.add(service);
             }
             return ret;
@@ -126,7 +129,7 @@ public final class PluginServiceFactory<C> {
         }
     }
 
-    private <T> void createOrRemoveService(Map<ServiceEntry, T> extractorMap, String line)
+    private <T> void createOrRemoveService(Map<ServiceEntry, T> serviceMap, String line)
         throws ReflectiveOperationException {
         if (line.length() > 0) {
             ServiceEntry entry = new ServiceEntry(line);
@@ -135,22 +138,27 @@ public final class PluginServiceFactory<C> {
                 // the proper key since the order is part of equals/hash
                 // so we cant fetch/remove it directly
                 Set<ServiceEntry> toRemove = new HashSet<ServiceEntry>();
-                for (ServiceEntry key : extractorMap.keySet()) {
+                for (ServiceEntry key : serviceMap.keySet()) {
                     if (key.getClassName().equals(entry.getClassName())) {
                         toRemove.add(key);
                     }
                 }
                 for (ServiceEntry key : toRemove) {
-                    extractorMap.remove(key);
+                    serviceMap.remove(key);
                 }
             } else {
                 Class<T> clazz = classForName(entry.getClassName());
                 if (clazz == null) {
                     throw new ClassNotFoundException("Class " + entry.getClassName() + " could not be found");
                 }
-                Constructor<T> constructor = clazz.getConstructor(context.getClass());
-                T ext = constructor.newInstance(context);
-                extractorMap.put(entry, ext);
+                Constructor<T> constructor = clazz.getConstructor(Map.class, context.getClass());
+                if (constructor == null) {
+                    throw new IllegalArgumentException(
+                        "Internal Error: " + clazz + " does not have constructor (Map<String,Map<String, String>,"
+                        + context.getClass() + ")");
+                }
+                T service = constructor.newInstance(config, context);
+                serviceMap.put(entry, service);
             }
         }
     }
@@ -171,16 +179,6 @@ public final class PluginServiceFactory<C> {
             }
         }
         return null;
-    }
-
-    private static void closeReader(LineNumberReader reader) {
-        if (reader != null) {
-            try {
-                reader.close();
-            } catch (IOException e) {
-                // Best effort
-            }
-        }
     }
 
     // =============================================================================

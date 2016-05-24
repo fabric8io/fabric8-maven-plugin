@@ -149,6 +149,11 @@ public class KubernetesConfiguration {
             return this;
         }
 
+        public Builder imagePullPolicy(String policy) {
+            config.imagePullPolicy = policy;
+            return this;
+        }
+
         public KubernetesConfiguration build() {
             return config;
         }

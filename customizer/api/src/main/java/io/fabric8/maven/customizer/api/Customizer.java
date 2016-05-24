@@ -25,7 +25,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
  * @since 15/05/16
  */
 public interface Customizer {
-      /**
+    /**
      * Provide additional image configurations
      *
      * @param existingConfigs the already detected and resolved configuration

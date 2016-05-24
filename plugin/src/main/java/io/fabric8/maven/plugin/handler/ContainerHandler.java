@@ -156,7 +156,7 @@ class ContainerHandler {
             portBuilder.withHostPort(portSpec.getInt("hostPort"));
         }
         if (portSpec.has("protocol")) {
-            portBuilder.withProtocol(portSpec.getString("protocol"));
+            portBuilder.withProtocol(portSpec.getString("protocol").toUpperCase());
         }
         if (portSpec.has("hostIP")) {
             portBuilder.withHostIP(portSpec.getString("hostIP"));

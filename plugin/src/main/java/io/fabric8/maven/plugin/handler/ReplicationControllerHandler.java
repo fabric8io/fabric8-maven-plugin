@@ -18,46 +18,45 @@ package io.fabric8.maven.plugin.handler;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.extensions.*;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.plugin.config.KubernetesConfiguration;
-import io.fabric8.maven.enricher.api.Kind;
 
 /**
  * @author roland
  * @since 08/04/16
  */
-public class ReplicaSetHandler {
+public class ReplicationControllerHandler {
 
     private final PodTemplateHandler podTemplateHandler;
 
-    ReplicaSetHandler(PodTemplateHandler podTemplateHandler) {
+    ReplicationControllerHandler(PodTemplateHandler podTemplateHandler) {
         this.podTemplateHandler = podTemplateHandler;
     }
 
-    public ReplicaSet getReplicaSet(KubernetesConfiguration config,
-                                    List<ImageConfiguration> images) throws IOException {
-        return new ReplicaSetBuilder()
-            .withMetadata(createRsMetaData(config))
-            .withSpec(createRsSpec(config, images))
+    public ReplicationController getReplicationController(KubernetesConfiguration config,
+                                                          List<ImageConfiguration> images) throws IOException {
+        return new ReplicationControllerBuilder()
+            .withMetadata(createRcMetaData(config))
+            .withSpec(createRcSpec(config, images))
             .build();
     }
 
     // ===========================================================
+    // TODO: "replica set" config used
 
-    private ObjectMeta createRsMetaData(KubernetesConfiguration config) {
+    private ObjectMeta createRcMetaData(KubernetesConfiguration config) {
         return new ObjectMetaBuilder()
-            .withName(KubernetesHelper.validateKubernetesId(config.getReplicaSetName(), "replica set name"))
+            .withName(KubernetesHelper.validateKubernetesId(config.getReplicaSetName(), "replication controller name"))
             .withAnnotations(config.getAnnotations().getReplicaSet())
             .build();
     }
 
-    private ReplicaSetSpec createRsSpec(KubernetesConfiguration config, List<ImageConfiguration> images) throws IOException {
-        return new ReplicaSetSpecBuilder()
+    private ReplicationControllerSpec createRcSpec(KubernetesConfiguration config, List<ImageConfiguration> images)
+        throws IOException {
+        return new ReplicationControllerSpecBuilder()
             .withReplicas(config.getReplicas())
             .withTemplate(podTemplateHandler.getPodTemplate(config,images))
             .build();

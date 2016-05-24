@@ -20,5 +20,5 @@ package io.fabric8.maven.plugin.config;
  * @since 22/03/16
  */
 public enum ServiceProtocol {
-    udp, tcp;
+    UDP, TCP;
 }

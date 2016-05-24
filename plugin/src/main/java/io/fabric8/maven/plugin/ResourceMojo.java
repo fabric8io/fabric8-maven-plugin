@@ -19,9 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -34,9 +32,7 @@ import io.fabric8.maven.plugin.config.ServiceConfiguration;
 import io.fabric8.maven.plugin.config.ServiceProtocol;
 import io.fabric8.maven.plugin.customizer.ImageConfigCustomizerManager;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
-import io.fabric8.maven.plugin.handler.HandlerHub;
-import io.fabric8.maven.plugin.handler.ReplicaSetHandler;
-import io.fabric8.maven.plugin.handler.ServiceHandler;
+import io.fabric8.maven.plugin.handler.*;
 import io.fabric8.maven.plugin.util.KubernetesResourceUtil;
 import io.fabric8.maven.plugin.util.ResourceFileType;
 import org.apache.maven.execution.MavenSession;
@@ -109,6 +105,12 @@ public class ResourceMojo extends AbstractMojo {
     @Parameter
     private List<ImageConfiguration> images;
 
+    @Parameter
+    private Map<String, String> enricher;
+
+    @Parameter
+    private Map<String, String> customizer;
+
     // The image configuration after resolving and customization
     private List<ImageConfiguration> resolvedImages;
 
@@ -122,12 +124,12 @@ public class ResourceMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
             log = new AnsiLogger(getLog(), getBooleanConfigProperty("useColor",true), getBooleanConfigProperty("verbose", false), "F8> ");
-            EnricherManager enricher = new EnricherManager(new MavenEnricherContext(project));
+            EnricherManager enricherManager = new EnricherManager(enricher, new MavenEnricherContext(project, getLog()));
             handlerHub = new HandlerHub(project);
             resolvedImages = resolveImages(images, log);
 
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
-                KubernetesList resources = generateResourceDescriptor(enricher, resolvedImages);
+                KubernetesList resources = generateResourceDescriptor(enricherManager, resolvedImages);
                 KubernetesResourceUtil.writeResourceDescriptor(resources, new File(target, "fabric8"), resourceFileType);
             }
         } catch (IOException e) {
@@ -149,7 +151,7 @@ public class ResourceMojo extends AbstractMojo {
             new ConfigHelper.Customizer() {
                 @Override
                 public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-                    return ImageConfigCustomizerManager.customize(configs, project);
+                    return ImageConfigCustomizerManager.customize(configs, customizer, project);
                 }
             });
 
@@ -174,7 +176,7 @@ public class ResourceMojo extends AbstractMojo {
     private KubernetesList generateResourceDescriptor(final EnricherManager enricher, List<ImageConfiguration> images)
         throws IOException, MojoExecutionException {
         File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
-        ReplicaSetHandler rsHandler = handlerHub.getReplicaSetHandler();
+        ReplicationControllerHandler rcHandler = handlerHub.getReplicationControllerHandler();
         ServiceHandler serviceHandler = handlerHub.getServiceHandler();
 
         KubernetesListBuilder builder;
@@ -191,16 +193,17 @@ public class ResourceMojo extends AbstractMojo {
         if (kubernetes != null) {
             log.info("Adding resources from plugin configuration");
             addServices(builder, kubernetes.getServices(), kubernetes.getAnnotations().getService());
-            builder.addToReplicaSetItems(rsHandler.getReplicaSet(kubernetes, images));
+            builder.addToReplicationControllerItems(rcHandler.getReplicationController(kubernetes, images));
         }
 
         // Check if at least a replica set is added. If not add a default one
         if (!hasPodControllers(builder)) {
-            String rcName = createDefaultReplicaSetName(project);
+            String rcName = createDefaultReplicationControllerName(project);
             log.info("Adding a default ReplicationController '%s'",rcName);
-            builder.addToReplicaSetItems(rsHandler.getReplicaSet(
+            builder.addToReplicationControllerItems(rcHandler.getReplicationController(
                 new KubernetesConfiguration.Builder()
                     .replicaSetName(rcName)
+                    .imagePullPolicy("IfNotPresent")
                     .build(),
                 resolvedImages));
         }
@@ -254,7 +257,7 @@ public class ResourceMojo extends AbstractMojo {
                         int portI = Integer.parseInt(port);
                         ret.add(
                             new ServiceConfiguration.Port.Builder()
-                                .protocol(ServiceProtocol.tcp) // TODO: default for the moment
+                                .protocol(ServiceProtocol.TCP) // TODO: default for the moment
                                 .port(portI)
                                 .targetPort(portI)
                                 .build()
@@ -268,16 +271,17 @@ public class ResourceMojo extends AbstractMojo {
 
     // Create a default service name
     private String createDefaultServiceName(MavenProject project) {
-        return createDefaultName(project,"svc");
+        return createDefaultName(project);
     }
 
     // Create a default replica set name based on Maven coordinates
-    private String createDefaultReplicaSetName(MavenProject project) {
-        return createDefaultName(project,"rs");
+    private String createDefaultReplicationControllerName(MavenProject project) {
+        return createDefaultName(project);
     }
 
-    private String createDefaultName(MavenProject project, String suffix) {
-        return project.getArtifactId() + "-" + suffix;
+    private String createDefaultName(MavenProject project, String ... suffixes) {
+        String suffix = StringUtils.join(suffixes,"-");
+        return project.getArtifactId() + (suffix.length() > 0 ? "-" + suffix : suffix);
     }
 
     private String formatPortsAsList(List<ServiceConfiguration.Port> ports)  {

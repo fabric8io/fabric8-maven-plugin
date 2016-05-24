@@ -32,9 +32,9 @@
   <fileSets>
     <fileSet>
       <includes>
-        <include>kubernetes.yaml</include>
+        <include>fabric8.yaml</include>
       </includes>
-      <directory>${project.build.directory}/</directory>
+      <directory>${project.build.outputDirectory}/</directory>
       <outputDirectory>.</outputDirectory>
       <fileMode>0644</fileMode>
     </fileSet>

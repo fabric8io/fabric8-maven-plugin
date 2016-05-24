@@ -30,8 +30,8 @@ import org.apache.maven.project.MavenProject;
  */
 public class ProjectInfoEnricher extends BaseEnricher {
 
-    public ProjectInfoEnricher(MavenEnricherContext buildContext) {
-        super(buildContext);
+    public ProjectInfoEnricher(Map<String, String> config, MavenEnricherContext buildContext) {
+        super(config, buildContext);
     }
 
     @Override
