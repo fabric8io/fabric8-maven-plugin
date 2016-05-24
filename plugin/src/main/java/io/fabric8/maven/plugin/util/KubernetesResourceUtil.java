@@ -118,6 +118,7 @@ public class KubernetesResourceUtil {
     static {
         String mapping[] =
             {
+                "service", "Service",
                 "svc", "Service",
                 "rc", "ReplicationController",
                 "rs", "ReplicaSet"
