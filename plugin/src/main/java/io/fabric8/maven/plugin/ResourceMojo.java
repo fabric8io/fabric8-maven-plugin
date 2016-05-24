@@ -15,11 +15,19 @@
  */
 package io.fabric8.maven.plugin;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.PodSpec;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -34,7 +42,11 @@ import io.fabric8.maven.plugin.config.ServiceConfiguration;
 import io.fabric8.maven.plugin.config.ServiceProtocol;
 import io.fabric8.maven.plugin.customizer.ImageConfigCustomizerManager;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
-import io.fabric8.maven.plugin.handler.*;
+import io.fabric8.maven.plugin.handler.HandlerHub;
+import io.fabric8.maven.plugin.handler.ReplicaSetHandler;
+import io.fabric8.maven.plugin.handler.ReplicationControllerHandler;
+import io.fabric8.maven.plugin.handler.ResourceEnricher;
+import io.fabric8.maven.plugin.handler.ServiceHandler;
 import io.fabric8.maven.plugin.util.KubernetesResourceUtil;
 import io.fabric8.maven.plugin.util.ResourceFileType;
 import io.fabric8.utils.Function;
@@ -43,11 +55,26 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.apache.maven.shared.utils.StringUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
 
 import static io.fabric8.maven.plugin.handler.Containers.getKubernetesContainerName;
 import static io.fabric8.maven.plugin.util.ResourceFileType.yaml;
@@ -187,17 +214,35 @@ public class ResourceMojo extends AbstractMojo {
         File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
         ReplicationControllerHandler rcHandler = handlerHub.getReplicationControllerHandler();
         ReplicaSetHandler rsHandler = handlerHub.getReplicaSetHandler();
-        ServiceHandler serviceHandler = handlerHub.getServiceHandler();
+        final ServiceHandler serviceHandler = handlerHub.getServiceHandler();
 
         KubernetesListBuilder builder;
         final String imagePullPolicy = "IfNotPresent";
 
+        final List<ServiceConfiguration> servicesConfig = extractDefaultServices(project, resolvedImages);
+        // TODO: Annotations
+        final Map<String, String> serviceAnnotations = null;
+
         // Add resource files found in the fabric8 directory
         if (resourceFiles != null && resourceFiles.length > 0) {
             log.info("Using resource templates from %s", resourceDir);
-            Function<HasMetadata, Void> enrichFunction = new Function<HasMetadata, Void>() {
-                @Override
-                public Void apply(HasMetadata hasMeta) {
+            final List<Service> defaultServices = new ArrayList<Service>(Arrays.asList(
+                    serviceHandler.getServices(servicesConfig, serviceAnnotations)));
+
+            ResourceEnricher loadEnricher = new ResourceEnricher() {
+                public void enrich(KubernetesListBuilder builder, HasMetadata resource) {
+                    if (resource instanceof Service) {
+                        Service service = (Service) resource;
+                        mergeServices(builder, service, defaultServices);
+                    }
+                    ObjectMeta metadata = resource.getMetadata();
+                    if (metadata == null) {
+                        metadata = new ObjectMeta();
+                        resource.setMetadata(metadata);
+                    }
+                    if (Strings.isNullOrBlank(metadata.getName())) {
+                        metadata.setName(project.getArtifactId());
+                    }
                     Function<List<Container>, Void> fn = new Function<List<Container>, Void>() {
                         @Override
                         public Void apply(List<Container> containers) {
@@ -205,17 +250,21 @@ public class ResourceMojo extends AbstractMojo {
                             return null;
                         }
                     };
-                    if (hasMeta instanceof ReplicaSet) {
-                        ReplicaSet rs = (ReplicaSet) hasMeta;
+                    if (resource instanceof ReplicaSet) {
+                        ReplicaSet rs = (ReplicaSet) resource;
                         getOrCreateContainerList(rs, fn);
-                    } else if (hasMeta instanceof ReplicationController) {
-                        ReplicationController rc = (ReplicationController) hasMeta;
+                    } else if (resource instanceof ReplicationController) {
+                        ReplicationController rc = (ReplicationController) resource;
                         getOrCreateContainerList(rc, fn);
                     }
-                    return null;
                 }
             };
-            builder = KubernetesResourceUtil.readResourceFragmentsFrom("v1", filterFiles(resourceFiles), enrichFunction);
+            builder = KubernetesResourceUtil.readResourceFragmentsFrom("v1", filterFiles(resourceFiles), loadEnricher);
+            if (!defaultServices.isEmpty()) {
+                for (Service defaultService : defaultServices) {
+                    builder.withItems(defaultService);
+                }
+            }
         } else {
             builder = new KubernetesListBuilder();
         }
@@ -247,10 +296,7 @@ public class ResourceMojo extends AbstractMojo {
 
         // If no services are defined, add the exposed ports as services
         if (!hasServices(builder)) {
-            builder.addToServiceItems(serviceHandler.getServices(
-                extractDefaultServices(project, resolvedImages),
-                // TODO: Annotations
-                null));
+            builder.addToServiceItems(serviceHandler.getServices(servicesConfig, serviceAnnotations));
         }
 
         // Enrich labels
@@ -263,6 +309,67 @@ public class ResourceMojo extends AbstractMojo {
         enricher.customize(builder);
 
         return builder.build();
+    }
+
+    private void mergeServices(KubernetesListBuilder builder, Service loadedService, List<Service> defaultedServices) {
+        if (defaultedServices.isEmpty()) {
+            return;
+        }
+
+        // lets find a suitable service to match against
+        Service matched = null;
+        String name = KubernetesHelper.getName(loadedService);
+        if (defaultedServices.size() == 0 || Strings.isNullOrBlank(name)) {
+            matched = defaultedServices.remove(0);
+        } else {
+            for (Service defaultedService : defaultedServices) {
+                if (Objects.equals(name, KubernetesHelper.getName(defaultedService))) {
+                    defaultedServices.remove(defaultedService);
+                    matched = defaultedService;
+                    break;
+                }
+            }
+        }
+        if (matched != null) {
+            if (loadedService.getMetadata() == null) {
+                loadedService.setMetadata(matched.getMetadata());
+            }
+            ServiceSpec matchedSpec = matched.getSpec();
+            if (matchedSpec != null) {
+                ServiceSpec loadedSpec = loadedService.getSpec();
+                if (loadedSpec == null) {
+                    loadedService.setSpec(matchedSpec);
+                } else {
+                    List<ServicePort> ports = loadedSpec.getPorts();
+                    if (ports == null || ports.isEmpty()) {
+                        loadedSpec.setPorts(matchedSpec.getPorts());
+                    } else {
+                        // TODO lets support adding extra ports
+                        List<ServicePort> matchedPorts = matchedSpec.getPorts();
+                        if (matchedPorts != null) {
+                            for (ServicePort matchedPort : matchedPorts) {
+                                if (!hasPort(ports, matchedPort)) {
+                                    ports.add(matchedPort);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    /**
+     * Returns true if the given port can be found in the collection
+     */
+    private boolean hasPort(List<ServicePort> ports, ServicePort port) {
+        for (ServicePort aPort : ports) {
+            if (Objects.equals(port.getPort(), aPort.getPort())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void defaultContainerImages(String imagePullPolicy, List<Container> containers) {

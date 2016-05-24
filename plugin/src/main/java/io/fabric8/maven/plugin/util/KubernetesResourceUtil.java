@@ -16,15 +16,6 @@
 
 package io.fabric8.maven.plugin.util;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,9 +24,18 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.plugin.handler.ResourceEnricher;
 import io.fabric8.utils.Files;
-import io.fabric8.utils.Function;
 import org.apache.maven.shared.utils.StringUtils;
+
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utility class for handling Kubernetes resource descriptors
@@ -54,13 +54,13 @@ public class KubernetesResourceUtil {
      * @return the list builder
      * @throws IOException
      */
-    public static KubernetesListBuilder readResourceFragmentsFrom(String apiVersion, File[] resourceFiles, Function<HasMetadata, Void> fn) throws IOException {
+    public static KubernetesListBuilder readResourceFragmentsFrom(String apiVersion, File[] resourceFiles, ResourceEnricher enricher) throws IOException {
         KubernetesListBuilder k8sBuilder = new KubernetesListBuilder();
         if (resourceFiles != null) {
             for (File file : resourceFiles) {
                 HasMetadata resource = getKubernetesResource(apiVersion, file);
-                if (fn != null) {
-                    fn.apply(resource);
+                if (enricher != null) {
+                    enricher.enrich(k8sBuilder, resource);
                 }
                 k8sBuilder.withItems(resource);
             }
@@ -118,6 +118,7 @@ public class KubernetesResourceUtil {
     static {
         String mapping[] =
             {
+                "service", "Service",
                 "svc", "Service",
                 "rc", "ReplicationController",
                 "rs", "ReplicaSet"
@@ -152,10 +153,6 @@ public class KubernetesResourceUtil {
         Map<String, Object> metaMap = getMetadata(fragment);
         if (StringUtils.isNotBlank(name)) {
             addIfNotExistent(metaMap, "name", name);
-        }
-        if (metaMap.get("name") == null) {
-            throw new IllegalArgumentException(
-                String.format("No name given as part of the filename in and no name in the metadata section of '%s'",file.getName()));
         }
         return fragment;
     }

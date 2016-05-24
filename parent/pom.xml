@@ -34,7 +34,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.maven>3.2.3</version.maven>
     <version.kubernetes-client>1.3.90</version.kubernetes-client>
-    <version.fabric8>2.2.101</version.fabric8>
+    <version.fabric8>2.2.120</version.fabric8>
     <version.docker-maven-plugin>0.15-SNAPSHOT</version.docker-maven-plugin>
   </properties>
 
