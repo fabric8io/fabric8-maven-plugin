@@ -111,6 +111,10 @@ public class ResourceMojo extends AbstractMojo {
     @Parameter
     private Map<String, String> customizer;
 
+    // Whether to use replica sets or replication controller. Could be configurable
+    // but for now leave it hidden.
+    private boolean useReplicaSet = true;
+
     // The image configuration after resolving and customization
     private List<ImageConfiguration> resolvedImages;
 
@@ -177,6 +181,7 @@ public class ResourceMojo extends AbstractMojo {
         throws IOException, MojoExecutionException {
         File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
         ReplicationControllerHandler rcHandler = handlerHub.getReplicationControllerHandler();
+        ReplicaSetHandler rsHandler = handlerHub.getReplicaSetHandler();
         ServiceHandler serviceHandler = handlerHub.getServiceHandler();
 
         KubernetesListBuilder builder;
@@ -198,14 +203,20 @@ public class ResourceMojo extends AbstractMojo {
 
         // Check if at least a replica set is added. If not add a default one
         if (!hasPodControllers(builder)) {
-            String rcName = createDefaultReplicationControllerName(project);
-            log.info("Adding a default ReplicationController '%s'",rcName);
-            builder.addToReplicationControllerItems(rcHandler.getReplicationController(
+            String name = createDefaultReplicaSetName(project);
+            KubernetesConfiguration config =
                 new KubernetesConfiguration.Builder()
-                    .replicaSetName(rcName)
+                    .replicaSetName(name)
                     .imagePullPolicy("IfNotPresent")
-                    .build(),
-                resolvedImages));
+                    .build();
+
+            if (useReplicaSet) {
+                log.info("Adding a default ReplicaSet '%s'", name);
+                builder.addToReplicaSetItems(rsHandler.getReplicaSet(config, resolvedImages));
+            } else {
+                log.info("Adding a default ReplicationController '%s'", name);
+                builder.addToReplicationControllerItems(rcHandler.getReplicationController(config, resolvedImages));
+            }
         }
 
         // If no services are defined, add the exposed ports as services
@@ -275,7 +286,7 @@ public class ResourceMojo extends AbstractMojo {
     }
 
     // Create a default replica set name based on Maven coordinates
-    private String createDefaultReplicationControllerName(MavenProject project) {
+    private String createDefaultReplicaSetName(MavenProject project) {
         return createDefaultName(project);
     }
 
