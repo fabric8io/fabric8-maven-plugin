@@ -128,23 +128,31 @@ public class DefaultServiceEnricher extends BaseEnricher {
         if (defaultService == null) {
             return;
         }
+        ObjectMeta loadedMetadata = loadedService.getMetadata();
+        if (loadedMetadata == null) {
+            loadedMetadata = defaultService.getMetadata();
+            loadedService.withNewMetadataLike(loadedMetadata).endMetadata();
+        }
+        String name = KubernetesHelper.getName(loadedMetadata);
+        String defaultServiceName = KubernetesHelper.getName(defaultService);
+        if (Strings.isNullOrBlank(name)) {
+            loadedService.withNewMetadataLike(loadedMetadata).withName(defaultServiceName).endMetadata();
+            name = KubernetesHelper.getName(loadedService.getMetadata());
+        }
+
         // lets find a suitable service to match against
-        String name = KubernetesHelper.getName(loadedService.getMetadata());
-        if (Strings.isNullOrBlank(name) || Objects.equals(name, KubernetesHelper.getName(defaultService))) {
-            if (loadedService.getMetadata() == null) {
-                loadedService.withMetadata(defaultService.getMetadata());
-            }
+        if (Objects.equals(name, defaultServiceName)) {
             ServiceSpec matchedSpec = defaultService.getSpec();
             if (matchedSpec != null) {
-                ServiceSpec loadedSpec = loadedService.getSpec();
+                ServiceFluent.SpecNested<ServiceBuilder> loadedSpec = loadedService.editSpec();
                 if (loadedSpec == null) {
-                    loadedService.withSpec(matchedSpec);
+                    loadedService.withNewSpecLike(matchedSpec).endSpec();
                 } else {
                     List<ServicePort> ports = loadedSpec.getPorts();
                     if (ports == null || ports.isEmpty()) {
-                        loadedSpec.setPorts(matchedSpec.getPorts());
+                        loadedSpec.withPorts(matchedSpec.getPorts()).endSpec();
                     } else {
-                        // TODO lets support adding extra ports
+                        // lets adding any missing ports
                         List<ServicePort> matchedPorts = matchedSpec.getPorts();
                         if (matchedPorts != null) {
                             for (ServicePort matchedPort : matchedPorts) {
@@ -153,6 +161,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
                                 }
                             }
                         }
+                        loadedSpec.withPorts(ports).endSpec();
                     }
                 }
             }
