@@ -29,24 +29,30 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
  */
 public enum ResourceFileType {
 
-    json {
+    json("json") {
         @Override
         public ObjectMapper getObjectMapper() {
             return new ObjectMapper();
         }
     },
 
-    yaml {
+    yaml("yml") {
         @Override
         public ObjectMapper getObjectMapper() {
             return new ObjectMapper(new YAMLFactory());
         }
     };
 
+    private final String extension;
+
+    ResourceFileType(String extension) {
+        this.extension = extension;
+    }
+
     public abstract ObjectMapper getObjectMapper();
 
     public File addExtension(File file) {
         String path = file.getAbsolutePath();
-        return new File(path + "." + name().toLowerCase());
+        return new File(path + "." + extension);
     }
 }

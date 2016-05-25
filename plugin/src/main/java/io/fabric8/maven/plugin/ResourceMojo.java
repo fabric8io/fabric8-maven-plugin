@@ -15,11 +15,11 @@
  */
 package io.fabric8.maven.plugin;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.maven.core.config.KubernetesConfiguration;
+import io.fabric8.maven.core.config.ResourceConfiguration;
+import io.fabric8.maven.core.config.ResourceMode;
 import io.fabric8.maven.core.config.ServiceConfiguration;
 import io.fabric8.maven.core.handler.*;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
@@ -43,18 +43,13 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
-import org.apache.maven.shared.utils.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 import static io.fabric8.maven.core.util.ResourceFileType.yaml;
 
@@ -109,17 +104,31 @@ public class ResourceMojo extends AbstractMojo {
     @Parameter(property = "fabric8.skip", defaultValue = "false")
     private boolean skip;
 
-    // Kubernetes specific configuration for this plugin
+
+    /**
+     * Operational mode how resources should be created.
+     */
+    @Parameter(property = "fabric8.mode")
+    private ResourceMode mode = ResourceMode.kubernetes;
+
+    // Resource  specific configuration for this plugin
     @Parameter
-    private KubernetesConfiguration kubernetes;
+    private ResourceConfiguration resources;
 
     // Reusing image configuration from d-m-p
     @Parameter
     private List<ImageConfiguration> images;
 
+    /**
+     * Enricher specific configuration configuration given through
+     * to the various enrichers.
+     */
     @Parameter
     private Map<String, String> enricher;
 
+    /**
+     * Configuration passed to customizers
+     */
     @Parameter
     private Map<String, String> customizer;
 
@@ -141,16 +150,28 @@ public class ResourceMojo extends AbstractMojo {
         try {
             log = new AnsiLogger(getLog(), getBooleanConfigProperty("useColor",true), getBooleanConfigProperty("verbose", false), "F8> ");
             handlerHub = new HandlerHub(project);
+
+            // Resolve the Docker image build configuration
             resolvedImages = resolveImages(images, log);
-            EnricherManager enricherManager = new EnricherManager(new EnricherContext(project, enricher, resolvedImages, kubernetes, log));
+
+            // Manager for calling enrichers.
+            EnricherManager enricherManager = new EnricherManager(new EnricherContext(project, enricher, resolvedImages, resources, log));
 
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
+                // Generate resources
                 KubernetesList resources = generateResourceDescriptor(enricherManager, resolvedImages);
-                KubernetesResourceUtil.writeResourceDescriptor(resources, new File(target, "fabric8"), resourceFileType);
+
+                // Write to descriptor to
+                KubernetesResourceUtil.writeResourceDescriptor(resources, getTargetFile(), resourceFileType);
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
         }
+    }
+
+    private File getTargetFile() {
+        // "kubernetes.yml" or "openshift.yml"
+        return new File(target, mode.getFileName());
     }
 
     private List<ImageConfiguration> resolveImages(List<ImageConfiguration> images, Logger log) {
@@ -205,11 +226,11 @@ public class ResourceMojo extends AbstractMojo {
         }
 
         // Add services + replicaSet if configured in plugin config
-        if (kubernetes != null) {
+        if (resources != null) {
             log.info("Adding resources from plugin configuration");
-            addServices(builder, kubernetes.getServices(), kubernetes.getAnnotations().getService());
+            addServices(builder, resources.getServices(), resources.getAnnotations().getService());
             // TODO: Change to ReplicaSet ...
-            builder.addToReplicationControllerItems(rcHandler.getReplicationController(kubernetes, images));
+            builder.addToReplicationControllerItems(rcHandler.getReplicationController(resources, images));
         }
 
         // Enrich labels

@@ -16,14 +16,13 @@
 
 package io.fabric8.maven.core.handler;
 
-import java.io.IOException;
 import java.util.List;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.*;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.core.config.KubernetesConfiguration;
+import io.fabric8.maven.core.config.ResourceConfiguration;
 
 /**
  * @author roland
@@ -37,7 +36,7 @@ public class ReplicaSetHandler {
         this.podTemplateHandler = podTemplateHandler;
     }
 
-    public ReplicaSet getReplicaSet(KubernetesConfiguration config,
+    public ReplicaSet getReplicaSet(ResourceConfiguration config,
                                     List<ImageConfiguration> images) {
         return new ReplicaSetBuilder()
             .withMetadata(createRsMetaData(config))
@@ -47,14 +46,14 @@ public class ReplicaSetHandler {
 
     // ===========================================================
 
-    private ObjectMeta createRsMetaData(KubernetesConfiguration config) {
+    private ObjectMeta createRsMetaData(ResourceConfiguration config) {
         return new ObjectMetaBuilder()
             .withName(KubernetesHelper.validateKubernetesId(config.getReplicaSetName(), "replica set name"))
             .withAnnotations(config.getAnnotations().getReplicaSet())
             .build();
     }
 
-    private ReplicaSetSpec createRsSpec(KubernetesConfiguration config, List<ImageConfiguration> images) {
+    private ReplicaSetSpec createRsSpec(ResourceConfiguration config, List<ImageConfiguration> images) {
         return new ReplicaSetSpecBuilder()
             .withReplicas(config.getReplicas())
             .withTemplate(podTemplateHandler.getPodTemplate(config,images))

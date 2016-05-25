@@ -22,15 +22,13 @@ import java.util.Set;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.maven.core.config.KubernetesConfiguration;
+import io.fabric8.maven.core.config.ResourceConfiguration;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicaSetHandler;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
-
-import static org.bouncycastle.asn1.x500.style.RFC4519Style.name;
 
 /**
  * @author roland
@@ -57,8 +55,8 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
     public void enrich(KubernetesListBuilder builder) {
         // Check if at least a replica set is added. If not add a default one
         if (!hasPodControllers(builder)) {
-            KubernetesConfiguration config =
-                new KubernetesConfiguration.Builder()
+            ResourceConfiguration config =
+                new ResourceConfiguration.Builder()
                     .replicaSetName(getConfig().get("name", MavenUtil.createDefaultResourceName(getProject())))
                     .imagePullPolicy(getConfig().get("imagePullPolicy","IfNotPresent"))
                     .build();

@@ -26,11 +26,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author roland
  * @since 22/03/16
  */
-public class KubernetesConfiguration {
-
-    // "kubernetes" or "openshift"
-    @Parameter
-    private String mode;
+public class ResourceConfiguration {
 
     @Parameter
     private Map<String,String> env;
@@ -78,10 +74,6 @@ public class KubernetesConfiguration {
     // Service account to use
     @Parameter
     private String serviceAccount;
-
-    public String getMode() {
-        return mode;
-    }
 
     public Map<String, String> getEnv() {
         return env != null ? env : Collections.<String, String>emptyMap();
@@ -142,7 +134,7 @@ public class KubernetesConfiguration {
     // =============================================================================================
 
     public static class Builder {
-        private KubernetesConfiguration config = new KubernetesConfiguration();
+        private ResourceConfiguration config = new ResourceConfiguration();
 
         public Builder replicaSetName(String name) {
             config.replicaSetName = name;
@@ -154,7 +146,7 @@ public class KubernetesConfiguration {
             return this;
         }
 
-        public KubernetesConfiguration build() {
+        public ResourceConfiguration build() {
             return config;
         }
     }

@@ -179,7 +179,7 @@
               <!-- Instead of "kubernetes", "openshift" can be used to switch on openshift mode (create templates,
                   use image stream, use binary builds). When "openshift" is used, it has additional configuration to switch
                   off openshift features, too) -->
-              <kubernetes>
+              <resources>
                 <!-- Resource directory from where to pick up k8s resource templates which are filled in with
                      maven properties and enriched by 'enrichers'-->
                 <resourceDir>src/main/fabric8</resourceDir>
@@ -233,7 +233,7 @@
                     <headless>true</headless>
                   </service>
                 </services>
-              </kubernetes>
+              </resources>
             </configuration>
           </plugin>
         </plugins>
