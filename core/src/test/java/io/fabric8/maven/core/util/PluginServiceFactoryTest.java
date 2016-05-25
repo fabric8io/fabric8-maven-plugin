@@ -16,7 +16,8 @@
 
 package io.fabric8.maven.core.util;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;

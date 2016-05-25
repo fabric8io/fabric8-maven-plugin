@@ -16,43 +16,25 @@
 package io.fabric8.maven.plugin;
 
 
+import java.io.File;
+import java.util.*;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesResource;
-import io.fabric8.kubernetes.api.model.ObjectReference;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceSpec;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.internal.HasMetadataComparator;
-import io.fabric8.openshift.api.model.Route;
-import io.fabric8.openshift.api.model.RouteList;
-import io.fabric8.openshift.api.model.RouteSpec;
-import io.fabric8.openshift.api.model.Template;
+import io.fabric8.openshift.api.model.*;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * Applies the Kubernetes UYAML to a namespace in a kubernetes environment

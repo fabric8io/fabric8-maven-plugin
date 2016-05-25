@@ -20,11 +20,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.maven.core.config.ResourceConfiguration;
+import io.fabric8.maven.core.config.VolumeConfiguration;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.core.config.ResourceConfiguration;
-import io.fabric8.maven.core.config.VolumeConfiguration;
 import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
 import org.json.JSONArray;

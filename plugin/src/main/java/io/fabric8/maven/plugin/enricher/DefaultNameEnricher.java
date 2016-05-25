@@ -16,11 +16,10 @@
 
 package io.fabric8.maven.plugin.enricher;
 
-import java.util.List;
-
 import io.fabric8.kubernetes.api.builder.Visitor;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.client.HasMetadataVisitiableBuilder;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;

@@ -16,7 +16,9 @@
 
 package io.fabric8.maven.customizer.spring.boot;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import io.fabric8.maven.customizer.api.BaseCustomizer;
 import io.fabric8.maven.customizer.api.MavenCustomizerContext;

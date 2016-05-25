@@ -20,8 +20,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.Kind;
 import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.Kind;
 import org.apache.maven.project.MavenProject;
 
 /**

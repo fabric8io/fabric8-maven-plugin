@@ -20,7 +20,9 @@ import java.util.*;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.util.PluginServiceFactory;
-import io.fabric8.maven.enricher.api.*;
+import io.fabric8.maven.enricher.api.Enricher;
+import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.Kind;
 
 import static io.fabric8.maven.plugin.enricher.EnricherManager.Extractor.*;
 

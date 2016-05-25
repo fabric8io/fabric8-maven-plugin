@@ -21,7 +21,9 @@ import java.util.Map;
 import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpecBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
-import io.fabric8.kubernetes.api.model.extensions.*;
+import io.fabric8.kubernetes.api.model.extensions.LabelSelector;
+import io.fabric8.kubernetes.api.model.extensions.LabelSelectorBuilder;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpecBuilder;
 import io.fabric8.maven.enricher.api.Kind;
 
 /**
