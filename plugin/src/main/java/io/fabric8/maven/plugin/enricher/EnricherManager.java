@@ -19,10 +19,8 @@ package io.fabric8.maven.plugin.enricher;
 import java.util.*;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.maven.enricher.api.Enricher;
-import io.fabric8.maven.enricher.api.Kind;
-import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.maven.plugin.util.PluginServiceFactory;
+import io.fabric8.maven.core.util.PluginServiceFactory;
+import io.fabric8.maven.enricher.api.*;
 
 import static io.fabric8.maven.plugin.enricher.EnricherManager.Extractor.*;
 
@@ -40,8 +38,9 @@ public class EnricherManager {
     private final List<? extends MetadataEnricherVisitor<?>> metaDataEnricherVisitors;
     private final List<? extends SelectorVisitor<?>> selectorVisitors;
 
-    public EnricherManager(Map<String,String> enricherConfig, MavenEnricherContext buildContext) {
-        PluginServiceFactory<MavenEnricherContext> pluginFactory = new PluginServiceFactory<>(enricherConfig, buildContext);
+    public EnricherManager(EnricherContext buildContext) {
+        PluginServiceFactory<EnricherContext> pluginFactory = new PluginServiceFactory<>(buildContext);
+
         enrichers = pluginFactory.createServiceObjects("META-INF/fabric8-enricher-default",
                                                        "META-INF/fabric8-enricher");
         Collections.reverse(enrichers);
@@ -86,14 +85,14 @@ public class EnricherManager {
      */
     public void customize(KubernetesListBuilder builder) {
         for (Enricher enricher : enrichers) {
-            enricher.customize(builder);
+            enricher.enrich(builder);
         }
     }
 
     // =============================================================================================
 
     /**
-     * Get all labels from all enrichers for a certain
+     * Get all labels from all enrichers for a certain kind
      *
      * @param kind resource type for which labels should be extracted
      * @return extracted labels
@@ -116,6 +115,15 @@ public class EnricherManager {
             putAllIfNotNull(ret, extractor.extract(enricher, kind));
         }
         return ret;
+    }
+
+    /**
+     * Add programmatically an enricher at the end of the enricher list
+     *
+     * @param enricher enricher to add
+     */
+    public void addEnricher(Enricher enricher) {
+        enrichers.add(enricher);
     }
 
     // ========================================================================================================

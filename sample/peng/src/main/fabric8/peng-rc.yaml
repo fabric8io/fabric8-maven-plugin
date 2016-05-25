@@ -3,8 +3,7 @@ spec:
   template:
     spec:
       containers:
-      - image: "rhuss/jax2016-pong:1"
-        name: pong
+      - name: pong
         ports:
         - containerPort: 8080
 

@@ -14,25 +14,10 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.customizer.api;
-
-import java.util.Map;
-
-import org.apache.maven.project.MavenProject;
-
+package io.fabric8.maven.core.handler;
 /**
  * @author roland
- * @since 15/05/16
+ * @since 08/04/16
  */
-abstract public class BaseCustomizer implements Customizer {
-
-    private final MavenCustomizerContext context;
-
-    public BaseCustomizer(MavenCustomizerContext context) {
-        this.context = context;
-    }
-
-    protected MavenProject getProject() {
-        return context.getProject();
-    }
+public class VolumeHandler {
 }

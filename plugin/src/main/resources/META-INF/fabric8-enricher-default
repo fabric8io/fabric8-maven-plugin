@@ -1,1 +1,21 @@
+# Default enrichers
+# =================
+
+# Add Maven coordinates as labels
 io.fabric8.maven.plugin.enricher.ProjectInfoEnricher
+
+# Add a default ReplicaSet (or ReplicationController if none is given)
+io.fabric8.maven.plugin.enricher.DefaultReplicaSetEnricher
+
+# Add a default service if none is given. Enrich also with
+# other information found
+io.fabric8.maven.plugin.enricher.DefaultServiceEnricher
+
+# Add a default name for any resource missing
+io.fabric8.maven.plugin.enricher.DefaultNameEnricher
+
+# Add an image from the docker build configuration if missing. Note that
+# the order of the images in the docker build section must be the same as
+# in an given external descriptor (if more than one images are used within
+# a pod)
+io.fabric8.maven.plugin.enricher.DefaultImageEnricher

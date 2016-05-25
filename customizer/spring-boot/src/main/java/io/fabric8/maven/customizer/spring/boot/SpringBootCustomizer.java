@@ -31,8 +31,8 @@ import org.apache.maven.project.MavenProject;
  */
 public class SpringBootCustomizer extends BaseCustomizer {
 
-    public SpringBootCustomizer(Map<String, String> config, MavenCustomizerContext context) {
-        super(config, context);
+    public SpringBootCustomizer(MavenCustomizerContext context) {
+        super(context);
     }
 
     @Override
