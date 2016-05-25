@@ -23,8 +23,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import static com.sun.jmx.snmp.ThreadContext.contains;
 import static io.fabric8.maven.core.util.KubernetesResourceUtil.getKubernetesResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -74,11 +76,30 @@ public class KubernetesResourceUtilTest {
     }
 
     @Test
+    public void containsKind() throws Exception {
+        HasMetadata ret = getKubernetesResource("v1", new File(fabric8Dir, "contains_kind.yml"));
+        assertEquals("ReplicationController", ret.getKind());
+    }
+
+    @Test
+    public void containsNoKindAndNoTypeInFilename() throws Exception {
+        try {
+            getKubernetesResource("v1", new File(fabric8Dir, "contains_no_kind.yml"));
+            fail();
+        } catch (IllegalArgumentException exp) {
+            assertTrue(exp.getMessage().contains("type"));
+            assertTrue(exp.getMessage().toLowerCase().contains("kind"));
+        }
+
+
+    }
+
+    @Test
     public void invalidPattern() throws IOException {
         try {
             getKubernetesResource("v1", new File(fabric8Dir, "blubber.yaml"));
             fail();
-        } catch (IllegalArgumentException exp) {
+        } catch (FileNotFoundException exp) {
             assertTrue(exp.getMessage().contains("blubber"));
         }
     }
