@@ -16,7 +16,6 @@
 
 package io.fabric8.maven.core.handler;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +23,7 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.core.config.KubernetesConfiguration;
+import io.fabric8.maven.core.config.ResourceConfiguration;
 import io.fabric8.maven.core.config.VolumeConfiguration;
 import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
@@ -47,7 +46,7 @@ class ContainerHandler {
         this.project = project;
     }
 
-    List<Container> getContainers(KubernetesConfiguration config, List<ImageConfiguration> images)  {
+    List<Container> getContainers(ResourceConfiguration config, List<ImageConfiguration> images)  {
 
         List<Container> ret = new ArrayList<>();
         for (ImageConfiguration imageConfig : images) {
@@ -70,7 +69,7 @@ class ContainerHandler {
     }
 
 
-    private String getImagePullPolicy(KubernetesConfiguration config) {
+    private String getImagePullPolicy(ResourceConfiguration config) {
         String pullPolicy = config.getImagePullPolicy();
         String version = project.getVersion();
         if (Strings.isNullOrBlank(pullPolicy) &&
@@ -81,14 +80,14 @@ class ContainerHandler {
         return pullPolicy;
     }
 
-    private SecurityContext createSecurityContext(KubernetesConfiguration config) {
+    private SecurityContext createSecurityContext(ResourceConfiguration config) {
         return new SecurityContextBuilder()
             .withPrivileged(config.isContainerPrivileged())
             .build();
     }
 
 
-    private List<VolumeMount> getVolumeMounts(KubernetesConfiguration config) {
+    private List<VolumeMount> getVolumeMounts(ResourceConfiguration config) {
         List<VolumeConfiguration> volumeConfigs = config.getVolumes();
 
         List<VolumeMount> ret = new ArrayList<>();

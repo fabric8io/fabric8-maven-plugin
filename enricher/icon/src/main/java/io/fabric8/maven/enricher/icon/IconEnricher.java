@@ -56,10 +56,10 @@ public class IconEnricher extends BaseEnricher {
 
         String dir = config.get("templateTempDir");
         templateTempDir =
-            dir != null ? new File(dir) : new File(getProject().getBasedir() + "target/fabric8/template-workdir");
+            dir != null ? new File(dir) : new File(getProject().getBasedir() + "/target/fabric8/template-workdir");
         dir = config.get("source.dir");
         appConfigDir =
-            dir != null ? new File(dir) : new File(getProject().getBasedir() + "src/main/fabric8");
+            dir != null ? new File(dir) : new File(getProject().getBasedir() + "/src/main/fabric8");
         iconRef = config.get("iconRef");
         maximumDataUrlSizeK = config.getAsInt("maximumDataUrlSizeK",2);
         iconUrlPrefix = config.get("iconUrlPrefix");

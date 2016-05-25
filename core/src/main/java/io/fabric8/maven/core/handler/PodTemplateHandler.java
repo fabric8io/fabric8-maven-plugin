@@ -16,12 +16,11 @@
 
 package io.fabric8.maven.core.handler;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.maven.core.config.KubernetesConfiguration;
+import io.fabric8.maven.core.config.ResourceConfiguration;
 import io.fabric8.maven.core.support.VolumeType;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.core.config.VolumeConfiguration;
@@ -38,20 +37,20 @@ public class PodTemplateHandler {
         this.containerHandler = containerHandler;
     }
 
-    public PodTemplateSpec getPodTemplate(KubernetesConfiguration config, List<ImageConfiguration> images)  {
+    public PodTemplateSpec getPodTemplate(ResourceConfiguration config, List<ImageConfiguration> images)  {
         return new PodTemplateSpecBuilder()
             .withMetadata(createPodMetaData(config))
             .withSpec(createPodSpec(config, images))
             .build();
     }
 
-    private ObjectMeta createPodMetaData(KubernetesConfiguration config) {
+    private ObjectMeta createPodMetaData(ResourceConfiguration config) {
         return new ObjectMetaBuilder()
             .withAnnotations(config.getAnnotations().getPod())
             .build();
     }
 
-    private PodSpec createPodSpec(KubernetesConfiguration config, List<ImageConfiguration> images) {
+    private PodSpec createPodSpec(ResourceConfiguration config, List<ImageConfiguration> images) {
 
         return new PodSpecBuilder()
             .withServiceAccountName(config.getServiceAccount())
@@ -60,7 +59,7 @@ public class PodTemplateHandler {
             .build();
     }
 
-    private List<Volume> getVolumes(KubernetesConfiguration config) {
+    private List<Volume> getVolumes(ResourceConfiguration config) {
         List<VolumeConfiguration> volumeConfigs = config.getVolumes();
 
         List<Volume> ret = new ArrayList<>();
