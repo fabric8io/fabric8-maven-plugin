@@ -109,9 +109,9 @@ public class KubernetesResourceUtilTest {
 
     @Test
     public void noNameInFileAndNotInMetadata() throws IOException {
-        getKubernetesResource("v1", new File(fabric8Dir, "svc.yml"));
-        // lets not fail here as we can default it later on based on the artifact id
-        //fail();
+        HasMetadata ret = getKubernetesResource("v1", new File(fabric8Dir, "svc.yml"));
+        assertEquals("Service",ret.getKind());
+        assertNull(ret.getMetadata().getName());
     }
 
     @Test

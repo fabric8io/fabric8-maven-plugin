@@ -137,8 +137,23 @@ public class KubernetesResourceUtil {
         String name = matcher.group(1);
         String type = matcher.group(3);
         String ext = matcher.group(4).toLowerCase();
-        String kind = extractKind(file.getName(), name, type);
+        String kind;
 
+        if (type != null) {
+            kind = FILENAME_TO_KIND_MAPPER.get(type.toLowerCase());
+            if (kind == null) {
+                throw new IllegalArgumentException(
+                    String.format("Unknown type '%s' for file %s. Must be one of : %s",
+                                  type, file.getName(), StringUtils.join(FILENAME_TO_KIND_MAPPER.keySet().iterator(), ", ")));
+            }
+        } else {
+            // Try name as type
+            kind = FILENAME_TO_KIND_MAPPER.get(name.toLowerCase());
+            if (kind != null) {
+                // Name is in fact the type, so lets erase the name here.
+                name = null;
+            }
+        }
         Map<String,Object> fragment = readFragment(file, ext);
 
         if (kind == null && !fragment.containsKey("kind")) {
@@ -154,21 +169,6 @@ public class KubernetesResourceUtil {
             addIfNotExistent(metaMap, "name", name);
         }
         return fragment;
-    }
-
-    private static String extractKind(String fileName, String name, String type) {
-        if (type != null) {
-            String kind = FILENAME_TO_KIND_MAPPER.get(type.toLowerCase());
-            if (kind == null) {
-                throw new IllegalArgumentException(
-                    String.format("Unknown type '%s' for file %s. Must be one of : %s",
-                                  type, fileName, StringUtils.join(FILENAME_TO_KIND_MAPPER.keySet().iterator(), ", ")));
-            }
-            return kind;
-        } else {
-            // Try name as type
-            return FILENAME_TO_KIND_MAPPER.get(name.toLowerCase());
-        }
     }
 
     // ===============================================================================================
