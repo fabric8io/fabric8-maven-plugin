@@ -16,18 +16,15 @@
  */
 package io.fabric8.maven.plugin;
 
+import java.io.File;
+
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.client.Config;
-import io.fabric8.kubernetes.client.ConfigBuilder;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.*;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-
-import java.io.File;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.DEFAULT_NAMESPACE;
 

@@ -15,13 +15,19 @@
  */
 package io.fabric8.maven.plugin;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.maven.core.config.ResourceConfiguration;
 import io.fabric8.maven.core.config.ResourceMode;
 import io.fabric8.maven.core.config.ServiceConfiguration;
-import io.fabric8.maven.core.handler.*;
+import io.fabric8.maven.core.handler.HandlerHub;
+import io.fabric8.maven.core.handler.ReplicationControllerHandler;
+import io.fabric8.maven.core.handler.ServiceHandler;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.ResourceFileType;
 import io.fabric8.maven.docker.config.ConfigHelper;
@@ -36,20 +42,10 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 import static io.fabric8.maven.core.util.ResourceFileType.yaml;
 

@@ -16,7 +16,9 @@
 
 package io.fabric8.maven.plugin.enricher;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.builder.Visitor;

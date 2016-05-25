@@ -22,7 +22,6 @@ import java.util.Map;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
-import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 
 /**

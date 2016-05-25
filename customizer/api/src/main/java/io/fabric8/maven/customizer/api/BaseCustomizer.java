@@ -16,8 +16,6 @@
 
 package io.fabric8.maven.customizer.api;
 
-import java.util.Map;
-
 import org.apache.maven.project.MavenProject;
 
 /**

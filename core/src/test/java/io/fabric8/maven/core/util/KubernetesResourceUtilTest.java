@@ -16,21 +16,18 @@
 
 package io.fabric8.maven.core.util;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
-import static com.sun.jmx.snmp.ThreadContext.contains;
 import static io.fabric8.maven.core.util.KubernetesResourceUtil.getKubernetesResource;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * @author roland

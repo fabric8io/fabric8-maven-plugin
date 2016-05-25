@@ -19,10 +19,11 @@ package io.fabric8.maven.core.handler;
 import java.util.List;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.extensions.*;
-import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.core.config.ResourceConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration;
 
 /**
  * @author roland

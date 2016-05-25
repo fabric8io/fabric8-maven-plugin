@@ -17,10 +17,8 @@
 package io.fabric8.maven.enricher.icon;
 
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
 
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.*;
@@ -29,7 +27,6 @@ import org.apache.maven.model.Scm;
 import org.apache.maven.project.MavenProject;
 
 import static io.fabric8.utils.Files.guessMediaType;
-import static java.rmi.server.RemoteServer.getLog;
 
 /**
  * Enrichre for adding icons to descriptors
