@@ -16,25 +16,55 @@
 package io.fabric8.maven.plugin;
 
 
-import java.io.File;
-import java.util.*;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesResource;
+import io.fabric8.kubernetes.api.model.ObjectReference;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.ServiceSpec;
+import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPath;
+import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPathBuilder;
+import io.fabric8.kubernetes.api.model.extensions.HTTPIngressRuleValue;
+import io.fabric8.kubernetes.api.model.extensions.Ingress;
+import io.fabric8.kubernetes.api.model.extensions.IngressBackend;
+import io.fabric8.kubernetes.api.model.extensions.IngressBuilder;
+import io.fabric8.kubernetes.api.model.extensions.IngressList;
+import io.fabric8.kubernetes.api.model.extensions.IngressRule;
+import io.fabric8.kubernetes.api.model.extensions.IngressSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.internal.HasMetadataComparator;
-import io.fabric8.openshift.api.model.*;
+import io.fabric8.openshift.api.model.Route;
+import io.fabric8.openshift.api.model.RouteList;
+import io.fabric8.openshift.api.model.RouteSpec;
+import io.fabric8.openshift.api.model.Template;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
+
+import static io.fabric8.kubernetes.api.KubernetesHelper.createIntOrString;
 
 /**
  * Applies the Kubernetes UYAML to a namespace in a kubernetes environment
@@ -45,7 +75,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
     /**
      * The generated kubernetes YAML file
      */
-    @Parameter(property = "fabric8.manifest", defaultValue = "${basedir}/target/classes/fabric8.yaml")
+    @Parameter(property = "fabric8.manifest", defaultValue = "${basedir}/target/classes/kubernetes.yml")
     private File kubernetesManifest;
 
 
@@ -107,10 +137,10 @@ public class DeployMojo extends AbstractFabric8Mojo {
     private boolean ignoreRunningOAuthClients;
 
     /**
-     * Should we create routes for any services which don't already have them.
+     * Should we create external Ingress/Routes for any LoadBalancer services which don't already have them.
      */
-    @Parameter(property = "fabric8.apply.createRoutes", defaultValue = "true")
-    private boolean createRoutes;
+    @Parameter(property = "fabric8.apply.createExternalUrls", defaultValue = "true")
+    private boolean createExternalUrls;
 
     /**
      * The folder we should store any temporary json files or results
@@ -121,7 +151,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
     public static Route createRouteForService(String routeDomainPostfix, String namespace, Service service, Log log) {
         Route route = null;
         String id = KubernetesHelper.getName(service);
-        if (Strings.isNotBlank(id) && shouldCreateRouteForService(log, service, id)) {
+        if (Strings.isNotBlank(id) && shouldCreateExternalURLForService(log, service, id)) {
             route = new Route();
             String routeId = id;
             KubernetesHelper.setName(route, namespace, routeId);
@@ -148,14 +178,63 @@ public class DeployMojo extends AbstractFabric8Mojo {
         return route;
     }
 
+    public static Ingress createIngressForService(String routeDomainPostfix, String namespace, Service service, Log log) {
+        Ingress ingress = null;
+        String serviceName = KubernetesHelper.getName(service);
+        ServiceSpec serviceSpec = service.getSpec();
+        if (serviceSpec != null && Strings.isNotBlank(serviceName) &&
+                shouldCreateExternalURLForService(log, service, serviceName)) {
+            String ingressId = serviceName;
+            String host = "";
+            if (Strings.isNotBlank(routeDomainPostfix)) {
+                host = serviceName  + "-" + namespace + "." + Strings.stripPrefix(routeDomainPostfix, ".");
+            }
+            List<HTTPIngressPath> paths  = new ArrayList<>();
+            List<ServicePort> ports = serviceSpec.getPorts();
+            if (ports != null) {
+                for (ServicePort port : ports) {
+                    Integer portNumber = port.getPort();
+                    if (portNumber != null) {
+                        HTTPIngressPath path = new HTTPIngressPathBuilder().withNewBackend().
+                                withServiceName(serviceName).withServicePort(createIntOrString(portNumber.intValue())).
+                                endBackend().build();
+                        paths.add(path);
+                    }
+                }
+            }
+            if (paths.isEmpty()) {
+                return ingress;
+            }
+            ingress = new IngressBuilder().
+                    withNewMetadata().withName(ingressId).withNamespace(namespace).endMetadata().
+                    withNewSpec().
+                    addNewRule().
+                    withHost(host).
+                    withNewHttp().
+                    withPaths(paths).
+                    endHttp().
+                    endRule().
+                    endSpec().build();
+
+            String json;
+            try {
+                json = KubernetesHelper.toJson(ingress);
+            } catch (JsonProcessingException e) {
+                json = e.getMessage() + ". object: " + ingress;
+            }
+            log.debug("Created ingress: " + json);
+        }
+        return ingress;
+    }
+
     /**
-     * Should we try to create a route for the given service?
+     * Should we try to create an external URL for the given service?
      * <p/>
      * By default lets ignore the kubernetes services and any service which does not expose ports 80 and 443
      *
      * @return true if we should create an OpenShift Route for this service.
      */
-    protected static boolean shouldCreateRouteForService(Log log, Service service, String id) {
+    protected static boolean shouldCreateExternalURLForService(Log log, Service service, String id) {
         if ("kubernetes".equals(id) || "kubernetes-ro".equals(id)) {
             return false;
         }
@@ -242,8 +321,12 @@ public class DeployMojo extends AbstractFabric8Mojo {
 
             entities.addAll(KubernetesHelper.toItemList(dto));
 
-            if (createRoutes) {
-                createRoutes(controller, entities);
+            if (createExternalUrls) {
+                if (controller.getOpenShiftClientOrNull() != null) {
+                    createRoutes(controller, entities);
+                } else {
+                    createIngress(controller, kubernetes, entities);
+                }
             }
 
             // Apply all items
@@ -289,7 +372,6 @@ public class DeployMojo extends AbstractFabric8Mojo {
     protected void disableOpenShiftFeatures(Controller controller) {
         // TODO we could check if the Templates service is running and if so we could still support templates?
         this.processTemplatesLocally = true;
-        this.createRoutes = false;
         controller.setSupportOAuthClients(false);
         controller.setProcessTemplatesLocally(true);
     }
@@ -365,5 +447,74 @@ public class DeployMojo extends AbstractFabric8Mojo {
             }
         }
         collection.addAll(routes);
+    }
+
+    protected void createIngress(Controller controller, KubernetesClient kubernetesClient, Collection<HasMetadata> collection) {
+        String routeDomainPostfix = this.routeDomain;
+        Log log = getLog();
+        String namespace = getNamespace();
+        List<Ingress> ingressList = null;
+        // lets get the routes first to see if we should bother
+        try {
+            IngressList ingresses = kubernetesClient.extensions().ingresses().inNamespace(namespace).list();
+            if (ingresses != null) {
+                ingressList = ingresses.getItems();
+            }
+        } catch (Exception e) {
+            log.warn("Cannot load Ingress instances. Must be an older version of Kubernetes? Error: " + e, e);
+            return;
+        }
+        List<Ingress> ingresses = new ArrayList<>();
+        for (Object object : collection) {
+            if (object instanceof Service) {
+                Service service = (Service) object;
+                if (!serviceHasIngressRule(ingressList, service)) {
+                    Ingress ingress = createIngressForService(routeDomainPostfix, namespace, service, log);
+                    if (ingress != null) {
+                        ingresses.add(ingress);
+                        log.info("Created ingress for " + namespace + ":" + KubernetesHelper.getName(service));
+                    } else {
+                        log.debug("No ingress required for " + namespace + ":" + KubernetesHelper.getName(service));
+                    }
+                } else {
+                    log.info("Already has ingress for service " + namespace + ":" + KubernetesHelper.getName(service));
+                }
+            }
+        }
+        collection.addAll(ingresses);
+
+    }
+
+    /**
+     * Returns true if there is an existing ingress rule for the given service
+     */
+    private boolean serviceHasIngressRule(List<Ingress> ingresses, Service service) {
+        String serviceName = KubernetesHelper.getName(service);
+        for (Ingress ingress : ingresses) {
+            IngressSpec spec = ingress.getSpec();
+            if (spec != null) {
+                List<IngressRule> rules = spec.getRules();
+                if (rules != null) {
+                    for (IngressRule rule : rules) {
+                        HTTPIngressRuleValue http = rule.getHttp();
+                        if (http != null) {
+                            List<HTTPIngressPath> paths = http.getPaths();
+                            if (paths != null) {
+                                for (HTTPIngressPath path : paths) {
+                                    IngressBackend backend = path.getBackend();
+                                    if (backend != null) {
+                                        if (Objects.equals(serviceName, backend.getServiceName())) {
+                                            return true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+        return false;
     }
 }
