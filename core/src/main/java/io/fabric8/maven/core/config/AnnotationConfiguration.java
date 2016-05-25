@@ -14,25 +14,43 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.customizer.api;
+package io.fabric8.maven.core.config;
 
 import java.util.Map;
 
-import org.apache.maven.project.MavenProject;
+import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland
- * @since 15/05/16
+ * @since 22/03/16
  */
-abstract public class BaseCustomizer implements Customizer {
+public class AnnotationConfiguration {
 
-    private final MavenCustomizerContext context;
+    @Parameter
+    private Map<String, String> pod;
 
-    public BaseCustomizer(MavenCustomizerContext context) {
-        this.context = context;
+    @Parameter
+    private Map<String, String> replicaSet;
+
+    @Parameter
+    private Map<String, String> service;
+
+    @Parameter
+    private Map<String, String> template;
+
+    public Map<String, String> getPod() {
+        return pod;
     }
 
-    protected MavenProject getProject() {
-        return context.getProject();
+    public Map<String, String> getReplicaSet() {
+        return replicaSet;
+    }
+
+    public Map<String, String> getService() {
+        return service;
+    }
+
+    public Map<String, String> getTemplate() {
+        return template;
     }
 }

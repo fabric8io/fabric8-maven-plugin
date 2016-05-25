@@ -19,6 +19,8 @@ package io.fabric8.maven.enricher.api;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.maven.shared.utils.StringUtils;
+
 /**
  * @author roland
  * @since 24/05/16
@@ -28,17 +30,24 @@ public class EnricherConfiguration {
     private final String prefix;
     private final Map<String,String> config;
 
-    EnricherConfiguration(String prefix, Map<String, String> config) {
+    public EnricherConfiguration(String prefix, Map<String, String> config) {
         this.config = Collections.unmodifiableMap(config != null ? config : Collections.<String, String>emptyMap());
-        this.prefix = prefix + ".";
+        this.prefix = prefix;
     }
 
     public String get(String key) {
         return get(key, null);
     }
 
+    /**
+     * Get a config value with a default
+     * @param key key part to lookup. The whole key is build up from <code>prefix + "." + key</code>. If key is empty or null,
+     *            then only the prefix is used for the lookup (this is suitable for enrichers having only one config option)
+     * @param defaultVal the default value to use when the no config is set
+     * @return the value looked up or the default value.
+     */
     public String get(String key, String defaultVal) {
-        String val = config.get(prefix + key);
+        String val = config.get(prefix + (StringUtils.isNotEmpty(key) ? "." + key : ""));
         return val != null ? val : defaultVal;
     }
 

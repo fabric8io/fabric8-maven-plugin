@@ -21,7 +21,7 @@ import java.util.Map;
 
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.Kind;
-import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.maven.enricher.api.EnricherContext;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -30,13 +30,13 @@ import org.apache.maven.project.MavenProject;
  */
 public class ProjectInfoEnricher extends BaseEnricher {
 
-    public ProjectInfoEnricher(Map<String, String> config, MavenEnricherContext buildContext) {
-        super(config, buildContext);
+    public ProjectInfoEnricher(EnricherContext buildContext) {
+        super(buildContext);
     }
 
     @Override
     public String getName() {
-        return "project-info";
+        return "label.project";
     }
 
     // For the moment return labels for all objects

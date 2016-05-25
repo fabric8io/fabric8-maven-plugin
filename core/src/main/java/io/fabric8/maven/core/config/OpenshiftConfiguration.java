@@ -14,25 +14,20 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.customizer.api;
+package io.fabric8.maven.core.config;
 
 import java.util.Map;
 
-import org.apache.maven.project.MavenProject;
+import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland
- * @since 15/05/16
+ * @since 22/03/16
  */
-abstract public class BaseCustomizer implements Customizer {
+public class OpenshiftConfiguration extends KubernetesConfiguration {
 
-    private final MavenCustomizerContext context;
+    // Template parameter to use
+    @Parameter
+    private Map<String,String> parameter;
 
-    public BaseCustomizer(MavenCustomizerContext context) {
-        this.context = context;
-    }
-
-    protected MavenProject getProject() {
-        return context.getProject();
-    }
 }

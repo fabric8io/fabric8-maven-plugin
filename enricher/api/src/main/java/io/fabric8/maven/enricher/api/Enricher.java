@@ -65,5 +65,5 @@ public interface Enricher {
      *
      * @param builder list to customer used to customize
      */
-    void customize(KubernetesListBuilder builder);
+    void enrich(KubernetesListBuilder builder);
 }

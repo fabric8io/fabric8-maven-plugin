@@ -21,14 +21,15 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
-import java.util.Arrays;
 
+import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.*;
 import io.fabric8.utils.*;
 import org.apache.maven.model.Scm;
 import org.apache.maven.project.MavenProject;
 
 import static io.fabric8.utils.Files.guessMediaType;
+import static java.rmi.server.RemoteServer.getLog;
 
 /**
  * Enrichre for adding icons to descriptors
@@ -48,8 +49,8 @@ public class IconEnricher extends BaseEnricher {
     private String iconBranch;
     private String iconUrl;
 
-    public IconEnricher(Map<String, String> origConfig, MavenEnricherContext buildContext) {
-        super(origConfig, buildContext);
+    public IconEnricher(EnricherContext buildContext) {
+        super(buildContext);
 
         EnricherConfiguration config = getConfig();
 
@@ -107,7 +108,7 @@ public class IconEnricher extends BaseEnricher {
                     }
                 }
             } catch (Exception e) {
-                getLog().warn("Failed to load icon file: " + e, e);
+                log.warn("Failed to load icon file: " + e, e);
             }
         }
 
@@ -120,9 +121,9 @@ public class IconEnricher extends BaseEnricher {
         }
 
         if (Strings.isNullOrBlank(answer)) {
-            getLog().debug("No icon file found for this project");
+            log.debug("No icon file found for this project");
         } else {
-            getLog().info("Icon URL: " + answer);
+            log.info("Icon URL: " + answer);
         }
 
         return answer;
@@ -165,7 +166,7 @@ public class IconEnricher extends BaseEnricher {
                     String fileName = "icon." + Files.getFileExtension(iconRef);
                     File outFile = new File(appBuildDir, fileName);
                     Files.copy(in, new FileOutputStream(outFile));
-                    getLog().info("Generated icon file " + outFile + " from icon reference: " + iconRef);
+                    log.info("Generated icon file " + outFile + " from icon reference: " + iconRef);
                     return outFile;
                 }
             }
@@ -176,48 +177,12 @@ public class IconEnricher extends BaseEnricher {
     private InputStream loadPluginResource(String iconRef) {
         InputStream answer = Thread.currentThread().getContextClassLoader().getResourceAsStream(iconRef);
         if (answer == null) {
-            answer = getTestClassLoader().getResourceAsStream(iconRef);
+            answer = MavenUtil.getTestClassLoader(getProject()).getResourceAsStream(iconRef);
         }
         if (answer == null) {
             answer = this.getClass().getResourceAsStream(iconRef);
         }
         return answer;
-    }
-
-    private URLClassLoader getTestClassLoader() {
-        try {
-            List<String> classpathElements = getProject().getTestClasspathElements();
-            MavenProject project = getProject();
-            return createClassLoader(classpathElements, project.getBuild().getTestOutputDirectory());
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Failed to resolve classpath: " + e, e);
-        }
-    }
-
-    private URLClassLoader createClassLoader(List<String> classpathElements, String... paths) throws MalformedURLException {
-        List<URL> urls = new ArrayList<>();
-        for (String path : paths) {
-            URL url = pathToUrl(path);
-            urls.add(url);
-        }
-        for (Object object : classpathElements) {
-            if (object != null) {
-                String path = object.toString();
-                URL url = pathToUrl(path);
-                urls.add(url);
-            }
-        }
-        getLog().debug("Creating class loader from: " + urls);
-        return createURLClassLoader(urls);
-    }
-
-    private URL pathToUrl(String path) throws MalformedURLException {
-        File file = new File(path);
-        return file.toURI().toURL();
-    }
-
-    private static URLClassLoader createURLClassLoader(Collection<URL> jars) {
-        return new URLClassLoader(jars.toArray(new URL[jars.size()]));
     }
 
     /**
@@ -280,7 +245,7 @@ public class IconEnricher extends BaseEnricher {
                         }
                     }
                     if (Strings.isNullOrBlank(urlPrefix)) {
-                        getLog().warn("No iconUrlPrefix defined or could be found via SCM in the pom.xml so cannot add an icon URL!");
+                        log.warn("No iconUrlPrefix defined or could be found via SCM in the pom.xml so cannot add an icon URL!");
                     } else {
                         String answer = URLUtils.pathJoin(urlPrefix, iconBranch, relativePath);
                         return answer;
@@ -291,7 +256,7 @@ public class IconEnricher extends BaseEnricher {
                 if (embeddedIcon != null) {
                     return embeddedIcon;
                 } else {
-                    getLog().warn("Cannot find url for icon to use " + iconUrl);
+                    log.warn("Cannot find url for icon to use " + iconUrl);
                 }
             }
         }

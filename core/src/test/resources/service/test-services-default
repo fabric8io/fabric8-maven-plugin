@@ -1,0 +1,5 @@
+io.fabric8.maven.core.util.PluginServiceFactoryTest$Test1,1000
+io.fabric8.maven.core.util.PluginServiceFactoryTest$Test2
+io.fabric8.maven.core.util.PluginServiceFactoryTest$Test5,200
+io.fabric8.maven.core.util.PluginServiceFactoryTest$Test4
+io.fabric8.maven.core.util.PluginServiceFactoryTest$Test3,5

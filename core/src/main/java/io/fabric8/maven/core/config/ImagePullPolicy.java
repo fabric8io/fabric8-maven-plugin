@@ -14,25 +14,21 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.customizer.api;
-
-import java.util.Map;
-
-import org.apache.maven.project.MavenProject;
-
+package io.fabric8.maven.core.config;
 /**
  * @author roland
- * @since 15/05/16
+ * @since 22/03/16
  */
-abstract public class BaseCustomizer implements Customizer {
+public enum ImagePullPolicy {
 
-    private final MavenCustomizerContext context;
+    ALWAYS("always"),
+    NEVER("never"),
+    IF_NOT_PRESENT("ifNotPresent"),
+    DEFAULT("default");
 
-    public BaseCustomizer(MavenCustomizerContext context) {
-        this.context = context;
-    }
+    private final String value;
 
-    protected MavenProject getProject() {
-        return context.getProject();
+    ImagePullPolicy(String value) {
+        this.value = value;
     }
 }

@@ -38,6 +38,13 @@
       <artifactId>docker-maven-plugin</artifactId>
     </dependency>
 
+    <!-- == Core ===================================== -->
+
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>fabric8-maven-core</artifactId>
+    </dependency>
+
     <!-- == Enricher ===================================== -->
 
     <dependency>
