@@ -124,7 +124,7 @@ public class KubernetesResourceUtil {
         }
     }
 
-    private static final String FILENAME_PATTERN = "^(.*?)-?([^-]+)\\.(yaml|yml|json)$";
+    private static final String FILENAME_PATTERN = "^(.*?)(-([^-]+))?\\.(yaml|yml|json)$";
 
     // Read fragment and add default values
     private static Map<String, Object> readAndEnrichFragment(String defaultApiVersion, File file) throws IOException {
@@ -135,15 +135,18 @@ public class KubernetesResourceUtil {
                 String.format("Resource file name '%s' does not match pattern <name>-<type>.(yaml|yml|json)", file.getName()));
         }
         String name = matcher.group(1);
-        String type = matcher.group(2).toLowerCase();
-        String ext = matcher.group(3).toLowerCase();
-        String kind = FILENAME_TO_KIND_MAPPER.get(type);
-        if (kind == null) {
-            throw new IllegalArgumentException(String.format("Unknown type '%s'. Must be one of : %s",
-                                                             type,
-                                                             StringUtils.join(FILENAME_TO_KIND_MAPPER.keySet().iterator(), ", ")));
-        }
+        String type = matcher.group(3);
+        String ext = matcher.group(4).toLowerCase();
+        String kind = extractKind(file.getName(), name, type);
+
         Map<String,Object> fragment = readFragment(file, ext);
+
+        if (kind == null && !fragment.containsKey("kind")) {
+            throw new IllegalArgumentException(
+                "No type given as part of the file name (e.g. 'app-rc.yml') " +
+                "and no 'Kind' defined in resource descriptor " + file.getName());
+        }
+
         addIfNotExistent(fragment, "kind", kind);
         addIfNotExistent(fragment, "apiVersion", defaultApiVersion);
         Map<String, Object> metaMap = getMetadata(fragment);
@@ -151,6 +154,21 @@ public class KubernetesResourceUtil {
             addIfNotExistent(metaMap, "name", name);
         }
         return fragment;
+    }
+
+    private static String extractKind(String fileName, String name, String type) {
+        if (type != null) {
+            String kind = FILENAME_TO_KIND_MAPPER.get(type.toLowerCase());
+            if (kind == null) {
+                throw new IllegalArgumentException(
+                    String.format("Unknown type '%s' for file %s. Must be one of : %s",
+                                  type, fileName, StringUtils.join(FILENAME_TO_KIND_MAPPER.keySet().iterator(), ", ")));
+            }
+            return kind;
+        } else {
+            // Try name as type
+            return FILENAME_TO_KIND_MAPPER.get(name.toLowerCase());
+        }
     }
 
     // ===============================================================================================
