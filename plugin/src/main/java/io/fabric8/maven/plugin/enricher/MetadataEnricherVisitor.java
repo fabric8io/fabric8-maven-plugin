@@ -21,6 +21,7 @@ import java.util.Map;
 
 import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
 import io.fabric8.maven.enricher.api.Kind;
 
@@ -129,6 +130,23 @@ public abstract class MetadataEnricherVisitor<T> implements Visitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(ReplicationControllerBuilder item) {
+            ObjectMeta ret = item.getMetadata();
+            return ret == null ? item.withNewMetadata().endMetadata().getMetadata() : ret;
+        }
+    }
+
+    public static class Deployment extends MetadataEnricherVisitor<DeploymentBuilder> {
+        public Deployment(EnricherManager enricher) {
+            super(enricher);
+        }
+
+        @Override
+        protected Kind getKind() {
+            return Kind.DEPLOYMENT;
+        }
+
+        @Override
+        protected ObjectMeta getOrCreateMetadata(DeploymentBuilder item) {
             ObjectMeta ret = item.getMetadata();
             return ret == null ? item.withNewMetadata().endMetadata().getMetadata() : ret;
         }

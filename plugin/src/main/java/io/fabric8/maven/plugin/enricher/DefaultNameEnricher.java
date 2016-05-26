@@ -20,6 +20,9 @@ import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentFluent;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
@@ -48,6 +51,22 @@ public class DefaultNameEnricher extends BaseEnricher {
                 ObjectMeta metadata = getOrCreateMetadata(resource);
                 if (Strings.isNullOrBlank(metadata.getName())) {
                     metadata.setName(getConfig().get("", MavenUtil.createDefaultResourceName(getProject())));
+                }
+            }
+        });
+
+        // TODO not sure why this is required for Deployment?
+        builder.accept(new Visitor<DeploymentBuilder>() {
+            @Override
+            public void visit(DeploymentBuilder resource) {
+                DeploymentFluent.MetadataNested<DeploymentBuilder> metadata = resource.editMetadata();
+                String defaultName = getConfig().get("", MavenUtil.createDefaultResourceName(getProject()));
+                if (metadata == null) {
+                    resource.withNewMetadata().withName(defaultName).endMetadata();
+                } else {
+                    if (Strings.isNullOrBlank(metadata.getName())) {
+                        metadata.withName(defaultName).endMetadata();
+                    }
                 }
             }
         });
