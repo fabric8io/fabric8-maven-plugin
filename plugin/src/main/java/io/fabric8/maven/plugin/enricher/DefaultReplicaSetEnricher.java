@@ -158,7 +158,7 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
     }
 
     private boolean hasPodControllers(KubernetesListBuilder builder) {
-        return checkForKind(builder, "ReplicationController", "ReplicaSet");
+        return checkForKind(builder, "ReplicationController", "ReplicaSet", "Deployment", "DeploymentConfig");
     }
 
     private boolean checkForKind(KubernetesListBuilder builder, String ... kinds) {
