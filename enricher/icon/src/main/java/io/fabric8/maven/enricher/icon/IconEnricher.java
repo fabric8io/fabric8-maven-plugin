@@ -71,7 +71,9 @@ public class IconEnricher extends BaseEnricher {
 
     @Override
     public Map<String, String> getAnnotations(Kind kind) {
-        if (kind == Kind.REPLICA_SET || kind == Kind.REPLICATION_CONTROLLER || kind == Kind.SERVICE) {
+        if (kind == Kind.REPLICA_SET || kind == Kind.REPLICATION_CONTROLLER ||
+                kind == Kind.DEPLOYMENT || kind == Kind.DEPLOYMENT_CONFIG ||
+                kind == Kind.SERVICE) {
             String iconUrl = getIconUrl();
             return iconUrl != null ? Collections.singletonMap("fabric8.io/iconUrl",iconUrl) : null;
         } else {

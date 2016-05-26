@@ -48,12 +48,14 @@ public class EnricherManager {
         Collections.reverse(enrichers);
 
         metaDataEnricherVisitors = Arrays.asList(
+            new MetadataEnricherVisitor.Deployment(this),
             new MetadataEnricherVisitor.ReplicaSet(this),
             new MetadataEnricherVisitor.ReplicationController(this),
             new MetadataEnricherVisitor.Service(this),
             new MetadataEnricherVisitor.PodTemplate(this));
 
         selectorVisitors = Arrays.asList(
+            new SelectorVisitor.Deployment(this),
             new SelectorVisitor.ReplicaSet(this),
             new SelectorVisitor.ReplicationController(this),
             new SelectorVisitor.Service(this));

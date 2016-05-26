@@ -47,6 +47,7 @@ import java.util.Set;
  * @since 25/05/16
  */
 public class DefaultReplicaSetEnricher extends BaseEnricher {
+    protected static final String[] POD_CONTROLLER_KINDS = {"ReplicationController", "ReplicaSet", "Deployment", "DeploymentConfig"};
 
     private ReplicationControllerHandler rcHandler;
     private ReplicaSetHandler rsHandler;
@@ -74,12 +75,6 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
 
         // Check if at least a replica set is added. If not add a default one
         if (hasPodControllers(builder)) {
-            builder.accept(new Visitor<ObjectMetaBuilder>() {
-                @Override
-                public void visit(ObjectMetaBuilder builder) {
-                    mergeObjectMeta(builder, defaultReplicaSet.getMetadata());
-                }
-            });
             final ReplicaSetSpec spec = defaultReplicaSet.getSpec();
             if (spec != null) {
                 PodTemplateSpec template = spec.getTemplate();
@@ -140,25 +135,8 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
         }
     }
 
-    /**
-     * lets default name, annotations, labels if missing
-     * @param builder
-     * @param metadata
-     */
-    private void mergeObjectMeta(ObjectMetaBuilder builder, ObjectMeta metadata) {
-        if (Strings.isNullOrBlank(builder.getName())) {
-            builder.withName(metadata.getName());
-        }
-        if (Maps.isNullOrEmpty(builder.getAnnotations())) {
-            builder.withAnnotations(metadata.getAnnotations());
-        }
-        if (Maps.isNullOrEmpty(builder.getLabels())) {
-            builder.withLabels(metadata.getLabels());
-        }
-    }
-
     private boolean hasPodControllers(KubernetesListBuilder builder) {
-        return checkForKind(builder, "ReplicationController", "ReplicaSet");
+        return checkForKind(builder, POD_CONTROLLER_KINDS);
     }
 
     private boolean checkForKind(KubernetesListBuilder builder, String ... kinds) {
@@ -170,5 +148,4 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
         }
         return false;
     }
-
 }

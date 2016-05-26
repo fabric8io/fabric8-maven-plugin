@@ -21,6 +21,7 @@ import java.util.Map;
 import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpecBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentSpecBuilder;
 import io.fabric8.kubernetes.api.model.extensions.LabelSelector;
 import io.fabric8.kubernetes.api.model.extensions.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpecBuilder;
@@ -51,6 +52,24 @@ public abstract class SelectorVisitor<T> implements Visitor<T> {
         @Override
         public void visit(ServiceSpecBuilder item) {
             item.getSelector().putAll(enricher.extractSelector(Kind.SERVICE));
+        }
+    }
+
+    static public class Deployment extends SelectorVisitor<DeploymentSpecBuilder> {
+
+        public Deployment(EnricherManager enricher) {
+            super(enricher);
+        }
+
+        @Override
+        public void visit(DeploymentSpecBuilder item) {
+            Map<String, String> selectorMatchLabels = enricher.extractSelector(Kind.REPLICATION_CONTROLLER);
+            LabelSelector selector = item.getSelector();
+            if (selector == null) {
+                item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
+            } else {
+                selector.getMatchLabels().putAll(selectorMatchLabels);
+            }
         }
     }
 
