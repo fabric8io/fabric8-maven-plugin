@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,6 +45,9 @@ import org.apache.maven.shared.utils.StringUtils;
  */
 public class KubernetesResourceUtil {
 
+    public static final String API_VERSION = "v1";
+    public static final String API_EXTENSIONS_VERSION = "extensions/v1beta1";
+
     /**
      * Read all Kubernetes resource fragments from a directory and create a {@link KubernetesListBuilder} which
      * can be adapted later.
@@ -53,11 +57,11 @@ public class KubernetesResourceUtil {
      * @return the list builder
      * @throws IOException
      */
-    public static KubernetesListBuilder readResourceFragmentsFrom(String apiVersion, File[] resourceFiles) throws IOException {
+    public static KubernetesListBuilder readResourceFragmentsFrom(String apiVersion, String apiExtensionsVersion, File[] resourceFiles) throws IOException {
         KubernetesListBuilder k8sBuilder = new KubernetesListBuilder();
         if (resourceFiles != null) {
             for (File file : resourceFiles) {
-                HasMetadata resource = getKubernetesResource(apiVersion, file);
+                HasMetadata resource = getKubernetesResource(apiVersion, apiExtensionsVersion, file);
                 k8sBuilder.withItems(resource);
             }
         }
@@ -76,11 +80,11 @@ public class KubernetesResourceUtil {
      *
      *
      * @param defaultApiVersion the API version to add if not given.
-     * @param file file to read, whose name must match {@link #FILENAME_PATTERN}.
-     * @return map holding the fragment
+     * @param apiExtensionsVersion the API version for extensions
+     *@param file file to read, whose name must match {@link #FILENAME_PATTERN}.  @return map holding the fragment
      */
-    public static HasMetadata getKubernetesResource(String defaultApiVersion, File file) throws IOException {
-        Map<String,Object> fragment = readAndEnrichFragment(defaultApiVersion, file);
+    public static HasMetadata getKubernetesResource(String defaultApiVersion, String apiExtensionsVersion, File file) throws IOException {
+        Map<String,Object> fragment = readAndEnrichFragment(defaultApiVersion, apiExtensionsVersion, file);
         ObjectMapper mapper = new ObjectMapper();
         return mapper.convertValue(fragment, HasMetadata.class);
     }
@@ -114,8 +118,10 @@ public class KubernetesResourceUtil {
     static {
         String mapping[] =
             {
+                "deployment", "Deployment",
                 "service", "Service",
                 "svc", "Service",
+                "sa", "ServiceAccount",
                 "rc", "ReplicationController",
                 "rs", "ReplicaSet"
             };
@@ -127,7 +133,7 @@ public class KubernetesResourceUtil {
     private static final String FILENAME_PATTERN = "^(.*?)(-([^-]+))?\\.(yaml|yml|json)$";
 
     // Read fragment and add default values
-    private static Map<String, Object> readAndEnrichFragment(String defaultApiVersion, File file) throws IOException {
+    private static Map<String, Object> readAndEnrichFragment(String defaultApiVersion, String apiExtensionsVersion, File file) throws IOException {
         Pattern pattern = Pattern.compile(FILENAME_PATTERN, Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(file.getName());
         if (!matcher.matches()) {
@@ -163,7 +169,11 @@ public class KubernetesResourceUtil {
         }
 
         addIfNotExistent(fragment, "kind", kind);
-        addIfNotExistent(fragment, "apiVersion", defaultApiVersion);
+        String apiVersion = defaultApiVersion;
+        if (Objects.equals(kind, "Deployment") || Objects.equals(kind, "Ingress")) {
+            apiVersion = apiExtensionsVersion;
+        }
+        addIfNotExistent(fragment, "apiVersion", apiVersion);
         Map<String, Object> metaMap = getMetadata(fragment);
         if (StringUtils.isNotBlank(name)) {
             addIfNotExistent(metaMap, "name", name);
