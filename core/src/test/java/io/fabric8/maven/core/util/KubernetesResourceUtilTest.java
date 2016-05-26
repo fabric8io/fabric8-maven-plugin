@@ -26,7 +26,10 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static io.fabric8.maven.core.util.KubernetesResourceUtil.API_VERSION;
+import static io.fabric8.maven.core.util.KubernetesResourceUtil.API_EXTENSIONS_VERSION;
 import static io.fabric8.maven.core.util.KubernetesResourceUtil.getKubernetesResource;
+import static io.fabric8.maven.docker.config.AssemblyMode.dir;
 import static org.junit.Assert.*;
 
 /**
@@ -46,8 +49,8 @@ public class KubernetesResourceUtilTest {
     @Test
     public void simple() throws IOException {
         for (String ext : new String[] { "yaml", "json" }) {
-            HasMetadata ret = getKubernetesResource("v1", new File(fabric8Dir, "simple-rc." + ext));
-            assertEquals("v1", ret.getApiVersion());
+            HasMetadata ret = getKubernetesResource(API_VERSION, API_EXTENSIONS_VERSION, new File(fabric8Dir, "simple-rc." + ext));
+            assertEquals(API_VERSION, ret.getApiVersion());
             assertEquals("ReplicationController", ret.getKind());
             assertEquals("simple", ret.getMetadata().getName());
         }
@@ -55,8 +58,8 @@ public class KubernetesResourceUtilTest {
 
     @Test
     public void withValue() throws IOException {
-        HasMetadata ret = getKubernetesResource("v1", new File(fabric8Dir, "named-svc.yaml"));
-        assertEquals("v1", ret.getApiVersion());
+        HasMetadata ret = getKubernetesResource(API_VERSION, API_EXTENSIONS_VERSION, new File(fabric8Dir, "named-svc.yaml"));
+        assertEquals(API_VERSION, ret.getApiVersion());
         assertEquals("Service", ret.getKind());
         assertEquals("pong", ret.getMetadata().getName());
     }
@@ -64,7 +67,7 @@ public class KubernetesResourceUtilTest {
     @Test
     public void invalidType() throws IOException {
         try {
-            getKubernetesResource("v1", new File(fabric8Dir, "simple-bla.yaml"));
+            getKubernetesResource(API_VERSION, API_EXTENSIONS_VERSION, new File(fabric8Dir, "simple-bla.yaml"));
             fail();
         } catch (IllegalArgumentException exp) {
             assertTrue(exp.getMessage().contains("bla"));
@@ -74,14 +77,14 @@ public class KubernetesResourceUtilTest {
 
     @Test
     public void containsKind() throws Exception {
-        HasMetadata ret = getKubernetesResource("v1", new File(fabric8Dir, "contains_kind.yml"));
+        HasMetadata ret = getKubernetesResource(API_VERSION, API_EXTENSIONS_VERSION, new File(fabric8Dir, "contains_kind.yml"));
         assertEquals("ReplicationController", ret.getKind());
     }
 
     @Test
     public void containsNoKindAndNoTypeInFilename() throws Exception {
         try {
-            getKubernetesResource("v1", new File(fabric8Dir, "contains_no_kind.yml"));
+            getKubernetesResource(API_VERSION, API_EXTENSIONS_VERSION, new File(fabric8Dir, "contains_no_kind.yml"));
             fail();
         } catch (IllegalArgumentException exp) {
             assertTrue(exp.getMessage().contains("type"));
@@ -94,7 +97,7 @@ public class KubernetesResourceUtilTest {
     @Test
     public void invalidPattern() throws IOException {
         try {
-            getKubernetesResource("v1", new File(fabric8Dir, "blubber.yaml"));
+            getKubernetesResource(API_VERSION, API_EXTENSIONS_VERSION, new File(fabric8Dir, "blubber.yaml"));
             fail();
         } catch (FileNotFoundException exp) {
             assertTrue(exp.getMessage().contains("blubber"));
@@ -103,13 +106,13 @@ public class KubernetesResourceUtilTest {
 
     @Test
     public void noNameInFile() throws IOException {
-        HasMetadata ret = getKubernetesResource("v1", new File(fabric8Dir, "rc.yml"));
+        HasMetadata ret = getKubernetesResource(API_VERSION, API_EXTENSIONS_VERSION, new File(fabric8Dir, "rc.yml"));
         assertEquals("flipper",ret.getMetadata().getName());
     }
 
     @Test
     public void noNameInFileAndNotInMetadata() throws IOException {
-        HasMetadata ret = getKubernetesResource("v1", new File(fabric8Dir, "svc.yml"));
+        HasMetadata ret = getKubernetesResource(API_VERSION, API_EXTENSIONS_VERSION, new File(fabric8Dir, "svc.yml"));
         assertEquals("Service",ret.getKind());
         assertNull(ret.getMetadata().getName());
     }
@@ -117,7 +120,7 @@ public class KubernetesResourceUtilTest {
     @Test
     public void invalidExtension() throws IOException {
         try {
-            getKubernetesResource("v1", new File(fabric8Dir, "simple-rc.txt"));
+            getKubernetesResource(API_VERSION, API_EXTENSIONS_VERSION, new File(fabric8Dir, "simple-rc.txt"));
             fail();
         } catch (IllegalArgumentException exp) {
             assertTrue(exp.getMessage().contains("txt"));
@@ -129,7 +132,7 @@ public class KubernetesResourceUtilTest {
     @Test
     public void readWholeDir() throws IOException {
         KubernetesListBuilder builder =
-            KubernetesResourceUtil.readResourceFragmentsFrom("v2", new File(fabric8Dir, "read-dir").listFiles());
+            KubernetesResourceUtil.readResourceFragmentsFrom("v2", "extensions/v2", new File(fabric8Dir, "read-dir").listFiles());
         KubernetesList list = builder.build();
         assertEquals(2,list.getItems().size());
         for (HasMetadata item : list.getItems() ) {
