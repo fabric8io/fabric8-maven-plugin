@@ -168,8 +168,9 @@ public class KubernetesResourceUtil {
         }
         addIfNotExistent(fragment, "apiVersion", apiVersion);
 
+        Map<String, Object> metaMap = getMetadata(fragment);
         if (StringUtils.isNotBlank(name)) {
-            addIfNotExistent(fragment, "name", name);
+            addIfNotExistent(metaMap, "name", name);
         }
 
         addIfNotExistent(fragment, "apiVersion", defaultApiVersion);
