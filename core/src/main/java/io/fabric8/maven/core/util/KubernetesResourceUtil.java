@@ -59,7 +59,8 @@ public class KubernetesResourceUtil {
      * @return the list builder
      * @throws IOException
      */
-    public static KubernetesListBuilder readResourceFragmentsFrom(String apiVersion, String apiExtensionsVersion, File[] resourceFiles) throws IOException {
+    public static KubernetesListBuilder readResourceFragmentsFrom(String apiVersion,
+                                                                  String apiExtensionsVersion, File[] resourceFiles) throws IOException {
         KubernetesListBuilder k8sBuilder = new KubernetesListBuilder();
         if (resourceFiles != null) {
             for (File file : resourceFiles) {
