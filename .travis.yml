@@ -1,0 +1,6 @@
+# We use Travis for updating the Sonarqube stats
+language: java
+jdk:
+  - oraclejdk8
+after_script:
+  - "[[ $TRAVIS_PULL_REQUEST == false ]] && [[ $TRAVIS_JDK_VERSION == oraclejdk8 ]] && mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar -Dsonar.host.url=https://nemo.sonarqube.org -Dsonar.login=$SONAR_TOKEN"
