@@ -37,6 +37,8 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.utils.Files;
 import org.apache.maven.shared.utils.StringUtils;
 
+import static io.fabric8.kubernetes.api.KubernetesHelper.defaultApiVersion;
+
 /**
  * Utility class for handling Kubernetes resource descriptors
  *
@@ -145,40 +147,54 @@ public class KubernetesResourceUtil {
         String ext = matcher.group(4).toLowerCase();
         String kind;
 
+        Map<String,Object> fragment = readFragment(file, ext);
+
         if (type != null) {
-            kind = FILENAME_TO_KIND_MAPPER.get(type.toLowerCase());
-            if (kind == null) {
-                throw new IllegalArgumentException(
-                    String.format("Unknown type '%s' for file %s. Must be one of : %s",
-                                  type, file.getName(), StringUtils.join(FILENAME_TO_KIND_MAPPER.keySet().iterator(), ", ")));
-            }
+            kind = getAndValidateKindFromType(file, type);
         } else {
             // Try name as type
             kind = FILENAME_TO_KIND_MAPPER.get(name.toLowerCase());
             if (kind != null) {
-                // Name is in fact the type, so lets erase the name here.
+                // Name is in fact the type, so lets erase the name.
                 name = null;
             }
         }
-        Map<String,Object> fragment = readFragment(file, ext);
 
-        if (kind == null && !fragment.containsKey("kind")) {
-            throw new IllegalArgumentException(
-                "No type given as part of the file name (e.g. 'app-rc.yml') " +
-                "and no 'Kind' defined in resource descriptor " + file.getName());
-        }
+        addKind(fragment, kind, file.getName());
 
-        addIfNotExistent(fragment, "kind", kind);
         String apiVersion = defaultApiVersion;
         if (Objects.equals(kind, "Deployment") || Objects.equals(kind, "Ingress")) {
             apiVersion = apiExtensionsVersion;
         }
         addIfNotExistent(fragment, "apiVersion", apiVersion);
+
         Map<String, Object> metaMap = getMetadata(fragment);
         if (StringUtils.isNotBlank(name)) {
             addIfNotExistent(metaMap, "name", name);
         }
+
+        addIfNotExistent(fragment, "apiVersion", defaultApiVersion);
         return fragment;
+    }
+
+    private static String getAndValidateKindFromType(File file, String type) {
+        String kind;
+        kind = FILENAME_TO_KIND_MAPPER.get(type.toLowerCase());
+        if (kind == null) {
+            throw new IllegalArgumentException(
+                String.format("Unknown type '%s' for file %s. Must be one of : %s",
+                              type, file.getName(), StringUtils.join(FILENAME_TO_KIND_MAPPER.keySet().iterator(), ", ")));
+        }
+        return kind;
+    }
+
+    private static void addKind(Map<String, Object> fragment, String kind, String fileName) {
+        if (kind == null && !fragment.containsKey("kind")) {
+            throw new IllegalArgumentException(
+                "No type given as part of the file name (e.g. 'app-rc.yml') " +
+                "and no 'Kind' defined in resource descriptor " + fileName);
+        }
+        addIfNotExistent(fragment, "kind", kind);
     }
 
     // ===============================================================================================
