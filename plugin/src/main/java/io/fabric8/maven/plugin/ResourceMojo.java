@@ -241,7 +241,6 @@ public class ResourceMojo extends AbstractMojo {
         return builder.build();
     }
 
-
     private File[] filterFiles(File[] resourceFiles) throws MojoExecutionException {
         if (!workDir.exists()) {
             if (!workDir.mkdirs()) {
