@@ -37,8 +37,6 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.utils.Files;
 import org.apache.maven.shared.utils.StringUtils;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.defaultApiVersion;
-
 /**
  * Utility class for handling Kubernetes resource descriptors
  *
@@ -92,14 +90,17 @@ public class KubernetesResourceUtil {
         return mapper.convertValue(fragment, HasMetadata.class);
     }
 
-    public static void writeResourceDescriptor(KubernetesList kubernetesList, File target, ResourceFileType resourceFileType)
+    public static File writeResourceDescriptor(KubernetesList kubernetesList, File target, ResourceFileType resourceFileType)
         throws IOException {
         ObjectMapper mapper = resourceFileType.getObjectMapper()
                                               .enable(SerializationFeature.INDENT_OUTPUT)
                                               .disable(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS)
                                               .disable(SerializationFeature.WRITE_NULL_MAP_VALUES);
         String serialized = mapper.writeValueAsString(kubernetesList);
-        Files.writeToFile(resourceFileType.addExtension(target), serialized, Charset.defaultCharset());
+        File outputFile = resourceFileType.addExtension(target);
+        Files.writeToFile(outputFile, serialized, Charset.defaultCharset());
+        return outputFile;
+
     }
 
 

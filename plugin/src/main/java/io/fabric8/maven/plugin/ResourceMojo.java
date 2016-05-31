@@ -44,6 +44,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 
@@ -122,6 +123,22 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     @Parameter
     private Map<String, String> customizer;
 
+    @Component
+    private MavenProjectHelper projectHelper;
+
+
+    /**
+     * The artifact type for attaching the generated kubernetes YAML file to the project
+     */
+    @Parameter(property = "fabric8.artifactType", defaultValue = "yml")
+    private String artifactType;
+
+    /**
+     * The artifact classifier for attaching the generated kubernetes YAML file to the project
+     */
+    @Parameter(property = "fabric8.artifactClassifier", defaultValue = "kubernetes")
+    private String artifactClassifier;
+
     // Whether to use replica sets or replication controller. Could be configurable
     // but for now leave it hidden.
     private boolean useReplicaSet = true;
@@ -148,8 +165,9 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                 // Generate resources
                 KubernetesList resources = generateResourceDescriptor(enricherManager, resolvedImages);
 
-                // Write to descriptor to
-                KubernetesResourceUtil.writeResourceDescriptor(resources, getTargetFile(), resourceFileType);
+                // Write to descriptor to the target
+                File outputFile = KubernetesResourceUtil.writeResourceDescriptor(resources, getTargetFile(), resourceFileType);
+                projectHelper.attachArtifact(project, artifactType, artifactClassifier, outputFile);
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
