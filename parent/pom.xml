@@ -36,8 +36,8 @@
     <version.kubernetes-client>1.3.92</version.kubernetes-client>
     <version.fabric8>2.2.122</version.fabric8>
     <version.docker-maven-plugin>0.15.3</version.docker-maven-plugin>
+    <additionalparam>-Xdoclint:none</additionalparam>
   </properties>
-
 
   <repositories>
     <repository>
