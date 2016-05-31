@@ -239,7 +239,6 @@
   </build>
 
   <profiles>
-    <profiles>
     <!-- "dist" profiles used for deploying -->
     <profile>
       <id>milestone</id>
