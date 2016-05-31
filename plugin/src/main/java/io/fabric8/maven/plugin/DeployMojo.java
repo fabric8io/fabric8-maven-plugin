@@ -36,7 +36,7 @@ import io.fabric8.kubernetes.api.model.extensions.IngressBuilder;
 import io.fabric8.kubernetes.api.model.extensions.IngressList;
 import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import io.fabric8.kubernetes.api.model.extensions.IngressSpec;
-import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.*;
 import io.fabric8.kubernetes.internal.HasMetadataComparator;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteList;
@@ -64,6 +64,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static io.fabric8.kubernetes.api.KubernetesHelper.DEFAULT_NAMESPACE;
 import static io.fabric8.kubernetes.api.KubernetesHelper.createIntOrString;
 
 /**
@@ -73,20 +74,31 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.createIntOrString;
 public class DeployMojo extends AbstractFabric8Mojo {
 
     /**
+     * The domain added to the service ID when creating OpenShift routes
+     */
+    @Parameter(property = "fabric8.domain")
+    protected String routeDomain;
+
+    /**
+     * Should we fail the build if an apply fails?
+     */
+    @Parameter(property = "fabric8.deploy.failOnError", defaultValue = "true")
+    protected boolean failOnError;
+    /**
+     * Should we update resources by deleting them first and then creating them again?
+     */
+    @Parameter(property = "fabric8.recreate", defaultValue = "false")
+    protected boolean recreate;
+    /**
      * The generated kubernetes YAML file
      */
     @Parameter(property = "fabric8.manifest", defaultValue = "${basedir}/target/classes/kubernetes.yml")
     private File kubernetesManifest;
 
-
-    @Parameter(defaultValue = "${project}", readonly = true, required = false)
-    private MavenProject project;
-
-
     /**
      * Should we create new kubernetes resources?
      */
-    @Parameter(property = "fabric8.apply.create", defaultValue = "true")
+    @Parameter(property = "fabric8.deploy.create", defaultValue = "true")
     private boolean createNewResources;
 
     /**
@@ -98,14 +110,14 @@ public class DeployMojo extends AbstractFabric8Mojo {
     /**
      * Should we fail if there is no kubernetes json
      */
-    @Parameter(property = "fabric8.apply.failOnNoKubernetesJson", defaultValue = "false")
+    @Parameter(property = "fabric8.deploy.failOnNoKubernetesJson", defaultValue = "false")
     private boolean failOnNoKubernetesJson;
 
     /**
      * In services only mode we only process services so that those can be recursively created/updated first
      * before creating/updating any pods and replication controllers
      */
-    @Parameter(property = "fabric8.apply.servicesOnly", defaultValue = "false")
+    @Parameter(property = "fabric8.deploy.servicesOnly", defaultValue = "false")
     private boolean servicesOnly;
 
     /**
@@ -114,39 +126,140 @@ public class DeployMojo extends AbstractFabric8Mojo {
      * definitions alone to avoid changing the portalIP addresses and breaking existing pods using
      * the service.
      */
-    @Parameter(property = "fabric8.apply.ignoreServices", defaultValue = "false")
+    @Parameter(property = "fabric8.deploy.ignoreServices", defaultValue = "false")
     private boolean ignoreServices;
 
     /**
      * Process templates locally in Java so that we can apply OpenShift templates on any Kubernetes environment
      */
-    @Parameter(property = "fabric8.apply.processTemplatesLocally", defaultValue = "false")
+    @Parameter(property = "fabric8.deploy.processTemplatesLocally", defaultValue = "false")
     private boolean processTemplatesLocally;
 
     /**
      * Should we delete all the pods if we update a Replication Controller
      */
-    @Parameter(property = "fabric8.apply.deletePods", defaultValue = "true")
+    @Parameter(property = "fabric8.deploy.deletePods", defaultValue = "true")
     private boolean deletePodsOnReplicationControllerUpdate;
 
     /**
      * Do we want to ignore OAuthClients which are already running?. OAuthClients are shared across namespaces
      * so we should not try to update or create/delete global oauth clients
      */
-    @Parameter(property = "fabric8.apply.ignoreRunningOAuthClients", defaultValue = "true")
+    @Parameter(property = "fabric8.deploy.ignoreRunningOAuthClients", defaultValue = "true")
     private boolean ignoreRunningOAuthClients;
 
     /**
      * Should we create external Ingress/Routes for any LoadBalancer services which don't already have them.
      */
-    @Parameter(property = "fabric8.apply.createExternalUrls", defaultValue = "true")
+    @Parameter(property = "fabric8.deploy.createExternalUrls", defaultValue = "true")
     private boolean createExternalUrls;
 
     /**
      * The folder we should store any temporary json files or results
      */
-    @Parameter(property = "fabric8.apply.jsonLogDir", defaultValue = "${basedir}/target/fabric8/applyJson")
+    @Parameter(property = "fabric8.deploy.jsonLogDir", defaultValue = "${basedir}/target/fabric8/applyJson")
     private File jsonLogDir;
+
+    /**
+     * Namespace under which to operate
+     */
+    @Parameter(property = "fabric8.namespace")
+    private String namespace;
+
+    // Kubernetes cliend
+    private KubernetesClient kubernetes;
+
+    @Override
+    public void execute() throws MojoExecutionException, MojoFailureException {
+        File manifest = kubernetesManifest;
+        if (!Files.isFile(manifest)) {
+            if (failOnNoKubernetesJson) {
+                throw new MojoFailureException("No such generated kubernetes YAML file: " + manifest);
+            } else {
+                getLog().warn("No such generated kubernetes YAML file: " + manifest + " for this project so ignoring");
+                return;
+            }
+        }
+        KubernetesClient kubernetes = createKubernetesClient();
+
+        if (kubernetes.getMasterUrl() == null || Strings.isNullOrBlank(kubernetes.getMasterUrl().toString())) {
+            throw new MojoFailureException("Cannot find Kubernetes master URL");
+        }
+        getLog().info("Using kubernetes at: " + kubernetes.getMasterUrl() + " in namespace " + getNamespace() + " Kubernetes manifest: " + manifest);
+
+        try {
+            Controller controller = createController();
+            controller.setAllowCreate(createNewResources);
+            controller.setServicesOnlyMode(servicesOnly);
+            controller.setIgnoreServiceMode(ignoreServices);
+            controller.setLogJsonDir(jsonLogDir);
+            controller.setBasedir(getRootProjectFolder());
+            controller.setIgnoreRunningOAuthClients(ignoreRunningOAuthClients);
+            controller.setProcessTemplatesLocally(processTemplatesLocally);
+            controller.setDeletePodsOnReplicationControllerUpdate(deletePodsOnReplicationControllerUpdate);
+            controller.setRollingUpgrade(rollingUpgrades);
+            controller.setRollingUpgradePreserveScale(isRollingUpgradePreserveScale());
+
+            boolean openShift = KubernetesHelper.isOpenShift(kubernetes);
+            if (openShift) {
+                getLog().info("OpenShift platform detected");
+            } else {
+                disableOpenShiftFeatures(controller);
+            }
+
+
+            String fileName = manifest.getName();
+            Object dto = KubernetesHelper.loadYaml(manifest, KubernetesResource.class);
+            if (dto == null) {
+                throw new MojoFailureException("Cannot load kubernetes YAML: " + manifest);
+            }
+
+            // lets check we have created the namespace
+            String namespace = getNamespace();
+            controller.applyNamespace(namespace);
+            controller.setNamespace(namespace);
+
+            if (dto instanceof Template) {
+                Template template = (Template) dto;
+                dto = applyTemplates(template, kubernetes, controller, fileName);
+            }
+
+            Set<KubernetesResource> resources = new LinkedHashSet<>();
+
+            Set<HasMetadata> entities = new TreeSet<>(new HasMetadataComparator());
+            for (KubernetesResource resource : resources) {
+                entities.addAll(KubernetesHelper.toItemList(resource));
+            }
+
+            entities.addAll(KubernetesHelper.toItemList(dto));
+
+            if (createExternalUrls) {
+                if (controller.getOpenShiftClientOrNull() != null) {
+                    createRoutes(controller, entities);
+                } else {
+                    createIngress(controller, kubernetes, entities);
+                }
+            }
+
+            // Apply all items
+            for (HasMetadata entity : entities) {
+                if (entity instanceof Pod) {
+                    Pod pod = (Pod) entity;
+                    controller.applyPod(pod, fileName);
+                } else if (entity instanceof Service) {
+                    Service service = (Service) entity;
+                    controller.applyService(service, fileName);
+                } else if (entity instanceof ReplicationController) {
+                    ReplicationController replicationController = (ReplicationController) entity;
+                    controller.applyReplicationController(replicationController, fileName);
+                } else if (entity != null) {
+                    controller.apply(entity, fileName);
+                }
+            }
+        } catch (Exception e) {
+            throw new MojoExecutionException(e.getMessage(), e);
+        }
+    }
 
     public static Route createRouteForService(String routeDomainPostfix, String namespace, Service service, Log log) {
         Route route = null;
@@ -257,111 +370,14 @@ public class DeployMojo extends AbstractFabric8Mojo {
         }
     }
 
-    @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
-        File manifest = kubernetesManifest;
-        if (!Files.isFile(manifest)) {
-            if (failOnNoKubernetesJson) {
-                throw new MojoFailureException("No such generated kubernetes YAML file: " + manifest);
-            } else {
-                getLog().warn("No such generated kubernetes YAML file: " + manifest + " for this project so ignoring");
-                return;
-            }
-        }
-        KubernetesClient kubernetes = getKubernetes();
-
-        if (kubernetes.getMasterUrl() == null || Strings.isNullOrBlank(kubernetes.getMasterUrl().toString())) {
-            throw new MojoFailureException("Cannot find Kubernetes master URL");
-        }
-        getLog().info("Using kubernetes at: " + kubernetes.getMasterUrl() + " in namespace " + getNamespace() + " Kubernetes manifest: " + manifest);
-
-        try {
-            Controller controller = createController();
-            controller.setAllowCreate(createNewResources);
-            controller.setServicesOnlyMode(servicesOnly);
-            controller.setIgnoreServiceMode(ignoreServices);
-            controller.setLogJsonDir(jsonLogDir);
-            controller.setBasedir(getRootProjectFolder());
-            controller.setIgnoreRunningOAuthClients(ignoreRunningOAuthClients);
-            controller.setProcessTemplatesLocally(processTemplatesLocally);
-            controller.setDeletePodsOnReplicationControllerUpdate(deletePodsOnReplicationControllerUpdate);
-            controller.setRollingUpgrade(rollingUpgrades);
-            controller.setRollingUpgradePreserveScale(isRollingUpgradePreserveScale());
-
-            boolean openShift = KubernetesHelper.isOpenShift(kubernetes);
-            if (openShift) {
-                getLog().info("OpenShift platform detected");
-            } else {
-                disableOpenShiftFeatures(controller);
-            }
-
-
-            String fileName = manifest.getName();
-            Object dto = KubernetesHelper.loadYaml(manifest, KubernetesResource.class);
-            if (dto == null) {
-                throw new MojoFailureException("Cannot load kubernetes YAML: " + manifest);
-            }
-
-            // lets check we have created the namespace
-            String namespace = getNamespace();
-            controller.applyNamespace(namespace);
-            controller.setNamespace(namespace);
-
-            if (dto instanceof Template) {
-                Template template = (Template) dto;
-                dto = applyTemplates(template, kubernetes, controller, fileName);
-            }
-
-            Set<KubernetesResource> resources = new LinkedHashSet<>();
-
-            Set<HasMetadata> entities = new TreeSet<>(new HasMetadataComparator());
-            for (KubernetesResource resource : resources) {
-                entities.addAll(KubernetesHelper.toItemList(resource));
-            }
-
-            entities.addAll(KubernetesHelper.toItemList(dto));
-
-            if (createExternalUrls) {
-                if (controller.getOpenShiftClientOrNull() != null) {
-                    createRoutes(controller, entities);
-                } else {
-                    createIngress(controller, kubernetes, entities);
-                }
-            }
-
-            // Apply all items
-            for (HasMetadata entity : entities) {
-                if (entity instanceof Pod) {
-                    Pod pod = (Pod) entity;
-                    controller.applyPod(pod, fileName);
-                } else if (entity instanceof Service) {
-                    Service service = (Service) entity;
-                    controller.applyService(service, fileName);
-                } else if (entity instanceof ReplicationController) {
-                    ReplicationController replicationController = (ReplicationController) entity;
-                    controller.applyReplicationController(replicationController, fileName);
-                } else if (entity != null) {
-                    controller.apply(entity, fileName);
-                }
-            }
-        } catch (Exception e) {
-            throw new MojoExecutionException(e.getMessage(), e);
-        }
-    }
-
     public boolean isRollingUpgrades() {
         return rollingUpgrades;
-    }
-
-    public void setRollingUpgrades(boolean rollingUpgrades) {
-        this.rollingUpgrades = rollingUpgrades;
     }
 
     public boolean isRollingUpgradePreserveScale() {
         return false;
     }
 
-    @Override
     public MavenProject getProject() {
         return project;
     }
@@ -516,5 +532,71 @@ public class DeployMojo extends AbstractFabric8Mojo {
             }
         }
         return false;
+    }
+
+    private KubernetesClient createKubernetesClient() {
+        Config config = new ConfigBuilder().withNamespace(getNamespace()).build();
+        return new DefaultKubernetesClient(config);
+    }
+
+    protected Controller createController() {
+        Controller controller = new Controller(createKubernetesClient());
+        controller.setThrowExceptionOnError(failOnError);
+        controller.setRecreateMode(recreate);
+        getLog().debug("Using recreate mode: " + recreate);
+        return controller;
+    }
+
+    protected synchronized String getNamespace() {
+        if (Strings.isNullOrBlank(namespace)) {
+            namespace = KubernetesHelper.defaultNamespace();
+        }
+        if (Strings.isNullOrBlank(namespace)) {
+            namespace = DEFAULT_NAMESPACE;
+        }
+        return namespace;
+    }
+
+    public String getRouteDomain() {
+        return routeDomain;
+    }
+
+    public boolean isFailOnError() {
+        return failOnError;
+    }
+
+    public boolean isRecreate() {
+        return recreate;
+    }
+
+    /**
+     * Returns the root project folder
+     */
+    protected File getRootProjectFolder() {
+        File answer = null;
+        MavenProject project = getProject();
+        while (project != null) {
+            File basedir = project.getBasedir();
+            if (basedir != null) {
+                answer = basedir;
+            }
+            project = project.getParent();
+        }
+        return answer;
+    }
+
+    /**
+     * Returns the root project folder
+     */
+    protected MavenProject getRootProject() {
+        MavenProject project = getProject();
+        while (project != null) {
+            MavenProject parent = project.getParent();
+            if (parent == null) {
+                break;
+            }
+            project = parent;
+        }
+        return project;
     }
 }

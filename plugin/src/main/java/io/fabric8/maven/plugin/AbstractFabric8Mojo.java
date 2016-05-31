@@ -17,11 +17,14 @@
 package io.fabric8.maven.plugin;
 
 import java.io.File;
+import java.util.Properties;
 
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.client.*;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Strings;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -30,115 +33,24 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.DEFAULT_NAMESPACE;
 
 public abstract class AbstractFabric8Mojo extends AbstractMojo {
 
-    /**
-     * Namespace under which to operate
-     */
-    @Parameter(property = "fabric8.namespace")
-    private String namespace;
+    @Parameter(defaultValue = "${project}", readonly = true)
+    protected MavenProject project;
 
-    /**
-     * The domain added to the service ID when creating OpenShift routes
-     */
-    @Parameter(property = "fabric8.domain")
-    protected String routeDomain;
+    @Parameter(defaultValue = "${session}", readonly = true)
+    protected MavenSession session;
 
-    /**
-     * Should we fail the build if an apply fails?
-     */
-    @Parameter(property = "fabric8.apply.failOnError", defaultValue = "true")
-    protected boolean failOnError;
+    // Logger to use
+    protected Logger log;
 
-    /**
-     * Should we update resources by deleting them first and then creating them again?
-     */
-    @Parameter(property = "fabric8.recreate", defaultValue = "false")
-    protected boolean recreate;
-
-    private KubernetesClient kubernetes;
-
-    public KubernetesClient getKubernetes() {
-        Config config = new ConfigBuilder().withNamespace(getNamespace()).build();
-        return new DefaultKubernetesClient(config);
-    }
-
-    protected Controller createController() {
-        Controller controller = new Controller(getKubernetes());
-        controller.setThrowExceptionOnError(failOnError);
-        controller.setRecreateMode(recreate);
-        getLog().debug("Using recreate mode: " + recreate);
-        return controller;
-    }
-
-    protected synchronized String getNamespace() {
-        if (Strings.isNullOrBlank(namespace)) {
-            namespace = KubernetesHelper.defaultNamespace();
-        }
-        if (Strings.isNullOrBlank(namespace)) {
-            namespace = DEFAULT_NAMESPACE;
-        }
-        return namespace;
-    }
-
-    public String getRouteDomain() {
-        return routeDomain;
-    }
-
-    public void setRouteDomain(String routeDomain) {
-        this.routeDomain = routeDomain;
-    }
-
-    public boolean isRecreate() {
-        return recreate;
-    }
-
-    public void setRecreate(boolean recreate) {
-        this.recreate = recreate;
-    }
-
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
-    }
-
-    public boolean isFailOnError() {
-        return failOnError;
-    }
-
-    public void setFailOnError(boolean failOnError) {
-        this.failOnError = failOnError;
-    }
-
-    public MavenProject getProject() {
-        return null;
-    }
-
-    /**
-     * Returns the root project folder
-     */
-    protected File getRootProjectFolder() {
-        File answer = null;
-        MavenProject project = getProject();
-        while (project != null) {
-            File basedir = project.getBasedir();
-            if (basedir != null) {
-                answer = basedir;
+    // Resolve properties with both `docker` (as used in d-m-p) and `fabric8` prefix
+    protected boolean getBooleanConfigProperty(String key, boolean defaultVal) {
+        Properties props = System.getProperties();
+        for (String prefix : new String[] { "fabric8", "docker"}) {
+            String lookup = prefix + "." + key;
+            if (props.containsKey(lookup)) {
+                return Boolean.parseBoolean(lookup);
             }
-            project = project.getParent();
         }
-        return answer;
-    }
-
-    /**
-     * Returns the root project folder
-     */
-    protected MavenProject getRootProject() {
-        MavenProject project = getProject();
-        while (project != null) {
-            MavenProject parent = project.getParent();
-            if (parent == null) {
-                break;
-            }
-            project = parent;
-        }
-        return project;
+        return defaultVal;
     }
 }

@@ -55,19 +55,13 @@ import static io.fabric8.maven.core.util.ResourceFileType.yaml;
  * installed and released to maven repositories like other build artifacts.
  */
 @Mojo(name = "resource", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
-public class ResourceMojo extends AbstractMojo {
+public class ResourceMojo extends AbstractFabric8Mojo {
 
     @Component(role = MavenFileFilter.class, hint = "default")
     private MavenFileFilter mavenFileFilter;
 
     @Component
     private ImageConfigResolver imageConfigResolver;
-
-    @Parameter(defaultValue = "${project}", readonly = true)
-    private MavenProject project;
-
-    @Parameter(defaultValue = "${session}", readonly = true)
-    private MavenSession session;
 
     /**
      * Folder where to find project specific files
@@ -138,9 +132,6 @@ public class ResourceMojo extends AbstractMojo {
     // Services
     private HandlerHub handlerHub;
 
-    // Logger to use
-    protected Logger log;
-
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
@@ -190,18 +181,6 @@ public class ResourceMojo extends AbstractMojo {
 
         ConfigHelper.initAndValidate(ret, null, log);
         return ret;
-    }
-
-    // Resolve properties with both `docker` (as used in d-m-p) and `fabric8` prefix
-    private boolean getBooleanConfigProperty(String key, boolean defaultVal) {
-        Properties props = System.getProperties();
-        for (String prefix : new String[] { "fabric8", "docker"}) {
-            String lookup = prefix + "." + key;
-            if (props.containsKey(lookup)) {
-                return Boolean.parseBoolean(lookup);
-            }
-        }
-        return defaultVal;
     }
 
     // ==================================================================================
@@ -262,7 +241,6 @@ public class ResourceMojo extends AbstractMojo {
         }
         return ret;
     }
-
 
     private void addServices(KubernetesListBuilder builder, List<ServiceConfiguration> serviceConfig, Map<String, String> annotations) {
         if (serviceConfig != null) {
