@@ -19,7 +19,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>fabric8-maven-parent</artifactId>
-  <version>3.0-SNAPSHOT</version>
+  <version>3.0.0-M1</version>
   <packaging>pom</packaging>
 
   <prerequisites>
@@ -51,7 +51,7 @@
   <scm>
     <connection>scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/fabric8io/fabric8-maven-plugin.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>v3.0.0-M1</tag>
     <url>git://github.com/fabric8io/fabric8-maven-plugin.git</url>
   </scm>
   
