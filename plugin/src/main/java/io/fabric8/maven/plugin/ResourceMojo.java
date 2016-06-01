@@ -58,6 +58,8 @@ import static io.fabric8.maven.core.util.ResourceFileType.yaml;
 @Mojo(name = "resource", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public class ResourceMojo extends AbstractFabric8Mojo {
 
+    private static final java.lang.String PROPERTY_DOCKER_LABEL = "fabric8.docker.label";
+
     @Component(role = MavenFileFilter.class, hint = "default")
     private MavenFileFilter mavenFileFilter;
 
@@ -152,6 +154,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
+            defineCustomProperties(project);
             log = new AnsiLogger(getLog(), getBooleanConfigProperty("useColor",true), getBooleanConfigProperty("verbose", false), "F8> ");
             handlerHub = new HandlerHub(project);
 
@@ -171,6 +174,18 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
+        }
+    }
+
+    private void defineCustomProperties(MavenProject project) {
+        Properties properties = project.getProperties();
+        String label = properties.getProperty(PROPERTY_DOCKER_LABEL);
+        if (label == null) {
+            label = project.getVersion();
+            if (label.endsWith("-SNAPSHOT")) {
+                label = "latest";
+            }
+            properties.setProperty(PROPERTY_DOCKER_LABEL, label);
         }
     }
 
