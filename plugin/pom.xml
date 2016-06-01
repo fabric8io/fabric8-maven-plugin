@@ -71,11 +71,6 @@
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>kubernetes-client</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>io.fabric8</groupId>
       <artifactId>kubernetes-api</artifactId>
     </dependency>
 

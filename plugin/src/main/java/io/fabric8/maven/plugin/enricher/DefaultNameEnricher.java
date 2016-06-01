@@ -20,9 +20,13 @@ import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
+import io.fabric8.kubernetes.api.model.ReplicationControllerFluent;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentFluent;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSetFluent;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
@@ -45,12 +49,14 @@ public class DefaultNameEnricher extends BaseEnricher {
 
     @Override
     public void enrich(KubernetesListBuilder builder) {
+        final String defaultName = getConfig().get("", MavenUtil.createDefaultResourceName(getProject()));
+
         builder.accept(new Visitor<HasMetadata>() {
             @Override
             public void visit(HasMetadata resource) {
                 ObjectMeta metadata = getOrCreateMetadata(resource);
                 if (Strings.isNullOrBlank(metadata.getName())) {
-                    metadata.setName(getConfig().get("", MavenUtil.createDefaultResourceName(getProject())));
+                    metadata.setName(defaultName);
                 }
             }
         });
@@ -60,7 +66,32 @@ public class DefaultNameEnricher extends BaseEnricher {
             @Override
             public void visit(DeploymentBuilder resource) {
                 DeploymentFluent.MetadataNested<DeploymentBuilder> metadata = resource.editMetadata();
-                String defaultName = getConfig().get("", MavenUtil.createDefaultResourceName(getProject()));
+                if (metadata == null) {
+                    resource.withNewMetadata().withName(defaultName).endMetadata();
+                } else {
+                    if (Strings.isNullOrBlank(metadata.getName())) {
+                        metadata.withName(defaultName).endMetadata();
+                    }
+                }
+            }
+        });
+        builder.accept(new Visitor<ReplicationControllerBuilder>() {
+            @Override
+            public void visit(ReplicationControllerBuilder resource) {
+                ReplicationControllerFluent.MetadataNested<ReplicationControllerBuilder> metadata = resource.editMetadata();
+                if (metadata == null) {
+                    resource.withNewMetadata().withName(defaultName).endMetadata();
+                } else {
+                    if (Strings.isNullOrBlank(metadata.getName())) {
+                        metadata.withName(defaultName).endMetadata();
+                    }
+                }
+            }
+        });
+        builder.accept(new Visitor<ReplicaSetBuilder>() {
+            @Override
+            public void visit(ReplicaSetBuilder resource) {
+                ReplicaSetFluent.MetadataNested<ReplicaSetBuilder> metadata = resource.editMetadata();
                 if (metadata == null) {
                     resource.withNewMetadata().withName(defaultName).endMetadata();
                 } else {
