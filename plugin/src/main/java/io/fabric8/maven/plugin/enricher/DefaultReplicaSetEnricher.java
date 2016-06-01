@@ -18,6 +18,7 @@ package io.fabric8.maven.plugin.enricher;
 
 import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -37,9 +38,11 @@ import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.utils.Maps;
 import io.fabric8.utils.Strings;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -129,6 +132,12 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
                     if (Strings.isNullOrBlank(container.getName())) {
                         container.setName(defaultContainer.getName());
                     }
+                    List<EnvVar> defaultEnv = defaultContainer.getEnv();
+                    if (defaultEnv != null) {
+                        for (EnvVar envVar : defaultEnv) {
+                            ensureHasEnv(container, envVar);
+                        }
+                    }
                     idx++;
                 }
                 builder.withContainers(containers);
@@ -141,6 +150,20 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
             }
             builder.withContainers(containers);
         }
+    }
+
+    private void ensureHasEnv(Container container, EnvVar envVar) {
+        List<EnvVar> envVars = container.getEnv();
+        if (envVars == null) {
+            envVars = new ArrayList<>();
+            container.setEnv(envVars);
+        }
+        for (EnvVar var : envVars) {
+            if (Objects.equals(var.getName(), envVar.getName())) {
+                return;
+            }
+        }
+        envVars.add(envVar);
     }
 
     private boolean hasPodControllers(KubernetesListBuilder builder) {
