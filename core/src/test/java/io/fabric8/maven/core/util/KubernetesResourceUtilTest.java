@@ -16,9 +16,8 @@
 
 package io.fabric8.maven.core.util;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
+import java.net.URLDecoder;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
@@ -41,9 +40,10 @@ public class KubernetesResourceUtilTest {
     private static File fabric8Dir;
 
     @BeforeClass
-    public static void initPath() {
+    public static void initPath() throws UnsupportedEncodingException {
         ClassLoader classLoader = KubernetesResourceUtil.class.getClassLoader();
-        fabric8Dir = new File(classLoader.getResource("fabric8/simple-rc.yaml").getFile()).getParentFile();
+        String filePath = URLDecoder.decode(classLoader.getResource("fabric8/simple-rc.yaml").getFile(), "UTF-8");
+        fabric8Dir = new File(filePath).getParentFile();
     }
 
     @Test
