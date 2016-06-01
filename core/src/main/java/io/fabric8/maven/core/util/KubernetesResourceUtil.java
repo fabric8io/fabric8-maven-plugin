@@ -122,7 +122,11 @@ public class KubernetesResourceUtil {
     static {
         String mapping[] =
             {
+                "cm", "ConfigMap",
+                "configmap", "ConfigMap",
                 "deployment", "Deployment",
+                "dc", "DeploymentConfig",
+                "deploymentconfig", "DeploymentConfig",
                 "service", "Service",
                 "svc", "Service",
                 "sa", "ServiceAccount",
