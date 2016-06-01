@@ -38,8 +38,6 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.plugin.customizer.ImageConfigCustomizerManager;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
-import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
@@ -90,6 +88,12 @@ public class ResourceMojo extends AbstractFabric8Mojo {
      */
     @Parameter(property = "fabric8.workDir", defaultValue = "${project.build.directory}/fabric8")
     private File workDir;
+
+    /**
+     * The fabric8 kubernetes resource directory for the individually enriched resources
+     */
+    @Parameter(property = "fabric8.enrichedResourcesDir", defaultValue = "${project.build.outputDirectory}/META-INF/fabric8")
+    private File enrichedResourcesDir;
 
     /**
      * Whether to skip the execution of this plugin. Best used as property "fabric8.skip"
@@ -169,7 +173,8 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                 KubernetesList resources = generateResourceDescriptor(enricherManager, resolvedImages);
 
                 // Write to descriptor to the target
-                File outputFile = KubernetesResourceUtil.writeResourceDescriptor(resources, getTargetFile(), resourceFileType);
+                enrichedResourcesDir.mkdirs();
+                File outputFile = KubernetesResourceUtil.writeResourceDescriptor(resources, getTargetFile(), resourceFileType, enrichedResourcesDir, log);
                 projectHelper.attachArtifact(project, artifactType, artifactClassifier, outputFile);
             }
         } catch (IOException e) {

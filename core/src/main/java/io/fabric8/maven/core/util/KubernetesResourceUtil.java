@@ -21,8 +21,10 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,8 +36,12 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Files;
+import io.fabric8.utils.Strings;
 import org.apache.maven.shared.utils.StringUtils;
+
+import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 
 /**
  * Utility class for handling Kubernetes resource descriptors
@@ -90,17 +96,39 @@ public class KubernetesResourceUtil {
         return mapper.convertValue(fragment, HasMetadata.class);
     }
 
-    public static File writeResourceDescriptor(KubernetesList kubernetesList, File target, ResourceFileType resourceFileType)
+    public static File writeResourceDescriptor(KubernetesList kubernetesList, File target, ResourceFileType resourceFileType, File kubernetesResourceDir, Logger log)
         throws IOException {
+        File outputFile = writeResource(kubernetesList, target, resourceFileType);
+
+        if (kubernetesResourceDir != null) {
+            List<HasMetadata> items = kubernetesList.getItems();
+            for (HasMetadata item : items) {
+                String itemNameAndKind = getName(item);
+                if (Strings.isNullOrBlank(itemNameAndKind)) {
+                    log.error("No name for generated item " + item);
+                    continue;
+                }
+                String postfix = getKindFilePostfix(item);
+                if (postfix != null) {
+                    itemNameAndKind += "-" + postfix;
+                }
+                File itemTarget = new File(kubernetesResourceDir, itemNameAndKind);
+                writeResource(item, itemTarget, resourceFileType);
+            }
+        }
+        return outputFile;
+
+    }
+
+    private static File writeResource(Object resource, File target, ResourceFileType resourceFileType) throws IOException {
         ObjectMapper mapper = resourceFileType.getObjectMapper()
                                               .enable(SerializationFeature.INDENT_OUTPUT)
                                               .disable(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS)
                                               .disable(SerializationFeature.WRITE_NULL_MAP_VALUES);
-        String serialized = mapper.writeValueAsString(kubernetesList);
+        String serialized = mapper.writeValueAsString(resource);
         File outputFile = resourceFileType.addExtension(target);
         Files.writeToFile(outputFile, serialized, Charset.defaultCharset());
         return outputFile;
-
     }
 
 
@@ -118,23 +146,24 @@ public class KubernetesResourceUtil {
     // ========================================================================================================
 
     private final static Map<String,String> FILENAME_TO_KIND_MAPPER = new HashMap<>();
+    private static String mappings[] =
+        {
+                // lets put the abbreviation we want to use first
+            "cm", "ConfigMap",
+            "configmap", "ConfigMap",
+            "deployment", "Deployment",
+            "dc", "DeploymentConfig",
+            "deploymentconfig", "DeploymentConfig",
+            "service", "Service",
+            "svc", "Service",
+            "sa", "ServiceAccount",
+            "rc", "ReplicationController",
+            "rs", "ReplicaSet"
+        };
 
     static {
-        String mapping[] =
-            {
-                "cm", "ConfigMap",
-                "configmap", "ConfigMap",
-                "deployment", "Deployment",
-                "dc", "DeploymentConfig",
-                "deploymentconfig", "DeploymentConfig",
-                "service", "Service",
-                "svc", "Service",
-                "sa", "ServiceAccount",
-                "rc", "ReplicationController",
-                "rs", "ReplicaSet"
-            };
-        for (int i = 0; i < mapping.length; i+=2) {
-            FILENAME_TO_KIND_MAPPER.put(mapping[i],mapping[i+1]);
+        for (int i = 0; i < mappings.length; i+=2) {
+            FILENAME_TO_KIND_MAPPER.put(mappings[i], mappings[i+1]);
         }
     }
 
@@ -192,6 +221,23 @@ public class KubernetesResourceUtil {
                               type, file.getName(), StringUtils.join(FILENAME_TO_KIND_MAPPER.keySet().iterator(), ", ")));
         }
         return kind;
+    }
+
+    private static String getKindFilePostfix(HasMetadata resource) {
+        String kind = resource.getKind();
+        if (kind == null) {
+            return "";
+        }
+        if (Strings.isNotBlank(kind)) {
+            for (int i = 0; i < mappings.length; i+=2) {
+                String postfix = mappings[i];
+                String matchKind = mappings[i+1];
+                if (Objects.equals(kind, matchKind)) {
+                    return postfix;
+                }
+            }
+        }
+        return kind.toLowerCase();
     }
 
     private static void addKind(Map<String, Object> fragment, String kind, String fileName) {
