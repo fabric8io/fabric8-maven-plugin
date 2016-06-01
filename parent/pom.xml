@@ -60,7 +60,6 @@
     <version.maven>3.2.3</version.maven>
     <version.fabric8>2.2.123</version.fabric8>
     <version.docker-maven-plugin>0.15.3</version.docker-maven-plugin>
-    <additionalparam>-Xdoclint:none</additionalparam>
   </properties>
 
   <repositories>
@@ -343,7 +342,8 @@
                   <goal>jar</goal>
                 </goals>
                 <configuration>
-                  <additionalparam>${javadoc.opts}</additionalparam>
+                  <!-- take that ... -->
+                  <additionalparam>-Xdoclint:none</additionalparam>
                 </configuration>
               </execution>
             </executions>
