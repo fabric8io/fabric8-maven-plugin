@@ -66,9 +66,10 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
 
     @Override
     public void enrich(KubernetesListBuilder builder) {
+        final String defaultName = getConfig().get("name", MavenUtil.createDefaultResourceName(getProject()));
         ResourceConfiguration config =
             new ResourceConfiguration.Builder()
-                .replicaSetName(getConfig().get("name", MavenUtil.createDefaultResourceName(getProject())))
+                .replicaSetName(defaultName)
                 .imagePullPolicy(getConfig().get("imagePullPolicy","IfNotPresent"))
                 .build();
         final ReplicaSet defaultReplicaSet = rsHandler.getReplicaSet(config, getImages());
@@ -84,7 +85,7 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
                         builder.accept(new Visitor<PodSpecBuilder>() {
                             @Override
                             public void visit(PodSpecBuilder builder) {
-                                mergePodSpec(builder, podSpec);
+                                mergePodSpec(builder, podSpec, defaultName);
                             }
                         });
                     }
@@ -102,7 +103,7 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
         }
     }
 
-    private void mergePodSpec(PodSpecBuilder builder, PodSpec defaultPodSpec) {
+    private void mergePodSpec(PodSpecBuilder builder, PodSpec defaultPodSpec, String defaultName) {
         List<Container> containers = builder.getContainers();
         List<Container> defaultContainers = defaultPodSpec.getContainers();
         int size = defaultContainers.size();
@@ -132,6 +133,13 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
                 }
                 builder.withContainers(containers);
             }
+        } else if (!containers.isEmpty()) {
+            // lets default the container name if there's none specified in the custom yaml file
+            Container container = containers.get(0);
+            if (Strings.isNullOrBlank(container.getName())) {
+                container.setName(defaultName);
+            }
+            builder.withContainers(containers);
         }
     }
 
