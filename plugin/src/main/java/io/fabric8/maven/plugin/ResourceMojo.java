@@ -246,14 +246,14 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             builder.addToReplicationControllerItems(rcHandler.getReplicationController(resources, images));
         }
 
+        // Add default
+        enricherManager.enrich(builder);
+
         // Enrich labels
         enricherManager.enrichLabels(builder);
 
         // Add missing selectors
         enricherManager.addMissingSelectors(builder);
-
-        // Final customization hook
-        enricherManager.customize(builder);
 
         return builder.build();
     }

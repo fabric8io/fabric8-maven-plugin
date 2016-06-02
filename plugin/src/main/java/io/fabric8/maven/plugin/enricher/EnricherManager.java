@@ -87,7 +87,7 @@ public class EnricherManager {
      *
      * @param builder builder to customize
      */
-    public void customize(KubernetesListBuilder builder) {
+    public void enrich(KubernetesListBuilder builder) {
         for (Enricher enricher : enrichers) {
             enricher.enrich(builder);
         }
