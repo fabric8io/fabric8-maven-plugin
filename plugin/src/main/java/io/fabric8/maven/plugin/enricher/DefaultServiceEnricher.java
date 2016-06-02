@@ -84,6 +84,10 @@ public class DefaultServiceEnricher extends BaseEnricher {
         } else {
             ret.headless(true);
         }
+
+        // Add a default type if configured
+        ret.type(getConfig().get("type"));
+
         return ret.build();
     }
 
