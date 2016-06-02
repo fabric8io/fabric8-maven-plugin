@@ -69,6 +69,7 @@
             <default.service.type>NodePort</default.service.type>
           </enricher>
         </configuration>
+        
         <executions>
           <execution>
             <goals>
