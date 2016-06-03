@@ -22,6 +22,7 @@ import java.util.Properties;
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.client.*;
+import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Strings;
 import org.apache.maven.execution.MavenSession;
@@ -40,7 +41,7 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
     protected MavenSession session;
 
     // Logger to use
-    protected Logger log;
+    protected Logger log = new AnsiLogger(getLog(), getBooleanConfigProperty("useColor",true), getBooleanConfigProperty("verbose", false), "F8> ");
 
     // Resolve properties with both `docker` (as used in d-m-p) and `fabric8` prefix
     protected boolean getBooleanConfigProperty(String key, boolean defaultVal) {

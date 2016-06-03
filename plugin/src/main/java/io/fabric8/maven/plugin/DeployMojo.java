@@ -89,11 +89,18 @@ public class DeployMojo extends AbstractFabric8Mojo {
      */
     @Parameter(property = "fabric8.recreate", defaultValue = "false")
     protected boolean recreate;
+
     /**
      * The generated kubernetes YAML file
      */
-    @Parameter(property = "fabric8.manifest", defaultValue = "${basedir}/target/classes/kubernetes.yml")
+    @Parameter(property = "fabric8.kubernetesManifest", defaultValue = "${basedir}/target/classes/kubernetes.yml")
     private File kubernetesManifest;
+
+    /**
+     * The generated openshift YAML file
+     */
+    @Parameter(property = "fabric8.openshiftManifest", defaultValue = "${basedir}/target/classes/openshift.yml")
+    private File openshiftManifest;
 
     /**
      * Should we create new kubernetes resources?
@@ -166,26 +173,34 @@ public class DeployMojo extends AbstractFabric8Mojo {
     @Parameter(property = "fabric8.namespace")
     private String namespace;
 
-    // Kubernetes cliend
+    // Kubernetes client
     private KubernetesClient kubernetes;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        File manifest = kubernetesManifest;
+        KubernetesClient kubernetes = createKubernetesClient();
+        File manifest;
+        String clusterKind = "Kubernetes";
+        if (KubernetesHelper.isOpenShift(kubernetes)) {
+            manifest = openshiftManifest;
+            clusterKind = "OpenShift";
+
+        } else {
+            manifest = kubernetesManifest;
+        }
         if (!Files.isFile(manifest)) {
             if (failOnNoKubernetesJson) {
-                throw new MojoFailureException("No such generated kubernetes YAML file: " + manifest);
+                throw new MojoFailureException("No such generated manifest file: " + manifest);
             } else {
-                getLog().warn("No such generated kubernetes YAML file: " + manifest + " for this project so ignoring");
+                getLog().warn("No such generated manifest file: " + manifest + " for this project so ignoring");
                 return;
             }
         }
-        KubernetesClient kubernetes = createKubernetesClient();
 
         if (kubernetes.getMasterUrl() == null || Strings.isNullOrBlank(kubernetes.getMasterUrl().toString())) {
             throw new MojoFailureException("Cannot find Kubernetes master URL");
         }
-        getLog().info("Using kubernetes at: " + kubernetes.getMasterUrl() + " in namespace " + getNamespace() + " Kubernetes manifest: " + manifest);
+        log.info("Using " + clusterKind +" at: " + kubernetes.getMasterUrl() + " in namespace " + getNamespace() + " with manifest: " + manifest);
 
         try {
             Controller controller = createController();

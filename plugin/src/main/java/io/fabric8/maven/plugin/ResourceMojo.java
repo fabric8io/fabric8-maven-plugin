@@ -20,9 +20,19 @@ import java.io.IOException;
 import java.net.URLClassLoader;
 import java.util.*;
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
+import io.fabric8.kubernetes.api.model.ReplicationControllerFluent;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentStrategy;
+import io.fabric8.kubernetes.api.model.extensions.LabelSelector;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.maven.core.config.ResourceConfiguration;
 import io.fabric8.maven.core.config.ResourceMode;
 import io.fabric8.maven.core.config.ServiceConfiguration;
@@ -39,6 +49,8 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.plugin.customizer.ImageConfigCustomizerManager;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
+import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
+import io.fabric8.openshift.api.model.DeploymentConfigFluent;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
@@ -104,12 +116,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     private boolean skip;
 
 
-    /**
-     * Operational mode how resources should be created.
-     */
-    @Parameter(property = "fabric8.mode")
-    private ResourceMode mode = ResourceMode.kubernetes;
-
     // Resource  specific configuration for this plugin
     @Parameter
     private ResourceConfiguration resources;
@@ -144,8 +150,14 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     /**
      * The artifact classifier for attaching the generated kubernetes YAML file to the project
      */
-    @Parameter(property = "fabric8.artifactClassifier", defaultValue = "kubernetes")
-    private String artifactClassifier;
+    @Parameter(property = "fabric8.kubernetesArtifactClassifier", defaultValue = "kubernetes")
+    private String kubernetesArtifactClassifier;
+
+    /**
+     * The artifact classifier for attaching the generated openshift YAML file to the project
+     */
+    @Parameter(property = "fabric8.openshiftArtifactClassifier", defaultValue = "openshift")
+    private String openshiftArtifactClassifier;
 
     // Whether to use replica sets or replication controller. Could be configurable
     // but for now leave it hidden.
@@ -161,7 +173,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
             defineCustomProperties(project);
-            log = new AnsiLogger(getLog(), getBooleanConfigProperty("useColor",true), getBooleanConfigProperty("verbose", false), "F8> ");
             handlerHub = new HandlerHub(project);
 
             // Resolve the Docker image build configuration
@@ -175,15 +186,104 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
                 // Generate resources
                 KubernetesList resources = generateResourceDescriptor(enricherManager, resolvedImages);
+                KubernetesList openShiftResources = createOpenShiftResources(resources);
 
                 // Write to descriptor to the target
                 enrichedResourcesDir.mkdirs();
-                File outputFile = KubernetesResourceUtil.writeResourceDescriptor(resources, getTargetFile(), resourceFileType, enrichedResourcesDir, log);
-                projectHelper.attachArtifact(project, artifactType, artifactClassifier, outputFile);
+
+                File kubernetesFile = KubernetesResourceUtil.writeResourceDescriptor(resources, new File(target, ResourceMode.kubernetes.getFileName()), resourceFileType, enrichedResourcesDir, log);
+                projectHelper.attachArtifact(project, artifactType, kubernetesArtifactClassifier, kubernetesFile);
+
+                File openshiftFile = KubernetesResourceUtil.writeResourceDescriptor(openShiftResources, new File(target, ResourceMode.openshift.getFileName()), resourceFileType, enrichedResourcesDir, log);
+                projectHelper.attachArtifact(project, artifactType, openshiftArtifactClassifier, openshiftFile);
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
         }
+    }
+
+    /**
+     * Converts the kubernetes resources into OpenShift resources
+     */
+    private KubernetesList createOpenShiftResources(KubernetesList resources) {
+        KubernetesListBuilder builder = new KubernetesListBuilder();
+        builder.withMetadata(resources.getMetadata());
+        List<HasMetadata> items = resources.getItems();
+        if (items != null) {
+            for (HasMetadata item : items) {
+                HasMetadata openshiftItem = convertToOpenShift(item);
+                if (openshiftItem != null) {
+                    builder.addToItems(openshiftItem);
+                }
+            }
+        }
+        return builder.build();
+    }
+
+    /**
+     * Converts any kubernetes resources to OpenShift equivalents
+     *
+     * @return the converted kubernetes resource or null if it should be ignored
+     */
+    private HasMetadata convertToOpenShift(HasMetadata item) {
+        if (item instanceof ReplicaSet) {
+            ReplicaSet resource = (ReplicaSet) item;
+            ReplicationControllerBuilder builder = new ReplicationControllerBuilder();
+            builder.withMetadata(resource.getMetadata());
+            ReplicaSetSpec spec = resource.getSpec();
+            if (spec != null) {
+                ReplicationControllerFluent.SpecNested<ReplicationControllerBuilder> specBuilder = builder.withNewSpec();
+                Integer replicas = spec.getReplicas();
+                if (replicas != null) {
+                    specBuilder.withReplicas(replicas);
+                }
+                LabelSelector selector = spec.getSelector();
+                if (selector  != null) {
+                    Map<String, String> matchLabels = selector.getMatchLabels();
+                    if (matchLabels != null && !matchLabels.isEmpty()) {
+                        specBuilder.withSelector(matchLabels);
+                    }
+                }
+                PodTemplateSpec template = spec.getTemplate();
+                if (template != null) {
+                    specBuilder.withTemplate(template);
+                }
+                specBuilder.endSpec();
+            }
+            return builder.build();
+        } else if (item instanceof Deployment) {
+            Deployment resource = (Deployment) item;
+            DeploymentConfigBuilder builder = new DeploymentConfigBuilder();
+            builder.withMetadata(resource.getMetadata());
+            DeploymentSpec spec = resource.getSpec();
+            if (spec != null) {
+                DeploymentConfigFluent.SpecNested<DeploymentConfigBuilder> specBuilder = builder.withNewSpec();
+                Integer replicas = spec.getReplicas();
+                if (replicas != null) {
+                    specBuilder.withReplicas(replicas);
+                }
+                LabelSelector selector = spec.getSelector();
+                if (selector  != null) {
+                    Map<String, String> matchLabels = selector.getMatchLabels();
+                    if (matchLabels != null && !matchLabels.isEmpty()) {
+                        specBuilder.withSelector(matchLabels);
+                    }
+                }
+                PodTemplateSpec template = spec.getTemplate();
+                if (template != null) {
+                    specBuilder.withTemplate(template);
+                }
+                DeploymentStrategy strategy = spec.getStrategy();
+                if (strategy != null) {
+                    // TODO is there any values we can copy across?
+                    //specBuilder.withStrategy(strategy);
+                }
+                specBuilder.endSpec();
+            }
+            return builder.build();
+
+        }
+        return item;
     }
 
     private void defineCustomProperties(MavenProject project) {
@@ -196,11 +296,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             }
             properties.setProperty(PROPERTY_DOCKER_LABEL, label);
         }
-    }
-
-    private File getTargetFile() {
-        // "kubernetes.yml" or "openshift.yml"
-        return new File(target, mode.getFileName());
     }
 
     private List<ImageConfiguration> resolveImages(List<ImageConfiguration> images, Logger log) {
