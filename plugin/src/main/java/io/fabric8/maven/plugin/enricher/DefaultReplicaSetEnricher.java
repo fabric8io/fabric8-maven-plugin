@@ -17,10 +17,21 @@
 package io.fabric8.maven.plugin.enricher;
 
 import io.fabric8.kubernetes.api.builder.Visitor;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.PodSpec;
+import io.fabric8.kubernetes.api.model.PodSpecBuilder;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.maven.core.config.ResourceConfiguration;
+import io.fabric8.maven.core.handler.DeploymentHandler;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicaSetHandler;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
@@ -28,6 +39,7 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherConfiguration;
 import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.utils.Maps;
 import io.fabric8.utils.Strings;
 
 import java.util.ArrayList;
@@ -44,14 +56,16 @@ import java.util.Set;
 public class DefaultReplicaSetEnricher extends BaseEnricher {
     protected static final String[] POD_CONTROLLER_KINDS = {"ReplicationController", "ReplicaSet", "Deployment", "DeploymentConfig"};
 
-    private ReplicationControllerHandler rcHandler;
-    private ReplicaSetHandler rsHandler;
+    private final DeploymentHandler deployHandler;
+    private final ReplicationControllerHandler rcHandler;
+    private final ReplicaSetHandler rsHandler;
 
     // ==========================================================================
     // Possible configuration options for this enricher
     private enum Config implements EnricherConfiguration.ConfigKey {
         name,
         imagePullPolicy("IfNotPresent"),
+        deployment("true"),
         replicaSet("true");
 
         // Don't beat me ;-) But its boilerplate anyway ....
@@ -64,11 +78,12 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
         HandlerHub handlers = new HandlerHub(buildContext.getProject());
         rcHandler = handlers.getReplicationControllerHandler();
         rsHandler = handlers.getReplicaSetHandler();
+        deployHandler = handlers.getDeploymentHandler();
     }
 
     @Override
     public String getName() {
-        return "default.rs";
+        return "default.deployment";
     }
 
     @Override
@@ -79,11 +94,11 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
                 .replicaSetName(defaultName)
                 .imagePullPolicy(getConfig(Config.imagePullPolicy))
                 .build();
-        final ReplicaSet defaultReplicaSet = rsHandler.getReplicaSet(config, getImages());
+        final Deployment defaultDeployment = deployHandler.getDeployment(config, getImages());
 
         // Check if at least a replica set is added. If not add a default one
         if (hasPodControllers(builder)) {
-            final ReplicaSetSpec spec = defaultReplicaSet.getSpec();
+            final DeploymentSpec spec = defaultDeployment.getSpec();
             if (spec != null) {
                 PodTemplateSpec template = spec.getTemplate();
                 if (template != null) {
@@ -99,10 +114,12 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
                 }
             }
         } else {
-
-            if (asBoolean(getConfig(Config.replicaSet))) {
+            if (asBoolean(getConfig(Config.deployment))) {
+                log.info("Adding a default Deployment");
+                builder.addToDeploymentItems(defaultDeployment);
+            } else if (asBoolean(getConfig(Config.replicaSet))) {
                 log.info("Adding a default ReplicaSet");
-                builder.addToReplicaSetItems(defaultReplicaSet);
+                builder.addToReplicaSetItems(rsHandler.getReplicaSet(config, getImages()));
             } else {
                 log.info("Adding a default ReplicationController");
                 builder.addToReplicationControllerItems(rcHandler.getReplicationController(config, getImages()));

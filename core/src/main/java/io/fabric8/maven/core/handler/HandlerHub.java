@@ -27,6 +27,7 @@ public class HandlerHub {
     private final ServiceHandler serviceHandler;
     private final ReplicaSetHandler replicaSetHandler;
     private final ReplicationControllerHandler replicationControllerHandler;
+    private final DeploymentHandler deploymentHandler;
 
     public HandlerHub(MavenProject project) {
         ProbeHandler probeHandler = new ProbeHandler();
@@ -34,6 +35,7 @@ public class HandlerHub {
         ContainerHandler containerHandler = new ContainerHandler(project, envVarHandler, probeHandler);
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
+        deploymentHandler = new DeploymentHandler(podTemplateHandler);
         replicaSetHandler = new ReplicaSetHandler(podTemplateHandler);
         replicationControllerHandler = new ReplicationControllerHandler(podTemplateHandler);
         serviceHandler = new ServiceHandler();
@@ -41,6 +43,10 @@ public class HandlerHub {
 
     public ServiceHandler getServiceHandler() {
         return serviceHandler;
+    }
+
+    public DeploymentHandler getDeploymentHandler() {
+        return deploymentHandler;
     }
 
     public ReplicaSetHandler getReplicaSetHandler() {
