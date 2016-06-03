@@ -117,7 +117,8 @@ public class SpringBootCustomizer extends BaseCustomizer {
 
     private String prepareVersion() {
         MavenProject project = getProject();
-        return project.getProperties().getProperty(DOCKER_IMAGE_NAME, project.getVersion());
+        //return project.getProperties().getProperty(DOCKER_IMAGE_NAME, project.getVersion());
+        return project.getVersion();
     }
 
     private List<String> extractPorts() {
