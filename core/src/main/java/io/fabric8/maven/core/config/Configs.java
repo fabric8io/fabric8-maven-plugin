@@ -13,31 +13,17 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
-package io.fabric8.maven.customizer.api;
-
-import org.apache.maven.project.MavenProject;
-
-import java.util.Map;
+package io.fabric8.maven.core.config;
 
 /**
- * @author roland
- * @since 15/05/16
+ * Helper functions for working with typesafe configs
  */
-public class MavenCustomizerContext {
-    private final MavenProject project;
-    private final Map<String, String> config;
-
-    public MavenCustomizerContext(MavenProject project, Map<String, String> config) {
-        this.project = project;
-        this.config = config;
+public class Configs {
+    public static int asInt(String value) {
+        return value != null ? Integer.parseInt(value) : 0;
     }
 
-    protected MavenProject getProject() {
-        return project;
-    }
-
-    public Map<String, String> getConfig() {
-        return config;
+    public static boolean asBoolean(String value) {
+        return value != null ? Boolean.parseBoolean(value) : false;
     }
 }

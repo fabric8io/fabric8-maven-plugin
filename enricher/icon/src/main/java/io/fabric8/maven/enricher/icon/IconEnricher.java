@@ -22,6 +22,7 @@ import java.net.URLClassLoader;
 import java.util.Collections;
 import java.util.Map;
 
+import io.fabric8.maven.core.config.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.*;
 import io.fabric8.utils.*;
@@ -269,7 +270,7 @@ public class IconEnricher extends BaseEnricher {
 
         int base64SizeK = Math.round(encoded.length / 1024);
 
-        if (base64SizeK < asInt(getConfig(Config.maximumDataUrlSizeK))) {
+        if (base64SizeK < Configs.asInt(getConfig(Config.maximumDataUrlSizeK))) {
             String mimeType = guessMediaType(iconFile);
             return "data:" + mimeType + ";charset=UTF-8;base64," + new String(encoded);
         } else {

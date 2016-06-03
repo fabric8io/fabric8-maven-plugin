@@ -58,14 +58,6 @@ public abstract class BaseEnricher implements Enricher {
         return config.get(key, defaultVal);
     }
 
-    protected int asInt(String value) {
-        return value != null ? Integer.parseInt(value) : 0;
-    }
-
-    protected boolean asBoolean(String value) {
-        return value != null ? Boolean.parseBoolean(value) : false;
-    }
-
     protected EnricherContext getBuildContext() {
         return buildContext;
     }

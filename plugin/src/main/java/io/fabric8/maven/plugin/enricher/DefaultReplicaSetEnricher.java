@@ -21,15 +21,12 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
+import io.fabric8.maven.core.config.Configs;
 import io.fabric8.maven.core.config.ResourceConfiguration;
 import io.fabric8.maven.core.handler.DeploymentHandler;
 import io.fabric8.maven.core.handler.HandlerHub;
@@ -39,7 +36,6 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherConfiguration;
 import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.utils.Maps;
 import io.fabric8.utils.Strings;
 
 import java.util.ArrayList;
@@ -114,10 +110,10 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
                 }
             }
         } else {
-            if (asBoolean(getConfig(Config.deployment))) {
+            if (Configs.asBoolean(getConfig(Config.deployment))) {
                 log.info("Adding a default Deployment");
                 builder.addToDeploymentItems(defaultDeployment);
-            } else if (asBoolean(getConfig(Config.replicaSet))) {
+            } else if (Configs.asBoolean(getConfig(Config.replicaSet))) {
                 log.info("Adding a default ReplicaSet");
                 builder.addToReplicaSetItems(rsHandler.getReplicaSet(config, getImages()));
             } else {

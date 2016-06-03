@@ -23,6 +23,7 @@ import java.util.Objects;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.maven.core.config.Configs;
 import io.fabric8.maven.core.config.ServiceConfiguration;
 import io.fabric8.maven.core.config.ServiceProtocol;
 import io.fabric8.maven.core.handler.HandlerHub;
@@ -106,7 +107,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
         if (ports.size() > 0) {
             ret.ports(ports);
         } else {
-            if (asBoolean(getConfig(Config.headless))) {
+            if (Configs.asBoolean(getConfig(Config.headless))) {
                 ret.headless(true);
             }
         }

@@ -20,7 +20,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import io.fabric8.maven.core.config.Configs;
 import io.fabric8.maven.customizer.api.BaseCustomizer;
+import io.fabric8.maven.customizer.api.CustomizerConfiguration;
 import io.fabric8.maven.customizer.api.MavenCustomizerContext;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -34,12 +36,29 @@ import org.apache.maven.project.MavenProject;
 public class SpringBootCustomizer extends BaseCustomizer {
 
     public SpringBootCustomizer(MavenCustomizerContext context) {
-        super(context);
+        super(context, "spring.boot");
     }
+
+    // ==========================================================================
+    // Possible configuration options for this enricher
+    private enum Config implements CustomizerConfiguration.ConfigKey {
+        combine("false");
+
+        // Don't beat me ;-) But its boilerplate anyway ....
+        private String d; Config() { this(null); } Config(String v) { d = v; } public String defVal() { return d; }
+    }
+    // ==========================================================================
+
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {
-        if (!containsBuildConfiguration(configs) && isApplicable()) {
+
+        boolean includeDefaultImage = false;
+        if (isApplicable()) {
+            boolean combineEnabled = Configs.asBoolean(getConfig(Config.combine));
+            includeDefaultImage = !containsBuildConfiguration(configs) || combineEnabled;
+        }
+        if (includeDefaultImage && isApplicable()) {
             ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
             BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
                 .assembly(createAssembly())
