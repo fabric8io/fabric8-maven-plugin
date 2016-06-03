@@ -17,6 +17,7 @@ package io.fabric8.maven.plugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLClassLoader;
 import java.util.*;
 
 import io.fabric8.kubernetes.api.model.KubernetesList;
@@ -46,6 +47,7 @@ import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 
+import static io.fabric8.maven.core.util.MavenUtil.getCompileClassLoader;
 import static io.fabric8.maven.core.util.ResourceFileType.yaml;
 
 
@@ -53,7 +55,7 @@ import static io.fabric8.maven.core.util.ResourceFileType.yaml;
  * Generates or copies the Kubernetes JSON file and attaches it to the build so its
  * installed and released to maven repositories like other build artifacts.
  */
-@Mojo(name = "resource", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
+@Mojo(name = "resource", defaultPhase = LifecyclePhase.GENERATE_RESOURCES, requiresDependencyResolution = ResolutionScope.COMPILE, requiresDependencyCollection = ResolutionScope.COMPILE)
 public class ResourceMojo extends AbstractFabric8Mojo {
 
     private static final java.lang.String PROPERTY_DOCKER_LABEL = "fabric8.docker.label";
@@ -165,8 +167,10 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             // Resolve the Docker image build configuration
             resolvedImages = resolveImages(images, log);
 
+            URLClassLoader compileClassLoader = getCompileClassLoader(project);
+
             // Manager for calling enrichers.
-            EnricherManager enricherManager = new EnricherManager(new EnricherContext(project, enricher, resolvedImages, resources, log));
+            EnricherManager enricherManager = new EnricherManager(new EnricherContext(project, enricher, resolvedImages, resources, compileClassLoader, log));
 
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
                 // Generate resources

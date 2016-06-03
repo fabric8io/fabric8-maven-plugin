@@ -16,6 +16,7 @@
 
 package io.fabric8.maven.enricher.api;
 
+import java.net.URLClassLoader;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +32,7 @@ import org.apache.maven.project.MavenProject;
 public class EnricherContext {
 
     private final MavenProject project;
+    private final URLClassLoader compileClassLoader;
     private final Logger log;
 
     private final List<ImageConfiguration> images;
@@ -38,10 +40,12 @@ public class EnricherContext {
 
     private Map<String, String> config;
     public EnricherContext(MavenProject project,
-                           Map<String,String> config,
+                           Map<String, String> config,
                            List<ImageConfiguration> images,
                            ResourceConfiguration kubernetesConfig,
+                           URLClassLoader compileClassLoader,
                            Logger log) {
+        this.compileClassLoader = compileClassLoader;
         this.log = log;
         this.project = project;
         this.config = config;
@@ -67,5 +71,9 @@ public class EnricherContext {
 
     public ResourceConfiguration getResourceConfiguration() {
         return resourceConfiguration;
+    }
+
+    public URLClassLoader getCompileClassLoader() {
+        return compileClassLoader;
     }
 }

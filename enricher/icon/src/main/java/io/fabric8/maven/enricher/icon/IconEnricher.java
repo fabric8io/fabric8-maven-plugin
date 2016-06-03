@@ -17,6 +17,8 @@
 package io.fabric8.maven.enricher.icon;
 
 import java.io.*;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Collections;
 import java.util.Map;
 
@@ -26,6 +28,8 @@ import io.fabric8.utils.*;
 import org.apache.maven.model.Scm;
 import org.apache.maven.project.MavenProject;
 
+import static io.fabric8.maven.core.util.MavenUtil.hasClass;
+import static io.fabric8.maven.core.util.MavenUtil.hasDependency;
 import static io.fabric8.utils.Files.guessMediaType;
 
 /**
@@ -110,12 +114,20 @@ public class IconEnricher extends BaseEnricher {
                 log.warn("Failed to load icon file: " + e, e);
             }
         }
-
         if (Strings.isNullOrBlank(answer)) {
+            if (Strings.isNullOrBlank(iconRef)) {
+                iconRef = chooseDefaultIconRef();
+                log.debug("Chosen iconRef: " + iconRef);
+            }
+
             // maybe its a common icon that is embedded in fabric8-console
-            String embeddedIcon = embeddedIconsInConsole(iconRef, "img/icons/");
-            if (embeddedIcon != null) {
-                return embeddedIcon;
+            if (Strings.isNotBlank(iconRef)) {
+                String embeddedIcon = embeddedIconsInConsole(iconRef, "img/icons/");
+                if (embeddedIcon != null) {
+                    return embeddedIcon;
+                } else {
+                    log.warn("Could not resolve iconRef: " + iconRef);
+                }
             }
         }
 
@@ -126,6 +138,43 @@ public class IconEnricher extends BaseEnricher {
         }
 
         return answer;
+    }
+
+    /**
+     * Lets use the project and its classpath to try figure out what default icon to use
+     *
+     * @return the icon ref if we can detect one or return null
+     */
+    private String chooseDefaultIconRef() {
+        MavenProject project = getProject();
+        URLClassLoader compileClassLoader = getBuildContext().getCompileClassLoader();
+        if (log.isDebugEnabled()) {
+            URL[] urls = compileClassLoader.getURLs();
+            for (URL url : urls) {
+                log.debug("compile classpath: " + url);
+            }
+        }
+
+        if (hasClass(compileClassLoader, "io.fabric8.funktion.runtime.Main") || hasDependency(project, "io.fabric8.funktion")) {
+            return "funktion";
+        }
+        if (hasClass(compileClassLoader, "org.apache.camel.CamelContext")) {
+            return "camel";
+        }
+        if (project.getPlugin("org.springframework.boot:spring-boot-maven-plugin") != null || hasClass(compileClassLoader, "org.springframework.boot.SpringApplication")) {
+            return "spring-boot";
+        }
+        if (hasClass(compileClassLoader, "org.springframework.core.Constants")) {
+            return "spring";
+        }
+        if (hasClass(compileClassLoader, "org.vertx.java.core.Handler", "io.vertx.core.Handler")) {
+            return "vertx";
+        }
+
+        if (project.getPlugin("org.wildfly.swarm:wildfly-swarm-plugin") != null || hasDependency(project, "org.wildfly.swarm")) {
+            return "wildfly-swarm";
+        }
+        return null;
     }
 
     private File copyIconToFolder(String iconRef, File appBuildDir) throws IOException {
@@ -320,6 +369,8 @@ public class IconEnricher extends BaseEnricher {
             return prefix + "fluentd.png";
         } else if (iconRef.contains("forge")) {
             return prefix + "forge.svg";
+        } else if (iconRef.contains("funktion")) {
+            return prefix + "funktion.png";
         } else if (iconRef.contains("gerrit")) {
             return prefix + "gerrit.png";
         } else if (iconRef.contains("gitlab")) {
@@ -380,6 +431,8 @@ public class IconEnricher extends BaseEnricher {
             return prefix + "vertx.svg";
         } else if (iconRef.contains("wildfly")) {
             return prefix + "wildfly.svg";
+        } else if (iconRef.contains("wildfly-swarm")) {
+            return prefix + "wildfly-swarm.png";
         } else if (iconRef.contains("weld")) {
             return prefix + "weld.svg";
         } else if (iconRef.contains("zipkin")) {
