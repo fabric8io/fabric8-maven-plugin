@@ -29,6 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -117,18 +118,29 @@ public class KubernetesResourceUtil {
             }
         }
         return outputFile;
+    }
 
+    public static String toYaml(Object resource) throws JsonProcessingException {
+        return serializeAsString(resource, ResourceFileType.yaml);
+    }
+
+    public static String toJson(Object resource) throws JsonProcessingException {
+        return serializeAsString(resource, ResourceFileType.json);
     }
 
     private static File writeResource(Object resource, File target, ResourceFileType resourceFileType) throws IOException {
+        String serialized = serializeAsString(resource, resourceFileType);
+        File outputFile = resourceFileType.addExtension(target);
+        Files.writeToFile(outputFile, serialized, Charset.defaultCharset());
+        return outputFile;
+    }
+
+    private static String serializeAsString(Object resource, ResourceFileType resourceFileType) throws JsonProcessingException {
         ObjectMapper mapper = resourceFileType.getObjectMapper()
                                               .enable(SerializationFeature.INDENT_OUTPUT)
                                               .disable(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS)
                                               .disable(SerializationFeature.WRITE_NULL_MAP_VALUES);
-        String serialized = mapper.writeValueAsString(resource);
-        File outputFile = resourceFileType.addExtension(target);
-        Files.writeToFile(outputFile, serialized, Charset.defaultCharset());
-        return outputFile;
+        return mapper.writeValueAsString(resource);
     }
 
 

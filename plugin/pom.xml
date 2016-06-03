@@ -132,11 +132,20 @@
       <artifactId>hamcrest-all</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.jmockit</groupId>
+      <artifactId>jmockit</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.jayway.jsonpath</groupId>
+      <artifactId>json-path-assert</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
     <plugins>
-      <plugin>
+    <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
         <configuration>
