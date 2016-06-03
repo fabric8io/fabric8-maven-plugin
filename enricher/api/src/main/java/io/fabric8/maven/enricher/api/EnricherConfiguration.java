@@ -30,42 +30,38 @@ public class EnricherConfiguration {
     private final String prefix;
     private final Map<String,String> config;
 
+    // Interfaces to use for dealing with configuration values
+    public interface ConfigKey {
+        String name();
+        String defVal();
+    }
+
     public EnricherConfiguration(String prefix, Map<String, String> config) {
         this.config = Collections.unmodifiableMap(config != null ? config : Collections.<String, String>emptyMap());
         this.prefix = prefix;
     }
 
-    public String get(String key) {
-        return get(key, null);
+    /**
+     * Get a configuration value
+     *
+     * @param key key to lookup. If it implements also {@link DefaultValueProvider} then use this for a default value
+     * @return the defa
+     */
+    public String get(ConfigKey key) {
+        return get(key, key.defVal());
     }
 
     /**
      * Get a config value with a default
-     * @param key key part to lookup. The whole key is build up from <code>prefix + "." + key</code>. If key is empty or null,
+     * @param key key part to lookup. The whole key is build up from <code>prefix + "." + key</code>. If key is null,
      *            then only the prefix is used for the lookup (this is suitable for enrichers having only one config option)
      * @param defaultVal the default value to use when the no config is set
      * @return the value looked up or the default value.
      */
-    public String get(String key, String defaultVal) {
-        String val = config.get(prefix + (StringUtils.isNotEmpty(key) ? "." + key : ""));
+    public String get(ConfigKey key, String defaultVal) {
+        String keyVal = key != null ? key.name() : "";
+        String val = config.get(prefix + (StringUtils.isNotEmpty(keyVal) ? "." + key : ""));
         return val != null ? val : defaultVal;
     }
 
-    public int getAsInt(String key) {
-        return getAsInt(key, 0);
-    }
-
-    public int getAsInt(String key, int defaultVal) {
-        String val = get(key);
-        return val != null ? Integer.parseInt(val) : defaultVal;
-    }
-
-    public boolean getAsBoolean(String key) {
-        return getAsBoolean(key, false);
-    }
-
-    public boolean getAsBoolean(String key, boolean defaultVal) {
-        String val = get(key);
-        return val != null ? Boolean.parseBoolean(val) : defaultVal;
-    }
 }

@@ -50,8 +50,20 @@ public abstract class BaseEnricher implements Enricher {
         return buildContext.getImages();
     }
 
-    protected EnricherConfiguration getConfig() {
-        return config;
+    protected String getConfig(EnricherConfiguration.ConfigKey key) {
+        return config.get(key);
+    }
+
+    protected String getConfig(EnricherConfiguration.ConfigKey key, String defaultVal) {
+        return config.get(key, defaultVal);
+    }
+
+    protected int asInt(String value) {
+        return value != null ? Integer.parseInt(value) : 0;
+    }
+
+    protected boolean asBoolean(String value) {
+        return value != null ? Boolean.parseBoolean(value) : false;
     }
 
     protected EnricherContext getBuildContext() {
