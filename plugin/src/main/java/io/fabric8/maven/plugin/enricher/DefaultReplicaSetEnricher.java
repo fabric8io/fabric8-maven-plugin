@@ -17,15 +17,7 @@
 package io.fabric8.maven.plugin.enricher;
 
 import io.fabric8.kubernetes.api.builder.Visitor;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.EnvVar;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.PodSpec;
-import io.fabric8.kubernetes.api.model.PodSpecBuilder;
-import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.maven.core.config.ResourceConfiguration;
@@ -34,8 +26,8 @@ import io.fabric8.maven.core.handler.ReplicaSetHandler;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.EnricherConfiguration;
 import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.utils.Maps;
 import io.fabric8.utils.Strings;
 
 import java.util.ArrayList;
@@ -55,6 +47,18 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
     private ReplicationControllerHandler rcHandler;
     private ReplicaSetHandler rsHandler;
 
+    // ==========================================================================
+    // Possible configuration options for this enricher
+    private enum Config implements EnricherConfiguration.ConfigKey {
+        name,
+        imagePullPolicy("IfNotPresent"),
+        replicaSet("true");
+
+        // Don't beat me ;-) But its boilerplate anyway ....
+        private String d; Config() { this(null); } Config(String v) { d = v; } public String defVal() { return d; }
+    }
+    // ==========================================================================
+
     public DefaultReplicaSetEnricher(EnricherContext buildContext) {
         super(buildContext);
         HandlerHub handlers = new HandlerHub(buildContext.getProject());
@@ -69,11 +73,11 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
 
     @Override
     public void enrich(KubernetesListBuilder builder) {
-        final String defaultName = getConfig().get("name", MavenUtil.createDefaultResourceName(getProject()));
+        final String defaultName = getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject()));
         ResourceConfiguration config =
             new ResourceConfiguration.Builder()
                 .replicaSetName(defaultName)
-                .imagePullPolicy(getConfig().get("imagePullPolicy","IfNotPresent"))
+                .imagePullPolicy(getConfig(Config.imagePullPolicy))
                 .build();
         final ReplicaSet defaultReplicaSet = rsHandler.getReplicaSet(config, getImages());
 
@@ -96,7 +100,7 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
             }
         } else {
 
-            if (getConfig().getAsBoolean("useReplicaSet",true)) {
+            if (asBoolean(getConfig(Config.replicaSet))) {
                 log.info("Adding a default ReplicaSet");
                 builder.addToReplicaSetItems(defaultReplicaSet);
             } else {

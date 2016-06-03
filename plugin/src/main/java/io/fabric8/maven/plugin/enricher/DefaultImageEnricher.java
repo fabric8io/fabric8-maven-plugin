@@ -25,6 +25,7 @@ import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.EnricherConfiguration;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.utils.Strings;
 
@@ -39,6 +40,17 @@ public class DefaultImageEnricher extends BaseEnricher {
     public DefaultImageEnricher(EnricherContext buildContext) {
         super(buildContext);
     }
+
+    // ==========================================================================
+    // Possible configuration options for this enricher
+    private enum Config implements EnricherConfiguration.ConfigKey {
+        // What pull policy to use when fetching images
+        pullPolicy("IfNoPresent");
+
+        private String d; Config(String v) { d = v; } public String defVal() { return d; }
+    }
+    // ==========================================================================
+
 
     @Override
     public String getName() {
@@ -103,7 +115,7 @@ public class DefaultImageEnricher extends BaseEnricher {
             containers = new ArrayList<Container>();
             podSpec.setContainers(containers);
         }
-        defaultContainerImages(getConfig().get("pullPolicy", "IfNotPresent"), containers);
+        defaultContainerImages(getConfig(Config.pullPolicy), containers);
         podSpec.setContainers(containers);
         return containers;
     }

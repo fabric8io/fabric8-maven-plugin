@@ -31,17 +31,33 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.EnricherConfiguration;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.utils.Strings;
 import org.apache.maven.shared.utils.StringUtils;
 
 /**
+ * An enricher for creating default services when not present.
+ *
  * @author roland
  * @since 25/05/16
  */
 public class DefaultServiceEnricher extends BaseEnricher {
 
     ServiceHandler serviceHandler;
+
+    // Possible configuration values. Use this name prefixed with this enrichers
+    // name in a <enricher> configuration sections.
+    private enum Config implements EnricherConfiguration.ConfigKey {
+        // Default name to use instead of a calculated one
+        name(null),
+        // Whether allow headless services.
+        headless("false"),
+        // Type of the service (LoadBalancer, NodePort, ...)
+        type(null);
+
+        private String d; Config(String v) { d = v; } public String defVal() { return d; }
+    }
 
     public DefaultServiceEnricher(EnricherContext buildContext) {
         super(buildContext);
@@ -77,16 +93,18 @@ public class DefaultServiceEnricher extends BaseEnricher {
         List<ServiceConfiguration.Port> ports = extractPortsFromImageConfiguration(getImages());
 
         ServiceConfiguration.Builder ret = new ServiceConfiguration.Builder();
-        ret.name(getConfig().get("name", MavenUtil.createDefaultResourceName(getProject())));
+        ret.name(getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject())));
 
         if (ports.size() > 0) {
             ret.ports(ports);
         } else {
-            ret.headless(true);
+            if (asBoolean(getConfig(Config.headless))) {
+                ret.headless(true);
+            }
         }
 
         // Add a default type if configured
-        ret.type(getConfig().get("type"));
+        ret.type(getConfig(Config.type));
 
         return ret.build();
     }

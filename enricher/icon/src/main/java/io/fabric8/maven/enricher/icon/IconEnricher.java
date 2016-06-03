@@ -45,28 +45,35 @@ public class IconEnricher extends BaseEnricher {
     private File templateTempDir;
     private File appConfigDir;
     private String iconRef;
-    private int maximumDataUrlSizeK;
-    private String iconUrlPrefix;
     private String iconBranch;
-    private String iconUrl;
+
+    // ==========================================================================
+    // Possible configuration options for this enricher
+    private enum Config implements EnricherConfiguration.ConfigKey {
+
+        templateTempDir,
+        sourceDir,
+        ref,
+        maximumDataUrlSizeK("2"),
+        urlPrefix,
+        branch("master"),
+        url;
+
+        // Don't beat me ;-) But its boilerplate anyway. Blame Java not to allow base enums with methods only ....
+        private String d; Config() { this(null); } Config(String v) { d = v; } public String defVal() { return d; }
+    }
+    // ==========================================================================
+
 
     public IconEnricher(EnricherContext buildContext) {
         super(buildContext);
 
-        EnricherConfiguration config = getConfig();
-
-        String dir = config.get("templateTempDir");
-        templateTempDir =
-            dir != null ? new File(dir) : new File(getProject().getBasedir() + "/target/fabric8/template-workdir");
-        dir = config.get("source.dir");
-        appConfigDir =
-            dir != null ? new File(dir) : new File(getProject().getBasedir() + "/src/main/fabric8");
-        iconRef = config.get("iconRef");
-        maximumDataUrlSizeK = config.getAsInt("maximumDataUrlSizeK",2);
-        iconUrlPrefix = config.get("iconUrlPrefix");
-        iconBranch = config.get("iconBranch", "master");
-        iconUrl = config.get("iconUrl");
+        String baseDir = getProject().getBasedir().getAbsolutePath();
+        templateTempDir = new File(getConfig(Config.templateTempDir, baseDir + "/target/fabric8/template-workdir"));
+        appConfigDir = new File(getConfig(Config.sourceDir, baseDir + "/src/main/fabric8"));
+        iconRef = getConfig(Config.ref);
     }
+
 
     @Override
     public String getName() {
@@ -88,7 +95,7 @@ public class IconEnricher extends BaseEnricher {
     // ====================================================================================================
 
     protected String getIconUrl() {
-        String answer = iconUrl;
+        String answer = getConfig(Config.url);
         if (Strings.isNullOrBlank(answer)) {
             try {
                 if (templateTempDir != null) {
@@ -262,7 +269,7 @@ public class IconEnricher extends BaseEnricher {
 
         int base64SizeK = Math.round(encoded.length / 1024);
 
-        if (base64SizeK < maximumDataUrlSizeK) {
+        if (base64SizeK < asInt(getConfig(Config.maximumDataUrlSizeK))) {
             String mimeType = guessMediaType(iconFile);
             return "data:" + mimeType + ";charset=UTF-8;base64," + new String(encoded);
         } else {
@@ -272,7 +279,7 @@ public class IconEnricher extends BaseEnricher {
                 if (rootProjectFolder != null) {
                     String relativePath = Files.getRelativePath(rootProjectFolder, iconSourceFile);
                     String relativeParentPath = Files.getRelativePath(rootProjectFolder, getProject().getBasedir());
-                    String urlPrefix = iconUrlPrefix;
+                    String urlPrefix = getConfig(Config.urlPrefix);
                     if (Strings.isNullOrBlank(urlPrefix)) {
                         Scm scm = getProject().getScm();
                         if (scm != null) {
@@ -295,7 +302,7 @@ public class IconEnricher extends BaseEnricher {
                     if (Strings.isNullOrBlank(urlPrefix)) {
                         log.warn("No iconUrlPrefix defined or could be found via SCM in the pom.xml so cannot add an icon URL!");
                     } else {
-                        String answer = URLUtils.pathJoin(urlPrefix, iconBranch, relativePath);
+                        String answer = URLUtils.pathJoin(urlPrefix, getConfig(Config.branch), relativePath);
                         return answer;
                     }
                 }
@@ -304,7 +311,7 @@ public class IconEnricher extends BaseEnricher {
                 if (embeddedIcon != null) {
                     return embeddedIcon;
                 } else {
-                    log.warn("Cannot find url for icon to use " + iconUrl);
+                    log.warn("Cannot find url for icon to use " + getIconUrl());
                 }
             }
         }
