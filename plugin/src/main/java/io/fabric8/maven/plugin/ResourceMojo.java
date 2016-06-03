@@ -40,11 +40,11 @@ import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.MavenProperties;
 import io.fabric8.maven.core.util.ResourceFileType;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
-import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.plugin.customizer.ImageConfigCustomizerManager;
@@ -69,8 +69,6 @@ import static io.fabric8.maven.core.util.ResourceFileType.yaml;
  */
 @Mojo(name = "resource", defaultPhase = LifecyclePhase.GENERATE_RESOURCES, requiresDependencyResolution = ResolutionScope.COMPILE, requiresDependencyCollection = ResolutionScope.COMPILE)
 public class ResourceMojo extends AbstractFabric8Mojo {
-
-    private static final java.lang.String PROPERTY_DOCKER_LABEL = "fabric8.docker.label";
 
     @Component(role = MavenFileFilter.class, hint = "default")
     private MavenFileFilter mavenFileFilter;
@@ -292,13 +290,13 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     private void defineCustomProperties(MavenProject project) {
         Properties properties = project.getProperties();
-        String label = properties.getProperty(PROPERTY_DOCKER_LABEL);
+        String label = properties.getProperty(MavenProperties.DOCKER_IMAGE_LABEL);
         if (label == null) {
             label = project.getVersion();
             if (label.endsWith("-SNAPSHOT")) {
                 label = "latest";
             }
-            properties.setProperty(PROPERTY_DOCKER_LABEL, label);
+            properties.setProperty(MavenProperties.DOCKER_IMAGE_LABEL, label);
         }
     }
 
