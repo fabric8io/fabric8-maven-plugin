@@ -20,28 +20,15 @@ import java.io.IOException;
 import java.net.URLClassLoader;
 import java.util.*;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
-import io.fabric8.kubernetes.api.model.ReplicationControllerFluent;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentStrategy;
-import io.fabric8.kubernetes.api.model.extensions.LabelSelector;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
+import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.extensions.*;
 import io.fabric8.maven.core.config.ResourceConfiguration;
-import io.fabric8.maven.core.config.ResourceMode;
 import io.fabric8.maven.core.config.ServiceConfiguration;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
-import io.fabric8.maven.core.util.MavenProperties;
-import io.fabric8.maven.core.util.ResourceFileType;
+import io.fabric8.maven.core.util.*;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
@@ -51,6 +38,7 @@ import io.fabric8.maven.plugin.customizer.ImageConfigCustomizerManager;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfigFluent;
+import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
@@ -92,20 +80,14 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     /**
      * The generated kubernetes JSON file
      */
-    @Parameter(property = "fabric8.targetDir", defaultValue = "${project.build.outputDirectory}")
-    private File target;
+    @Parameter(property = "fabric8.targetDir", defaultValue = "${project.build.outputDirectory}/META-INF/fabric8")
+    private File targetDir;
 
     /**
      * The fabric8 working directory
      */
     @Parameter(property = "fabric8.workDir", defaultValue = "${project.build.directory}/fabric8")
     private File workDir;
-
-    /**
-     * The fabric8 kubernetes resource directory for the individually enriched resources
-     */
-    @Parameter(property = "fabric8.enrichedResourcesDir", defaultValue = "${project.build.outputDirectory}/META-INF/fabric8")
-    private File enrichedResourcesDir;
 
     /**
      * Whether to skip the execution of this plugin. Best used as property "fabric8.skip"
@@ -145,18 +127,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     @Parameter(property = "fabric8.artifactType", defaultValue = "yml")
     private String artifactType;
 
-    /**
-     * The artifact classifier for attaching the generated kubernetes YAML file to the project
-     */
-    @Parameter(property = "fabric8.kubernetesArtifactClassifier", defaultValue = "kubernetes")
-    private String kubernetesArtifactClassifier;
-
-    /**
-     * The artifact classifier for attaching the generated openshift YAML file to the project
-     */
-    @Parameter(property = "fabric8.openshiftArtifactClassifier", defaultValue = "openshift")
-    private String openshiftArtifactClassifier;
-
     // Whether to use replica sets or replication controller. Could be configurable
     // but for now leave it hidden.
     private boolean useReplicaSet = true;
@@ -176,40 +146,61 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             // Resolve the Docker image build configuration
             resolvedImages = resolveImages(images, log);
 
-            URLClassLoader compileClassLoader = getCompileClassLoader(project);
-
             // Manager for calling enrichers.
-            EnricherManager enricherManager = new EnricherManager(new EnricherContext(project, enricher, resolvedImages, resources, compileClassLoader, log));
+            URLClassLoader compileClassLoader = getCompileClassLoader(project);
+            EnricherContext ctx = new EnricherContext(project, enricher, resolvedImages,
+                                                      resources, compileClassLoader, log);
+            EnricherManager enricherManager = new EnricherManager(ctx);
 
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
-                // Generate resources
-                KubernetesList resources = generateResourceDescriptor(enricherManager, resolvedImages);
-                KubernetesList openShiftResources = createOpenShiftResources(resources);
+                // Generate & write Kubernetes resources
+                KubernetesList kubernetesResources = generateKubernetesResources(enricherManager, resolvedImages);
+                writeResources(kubernetesResources, ResourceClassifier.KUBERNETES);
 
-                // Write to descriptor to the target
-                enrichedResourcesDir.mkdirs();
-
-                File kubernetesFile = KubernetesResourceUtil.writeResourceDescriptor(resources, new File(target, ResourceMode.kubernetes.getFileName()), resourceFileType, enrichedResourcesDir, log);
-                projectHelper.attachArtifact(project, artifactType, kubernetesArtifactClassifier, kubernetesFile);
-
-                File openshiftFile = KubernetesResourceUtil.writeResourceDescriptor(openShiftResources, new File(target, ResourceMode.openshift.getFileName()), resourceFileType, enrichedResourcesDir, log);
-                projectHelper.attachArtifact(project, artifactType, openshiftArtifactClassifier, openshiftFile);
+                // Adapt list to use OpenShift specific resource objects
+                KubernetesList openShiftResources = convertToOpenShiftResources(kubernetesResources);
+                writeResources(openShiftResources, ResourceClassifier.OPENSHIFT);
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
         }
     }
 
-    /**
-     * Converts the kubernetes resources into OpenShift resources
-     */
-    private KubernetesList createOpenShiftResources(KubernetesList resources) {
+    private void writeResources(KubernetesList resources, ResourceClassifier classifier) throws IOException {
+        // write kubernetes.yml / openshift.yml
+        File resourceFileBase = new File(this.targetDir, classifier.getValue());
+        File file = KubernetesResourceUtil.writeResource(resources, resourceFileBase, resourceFileType);
+
+        // Attach it to the Maven reactor so that it will also get deployed
+        projectHelper.attachArtifact(project, artifactType, classifier.getValue(), file);
+
+        // write separate files, one for each resource item
+        writeIndividualResources(resources, resourceFileBase);
+    }
+
+
+    private void writeIndividualResources(KubernetesList resources, File targetDir) throws IOException {
+        for (HasMetadata item : resources.getItems()) {
+            String name = KubernetesHelper.getName(item);
+            if (Strings.isNullOrBlank(name)) {
+                log.error("No name for generated item " + item);
+                continue;
+            }
+            String itemFile = KubernetesResourceUtil.getNameWithSuffix(name, item.getKind());
+            File itemTarget = new File(targetDir, itemFile);
+            KubernetesResourceUtil.writeResource(item, itemTarget, resourceFileType);
+        }
+    }
+
+
+    // Converts the kubernetes resources into OpenShift resources
+    private KubernetesList convertToOpenShiftResources(KubernetesList resources) {
         KubernetesListBuilder builder = new KubernetesListBuilder();
         builder.withMetadata(resources.getMetadata());
         List<HasMetadata> items = resources.getItems();
         if (items != null) {
             for (HasMetadata item : items) {
-                HasMetadata openshiftItem = convertToOpenShift(item);
+                HasMetadata openshiftItem = convertKubernetesItemToOpenShift(item);
                 if (openshiftItem != null) {
                     builder.addToItems(openshiftItem);
                 }
@@ -219,11 +210,11 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     }
 
     /**
-     * Converts any kubernetes resources to OpenShift equivalents
+     * Converts any kubernetes resource to the OpenShift equivalent
      *
      * @return the converted kubernetes resource or null if it should be ignored
      */
-    private HasMetadata convertToOpenShift(HasMetadata item) {
+    private HasMetadata convertKubernetesItemToOpenShift(HasMetadata item) {
         if (item instanceof ReplicaSet) {
             ReplicaSet resource = (ReplicaSet) item;
             ReplicationControllerBuilder builder = new ReplicationControllerBuilder();
@@ -324,7 +315,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     // ==================================================================================
 
-    private KubernetesList generateResourceDescriptor(final EnricherManager enricherManager, List<ImageConfiguration> images)
+    private KubernetesList generateKubernetesResources(final EnricherManager enricherManager, List<ImageConfiguration> images)
         throws IOException, MojoExecutionException {
         File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
         ReplicationControllerHandler rcHandler = handlerHub.getReplicationControllerHandler();
