@@ -37,7 +37,7 @@ public class ImageConfigCustomizerManager {
 
         List<ImageConfiguration> ret = imageConfigs;
         PluginServiceFactory<MavenCustomizerContext> pluginFactory = new PluginServiceFactory<>(
-            new MavenCustomizerContext(project));
+            new MavenCustomizerContext(project, customizerConfigs));
         List<Customizer> customizers =
             pluginFactory.createServiceObjects("META-INF/fabric8-customizer-default", "META-INF/fabric8-customizer");
         for (Customizer customizer : customizers) {

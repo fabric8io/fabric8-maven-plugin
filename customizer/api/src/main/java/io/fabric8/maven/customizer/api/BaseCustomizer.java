@@ -25,12 +25,37 @@ import org.apache.maven.project.MavenProject;
 abstract public class BaseCustomizer implements Customizer {
 
     private final MavenCustomizerContext context;
+    private final String name;
+    private final CustomizerConfiguration config;
 
-    public BaseCustomizer(MavenCustomizerContext context) {
+    public BaseCustomizer(MavenCustomizerContext context, String name) {
         this.context = context;
+        this.name = name;
+        this.config = new CustomizerConfiguration(getName(), context.getConfig());
     }
 
     protected MavenProject getProject() {
         return context.getProject();
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public MavenCustomizerContext getContext() {
+        return context;
+    }
+
+    public CustomizerConfiguration getConfig() {
+        return config;
+    }
+
+    protected String getConfig(CustomizerConfiguration.ConfigKey key) {
+        return config.get(key);
+    }
+
+    protected String getConfig(CustomizerConfiguration.ConfigKey key, String defaultVal) {
+        return config.get(key, defaultVal);
+    }
+
 }
