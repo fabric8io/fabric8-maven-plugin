@@ -83,8 +83,16 @@ public class DefaultServiceEnricher extends BaseEnricher {
                 }
             });
         } else {
-            log.info("Adding a default Service with ports [%s]", formatPortsAsList(defaultService.getSpec().getPorts()));
-            builder.addToServiceItems(defaultService);
+            if (defaultService != null) {
+                ServiceSpec spec = defaultService.getSpec();
+                if (spec != null) {
+                    List<ServicePort> ports = spec.getPorts();
+                    if (ports != null) {
+                        log.info("Adding a default Service with ports [%s]", formatPortsAsList(ports));
+                        builder.addToServiceItems(defaultService);
+                    }
+                }
+            }
         }
     }
 
