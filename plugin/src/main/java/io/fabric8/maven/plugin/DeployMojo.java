@@ -93,13 +93,13 @@ public class DeployMojo extends AbstractFabric8Mojo {
     /**
      * The generated kubernetes YAML file
      */
-    @Parameter(property = "fabric8.kubernetesManifest", defaultValue = "${basedir}/target/classes/kubernetes.yml")
+    @Parameter(property = "fabric8.kubernetesManifest", defaultValue = "${basedir}/target/classes/META-INF/fabric8/kubernetes.yml")
     private File kubernetesManifest;
 
     /**
      * The generated openshift YAML file
      */
-    @Parameter(property = "fabric8.openshiftManifest", defaultValue = "${basedir}/target/classes/openshift.yml")
+    @Parameter(property = "fabric8.openshiftManifest", defaultValue = "${basedir}/target/classes/META-INF/fabric8/openshift.yml")
     private File openshiftManifest;
 
     /**
