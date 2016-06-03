@@ -54,6 +54,10 @@ public abstract class BaseEnricher implements Enricher {
         return config;
     }
 
+    protected EnricherContext getBuildContext() {
+        return buildContext;
+    }
+
     @Override
     public Map<String, String> getLabels(Kind kind) { return null; }
 

@@ -26,10 +26,13 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
+import io.fabric8.utils.Objects;
 import io.fabric8.utils.Zips;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
@@ -120,4 +123,37 @@ public class MavenUtil {
         }
     }
 
+    /**
+     * Returns true if any of the given class names could be found on the given class loader
+     */
+    public static boolean hasClass(ClassLoader classLoader, String... classNames) {
+        for (String className : classNames) {
+            try {
+                classLoader.loadClass(className);
+                return true;
+            } catch (Throwable e) {
+                // ignore
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns true if the maven project has a dependency with the given groupId
+     */
+    public static boolean hasDependency(MavenProject project, String groupId) {
+        Set<Artifact> artifacts = project.getArtifacts();
+        if (artifacts != null) {
+            for (Artifact artifact : artifacts) {
+                String scope = artifact.getScope();
+                if (Objects.equal("test", scope)) {
+                    continue;
+                }
+                if (Objects.equal(groupId, artifact.getGroupId())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }
