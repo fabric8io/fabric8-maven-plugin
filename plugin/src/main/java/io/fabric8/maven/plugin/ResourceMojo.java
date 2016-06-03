@@ -278,6 +278,10 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                     // TODO is there any values we can copy across?
                     //specBuilder.withStrategy(strategy);
                 }
+
+                // lets add a default trigger so that its triggered when we change its config
+                specBuilder.addNewTrigger().withType("ConfigChange").endTrigger();
+
                 specBuilder.endSpec();
             }
             return builder.build();
