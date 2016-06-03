@@ -19,6 +19,7 @@ package io.fabric8.maven.customizer.spring.boot;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
 import io.fabric8.maven.core.config.Configs;
 import io.fabric8.maven.customizer.api.BaseCustomizer;
@@ -28,6 +29,9 @@ import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import org.apache.maven.project.MavenProject;
+
+import static io.fabric8.maven.core.util.MavenProperties.DOCKER_IMAGE_NAME;
+import static io.fabric8.maven.core.util.MavenProperties.DOCKER_IMAGE_USER;
 
 /**
  * @author roland
@@ -52,7 +56,14 @@ public class SpringBootCustomizer extends BaseCustomizer {
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {
-
+        MavenProject project = getProject();
+        Properties properties = project.getProperties();
+        if (!properties.containsKey(DOCKER_IMAGE_USER)) {
+            properties.put(DOCKER_IMAGE_USER, prepareUserName());
+        }
+        if (!properties.containsKey(DOCKER_IMAGE_NAME)) {
+            properties.put(DOCKER_IMAGE_NAME, prepareName());
+        }
         boolean includeDefaultImage = false;
         if (isApplicable()) {
             boolean combineEnabled = Configs.asBoolean(getConfig(Config.combine));
@@ -83,13 +94,16 @@ public class SpringBootCustomizer extends BaseCustomizer {
     }
 
     private String extractImageName() {
-        MavenProject project = getProject();
-        return prepareUserName(project.getGroupId()) + "/" +
-               project.getArtifactId().toLowerCase() + ":" +
-               project.getVersion();
+        return prepareUserName() + "/" + prepareName() + ":" + prepareVersion();
     }
 
-    private String prepareUserName(String groupId) {
+    private String prepareName() {
+        MavenProject project = getProject();
+        return project.getArtifactId().toLowerCase();
+    }
+
+    private String prepareUserName() {
+        String groupId = getProject().getGroupId();
         int idx = groupId.lastIndexOf(".");
         String last = groupId.substring(idx != -1 ? idx : 0);
         StringBuilder ret = new StringBuilder();
@@ -99,6 +113,11 @@ public class SpringBootCustomizer extends BaseCustomizer {
             }
         }
         return ret.toString();
+    }
+
+    private String prepareVersion() {
+        MavenProject project = getProject();
+        return project.getProperties().getProperty(DOCKER_IMAGE_NAME, project.getVersion());
     }
 
     private List<String> extractPorts() {
