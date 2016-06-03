@@ -19,6 +19,7 @@ package io.fabric8.maven.plugin.enricher;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
@@ -57,10 +58,15 @@ public class ProjectInfoEnricher extends BaseEnricher {
     @Override
     public Map<String, String> getSelector(Kind kind) {
         Map ret = getLabels(kind);
-        if  (kind == Kind.SERVICE) {
-            // We don't use the version as part of the selector
-            ret.remove("version");
+        if  (kind == Kind.SERVICE || kind == Kind.DEPLOYMENT || kind == Kind.DEPLOYMENT_CONFIG) {
+            return removeVersionSelector(ret);
         }
         return ret;
+    }
+
+    public static Map<String, String> removeVersionSelector(Map<String, String> selector) {
+        Map<String, String> answer = new HashMap<>(selector);
+        answer.remove("version");
+        return answer;
     }
 }
