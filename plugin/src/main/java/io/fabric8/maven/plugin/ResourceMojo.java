@@ -312,10 +312,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         if (Strings.isNullOrBlank(properties.getProperty(DOCKER_IMAGE_USER))) {
             properties.setProperty(DOCKER_IMAGE_USER, DockerUtil.prepareUserName(project));
         }
-
-        System.out.println("=> " + DOCKER_IMAGE_USER + " = " + properties.getProperty(DOCKER_IMAGE_USER));
-        System.out.println("=> " + DOCKER_IMAGE_NAME + " = " + properties.getProperty(DOCKER_IMAGE_NAME));
-        System.out.println("=> " + DOCKER_IMAGE_LABEL + " = " + properties.getProperty(MavenProperties.DOCKER_IMAGE_LABEL));
     }
 
     private List<ImageConfiguration> resolveImages(List<ImageConfiguration> images, Logger log) {
