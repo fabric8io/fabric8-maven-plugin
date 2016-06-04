@@ -32,7 +32,6 @@ import org.apache.maven.project.MavenProject;
 public class EnricherContext {
 
     private final MavenProject project;
-    private final URLClassLoader compileClassLoader;
     private final Logger log;
 
     private final List<ImageConfiguration> images;
@@ -43,9 +42,7 @@ public class EnricherContext {
                            Map<String, String> config,
                            List<ImageConfiguration> images,
                            ResourceConfiguration kubernetesConfig,
-                           URLClassLoader compileClassLoader,
                            Logger log) {
-        this.compileClassLoader = compileClassLoader;
         this.log = log;
         this.project = project;
         this.config = config;
@@ -73,7 +70,4 @@ public class EnricherContext {
         return resourceConfiguration;
     }
 
-    public URLClassLoader getCompileClassLoader() {
-        return compileClassLoader;
-    }
 }

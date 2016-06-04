@@ -29,8 +29,7 @@ import io.fabric8.utils.*;
 import org.apache.maven.model.Scm;
 import org.apache.maven.project.MavenProject;
 
-import static io.fabric8.maven.core.util.MavenUtil.hasClass;
-import static io.fabric8.maven.core.util.MavenUtil.hasDependency;
+import static io.fabric8.maven.core.util.MavenUtil.*;
 import static io.fabric8.utils.Files.guessMediaType;
 
 /**
@@ -146,31 +145,27 @@ public class IconEnricher extends BaseEnricher {
      */
     private String chooseDefaultIconRef() {
         MavenProject project = getProject();
-        URLClassLoader compileClassLoader = getBuildContext().getCompileClassLoader();
-        if (log.isDebugEnabled()) {
-            URL[] urls = compileClassLoader.getURLs();
-            for (URL url : urls) {
-                log.debug("compile classpath: " + url);
-            }
-        }
+        EnricherContext context = getContext();
 
-        if (hasClass(compileClassLoader, "io.fabric8.funktion.runtime.Main") || hasDependency(project, "io.fabric8.funktion")) {
+        if (hasClass(project, "io.fabric8.funktion.runtime.Main") || hasDependency(project, "io.fabric8.funktion")) {
             return "funktion";
         }
-        if (hasClass(compileClassLoader, "org.apache.camel.CamelContext")) {
+        if (hasClass(project, "org.apache.camel.CamelContext")) {
             return "camel";
         }
-        if (project.getPlugin("org.springframework.boot:spring-boot-maven-plugin") != null || hasClass(compileClassLoader, "org.springframework.boot.SpringApplication")) {
+        if (hasPlugin(project,"org.springframework.boot:spring-boot-maven-plugin")  ||
+            hasClass(project, "org.springframework.boot.SpringApplication")) {
             return "spring-boot";
         }
-        if (hasClass(compileClassLoader, "org.springframework.core.Constants")) {
+        if (hasClass(project, "org.springframework.core.Constants")) {
             return "spring";
         }
-        if (hasClass(compileClassLoader, "org.vertx.java.core.Handler", "io.vertx.core.Handler")) {
+        if (hasClass(project, "org.vertx.java.core.Handler", "io.vertx.core.Handler")) {
             return "vertx";
         }
 
-        if (project.getPlugin("org.wildfly.swarm:wildfly-swarm-plugin") != null || hasDependency(project, "org.wildfly.swarm")) {
+        if (hasPlugin(project, "org.wildfly.swarm:wildfly-swarm-plugin") ||
+            hasDependency(project, "org.wildfly.swarm")) {
             return "wildfly-swarm";
         }
         return null;

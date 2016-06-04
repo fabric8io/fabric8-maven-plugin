@@ -14,7 +14,7 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.core.support;
+package io.fabric8.maven.core.extenvvar;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * A DTO to load/save JSON schema
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class JsonSchema {
+class JsonSchema {
     private String id;
     @JsonProperty("$schema")
     private String uri;

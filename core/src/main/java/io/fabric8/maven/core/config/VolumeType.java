@@ -14,14 +14,13 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.core.support;
+package io.fabric8.maven.core.config;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
-import io.fabric8.maven.core.config.VolumeConfiguration;
 
 public enum VolumeType {
 
