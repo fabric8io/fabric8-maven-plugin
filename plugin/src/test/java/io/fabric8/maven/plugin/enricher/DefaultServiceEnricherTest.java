@@ -20,14 +20,9 @@ import java.util.*;
 
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.maven.core.config.ServiceConfiguration;
-import io.fabric8.maven.core.handler.HandlerHub;
-import io.fabric8.maven.core.handler.ServiceHandler;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import mockit.*;
 import mockit.integration.junit4.JMockit;
@@ -71,7 +66,7 @@ public class DefaultServiceEnricherTest {
         // Enrich
         DefaultServiceEnricher serviceEnricher = new DefaultServiceEnricher(context);
         KubernetesListBuilder builder = new KubernetesListBuilder();
-        serviceEnricher.enrich(builder);
+        serviceEnricher.addDefaultResources(builder);
 
         // Validate that the generated resource contains
         KubernetesList list = builder.build();

@@ -24,7 +24,7 @@ import java.util.Objects;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.plugin.customizer.ImageConfigCustomizerManager;
+import io.fabric8.maven.plugin.customizer.CustomizerManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -58,7 +58,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-        return ImageConfigCustomizerManager.customize(configs, customizer, project);
+        return CustomizerManager.customize(configs, customizer, project);
     }
 
     @Override

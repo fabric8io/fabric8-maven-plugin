@@ -42,7 +42,7 @@ public class DefaultNameEnricher extends BaseEnricher {
     }
 
     @Override
-    public void enrich(KubernetesListBuilder builder) {
+    public void addDefaultResources(KubernetesListBuilder builder) {
         final String defaultName = getConfig(null, MavenUtil.createDefaultResourceName(getProject()));
 
         builder.accept(new Visitor<HasMetadata>() {

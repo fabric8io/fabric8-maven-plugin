@@ -83,13 +83,24 @@ public class EnricherManager {
     }
 
     /**
-     * Allow enricher to do customizations on their own
+     * Allow enricher to do customizations on their own at the end of the enrichment
      *
      * @param builder builder to customize
      */
-    public void enrich(KubernetesListBuilder builder) {
+    public void adapt(KubernetesListBuilder builder) {
         for (Enricher enricher : enrichers) {
-            enricher.enrich(builder);
+            enricher.adapt(builder);
+        }
+    }
+
+    /**
+     * Allow enricher to add default resource objects
+     *
+     * @param builder builder to examine for missing resources and used for adding default resources to it
+     */
+    public void addDefaultResources(KubernetesListBuilder builder) {
+        for (Enricher enricher : enrichers) {
+            enricher.addDefaultResources(builder);
         }
     }
 

@@ -17,7 +17,6 @@ package io.fabric8.maven.plugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URLClassLoader;
 import java.util.*;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -34,7 +33,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.maven.plugin.customizer.ImageConfigCustomizerManager;
+import io.fabric8.maven.plugin.customizer.CustomizerManager;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfigFluent;
@@ -47,7 +46,6 @@ import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 
-import static io.fabric8.maven.core.util.MavenUtil.getCompileClassLoader;
 import static io.fabric8.maven.core.util.ResourceFileType.yaml;
 
 
@@ -303,7 +301,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             new ConfigHelper.Customizer() {
                 @Override
                 public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-                    return ImageConfigCustomizerManager.customize(configs, customizer, project);
+                    return CustomizerManager.customize(configs, customizer, project);
                 }
             });
 
@@ -336,14 +334,17 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             builder.addToReplicationControllerItems(rcHandler.getReplicationController(resources, images));
         }
 
-        // Add default
-        enricherManager.enrich(builder);
+        // Add default resources
+        enricherManager.addDefaultResources(builder);
 
         // Enrich labels
         enricherManager.enrichLabels(builder);
 
         // Add missing selectors
         enricherManager.addMissingSelectors(builder);
+
+        // Final customization step
+        enricherManager.adapt(builder);
 
         return builder.build();
     }

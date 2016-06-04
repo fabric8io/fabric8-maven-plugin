@@ -29,7 +29,7 @@ import org.apache.maven.project.MavenProject;
  * @author roland
  * @since 15/05/16
  */
-public class ImageConfigCustomizerManager {
+public class CustomizerManager {
 
     public static List<ImageConfiguration> customize(List<ImageConfiguration> imageConfigs,
                                                      Map<String, String> customizerConfigs,
