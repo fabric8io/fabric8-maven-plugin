@@ -68,7 +68,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
     }
 
     @Override
-    public void enrich(KubernetesListBuilder builder) {
+    public void addDefaultResources(KubernetesListBuilder builder) {
         final ServiceConfiguration defaultServiceConfig = extractDefaultServiceConfig();
         final Service defaultService = serviceHandler.getService(defaultServiceConfig,null);
 

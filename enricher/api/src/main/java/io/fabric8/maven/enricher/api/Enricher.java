@@ -60,10 +60,20 @@ public interface Enricher {
     Map<String,String> getSelector(Kind kind);
 
     /**
+     * Add default resources when they are missing. Each enricher should be responsible
+     * for a certain kind of resource and should detect whehter a default resource
+     * should be added
+     *
+     * @param builder the build to examine and add to
+     */
+    void addDefaultResources(KubernetesListBuilder builder);
+
+    /**
      * Final customization of the overall resource
      * descriptor
      *
      * @param builder list to customer used to customize
      */
-    void enrich(KubernetesListBuilder builder);
+    void adapt(KubernetesListBuilder builder);
+
 }

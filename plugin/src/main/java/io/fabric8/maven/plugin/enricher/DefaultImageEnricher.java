@@ -52,7 +52,7 @@ public class DefaultImageEnricher extends BaseEnricher {
     }
 
     @Override
-    public void enrich(KubernetesListBuilder builder) {
+    public void addDefaultResources(KubernetesListBuilder builder) {
 
         builder.accept(new Visitor<ReplicationControllerBuilder>() {
             @Override

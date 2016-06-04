@@ -75,7 +75,7 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
     }
 
     @Override
-    public void enrich(KubernetesListBuilder builder) {
+    public void addDefaultResources(KubernetesListBuilder builder) {
         final String defaultName = getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject()));
         ResourceConfiguration config =
             new ResourceConfiguration.Builder()
