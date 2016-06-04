@@ -19,6 +19,7 @@ package io.fabric8.maven.enricher.api;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.fabric8.maven.core.util.Configs;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -29,12 +30,10 @@ import static org.junit.Assert.assertEquals;
  */
 public class EnricherConfigurationTest {
 
-    private enum Config implements EnricherConfiguration.ConfigKey {
-        type {
-            public String defVal() {
-                return null;
-            }
-        }
+    private enum Config implements Configs.Key {
+        type;
+
+        public String def() { return null; }
     }
 
     @Test

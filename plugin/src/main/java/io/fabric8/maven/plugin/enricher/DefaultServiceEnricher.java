@@ -23,7 +23,7 @@ import java.util.Objects;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.maven.core.config.Configs;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.config.ServiceConfiguration;
 import io.fabric8.maven.core.config.ServiceProtocol;
 import io.fabric8.maven.core.handler.HandlerHub;
@@ -47,28 +47,24 @@ public class DefaultServiceEnricher extends BaseEnricher {
 
     ServiceHandler serviceHandler;
 
-    // Possible configuration values. Use this name prefixed with this enrichers
-    // name in a <enricher> configuration sections.
-    private enum Config implements EnricherConfiguration.ConfigKey {
+    // Available configuration keys
+    private enum Config implements Configs.Key {
         // Default name to use instead of a calculated one
-        name(null),
-        // Whether allow headless services.
-        headless("false"),
-        // Type of the service (LoadBalancer, NodePort, ...)
-        type(null);
+        name,
 
-        private String d; Config(String v) { d = v; } public String defVal() { return d; }
+        // Whether allow headless services.
+        headless {{ super.d = "false"; }},
+
+        // Type of the service (LoadBalancer, NodePort, ...)
+        type;
+
+        public String def() { return d; } private String d;
     }
 
     public DefaultServiceEnricher(EnricherContext buildContext) {
-        super(buildContext);
+        super(buildContext, "default.service");
         HandlerHub handlers = new HandlerHub(buildContext.getProject());
         serviceHandler = handlers.getServiceHandler();
-    }
-
-    @Override
-    public String getName() {
-        return "default.service";
     }
 
     @Override

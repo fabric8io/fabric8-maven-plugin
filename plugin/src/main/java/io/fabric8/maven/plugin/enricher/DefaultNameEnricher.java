@@ -38,12 +38,7 @@ import io.fabric8.utils.Strings;
 public class DefaultNameEnricher extends BaseEnricher {
 
     public DefaultNameEnricher(EnricherContext buildContext) {
-        super(buildContext);
-    }
-
-    @Override
-    public String getName() {
-        return "default.name";
+        super(buildContext, "default.name");
     }
 
     @Override
