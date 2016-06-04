@@ -22,12 +22,6 @@ package io.fabric8.maven.core.util;
 public class MavenProperties {
 
     /**
-     * The default docker image label. If not using a SNAPSHOT <code>project.version</code> then this
-     * value is the <code>project.version</code> otherwise its <code>latest</code>
-     */
-    public static final String DOCKER_IMAGE_LABEL = "fabric8.docker.label";
-
-    /**
      * The default user used for docker images which is based on the <code>project.groupId</code>
      */
     public static final String DOCKER_IMAGE_USER = "fabric8.docker.user";
@@ -36,4 +30,15 @@ public class MavenProperties {
      * The default user used for docker images which is based on the <code>project.artifactId</code>
      */
     public static final String DOCKER_IMAGE_NAME = "fabric8.docker.name";
+
+    /**
+     * The default docker image label. If not using a SNAPSHOT <code>project.version</code> then this
+     * value is the <code>project.version</code> otherwise its <code>latest</code>
+     */
+    public static final String DOCKER_IMAGE_LABEL = "fabric8.docker.label";
+
+
+    public static final String[] MAVEN_PROPERTIES = {
+            DOCKER_IMAGE_USER, DOCKER_IMAGE_NAME, DOCKER_IMAGE_LABEL
+    };
 }

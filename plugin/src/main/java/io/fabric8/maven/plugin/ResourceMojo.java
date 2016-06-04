@@ -46,6 +46,9 @@ import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 
+import static io.fabric8.maven.core.util.MavenProperties.DOCKER_IMAGE_LABEL;
+import static io.fabric8.maven.core.util.MavenProperties.DOCKER_IMAGE_NAME;
+import static io.fabric8.maven.core.util.MavenProperties.DOCKER_IMAGE_USER;
 import static io.fabric8.maven.core.util.ResourceFileType.yaml;
 
 
@@ -92,6 +95,12 @@ public class ResourceMojo extends AbstractFabric8Mojo {
      */
     @Parameter(property = "fabric8.skip", defaultValue = "false")
     private boolean skip;
+
+    /**
+     * Whether to use the docker label of <code>latest</code> when building SNAPSHOT versions
+     */
+    @Parameter(property = "fabric8.useLatestLabelForSnapshot", defaultValue = "true")
+    private boolean useLatestLabelForSnapshot;
 
 
     // Resource  specific configuration for this plugin
@@ -277,14 +286,24 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     private void defineCustomProperties(MavenProject project) {
         Properties properties = project.getProperties();
-        String label = properties.getProperty(MavenProperties.DOCKER_IMAGE_LABEL);
-        if (label == null) {
+        String label = properties.getProperty(DOCKER_IMAGE_LABEL);
+        if (Strings.isNullOrBlank(label)) {
             label = project.getVersion();
-            if (label.endsWith("-SNAPSHOT")) {
+            if (useLatestLabelForSnapshot && label.endsWith("-SNAPSHOT")) {
                 label = "latest";
             }
-            properties.setProperty(MavenProperties.DOCKER_IMAGE_LABEL, label);
+            properties.setProperty(DOCKER_IMAGE_LABEL, label);
         }
+        if (Strings.isNullOrBlank(properties.getProperty(DOCKER_IMAGE_NAME))) {
+            properties.setProperty(DOCKER_IMAGE_NAME, DockerUtil.prepareImageNamePart(project));
+        }
+        if (Strings.isNullOrBlank(properties.getProperty(DOCKER_IMAGE_USER))) {
+            properties.setProperty(DOCKER_IMAGE_USER, DockerUtil.prepareUserName(project));
+        }
+
+        System.out.println("=> " + DOCKER_IMAGE_USER + " = " + properties.getProperty(DOCKER_IMAGE_USER));
+        System.out.println("=> " + DOCKER_IMAGE_NAME + " = " + properties.getProperty(DOCKER_IMAGE_NAME));
+        System.out.println("=> " + DOCKER_IMAGE_LABEL + " = " + properties.getProperty(MavenProperties.DOCKER_IMAGE_LABEL));
     }
 
     private List<ImageConfiguration> resolveImages(List<ImageConfiguration> images, Logger log) {
