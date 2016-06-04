@@ -16,15 +16,11 @@
 
 package io.fabric8.maven.core.handler;
 
-import java.io.IOException;
 import java.util.*;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
-import io.fabric8.maven.core.support.JsonSchema;
-import io.fabric8.maven.core.support.JsonSchemaProperty;
-import io.fabric8.maven.core.support.JsonSchemas;
-import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.core.extenvvar.ExternalEnvVarHandler;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -43,7 +39,7 @@ class EnvVarHandler {
 
         List<EnvVar> ret = new ArrayList<>();
 
-        Map<String, String> envs = getExportedEnvironmentVariables(envVars);
+        Map<String, String> envs = ExternalEnvVarHandler.getExportedEnvironmentVariables(project, envVars);
         Map<String, EnvVar> envMap = convertToEnvVarMap(envs);
         ret.addAll(envMap.values());
 
@@ -74,39 +70,6 @@ class EnvVarHandler {
             }
         }
         return envMap;
-    }
-
-    private Map<String, String> getExportedEnvironmentVariables(Map<String, String> envVars) {
-        Map<String, String> ret = getEnvironmentVarsFromJsonSchema(envVars);
-        ret.putAll(envVars);
-        return ret;
-    }
-
-    private Map<String, String> getEnvironmentVarsFromJsonSchema(Map<String, String> envVars) {
-        Map<String, String> ret = new TreeMap<>();
-        JsonSchema schema = getEnvironmentVariableJsonSchema(envVars);
-        Map<String, JsonSchemaProperty> properties = schema.getProperties();
-        Set<Map.Entry<String, JsonSchemaProperty>> entries = properties.entrySet();
-        for (Map.Entry<String, JsonSchemaProperty> entry : entries) {
-            String name = entry.getKey();
-            String value = entry.getValue().getDefaultValue();
-            ret.put(name, value != null ? value : "");
-        }
-        return ret;
-    }
-
-    private JsonSchema getEnvironmentVariableJsonSchema(Map<String, String> envVars) {
-        try {
-            JsonSchema schema = JsonSchemas.loadEnvironmentSchemas(MavenUtil.getCompileClassLoader(project),
-                                                                   project.getBuild().getOutputDirectory());
-            if (schema == null) {
-                schema = new JsonSchema();
-            }
-            JsonSchemas.addEnvironmentVariables(schema, envVars);
-            return schema;
-        } catch (IOException exp) {
-            throw new IllegalArgumentException("Cannot load environment variables from JSON schema",exp);
-        }
     }
 
 }

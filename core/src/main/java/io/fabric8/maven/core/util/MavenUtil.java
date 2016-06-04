@@ -123,20 +123,6 @@ public class MavenUtil {
         }
     }
 
-    /**
-     * Returns true if any of the given class names could be found on the given class loader
-     */
-    public static boolean hasClass(ClassLoader classLoader, String... classNames) {
-        for (String className : classNames) {
-            try {
-                classLoader.loadClass(className);
-                return true;
-            } catch (Throwable e) {
-                // ignore
-            }
-        }
-        return false;
-    }
 
     /**
      * Returns true if the maven project has a dependency with the given groupId
@@ -152,6 +138,26 @@ public class MavenUtil {
                 if (Objects.equal(groupId, artifact.getGroupId())) {
                     return true;
                 }
+            }
+        }
+        return false;
+    }
+
+    public static boolean hasPlugin(MavenProject project, String plugin) {
+        return project.getPlugin(plugin) != null;
+    }
+
+    /**
+     * Returns true if any of the given class names could be found on the given class loader
+     */
+    public static boolean hasClass(MavenProject project, String ... classNames) {
+        URLClassLoader compileClassLoader = getCompileClassLoader(project);
+        for (String className : classNames) {
+            try {
+                compileClassLoader.loadClass(className);
+                return true;
+            } catch (Throwable e) {
+                // ignore
             }
         }
         return false;

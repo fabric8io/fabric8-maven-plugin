@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Properties;
 
 import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.customizer.api.BaseCustomizer;
 import io.fabric8.maven.customizer.api.CustomizerConfiguration;
 import io.fabric8.maven.customizer.api.MavenCustomizerContext;
@@ -143,6 +144,6 @@ public class SpringBootCustomizer extends BaseCustomizer {
 
     protected boolean isApplicable() {
         MavenProject project = getProject();
-        return project.getPlugin("org.springframework.boot:spring-boot-maven-plugin") != null;
+        return MavenUtil.hasPlugin(project,"org.springframework.boot:spring-boot-maven-plugin");
     }
 }

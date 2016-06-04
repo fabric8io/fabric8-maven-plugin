@@ -67,7 +67,7 @@ public abstract class BaseEnricher implements Enricher {
         return config.get(key, defaultVal);
     }
 
-    protected EnricherContext getBuildContext() {
+    protected EnricherContext getContext() {
         return buildContext;
     }
 

@@ -22,7 +22,7 @@ import java.util.List;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.config.ResourceConfiguration;
 import io.fabric8.maven.core.config.VolumeConfiguration;
-import io.fabric8.maven.core.support.VolumeType;
+import io.fabric8.maven.core.config.VolumeType;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 
 /**

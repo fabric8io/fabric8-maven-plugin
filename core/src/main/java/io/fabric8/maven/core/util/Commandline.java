@@ -14,7 +14,7 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.core.support;
+package io.fabric8.maven.core.util;
 
 import java.util.*;
 

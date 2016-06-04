@@ -147,9 +147,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             resolvedImages = resolveImages(images, log);
 
             // Manager for calling enrichers.
-            URLClassLoader compileClassLoader = getCompileClassLoader(project);
-            EnricherContext ctx = new EnricherContext(project, enricher, resolvedImages,
-                                                      resources, compileClassLoader, log);
+            EnricherContext ctx = new EnricherContext(project, enricher, resolvedImages, resources, log);
             EnricherManager enricherManager = new EnricherManager(ctx);
 
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
