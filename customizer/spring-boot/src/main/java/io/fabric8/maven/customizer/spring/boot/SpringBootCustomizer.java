@@ -22,15 +22,16 @@ import java.util.List;
 import java.util.Properties;
 
 import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.DockerUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.customizer.api.BaseCustomizer;
-import io.fabric8.maven.customizer.api.CustomizerConfiguration;
 import io.fabric8.maven.customizer.api.MavenCustomizerContext;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import org.apache.maven.project.MavenProject;
 
+import static io.fabric8.maven.core.util.MavenProperties.DOCKER_IMAGE_LABEL;
 import static io.fabric8.maven.core.util.MavenProperties.DOCKER_IMAGE_NAME;
 import static io.fabric8.maven.core.util.MavenProperties.DOCKER_IMAGE_USER;
 
@@ -95,26 +96,17 @@ public class SpringBootCustomizer extends BaseCustomizer {
 
     private String prepareName() {
         MavenProject project = getProject();
-        return project.getArtifactId().toLowerCase();
+        return project.getProperties().getProperty(DOCKER_IMAGE_NAME, DockerUtil.prepareImageNamePart(project));
     }
 
     private String prepareUserName() {
-        String groupId = getProject().getGroupId();
-        int idx = groupId.lastIndexOf(".");
-        String last = groupId.substring(idx != -1 ? idx : 0);
-        StringBuilder ret = new StringBuilder();
-        for (char c : last.toCharArray()) {
-            if (Character.isLetter(c) || Character.isDigit(c)) {
-                ret.append(c);
-            }
-        }
-        return ret.toString();
+        MavenProject project = getProject();
+        return project.getProperties().getProperty(DOCKER_IMAGE_USER, DockerUtil.prepareUserName(project));
     }
 
     private String prepareVersion() {
         MavenProject project = getProject();
-        //return project.getProperties().getProperty(DOCKER_IMAGE_NAME, project.getVersion());
-        return project.getVersion();
+        return project.getProperties().getProperty(DOCKER_IMAGE_LABEL, project.getVersion());
     }
 
     private List<String> extractPorts() {
