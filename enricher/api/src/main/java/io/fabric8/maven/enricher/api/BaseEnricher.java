@@ -20,7 +20,9 @@ import java.util.List;
 import java.util.Map;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.handler.property.ConfigKey;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.project.MavenProject;
 
@@ -31,15 +33,22 @@ import org.apache.maven.project.MavenProject;
 public abstract class BaseEnricher implements Enricher {
 
     private final EnricherConfiguration config;
+    private final String name;
     private EnricherContext buildContext;
 
     protected Logger log;
 
-    public BaseEnricher(EnricherContext buildContext) {
+    public BaseEnricher(EnricherContext buildContext, String name) {
         this.buildContext = buildContext;
         // Pick the configuration which is for us
-        this.config = new EnricherConfiguration(getName(), buildContext.getConfig());
+        this.config = new EnricherConfiguration(name, buildContext.getConfig());
         this.log = buildContext.getLog();
+        this.name = name;
+    }
+
+    @Override
+    public String getName() {
+        return null;
     }
 
     protected MavenProject getProject() {
@@ -50,11 +59,11 @@ public abstract class BaseEnricher implements Enricher {
         return buildContext.getImages();
     }
 
-    protected String getConfig(EnricherConfiguration.ConfigKey key) {
+    protected String getConfig(Configs.Key key) {
         return config.get(key);
     }
 
-    protected String getConfig(EnricherConfiguration.ConfigKey key, String defaultVal) {
+    protected String getConfig(Configs.Key key, String defaultVal) {
         return config.get(key, defaultVal);
     }
 

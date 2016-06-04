@@ -16,6 +16,8 @@
 
 package io.fabric8.maven.customizer.api;
 
+import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.docker.config.handler.property.ConfigKey;
 import org.apache.maven.shared.utils.StringUtils;
 
 import java.util.Collections;
@@ -28,12 +30,6 @@ public class CustomizerConfiguration {
     private final String prefix;
     private final Map<String,String> config;
 
-    // Interfaces to use for dealing with configuration values
-    public interface ConfigKey {
-        String name();
-        String defVal();
-    }
-
     public CustomizerConfiguration(String prefix, Map<String, String> config) {
         this.config = Collections.unmodifiableMap(config != null ? config : Collections.<String, String>emptyMap());
         this.prefix = prefix;
@@ -45,8 +41,8 @@ public class CustomizerConfiguration {
      * @param key key to lookup. If it implements also {@link DefaultValueProvider} then use this for a default value
      * @return the defa
      */
-    public String get(ConfigKey key) {
-        return get(key, key.defVal());
+    public String get(Configs.Key key) {
+        return get(key, key.def());
     }
 
     /**
@@ -56,7 +52,7 @@ public class CustomizerConfiguration {
      * @param defaultVal the default value to use when the no config is set
      * @return the value looked up or the default value.
      */
-    public String get(ConfigKey key, String defaultVal) {
+    public String get(Configs.Key key, String defaultVal) {
         String keyVal = key != null ? key.name() : "";
         String val = config.get(prefix + (StringUtils.isNotEmpty(keyVal) ? "." + key : ""));
         return val != null ? val : defaultVal;

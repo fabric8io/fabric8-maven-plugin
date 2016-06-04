@@ -13,12 +13,21 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.core.config;
+
+package io.fabric8.maven.core.util;
 
 /**
  * Helper functions for working with typesafe configs
  */
 public class Configs {
+
+    // Interfaces to use for dealing with configuration values and default values
+    public interface Key {
+        String name();
+        String def();
+    }
+
+
     public static int asInt(String value) {
         return value != null ? Integer.parseInt(value) : 0;
     }

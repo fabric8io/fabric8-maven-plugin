@@ -16,6 +16,7 @@
 
 package io.fabric8.maven.customizer.api;
 
+import io.fabric8.maven.core.util.Configs;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -50,11 +51,11 @@ abstract public class BaseCustomizer implements Customizer {
         return config;
     }
 
-    protected String getConfig(CustomizerConfiguration.ConfigKey key) {
+    protected String getConfig(Configs.Key key) {
         return config.get(key);
     }
 
-    protected String getConfig(CustomizerConfiguration.ConfigKey key, String defaultVal) {
+    protected String getConfig(Configs.Key key, String defaultVal) {
         return config.get(key, defaultVal);
     }
 

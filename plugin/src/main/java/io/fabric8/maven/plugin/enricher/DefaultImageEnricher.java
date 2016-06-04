@@ -23,6 +23,7 @@ import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherConfiguration;
@@ -38,23 +39,16 @@ import static io.fabric8.maven.core.handler.Containers.getKubernetesContainerNam
 public class DefaultImageEnricher extends BaseEnricher {
 
     public DefaultImageEnricher(EnricherContext buildContext) {
-        super(buildContext);
+        super(buildContext, "default.image");
     }
 
-    // ==========================================================================
-    // Possible configuration options for this enricher
-    private enum Config implements EnricherConfiguration.ConfigKey {
+
+    // Available configuration keys
+    private enum Config implements Configs.Key {
         // What pull policy to use when fetching images
-        pullPolicy("IfNoPresent");
+        pullPolicy {{ super.d = "IfNoPresent"; }};
 
-        private String d; Config(String v) { d = v; } public String defVal() { return d; }
-    }
-    // ==========================================================================
-
-
-    @Override
-    public String getName() {
-        return "default.image";
+        public String def() { return d; } private String d;
     }
 
     @Override

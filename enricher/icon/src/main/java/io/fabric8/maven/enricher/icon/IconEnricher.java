@@ -22,7 +22,7 @@ import java.net.URLClassLoader;
 import java.util.Collections;
 import java.util.Map;
 
-import io.fabric8.maven.core.config.Configs;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.*;
 import io.fabric8.utils.*;
@@ -48,26 +48,22 @@ public class IconEnricher extends BaseEnricher {
     private String iconRef;
     private String iconBranch;
 
-    // ==========================================================================
-    // Possible configuration options for this enricher
-    private enum Config implements EnricherConfiguration.ConfigKey {
+    // Available configuration keys
+    private enum Config implements Configs.Key {
 
         templateTempDir,
         sourceDir,
         ref,
-        maximumDataUrlSizeK("2"),
+        maximumDataUrlSizeK   {{ super.d = "2"; }},
         urlPrefix,
-        branch("master"),
+        branch                {{ super.d = "master"; }},
         url;
 
-        // Don't beat me ;-) But its boilerplate anyway. Blame Java not to allow base enums with methods only ....
-        private String d; Config() { this(null); } Config(String v) { d = v; } public String defVal() { return d; }
+        public String def() { return d; } private String d;
     }
-    // ==========================================================================
-
 
     public IconEnricher(EnricherContext buildContext) {
-        super(buildContext);
+        super(buildContext, "icon");
 
         String baseDir = getProject().getBasedir().getAbsolutePath();
         templateTempDir = new File(getConfig(Config.templateTempDir, baseDir + "/target/fabric8/template-workdir"));
@@ -75,11 +71,6 @@ public class IconEnricher extends BaseEnricher {
         iconRef = getConfig(Config.ref);
     }
 
-
-    @Override
-    public String getName() {
-        return "icon";
-    }
 
     @Override
     public Map<String, String> getAnnotations(Kind kind) {

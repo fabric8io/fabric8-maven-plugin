@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
-import io.fabric8.maven.core.config.Configs;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.customizer.api.BaseCustomizer;
 import io.fabric8.maven.customizer.api.CustomizerConfiguration;
 import io.fabric8.maven.customizer.api.MavenCustomizerContext;
@@ -43,16 +43,11 @@ public class SpringBootCustomizer extends BaseCustomizer {
         super(context, "spring.boot");
     }
 
-    // ==========================================================================
-    // Possible configuration options for this enricher
-    private enum Config implements CustomizerConfiguration.ConfigKey {
-        combine("false");
+    private enum Config implements Configs.Key {
+        combine {{ super.d = "false"; }};
 
-        // Don't beat me ;-) But its boilerplate anyway ....
-        private String d; Config() { this(null); } Config(String v) { d = v; } public String defVal() { return d; }
+        public String def() { return d; } private String d;
     }
-    // ==========================================================================
-
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {

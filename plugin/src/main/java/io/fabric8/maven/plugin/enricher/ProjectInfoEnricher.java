@@ -32,12 +32,7 @@ import org.apache.maven.project.MavenProject;
 public class ProjectInfoEnricher extends BaseEnricher {
 
     public ProjectInfoEnricher(EnricherContext buildContext) {
-        super(buildContext);
-    }
-
-    @Override
-    public String getName() {
-        return "label.project";
+        super(buildContext, "label.project");
     }
 
     // For the moment return labels for all objects

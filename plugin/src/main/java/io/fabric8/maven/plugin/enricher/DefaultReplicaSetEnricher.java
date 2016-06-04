@@ -26,7 +26,7 @@ import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
-import io.fabric8.maven.core.config.Configs;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.config.ResourceConfiguration;
 import io.fabric8.maven.core.handler.DeploymentHandler;
 import io.fabric8.maven.core.handler.HandlerHub;
@@ -56,30 +56,22 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
     private final ReplicationControllerHandler rcHandler;
     private final ReplicaSetHandler rsHandler;
 
-    // ==========================================================================
-    // Possible configuration options for this enricher
-    private enum Config implements EnricherConfiguration.ConfigKey {
+    // Available configuration keys
+    private enum Config implements Configs.Key {
         name,
-        imagePullPolicy("IfNotPresent"),
-        deployment("true"),
-        replicaSet("true");
+        imagePullPolicy  {{ super.d = "IfNotPresent"; }},
+        deployment       {{ super.d = "true"; }},
+        replicaSet       {{ super.d = "true"; }};
 
-        // Don't beat me ;-) But its boilerplate anyway ....
-        private String d; Config() { this(null); } Config(String v) { d = v; } public String defVal() { return d; }
+        public String def() { return d; } private String d;
     }
-    // ==========================================================================
 
     public DefaultReplicaSetEnricher(EnricherContext buildContext) {
-        super(buildContext);
+        super(buildContext, "default.deployment");
         HandlerHub handlers = new HandlerHub(buildContext.getProject());
         rcHandler = handlers.getReplicationControllerHandler();
         rsHandler = handlers.getReplicaSetHandler();
         deployHandler = handlers.getDeploymentHandler();
-    }
-
-    @Override
-    public String getName() {
-        return "default.deployment";
     }
 
     @Override
