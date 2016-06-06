@@ -53,12 +53,12 @@ public class IconEnricher extends BaseEnricher {
         templateTempDir,
         sourceDir,
         ref,
-        maximumDataUrlSizeK   {{ super.d = "2"; }},
+        maximumDataUrlSizeK   {{ d = "2"; }},
         urlPrefix,
-        branch                {{ super.d = "master"; }},
+        branch                {{ d = "master"; }},
         url;
 
-        public String def() { return d; } private String d;
+        public String def() { return d; } protected String d;
     }
 
     public IconEnricher(EnricherContext buildContext) {

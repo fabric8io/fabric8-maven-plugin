@@ -53,12 +53,12 @@ public class DefaultServiceEnricher extends BaseEnricher {
         name,
 
         // Whether allow headless services.
-        headless {{ super.d = "false"; }},
+        headless {{ d = "false"; }},
 
         // Type of the service (LoadBalancer, NodePort, ...)
         type;
 
-        public String def() { return d; } private String d;
+        public String def() { return d; } protected String d;
     }
 
     public DefaultServiceEnricher(EnricherContext buildContext) {
