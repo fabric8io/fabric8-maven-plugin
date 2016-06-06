@@ -17,6 +17,7 @@ package io.fabric8.maven.plugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -97,10 +98,16 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     private boolean skip;
 
     /**
+     * Whether to use a timestamped label when building SNAPSHOT versions
+     */
+    @Parameter(defaultValue = "true")
+    private boolean snapshotLabelUseTimestamp;
+
+    /**
      * Whether to use the docker label of <code>latest</code> when building SNAPSHOT versions
      */
-    @Parameter(property = "fabric8.useLatestLabelForSnapshot", defaultValue = "true")
-    private boolean useLatestLabelForSnapshot;
+    @Parameter(defaultValue = "true")
+    private boolean snapshotLabelUseLatest;
 
 
     // Resource  specific configuration for this plugin
@@ -289,8 +296,13 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         String label = properties.getProperty(DOCKER_IMAGE_LABEL);
         if (Strings.isNullOrBlank(label)) {
             label = project.getVersion();
-            if (useLatestLabelForSnapshot && label.endsWith("-SNAPSHOT")) {
-                label = "latest";
+            if (label.endsWith("-SNAPSHOT")) {
+                if (snapshotLabelUseTimestamp) {
+                    label = "snapshot-" + new SimpleDateFormat("yyMMdd-HHmmss-SSSS").format(new Date());
+
+                } else if (snapshotLabelUseLatest) {
+                    label = "latest";
+                }
             }
             properties.setProperty(DOCKER_IMAGE_LABEL, label);
         }
@@ -300,10 +312,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         if (Strings.isNullOrBlank(properties.getProperty(DOCKER_IMAGE_USER))) {
             properties.setProperty(DOCKER_IMAGE_USER, DockerUtil.prepareUserName(project));
         }
-
-        System.out.println("=> " + DOCKER_IMAGE_USER + " = " + properties.getProperty(DOCKER_IMAGE_USER));
-        System.out.println("=> " + DOCKER_IMAGE_NAME + " = " + properties.getProperty(DOCKER_IMAGE_NAME));
-        System.out.println("=> " + DOCKER_IMAGE_LABEL + " = " + properties.getProperty(MavenProperties.DOCKER_IMAGE_LABEL));
     }
 
     private List<ImageConfiguration> resolveImages(List<ImageConfiguration> images, Logger log) {
