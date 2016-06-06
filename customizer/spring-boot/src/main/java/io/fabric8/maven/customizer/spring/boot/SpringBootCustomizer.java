@@ -45,9 +45,9 @@ public class SpringBootCustomizer extends BaseCustomizer {
     }
 
     private enum Config implements Configs.Key {
-        combine {{ super.d = "false"; }};
+        combine {{ d = "false"; }};
 
-        public String def() { return d; } private String d;
+        public String def() { return d; } protected String d;
     }
 
     @Override

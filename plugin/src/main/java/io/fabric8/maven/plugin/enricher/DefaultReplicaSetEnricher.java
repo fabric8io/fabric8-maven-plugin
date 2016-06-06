@@ -59,11 +59,11 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
     // Available configuration keys
     private enum Config implements Configs.Key {
         name,
-        imagePullPolicy  {{ super.d = "IfNotPresent"; }},
-        deployment       {{ super.d = "true"; }},
-        replicaSet       {{ super.d = "true"; }};
+        imagePullPolicy  {{ d = "IfNotPresent"; }},
+        deployment       {{ d = "true"; }},
+        replicaSet       {{ d = "true"; }};
 
-        public String def() { return d; } private String d;
+        public String def() { return d; } protected String d;
     }
 
     public DefaultReplicaSetEnricher(EnricherContext buildContext) {

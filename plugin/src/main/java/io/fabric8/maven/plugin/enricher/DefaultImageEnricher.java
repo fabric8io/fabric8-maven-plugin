@@ -46,9 +46,9 @@ public class DefaultImageEnricher extends BaseEnricher {
     // Available configuration keys
     private enum Config implements Configs.Key {
         // What pull policy to use when fetching images
-        pullPolicy {{ super.d = "IfNoPresent"; }};
+        pullPolicy {{ d = "IfNoPresent"; }};
 
-        public String def() { return d; } private String d;
+        public String def() { return d; } protected String d;
     }
 
     @Override
