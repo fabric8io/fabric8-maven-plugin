@@ -31,7 +31,6 @@ import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import org.apache.maven.project.MavenProject;
 
-import static io.fabric8.maven.core.util.MavenProperties.DOCKER_IMAGE_LABEL;
 import static io.fabric8.maven.core.util.MavenProperties.DOCKER_IMAGE_NAME;
 import static io.fabric8.maven.core.util.MavenProperties.DOCKER_IMAGE_USER;
 
@@ -106,7 +105,7 @@ public class SpringBootCustomizer extends BaseCustomizer {
 
     private String prepareVersion() {
         MavenProject project = getProject();
-        return project.getProperties().getProperty(DOCKER_IMAGE_LABEL, project.getVersion());
+        return DockerUtil.getDockerLabel(project);
     }
 
     private List<String> extractPorts() {

@@ -17,6 +17,8 @@ package io.fabric8.maven.core.util;
 
 import org.apache.maven.project.MavenProject;
 
+import static io.fabric8.maven.core.util.MavenProperties.DOCKER_IMAGE_LABEL;
+
 /**
  */
 public class DockerUtil {
@@ -35,5 +37,9 @@ public class DockerUtil {
 
     public static String prepareImageNamePart(MavenProject project) {
         return project.getArtifactId().toLowerCase();
+    }
+
+    public static String getDockerLabel(MavenProject project) {
+        return project.getProperties().getProperty(DOCKER_IMAGE_LABEL, project.getVersion());
     }
 }
