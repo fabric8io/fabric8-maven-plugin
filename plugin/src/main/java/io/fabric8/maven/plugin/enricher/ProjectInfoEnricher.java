@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.util.DockerUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
@@ -43,7 +44,7 @@ public class ProjectInfoEnricher extends BaseEnricher {
 
         Map<String, String> ret = new HashMap<>();
 
-        ret.put("version", project.getVersion());
+        ret.put("version", DockerUtil.getDockerLabel(project));
         ret.put("project", project.getArtifactId());
         ret.put("group", project.getGroupId());
         ret.put("provider", "fabric8");
