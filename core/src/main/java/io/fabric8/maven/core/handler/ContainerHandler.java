@@ -18,10 +18,13 @@ package io.fabric8.maven.core.handler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.config.ResourceConfiguration;
 import io.fabric8.maven.core.config.VolumeConfiguration;
+import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.core.util.SpringBootProperties;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -30,11 +33,15 @@ import org.apache.maven.project.MavenProject;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import static io.fabric8.maven.core.util.MavenUtil.hasClass;
+import static io.fabric8.utils.PropertiesHelper.getInteger;
+
 /**
  * @author roland
  * @since 08/04/16
  */
 class ContainerHandler {
+    private static final Integer DEFAULT_MANAGEMENT_PORT = 8081;
 
     private final EnvVarHandler envVarHandler;
     private final ProbeHandler probeHandler;
@@ -49,8 +56,20 @@ class ContainerHandler {
     List<Container> getContainers(ResourceConfiguration config, List<ImageConfiguration> images)  {
 
         List<Container> ret = new ArrayList<>();
+        int idx = 1;
         for (ImageConfiguration imageConfig : images) {
             if (imageConfig.getBuildConfiguration() != null) {
+                Probe livenessProbe = probeHandler.getProbe(config.getLiveness());
+                Probe readinessProbe = probeHandler.getProbe(config.getReadiness());
+                // lets only discover probes for the last contributed image (spring boot etc)
+                if (idx++ == images.size()) {
+                    if (livenessProbe == null) {
+                        livenessProbe = discoverLivenessProbe();
+                    }
+                    if (readinessProbe == null) {
+                        readinessProbe = discoverReadinessProbe();
+                    }
+                }
                 Container container = new ContainerBuilder()
                     .withName(Containers.getKubernetesContainerName(project, imageConfig))
                     .withImage(imageConfig.getName())
@@ -59,13 +78,33 @@ class ContainerHandler {
                     .withSecurityContext(createSecurityContext(config))
                     .withPorts(getContainerPorts(imageConfig))
                     .withVolumeMounts(getVolumeMounts(config))
-                    .withLivenessProbe(probeHandler.getProbe(config.getLiveness()))
-                    .withReadinessProbe(probeHandler.getProbe(config.getReadiness()))
+                    .withLivenessProbe(livenessProbe)
+                    .withReadinessProbe(readinessProbe)
                     .build();
                 ret.add(container);
             }
         }
         return ret;
+    }
+
+    private Probe discoverReadinessProbe() {
+        return discoverSpringBootHealthCheck();
+    }
+
+    private Probe discoverLivenessProbe() {
+        return discoverSpringBootHealthCheck();
+    }
+
+    private Probe discoverSpringBootHealthCheck() {
+        if (hasClass(project, "org.springframework.boot.actuate.health.HealthIndicator")) {
+            Properties properties = MavenUtil.getSpringBootApplicationProperties(project);
+            Integer port = getInteger(properties, SpringBootProperties.MANAGEMENT_PORT, getInteger(properties, SpringBootProperties.SERVER_PORT, DEFAULT_MANAGEMENT_PORT));
+
+            // lets default to adding a spring boot actuator health check
+            return new ProbeBuilder().withNewHttpGet().
+                    withNewPort(port).withPath("/health").endHttpGet().build();
+        }
+        return null;
     }
 
 
