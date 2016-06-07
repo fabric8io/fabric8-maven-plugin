@@ -32,6 +32,7 @@ import io.fabric8.maven.core.util.*;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
+import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.plugin.customizer.CustomizerManager;
@@ -47,9 +48,6 @@ import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 
-import static io.fabric8.maven.core.util.MavenProperties.DOCKER_IMAGE_LABEL;
-import static io.fabric8.maven.core.util.MavenProperties.DOCKER_IMAGE_NAME;
-import static io.fabric8.maven.core.util.MavenProperties.DOCKER_IMAGE_USER;
 import static io.fabric8.maven.core.util.ResourceFileType.yaml;
 
 
@@ -97,19 +95,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     @Parameter(property = "fabric8.skip", defaultValue = "false")
     private boolean skip;
 
-    /**
-     * Whether to use a timestamped label when building SNAPSHOT versions
-     */
-    @Parameter(defaultValue = "true")
-    private boolean snapshotLabelUseTimestamp;
-
-    /**
-     * Whether to use the docker label of <code>latest</code> when building SNAPSHOT versions
-     */
-    @Parameter(defaultValue = "true")
-    private boolean snapshotLabelUseLatest;
-
-
     // Resource  specific configuration for this plugin
     @Parameter
     private ResourceConfiguration resources;
@@ -134,7 +119,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     @Component
     private MavenProjectHelper projectHelper;
 
-
     /**
      * The artifact type for attaching the generated kubernetes YAML file to the project
      */
@@ -154,7 +138,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
-            defineCustomProperties(project);
             handlerHub = new HandlerHub(project);
 
             // Resolve the Docker image build configuration
@@ -291,29 +274,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         return item;
     }
 
-    private void defineCustomProperties(MavenProject project) {
-        Properties properties = project.getProperties();
-        String label = properties.getProperty(DOCKER_IMAGE_LABEL);
-        if (Strings.isNullOrBlank(label)) {
-            label = project.getVersion();
-            if (label.endsWith("-SNAPSHOT")) {
-                if (snapshotLabelUseTimestamp) {
-                    label = "snapshot-" + new SimpleDateFormat("yyMMdd-HHmmss-SSSS").format(new Date());
-
-                } else if (snapshotLabelUseLatest) {
-                    label = "latest";
-                }
-            }
-            properties.setProperty(DOCKER_IMAGE_LABEL, label);
-        }
-        if (Strings.isNullOrBlank(properties.getProperty(DOCKER_IMAGE_NAME))) {
-            properties.setProperty(DOCKER_IMAGE_NAME, DockerUtil.prepareImageNamePart(project));
-        }
-        if (Strings.isNullOrBlank(properties.getProperty(DOCKER_IMAGE_USER))) {
-            properties.setProperty(DOCKER_IMAGE_USER, DockerUtil.prepareUserName(project));
-        }
-    }
-
     private List<ImageConfiguration> resolveImages(List<ImageConfiguration> images, Logger log) {
         final Properties resolveProperties = project.getProperties();
         List<ImageConfiguration> ret = ConfigHelper.resolveImages(
@@ -332,7 +292,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                 }
             });
 
-        ConfigHelper.initAndValidate(ret, null, log);
+        ConfigHelper.initAndValidate(ret, null, new ImageNameFormatter(project), log);
         return ret;
     }
 
