@@ -19,10 +19,8 @@ package io.fabric8.maven.customizer.spring.boot;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.DockerUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.customizer.api.BaseCustomizer;
 import io.fabric8.maven.customizer.api.MavenCustomizerContext;
@@ -30,9 +28,6 @@ import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import org.apache.maven.project.MavenProject;
-
-import static io.fabric8.maven.core.util.MavenProperties.DOCKER_IMAGE_NAME;
-import static io.fabric8.maven.core.util.MavenProperties.DOCKER_IMAGE_USER;
 
 /**
  * @author roland
@@ -45,35 +40,24 @@ public class SpringBootCustomizer extends BaseCustomizer {
     }
 
     private enum Config implements Configs.Key {
-        combine {{ d = "false"; }};
+        combine {{ d = "false"; }},
+        name    {{ d = "%g/%a:%l"; }},
+        from    {{ d = "fabric8/java-alpine-openjdk8-jdk"; }};
 
         public String def() { return d; } protected String d;
     }
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {
-        MavenProject project = getProject();
-        Properties properties = project.getProperties();
-        if (!properties.containsKey(DOCKER_IMAGE_USER)) {
-            properties.put(DOCKER_IMAGE_USER, prepareUserName());
-        }
-        if (!properties.containsKey(DOCKER_IMAGE_NAME)) {
-            properties.put(DOCKER_IMAGE_NAME, prepareName());
-        }
-        boolean includeDefaultImage = false;
-        if (isApplicable()) {
-            boolean combineEnabled = Configs.asBoolean(getConfig(Config.combine));
-            includeDefaultImage = !containsBuildConfiguration(configs) || combineEnabled;
-        }
-        if (includeDefaultImage && isApplicable()) {
+        if (isApplicable() && shouldIncludeDefaultImage(configs)) {
             ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
             BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
                 .assembly(createAssembly())
-                .from(getBaseImage())
+                .from(getConfig(Config.from))
                 .ports(extractPorts());
-            addLatestIfSnapshot(buildBuilder);
+            addLatestTagIfSnapshot(buildBuilder);
             imageBuilder
-                .name(extractImageName())
+                .name(getConfig(Config.name))
                 .buildConfig(buildBuilder.build());
             configs.add(imageBuilder.build());
             return configs;
@@ -82,38 +66,20 @@ public class SpringBootCustomizer extends BaseCustomizer {
         }
     }
 
-    private void addLatestIfSnapshot(BuildImageConfiguration.Builder buildBuilder) {
+    private boolean shouldIncludeDefaultImage(List<ImageConfiguration> configs) {
+        boolean combineEnabled = Configs.asBoolean(getConfig(Config.combine));
+        return !containsBuildConfiguration(configs) || combineEnabled;
+    }
+
+    private void addLatestTagIfSnapshot(BuildImageConfiguration.Builder buildBuilder) {
         MavenProject project = getProject();
         if (project.getVersion().endsWith("-SNAPSHOT")) {
             buildBuilder.tags(Collections.singletonList("latest"));
         }
     }
 
-    private String extractImageName() {
-        return prepareUserName() + "/" + prepareName() + ":" + prepareVersion();
-    }
-
-    private String prepareName() {
-        MavenProject project = getProject();
-        return project.getProperties().getProperty(DOCKER_IMAGE_NAME, DockerUtil.prepareImageNamePart(project));
-    }
-
-    private String prepareUserName() {
-        MavenProject project = getProject();
-        return project.getProperties().getProperty(DOCKER_IMAGE_USER, DockerUtil.prepareUserName(project));
-    }
-
-    private String prepareVersion() {
-        MavenProject project = getProject();
-        return DockerUtil.getDockerLabel(project);
-    }
-
     private List<String> extractPorts() {
         return Arrays.asList("8080");
-    }
-
-    private String getBaseImage() {
-        return "fabric8/java-alpine-openjdk8-jdk";
     }
 
     private AssemblyConfiguration createAssembly() {

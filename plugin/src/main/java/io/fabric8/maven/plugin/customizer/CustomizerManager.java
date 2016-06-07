@@ -36,6 +36,7 @@ public class CustomizerManager {
                                                      MavenProject project) {
 
         List<ImageConfiguration> ret = imageConfigs;
+
         PluginServiceFactory<MavenCustomizerContext> pluginFactory = new PluginServiceFactory<>(
             new MavenCustomizerContext(project, customizerConfigs));
         List<Customizer> customizers =
