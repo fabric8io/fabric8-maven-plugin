@@ -17,7 +17,6 @@ package io.fabric8.maven.plugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -29,6 +28,7 @@ import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
 import io.fabric8.maven.core.util.*;
+import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
@@ -40,10 +40,10 @@ import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfigFluent;
 import io.fabric8.utils.Strings;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
-import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
@@ -57,6 +57,9 @@ import static io.fabric8.maven.core.util.ResourceFileType.yaml;
  */
 @Mojo(name = "resource", defaultPhase = LifecyclePhase.PROCESS_RESOURCES, requiresDependencyResolution = ResolutionScope.COMPILE, requiresDependencyCollection = ResolutionScope.COMPILE)
 public class ResourceMojo extends AbstractFabric8Mojo {
+
+    // THe key how we got the the docker maven plugin
+    private static final String DOCKER_MAVEN_PLUGIN_KEY = "io.fabric8:docker-maven-plugin";
 
     @Component(role = MavenFileFilter.class, hint = "default")
     private MavenFileFilter mavenFileFilter;
@@ -141,7 +144,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             handlerHub = new HandlerHub(project);
 
             // Resolve the Docker image build configuration
-            resolvedImages = resolveImages(images, log);
+            resolvedImages = getResolvedImages(images, log);
 
             // Manager for calling enrichers.
             EnricherContext ctx = new EnricherContext(project, enricher, resolvedImages, resources, log);
@@ -274,9 +277,12 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         return item;
     }
 
+    // ==================================================================================
+
     private List<ImageConfiguration> resolveImages(List<ImageConfiguration> images, Logger log) {
+        List<ImageConfiguration> ret;
         final Properties resolveProperties = project.getProperties();
-        List<ImageConfiguration> ret = ConfigHelper.resolveImages(
+        ret = ConfigHelper.resolveImages(
             images,
             new ConfigHelper.Resolver() {
                 @Override
@@ -284,7 +290,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                     return imageConfigResolver.resolve(image, resolveProperties);
                 }
             },
-            null,  // no filter
+            null,  // no filter on image name yet (TODO: Maybe add this, too ?)
             new ConfigHelper.Customizer() {
                 @Override
                 public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
@@ -292,11 +298,31 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                 }
             });
 
-        ConfigHelper.initAndValidate(ret, null, new ImageNameFormatter(project), log);
+        String minimalApiVersion = ConfigHelper.initAndValidate(ret, null /* no minimal api version */,
+                                                                new ImageNameFormatter(project), log);
+        saveResolvedImagesInPluginContext(session, ret, minimalApiVersion);
         return ret;
     }
 
-    // ==================================================================================
+    private List<ImageConfiguration> getResolvedImages(List<ImageConfiguration> images, Logger log) {
+        List<ImageConfiguration> ret = getResolvedImagesFromPluginContext();
+        if (ret != null) {
+            return ret;
+        }
+        return resolveImages(images, log);
+    }
+
+    private void saveResolvedImagesInPluginContext(MavenSession session, List<ImageConfiguration> images, String apiVersion) {
+        Map<String, Object> pluginContext = getPluginContext();
+        pluginContext.put(AbstractDockerMojo.CONTEXT_KEY_RESOLVED_IMAGES, images);
+        if (apiVersion != null) {
+            pluginContext.put(AbstractDockerMojo.CONTEXT_KEY_MINIMAL_API_VERSION, apiVersion);
+        }
+    }
+
+    private List<ImageConfiguration> getResolvedImagesFromPluginContext() {
+        return (List<ImageConfiguration>) getPluginContext().get(AbstractDockerMojo.CONTEXT_KEY_RESOLVED_IMAGES);
+    }
 
     private KubernetesList generateKubernetesResources(final EnricherManager enricherManager, List<ImageConfiguration> images)
         throws IOException, MojoExecutionException {

@@ -16,21 +16,14 @@
  */
 package io.fabric8.maven.plugin;
 
-import java.io.File;
 import java.util.Properties;
 
-import io.fabric8.kubernetes.api.Controller;
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.client.*;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.utils.Strings;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-
-import static io.fabric8.kubernetes.api.KubernetesHelper.DEFAULT_NAMESPACE;
 
 public abstract class AbstractFabric8Mojo extends AbstractMojo {
 
