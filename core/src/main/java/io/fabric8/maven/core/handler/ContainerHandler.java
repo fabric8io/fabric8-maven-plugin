@@ -41,7 +41,7 @@ import static io.fabric8.utils.PropertiesHelper.getInteger;
  * @since 08/04/16
  */
 class ContainerHandler {
-    private static final Integer DEFAULT_MANAGEMENT_PORT = 8081;
+    private static final Integer DEFAULT_MANAGEMENT_PORT = 8080;
 
     private final EnvVarHandler envVarHandler;
     private final ProbeHandler probeHandler;
@@ -98,6 +98,7 @@ class ContainerHandler {
     private Probe discoverSpringBootHealthCheck() {
         if (hasClass(project, "org.springframework.boot.actuate.health.HealthIndicator")) {
             Properties properties = MavenUtil.getSpringBootApplicationProperties(project);
+            System.out.println("============ application.properties: " + properties);
             Integer port = getInteger(properties, SpringBootProperties.MANAGEMENT_PORT, getInteger(properties, SpringBootProperties.SERVER_PORT, DEFAULT_MANAGEMENT_PORT));
 
             // lets default to adding a spring boot actuator health check

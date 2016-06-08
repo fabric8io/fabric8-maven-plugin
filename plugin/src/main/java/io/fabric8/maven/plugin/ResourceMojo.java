@@ -55,7 +55,7 @@ import static io.fabric8.maven.core.util.ResourceFileType.yaml;
  * Generates or copies the Kubernetes JSON file and attaches it to the build so its
  * installed and released to maven repositories like other build artifacts.
  */
-@Mojo(name = "resource", defaultPhase = LifecyclePhase.GENERATE_RESOURCES, requiresDependencyResolution = ResolutionScope.COMPILE, requiresDependencyCollection = ResolutionScope.COMPILE)
+@Mojo(name = "resource", defaultPhase = LifecyclePhase.PROCESS_RESOURCES, requiresDependencyResolution = ResolutionScope.COMPILE, requiresDependencyCollection = ResolutionScope.COMPILE)
 public class ResourceMojo extends AbstractFabric8Mojo {
 
     @Component(role = MavenFileFilter.class, hint = "default")
