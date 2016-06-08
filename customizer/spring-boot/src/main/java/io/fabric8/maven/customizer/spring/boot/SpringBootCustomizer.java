@@ -42,7 +42,7 @@ public class SpringBootCustomizer extends BaseCustomizer {
     private enum Config implements Configs.Key {
         combine {{ d = "false"; }},
         name    {{ d = "%g/%a:%l"; }},
-        alias    {{ d = "springboot"; }},
+        alias   {{ d = "springboot"; }},
         from    {{ d = "fabric8/java-alpine-openjdk8-jdk"; }};
 
         public String def() { return d; } protected String d;

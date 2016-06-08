@@ -98,7 +98,6 @@ class ContainerHandler {
     private Probe discoverSpringBootHealthCheck() {
         if (hasClass(project, "org.springframework.boot.actuate.health.HealthIndicator")) {
             Properties properties = MavenUtil.getSpringBootApplicationProperties(project);
-            System.out.println("============ application.properties: " + properties);
             Integer port = getInteger(properties, SpringBootProperties.MANAGEMENT_PORT, getInteger(properties, SpringBootProperties.SERVER_PORT, DEFAULT_MANAGEMENT_PORT));
 
             // lets default to adding a spring boot actuator health check
