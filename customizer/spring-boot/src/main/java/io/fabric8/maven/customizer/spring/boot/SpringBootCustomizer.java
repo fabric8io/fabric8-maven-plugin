@@ -42,6 +42,7 @@ public class SpringBootCustomizer extends BaseCustomizer {
     private enum Config implements Configs.Key {
         combine {{ d = "false"; }},
         name    {{ d = "%g/%a:%l"; }},
+        alias    {{ d = "springboot"; }},
         from    {{ d = "fabric8/java-alpine-openjdk8-jdk"; }};
 
         public String def() { return d; } protected String d;
@@ -58,6 +59,7 @@ public class SpringBootCustomizer extends BaseCustomizer {
             addLatestTagIfSnapshot(buildBuilder);
             imageBuilder
                 .name(getConfig(Config.name))
+                .alias(getConfig(Config.alias))
                 .buildConfig(buildBuilder.build());
             configs.add(imageBuilder.build());
             return configs;
