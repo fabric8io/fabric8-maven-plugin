@@ -70,7 +70,7 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.createIntOrString;
 /**
  * Applies the Kubernetes UYAML to a namespace in a kubernetes environment
  */
-@Mojo(name = "deploy", requiresDependencyResolution = ResolutionScope.RUNTIME, defaultPhase = LifecyclePhase.INSTALL)
+@Mojo(name = "deploy", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.INSTALL)
 public class DeployMojo extends AbstractFabric8Mojo {
 
     /**
