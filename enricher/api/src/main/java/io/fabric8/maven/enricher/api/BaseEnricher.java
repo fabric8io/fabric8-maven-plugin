@@ -20,10 +20,16 @@ import java.util.List;
 import java.util.Map;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.client.Config;
+import io.fabric8.kubernetes.client.ConfigBuilder;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.maven.core.config.ResourceConfiguration;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.property.ConfigKey;
 import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -35,6 +41,7 @@ public abstract class BaseEnricher implements Enricher {
     private final EnricherConfiguration config;
     private final String name;
     private EnricherContext buildContext;
+    private KubernetesClient kubernetesClient;
 
     protected Logger log;
 
@@ -53,6 +60,31 @@ public abstract class BaseEnricher implements Enricher {
 
     protected MavenProject getProject() {
         return buildContext.getProject();
+    }
+
+    protected Logger getLog() {
+        return log;
+    }
+
+    protected KubernetesClient getKubernetes() {
+        if (kubernetesClient == null) {
+            String ns = getNamespaceConfig();
+            if (Strings.isNotBlank(ns)) {
+                Config config = new ConfigBuilder().withNamespace(ns).build();
+                kubernetesClient = new DefaultKubernetesClient(config);
+            } else {
+                kubernetesClient = new DefaultKubernetesClient();
+            }
+        }
+        return kubernetesClient;
+    }
+
+    private String getNamespaceConfig() {
+        ResourceConfiguration resourceConfiguration = getContext().getResourceConfiguration();
+        if (resourceConfiguration != null) {
+            return resourceConfiguration.getNamespace();
+        }
+        return null;
     }
 
     protected List<ImageConfiguration> getImages() {
