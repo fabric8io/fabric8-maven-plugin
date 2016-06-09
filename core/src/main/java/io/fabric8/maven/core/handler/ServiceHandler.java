@@ -20,7 +20,11 @@ import java.util.*;
 
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.config.ServiceConfiguration;
+import io.fabric8.maven.core.util.KubernetesAnnotations;
+import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.utils.Strings;
+
+import static org.bouncycastle.asn1.x500.style.RFC4519Style.name;
 
 /**
  * @author roland
@@ -38,10 +42,21 @@ public class ServiceHandler {
         ArrayList<Service> ret = new ArrayList<>();
 
         for (ServiceConfiguration service : services) {
+            Map<String, String> serviceAnnotations = new HashMap<>();
+            if (annotations != null) {
+                serviceAnnotations.putAll(annotations);
+            }
+            // lets add the prometheus annotations if required
+            String prometheusPort = findPrometheusPort(service.getPorts());
+            if (Strings.isNotBlank(prometheusPort)) {
+                        MapUtil.putIfAbsent(serviceAnnotations, KubernetesAnnotations.PROMETHEUS_PORT, prometheusPort);
+                MapUtil.putIfAbsent(serviceAnnotations, KubernetesAnnotations.PROMETHEUS_SCRAPE, "true");
+            }
+
             ServiceBuilder serviceBuilder = new ServiceBuilder()
                 .withNewMetadata()
                   .withName(service.getName())
-                  .withAnnotations(annotations)
+                  .withAnnotations(serviceAnnotations)
                 .endMetadata();
 
             ServiceFluent.SpecNested<ServiceBuilder> serviceSpecBuilder =
@@ -86,4 +101,20 @@ public class ServiceHandler {
         }
         return ret;
     }
+
+    private String findPrometheusPort(List<ServiceConfiguration.Port> ports) {
+        for (ServiceConfiguration.Port port : ports) {
+            int number = port.getPort();
+            boolean valid = number == 9779;
+            String name = port.getName();
+            if (name != null && name.toLowerCase().equals("prometheus")) {
+                valid = true;
+            }
+            if (valid) {
+                return "" + number;
+            }
+        }
+        return null;
+    }
+
 }
