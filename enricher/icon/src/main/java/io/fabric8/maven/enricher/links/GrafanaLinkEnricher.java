@@ -16,14 +16,22 @@
 package io.fabric8.maven.enricher.links;
 
 import io.fabric8.kubernetes.api.Annotations;
+import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.ServiceNames;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.util.KubernetesAnnotations;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 import io.fabric8.maven.enricher.api.Kinds;
+import io.fabric8.utils.Strings;
+import io.fabric8.utils.URLUtils;
+import org.apache.maven.project.MavenProject;
 
 import java.util.Collections;
 import java.util.Map;
+
+import static io.fabric8.maven.core.util.MavenUtil.hasClass;
 
 /**
  */
@@ -43,9 +51,42 @@ public class GrafanaLinkEnricher extends BaseEnricher {
       }
 
     private String findGrafanaLink() {
-        // TODO lets try find grafana service...
-        // TODO lets add a default dashboard plus the parameters...
+        // lets see if we can find grafana
+        KubernetesClient kubernetes = getKubernetes();
+        String ns = kubernetes.getNamespace();
+        String url = KubernetesHelper.getServiceURL(kubernetes, ServiceNames.GRAFANA, ns, "http", true);
+        MavenProject project = getProject();
+        if (url != null) {
+            String defaultDashboard = detectDefaultDashboard(project);
+            String query = "?var-namespace=" + ns;
+
+            String projectName = null;
+            String version = null;
+
+            // TODO - use the docker names which may differ from project metadata!
+            if (Strings.isNullOrBlank(projectName)) {
+                projectName = project.getArtifactId();
+            }
+            if (Strings.isNullOrBlank(version)) {
+                version = project.getVersion();
+            }
+
+            if (Strings.isNotBlank(projectName)) {
+                query += "&var-project=" + projectName;
+            }
+            if (Strings.isNotBlank(version)) {
+                query += "&var-version=" + version;
+            }
+            return URLUtils.pathJoin(url, "dashboard/file", defaultDashboard, query);
+        }
         return null;
+    }
+
+    protected String detectDefaultDashboard(MavenProject project) {
+        if (hasClass(project, "org.apache.camel.CamelContext")) {
+            return "camel-routes.json";
+        }
+        return "kubernetes-pods.json";
     }
 
 }

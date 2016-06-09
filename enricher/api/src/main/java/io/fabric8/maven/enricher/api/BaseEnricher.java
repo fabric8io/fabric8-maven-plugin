@@ -68,7 +68,7 @@ public abstract class BaseEnricher implements Enricher {
 
     protected KubernetesClient getKubernetes() {
         if (kubernetesClient == null) {
-            String ns = getNamespace();
+            String ns = getNamespaceConfig();
             if (Strings.isNotBlank(ns)) {
                 Config config = new ConfigBuilder().withNamespace(ns).build();
                 kubernetesClient = new DefaultKubernetesClient(config);
@@ -79,7 +79,7 @@ public abstract class BaseEnricher implements Enricher {
         return kubernetesClient;
     }
 
-    private String getNamespace() {
+    private String getNamespaceConfig() {
         ResourceConfiguration resourceConfiguration = getContext().getResourceConfiguration();
         if (resourceConfiguration != null) {
             return resourceConfiguration.getNamespace();
