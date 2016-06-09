@@ -16,6 +16,7 @@
 
 package io.fabric8.maven.customizer.spring.boot;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -27,6 +28,7 @@ import io.fabric8.maven.customizer.api.MavenCustomizerContext;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -43,7 +45,10 @@ public class SpringBootCustomizer extends BaseCustomizer {
         combine {{ d = "false"; }},
         name    {{ d = "%g/%a:%l"; }},
         alias   {{ d = "springboot"; }},
-        from    {{ d = "fabric8/java-alpine-openjdk8-jdk"; }};
+        from    {{ d = "fabric8/java-alpine-openjdk8-jdk"; }},
+        webPort   {{ d = "8080"; }},
+        jolokiaPort   {{ d = "8778"; }},
+        prometheusPort   {{ d = "9779"; }};
 
         public String def() { return d; } protected String d;
     }
@@ -81,7 +86,18 @@ public class SpringBootCustomizer extends BaseCustomizer {
     }
 
     private List<String> extractPorts() {
-        return Arrays.asList("8080");
+        // TODO would rock to look at the base image and find the exposed ports!
+        List<String> answer = new ArrayList<>();
+        addPortIfValid(answer, getConfig(Config.webPort));
+        addPortIfValid(answer, getConfig(Config.jolokiaPort));
+        addPortIfValid(answer, getConfig(Config.prometheusPort));
+        return answer;
+    }
+
+    private void addPortIfValid(List<String> list, String port) {
+        if (Strings.isNotBlank(port)) {
+            list.add(port);
+        }
     }
 
     private AssemblyConfiguration createAssembly() {

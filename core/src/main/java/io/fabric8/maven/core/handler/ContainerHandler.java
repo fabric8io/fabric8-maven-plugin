@@ -87,21 +87,22 @@ class ContainerHandler {
     }
 
     private Probe discoverReadinessProbe() {
-        return discoverSpringBootHealthCheck();
+        return discoverSpringBootHealthCheck(10);
     }
 
     private Probe discoverLivenessProbe() {
-        return discoverSpringBootHealthCheck();
+        // lets leave long enough for the app to actually start :)
+        return discoverSpringBootHealthCheck(180);
     }
 
-    private Probe discoverSpringBootHealthCheck() {
+    private Probe discoverSpringBootHealthCheck(int initialDelay) {
         if (hasClass(project, "org.springframework.boot.actuate.health.HealthIndicator")) {
             Properties properties = MavenUtil.getSpringBootApplicationProperties(project);
             Integer port = getInteger(properties, SpringBootProperties.MANAGEMENT_PORT, getInteger(properties, SpringBootProperties.SERVER_PORT, DEFAULT_MANAGEMENT_PORT));
 
             // lets default to adding a spring boot actuator health check
             return new ProbeBuilder().withNewHttpGet().
-                    withNewPort(port).withPath("/health").endHttpGet().build();
+                    withNewPort(port).withPath("/health").endHttpGet().withInitialDelaySeconds(initialDelay).build();
         }
         return null;
     }
