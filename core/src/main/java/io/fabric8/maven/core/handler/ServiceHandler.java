@@ -48,6 +48,11 @@ public class ServiceHandler {
                 serviceBuilder.withNewSpec();
 
             List<ServicePort> servicePorts = new ArrayList<>();
+
+            // lets default to only adding the first port as usually its the web port only
+            // TODO we could add better filters maybe?
+            // worst case folks can be specific of what ports to expose?
+            int count = 0;
             for (ServiceConfiguration.Port port : service.getPorts()) {
                 ServicePort servicePort = new ServicePortBuilder()
                     .withName(port.getName())
@@ -57,6 +62,9 @@ public class ServiceHandler {
                     .withNodePort(port.getNodePort())
                     .build();
                 servicePorts.add(servicePort);
+                if (++count >= 1) {
+                    break;
+                }
             }
 
             if (!servicePorts.isEmpty()) {
