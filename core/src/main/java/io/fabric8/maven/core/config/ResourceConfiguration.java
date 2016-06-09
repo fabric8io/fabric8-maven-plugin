@@ -75,6 +75,9 @@ public class ResourceConfiguration {
     @Parameter
     private String serviceAccount;
 
+    @Parameter
+    private String namespace;
+
     public Map<String, String> getEnv() {
         return env != null ? env : Collections.<String, String>emptyMap();
     }
@@ -129,6 +132,10 @@ public class ResourceConfiguration {
 
     public String getServiceAccount() {
         return serviceAccount;
+    }
+
+    public String getNamespace() {
+        return namespace;
     }
 
     // =============================================================================================

@@ -13,17 +13,16 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.core.util;
+package io.fabric8.maven.enricher.api;
 
 /**
  */
-public class KubernetesAnnotations {
-
-    // TODO remove with Annotations class from kubernetes-api after the next fabric8 release!
-
-    public static final String PROMETHEUS_PORT = "prometheus.io/port";
-    public static final String PROMETHEUS_SCRAPE = "prometheus.io/scrape";
-
-    public static final String ICON_URL = "fabric8.io/iconUrl";
-    public static final String METRICS_URL = "fabric8.io/metricsUrl";
+public class Kinds {
+    /**
+     * Returns true if the kind is a Deployment/DeploymentConfig or ReplicaSet/ReplicationController
+     */
+    public static boolean isDeployOrReplicaKind(Kind kind) {
+        return kind == Kind.REPLICA_SET || kind == Kind.REPLICATION_CONTROLLER ||
+                kind == Kind.DEPLOYMENT || kind == Kind.DEPLOYMENT_CONFIG;
+    }
 }

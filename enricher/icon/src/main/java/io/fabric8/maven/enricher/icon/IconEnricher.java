@@ -17,12 +17,11 @@
 package io.fabric8.maven.enricher.icon;
 
 import java.io.*;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Collections;
 import java.util.Map;
 
 import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.KubernetesAnnotations;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.*;
 import io.fabric8.utils.*;
@@ -73,11 +72,10 @@ public class IconEnricher extends BaseEnricher {
 
     @Override
     public Map<String, String> getAnnotations(Kind kind) {
-        if (kind == Kind.REPLICA_SET || kind == Kind.REPLICATION_CONTROLLER ||
-                kind == Kind.DEPLOYMENT || kind == Kind.DEPLOYMENT_CONFIG ||
+        if (Kinds.isDeployOrReplicaKind(kind) ||
                 kind == Kind.SERVICE) {
             String iconUrl = getIconUrl();
-            return iconUrl != null ? Collections.singletonMap("fabric8.io/iconUrl",iconUrl) : null;
+            return iconUrl != null ? Collections.singletonMap(KubernetesAnnotations.ICON_URL,iconUrl) : null;
         } else {
             return null;
         }
