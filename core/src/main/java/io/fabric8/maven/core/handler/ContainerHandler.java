@@ -54,7 +54,6 @@ class ContainerHandler {
     }
 
     List<Container> getContainers(ResourceConfiguration config, List<ImageConfiguration> images)  {
-
         List<Container> ret = new ArrayList<>();
         int idx = 1;
         for (ImageConfiguration imageConfig : images) {
