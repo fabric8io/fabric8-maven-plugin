@@ -34,7 +34,7 @@ import org.apache.maven.plugins.annotations.*;
  * @author roland
  * @since 16/03/16
  */
-@Mojo(name = "build", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE)
+@Mojo(name = "build", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     static final String FABRIC8_DOCKER_SKIP_POM = "fabric8.docker.skip.pom";
