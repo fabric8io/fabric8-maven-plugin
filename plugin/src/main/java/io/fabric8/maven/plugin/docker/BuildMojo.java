@@ -26,9 +26,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.plugin.customizer.CustomizerManager;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.*;
 
 /**
  * Proxy to d-m-p's build Mojo
@@ -36,7 +34,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author roland
  * @since 16/03/16
  */
-@Mojo(name = "build", defaultPhase = LifecyclePhase.INSTALL)
+@Mojo(name = "build", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     static final String FABRIC8_DOCKER_SKIP_POM = "fabric8.docker.skip.pom";

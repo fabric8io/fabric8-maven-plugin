@@ -14,24 +14,19 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.plugin.docker;
+package io.fabric8.maven.plugin;
 
-
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.plugins.annotations.*;
 
 /**
- * Proxy to d-m-p's build push
+ * Mojo for doing everything by forking the lifecycle.
+ *
+ * The goals fabric8:resource and fabric8:build must be bound to the proper execution phases.
  *
  * @author roland
- * @since 16/03/16
+ * @since 09/06/16
  */
-@Mojo(name = "push", defaultPhase = LifecyclePhase.INSTALL, requiresDependencyResolution = ResolutionScope.COMPILE)
-public class PushMojo extends io.fabric8.maven.docker.PushMojo {
 
-    @Override
-    protected String getLogPrefix() {
-        return "F8> ";
-    }
-}
+@Mojo(name = "run", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.VALIDATE)
+@Execute(phase = LifecyclePhase.INSTALL)
+public class RunMojo extends DeployMojo { }
