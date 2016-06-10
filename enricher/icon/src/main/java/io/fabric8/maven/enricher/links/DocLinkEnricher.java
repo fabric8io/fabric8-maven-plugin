@@ -16,9 +16,6 @@
 package io.fabric8.maven.enricher.links;
 
 import io.fabric8.kubernetes.api.Annotations;
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
@@ -35,8 +32,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
-import static java.rmi.server.RemoteServer.getLog;
 
 /**
  * Adds a link to the generated documentation for this microservice so we can link to the versioned docs in the
@@ -82,18 +77,16 @@ public class DocLinkEnricher extends BaseEnricher {
                             }
                         }
                         URL u = new URL(urlToParse);
-                        String host = u.getHost();
+                        String serviceName = u.getHost();
+                        String protocol = u.getProtocol();
                         // lets see if the host name is a service name in which case we'll resolve to the public URL
-                        KubernetesClient kubernetes = getKubernetes();
-                        String ns = kubernetes.getNamespace();
-                        Service service = kubernetes.services().inNamespace(ns).withName(host).get();
-                        if (service != null) {
-                            String publicUrl = KubernetesHelper.getServiceURL(kubernetes, host, ns, u.getProtocol(), true);
+                        String publicUrl = getExternalServiceURL(serviceName, protocol);
+                        if (Strings.isNotBlank(publicUrl)) {
                             return URLUtils.pathJoin(publicUrl, u.getPath());
                         }
 
                     } catch (MalformedURLException e) {
-                        getLog().error("Failed to parse URL: " + url, e);
+                        getLog().error("Failed to parse URL: " + url + ". " + e, e);
                     }
                     return url;
                 }
