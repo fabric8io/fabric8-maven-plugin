@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.core.util;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -27,5 +28,22 @@ public class MapUtil {
         if (!map.containsKey(name)) {
             map.put(name, value);
         }
+    }
+
+    /**
+     * Returns a new map with all the entries of map1 and any from map2 which don't override map1.
+     *
+     * Can handle either maps being null. Always returns a new mutable map
+     */
+    public static <K,V> Map<K,V> mergeMaps(Map<K, V> map1, Map<K, V> map2) {
+        Map<K, V> answer = new HashMap<>();
+        if (map2 != null) {
+            answer.putAll(map2);
+        }
+        if (map1 != null) {
+            answer.putAll(map1);
+        }
+        return answer;
+
     }
 }
