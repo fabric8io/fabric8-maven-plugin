@@ -16,11 +16,16 @@
 
 package io.fabric8.maven.core.handler;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.ContainerPort;
+import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.Probe;
+import io.fabric8.kubernetes.api.model.ProbeBuilder;
+import io.fabric8.kubernetes.api.model.SecurityContext;
+import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
+import io.fabric8.kubernetes.api.model.VolumeMount;
+import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.maven.core.config.ResourceConfiguration;
 import io.fabric8.maven.core.config.VolumeConfiguration;
 import io.fabric8.maven.core.util.MavenUtil;
@@ -32,6 +37,10 @@ import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 import static io.fabric8.maven.core.util.MavenUtil.hasClass;
 import static io.fabric8.utils.PropertiesHelper.getInteger;
@@ -163,7 +172,7 @@ class ContainerHandler {
         }
     }
 
-    private EditableContainerPort extractContainerPort(JSONObject portSpec) {
+    private ContainerPort extractContainerPort(JSONObject portSpec) {
         ContainerPortBuilder portBuilder = new ContainerPortBuilder()
             .withContainerPort(portSpec.getInt("containerPort"));
         if (portSpec.has("hostPort")) {

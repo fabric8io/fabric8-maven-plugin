@@ -16,19 +16,31 @@
 
 package io.fabric8.maven.enricher.icon;
 
-import java.io.*;
-import java.util.Collections;
-import java.util.Map;
-
+import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.KubernetesAnnotations;
 import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.enricher.api.*;
-import io.fabric8.utils.*;
+import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.Kind;
+import io.fabric8.maven.enricher.api.Kinds;
+import io.fabric8.utils.Base64Encoder;
+import io.fabric8.utils.Files;
+import io.fabric8.utils.Strings;
+import io.fabric8.utils.URLUtils;
 import org.apache.maven.model.Scm;
 import org.apache.maven.project.MavenProject;
 
-import static io.fabric8.maven.core.util.MavenUtil.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.Map;
+
+import static io.fabric8.maven.core.util.MavenUtil.hasClass;
+import static io.fabric8.maven.core.util.MavenUtil.hasDependency;
+import static io.fabric8.maven.core.util.MavenUtil.hasPlugin;
 import static io.fabric8.utils.Files.guessMediaType;
 
 /**
@@ -75,7 +87,7 @@ public class IconEnricher extends BaseEnricher {
         if (Kinds.isDeployOrReplicaKind(kind) ||
                 kind == Kind.SERVICE) {
             String iconUrl = getIconUrl();
-            return iconUrl != null ? Collections.singletonMap(KubernetesAnnotations.ICON_URL,iconUrl) : null;
+            return iconUrl != null ? Collections.singletonMap(Annotations.Builds.ICON_URL,iconUrl) : null;
         } else {
             return null;
         }

@@ -16,21 +16,23 @@
 
 package io.fabric8.maven.enricher.api;
 
-import java.util.List;
-import java.util.Map;
-
+import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.client.Config;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.config.ResourceConfiguration;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.handler.property.ConfigKey;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
+
+import java.util.List;
+import java.util.Map;
+
+import static java.rmi.server.RemoteServer.getLog;
 
 /**
  * @author roland
@@ -53,11 +55,33 @@ public abstract class BaseEnricher implements Enricher {
         this.name = name;
     }
 
+
+    private enum Config implements Configs.Key {
+        offline {{ d = "false"; }};
+
+        public String def() { return d; } protected String d;
+    }
+
+
     @Override
     public String getName() {
         return null;
     }
 
+    @Override
+    public Map<String, String> getLabels(Kind kind) { return null; }
+
+    @Override
+    public Map<String, String> getAnnotations(Kind kind) { return null; }
+
+    @Override
+    public void adapt(KubernetesListBuilder builder) { }
+
+    @Override
+    public void addDefaultResources(KubernetesListBuilder builder) { }
+
+    @Override
+    public Map<String, String> getSelector(Kind kind) { return null; }
     protected MavenProject getProject() {
         return buildContext.getProject();
     }
@@ -66,12 +90,19 @@ public abstract class BaseEnricher implements Enricher {
         return log;
     }
 
+    /**
+     * Returns true if in offline mode
+     */
+    protected boolean isOffline() {
+        return Configs.asBoolean(getConfig(Config.offline));
+    }
+
+
     protected KubernetesClient getKubernetes() {
         if (kubernetesClient == null) {
             String ns = getNamespaceConfig();
             if (Strings.isNotBlank(ns)) {
-                Config config = new ConfigBuilder().withNamespace(ns).build();
-                kubernetesClient = new DefaultKubernetesClient(config);
+                kubernetesClient = new DefaultKubernetesClient(new ConfigBuilder().withNamespace(ns).build());
             } else {
                 kubernetesClient = new DefaultKubernetesClient();
             }
@@ -103,18 +134,29 @@ public abstract class BaseEnricher implements Enricher {
         return buildContext;
     }
 
-    @Override
-    public Map<String, String> getLabels(Kind kind) { return null; }
 
-    @Override
-    public Map<String, String> getAnnotations(Kind kind) { return null; }
-
-    @Override
-    public void adapt(KubernetesListBuilder builder) { }
-
-    @Override
-    public void addDefaultResources(KubernetesListBuilder builder) { }
-
-    @Override
-    public Map<String, String> getSelector(Kind kind) { return null; }
+    /**
+     * Returns the external access to the given service name
+     *
+     * @param serviceName name of the service
+     * @param protocol URL protocol such as <code>http</code>
+     */
+    protected String getExternalServiceURL(String serviceName, String protocol) {
+        String publicUrl = null;
+        if (isOffline()) {
+            getLog().info("Not looking for service " + serviceName + " as in offline mode");
+        } else {
+            try {
+                KubernetesClient kubernetes = getKubernetes();
+                String ns = kubernetes.getNamespace();
+                Service service = kubernetes.services().inNamespace(ns).withName(serviceName).get();
+                if (service != null) {
+                    publicUrl = KubernetesHelper.getServiceURL(kubernetes, serviceName, ns, protocol, true);
+                }
+            } catch (Exception e) {
+                getLog().warn("Failed to find service " + serviceName + ". May be in offline mode. Exception: " + e);
+            }
+        }
+        return publicUrl;
+    }
 }

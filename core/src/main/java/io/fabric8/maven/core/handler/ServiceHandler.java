@@ -16,15 +16,22 @@
 
 package io.fabric8.maven.core.handler;
 
-import java.util.*;
-
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.Annotations;
+import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.ServiceFluent;
+import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.maven.core.config.ServiceConfiguration;
-import io.fabric8.maven.core.util.KubernetesAnnotations;
 import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.utils.Strings;
 
-import static org.bouncycastle.asn1.x500.style.RFC4519Style.name;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author roland
@@ -49,8 +56,8 @@ public class ServiceHandler {
             // lets add the prometheus annotations if required
             String prometheusPort = findPrometheusPort(service.getPorts());
             if (Strings.isNotBlank(prometheusPort)) {
-                        MapUtil.putIfAbsent(serviceAnnotations, KubernetesAnnotations.PROMETHEUS_PORT, prometheusPort);
-                MapUtil.putIfAbsent(serviceAnnotations, KubernetesAnnotations.PROMETHEUS_SCRAPE, "true");
+                        MapUtil.putIfAbsent(serviceAnnotations, Annotations.Management.PROMETHEUS_PORT, prometheusPort);
+                MapUtil.putIfAbsent(serviceAnnotations, Annotations.Management.PROMETHEUS_SCRAPE, "true");
             }
 
             ServiceBuilder serviceBuilder = new ServiceBuilder()
