@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Objects;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.util.Configs;
@@ -73,7 +74,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
         final Service defaultService = serviceHandler.getService(defaultServiceConfig,null);
 
         if (hasServices(builder)) {
-            builder.accept(new Visitor<ServiceBuilder>() {
+            builder.accept(new TypedVisitor<ServiceBuilder>() {
                 @Override
                 public void visit(ServiceBuilder service) {
                     mergeServices(service, defaultService);

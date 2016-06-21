@@ -16,9 +16,7 @@
 
 package io.fabric8.maven.plugin.enricher;
 
-import java.util.Map;
-
-import io.fabric8.kubernetes.api.builder.Visitor;
+import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpecBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentSpecBuilder;
@@ -27,13 +25,15 @@ import io.fabric8.kubernetes.api.model.extensions.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpecBuilder;
 import io.fabric8.maven.enricher.api.Kind;
 
+import java.util.Map;
+
 import static io.fabric8.maven.plugin.enricher.ProjectInfoEnricher.removeVersionSelector;
 
 /**
  * @author roland
  * @since 02/05/16
  */
-public abstract class SelectorVisitor<T> implements Visitor<T> {
+public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
 
     protected final EnricherManager enricher;
 
