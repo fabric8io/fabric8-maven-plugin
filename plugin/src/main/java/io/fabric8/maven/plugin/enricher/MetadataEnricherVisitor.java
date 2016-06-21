@@ -19,6 +19,7 @@ package io.fabric8.maven.plugin.enricher;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
@@ -29,7 +30,7 @@ import io.fabric8.maven.enricher.api.Kind;
  * @author roland
  * @since 02/05/16
  */
-public abstract class MetadataEnricherVisitor<T> implements Visitor<T> {
+public abstract class MetadataEnricherVisitor<T> extends TypedVisitor<T> {
 
     private final EnricherManager enricher;
 

@@ -19,6 +19,7 @@ package io.fabric8.maven.plugin.enricher;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
@@ -54,14 +55,14 @@ public class DefaultImageEnricher extends BaseEnricher {
     @Override
     public void addDefaultResources(KubernetesListBuilder builder) {
 
-        builder.accept(new Visitor<ReplicationControllerBuilder>() {
+        builder.accept(new TypedVisitor<ReplicationControllerBuilder>() {
             @Override
             public void visit(ReplicationControllerBuilder item) {
                 getOrCreateContainerList(item);
             }
         });
 
-        builder.accept(new Visitor<ReplicaSetBuilder>() {
+        builder.accept(new TypedVisitor<ReplicaSetBuilder>() {
             @Override
             public void visit(ReplicaSetBuilder item) {
                 getOrCreateContainerList(item);

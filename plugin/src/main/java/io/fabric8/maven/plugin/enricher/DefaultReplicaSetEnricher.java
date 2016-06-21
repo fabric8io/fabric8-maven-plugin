@@ -16,6 +16,7 @@
 
 package io.fabric8.maven.plugin.enricher;
 
+import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.EnvVar;
@@ -92,7 +93,7 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
                 if (template != null) {
                     final PodSpec podSpec = template.getSpec();
                     if (podSpec != null) {
-                        builder.accept(new Visitor<PodSpecBuilder>() {
+                        builder.accept(new TypedVisitor<PodSpecBuilder>() {
                             @Override
                             public void visit(PodSpecBuilder builder) {
                                 mergePodSpec(builder, podSpec, defaultName);

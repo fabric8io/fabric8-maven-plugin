@@ -16,6 +16,7 @@
 
 package io.fabric8.maven.plugin.enricher;
 
+import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
@@ -45,7 +46,7 @@ public class DefaultNameEnricher extends BaseEnricher {
     public void addDefaultResources(KubernetesListBuilder builder) {
         final String defaultName = getConfig(null, MavenUtil.createDefaultResourceName(getProject()));
 
-        builder.accept(new Visitor<HasMetadata>() {
+        builder.accept(new TypedVisitor<HasMetadata>() {
             @Override
             public void visit(HasMetadata resource) {
                 ObjectMeta metadata = getOrCreateMetadata(resource);
@@ -56,7 +57,7 @@ public class DefaultNameEnricher extends BaseEnricher {
         });
 
         // TODO not sure why this is required for Deployment?
-        builder.accept(new Visitor<DeploymentBuilder>() {
+        builder.accept(new TypedVisitor<DeploymentBuilder>() {
             @Override
             public void visit(DeploymentBuilder resource) {
                 DeploymentFluent.MetadataNested<DeploymentBuilder> metadata = resource.editMetadata();
@@ -69,7 +70,7 @@ public class DefaultNameEnricher extends BaseEnricher {
                 }
             }
         });
-        builder.accept(new Visitor<ReplicationControllerBuilder>() {
+        builder.accept(new TypedVisitor<ReplicationControllerBuilder>() {
             @Override
             public void visit(ReplicationControllerBuilder resource) {
                 ReplicationControllerFluent.MetadataNested<ReplicationControllerBuilder> metadata = resource.editMetadata();
@@ -82,7 +83,7 @@ public class DefaultNameEnricher extends BaseEnricher {
                 }
             }
         });
-        builder.accept(new Visitor<ReplicaSetBuilder>() {
+        builder.accept(new TypedVisitor<ReplicaSetBuilder>() {
             @Override
             public void visit(ReplicaSetBuilder resource) {
                 ReplicaSetFluent.MetadataNested<ReplicaSetBuilder> metadata = resource.editMetadata();
