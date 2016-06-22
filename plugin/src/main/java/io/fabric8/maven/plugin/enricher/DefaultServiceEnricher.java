@@ -57,7 +57,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
         headless {{ d = "false"; }},
 
         // Type of the service (LoadBalancer, NodePort, ...)
-        type;
+        type {{ d = "LoadBalancer"; }};
 
         public String def() { return d; } protected String d;
     }
