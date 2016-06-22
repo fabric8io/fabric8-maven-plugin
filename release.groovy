@@ -4,12 +4,22 @@ def repo(){
 }
 
 def stage(){
-
-
   return stageProject{
     project = repo()
     useGitTagForNextVersion = true
     setVersionExtraArgs = '-pl parent'
+  }
+}
+
+def updateDependencies(source){
+  def properties = []
+  properties << ['<version.fabric8>','io/fabric8/kubernetes-api']
+  properties << ['<version.docker-maven-plugin>','io/fabric8/docker-maven-plugin']
+
+  updatePropertyVersion{
+    updates = properties
+    repository = source
+    project = repo()
   }
 }
 
