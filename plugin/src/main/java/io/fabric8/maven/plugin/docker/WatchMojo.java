@@ -36,7 +36,6 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     @Parameter
     Map<String, String> customizer;
 
-
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
         return CustomizerManager.customize(configs, customizer, project);
