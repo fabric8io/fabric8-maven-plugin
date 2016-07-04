@@ -59,7 +59,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.maven>3.2.3</version.maven>
     <version.fabric8>2.2.136</version.fabric8>
-    <version.docker-maven-plugin>0.15-SNAPSHOT</version.docker-maven-plugin>
+    <version.docker-maven-plugin>0.15.9</version.docker-maven-plugin>
   </properties>
 
   <repositories>
