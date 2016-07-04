@@ -21,7 +21,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>fabric8-maven-sample-peng</artifactId>
-  <version>3.0.0-SNAPSHOT</version>
+  <version>3.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>Fabric8 Maven :: Sample :: Peng</name>
@@ -69,7 +69,7 @@
           <!-- Todo: Remove this boilerplate in a default configuration -->
           <images>
             <image>
-              <name>${project.artifactId}:${project.version}</name>
+              <name>${project.artifactId}:%t</name>
               <build>
                 <from>${dmp.from}</from>
                 <cmd><shell>java -jar /maven/${project.build.finalName}.jar</shell></cmd>
@@ -82,6 +82,14 @@
             </image>
           </images>
         </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>resource</goal>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
       <plugin>

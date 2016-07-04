@@ -5,16 +5,15 @@
 [![Technical Debt](https://img.shields.io/sonar/https/nemo.sonarqube.org/io.fabric8:fabric8-maven-plugin-build/tech_debt.svg?style=flat-square)](https://nemo.sonarqube.org/overview?id=io.fabric8%3Afabric8-maven-plugin-build)
 [![Dependency Status](https://www.versioneye.com/java/io.fabric8:fabric8-maven-plugin-build/badge?style=flat-square)](https://www.versioneye.com/java/io.fabric8:fabric8-maven-plugin-build/)
 
-> **This is work in progress. It is a rewrite of the original
->  [fabric8-maven-plugin](https://github.com/fabric8io/fabric8/tree/master/fabric8-maven-plugin)
->  which includes
->  [docker-maven-plugin](https://github.com/fabric8io/docker-maven-plugin)
->  and is intended a one-stop-shop for building and deploying Java
->  applications for Docker, Kubernetes and OpenShift**
->
-> It's not even alpha yet.
+This plugin is is a rewrite of the original
+[fabric8-maven-plugin](https://github.com/fabric8io/fabric8/tree/master/fabric8-maven-plugin)
+which includes
+[docker-maven-plugin](https://github.com/fabric8io/docker-maven-plugin)
+and is intended a one-stop-shop for building and deploying Java
+applications for Docker, Kubernetes and OpenShift. Its still work in progress, 
+but already usable. See the [samples](samples/) for some examples.
 
-This plugins makes it easy to get your Java applications on to
+This plugin makes it easy to get your Java applications on to
 OpenShift or Kubernetes. The main goal is easy of use and a consistent
 usage pattern for different build workflows.
 

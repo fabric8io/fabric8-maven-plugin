@@ -32,18 +32,19 @@ import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
+import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.plugin.customizer.CustomizerManager;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
+import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfigFluent;
 import io.fabric8.utils.Strings;
-import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.*;
 import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
@@ -66,6 +67,10 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     @Component
     private ImageConfigResolver imageConfigResolver;
+
+    // Used for determining which mojos a called durin a run
+    @Component
+    private GoalFinder goalFinder;
 
     /**
      * Folder where to find project specific files
@@ -279,7 +284,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     // ==================================================================================
 
-    private List<ImageConfiguration> resolveImages(List<ImageConfiguration> images, Logger log) {
+    private List<ImageConfiguration> getResolvedImages(List<ImageConfiguration> images, Logger log) throws MojoExecutionException {
         List<ImageConfiguration> ret;
         final Properties resolveProperties = project.getProperties();
         ret = ConfigHelper.resolveImages(
@@ -298,31 +303,38 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                 }
             });
 
+        Date now = getBuildReferenceDate();
+        storeReferenceDateInPluginContext(now);
         String minimalApiVersion = ConfigHelper.initAndValidate(ret, null /* no minimal api version */,
-                                                                new ImageNameFormatter(project), log);
-        saveResolvedImagesInPluginContext(session, ret, minimalApiVersion);
+                                                                new ImageNameFormatter(project,now), log);
         return ret;
     }
 
-    private List<ImageConfiguration> getResolvedImages(List<ImageConfiguration> images, Logger log) {
-        List<ImageConfiguration> ret = getResolvedImagesFromPluginContext();
-        if (ret != null) {
-            return ret;
-        }
-        return resolveImages(images, log);
-    }
-
-    private void saveResolvedImagesInPluginContext(MavenSession session, List<ImageConfiguration> images, String apiVersion) {
+    private void storeReferenceDateInPluginContext(Date now) {
         Map<String, Object> pluginContext = getPluginContext();
-        pluginContext.put(AbstractDockerMojo.CONTEXT_KEY_RESOLVED_IMAGES, images);
-        if (apiVersion != null) {
-            pluginContext.put(AbstractDockerMojo.CONTEXT_KEY_MINIMAL_API_VERSION, apiVersion);
+        pluginContext.put(AbstractDockerMojo.CONTEXT_KEY_BUILD_TIMESTAMP, now);
+    }
+
+    // get a reference date
+    private Date getBuildReferenceDate() throws MojoExecutionException {
+        if (goalFinder.runningWithGoal(project, session, "fabric8:build")) {
+            // we are running together with fabric8:build, but since fabric8:build is running later we
+            // are creating the build date here which is reused by fabric8:build
+            return new Date();
+        } else {
+            // Pick up an existing build date created by fabric8:build previously
+            File tsFile = new File(project.getBuild().getDirectory(),AbstractDockerMojo.DOCKER_BUILD_TIMESTAMP);
+            if (!tsFile.exists()) {
+                return new Date();
+            }
+            try {
+                return EnvUtil.loadTimestamp(tsFile);
+            } catch (MojoExecutionException e) {
+                throw new MojoExecutionException("Cannot read timestamp from " + tsFile,e);
+            }
         }
     }
 
-    private List<ImageConfiguration> getResolvedImagesFromPluginContext() {
-        return (List<ImageConfiguration>) getPluginContext().get(AbstractDockerMojo.CONTEXT_KEY_RESOLVED_IMAGES);
-    }
 
     private KubernetesList generateKubernetesResources(final EnricherManager enricherManager, List<ImageConfiguration> images)
         throws IOException, MojoExecutionException {
