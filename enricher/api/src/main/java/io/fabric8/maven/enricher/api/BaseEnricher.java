@@ -32,6 +32,7 @@ import org.apache.maven.project.MavenProject;
 import java.util.List;
 import java.util.Map;
 
+import static io.fabric8.kubernetes.api.KubernetesHelper.DEFAULT_NAMESPACE;
 import static java.rmi.server.RemoteServer.getLog;
 
 /**
@@ -100,12 +101,14 @@ public abstract class BaseEnricher implements Enricher {
 
     protected KubernetesClient getKubernetes() {
         if (kubernetesClient == null) {
-            String ns = getNamespaceConfig();
-            if (Strings.isNotBlank(ns)) {
-                kubernetesClient = new DefaultKubernetesClient(new ConfigBuilder().withNamespace(ns).build());
-            } else {
-                kubernetesClient = new DefaultKubernetesClient();
+            String namespace = getNamespaceConfig();
+            if (Strings.isNullOrBlank(namespace)) {
+                namespace = KubernetesHelper.defaultNamespace();
             }
+            if (Strings.isNullOrBlank(namespace)) {
+                namespace = DEFAULT_NAMESPACE;
+            }
+            kubernetesClient = new DefaultKubernetesClient(new ConfigBuilder().withNamespace(namespace).build());
         }
         return kubernetesClient;
     }
