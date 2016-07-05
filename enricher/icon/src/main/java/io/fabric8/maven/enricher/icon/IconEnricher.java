@@ -44,7 +44,7 @@ import static io.fabric8.maven.core.util.MavenUtil.hasPlugin;
 import static io.fabric8.utils.Files.guessMediaType;
 
 /**
- * Enrichre for adding icons to descriptors
+ * Enricher for adding icons to descriptors
  *
  * @author roland
  * @since 01/05/16

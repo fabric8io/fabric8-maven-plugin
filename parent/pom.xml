@@ -58,7 +58,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.maven>3.2.3</version.maven>
-    <version.fabric8>2.2.136</version.fabric8>
+    <version.fabric8>2.2.139</version.fabric8>
     <version.docker-maven-plugin>0.15.9</version.docker-maven-plugin>
   </properties>
 
@@ -111,6 +111,12 @@
       <dependency>
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-enricher-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-enricher-git</artifactId>
         <version>${project.version}</version>
       </dependency>
 

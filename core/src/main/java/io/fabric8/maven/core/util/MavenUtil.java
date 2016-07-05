@@ -192,4 +192,18 @@ public class MavenUtil {
         }
         return answer;
     }
+
+    /**
+     * Returns the root maven project or null if there is no maven project
+     */
+    public static MavenProject getRootProject(MavenProject project) {
+        while (project != null) {
+            MavenProject parent = project.getParent();
+            if (parent == null) {
+                break;
+            }
+            project = parent;
+        }
+        return project;
+    }
 }
