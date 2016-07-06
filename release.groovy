@@ -23,6 +23,31 @@ def updateDependencies(source){
   }
 }
 
+def updateDownstreamDependencies(stagedProject){
+  def downstreamProjects = [
+          'fabric8-quickstarts/cdi-camel',
+          'fabric8-quickstarts/spring-boot-ribbon',
+          'fabric8-quickstarts/spring-boot-camel',
+          'fabric8-quickstarts/spring-boot-camel-xml'
+  ]
+  pushPomPropertyChangePR{
+    propertyName = 'fabric8.maven.plugin.version'
+    projects = downstreamProjects
+    version = stagedProject[1]
+  }
+
+
+  def parentPomDownstreamProjects = [
+          'fabric8io/funktion'
+  ]
+  pushPomPropertyChangePR{
+    parentPomLocation = 'parent/pom.xml'
+    propertyName = 'fabric8.maven.plugin.version'
+    projects = parentPomDownstreamProjects
+    version = stagedProject[1]
+  }
+}
+
 def approveRelease(project){
   def releaseVersion = project[1]
   approve{
