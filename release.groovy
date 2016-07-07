@@ -24,18 +24,11 @@ def updateDependencies(source){
 }
 
 def updateDownstreamDependencies(stagedProject){
-  def downstreamProjects = [
-          'fabric8-quickstarts/cdi-camel',
-          'fabric8-quickstarts/spring-boot-ribbon',
-          'fabric8-quickstarts/spring-boot-camel',
-          'fabric8-quickstarts/spring-boot-camel-xml'
-  ]
-  pushPomPropertyChangePR{
+  pushPomPropertyChangePROrganisation{
+    organisation = 'fabric8-quickstarts'
     propertyName = 'fabric8.maven.plugin.version'
-    projects = downstreamProjects
     version = stagedProject[1]
   }
-
 
   def parentPomDownstreamProjects = [
           'fabric8io/funktion'
