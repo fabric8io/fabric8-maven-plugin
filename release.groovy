@@ -23,14 +23,21 @@ def updateDependencies(source){
   }
 }
 
-def updateDownstreamDependencies(stagedProject){
-  def downstreamProjects = [
-          'fabric8io/funktion',
-          'fabric8io/fabric8-maven-dependencies'
-  ]
-  pushPomPropertyChangePR{
+def updateDownstreamDependencies(stagedProject) {
+  pushPomPropertyChangePR {
     propertyName = 'fabric8.maven.plugin.version'
-    projects = downstreamProjects
+    projects = [
+            'fabric8io/fabric8-maven-dependencies'
+    ]
+    version = stagedProject[1]
+  }
+
+  pushPomPropertyChangePR {
+    parentPomLocation = 'parent/pom.xml'
+    propertyName = 'fabric8.maven.plugin.version'
+    projects = [
+            'fabric8io/funktion'
+    ]
     version = stagedProject[1]
   }
 }
