@@ -182,6 +182,15 @@ public class DefaultServiceEnricher extends BaseEnricher {
                     if (ports == null || ports.isEmpty()) {
                         loadedSpec.withPorts(matchedSpec.getPorts()).endSpec();
                     } else {
+                        // lets default any missing values
+                        for (ServicePort port : ports) {
+                            if (Strings.isNullOrBlank(port.getProtocol())) {
+                                port.setProtocol("TCP");
+                            }
+                            if (Strings.isNullOrBlank(port.getName())) {
+                                port.setName(getDefaultPortName(port));
+                            }
+                        }
                         // lets add first missing port
                         List<ServicePort> matchedPorts = matchedSpec.getPorts();
                         if (matchedPorts != null && ports.isEmpty()) {
@@ -198,6 +207,25 @@ public class DefaultServiceEnricher extends BaseEnricher {
                 }
             }
         }
+    }
+
+    public static String getDefaultPortName(ServicePort servicePort) {
+        Integer port = servicePort.getPort();
+        if (port != null) {
+            switch (port) {
+                case 80:
+                case 8080:
+                case 9090:
+                    return "http";
+                case 443:
+                    return "https";
+                case 8778:
+                    return "jolokia";
+                case 9779:
+                    return "prometheus";
+            }
+        }
+        return "default";
     }
 
     /**
