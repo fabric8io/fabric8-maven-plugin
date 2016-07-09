@@ -20,12 +20,12 @@
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>fabric8-maven-parent</artifactId>
-    <version>3.0-SNAPSHOT</version>
+    <version>3.0.26</version>
     <relativePath>../../parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>fabric8-maven-enricher-icon</artifactId>
-  <version>3.0-SNAPSHOT</version>
+  <version>3.0.26</version>
 
   <name>Fabric8 Maven :: Enricher :: Icon</name>
 
