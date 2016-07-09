@@ -182,12 +182,14 @@ public class DefaultServiceEnricher extends BaseEnricher {
                     if (ports == null || ports.isEmpty()) {
                         loadedSpec.withPorts(matchedSpec.getPorts()).endSpec();
                     } else {
-                        // lets adding any missing ports
+                        // lets add first missing port
                         List<ServicePort> matchedPorts = matchedSpec.getPorts();
-                        if (matchedPorts != null) {
+                        if (matchedPorts != null && ports.isEmpty()) {
                             for (ServicePort matchedPort : matchedPorts) {
                                 if (!hasPort(ports, matchedPort)) {
                                     ports.add(matchedPort);
+                                    // lets only add 1 port
+                                    break;
                                 }
                             }
                         }
