@@ -519,10 +519,46 @@ table.CodeRay td.code>pre{padding:0}
 <span id="revdate">2016-07-11</span>
 </div>
 <div id="toc" class="toc2">
-<div id="toctitle">docker-maven-plugin</div>
+<div id="toctitle">fabric8-maven-plugin</div>
 <ul class="sectlevel1">
-<li><a href="#introduction">1. Introduction</a></li>
+<li><a href="#introduction">1. Introduction</a>
+<ul class="sectlevel2">
+<li><a href="#building-images">1.1. Building Images</a></li>
+<li><a href="#kubernetes-and-openshift-resource-descriptors">1.2. Kubernetes and OpenShift Resource Descriptors</a></li>
+<li><a href="#configuration">1.3. Configuration</a></li>
+<li><a href="#examples">1.4. Examples</a>
+<ul class="sectlevel3">
+<li><a href="#zero-config">1.4.1. Zero-Config</a></li>
+<li><a href="#xml-configuration">1.4.2. XML Configuration</a></li>
+<li><a href="#enhanced-yaml-descriptors">1.4.3. Enhanced YAML Descriptors</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a href="#installation">2. Installation</a></li>
+<li><a href="#goals">3. Goals</a>
+<ul class="sectlevel2">
+<li><a href="#fabric8:resource">3.1. <strong>fabric8:resource</strong></a></li>
+<li><a href="#fabric8:build">3.2. <strong>fabric8:build</strong></a>
+<ul class="sectlevel3">
+<li><a href="#build-configuration">3.2.1. Configuration</a></li>
+<li><a href="#build-assembly">3.2.2. Assembly</a></li>
+<li><a href="#misc-env">3.2.3. Environment and Labels</a></li>
+<li><a href="#misc-startup">3.2.4. Startup Arguments</a></li>
+<li><a href="#build-buildargs">3.2.5. Build Args</a></li>
+</ul>
+</li>
+<li><a href="#fabric8:push">3.3. <strong>fabric8:push</strong></a></li>
+<li><a href="#fabric8:deploy">3.4. <strong>fabric8:deploy</strong></a></li>
+<li><a href="#fabric8:watch">3.5. <strong>fabric8:watch</strong></a></li>
+</ul>
+</li>
+<li><a href="#extensions">4. Extensions</a>
+<ul class="sectlevel2">
+<li><a href="#starter">4.1. Starter</a></li>
+<li><a href="#enricher">4.2. Enricher</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -539,21 +575,1145 @@ table.CodeRay td.code>pre{padding:0}
 <h2 id="introduction">1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>first</p>
+<p>The <strong>fabric8-maven-plugin</strong> brings your Java applications to <a href="http://kubernetes.io/">Kubernetes</a> and <a href="https://www.openshift.com/">OpenShift</a>. It provides a tight integration into <a href="http://maven.apache.org">Maven</a> builds and benefits from the build information already given. It focuses on the following aspect:</p>
+</div>
+<div class="sect2">
+<h3 id="building-images">1.1. Building Images</h3>
+<div class="paragraph">
+<p>One main task of this plugin is to create Docker images holding the actual application and which can be deployed on Kubernetes / OpenShift. This is done with the <a href="#fabric8:build"><strong>fabric8:build</strong></a> goal. It is easy to include build artifacts and their dependencies into an image. The plugin uses the assembly descriptor format from the <a href="http://maven.apache.org/plugins/maven-assembly-plugin/">maven-assembly-plugin</a> to specify the content which will be added from a sub-directory in the image (<code>/deployments</code> by default). Images that are built with this plugin can then be pushed to public or private Docker registries with <a href="#fabric8:push"><strong>fabric8:push</strong></a>.</p>
+</div>
+<div class="paragraph">
+<p>Depending on the operational mode, for building the actual image either a Docker daemon is contacted directly or an <a href="https://docs.openshift.com/enterprise/3.0/architecture/core_concepts/builds_and_image_streams.html#docker-build">OpenShift Docker Build</a> is performed.</p>
+</div>
+<div class="paragraph">
+<p>A special <a href="#fabric8:watch"><strong>fabric8:watch</strong></a> goal allows for reacting on code changes and automatic recreation of images or copying new artifacts into running container.</p>
+</div>
+<div class="paragraph">
+<p>This image related features are inherited from the <a href="https://github.com/fabric8io/docker-maven-plugin">fabric8io/docker-maven-plugin</a> which has a rich configuration syntax for creating images.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="kubernetes-and-openshift-resource-descriptors">1.2. Kubernetes and OpenShift Resource Descriptors</h3>
+<div class="paragraph">
+<p>With <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> Kubernetes and OpenShift resource descriptors can be created from the build information for creating the corresponding resource object. These files are packaged within the Maven artifacts crearted and can be deployed to a running orchestration platform with <a href="#fabric8:deploy"><strong>fabric8:deploy</strong></a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="configuration">1.3. Configuration</h3>
+<div class="paragraph">
+<p>In order to capture many use case scenarios, this plugin provides three levels of configuration:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Zero-Config</strong> which is similar to spring-boot-starter the plugin makes some opinionated decisions based what it finds in the pom.xml (like the base image to use, which ports to expose, &#8230;&#8203;). Great for starting up things and for keeping our quickstarts small and tidy.</p>
+</li>
+<li>
+<p><strong>XML plugin configuration</strong> which is similar to what the <a href="https://fabric8io.github.io/docker-maven-plugin/#example">docker-maven-plugin</a> provides. This allows for type safe configuration with IDE support.</p>
+</li>
+<li>
+<p><strong>Kubernetes &amp; OpenShift YAML files</strong> which are given YAML fragments and that can be <em>enriched</em> by the plugin. This allows expert users to use plain configuration file with all their capabilities, but also to add project specific build information.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="examples">1.4. Examples</h3>
+<div class="paragraph">
+<p>Enough words, lets have a look at some code. The following examples will demonstrate all three configurations variants in different Examples</p>
+</div>
+<div class="sect3">
+<h4 id="zero-config">1.4.1. Zero-Config</h4>
+
+</div>
+<div class="sect3">
+<h4 id="xml-configuration">1.4.2. XML Configuration</h4>
+
+</div>
+<div class="sect3">
+<h4 id="enhanced-yaml-descriptors">1.4.3. Enhanced YAML Descriptors</h4>
+
+</div>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="installation">2. Installation</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>This plugin is available from Maven central and can be connected to
+pre- and post-integration phase as seen below. The configuration and
+available goals are described below.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.0-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
 
+  <span class="tag">&lt;configuration&gt;</span>
+     ....
+     <span class="tag">&lt;images&gt;</span>
+        <span class="comment">&lt;!-- A single's image configuration --&gt;</span>
+        <span class="tag">&lt;image&gt;</span>
+          ...
+          <span class="tag">&lt;build&gt;</span>
+           ....
+          <span class="tag">&lt;/build&gt;</span>
+        <span class="tag">&lt;/image&gt;</span>
+        ....
+     <span class="tag">&lt;/images&gt;</span>
+  <span class="tag">&lt;/configuration&gt;</span>
+
+  <span class="comment">&lt;!-- Connect fabric8:resource and fabric8:build to lifecycle phases --&gt;</span>
+  <span class="tag">&lt;executions&gt;</span>
+    <span class="tag">&lt;execution&gt;</span>
+       <span class="tag">&lt;id&gt;</span>fabric8<span class="tag">&lt;/id&gt;</span>
+       <span class="tag">&lt;goals&gt;</span>
+         <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
+         <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
+       <span class="tag">&lt;/goals&gt;</span>
+    <span class="tag">&lt;/execution&gt;</span>
+  <span class="tag">&lt;/executions&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When working with this plugin you can use an own packaging with a specialized lifecycle in order to keep your pom files small. Three packaging variants are available:</p>
+</div>
+<div class="paragraph">
+<p>The rest of this manual is now about how to configure the plugin for your images.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="goals">3. Goals</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This plugin supports the following goals, which are explained in the next sections:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 1. Plugin Goals</caption>
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Goal</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:build"><strong>fabric8:build</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Build images</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:push"><strong>fabric8:push</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Push images to a registry</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:resource"><strong>fabric8:resource</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Create Kubernetes or OpenShift resource descriptors</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:deploy"><strong>fabric8:deploy</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Deploy resources decriptors to a cluster</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:watch"><strong>fabric8:watch</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Watch for doing rebuilds and redeployments</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Depending on whether the OpenShift or Kubernetes operational mode is used, the workflow and the performed actions differs :</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 2. Strategies</caption>
+<colgroup>
+<col style="width: 11.1111%;">
+<col style="width: 44.4444%;">
+<col style="width: 44.4445%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Use Case</th>
+<th class="tableblock halign-left valign-top">Kubernetes</th>
+<th class="tableblock halign-left valign-top">OpenShift</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Build</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>fabric8:build</code> <code>fabric8:push</code>
+* Creates a image against an exposed Docker daemon (with a <code>docker.tar</code>)
+* Pushes the image to a registry which is then referenced from the configuration</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>fabric8:build</code></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Creates a <code>BuildConfig</code></p>
+</li>
+<li>
+<p>Starts an OpenShift build with a <code>docker.tar</code> as input</p>
+</li>
+<li>
+<p>Creates an <code>ImageStream</code> which can be referenced by the deployment descriptors</p>
+</li>
+</ul>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Deploy</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>fabric8:deploy</code>
+* Applies a Kubernetes resource descriptor to cluster</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>fabric8:deploy</code>
+* Applies an OpenShift resource descriptor to a cluster</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="sect2">
+<h3 id="fabric8:resource">3.1. <strong>fabric8:resource</strong></h3>
+
+</div>
+<div class="sect2">
+<h3 id="fabric8:build">3.2. <strong>fabric8:build</strong></h3>
+<div class="paragraph">
+<p>This goal will build all images which have a <code>&lt;build&gt;</code> configuration section, or, if the global configuration variable <code>image</code> (property:
+<code>docker.image</code>) is set, only the images contained in this variable (comma separated) will be built.</p>
+</div>
+<div id="build-overview" class="paragraph">
+<p>Images can be build in two different ways:</p>
+</div>
+<div class="paragraph">
+<div class="title">Inline plugin configuration</div>
+<p>With an inline plugin configuration all information required to build the image is contained in the plugin configuration. By default its the standard XML based configuration for the plugin but can be switched to a property based configuration syntax as described in the section <a href="#external-configuration">External configuration</a>. The XML configuration syntax is recommended because of its more structured and typed nature.</p>
+</div>
+<div class="paragraph">
+<p>When using this mode, the Dockerfile is created on the fly with all instructions extracted from the configuration given.</p>
+</div>
+<div class="paragraph">
+<div class="title">External Dockerfile</div>
+<p>Alternatively an external Dockerfile template can be used. This mode is switch on by using one of these two configuration options within
+the <code>&lt;build&gt;</code> configuration section.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>dockerFileDir</strong> specifies a directory containing a <code>Dockerfile</code> that will be used to create the image.</p>
+</li>
+<li>
+<p><strong>dockerFile</strong> specifies a specific Dockerfile. The <code>dockerFileDir</code> is set to the directory containing the file.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>If <code>dockerFileDir</code> is a relative path looked up in <code>${project.basedir}/src/main/docker</code>. You can make easily an absolute path by prefixing with <code>${project.basedir}</code>.</p>
+</div>
+<div class="paragraph">
+<p>Any additional files located in the <code>dockerFileDir</code> directory will also be added to the build context as well as any files specified by an assembly. However, you still need to insert <code>ADD</code> or <code>COPY</code> directives yourself into the Dockerfile.</p>
+</div>
+<div class="paragraph">
+<p>If this directory contains a <code>.maven-dockerignore</code> (or alternatively, a <code>.maven-dockerexclude</code> file), then it is used for excluding files for the build. Each line in this file is treated as an <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>. It is similar to <code>.dockerignore</code> when using Docker but has a slightly different syntax (hence the different name).</p>
+</div>
+<div class="paragraph">
+<p>If this directory contains a <code>.maven-dockerinclude</code> file, then it is used for including only those files for the build. Each line in this file is also treated as an <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>.</p>
+</div>
+<div class="paragraph">
+<p>Except for the <a href="#build-assembly">assembly configuration</a> all other configuration options are ignored for now.</p>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="paragraph">
+<p>For the future it is planned to introduce special keywords lile <code>DMP_ADD_ASSEMBLY</code> which can be used in the Dockerfile template to placing the configuration resulting from the additional configuration.</p>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>The following example uses a Dockerfile in the directory
+<code>src/main/docker/demo</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+ <span class="tag">&lt;configuration&gt;</span>
+   <span class="tag">&lt;images&gt;</span>
+     <span class="tag">&lt;image&gt;</span>
+       <span class="tag">&lt;name&gt;</span>user/demo<span class="tag">&lt;/name&gt;</span>
+       <span class="tag">&lt;build&gt;</span>
+         <span class="tag">&lt;dockerFileDir&gt;</span>demo<span class="tag">&lt;/dockerFileDir&gt;</span>
+       <span class="tag">&lt;/build&gt;</span>
+     <span class="tag">&lt;/image&gt;</span>
+   <span class="tag">&lt;/images&gt;</span>
+ <span class="tag">&lt;/configuration&gt;</span>
+ ...
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="build-configuration">3.2.1. Configuration</h4>
+<div class="paragraph">
+<p>All build relevant configuration is contained in the <code>&lt;build&gt;</code> section
+of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
+<code>&lt;dockerFile&gt;</code> the following configuration options are available:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 3. Build configuration</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>args</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Map specifying the value of <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg">Docker build args</a>
+which should be used when building the image with an external Dockerfile which uses build arguments. The key-value syntax is the same as when defining Maven properties (or <code>labels</code> or <code>env</code>).
+This argument is ignored when no external Dockerfile is used. Build args can also be specified as properties as
+described in <a href="#build-buildargs">Build Args</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>assembly</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">specifies the assembly configuration as described in <a href="#build-assembly">Build Assembly</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cleanup</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cleanup dangling (untagged) images after each build (including any containers created from them). Default is <code>try</code> which tries to remove the old image, but doesn&#8217;t fail the build if this is not possible because e.g. the image is still used by a running container. Use <code>remove</code> if you want to fail the build and <code>none</code> if no cleanup is requested.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>nocache</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Don&#8217;t use Docker&#8217;s build cache. This can be overwritten by setting a system property <code>docker.nocache</code> when running Maven.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cmd</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A command to execute by default (i.e. if no command is provided when a container for this image is started). See <a href="#misc-startup">Startup Arguments</a> for details.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>entryPoint</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">An entrypoint allows you to configure a container that will run as an executable. See <a href="#misc-startup">Startup Arguments</a> for details.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>env</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The environments as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>from</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The base image which should be used for this image. If not given this default to <code>busybox:latest</code> and is suitable for a pure data image.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>labels</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Labels  as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>maintainer</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The author (<code>MAINTAINER</code>) field for the generated image</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ports</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The exposed ports which is a list of <code>&lt;port&gt;</code> elements, one for each port to expose.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>runCmds</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Commands to be run during the build process. It contains <strong>run</strong> elements which are passed to the shell. The run commands are inserted right after the assembly and after <strong>workdir</strong> in to the Dockerfile. This tag is not to be confused with the <code>&lt;run&gt;</code> section for this image which specifies the runtime behaviour when starting containers.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>optimise</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">if set to true then it will compress all the <code>runCmds</code> into a single <code>RUN</code> directive so that only one image layer is created.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>compression</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The compression mode how the build archive is transmitted to the docker daemon (<code>fabric8:build</code>) and how docker build archives are attached to this build as sources (<code>fabric8:source</code>). The value can be <code>none</code> (default), <code>gzip</code> or <code>bzip2</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skip</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">if set to true disables building of the image. This config option is best used together with a maven property</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>tags</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of additional <code>tag</code> elements with which an image is to be tagged after the build.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>user</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">User to which the Dockerfile should switch to the end (corresponds to the <code>USER</code> Dockerfile directive).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>volumes</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>volume</code> elements to create a container volume.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>workdir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Directory to change to when starting the container.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>From this configuration this Plugin creates an in-memory Dockerfile,
+copies over the assembled files and calls the Docker daemon via its
+remote API.</p>
+</div>
+<div class="paragraph">
+<p>Here&#8217;s an example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;build&gt;</span>
+  <span class="tag">&lt;from&gt;</span>java:8u40<span class="tag">&lt;/from&gt;</span>
+  <span class="tag">&lt;maintainer&gt;</span>john.doe@example.com<span class="tag">&lt;/maintainer&gt;</span>
+  <span class="tag">&lt;tags&gt;</span>
+    <span class="tag">&lt;tag&gt;</span>latest<span class="tag">&lt;/tag&gt;</span>
+    <span class="tag">&lt;tag&gt;</span>${project.version}<span class="tag">&lt;/tag&gt;</span>
+  <span class="tag">&lt;/tags&gt;</span>
+  <span class="tag">&lt;ports&gt;</span>
+    <span class="tag">&lt;port&gt;</span>8080<span class="tag">&lt;/port&gt;</span>
+  <span class="tag">&lt;/ports&gt;</span>
+  <span class="tag">&lt;volumes&gt;</span>
+    <span class="tag">&lt;volume&gt;</span>/path/to/expose<span class="tag">&lt;/volume&gt;</span>
+  <span class="tag">&lt;/volumes&gt;</span>
+
+  <span class="tag">&lt;entryPoint&gt;</span>
+    <span class="comment">&lt;!-- exec form for ENTRYPOINT --&gt;</span>
+    <span class="tag">&lt;exec&gt;</span>
+      <span class="tag">&lt;arg&gt;</span>java<span class="tag">&lt;/arg&gt;</span>
+      <span class="tag">&lt;arg&gt;</span>-jar<span class="tag">&lt;/arg&gt;</span>
+      <span class="tag">&lt;arg&gt;</span>/opt/demo/server.jar<span class="tag">&lt;/arg&gt;</span>
+    <span class="tag">&lt;/exec&gt;</span>
+  <span class="tag">&lt;/entryPoint&gt;</span>
+
+  <span class="tag">&lt;assembly&gt;</span>
+    <span class="tag">&lt;mode&gt;</span>dir<span class="tag">&lt;/mode&gt;</span>
+    <span class="tag">&lt;basedir&gt;</span>/opt/demo<span class="tag">&lt;/basedir&gt;</span>
+    <span class="tag">&lt;descriptor&gt;</span>assembly.xml<span class="tag">&lt;/descriptor&gt;</span>
+  <span class="tag">&lt;/assembly&gt;</span>
+<span class="tag">&lt;/build&gt;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="build-assembly">3.2.2. Assembly</h4>
+<div class="paragraph">
+<p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 4. Assembly Configuration</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>basedir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Directory under which the files and artifacts contained in the assembly will be copied within the container. The default value for this is <code>/maven</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>inline</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Inlined assembly descriptor as described in <a href="#build-assembly-descriptor">Assembly Descriptor</a> below.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>descriptor</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to an assembly descriptor file, whose format is described  <a href="#build-assembly-descriptor">Assembly Descriptor</a> below.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>descriptorRef</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Alias to a predefined assembly descriptor. The available aliases are also described in <a href="#build-assembly-descriptor">Assembly Descriptor</a> below.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerFileDir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Directory containing an external Dockerfile. _This option is deprecated, please use &lt;dockerfiledir&gt; directly in the &lt;build&gt; section.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>exportBasedir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specification whether the <code>basedir</code> should be exported as a volume.  This value is <code>true</code> by default except in the case the <code>basedir</code> is set to the container root (<code>/</code>). It is also <code>false</code> by default when a base image is used with <code>from</code> since exporting makes no sense in this case and will waste disk space unnecessarily.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ignorePermissions</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specification if existing file permissions should be ignored
+when creating the assembly archive with a mode <code>dir</code>. This value is <code>false</code> by default. <em>This property is deprecated, use a <code>permissionMode</code> of <code>ignore</code> instead.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>mode</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Mode how the how the assembled files should be collected:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>dir</code> : Files are simply copied (default),</p>
+</li>
+<li>
+<p><code>tar</code> : Transfer via tar archive</p>
+</li>
+<li>
+<p><code>tgz</code> : Transfer via compressed tar archive</p>
+</li>
+<li>
+<p><code>zip</code> : Transfer via ZIP archive</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The archive formats have the advantage that file permission can be preserved better (since the copying is independent from the underlying files systems), but might triggers internal bugs from the Maven assembler (as it has been reported in <a href="https://github.com/fabric8io/docker-maven-plugin/issues/171">#171</a>)</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>permissions</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Permission of the files to add:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>ignore</code> to use the permission as found on files regardless on any
+assembly configuration</p>
+</li>
+<li>
+<p><code>keep</code> to respect the assembly provided permissions, <code>exec</code> for setting the executable bit on all files (required for Windows when using an assembly mode <code>dir</code>)</p>
+</li>
+<li>
+<p><code>auto</code> to let the plugin select <code>exec</code> on Windows and <code>keep</code> on others.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><code>keep</code> is the default value.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>user</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">User and/or group under which the files should be added. The user must already exist in the base image.
+</p><p class="tableblock">It has the general format <code>user[:group[:run-user]]</code>. The user and group can be given either as numeric user- and group-id or as names. The group id is optional.
+</p><p class="tableblock">If a third part is given, then the build changes to user <code>root</code> before changing the ownerships, changes the ownerships and then change to user <code>run-user</code> which is then used for the final command to execute. This feature might be needed, if the base image already changed the user (e.g. to 'jboss') so that a <code>chown</code> from root to this user would fail.
+</p><p class="tableblock">For example, the image <code>jboss/wildfly</code> use a "jboss" user under which all commands are executed. Adding files in Docker always happens under the UID root. These files can only be changed to "jboss" is the <code>chown</code> command is executed as root. For the following commands to be run again as "jboss" (like the final <code>standalone.sh</code>), the plugin switches back to user <code>jboss</code> (this is this "run-user") after changing the file ownership. For this example a specification of
+<code>jboss:jboss:jboss</code> would be required.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>In the event you do not need to include any artifacts with the image, you may safely omit this element from the configuration.</p>
+</div>
+<div class="sect4">
+<h5 id="build-assembly-descriptor">Assembly Descriptor</h5>
+<div class="paragraph">
+<p>With using the <code>inline</code>, <code>descriptor</code> or <code>descriptorRef</code> option
+it is possible to bring local files, artifacts and dependencies into
+the running Docker container. A <code>descriptor</code> points to a file
+describing the data to put into an image to build. It has the same
+<a href="http://maven.apache.org/plugins/maven-assembly-plugin/assembly.html">format</a> as for creating assemblies with the
+<a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a> with following exceptions:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>&lt;formats&gt;</code> are ignored, the assembly will allways use a directory
+when preparing the data container (i.e. the format is fixed to
+<code>dir</code>)</p>
+</li>
+<li>
+<p>The <code>&lt;id&gt;</code> is ignored since only a single assembly descriptor is
+used (no need to distinguish multiple descriptors)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Also you can inline the assembly description with a <code>inline</code> description
+directly into the pom file. Adding the proper namespace even allows for
+IDE autocompletion. As an example, refer to the profile <code>inline</code> in
+the `data-jolokia-demo&#8217;s pom.xml.</p>
+</div>
+<div class="paragraph">
+<p>Alternatively <code>descriptorRef</code> can be used with the name of a
+predefined assembly descriptor. The following symbolic names can be
+used for <code>descriptorRef</code>:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 5. Predefined Assembly Descriptors</caption>
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Assembly Reference</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>artifact-with-dependencies</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Attaches project&#8217;s artifact and all its dependencies. Also, when a <code>classpath</code> file exists in the target directory, this will be added to.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>artifact</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Attaches only the project&#8217;s artifact but no dependencies.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>project</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Attaches the whole Maven project but with out the <code>target/</code> directory.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>rootWar</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Copies the artifact as <code>ROOT.war</code> to the exposed directory. I.e. Tomcat will then deploy the war under the root context.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>For example,</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;images&gt;</span>
+  <span class="tag">&lt;image&gt;</span>
+    <span class="tag">&lt;build&gt;</span>
+      <span class="tag">&lt;assembly&gt;</span>
+         <span class="tag">&lt;descriptorRef&gt;</span>artifact-with-dependencies<span class="tag">&lt;/descriptorRef&gt;</span>
+         .....</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>will add the created artifact with the name <code>${project.build.finalName}.${artifact.extension}</code> and all jar dependencies in the the <code>baseDir</code> (which is <code>/maven</code> by default).</p>
+</div>
+<div class="paragraph">
+<p>All declared files end up in the configured <code>basedir</code> (or <code>/maven</code> by default) in the created image.</p>
+</div>
+<div class="paragraph">
+<p>If the assembly references the artifact to build with this pom, it is required that the <code>package</code> phase is included in the run. This happens either automatically when the <code>fabric8:build</code> target is called as part of a binding (e.g. is <code>fabric8:build</code> is bound to the <code>pre-integration-test</code>
+phase) or it must be ensured when called on the command line:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn package fabric8:build</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This is a general restriction of the Maven lifecycle which applies also
+for the <code>maven-assembly-plugin</code> itself.</p>
+</div>
+<div class="paragraph">
+<p>In the following example a dependency from the pom.xml is included and
+mapped to the name <code>jolokia.war</code>. With this configuration you will end
+up with an image, based on <code>busybox</code> which has a directory <code>/maven</code>
+containing a single file <code>jolokia.war</code>. This volume is also exported
+automatically.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;assembly&gt;</span>
+  <span class="tag">&lt;dependencySets&gt;</span>
+    <span class="tag">&lt;dependencySet&gt;</span>
+      <span class="tag">&lt;includes&gt;</span>
+        <span class="tag">&lt;include&gt;</span>org.jolokia:jolokia-war<span class="tag">&lt;/include&gt;</span>
+      <span class="tag">&lt;/includes&gt;</span>
+      <span class="tag">&lt;outputDirectory&gt;</span>.<span class="tag">&lt;/outputDirectory&gt;</span>
+      <span class="tag">&lt;outputFileNameMapping&gt;</span>jolokia.war<span class="tag">&lt;/outputFileNameMapping&gt;</span>
+    <span class="tag">&lt;/dependencySet&gt;</span>
+  <span class="tag">&lt;/dependencySets&gt;</span>
+<span class="tag">&lt;/assembly&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Another container can now connect to the volume an 'mount' the
+<code>/maven</code> directory. A container  from <code>consol/tomcat-7.0</code> will look
+into <code>/maven</code> and copy over everything to <code>/opt/tomcat/webapps</code> before
+starting Tomcat.</p>
+</div>
+<div class="paragraph">
+<p>If you are using the <code>artifact</code> or <code>artifact-with-dependencies</code> descriptor, it is
+possible to change the name of the final build artifact with the following:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;build&gt;</span>
+  <span class="tag">&lt;finalName&gt;</span>your-desired-final-name<span class="tag">&lt;/finalName&gt;</span>
+  ...
+<span class="tag">&lt;/build&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Please note, based upon the following documentation listed <a href="http://maven.apache.org/pom.html#BaseBuild_Element">here</a>, there is no guarantee the plugin creating your artifact will honor it in which case you will need to use a custom descriptor like above to achieve the desired naming.</p>
+</div>
+<div class="paragraph">
+<p>Currently the <code>jar</code> and <code>war</code> plugins properly honor the usage of <code>finalName</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="misc-env">3.2.3. Environment and Labels</h4>
+<div class="paragraph">
+<p>When creating a container one or more environment variables can be set via configuration with the <code>env</code> parameter</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;env&gt;</span>
+  <span class="tag">&lt;JAVA_HOME&gt;</span>/opt/jdk8<span class="tag">&lt;/JAVA_HOME&gt;</span>
+  <span class="tag">&lt;CATALINA_OPTS&gt;</span>-Djava.security.egd=file:/dev/./urandom<span class="tag">&lt;/CATALINA_OPTS&gt;</span>
+<span class="tag">&lt;/env&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you put this configuration into profiles you can easily create various test variants with a single image (e.g. by switching the JDK or whatever).</p>
+</div>
+<div class="paragraph">
+<p>It is also possible to set the environment variables from the outside of the plugin&#8217;s configuration with the parameter <code>envPropertyFile</code>. If given, this property file is used to set the environment variables where the keys and values specify the environment variable. Environment variables specified in this file override any environment variables specified in the configuration.</p>
+</div>
+<div class="paragraph">
+<p>Labels can be set inline the same way as environment variables:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;labels&gt;</span>
+   <span class="tag">&lt;com.example.label-with-value&gt;</span>foo<span class="tag">&lt;/com.example.label-with-value&gt;</span>
+   <span class="tag">&lt;version&gt;</span>${project.version}<span class="tag">&lt;/version&gt;</span>
+   <span class="tag">&lt;artifactId&gt;</span>${project.artifactId}<span class="tag">&lt;/artifactId&gt;</span>
+<span class="tag">&lt;/labels&gt;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="misc-startup">3.2.4. Startup Arguments</h4>
+<div class="paragraph">
+<p>Using <code>entryPoint</code> and <code>cmd</code> it is possible to specify the <a href="https://docs.docker.com/reference/builder/#entrypoint">entry point</a>
+or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a container.</p>
+</div>
+<div class="paragraph">
+<p>The difference is, that an <code>entrypoint</code> is the command that always be executed, with the <code>cmd</code> as argument. If no <code>entryPoint</code> is provided, it defaults to <code>/bin/sh -c</code> so any <code>cmd</code> given is executed with a shell. The arguments given to <code>docker run</code> are always given as arguments to the
+<code>entrypoint</code>, overriding any given <code>cmd</code> option. On the other hand if no extra arguments are given to <code>docker run</code> the default <code>cmd</code> is used as argument to <code>entrypoint</code>.</p>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="paragraph">
+<p>See this <a href="http://stackoverflow.com/questions/21553353/what-is-the-difference-between-cmd-and-entrypoint-in-a-dockerfile">stackoverflow question</a> for a detailed explanation.</p>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>A entry point or command can be specified in two alternative formats:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 6. Entrypoint and Command Configuration</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Mode</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>shell</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Shell form in which the whole line is given to <code>shell -c</code> for interpretation.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>exec</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of arguments (with inner <code>&lt;args&gt;</code>) arguments which will be given to the <code>exec</code> call directly without any shell interpretation.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Either shell or params should be specified.</p>
+</div>
+<div class="paragraph">
+<p>Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entryPoint&gt;</span>
+   <span class="comment">&lt;!-- shell form  --&gt;</span>
+   <span class="tag">&lt;shell&gt;</span>java -jar $HOME/server.jar<span class="tag">&lt;/shell&gt;</span>
+<span class="tag">&lt;/entryPoint&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>or</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entryPoint&gt;</span>
+   <span class="comment">&lt;!-- exec form  --&gt;</span>
+   <span class="tag">&lt;exec&gt;</span>
+     <span class="tag">&lt;args&gt;</span>java<span class="tag">&lt;/args&gt;</span>
+     <span class="tag">&lt;args&gt;</span>-jar<span class="tag">&lt;/args&gt;</span>
+     <span class="tag">&lt;args&gt;</span>/opt/demo/server.jar<span class="tag">&lt;/args&gt;</span>
+   <span class="tag">&lt;/exec&gt;</span>
+<span class="tag">&lt;/entryPoint&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This can be formulated also more dense with:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="comment">&lt;!-- shell form  --&gt;</span>
+<span class="tag">&lt;entryPoint&gt;</span>java -jar $HOME/server.jar<span class="tag">&lt;/entryPoint&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>or</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entryPoint&gt;</span>
+  <span class="comment">&lt;!-- exec form  --&gt;</span>
+  <span class="tag">&lt;arg&gt;</span>java<span class="tag">&lt;/arg&gt;</span>
+  <span class="tag">&lt;arg&gt;</span>-jar<span class="tag">&lt;/arg&gt;</span>
+  <span class="tag">&lt;arg&gt;</span>/opt/demo/server.jar<span class="tag">&lt;/arg&gt;</span>
+<span class="tag">&lt;/entryPoint&gt;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="build-buildargs">3.2.5. Build Args</h4>
+<div class="paragraph">
+<p>As described in section <a href="#build-configuration">Configuration</a> for external Dockerfiles <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg">Docker build arg</a> can be used. In addition to the
+configuration within the plugin configuration you can also use properties to specify them:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Set a system property when running Maven, eg.: <code>-Ddocker.buildArg.http_proxy=http://proxy:8001</code>. This is especially
+useful when using predefined Docker arguments for setting proxies transparently.</p>
+</li>
+<li>
+<p>Set a project property within the <code>pom.xml</code>, eg.:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml">  <span class="tag">&lt;docker.buildArg.myBuildArg&gt;</span>myValue<span class="tag">&lt;/docker.buildArg.myBuildArg&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Please note that the system property setting will always override the project property. Also note that for all properties which are not Docker <a href="https://docs.docker.com/engine/reference/builder/#arg">predefined</a> properties, the external Dockerfile must contain an <code>ARGS</code> instruction.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fabric8:push">3.3. <strong>fabric8:push</strong></h3>
+<div class="paragraph">
+<p>This goal uploads images to the registry which have a <code>&lt;build&gt;</code> configuration section. The images to push can be restricted with with
+the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code>
+with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 7. Push options</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 71.4285%;">
+<col style="width: 14.2858%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipPush</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> the plugin won&#8217;t push any images that have been built.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip.push</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>pushRegistry</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The registry to use when pushing the image. <a href="#registry">Registry Handling</a> for
+more details.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.push.registry</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="fabric8:deploy">3.4. <strong>fabric8:deploy</strong></h3>
+
+</div>
+<div class="sect2">
+<h3 id="fabric8:watch">3.5. <strong>fabric8:watch</strong></h3>
+<div class="paragraph">
+<p>When developing and testing applications you will often have to rebuild Docker images and restart containers. Typing <code>fabric8:build</code> and <code>fabric8:start</code> all the time is cumbersome. With <code>fabric8:watch</code> you can enable automatic rebuilding of images and restarting of containers in case of updates.</p>
+</div>
+<div class="paragraph">
+<p><code>fabric8:watch</code> is the top-level goal which perform these tasks. There are two watch modes, which can be specified in multiple ways:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>build</code> : Automatically rebuild one or more Docker images when one of the files selected by an assembly changes. This works for all files included directly in <code>assembly.xml</code> but also for arbitrary dependencies.
+For example:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">$ mvn package fabric8:build fabric8:watch -Ddocker.watchMode=build</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This mode works only when there is a <code>&lt;build&gt;</code> section in an image configuration. Otherwise no automatically build will be triggered for an image with only a <code>&lt;run&gt;</code> section. Note that you need the <code>package</code> phase to be executed before otherwise any artifact created by this build can not be included into the assembly. As described in the section about <code>fabric8:start</code> this is a Maven limitation.
+* <code>run</code> : Automatically restart container when their associated images changes. This is useful if you pull a new version of an image externally or especially in combination with the <code>build</code> mode to restart containers when their image has been automatically rebuilt. This mode works reliably only when used together with <code>fabric8:start</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">$ mvn fabric8:start fabric8:watch -Ddocker.watchMode=run</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>both</code> : Enables both <code>build</code> and <code>run</code>. This is the default.</p>
+</li>
+<li>
+<p><code>none</code> : Image is completely ignored for watching.</p>
+</li>
+<li>
+<p><code>copy</code> : Copy changed files into the running container. This is the fast way to update a container, however the target container must support hot deply, too so that it makes sense. Most application servers like Tomcat supports this.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The mode can also be <code>both</code> or <code>none</code> to select both or none of these variants, respectively. The default is <code>both</code>.</p>
+</div>
+<div class="paragraph">
+<p><code>fabric8:watch</code> will run forever until it is interrupted with <code>CTRL-C</code> after which it will stop all containers. Depending on the configuration parameters <code>keepContainer</code> and <code>removeVolumes</code> the stopped containers with their volumes will be removed, too.</p>
+</div>
+<div class="paragraph">
+<p>When an image is removed while watching it, error messages will be printed out periodically.  So don&#8217;t do that ;-)</p>
+</div>
+<div class="paragraph">
+<p>Dynamically assigned ports stay stable in that they won&#8217;t change after a container has been stopped and a new container is created and started. The new container will try to allocate the same ports as the previous container.</p>
+</div>
+<div class="paragraph">
+<p>If containers are linked together network or volume wise, and you update a container which other containers dependent on, the dependant containers are not restarted for now. E.g. when you have a "service" container accessing a "db" container and the "db" container is updated, then you "service" container will fail until it is restarted, too.</p>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="paragraph">
+<p>A future version of this plugin will take care of restarting
+these containers, too (in the right order), but for now you would have
+to do this manually.</p>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>This maven goal can be configured with the following top-level parameters:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 8. Watch configuration</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 71.4285%;">
+<col style="width: 14.2858%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchMode</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Watch mode specifies what should be watched</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>build</code> : Watch changes in the assembly and rebuild the image in
+case</p>
+</li>
+<li>
+<p><code>run</code> : Watch a container&#8217;s image whether it changes and restart
+the container in case</p>
+</li>
+<li>
+<p><code>copy</code> : Changed files are copied into the container. The container can be either running or might be already exited (when used as a <em>data container</em> linked into a <em>platform container</em>). Requires Docker &gt;= 1.8.</p>
+</li>
+<li>
+<p><code>both</code> : <code>build</code> and <code>run</code> combined</p>
+</li>
+<li>
+<p><code>none</code> : Neither watching for builds nor images. This is useful if
+you use prefactored images which won&#8217;t be changed and hence don&#8217;t
+need any watching. <code>none</code> is best used on an per image level, see
+below how this can be specified.</p>
+</li>
+</ul>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.watchMode</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchInterval</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Interval in milliseconds how  often to check for changes, which must be larger than 100ms. The default is 5 seconds.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.watchInterval</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchPostGoal</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A maven goal which should be called if a rebuild or a restart has been performed. This goal must have the format <code>&lt;pluginGroupId&gt;:&lt;pluginArtifactId&gt;:&lt;goal&gt;</code> and the plugin must be configured in the <code>pom.xml</code>. For example a post-goal <code>io.fabric8:fabric8:delete-pods</code> will trigger the deletion of PODs in Kubernetes which in turn triggers are new start of a POD within the Kubernetes cluster. The value specified here is the the default post goal which can be overridden by <code>&lt;postGoal&gt;</code> in a <code>&lt;watch&gt;</code> configuration.</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchPostExec</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A command which is executed within the container after files are copied into this container when <code>watchMode</code> is <code>copy</code>. Note that this container must be running.</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keepRunning</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> all container will be kept running after <code>fabric8:watch</code> has been stopped. By default this is set to <code>false</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.keepRunning</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keepContainer</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">As for <code>fabric8:stop</code>, if this is set to <code>true</code> (and <code>keepRunning</code> is disabled) then all container will be removed after they have been stopped. The default is <code>true</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.keepContainer</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>removeVolumes</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">if set to <code>true</code> will remove any volumes associated to the container as well. This option will be ignored if either <code>keepContainer</code> or <code>keepRunning</code> are <code>true</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.removeVolumes</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Image specific watch configuration goes into an extra image-level <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). The following parameters are recognized:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 9. Watch configuration for a single image</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>mode</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Each image can be configured for having individual watch mode. These take precedence of the global watch mode. The mode specified in this configuration takes precedence over the globally specified mode.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>interval</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Watch interval can be specified in milliseconds on image level. If given this will override the global watch interval.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>postGoal</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Post Maven plugin goal after a rebuild or restart. The value here must have the format <code>&lt;pluginGroupId&gt;:&lt;pluginArtifactId&gt;:&lt;goal&gt;</code> (e.g. <code>io.fabric8:fabric8:delete-pods</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>postExec</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Command to execute after files are copied into a
+running container when <code>mode</code> is <code>copy</code>.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Here is an example how the watch mode can be tuned:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
+   <span class="comment">&lt;!-- Check every 10 seconds by default --&gt;</span>
+   <span class="tag">&lt;watchInterval&gt;</span>10000<span class="tag">&lt;/watchInterval&gt;</span>
+   <span class="comment">&lt;!-- Watch for doing rebuilds and restarts --&gt;</span>
+   <span class="tag">&lt;watchMode&gt;</span>both<span class="tag">&lt;/watch&gt;</span>
+   <span class="tag">&lt;images&gt;</span>
+      <span class="tag">&lt;image&gt;</span>
+         <span class="comment">&lt;!-- Service checks every 5 seconds --&gt;</span>
+         <span class="tag">&lt;alias&gt;</span>service<span class="tag">&lt;/alias&gt;</span>
+         ....
+         <span class="tag">&lt;watch&gt;</span>
+            <span class="tag">&lt;interval&gt;</span>5000<span class="tag">&lt;/interval&gt;</span>
+         <span class="tag">&lt;/watch&gt;</span>
+      <span class="tag">&lt;/image&gt;</span>
+      <span class="tag">&lt;image&gt;</span>
+         <span class="comment">&lt;!-- Database needs no watching --&gt;</span>
+         <span class="tag">&lt;alias&gt;</span>db<span class="tag">&lt;alias&gt;</span>
+         ....
+         <span class="tag">&lt;watch&gt;</span>
+            <span class="tag">&lt;mode&gt;</span>none<span class="tag">&lt;/mode&gt;</span>
+         <span class="tag">&lt;/watch&gt;</span>
+      <span class="tag">&lt;/image&gt;</span>
+      ....
+   <span class="tag">&lt;/images&gt;</span>
+<span class="tag">&lt;/configuration&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Given this configuration</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn package fabric8:build fabric8:start fabric8:watch</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can build the service image, start up all containers and go into a watch loop. Again, you need the <code>package</code> phase in order that the assembly can find the artifact build by this project. This is a Maven limitation. The <code>db</code> image will never be watch since it assumed to not change while watching.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="extensions">4. Extensions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This plugin provides two major extensions hook how the creation of images and resources descriptors can be customized:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Starters</strong> are used to auto create or customize image configuration when creating Docker images. They are a bit like <a href="http://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#using-boot-starter-poms">Spring Boot Starter POMs</a> as they can be enabled or disabled by declaring a Maven dependency. Starters are able to examine the build and to <em>detect</em> certain feature like whether Spring boot application is build or a plain war file. Depending on the collected informations a base image or the exposed ports are selected automatically for creating a image build configuration.</p>
+</li>
+<li>
+<p><strong>Enrichers</strong> are a similar concept but for creating the Kubernetes resource descriptors. Enricher can add build meta data as labels, automatically create <code>ReplicaSet</code> or <code>Service</code> based on the image performed. Again, enrichers can be selectively switched on and off via declaring Maven dependencies or via the XML configuration. fabric8-maven-plugin already comes with a rich set of enrichers. Whereas <strong>Starters</strong> are only useful in the <em>Zero-Config</em> case, <strong>Enrichers</strong> make sense for any configuration variant.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The following sections described which Starters and Enrichers are available and how own customizations can be hooked in.</p>
+</div>
+<div class="sect2">
+<h3 id="starter">4.1. Starter</h3>
+
+</div>
+<div class="sect2">
+<h3 id="enricher">4.2. Enricher</h3>
+
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 3.0-SNAPSHOT<br>
-Last updated 2016-07-11 10:00:34 UTC
+Last updated 2016-07-11 18:53:43 UTC
 </div>
 </div>
 </body>
