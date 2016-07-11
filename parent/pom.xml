@@ -59,7 +59,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.maven>3.2.3</version.maven>
     <version.fabric8>2.2.142</version.fabric8>
-    <version.docker-maven-plugin>0.15.9</version.docker-maven-plugin>
+    <version.docker-maven-plugin>0.15-SNAPSHOT</version.docker-maven-plugin>
   </properties>
 
   <repositories>
@@ -233,6 +233,14 @@
         <scope>test</scope>
       </dependency>
 
+      <!-- == doc ====================================== -->
+
+      <dependency>
+        <groupId>org.asciidoctor</groupId>
+        <artifactId>asciidoctorj-pdf</artifactId>
+        <version>1.5.0-alpha.11</version>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 
@@ -291,6 +299,19 @@
         <plugin>
           <artifactId>maven-resources-plugin</artifactId>
           <version>3.0.0</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.asciidoctor</groupId>
+          <artifactId>asciidoctor-maven-plugin</artifactId>
+          <version>1.5.3</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.asciidoctor</groupId>
+              <artifactId>asciidoctorj</artifactId>
+              <version>1.5.4</version>
+            </dependency>
+          </dependencies>
         </plugin>
 
       </plugins>
@@ -392,7 +413,6 @@
     <!-- "milestone" profiles used for deploying manually -->
     <profile>
       <id>milestone</id>
-
       <build>
         <plugins>
           <plugin>
@@ -416,6 +436,28 @@
         </plugins>
       </build>
     </profile>
+
+    <!-- "doc-html" for creating the asciidocs -->
+     <profile>
+      <id>doc-html</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.asciidoctor</groupId>
+            <artifactId>asciidoctor-maven-plugin</artifactId>
+            <configuration>
+              <backend>html</backend>
+              <sourceHighlighter>coderay</sourceHighlighter>
+              <attributes>
+                <toc>left</toc>
+              </attributes>
+            </configuration>
+          </plugin>
+        </plugins>
+        <defaultGoal>generate-resources asciidoctor:process-asciidoc</defaultGoal>
+      </build>
+    </profile>
+
   </profiles>
 
 </project>

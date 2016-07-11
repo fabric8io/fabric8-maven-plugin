@@ -54,4 +54,14 @@
     <url>git://github.com/fabric8io/fabric8-maven-plugin.git</url>
   </scm>
 
+  <profiles>
+    <!-- Generate HTML and PDF documentation (with -Ppdf-->
+    <profile>
+      <id>doc</id>
+      <modules>
+        <module>doc</module>
+      </modules>
+    </profile>
+  </profiles>
+
 </project>
