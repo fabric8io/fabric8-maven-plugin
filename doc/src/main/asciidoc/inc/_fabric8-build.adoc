@@ -1,0 +1,18 @@
+
+[[fabric8:build]]
+== *fabric8:build*
+
+This goal will build all images which have a `<build>` configuration section, or, if the global configuration variable `image` (property:
+`docker.image`) is set, only the images contained in this variable (comma separated) will be built.
+
+include::classpath:/META-INF/doc/dmp/inc/build/_overview.adoc[]
+
+include::classpath:/META-INF/doc/dmp/inc/build/_configuration.adoc[]
+
+include::classpath:/META-INF/doc/dmp/inc/build/_assembly.adoc[]
+
+include::classpath:/META-INF/doc/dmp/inc/misc/_env.adoc[]
+
+include::classpath:/META-INF/doc/dmp/inc/misc/_startup.adoc[]
+
+include::classpath:/META-INF/doc/dmp/inc/build/_buildargs.adoc[]

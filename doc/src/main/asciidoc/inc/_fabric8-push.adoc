@@ -1,0 +1,6 @@
+[[fabric8:push]]
+== *fabric8:push*
+
+include::classpath:/META-INF/doc/dmp/inc/push/_overview.adoc[]
+
+include::classpath:/META-INF/doc/dmp/inc/push/_configuration.adoc[]

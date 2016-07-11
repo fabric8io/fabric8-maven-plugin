@@ -1,3 +1,45 @@
 
 [[installation]]
 = Installation
+
+This plugin is available from Maven central and can be connected to
+pre- and post-integration phase as seen below. The configuration and
+available goals are described below.
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>fabric8-maven-plugin</artifactId>
+  <version>{version}</version>
+
+  <configuration>
+     ....
+     <images>
+        <!-- A single's image configuration -->
+        <image>
+          ...
+          <build>
+           ....
+          </build>
+        </image>
+        ....
+     </images>
+  </configuration>
+
+  <!-- Connect fabric8:resource and fabric8:build to lifecycle phases -->
+  <executions>
+    <execution>
+       <id>fabric8</id>
+       <goals>
+         <goal>resource</goal>
+         <goal>build</goal>
+       </goals>
+    </execution>
+  </executions>
+</plugin>
+----
+
+When working with this plugin you can use an own packaging with a specialized lifecycle in order to keep your pom files small. Three packaging variants are available:
+
+The rest of this manual is now about how to configure the plugin for your images.

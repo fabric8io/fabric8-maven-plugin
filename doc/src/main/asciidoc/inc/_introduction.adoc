@@ -2,4 +2,40 @@
 [[introduction]]
 = Introduction
 
-first
+The *fabric8-maven-plugin* brings your Java applications to http://kubernetes.io/[Kubernetes] and https://www.openshift.com/[OpenShift]. It provides a tight integration into http://maven.apache.org[Maven] builds and benefits from the build information already given. It focuses on the following aspect:
+
+== Building Images
+
+One main task of this plugin is to create Docker images holding the actual application and which can be deployed on Kubernetes / OpenShift. This is done with the <<fabric8:build>> goal. It is easy to include build artifacts and their dependencies into an image. The plugin uses the assembly descriptor format from the http://maven.apache.org/plugins/maven-assembly-plugin/[maven-assembly-plugin] to specify the content which will be added from a sub-directory in the image (`/deployments` by default). Images that are built with this plugin can then be pushed to public or private Docker registries with <<fabric8:push>>.
+
+Depending on the operational mode, for building the actual image either a Docker daemon is contacted directly or an https://docs.openshift.com/enterprise/3.0/architecture/core_concepts/builds_and_image_streams.html#docker-build[OpenShift Docker Build] is performed.
+
+A special <<fabric8:watch>> goal allows for reacting on code changes and automatic recreation of images or copying new artifacts into running container.
+
+This image related features are inherited from the https://github.com/fabric8io/docker-maven-plugin[fabric8io/docker-maven-plugin] which has a rich configuration syntax for creating images.
+
+== Kubernetes and OpenShift Resource Descriptors
+
+With <<fabric8:resource>> Kubernetes and OpenShift resource descriptors can be created from the build information for creating the corresponding resource object. These files are packaged within the Maven artifacts crearted and can be deployed to a running orchestration platform with <<fabric8:deploy>>.
+
+== Configuration
+
+In order to capture many use case scenarios, this plugin provides three levels of configuration:
+
+* *Zero-Config* which is similar to spring-boot-starter the plugin makes some opinionated decisions based what it finds in the pom.xml (like the base image to use, which ports to expose, ...). Great for starting up things and for keeping our quickstarts small and tidy.
+
+* *XML plugin configuration* which is similar to what the https://fabric8io.github.io/docker-maven-plugin/#example[docker-maven-plugin] provides. This allows for type safe configuration with IDE support.
+
+* *Kubernetes &amp; OpenShift YAML files* which are given YAML fragments and that can be _enriched_ by the plugin. This allows expert users to use plain configuration file with all their capabilities, but also to add project specific build information.
+
+== Examples
+
+Enough words, lets have a look at some code. The following examples will demonstrate all three configurations variants in different Examples
+
+=== Zero-Config
+
+
+=== XML Configuration
+
+
+=== Enhanced YAML Descriptors
