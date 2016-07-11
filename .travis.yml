@@ -6,6 +6,7 @@ before_install:
   - sed -i.bak -e 's|https://nexus.codehaus.org/snapshots/|https://oss.sonatype.org/content/repositories/codehaus-snapshots/|g' ~/.m2/settings.xml
 install: true
 script:
+  - sh doc/ci-docs.sh
   - |
     mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar \
           -Dsonar.host.url=https://nemo.sonarqube.org \

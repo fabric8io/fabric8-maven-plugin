@@ -1,9 +1,9 @@
-echo ===========================================
-echo Deploying docker-maven-plugin documentation
-echo ===========================================
+echo ============================================
+echo Deploying fabric8-maven-plugin documentation
+echo ============================================
 
 cd doc && \
-mvn -Phtml,pdf package && \
+mvn -Pdoc,html,pdf package && \
 git clone -b gh-pages git@github.com:fabric8io/fabric8-maven-plugin.git gh-pages && \
 cp -rv target/generated-docs/* gh-pages/ && \
 cd gh-pages && \
