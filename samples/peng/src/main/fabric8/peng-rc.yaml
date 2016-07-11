@@ -1,9 +1,0 @@
-spec:
-  replicas: 1
-  template:
-    spec:
-      containers:
-      - name: pong
-        ports:
-        - containerPort: 8080
-

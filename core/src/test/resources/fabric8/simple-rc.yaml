@@ -1,9 +1,0 @@
-spec:
-  template:
-    spec:
-      containers:
-      - image: "rhuss/jax2016-ping:1"
-        name: ping
-        env:
-        - name: STRENGTH
-          value: "5"
