@@ -1,0 +1,7 @@
+
+[[fabric8:watch]]
+== *fabric8:watch*
+
+include::classpath:/META-INF/doc/dmp/inc/watch/_overview.adoc[]
+
+include::classpath:/META-INF/doc/dmp/inc/watch/_configuration.adoc[]

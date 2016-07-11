@@ -56,7 +56,6 @@ public class ClasspathIncludeProcessor extends IncludeProcessor {
 
     private List<String> readContent(String target) {
         String resourcePath = target.substring("classpath:".length());
-        System.out.println("Looking up " + resourcePath);
         InputStream is = getClass().getResourceAsStream(resourcePath);
         if (is == null) {
             throw new IllegalArgumentException("No resource " + target + " could be found in the classpath");

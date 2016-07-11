@@ -4,9 +4,10 @@ Roland Huß;
 :revdate: {localdate}
 :toc: macro
 :toclevels: 3
-:toc-title: docker-maven-plugin
+:toc-title: fabric8-maven-plugin
 :doctype: book
 :icons: font
+:plugin: fabric8
 
 ifndef::ebook-format[:leveloffset: 1]
 
@@ -19,5 +20,15 @@ ifdef::basebackend-html[toc::[]]
 include::inc/_introduction.adoc[]
 
 include::inc/_installation.adoc[]
+
+include::inc/_goals.adoc[]
+
+include::inc/_fabric8-resource.adoc[]
+include::inc/_fabric8-build.adoc[]
+include::inc/_fabric8-push.adoc[]
+include::inc/_fabric8-deploy.adoc[]
+include::inc/_fabric8-watch.adoc[]
+
+include::inc/_extensions.adoc[]
 
 // include::classpath:/META-INF/doc/dmp/inc/_docker-build.adoc[]
