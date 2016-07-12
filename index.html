@@ -515,7 +515,7 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/fabric8-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 3.0.27,</span>
+<span id="revnumber">version 3.0-SNAPSHOT,</span>
 <span id="revdate">2016-07-12</span>
 </div>
 <div id="toc" class="toc2">
@@ -650,7 +650,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>3.0.27<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.0-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -749,9 +749,17 @@ available goals are described below.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Build</p></td>
 <td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>fabric8:build</code> <code>fabric8:push</code>
-* Creates a image against an exposed Docker daemon (with a <code>docker.tar</code>)
-* Pushes the image to a registry which is then referenced from the configuration</p>
+<p><code>fabric8:build</code> <code>fabric8:push</code></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Creates a image against an exposed Docker daemon (with a <code>docker.tar</code>)</p>
+</li>
+<li>
+<p>Pushes the image to a registry which is then referenced from the configuration</p>
+</li>
+</ul>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div><div class="paragraph">
 <p><code>fabric8:build</code></p>
@@ -773,12 +781,24 @@ available goals are described below.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Deploy</p></td>
 <td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>fabric8:deploy</code>
-* Applies a Kubernetes resource descriptor to cluster</p>
+<p><code>fabric8:deploy</code></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Applies a Kubernetes resource descriptor to cluster</p>
+</li>
+</ul>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>fabric8:deploy</code>
-* Applies an OpenShift resource descriptor to a cluster</p>
+<p><code>fabric8:deploy</code></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Applies an OpenShift resource descriptor to a cluster</p>
+</li>
+</ul>
 </div></div></td>
 </tr>
 </tbody>
@@ -1712,8 +1732,8 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 3.0.27<br>
-Last updated 2016-07-12 05:41:32 UTC
+Version 3.0-SNAPSHOT<br>
+Last updated 2016-07-12 09:47:39 UTC
 </div>
 </div>
 </body>
