@@ -26,7 +26,7 @@
 
   <parent>
     <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
+    <artifactId>spring-boot-generator-parent</artifactId>
     <version>1.3.5.RELEASE</version>
   </parent>
 
@@ -35,20 +35,22 @@
 
   <dependencies>
 
-    <!-- Boot starter  -->
+    <!-- Boot generator  -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
+      <artifactId>spring-boot-generator-web</artifactId>
     </dependency>
 
- <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-actuator</artifactId>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-generator-actuator</artifactId>
     </dependency>
-<dependency>
-    <groupId>org.jolokia</groupId>
-    <artifactId>jolokia-core</artifactId>
- </dependency>
+
+    <dependency>
+      <groupId>org.jolokia</groupId>
+      <artifactId>jolokia-core</artifactId>
+    </dependency>
+
   </dependencies>
 
   <build>

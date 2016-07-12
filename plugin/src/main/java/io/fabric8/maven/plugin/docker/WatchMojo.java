@@ -18,7 +18,7 @@ package io.fabric8.maven.plugin.docker;
 
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.plugin.customizer.CustomizerManager;
+import io.fabric8.maven.plugin.generator.GeneratorManager;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -34,11 +34,11 @@ import java.util.Map;
 public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
 
     @Parameter
-    Map<String, String> customizer;
+    Map<String, String> generator;
 
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-        return CustomizerManager.customize(configs, customizer, project);
+        return GeneratorManager.generate(configs, generator, project, log);
     }
 
     @Override

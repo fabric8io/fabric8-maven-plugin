@@ -128,19 +128,19 @@
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-customizer-api</artifactId>
+        <artifactId>fabric8-maven-generator-api</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-customizer-java-app</artifactId>
+        <artifactId>fabric8-maven-generator-java-app</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-customizer-spring-boot</artifactId>
+        <artifactId>fabric8-maven-generator-spring-boot</artifactId>
         <version>${project.version}</version>
       </dependency>
 

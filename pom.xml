@@ -42,9 +42,9 @@
     <module>enricher/api</module>
     <module>enricher/git</module>
     <module>enricher/icon</module>
-    <module>customizer/api</module>
-    <module>customizer/java-app</module>
-    <module>customizer/spring-boot</module>
+    <module>generator/api</module>
+    <module>generator/java-app</module>
+    <module>generator/spring-boot</module>
   </modules>
 
   <scm>
