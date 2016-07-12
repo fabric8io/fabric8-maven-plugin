@@ -40,14 +40,14 @@ public class JavaAppGenerator extends BaseGenerator {
     }
 
     private enum Config implements Configs.Key {
-        mainClass {{ d = ""; }},
-        combine {{ d = "false"; }},
-        name    {{ d = "%g/%a:%l"; }},
-        alias   {{ d = "javaapp"; }},
-        from    {{ d = "fabric8/java-alpine-openjdk8-jdk"; }},
-        webPort   {{ d = ""; }},
-        jolokiaPort   {{ d = "8778"; }},
-        prometheusPort   {{ d = "9779"; }};
+        mainClass      {{ d = ""; }},
+        combine        {{ d = "false"; }},
+        name           {{ d = "%g/%a:%l"; }},
+        alias          {{ d = "javaapp"; }},
+        from           {{ d = "fabric8/java-alpine-openjdk8-jdk"; }},
+        webPort        {{ d = ""; }},
+        jolokiaPort    {{ d = "8778"; }},
+        prometheusPort {{ d = "9779"; }};
 
         public String def() { return d; } protected String d;
     }

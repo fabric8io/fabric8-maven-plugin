@@ -22,7 +22,6 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
-import io.fabric8.maven.enricher.api.Kinds;
 import io.fabric8.utils.Base64Encoder;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Strings;
@@ -81,11 +80,9 @@ public class IconEnricher extends BaseEnricher {
         iconRef = getConfig(Config.ref);
     }
 
-
     @Override
     public Map<String, String> getAnnotations(Kind kind) {
-        if (Kinds.isDeployOrReplicaKind(kind) ||
-                kind == Kind.SERVICE) {
+        if (kind.isDeployOrReplicaKind() || kind.isService()) {
             String iconUrl = getIconUrl();
             return iconUrl != null ? Collections.singletonMap(Annotations.Builds.ICON_URL,iconUrl) : null;
         } else {

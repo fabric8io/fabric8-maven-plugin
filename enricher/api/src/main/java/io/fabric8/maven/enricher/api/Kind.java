@@ -27,5 +27,23 @@ public enum Kind {
     REPLICATION_CONTROLLER,
     DEPLOYMENT,
     DEPLOYMENT_CONFIG,
-    POD_TEMPLATE
+    POD_TEMPLATE;
+
+    /**
+     * Returns true if the kind is a Deployment/DeploymentConfig or ReplicaSet/ReplicationController
+     */
+    public boolean isDeployOrReplicaKind() {
+        return this == Kind.REPLICA_SET || this == Kind.REPLICATION_CONTROLLER ||
+               this == Kind.DEPLOYMENT || this == Kind.DEPLOYMENT_CONFIG;
+    }
+
+    /**
+     * Check whether kinds is a Service
+     *
+     * @param kind kind to check
+     * @return true if the given kind is a service
+     */
+    public boolean isService() {
+        return this == Kind.SERVICE;
+    }
 }

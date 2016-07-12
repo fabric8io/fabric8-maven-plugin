@@ -13,16 +13,25 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.enricher.api;
+
+package io.fabric8.maven.plugin;
+
+
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 
 /**
+ * Proxy to d-m-p's build push
+ *
+ * @author roland
+ * @since 16/03/16
  */
-public class Kinds {
-    /**
-     * Returns true if the kind is a Deployment/DeploymentConfig or ReplicaSet/ReplicationController
-     */
-    public static boolean isDeployOrReplicaKind(Kind kind) {
-        return kind == Kind.REPLICA_SET || kind == Kind.REPLICATION_CONTROLLER ||
-                kind == Kind.DEPLOYMENT || kind == Kind.DEPLOYMENT_CONFIG;
+@Mojo(name = "push", defaultPhase = LifecyclePhase.INSTALL, requiresDependencyResolution = ResolutionScope.COMPILE)
+public class PushMojo extends io.fabric8.maven.docker.PushMojo {
+
+    @Override
+    protected String getLogPrefix() {
+        return "F8> ";
     }
 }

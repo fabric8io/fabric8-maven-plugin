@@ -20,7 +20,6 @@ import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
-import io.fabric8.maven.enricher.api.Kinds;
 import io.fabric8.utils.Strings;
 import io.fabric8.utils.URLUtils;
 import org.apache.maven.project.MavenProject;
@@ -46,7 +45,7 @@ public class GrafanaLinkEnricher extends BaseEnricher {
 
     @Override
     public Map<String, String> getAnnotations(Kind kind) {
-        if (Kinds.isDeployOrReplicaKind(kind)) {
+        if (kind.isDeployOrReplicaKind()) {
             String url = findGrafanaLink();
             return url != null ? Collections.singletonMap(Annotations.Builds.METRICS_PATH, url) : null;
         } else {
