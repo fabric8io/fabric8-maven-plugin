@@ -155,8 +155,9 @@ public class DefaultServiceEnricher extends BaseEnricher {
     }
 
     private void mergeServices(ServiceBuilder loadedService, Service defaultService) {
-        if (defaultService == null) {
-            return;
+        String defaultServiceName = KubernetesHelper.getName(defaultService);
+        if (Strings.isNullOrBlank(defaultServiceName)) {
+            defaultServiceName = getProject().getArtifactId();
         }
         ObjectMeta loadedMetadata = loadedService.getMetadata();
         if (loadedMetadata == null) {
@@ -164,10 +165,12 @@ public class DefaultServiceEnricher extends BaseEnricher {
             loadedService.withNewMetadataLike(loadedMetadata).endMetadata();
         }
         String name = KubernetesHelper.getName(loadedMetadata);
-        String defaultServiceName = KubernetesHelper.getName(defaultService);
         if (Strings.isNullOrBlank(name)) {
             loadedService.withNewMetadataLike(loadedMetadata).withName(defaultServiceName).endMetadata();
             name = KubernetesHelper.getName(loadedService.getMetadata());
+        }
+        if (defaultService == null) {
+            return;
         }
 
         // lets find a suitable service to match against
