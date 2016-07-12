@@ -35,8 +35,10 @@ Depending on whether the OpenShift or Kubernetes operational mode is used, the w
 
 | Build
 a| `fabric8:build` `fabric8:push`
+
 * Creates a image against an exposed Docker daemon (with a `docker.tar`)
 * Pushes the image to a registry which is then referenced from the configuration
+
 a| `fabric8:build`
 
 * Creates a `BuildConfig`
@@ -45,7 +47,11 @@ a| `fabric8:build`
 
 | Deploy
 a| `fabric8:deploy`
+
 * Applies a Kubernetes resource descriptor to cluster
+
 a| `fabric8:deploy`
+
 * Applies an OpenShift resource descriptor to a cluster
+
 |===

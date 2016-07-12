@@ -38,6 +38,8 @@
     <dependency>
       <groupId>io.fabric8</groupId>
       <artifactId>docker-maven-plugin</artifactId>
+      <!-- with snapshot version temporarily to find d-m-p doc snippets -->
+      <version>0.15-SNAPSHOT</version>
     </dependency>
 
     <!-- == asciidoctor ================================= -->
@@ -51,6 +53,31 @@
 
 
   <build>
+
+    <plugins>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-asciidoc</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.outputDirectory}/META-INF/doc/fmp</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/asciidoc</directory>
+                  <filtering>false</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+
     <pluginManagement>
       <plugins>
         <plugin>
