@@ -24,7 +24,7 @@ import java.util.Objects;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.plugin.customizer.CustomizerManager;
+import io.fabric8.maven.plugin.generator.GeneratorManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.*;
 
@@ -39,15 +39,21 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     static final String FABRIC8_DOCKER_SKIP_POM = "fabric8.docker.skip.pom";
 
+    // Kept as a fallback
+    @Deprecated
     @Parameter
     Map<String, String> customizer;
+
+    @Parameter
+    Map<String, String> generator;
 
     @Parameter(property = FABRIC8_DOCKER_SKIP_POM)
     boolean disablePomPackaging;
 
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-        if (project != null && disablePomPackaging && Objects.equals("pom", project.getPackaging())) {
+        if (project != null && disablePomPackaging
+            && Objects.equals("pom", project.getPackaging())) {
             getLog().debug("Disabling docker build for pom packaging due to property: " + FABRIC8_DOCKER_SKIP_POM);
             return;
         }
@@ -56,7 +62,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-        return CustomizerManager.customize(configs, customizer, project);
+        return GeneratorManager.generate(configs, generator != null ? generator : customizer, project, log);
     }
 
     @Override

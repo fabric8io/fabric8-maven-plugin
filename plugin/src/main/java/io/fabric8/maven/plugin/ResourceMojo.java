@@ -36,9 +36,9 @@ import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.maven.plugin.customizer.CustomizerManager;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.core.util.GoalFinder;
+import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfigFluent;
 import io.fabric8.utils.Strings;
@@ -119,10 +119,10 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     private Map<String, String> enricher;
 
     /**
-     * Configuration passed to customizers
+     * Configuration passed to generators
      */
     @Parameter
-    private Map<String, String> customizer;
+    private Map<String, String> generator;
 
     @Component
     private MavenProjectHelper projectHelper;
@@ -284,7 +284,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     // ==================================================================================
 
-    private List<ImageConfiguration> getResolvedImages(List<ImageConfiguration> images, Logger log) throws MojoExecutionException {
+    private List<ImageConfiguration> getResolvedImages(List<ImageConfiguration> images, final Logger log) throws MojoExecutionException {
         List<ImageConfiguration> ret;
         final Properties resolveProperties = project.getProperties();
         ret = ConfigHelper.resolveImages(
@@ -299,7 +299,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             new ConfigHelper.Customizer() {
                 @Override
                 public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-                    return CustomizerManager.customize(configs, customizer, project);
+                    return GeneratorManager.generate(configs, generator, project, log);
                 }
             });
 
