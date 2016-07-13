@@ -137,9 +137,6 @@ public class GitEnricher extends BaseEnricher {
                     } catch (Throwable e) {
                         Throwable cause = e;
 
-                        getLog().warn("Failed: " + e, e);
-                        e.printStackTrace();
-
                         boolean notFound = false;
                         boolean connectError = false;
                         Iterable<Throwable> it = createExceptionIterable(e);
