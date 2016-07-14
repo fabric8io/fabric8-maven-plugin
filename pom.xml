@@ -42,6 +42,7 @@
     <module>enricher/api</module>
     <module>enricher/build</module>
     <module>enricher/icon</module>
+    <module>enricher/dependency</module>
     <module>generator/api</module>
     <module>generator/java-app</module>
     <module>generator/spring-boot</module>
