@@ -61,7 +61,6 @@ public class BuildEnricher extends AbstractLiveEnricher {
     // Available configuration keys
     private enum Config implements Configs.Key {
         cdBuild        {{  d = "true"; }},
-        offline        {{  d = "false"; }},
         gitService     {{  d = ServiceNames.GOGS; }},
         jenkinsService {{  d = ServiceNames.JENKINS; }},
         useEnvVar      {{  d = "JENKINS_GOGS_USER"; }};

@@ -35,7 +35,7 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
     private KubernetesClient kubernetesClient;
 
     private enum Config implements Configs.Key {
-        online {{ d = "false"; }};
+        online {{ d = "true"; }};
 
         public String def() { return d; } protected String d;
     }
