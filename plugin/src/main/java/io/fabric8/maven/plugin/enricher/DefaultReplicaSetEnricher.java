@@ -17,7 +17,6 @@
 package io.fabric8.maven.plugin.enricher;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -27,15 +26,14 @@ import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
-import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.config.ResourceConfiguration;
 import io.fabric8.maven.core.handler.DeploymentHandler;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicaSetHandler;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherConfiguration;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.utils.Strings;
 
@@ -60,9 +58,10 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
     // Available configuration keys
     private enum Config implements Configs.Key {
         name,
-        imagePullPolicy  {{ d = "IfNotPresent"; }},
-        deployment       {{ d = "true"; }},
-        replicaSet       {{ d = "true"; }};
+        imagePullPolicy     {{ d = "IfNotPresent"; }},
+        deployment          {{ d = "true"; }},
+        replicaSet          {{ d = "true"; }},
+        replicaController   {{ d = "true"; }};
 
         public String def() { return d; } protected String d;
     }
@@ -109,7 +108,7 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
             } else if (Configs.asBoolean(getConfig(Config.replicaSet))) {
                 log.info("Adding a default ReplicaSet");
                 builder.addToReplicaSetItems(rsHandler.getReplicaSet(config, getImages()));
-            } else {
+            } else if (Configs.asBoolean(getConfig(Config.replicaController))) {
                 log.info("Adding a default ReplicationController");
                 builder.addToReplicationControllerItems(rcHandler.getReplicationController(config, getImages()));
             }
