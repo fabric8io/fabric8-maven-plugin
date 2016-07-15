@@ -16,9 +16,9 @@
 
 package io.fabric8.maven.enricher.api;
 
-import java.util.Map;
-
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+
+import java.util.Map;
 
 /**
  * Interface describing enrichers which add to kubernetes descriptors
@@ -61,7 +61,7 @@ public interface Enricher {
 
     /**
      * Add default resources when they are missing. Each enricher should be responsible
-     * for a certain kind of resource and should detect whehter a default resource
+     * for a certain kind of resource and should detect whether a default resource
      * should be added
      *
      * @param builder the build to examine and add to
