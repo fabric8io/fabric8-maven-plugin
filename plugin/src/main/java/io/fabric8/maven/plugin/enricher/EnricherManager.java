@@ -20,6 +20,7 @@ import java.util.*;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.util.PluginServiceFactory;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.Enricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
@@ -36,12 +37,16 @@ public class EnricherManager {
     // List of enrichers used for customizing the generated deployment descriptors
     private List<Enricher> enrichers;
 
+    private Logger log;
+
     // List of visitors used to enrich with labels
     private final List<? extends MetadataEnricherVisitor<?>> metaDataEnricherVisitors;
     private final List<? extends SelectorVisitor<?>> selectorVisitors;
 
     public EnricherManager(EnricherContext buildContext) {
         PluginServiceFactory<EnricherContext> pluginFactory = new PluginServiceFactory<>(buildContext);
+
+        log = buildContext.getLog();
 
         enrichers = pluginFactory.createServiceObjects("META-INF/fabric8-enricher-default",
                                                        "META-INF/fabric8-enricher");

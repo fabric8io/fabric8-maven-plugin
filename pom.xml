@@ -40,7 +40,7 @@
     <module>core</module>
     <module>plugin</module>
     <module>enricher/api</module>
-    <module>enricher/git</module>
+    <module>enricher/build</module>
     <module>enricher/icon</module>
     <module>generator/api</module>
     <module>generator/java-app</module>

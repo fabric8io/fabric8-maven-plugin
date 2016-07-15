@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.DEFAULT_NAMESPACE;
-import static java.rmi.server.RemoteServer.getLog;
 
 /**
  * @author roland
@@ -44,25 +43,17 @@ public abstract class BaseEnricher implements Enricher {
     private final EnricherConfiguration config;
     private final String name;
     private EnricherContext buildContext;
-    private KubernetesClient kubernetesClient;
 
     protected Logger log;
 
     public BaseEnricher(EnricherContext buildContext, String name) {
         this.buildContext = buildContext;
         // Pick the configuration which is for us
-        this.config = new EnricherConfiguration(name, buildContext.getConfig());
+        this.config = new EnricherConfiguration(buildContext.getProject().getProperties(),
+                                                name, buildContext.getConfig());
         this.log = buildContext.getLog();
         this.name = name;
     }
-
-
-    private enum Config implements Configs.Key {
-        offline {{ d = "false"; }};
-
-        public String def() { return d; } protected String d;
-    }
-
 
     @Override
     public String getName() {
@@ -91,36 +82,6 @@ public abstract class BaseEnricher implements Enricher {
         return log;
     }
 
-    /**
-     * Returns true if in offline mode
-     */
-    protected boolean isOffline() {
-        return Configs.asBoolean(getConfig(Config.offline));
-    }
-
-
-    protected KubernetesClient getKubernetes() {
-        if (kubernetesClient == null) {
-            String namespace = getNamespaceConfig();
-            if (Strings.isNullOrBlank(namespace)) {
-                namespace = KubernetesHelper.defaultNamespace();
-            }
-            if (Strings.isNullOrBlank(namespace)) {
-                namespace = DEFAULT_NAMESPACE;
-            }
-            kubernetesClient = new DefaultKubernetesClient(new ConfigBuilder().withNamespace(namespace).build());
-        }
-        return kubernetesClient;
-    }
-
-    private String getNamespaceConfig() {
-        ResourceConfiguration resourceConfiguration = getContext().getResourceConfiguration();
-        if (resourceConfiguration != null) {
-            return resourceConfiguration.getNamespace();
-        }
-        return null;
-    }
-
     protected List<ImageConfiguration> getImages() {
         return buildContext.getImages();
     }
@@ -135,31 +96,5 @@ public abstract class BaseEnricher implements Enricher {
 
     protected EnricherContext getContext() {
         return buildContext;
-    }
-
-
-    /**
-     * Returns the external access to the given service name
-     *
-     * @param serviceName name of the service
-     * @param protocol URL protocol such as <code>http</code>
-     */
-    protected String getExternalServiceURL(String serviceName, String protocol) {
-        String publicUrl = null;
-        if (isOffline()) {
-            getLog().info("Not looking for service " + serviceName + " as in offline mode");
-        } else {
-            try {
-                KubernetesClient kubernetes = getKubernetes();
-                String ns = kubernetes.getNamespace();
-                Service service = kubernetes.services().inNamespace(ns).withName(serviceName).get();
-                if (service != null) {
-                    publicUrl = KubernetesHelper.getServiceURL(kubernetes, serviceName, ns, protocol, true);
-                }
-            } catch (Exception e) {
-                getLog().warn("Failed to find service " + serviceName + ". May be in offline mode. Exception: " + e);
-            }
-        }
-        return publicUrl;
     }
 }

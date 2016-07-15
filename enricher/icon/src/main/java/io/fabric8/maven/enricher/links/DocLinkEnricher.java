@@ -16,10 +16,7 @@
 package io.fabric8.maven.enricher.links;
 
 import io.fabric8.kubernetes.api.Annotations;
-import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
-import io.fabric8.maven.enricher.api.Kinds;
+import io.fabric8.maven.enricher.api.*;
 import io.fabric8.utils.Strings;
 import io.fabric8.utils.URLUtils;
 import org.apache.maven.model.DistributionManagement;
@@ -37,14 +34,14 @@ import java.util.Set;
  * Adds a link to the generated documentation for this microservice so we can link to the versioned docs in the
  * annotations
  */
-public class DocLinkEnricher extends BaseEnricher {
+public class DocLinkEnricher extends AbstractLiveEnricher {
     public DocLinkEnricher(EnricherContext buildContext) {
         super(buildContext, "docLink");
     }
 
     @Override
     public Map<String, String> getAnnotations(Kind kind) {
-        if (Kinds.isDeployOrReplicaKind(kind)) {
+        if (kind.isDeployOrReplicaKind()) {
             String url = findDocumentationUrl();
             return url != null ? Collections.singletonMap(Annotations.Builds.DOCS_URL, url) : null;
         } else {
@@ -79,12 +76,13 @@ public class DocLinkEnricher extends BaseEnricher {
                         URL u = new URL(urlToParse);
                         String serviceName = u.getHost();
                         String protocol = u.getProtocol();
-                        // lets see if the host name is a service name in which case we'll resolve to the public URL
-                        String publicUrl = getExternalServiceURL(serviceName, protocol);
-                        if (Strings.isNotBlank(publicUrl)) {
-                            return URLUtils.pathJoin(publicUrl, u.getPath());
+                        if (isOnline()) {
+                            // lets see if the host name is a service name in which case we'll resolve to the public URL
+                            String publicUrl = getExternalServiceURL(serviceName, protocol);
+                            if (Strings.isNotBlank(publicUrl)) {
+                                return URLUtils.pathJoin(publicUrl, u.getPath());
+                            }
                         }
-
                     } catch (MalformedURLException e) {
                         getLog().error("Failed to parse URL: " + url + ". " + e, e);
                     }

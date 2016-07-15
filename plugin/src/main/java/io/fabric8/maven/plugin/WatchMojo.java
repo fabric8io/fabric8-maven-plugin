@@ -14,7 +14,7 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.plugin.docker;
+package io.fabric8.maven.plugin;
 
 
 import io.fabric8.maven.docker.config.ImageConfiguration;

@@ -41,13 +41,13 @@ public class SpringBootGenerator extends BaseGenerator {
     }
 
     private enum Config implements Configs.Key {
-        combine {{ d = "false"; }},
-        name    {{ d = "%g/%a:%t"; }},
-        alias   {{ d = "springboot"; }},
-        from    {{ d = "fabric8/java-alpine-openjdk8-jdk"; }},
-        webPort   {{ d = "8080"; }},
-        jolokiaPort   {{ d = "8778"; }},
-        prometheusPort   {{ d = "9779"; }};
+        combine        {{ d = "false"; }},
+        name           {{ d = "%g/%a:%t"; }},
+        alias          {{ d = "springboot"; }},
+        from           {{ d = "fabric8/java-alpine-openjdk8-jdk"; }},
+        webPort        {{ d = "8080"; }},
+        jolokiaPort    {{ d = "8778"; }},
+        prometheusPort {{ d = "9779"; }};
 
         public String def() { return d; } protected String d;
     }
