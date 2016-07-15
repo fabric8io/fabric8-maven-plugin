@@ -1,1 +1,1 @@
-io.fabric8.maven.enricher.git.GitEnricher
+io.fabric8.maven.enricher.build.BuildEnricher
