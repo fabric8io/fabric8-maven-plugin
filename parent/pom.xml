@@ -54,7 +54,7 @@
     <tag>HEAD</tag>
     <url>git://github.com/fabric8io/fabric8-maven-plugin.git</url>
   </scm>
-  
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.maven>3.2.3</version.maven>
@@ -116,7 +116,7 @@
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-enricher-git</artifactId>
+        <artifactId>fabric8-maven-enricher-build</artifactId>
         <version>${project.version}</version>
       </dependency>
 
