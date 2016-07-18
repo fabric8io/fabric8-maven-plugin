@@ -38,6 +38,7 @@ import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import io.fabric8.kubernetes.api.model.extensions.IngressSpec;
 import io.fabric8.kubernetes.client.*;
 import io.fabric8.kubernetes.internal.HasMetadataComparator;
+import io.fabric8.maven.core.access.KubernetesAccess;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteList;
 import io.fabric8.openshift.api.model.RouteSpec;
@@ -64,7 +65,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.DEFAULT_NAMESPACE;
 import static io.fabric8.kubernetes.api.KubernetesHelper.createIntOrString;
 
 /**
@@ -84,6 +84,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
      */
     @Parameter(property = "fabric8.deploy.failOnError", defaultValue = "true")
     protected boolean failOnError;
+
     /**
      * Should we update resources by deleting them first and then creating them again?
      */
@@ -173,18 +174,18 @@ public class DeployMojo extends AbstractFabric8Mojo {
     @Parameter(property = "fabric8.namespace")
     private String namespace;
 
-    // Kubernetes client
-    private KubernetesClient kubernetes;
+    private KubernetesAccess kubernetesAccess;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        KubernetesClient kubernetes = createKubernetesClient();
+        kubernetesAccess = new KubernetesAccess(namespace);
+
+        KubernetesClient kubernetes = kubernetesAccess.createKubernetesClient();
         File manifest;
         String clusterKind = "Kubernetes";
         if (KubernetesHelper.isOpenShift(kubernetes)) {
             manifest = openshiftManifest;
             clusterKind = "OpenShift";
-
         } else {
             manifest = kubernetesManifest;
         }
@@ -192,7 +193,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
             if (failOnNoKubernetesJson) {
                 throw new MojoFailureException("No such generated manifest file: " + manifest);
             } else {
-                getLog().warn("No such generated manifest file: " + manifest + " for this project so ignoring");
+                log.warn("No such generated manifest file %s for this project so ignoring", manifest);
                 return;
             }
         }
@@ -200,7 +201,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
         if (kubernetes.getMasterUrl() == null || Strings.isNullOrBlank(kubernetes.getMasterUrl().toString())) {
             throw new MojoFailureException("Cannot find Kubernetes master URL");
         }
-        log.info("Using " + clusterKind +" at: " + kubernetes.getMasterUrl() + " in namespace " + getNamespace() + " with manifest: " + manifest);
+        log.info("Using %s at %s in namespace %s with manifest %s ",clusterKind, kubernetes.getMasterUrl(), kubernetesAccess.getNamespace(), manifest);
 
         try {
             Controller controller = createController();
@@ -230,7 +231,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
             }
 
             // lets check we have created the namespace
-            String namespace = getNamespace();
+            String namespace = kubernetesAccess.getNamespace();
             controller.applyNamespace(namespace);
             controller.setNamespace(namespace);
 
@@ -408,7 +409,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
     }
 
     protected Object applyTemplates(Template template, KubernetesClient kubernetes, Controller controller, String fileName) throws Exception {
-        KubernetesHelper.setNamespace(template, getNamespace());
+        KubernetesHelper.setNamespace(template, kubernetesAccess.getNamespace());
         overrideTemplateParameters(template);
         return controller.applyTemplate(template, fileName);
     }
@@ -452,7 +453,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
     protected void createRoutes(Controller controller, Collection<HasMetadata> collection) {
         String routeDomainPostfix = this.routeDomain;
         Log log = getLog();
-        String namespace = getNamespace();
+        String namespace = kubernetesAccess.getNamespace();
         // lets get the routes first to see if we should bother
         try {
             OpenShiftClient openshiftClient = controller.getOpenShiftClientOrNull();
@@ -483,7 +484,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
     protected void createIngress(Controller controller, KubernetesClient kubernetesClient, Collection<HasMetadata> collection) {
         String routeDomainPostfix = this.routeDomain;
         Log log = getLog();
-        String namespace = getNamespace();
+        String namespace = kubernetesAccess.getNamespace();
         List<Ingress> ingressList = null;
         // lets get the routes first to see if we should bother
         try {
@@ -523,25 +524,29 @@ public class DeployMojo extends AbstractFabric8Mojo {
         String serviceName = KubernetesHelper.getName(service);
         for (Ingress ingress : ingresses) {
             IngressSpec spec = ingress.getSpec();
-            if (spec != null) {
-                List<IngressRule> rules = spec.getRules();
-                if (rules != null) {
-                    for (IngressRule rule : rules) {
-                        HTTPIngressRuleValue http = rule.getHttp();
-                        if (http != null) {
-                            List<HTTPIngressPath> paths = http.getPaths();
-                            if (paths != null) {
-                                for (HTTPIngressPath path : paths) {
-                                    IngressBackend backend = path.getBackend();
-                                    if (backend != null) {
-                                        if (Objects.equals(serviceName, backend.getServiceName())) {
-                                            return true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
+            if (spec == null) {
+                break;
+            }
+            List<IngressRule> rules = spec.getRules();
+            if (rules == null) {
+                break;
+            }
+            for (IngressRule rule : rules) {
+                HTTPIngressRuleValue http = rule.getHttp();
+                if (http == null) {
+                    break;
+                }
+                List<HTTPIngressPath> paths = http.getPaths();
+                if (paths == null) {
+                    break;
+                }
+                for (HTTPIngressPath path : paths) {
+                    IngressBackend backend = path.getBackend();
+                    if (backend == null) {
+                        break;
+                    }
+                    if (Objects.equals(serviceName, backend.getServiceName())) {
+                        return true;
                     }
                 }
             }
@@ -549,27 +554,12 @@ public class DeployMojo extends AbstractFabric8Mojo {
         return false;
     }
 
-    private KubernetesClient createKubernetesClient() {
-        Config config = new ConfigBuilder().withNamespace(getNamespace()).build();
-        return new DefaultKubernetesClient(config);
-    }
-
     protected Controller createController() {
-        Controller controller = new Controller(createKubernetesClient());
+        Controller controller = new Controller(kubernetesAccess.createKubernetesClient());
         controller.setThrowExceptionOnError(failOnError);
         controller.setRecreateMode(recreate);
         getLog().debug("Using recreate mode: " + recreate);
         return controller;
-    }
-
-    protected synchronized String getNamespace() {
-        if (Strings.isNullOrBlank(namespace)) {
-            namespace = KubernetesHelper.defaultNamespace();
-        }
-        if (Strings.isNullOrBlank(namespace)) {
-            namespace = DEFAULT_NAMESPACE;
-        }
-        return namespace;
     }
 
     public String getRouteDomain() {

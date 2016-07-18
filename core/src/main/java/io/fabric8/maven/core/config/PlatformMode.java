@@ -21,7 +21,7 @@ package io.fabric8.maven.core.config;
  * @author roland
  * @since 25/05/16
  */
-public enum ResourceMode {
+public enum PlatformMode {
     /**
      * Create resources descriptors for vanilla Kubernetes
      */
@@ -40,7 +40,7 @@ public enum ResourceMode {
 
     private final String fileName;
 
-    ResourceMode(String fileName) {
+    PlatformMode(String fileName) {
         this.fileName = fileName;
     }
 
