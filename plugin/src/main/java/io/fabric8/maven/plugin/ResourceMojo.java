@@ -49,6 +49,7 @@ import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 
+import static io.fabric8.maven.core.util.ResourceFileType.json;
 import static io.fabric8.maven.core.util.ResourceFileType.yaml;
 
 
@@ -176,6 +177,14 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
         // Attach it to the Maven reactor so that it will also get deployed
         projectHelper.attachArtifact(project, artifactType, classifier.getValue(), file);
+
+        if (resourceFileType.equals(yaml)) {
+            // lets generate JSON too to aid migration from version 2.x to 3.x for packaging templates
+            file = KubernetesResourceUtil.writeResource(resources, resourceFileBase, json);
+
+            // Attach it to the Maven reactor so that it will also get deployed
+            projectHelper.attachArtifact(project, artifactType, classifier.getValue(), file);
+        }
 
         // write separate files, one for each resource item
         writeIndividualResources(resources, resourceFileBase);
