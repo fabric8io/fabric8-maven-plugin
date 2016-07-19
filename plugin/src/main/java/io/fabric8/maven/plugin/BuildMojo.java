@@ -161,7 +161,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     private void startBuild(File dockerTar, OpenShiftClient client, String buildName) {
         // TODO: Wait unti kubernetes-client support instantiateBinary()
         // PR is underway ....
-        log.info("Starting build for %s",buildName);
+        log.info("Starting build %s",buildName);
         client.buildConfigs().withName(buildName)
               .instantiateBinary()
               .fromFile(dockerTar);
@@ -182,12 +182,14 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             hasImageStream = false;
         }
         if (!hasImageStream) {
-            log.info("Creating OpenShift ImageStream %s", imageStreamName);
+            log.info("Creating ImageStream %s", imageStreamName);
             builder.addNewImageStreamItem()
                      .withNewMetadata()
                        .withName(imageStreamName)
                      .endMetadata()
                    .endImageStreamItem();
+        } else {
+            log.info("Using ImageStream %s", imageStreamName);
         }
     }
 
@@ -199,7 +201,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             hasBuildConfig = false;
         }
         if (!hasBuildConfig) {
-            log.info("Creating OpenShift BuildConfig %s for Docker build", buildName);
+            log.info("Creating BuildConfig %s for Docker build", buildName);
             builder.addNewBuildConfigItem()
                      .withNewMetadata()
                        .withName(buildName)
@@ -219,6 +221,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                        .endOutput()
                      .endSpec()
                    .endBuildConfigItem();
+        } else {
+            log.info("Using BuildConfig %s", buildName);
         }
     }
 
