@@ -34,7 +34,9 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
     protected MavenSession session;
 
     // Logger to use
-    protected Logger log = new AnsiLogger(getLog(), getBooleanConfigProperty("useColor",true), getBooleanConfigProperty("verbose", false), "F8> ");
+    protected Logger log = new AnsiLogger(getLog(),
+                                          getBooleanConfigProperty("useColor",true),
+                                          getBooleanConfigProperty("verbose", false), "F8> ");
 
     // Resolve properties with both `docker` (as used in d-m-p) and `fabric8` prefix
     protected boolean getBooleanConfigProperty(String key, boolean defaultVal) {
