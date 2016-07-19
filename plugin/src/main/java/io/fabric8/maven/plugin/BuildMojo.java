@@ -17,24 +17,25 @@
 package io.fabric8.maven.plugin;
 
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.maven.core.access.KubernetesAccess;
+import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.ResourceFileType;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
+import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.*;
 
@@ -63,10 +64,13 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     Map<String, String> generator;
 
     @Parameter(property = "fabric8.build.skip.pom", defaultValue = "true")
-    boolean disablePomPackaging;
+    boolean skipPomBuilds;
 
     @Parameter(property = "fabric8.build.mode")
     PlatformMode buildMode;
+
+    @Parameter(property = "fabric8.build.recreate", defaultValue = "false")
+    boolean recreateBuildConfig;
 
     /**
      * Namespace to use when doing a Docker build against OpenShift
@@ -75,12 +79,12 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     private String namespace;
 
     // Access for creating OpenShift binary builds
-    private KubernetesAccess kubernetesAccess;
+    private ClusterAccess clusterAccess;
 
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
 
-        if (project != null && disablePomPackaging
+        if (project != null && skipPomBuilds
             && Objects.equals("pom", project.getPackaging())) {
             getLog().debug("Disabling docker build for pom packaging");
             return;
@@ -99,7 +103,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         } else {
             throw new MojoExecutionException("Unknown platform mode " + buildMode);
         }
-
     }
 
     /**
@@ -123,67 +126,100 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     // Docker build with a binary source strategy
     private void executeOpenShiftBuild(ServiceHub hub, ImageConfiguration imageConfig) throws MojoExecutionException {
         MojoParameters params = createMojoParameters();
-        KubernetesAccess access = new KubernetesAccess(namespace);
         ImageName imageName = new ImageName(imageConfig.getName());
 
+        // Create tar file with Docker archive
         File dockerTar = hub.getArchiveService().createDockerBuildArchive(imageConfig, params);
 
-        KubernetesClient client = access.createKubernetesClient();
+        OpenShiftClient client = getOpenShiftClient();
+
+        KubernetesListBuilder builder = new KubernetesListBuilder();
+        String buildName = imageName.getSimpleName() + "-build";
+        String imageStreamName = imageName.getSimpleName();
+
+        // Check for buildconfig / imagestream and create them if necessary
+        checkOrCreateBuildConfig(client, builder, buildName, imageStreamName, imageName.getTag());
+        checkOrCreateImageStream(client, builder, imageStreamName);
+        createResourceObjects(client, builder);
+
+        // Start the actual build
+        startBuild(dockerTar, client, buildName);
+    }
+
+    // Create the openshift client
+    private OpenShiftClient getOpenShiftClient() throws MojoExecutionException {
+        ClusterAccess access = new ClusterAccess(namespace);
+        OpenShiftClient client = access.createOpenShiftClient();
         if (!KubernetesHelper.isOpenShift(client)) {
             throw new MojoExecutionException(
                 "Cannot create OpenShift Docker build with a non-OpenShift cluster at " + client.getMasterUrl());
         }
+        return client;
+    }
 
-        KubernetesListBuilder builder = new KubernetesListBuilder();
-        addBuildConfig(builder, imageName);
-        addImageStream(builder, imageName);
 
-        try {
-            FileInputStream dockerTarIs = new FileInputStream(dockerTar);
-            // TODO: Wait unti kubernetes-client support instantiateBinary()
-            // PR is underway ....
-            // client.lists().create(builder.build());
+    private void startBuild(File dockerTar, OpenShiftClient client, String buildName) {
+        // TODO: Wait unti kubernetes-client support instantiateBinary()
+        // PR is underway ....
+        log.info("Starting build for %s",buildName);
+        client.buildConfigs().withName(buildName)
+              .instantiateBinary()
+              .fromFile(dockerTar);
+    }
 
-        } catch (FileNotFoundException e) {
-            throw new MojoExecutionException("Internal: Cannot read " + dockerTar + ": " + e,e);
+    private void createResourceObjects(OpenShiftClient client, KubernetesListBuilder builder) {
+        KubernetesList k8sList = builder.build();
+        if (k8sList.getItems().size() != 0) {
+            client.lists().create(k8sList);
         }
     }
 
-    private void addImageStream(KubernetesListBuilder builder, ImageName imageName) {
-        builder.addNewImageStreamItem()
-                  .withNewMetadata()
-                     .withName(imageName.getNameWithoutTag())
-                  .endMetadata()
-               .endImageStreamItem();
+    //
+    private void checkOrCreateImageStream(OpenShiftClient client, KubernetesListBuilder builder, String imageStreamName) {
+        boolean hasImageStream = client.imageStreams().withName(imageStreamName).get() != null;
+        if (hasImageStream && recreateBuildConfig) {
+            client.imageStreams().withName(imageStreamName).delete();
+            hasImageStream = false;
+        }
+        if (!hasImageStream) {
+            log.info("Creating OpenShift ImageStream %s", imageStreamName);
+            builder.addNewImageStreamItem()
+                     .withNewMetadata()
+                       .withName(imageStreamName)
+                     .endMetadata()
+                   .endImageStreamItem();
+        }
     }
 
-    private void addBuildConfig(KubernetesListBuilder builder, ImageName imageName) {
-        builder.addNewBuildConfigItem()
-                   .withNewMetadata()
-                       .withName(getBuildName(imageName))
-                   .endMetadata()
-                   .withNewSpec()
-                       .withNewSource()
-                          .withNewBinary()
-                          .endBinary()
-                       .endSource()
+    private void checkOrCreateBuildConfig(OpenShiftClient client, KubernetesListBuilder builder,
+                                          String buildName, String imageStreamName, String imageTag) {
+        boolean hasBuildConfig = client.buildConfigs().withName(buildName).get() != null;
+        if (hasBuildConfig && recreateBuildConfig) {
+            client.buildConfigs().withName(buildName).delete();
+            hasBuildConfig = false;
+        }
+        if (!hasBuildConfig) {
+            log.info("Creating OpenShift BuildConfig %s for Docker build", buildName);
+            builder.addNewBuildConfigItem()
+                     .withNewMetadata()
+                       .withName(buildName)
+                     .endMetadata()
+                     .withNewSpec()
                        .withNewStrategy()
-                          .withNewDockerStrategy()
-                          .endDockerStrategy()
+                         .withType("Docker")
                        .endStrategy()
+                       .withNewSource()
+                         .withType("Binary")
+                       .endSource()
                        .withNewOutput()
-                          .withNewTo()
-                            .withKind("ImageStreamTag")
-                            .withName(imageName.getFullName())
-                          .endTo()
+                         .withNewTo()
+                           .withKind("ImageStreamTag")
+                           .withName(imageStreamName + ":" + imageTag)
+                         .endTo()
                        .endOutput()
-                   .endSpec()
-                 .endBuildConfigItem();
+                     .endSpec()
+                   .endBuildConfigItem();
+        }
     }
 
-    private String getBuildName(ImageName imageName) {
-        return
-            (imageName.getUser() != null ? imageName.getUser() + "-"  : "")
-            + imageName.getRepository() + "-build";
-    }
 }

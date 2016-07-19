@@ -18,6 +18,8 @@ package io.fabric8.maven.core.access;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.client.*;
+import io.fabric8.openshift.client.DefaultOpenShiftClient;
+import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.utils.Strings;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.DEFAULT_NAMESPACE;
@@ -26,11 +28,11 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.DEFAULT_NAMESPACE;
  * @author roland
  * @since 17/07/16
  */
-public class KubernetesAccess {
+public class ClusterAccess {
 
     private String namespace;
 
-    public KubernetesAccess(String namespace) {
+    public ClusterAccess(String namespace) {
         if (Strings.isNullOrBlank(namespace)) {
             this.namespace = KubernetesHelper.defaultNamespace();
         }
@@ -40,10 +42,19 @@ public class KubernetesAccess {
     }
 
     public KubernetesClient createKubernetesClient() {
-        Config config = new ConfigBuilder().withNamespace(getNamespace()).build();
-        return new DefaultKubernetesClient(config);
+        Config config = createDefaultConfig();
+        return new DefaultKubernetesClient(createDefaultConfig());
     }
 
+    public OpenShiftClient createOpenShiftClient() {
+        return new DefaultOpenShiftClient(createDefaultConfig());
+    }
+
+    // ============================================================================
+
+    private Config createDefaultConfig() {
+        return new ConfigBuilder().withNamespace(getNamespace()).build();
+    }
     public String getNamespace() {
         return namespace;
     }

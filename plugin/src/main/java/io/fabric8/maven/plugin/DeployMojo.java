@@ -38,7 +38,7 @@ import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import io.fabric8.kubernetes.api.model.extensions.IngressSpec;
 import io.fabric8.kubernetes.client.*;
 import io.fabric8.kubernetes.internal.HasMetadataComparator;
-import io.fabric8.maven.core.access.KubernetesAccess;
+import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteList;
 import io.fabric8.openshift.api.model.RouteSpec;
@@ -174,13 +174,13 @@ public class DeployMojo extends AbstractFabric8Mojo {
     @Parameter(property = "fabric8.namespace")
     private String namespace;
 
-    private KubernetesAccess kubernetesAccess;
+    private ClusterAccess clusterAccess;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        kubernetesAccess = new KubernetesAccess(namespace);
+        clusterAccess = new ClusterAccess(namespace);
 
-        KubernetesClient kubernetes = kubernetesAccess.createKubernetesClient();
+        KubernetesClient kubernetes = clusterAccess.createKubernetesClient();
         File manifest;
         String clusterKind = "Kubernetes";
         if (KubernetesHelper.isOpenShift(kubernetes)) {
@@ -201,7 +201,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
         if (kubernetes.getMasterUrl() == null || Strings.isNullOrBlank(kubernetes.getMasterUrl().toString())) {
             throw new MojoFailureException("Cannot find Kubernetes master URL");
         }
-        log.info("Using %s at %s in namespace %s with manifest %s ",clusterKind, kubernetes.getMasterUrl(), kubernetesAccess.getNamespace(), manifest);
+        log.info("Using %s at %s in namespace %s with manifest %s ", clusterKind, kubernetes.getMasterUrl(), clusterAccess.getNamespace(), manifest);
 
         try {
             Controller controller = createController();
@@ -231,7 +231,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
             }
 
             // lets check we have created the namespace
-            String namespace = kubernetesAccess.getNamespace();
+            String namespace = clusterAccess.getNamespace();
             controller.applyNamespace(namespace);
             controller.setNamespace(namespace);
 
@@ -409,7 +409,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
     }
 
     protected Object applyTemplates(Template template, KubernetesClient kubernetes, Controller controller, String fileName) throws Exception {
-        KubernetesHelper.setNamespace(template, kubernetesAccess.getNamespace());
+        KubernetesHelper.setNamespace(template, clusterAccess.getNamespace());
         overrideTemplateParameters(template);
         return controller.applyTemplate(template, fileName);
     }
@@ -453,7 +453,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
     protected void createRoutes(Controller controller, Collection<HasMetadata> collection) {
         String routeDomainPostfix = this.routeDomain;
         Log log = getLog();
-        String namespace = kubernetesAccess.getNamespace();
+        String namespace = clusterAccess.getNamespace();
         // lets get the routes first to see if we should bother
         try {
             OpenShiftClient openshiftClient = controller.getOpenShiftClientOrNull();
@@ -484,7 +484,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
     protected void createIngress(Controller controller, KubernetesClient kubernetesClient, Collection<HasMetadata> collection) {
         String routeDomainPostfix = this.routeDomain;
         Log log = getLog();
-        String namespace = kubernetesAccess.getNamespace();
+        String namespace = clusterAccess.getNamespace();
         List<Ingress> ingressList = null;
         // lets get the routes first to see if we should bother
         try {
@@ -555,7 +555,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
     }
 
     protected Controller createController() {
-        Controller controller = new Controller(kubernetesAccess.createKubernetesClient());
+        Controller controller = new Controller(clusterAccess.createKubernetesClient());
         controller.setThrowExceptionOnError(failOnError);
         controller.setRecreateMode(recreate);
         getLog().debug("Using recreate mode: " + recreate);
