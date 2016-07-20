@@ -316,7 +316,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
             String ingressId = serviceName;
             String host = "";
             if (Strings.isNotBlank(routeDomainPostfix)) {
-                host = serviceName  + "-" + namespace + "." + Strings.stripPrefix(routeDomainPostfix, ".");
+                host = serviceName  + "." + namespace + "." + Strings.stripPrefix(routeDomainPostfix, ".");
             }
             List<HTTPIngressPath> paths  = new ArrayList<>();
             List<ServicePort> ports = serviceSpec.getPorts();
