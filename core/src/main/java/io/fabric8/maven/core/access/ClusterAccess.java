@@ -33,10 +33,12 @@ public class ClusterAccess {
     private String namespace;
 
     public ClusterAccess(String namespace) {
-        if (Strings.isNullOrBlank(namespace)) {
+        this.namespace = namespace;
+
+        if (Strings.isNullOrBlank(this.namespace)) {
             this.namespace = KubernetesHelper.defaultNamespace();
         }
-        if (Strings.isNullOrBlank(namespace)) {
+        if (Strings.isNullOrBlank(this.namespace)) {
             this.namespace = DEFAULT_NAMESPACE;
         }
     }
