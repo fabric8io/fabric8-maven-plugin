@@ -32,9 +32,7 @@ import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
-import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.ImageNameFormatter;
-import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.*;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.core.util.GoalFinder;
@@ -270,9 +268,14 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                         specBuilder.withSelector(matchLabels);
                     }
                 }
+                Map<String, String> containerToImageMap = new HashMap<>();
                 PodTemplateSpec template = spec.getTemplate();
                 if (template != null) {
                     specBuilder.withTemplate(template);
+                    List<Container> containers = template.getSpec().getContainers();
+                    for (Container container : containers) {
+                        containerToImageMap.put(container.getName(), container.getImage());
+                    }
                 }
                 DeploymentStrategy strategy = spec.getStrategy();
                 if (strategy != null) {
@@ -282,6 +285,25 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
                 // lets add a default trigger so that its triggered when we change its config
                 specBuilder.addNewTrigger().withType("ConfigChange").endTrigger();
+
+                // add a new image change trigger for the build stream
+                if (containerToImageMap.size() != 0) {
+                    for (Map.Entry<String, String> entry : containerToImageMap.entrySet()) {
+                        String containerName = entry.getKey();
+                        ImageName image = new ImageName(entry.getValue());
+                        specBuilder.addNewTrigger()
+                                     .withType("ImageChange")
+                                     .withNewImageChangeParams()
+                                       .withAutomatic(true)
+                                       .withNewFrom()
+                                         .withKind("ImageStreamTag")
+                                         .withName(image.getSimpleName() + ":" + image.getTag())
+                                       .endFrom()
+                                       .withContainerNames(containerName)
+                                     .endImageChangeParams()
+                                   .endTrigger();
+                    }
+                }
 
                 specBuilder.endSpec();
             }
@@ -355,7 +377,10 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         // Add resource files found in the fabric8 directory
         if (resourceFiles != null && resourceFiles.length > 0) {
             log.info("Using resource templates from %s", resourceDir);
-            builder = KubernetesResourceUtil.readResourceFragmentsFrom(KubernetesResourceUtil.API_VERSION, KubernetesResourceUtil.API_EXTENSIONS_VERSION, filterFiles(resourceFiles));
+            builder = KubernetesResourceUtil.readResourceFragmentsFrom(
+                KubernetesResourceUtil.API_VERSION,
+                KubernetesResourceUtil.API_EXTENSIONS_VERSION,
+                filterFiles(resourceFiles));
         } else {
             builder = new KubernetesListBuilder();
         }
