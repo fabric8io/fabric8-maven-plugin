@@ -26,9 +26,8 @@ import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.access.ClusterAccess;
+import io.fabric8.maven.core.config.BuildRecreateMode;
 import io.fabric8.maven.core.config.PlatformMode;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
-import io.fabric8.maven.core.util.ResourceFileType;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
@@ -61,16 +60,35 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      * <code>&lt;generator-prefix&gt;-&lt;option&gt;</code>.
      */
     @Parameter
-    Map<String, String> generator;
+    private Map<String, String> generator;
 
     @Parameter(property = "fabric8.build.skip.pom", defaultValue = "true")
-    boolean skipPomBuilds;
+    private boolean skipPomBuilds;
 
-    @Parameter(property = "fabric8.build.mode")
-    PlatformMode buildMode;
+    /**
+     * Whether to perform a Kubernetes build (i.e. agains a vanilla Docker daemon) or
+     * an OpenShift build (with a Docker build against the OpenShift API server.
+     */
+    @Parameter(property = "fabric8.mode")
+    private PlatformMode mode = PlatformMode.kubernetes;
 
-    @Parameter(property = "fabric8.build.recreate", defaultValue = "false")
-    boolean recreateBuildConfig;
+    /**
+     * How to recreate the build config and/or image stream created by the build.
+     * Only in effect when <code>mode == openshift</code>. If not set, existing
+     * build config will not be recreated.
+     *
+     * The possible values are:
+     *
+     * <ul>
+     *   <li><strong>buildConfig</strong> or <strong>bc</strong> :
+     *       Only the build config is recreated</li>
+     *   <li><strong>imageStream</strong> or <strong>is</strong> :
+     *       Only the image stream is recreated</li>
+     *   <li><strong>all</strong> : Both, build config and image stream are recreated</li>
+     * </ul>
+     */
+    @Parameter(property = "fabric8.build.recreate")
+    private BuildRecreateMode recreate;
 
     /**
      * Namespace to use when doing a Docker build against OpenShift
@@ -96,12 +114,12 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
         throws MojoExecutionException, DockerAccessException {
 
-        if (buildMode == PlatformMode.kubernetes) {
+        if (mode == PlatformMode.kubernetes) {
             super.buildAndTag(hub, imageConfig);
-        } else if (buildMode == PlatformMode.openshift) {
+        } else if (mode == PlatformMode.openshift) {
             executeOpenShiftBuild(hub, imageConfig);
         } else {
-            throw new MojoExecutionException("Unknown platform mode " + buildMode);
+            throw new MojoExecutionException("Unknown platform mode " + mode);
         }
     }
 
@@ -177,7 +195,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     //
     private void checkOrCreateImageStream(OpenShiftClient client, KubernetesListBuilder builder, String imageStreamName) {
         boolean hasImageStream = client.imageStreams().withName(imageStreamName).get() != null;
-        if (hasImageStream && recreateBuildConfig) {
+        if (hasImageStream && recreate.isImageStream()) {
             client.imageStreams().withName(imageStreamName).delete();
             hasImageStream = false;
         }
@@ -196,7 +214,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     private void checkOrCreateBuildConfig(OpenShiftClient client, KubernetesListBuilder builder,
                                           String buildName, String imageStreamName, String imageTag) {
         boolean hasBuildConfig = client.buildConfigs().withName(buildName).get() != null;
-        if (hasBuildConfig && recreateBuildConfig) {
+        if (hasBuildConfig && recreate.isBuildConfig()) {
             client.buildConfigs().withName(buildName).delete();
             hasBuildConfig = false;
         }
