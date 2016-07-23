@@ -17,12 +17,7 @@
 package io.fabric8.maven.enricher.build;
 
 import io.fabric8.kubernetes.api.Annotations;
-import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.ServiceNames;
-import io.fabric8.kubernetes.client.ConfigBuilder;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.maven.core.config.ResourceConfiguration;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.*;
@@ -38,11 +33,7 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.ConnectException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -51,7 +42,9 @@ import java.util.Map;
  * <ul>
  *   <li>Git Branch</li>
  *   <li>Git Commit ID</li>
- *   <li></li>
+ *   <li>Git access URL</li>
+ *   <li>Jenkins build number</li>
+ *   <li>Jenkins build url</li>
  * </ul>
  *
  * @since 01/05/16
@@ -60,16 +53,24 @@ public class BuildEnricher extends AbstractLiveEnricher {
 
     // Available configuration keys
     private enum Config implements Configs.Key {
-        cdBuild        {{  d = "true"; }},
         gitService     {{  d = ServiceNames.GOGS; }},
         jenkinsService {{  d = ServiceNames.JENKINS; }},
-        useEnvVar      {{  d = "JENKINS_GOGS_USER"; }};
+        gitUserEnvVar  {{  d = "GIT_USER"; }};
 
         public String def() { return d; } protected String d;
     }
 
     public BuildEnricher(EnricherContext buildContext) {
         super(buildContext, "build");
+
+        if (!isOnline()) {
+            log.info("Run in cluster-offline mode");
+        }
+    }
+
+    @Override
+    protected boolean getDefaultOnline() {
+        return isInCDBuild();
     }
 
     @Override
@@ -77,25 +78,27 @@ public class BuildEnricher extends AbstractLiveEnricher {
         Map<String, String> annotations = new HashMap<>();
         if (kind.isDeployOrReplicaKind() || kind.isService()) {
             MavenProject rootProject = MavenUtil.getRootProject(getProject());
+            String repoName = rootProject.getArtifactId();
 
+            // Git annotations (if git is used as SCM)
             Repository repository = getGitRepository(rootProject);
-            if (repository == null) {
-                // Couldn't fetch any local git information, so git enrichment
-                return null;
+            if (repository != null) {
+                addGitBranch(annotations, repository);
+                if (isOnline()) {
+                    String gitCommitId = getAndAddGitCommitId(annotations, repository);
+                    if (gitCommitId != null) {
+                        addGitServiceUrl(annotations, repoName, gitCommitId);
+                    } else {
+                        log.debug("No Git commit id found");
+                    }
+                }
+            } else {
+                log.debug("No local Git repository found");
             }
 
-            String repoName = rootProject.getArtifactId();
-            addGitBranch(annotations, repository);
-            String gitCommitId = getAndAddGitCommitId(annotations, repository);
-
+            // Jenkins annotations
             if (isOnline()) {
-                addGitUrl(annotations, repoName, gitCommitId);
-                addJenkinsUrl(annotations, repoName);
-            } else {
-                getLog().info(
-                    "Not looking for Kubernetes services " +
-                    ServiceNames.GOGS + " and " + ServiceNames.JENKINS +
-                    " because runnig in offline mode");
+                addJenkinsServiceUrl(annotations, repoName);
             };
         }
         return annotations;
@@ -103,25 +106,20 @@ public class BuildEnricher extends AbstractLiveEnricher {
 
     // =================================
 
-    private void addGitUrl(Map<String, String> annotations, String repoName, String gitCommitId) {
-        String username = getUserName();
-        if (gitCommitId != null) {
-            // this requires online access to kubernetes so we should silently fail if no connection
-            String gogsUrl = getExternalServiceURL(getConfig(Config.gitService), "http");
-            String rootGitUrl = URLUtils.pathJoin(gogsUrl, username, repoName);
-            rootGitUrl = URLUtils.pathJoin(rootGitUrl, "commit", gitCommitId);
-            if (Strings.isNotBlank(rootGitUrl)) {
-                annotations.put(Annotations.Builds.GIT_URL, rootGitUrl);
-            }
+    private void addGitServiceUrl(Map<String, String> annotations, String repoName, String gitCommitId) {
+        String username = getGitUserName();
+        // this requires online access to kubernetes so we should silently fail if no connection
+        String gogsUrl = getExternalServiceURL(getConfig(Config.gitService), "http");
+        String rootGitUrl = URLUtils.pathJoin(gogsUrl, username, repoName);
+        rootGitUrl = URLUtils.pathJoin(rootGitUrl, "commit", gitCommitId);
+        if (Strings.isNotBlank(rootGitUrl)) {
+            annotations.put(Annotations.Builds.GIT_URL, rootGitUrl);
         }
     }
 
-    private void addJenkinsUrl(Map<String,String> annotations, String repoName) {
+    private void addJenkinsServiceUrl(Map<String,String> annotations, String repoName) {
         String buildId = Systems.getEnvVarOrSystemProperty("BUILD_ID");
-
-        if (Strings.isNullOrBlank(buildId)) {
-            warnCD("Cannot find $BUILD_ID so must not be inside a Jenkins build");
-        } else {
+        if (buildId != null) {
             annotations.put(Annotations.Builds.BUILD_ID, buildId);
             String serviceUrl = getExternalServiceURL(getConfig(Config.jenkinsService), "http");
             if (serviceUrl != null) {
@@ -129,12 +127,14 @@ public class BuildEnricher extends AbstractLiveEnricher {
                 jobUrl = URLUtils.pathJoin(jobUrl, buildId);
                 annotations.put(Annotations.Builds.BUILD_URL, jobUrl);
             }
+        } else {
+            log.debug("No Jenkins annotation as no BUILD_ID could be found");
         }
     }
 
-    private String getUserName() {
+    private String getGitUserName() {
         String username;
-        String userEnvVar = getConfig(Config.useEnvVar);
+        String userEnvVar = getConfig(Config.gitUserEnvVar);
         username = Systems.getEnvVarOrSystemProperty(userEnvVar);
         if (Strings.isNullOrBlank(username)) {
             username = "gogsadmin";
@@ -149,7 +149,7 @@ public class BuildEnricher extends AbstractLiveEnricher {
                 annotations.put(Annotations.Builds.GIT_BRANCH, branch);
             }
         } catch (IOException e) {
-            warnCD("Failed to find git branch: " + e, e);
+            log.warn("Failed to find git branch: " + e, e);
         } finally {
             if (repository != null) {
                 repository.close();
@@ -167,12 +167,12 @@ public class BuildEnricher extends AbstractLiveEnricher {
                     annotations.put(Annotations.Builds.GIT_COMMIT, gitCommitId);
                     return gitCommitId;
                 }
-                warnCD("Cannot find git commit SHA as no commits could be found");
+                log.warn("Cannot find git commit SHA as no commits could be found");
             } else {
-                warnCD("Cannot find git commit SHA as no git repository could be found");
+                log.warn("Cannot find git commit SHA as no git repository could be found");
             }
         } catch (Exception e) {
-            warnCD("Failed to find git commit id: " + e, e);
+            log.warn("Failed to find git commit id: " + e, e);
         } finally {
             if (repository != null) {
                 try {
@@ -204,7 +204,7 @@ public class BuildEnricher extends AbstractLiveEnricher {
         try {
             File gitFolder = GitHelpers.findGitFolder(basedir);
             if (gitFolder == null) {
-                warnCD("Could not find .git folder based on the current basedir of " + basedir);
+                // No git repository found
                 return null;
             }
             FileRepositoryBuilder builder = new FileRepositoryBuilder();
@@ -213,20 +213,12 @@ public class BuildEnricher extends AbstractLiveEnricher {
                     .setGitDir(gitFolder)
                     .build();
             if (repository == null) {
-                warnCD("No .git/config file could be found so cannot annotate kubernetes resources with git commit SHA and branch");
+                log.warn("No .git/config file could be found so cannot annotate kubernetes resources with git commit SHA and branch");
             }
             return repository;
         } catch (Exception e) {
-            warnCD("Failed to initialise Git Repository: " + e, e);
+            log.warn("Failed to initialise Git Repository: " + e, e);
             return null;
-        }
-    }
-
-    protected void warnCD(String message) {
-        if (isInCDBuild()) {
-            getLog().warn(message);
-        } else {
-            getLog().debug(message);
         }
     }
 
@@ -235,16 +227,10 @@ public class BuildEnricher extends AbstractLiveEnricher {
      * lets warn if we cannot detect things like the GIT commit or Jenkins build server URL
      */
     protected boolean isInCDBuild() {
-        return Configs.asBoolean(getConfig(Config.cdBuild));
+        // If no online mode specified, we are supposed to be online
+        // when running in an Jenkins CD.
+        // TODO: Isn't there a better datum to detect a CD build ? because BUILD_CD is set
+        // also when you do a 'regular' CI job ....
+        return Systems.getEnvVarOrSystemProperty("BUILD_ID") != null;
     }
-
-    protected void warnCD(String message, Throwable exception) {
-        if (isInCDBuild()) {
-            getLog().warn(message, exception);
-        } else {
-            getLog().debug(message, exception);
-        }
-    }
-
-
 }
