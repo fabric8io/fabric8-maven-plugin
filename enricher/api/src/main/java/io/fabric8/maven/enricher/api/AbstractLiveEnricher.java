@@ -35,7 +35,7 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
     private KubernetesClient kubernetesClient;
 
     private enum Config implements Configs.Key {
-        online {{ d = "true"; }};
+        online;
 
         public String def() { return d; } protected String d;
     }
@@ -45,11 +45,26 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
     }
 
     /**
-     * Returns true if in offline mode
+     * Returns true if in offline mode, "false" if not speciied.
+     * Can be overriden by
      */
     protected boolean isOnline() {
-        return Configs.asBoolean(getConfig(Config.online)) ||
-               asBooleanFromGlobalProp("fabric8.online");
+        String isOnline = getConfig(Config.online);
+        if (isOnline != null) {
+            return Configs.asBoolean(isOnline);
+        }
+        Boolean ret = asBooleanFromGlobalProp("fabric8.online");
+        return ret != null ? ret : getDefaultOnline();
+    }
+
+    /**
+     * Return the value to return if no online mode is explicitely specified.
+     * Can be overridden, by default it returns <code>false</code>.
+     *
+     * @return the defaul valuet.
+     */
+    protected boolean getDefaultOnline() {
+        return false;
     }
 
     /**
@@ -118,12 +133,12 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
     // ====================================================================================
 
     // Check a global prop from the project or system props
-    private boolean asBooleanFromGlobalProp(String prop) {
+    protected Boolean asBooleanFromGlobalProp(String prop) {
         String value = getProject().getProperties().getProperty(prop);
         if (value == null) {
             value = System.getProperty(prop);
         }
-        return value != null ? Boolean.valueOf(value) : false;
+        return value != null ? Boolean.valueOf(value) : null;
     }
 
     private KubernetesClient getKubernetes() {

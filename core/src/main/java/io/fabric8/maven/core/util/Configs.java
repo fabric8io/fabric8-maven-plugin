@@ -27,7 +27,6 @@ public class Configs {
         String def();
     }
 
-
     public static int asInt(String value) {
         return value != null ? Integer.parseInt(value) : 0;
     }

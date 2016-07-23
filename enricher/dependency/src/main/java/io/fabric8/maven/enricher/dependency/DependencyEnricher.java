@@ -46,9 +46,7 @@ public class DependencyEnricher extends BaseEnricher {
 
     includeTransitive {{ d = "true"; }};
 
-    public String def() {
-      return d;
-    } protected String d;
+    public String def() { return d; } protected String d;
   }
 
   private static String DEPENDENCY_KUBERNETES_YAML = "/META-INF/fabric8/kubernetes.yml";

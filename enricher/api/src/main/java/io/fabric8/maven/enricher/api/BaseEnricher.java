@@ -16,23 +16,15 @@
 
 package io.fabric8.maven.enricher.api;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.client.ConfigBuilder;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.maven.core.config.ResourceConfiguration;
 import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
 
 import java.util.List;
 import java.util.Map;
-
-import static io.fabric8.kubernetes.api.KubernetesHelper.DEFAULT_NAMESPACE;
 
 /**
  * @author roland
@@ -51,13 +43,13 @@ public abstract class BaseEnricher implements Enricher {
         // Pick the configuration which is for us
         this.config = new EnricherConfiguration(buildContext.getProject().getProperties(),
                                                 name, buildContext.getConfig());
-        this.log = buildContext.getLog();
+        this.log = new PrefixedLogger(name, buildContext.getLog());
         this.name = name;
     }
 
     @Override
     public String getName() {
-        return null;
+        return name;
     }
 
     @Override
@@ -81,6 +73,7 @@ public abstract class BaseEnricher implements Enricher {
     protected Logger getLog() {
         return log;
     }
+
 
     protected List<ImageConfiguration> getImages() {
         return buildContext.getImages();
