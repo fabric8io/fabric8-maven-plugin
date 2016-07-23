@@ -515,7 +515,7 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/fabric8-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 3.0.35,</span>
+<span id="revnumber">version 3.0-SNAPSHOT,</span>
 <span id="revdate">2016-07-23</span>
 </div>
 <div id="toc" class="toc2">
@@ -649,7 +649,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>3.0.35<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.0-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -864,6 +864,7 @@ the <code>&lt;build&gt;</code> configuration section.</p>
 <code>src/main/docker/demo</code>:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
  <span class="tag">&lt;configuration&gt;</span>
@@ -968,6 +969,28 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">List of additional <code>tag</code> elements with which an image is to be tagged after the build.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ulimits</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>ulimits for the container. This list contains <code>&lt;ulimit&gt;</code> elements which three sub elements:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>&lt;name&gt;</code> : The ulimit to set (e.g. <code>memlock</code>). Please refer to the Docker documentation for the possible values to set</p>
+</li>
+<li>
+<p><code>&lt;hard&gt;</code> : The hard limit</p>
+</li>
+<li>
+<p><code>&lt;soft&gt;</code> : The soft limit</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>See below for an example.</p>
+</div></div></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>user</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">User to which the Dockerfile should switch to the end (corresponds to the <code>USER</code> Dockerfile directive).</p></td>
 </tr>
@@ -986,10 +1009,8 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 copies over the assembled files and calls the Docker daemon via its
 remote API.</p>
 </div>
-<div class="paragraph">
-<p>Here&#8217;s an example:</p>
-</div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;build&gt;</span>
   <span class="tag">&lt;from&gt;</span>java:8u40<span class="tag">&lt;/from&gt;</span>
@@ -1001,6 +1022,13 @@ remote API.</p>
   <span class="tag">&lt;ports&gt;</span>
     <span class="tag">&lt;port&gt;</span>8080<span class="tag">&lt;/port&gt;</span>
   <span class="tag">&lt;/ports&gt;</span>
+  <span class="tag">&lt;ulimits&gt;</span>
+    <span class="tag">&lt;ulimit&gt;</span>
+       <span class="tag">&lt;name&gt;</span>memlock<span class="tag">&lt;/name&gt;</span>
+       <span class="tag">&lt;hard&gt;</span>-1<span class="tag">&lt;/hard&gt;</span>
+       <span class="tag">&lt;soft&gt;</span>-1<span class="tag">&lt;/soft&gt;</span>
+    <span class="tag">&lt;/ulimit&gt;</span>
+  <span class="tag">&lt;ulimits&gt;</span>
   <span class="tag">&lt;volumes&gt;</span>
     <span class="tag">&lt;volume&gt;</span>/path/to/expose<span class="tag">&lt;/volume&gt;</span>
   <span class="tag">&lt;/volumes&gt;</span>
@@ -1021,6 +1049,9 @@ remote API.</p>
   <span class="tag">&lt;/assembly&gt;</span>
 <span class="tag">&lt;/build&gt;</span></code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>In order to see the individual build steps you can switch on <code>verbose</code> mode either by setting the property <code>docker.verbose</code> or by using <code>&lt;verbose&gt;true&lt;/verbose&gt;</code> in the <a href="#global-configuration">Global configuration</a></p>
 </div>
 </div>
 <div class="sect3">
@@ -1196,10 +1227,8 @@ used for <code>descriptorRef</code>:</p>
 </tr>
 </tbody>
 </table>
-<div class="paragraph">
-<p>For example,</p>
-</div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;images&gt;</span>
   <span class="tag">&lt;image&gt;</span>
@@ -1220,6 +1249,7 @@ used for <code>descriptorRef</code>:</p>
 phase) or it must be ensured when called on the command line:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="sh">mvn package fabric8:build</code></pre>
 </div>
@@ -1236,6 +1266,7 @@ containing a single file <code>jolokia.war</code>. This volume is also exported
 automatically.</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;assembly&gt;</span>
   <span class="tag">&lt;dependencySets&gt;</span>
@@ -1261,6 +1292,7 @@ starting Tomcat.</p>
 possible to change the name of the final build artifact with the following:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;build&gt;</span>
   <span class="tag">&lt;finalName&gt;</span>your-desired-final-name<span class="tag">&lt;/finalName&gt;</span>
@@ -1282,6 +1314,7 @@ possible to change the name of the final build artifact with the following:</p>
 <p>When creating a container one or more environment variables can be set via configuration with the <code>env</code> parameter</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;env&gt;</span>
   <span class="tag">&lt;JAVA_HOME&gt;</span>/opt/jdk8<span class="tag">&lt;/JAVA_HOME&gt;</span>
@@ -1299,6 +1332,7 @@ possible to change the name of the final build artifact with the following:</p>
 <p>Labels can be set inline the same way as environment variables:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;labels&gt;</span>
    <span class="tag">&lt;com.example.label-with-value&gt;</span>foo<span class="tag">&lt;/com.example.label-with-value&gt;</span>
@@ -1354,10 +1388,8 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <div class="paragraph">
 <p>Either shell or params should be specified.</p>
 </div>
-<div class="paragraph">
-<p>Example:</p>
-</div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entryPoint&gt;</span>
    <span class="comment">&lt;!-- shell form  --&gt;</span>
@@ -1369,6 +1401,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <p>or</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entryPoint&gt;</span>
    <span class="comment">&lt;!-- exec form  --&gt;</span>
@@ -1384,6 +1417,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <p>This can be formulated also more dense with:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="comment">&lt;!-- shell form  --&gt;</span>
 <span class="tag">&lt;entryPoint&gt;</span>java -jar $HOME/server.jar<span class="tag">&lt;/entryPoint&gt;</span></code></pre>
@@ -1393,6 +1427,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <p>or</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entryPoint&gt;</span>
   <span class="comment">&lt;!-- exec form  --&gt;</span>
@@ -1421,6 +1456,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </ul>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml">  <span class="tag">&lt;docker.buildArg.myBuildArg&gt;</span>myValue<span class="tag">&lt;/docker.buildArg.myBuildArg&gt;</span></code></pre>
 </div>
@@ -1434,8 +1470,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <h3 id="fabric8:push">3.3. <strong>fabric8:push</strong></h3>
 <div class="paragraph">
 <p>This goal uploads images to the registry which have a <code>&lt;build&gt;</code> configuration section. The images to push can be restricted with with
-the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code>
-with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
+the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code> with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 7. Push options</caption>
@@ -1463,6 +1498,11 @@ with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <
 more details.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.push.registry</code></p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>retries</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">How often should a push be retried before giving up. This useful for flaky registries which tend to return 500 error codes from time to time. The default is 0 which means no retry at all.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.push.retries</code></p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -1481,12 +1521,12 @@ more details.</p></td>
 <div class="ulist">
 <ul>
 <li>
-<p><code>build</code> : Automatically rebuild one or more Docker images when one of the files selected by an assembly changes. This works for all files included directly in <code>assembly.xml</code> but also for arbitrary dependencies.
-For example:</p>
+<p><code>build</code> : Automatically rebuild one or more Docker images when one of the files selected by an assembly changes. This works for all files included directly in <code>assembly.xml</code> but also for arbitrary dependencies.</p>
 </li>
 </ul>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="sh">$ mvn package fabric8:build fabric8:watch -Ddocker.watchMode=build</code></pre>
 </div>
@@ -1496,6 +1536,7 @@ For example:</p>
 * <code>run</code> : Automatically restart container when their associated images changes. This is useful if you pull a new version of an image externally or especially in combination with the <code>build</code> mode to restart containers when their image has been automatically rebuilt. This mode works reliably only when used together with <code>fabric8:start</code>.</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="sh">$ mvn fabric8:start fabric8:watch -Ddocker.watchMode=run</code></pre>
 </div>
@@ -1657,6 +1698,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p>Here is an example how the watch mode can be tuned:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
    <span class="comment">&lt;!-- Check every 10 seconds by default --&gt;</span>
@@ -1689,6 +1731,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p>Given this configuration</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="sh">mvn package fabric8:build fabric8:start fabric8:watch</code></pre>
 </div>
@@ -1730,8 +1773,8 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 3.0.35<br>
-Last updated 2016-07-23 08:36:40 UTC
+Version 3.0-SNAPSHOT<br>
+Last updated 2016-07-23 19:33:18 UTC
 </div>
 </div>
 </body>
