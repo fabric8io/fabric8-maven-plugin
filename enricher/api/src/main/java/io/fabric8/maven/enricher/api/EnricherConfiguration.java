@@ -16,13 +16,10 @@
 
 package io.fabric8.maven.enricher.api;
 
-import java.util.Collections;
-import java.util.Map;
 import java.util.Properties;
 
+import io.fabric8.maven.core.config.ProcessorConfiguration;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.docker.config.handler.property.ConfigKey;
-import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
 
 /**
@@ -34,11 +31,11 @@ public class EnricherConfiguration {
     private static final String ENRICHER_PROP_PREFIX = "fabri8.enricher";
 
     private final String prefix;
-    private final Map<String,String> config;
+    private final ProcessorConfiguration config;
     private final Properties projectProperties;
 
-    public EnricherConfiguration(Properties projectProperties, String prefix, Map<String, String> config) {
-        this.config = Collections.unmodifiableMap(config != null ? config : Collections.<String, String>emptyMap());
+    public EnricherConfiguration(Properties projectProperties, String prefix, ProcessorConfiguration config) {
+        this.config = config != null ? config : ProcessorConfiguration.EMPTY;
         this.prefix = prefix;
         this.projectProperties = projectProperties;
     }
@@ -64,7 +61,7 @@ public class EnricherConfiguration {
     public String get(Configs.Key key, String defaultVal) {
         String keyVal = key != null ? key.name() : "";
         String fullKey = prefix + (StringUtils.isNotEmpty(keyVal) ? "." + key : "");
-        String val = config.get(fullKey);
+        String val = config.getConfig(fullKey);
         if (val == null) {
             val = projectProperties.getProperty(ENRICHER_PROP_PREFIX + "." + fullKey);
         } if (val == null) {

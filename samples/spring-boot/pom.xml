@@ -68,8 +68,18 @@
 
         <configuration>
           <enricher>
-            <default.service.type>NodePort</default.service.type>
+            <excludes>
+              <exclude>build</exclude>
+            </excludes>
+            <config>
+              <default.service.type>NodePort</default.service.type>
+            </config>
           </enricher>
+          <generator>
+            <excludes>
+              <exclude>java.app</exclude>
+            </excludes>
+          </generator>
         </configuration>
 
         <executions>

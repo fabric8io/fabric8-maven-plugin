@@ -20,6 +20,7 @@ import java.net.URLClassLoader;
 import java.util.List;
 import java.util.Map;
 
+import io.fabric8.maven.core.config.ProcessorConfiguration;
 import io.fabric8.maven.core.config.ResourceConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
@@ -37,9 +38,10 @@ public class EnricherContext {
     private final List<ImageConfiguration> images;
     private final ResourceConfiguration resourceConfiguration;
 
-    private Map<String, String> config;
+    private ProcessorConfiguration config;
+
     public EnricherContext(MavenProject project,
-                           Map<String, String> config,
+                           ProcessorConfiguration config,
                            List<ImageConfiguration> images,
                            ResourceConfiguration kubernetesConfig,
                            Logger log) {
@@ -62,7 +64,7 @@ public class EnricherContext {
         return log;
     }
 
-    public Map<String, String> getConfig() {
+    public ProcessorConfiguration getConfig() {
         return config;
     }
 

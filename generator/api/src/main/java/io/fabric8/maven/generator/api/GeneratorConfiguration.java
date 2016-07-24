@@ -16,22 +16,19 @@
 
 package io.fabric8.maven.generator.api;
 
+import io.fabric8.maven.core.config.ProcessorConfiguration;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.docker.config.handler.property.ConfigKey;
 import org.apache.maven.shared.utils.StringUtils;
-
-import java.util.Collections;
-import java.util.Map;
 
 /**
  */
 public class GeneratorConfiguration {
 
     private final String prefix;
-    private final Map<String,String> config;
+    private final ProcessorConfiguration config;
 
-    public GeneratorConfiguration(String prefix, Map<String, String> config) {
-        this.config = Collections.unmodifiableMap(config != null ? config : Collections.<String, String>emptyMap());
+    public GeneratorConfiguration(String prefix, ProcessorConfiguration config) {
+        this.config = config != null ? config : ProcessorConfiguration.EMPTY;
         this.prefix = prefix;
     }
 
@@ -54,7 +51,7 @@ public class GeneratorConfiguration {
      */
     public String get(Configs.Key key, String defaultVal) {
         String keyVal = key != null ? key.name() : "";
-        String val = config.get(prefix + (StringUtils.isNotEmpty(keyVal) ? "." + key : ""));
+        String val = config.getConfig(prefix + (StringUtils.isNotEmpty(keyVal) ? "." + key : ""));
         return val != null ? val : defaultVal;
     }
 

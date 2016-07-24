@@ -22,6 +22,7 @@ import java.util.*;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.*;
+import io.fabric8.maven.core.config.ProcessorConfiguration;
 import io.fabric8.maven.core.config.ResourceConfiguration;
 import io.fabric8.maven.core.config.ServiceConfiguration;
 import io.fabric8.maven.core.handler.HandlerHub;
@@ -115,13 +116,13 @@ public class ResourceMojo extends AbstractFabric8Mojo {
      * to the various enrichers.
      */
     @Parameter
-    private Map<String, String> enricher;
+    private ProcessorConfiguration enricher;
 
     /**
      * Configuration passed to generators
      */
     @Parameter
-    private Map<String, String> generator;
+    private ProcessorConfiguration generator;
 
     @Component
     private MavenProjectHelper projectHelper;

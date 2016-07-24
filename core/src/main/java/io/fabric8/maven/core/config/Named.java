@@ -14,29 +14,17 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.generator.api;
-
-import java.util.List;
-
-import io.fabric8.maven.core.config.Named;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-
+package io.fabric8.maven.core.config;
 /**
+ * Interface for marking object holding a name
+ *
  * @author roland
- * @since 15/05/16
+ * @since 24/07/16
  */
-public interface Generator extends Named {
-
+public interface Named {
     /**
-     * Provide additional image configurations
-     *
-     * @param existingConfigs the already detected and resolved configuration
-     * @return list of image configurations
+     * Get name of this object
+     * @return
      */
-    List<ImageConfiguration> customize(List<ImageConfiguration> existingConfigs);
+    public String getName();
 }
-
-
-
-
-
