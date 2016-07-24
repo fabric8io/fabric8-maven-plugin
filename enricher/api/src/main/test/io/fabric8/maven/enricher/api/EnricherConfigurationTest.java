@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import io.fabric8.maven.core.config.ProcessorConfiguration;
 import io.fabric8.maven.core.util.Configs;
 import org.junit.Test;
 
@@ -41,7 +42,7 @@ public class EnricherConfigurationTest {
     public void simple() throws Exception {
         Map<String,String> configMap = new HashMap<>();
         configMap.put("default.service.type", "LoadBalancer");
-        EnricherConfiguration config = new EnricherConfiguration(new Properties(), "default.service", configMap);
+        EnricherConfiguration config = new EnricherConfiguration(new Properties(), "default.service", new ProcessorConfiguration(null, null, configMap));
         assertEquals("LoadBalancer",config.get(Config.type));
     }
 }
