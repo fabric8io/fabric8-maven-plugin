@@ -37,8 +37,8 @@ The full documentation can be found in the [User Manual](https://fabric8io.githu
 * [User Manual](https://fabric8io.github.com/fabric8-maven-plugin) [[PDF](https://fabric8io.github.io/fabric8-maven-plugin/fabric8-maven-plugin.pdf)]
 * Examples are in the [samples](samples/) directory
 * Many [fabric8 Quickstarts](https://github.com/fabric8-quickstarts) use this plugin and are good showcases, too.
-* You'll find us on IRC freenode in channel #fabric8 and we are happy to answer any questions.
-* Contributions are highly appreciated and encouraged. Simply send us Pull Requests.
+* You'll find us on IRC freenode in channel [#fabric8](https://webchat.freenode.net/?channels=fabric8) and we are happy to answer any questions.
+* Contributions are highly appreciated and encouraged. Please send us Pull Requests.
 
 ### fabric8-maven-plugin 3 vs. 2
 
