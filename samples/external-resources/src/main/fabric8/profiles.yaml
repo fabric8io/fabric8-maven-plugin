@@ -1,0 +1,10 @@
+- name: simple
+  generator:
+    includes:
+    - spring.boot
+  enricher:
+    excludes:
+    - build
+    - icon
+    config:
+      dependency.includeTransitive: "false"

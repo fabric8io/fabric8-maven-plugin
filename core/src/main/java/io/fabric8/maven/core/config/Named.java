@@ -15,42 +15,16 @@
  */
 
 package io.fabric8.maven.core.config;
-
-import java.util.Map;
-
-import org.apache.maven.plugins.annotations.Parameter;
-
 /**
+ * Interface for marking object holding a name
+ *
  * @author roland
- * @since 22/03/16
+ * @since 24/07/16
  */
-public class AnnotationConfiguration {
-
-    @Parameter
-    private Map<String, String> pod;
-
-    @Parameter
-    private Map<String, String> replicaSet;
-
-    @Parameter
-    private Map<String, String> service;
-
-    @Parameter
-    private Map<String, String> template;
-
-    public Map<String, String> getPod() {
-        return pod;
-    }
-
-    public Map<String, String> getReplicaSet() {
-        return replicaSet;
-    }
-
-    public Map<String, String> getService() {
-        return service;
-    }
-
-    public Map<String, String> getTemplate() {
-        return template;
-    }
+public interface Named {
+    /**
+     * Get name of this object
+     * @return
+     */
+    public String getName();
 }

@@ -16,51 +16,41 @@
 
 package io.fabric8.maven.core.config;
 
+import java.util.Map;
+
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland
  * @since 22/03/16
  */
-public class ProbeConfiguration {
+public class AnnotationConfig {
 
-    // Initial delay in seconds before the probe is started.
     @Parameter
-    Integer initialDelaySeconds;
+    private Map<String, String> pod;
 
-    // Timeout in seconds how long the probe might take
     @Parameter
-    Integer timeoutSeconds;
+    private Map<String, String> replicaSet;
 
-    // Command to execute for probing
     @Parameter
-    String exec;
+    private Map<String, String> service;
 
-    // Probe this URL
     @Parameter
-    String getUrl;
+    private Map<String, String> template;
 
-    // TCP port to probe
-    @Parameter
-    String tcpPort;
-
-    public Integer getInitialDelaySeconds() {
-        return initialDelaySeconds;
+    public Map<String, String> getPod() {
+        return pod;
     }
 
-    public Integer getTimeoutSeconds() {
-        return timeoutSeconds;
+    public Map<String, String> getReplicaSet() {
+        return replicaSet;
     }
 
-    public String getExec() {
-        return exec;
+    public Map<String, String> getService() {
+        return service;
     }
 
-    public String getGetUrl() {
-        return getUrl;
-    }
-
-    public String getTcpPort() {
-        return tcpPort;
+    public Map<String, String> getTemplate() {
+        return template;
     }
 }

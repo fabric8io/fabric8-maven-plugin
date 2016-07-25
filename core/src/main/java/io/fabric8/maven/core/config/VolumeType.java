@@ -26,7 +26,7 @@ public enum VolumeType {
 
     HOST_PATH("hostPath") {
         @Override
-        public Volume fromConfig(VolumeConfiguration config) {
+        public Volume fromConfig(VolumeConfig config) {
             return new VolumeBuilder()
                     .withName(config.getName())
                     .withNewHostPath(config.getPath())
@@ -34,14 +34,14 @@ public enum VolumeType {
         }
     }, EMPTY_DIR("emptyDir") {
         @Override
-        public Volume fromConfig(VolumeConfiguration config) {
+        public Volume fromConfig(VolumeConfig config) {
             return new VolumeBuilder()
                     .withName(config.getName())
                     .withNewEmptyDir(config.getMedium())
                     .build();
         }
     }, GIT_REPO("gitRepo") {
-        public Volume fromConfig(VolumeConfiguration config) {
+        public Volume fromConfig(VolumeConfig config) {
             String repository = config.getRepository();
             String revision = config.getRevision();
             return new VolumeBuilder()
@@ -50,7 +50,7 @@ public enum VolumeType {
                     .build();
         }
     }, SECRET("secret") {
-        public Volume fromConfig(VolumeConfiguration config) {
+        public Volume fromConfig(VolumeConfig config) {
             String secretName = config.getSecretName();
             return new VolumeBuilder()
                     .withName(config.getName())
@@ -58,7 +58,7 @@ public enum VolumeType {
                     .build();
         }
     }, NFS_PATH("nfsPath") {
-        public Volume fromConfig(VolumeConfiguration config) {
+        public Volume fromConfig(VolumeConfig config) {
             String path = config.getPath();
             String server = config.getServer();
             Boolean readOnly = config.getReadOnly();
@@ -68,7 +68,7 @@ public enum VolumeType {
                     .build();
         }
     }, CGE_DISK("gcePdName") {
-        public Volume fromConfig(VolumeConfiguration config) {
+        public Volume fromConfig(VolumeConfig config) {
 
             String pdName = config.getPdName();
             String fsType = config.getFsType();
@@ -82,7 +82,7 @@ public enum VolumeType {
         }
 
     }, GLUSTER_FS_PATH("glusterFsPath") {
-        public Volume fromConfig(VolumeConfiguration config) {
+        public Volume fromConfig(VolumeConfig config) {
             String path = config.getPath();
             String endpoints = config.getEndpoints();
             Boolean readOnly = config.getReadOnly();
@@ -94,7 +94,7 @@ public enum VolumeType {
         }
 
     }, PERSISTENT_VOLUME_CLAIM("persistentVolumeClaim") {
-        public Volume fromConfig(VolumeConfiguration config) {
+        public Volume fromConfig(VolumeConfig config) {
             String claimRef = config.getClaimRef();
             Boolean readOnly = config.getReadOnly();
 
@@ -107,7 +107,7 @@ public enum VolumeType {
     };
 
     private final String type;
-    public abstract Volume fromConfig(VolumeConfiguration config);
+    public abstract Volume fromConfig(VolumeConfig config);
     VolumeType(String type) {
         this.type = type;
     }

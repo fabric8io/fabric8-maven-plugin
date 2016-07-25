@@ -19,7 +19,7 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>spring-boot-web</artifactId>
+  <artifactId>fabri8-maven-sample-spring-boot</artifactId>
   <groupId>io.fabric8</groupId>
   <version>3.0-SNAPSHOT</version>
   <packaging>jar</packaging>
@@ -68,8 +68,18 @@
 
         <configuration>
           <enricher>
-            <default.service.type>NodePort</default.service.type>
+            <excludes>
+              <exclude>build</exclude>
+            </excludes>
+            <config>
+              <default.service.type>NodePort</default.service.type>
+            </config>
           </enricher>
+          <generator>
+            <excludes>
+              <exclude>java.app</exclude>
+            </excludes>
+          </generator>
         </configuration>
 
         <executions>

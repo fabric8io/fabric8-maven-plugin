@@ -17,6 +17,7 @@
 package io.fabric8.maven.enricher.api;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.config.Named;
 
 import java.util.Map;
 
@@ -26,14 +27,7 @@ import java.util.Map;
  * @author roland
  * @since 01/04/16
  */
-public interface Enricher {
-
-    /**
-     * Unique name of the enricher
-     *
-     * @return enricher name
-     */
-    String getName();
+public interface Enricher extends Named {
 
     /**
      * Get labels to add too objects

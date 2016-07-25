@@ -20,8 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.maven.core.config.ResourceConfiguration;
-import io.fabric8.maven.core.config.VolumeConfiguration;
+import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.config.VolumeConfig;
 import io.fabric8.maven.core.config.VolumeType;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 
@@ -37,20 +37,20 @@ public class PodTemplateHandler {
         this.containerHandler = containerHandler;
     }
 
-    public PodTemplateSpec getPodTemplate(ResourceConfiguration config, List<ImageConfiguration> images)  {
+    public PodTemplateSpec getPodTemplate(ResourceConfig config, List<ImageConfiguration> images)  {
         return new PodTemplateSpecBuilder()
             .withMetadata(createPodMetaData(config))
             .withSpec(createPodSpec(config, images))
             .build();
     }
 
-    private ObjectMeta createPodMetaData(ResourceConfiguration config) {
+    private ObjectMeta createPodMetaData(ResourceConfig config) {
         return new ObjectMetaBuilder()
             .withAnnotations(config.getAnnotations().getPod())
             .build();
     }
 
-    private PodSpec createPodSpec(ResourceConfiguration config, List<ImageConfiguration> images) {
+    private PodSpec createPodSpec(ResourceConfig config, List<ImageConfiguration> images) {
 
         return new PodSpecBuilder()
             .withServiceAccountName(config.getServiceAccount())
@@ -59,12 +59,12 @@ public class PodTemplateHandler {
             .build();
     }
 
-    private List<Volume> getVolumes(ResourceConfiguration config) {
-        List<VolumeConfiguration> volumeConfigs = config.getVolumes();
+    private List<Volume> getVolumes(ResourceConfig config) {
+        List<VolumeConfig> volumeConfigs = config.getVolumes();
 
         List<Volume> ret = new ArrayList<>();
         if (volumeConfigs != null) {
-            for (VolumeConfiguration volumeConfig : volumeConfigs) {
+            for (VolumeConfig volumeConfig : volumeConfigs) {
                 VolumeType type = VolumeType.typeFor(volumeConfig.getType());
                 if (type != null) {
                     ret.add(type.fromConfig(volumeConfig));

@@ -82,36 +82,12 @@ public final class PluginServiceFactory<C> {
 
     private <T> void readServiceDefinitions(Map<ServiceEntry, T> extractorMap, String defPath) {
         try {
-            for (String url : getResources(defPath)) {
+            for (String url : ClassUtil.getResources(defPath)) {
                 readServiceDefinitionFromUrl(extractorMap, url);
             }
         } catch (IOException e) {
             throw new IllegalStateException("Cannot load service from " + defPath + ": " + e, e);
         }
-    }
-
-    public static Set<String> getResources(String resource) throws IOException {
-        Set<String> ret = new HashSet<>();
-        for (ClassLoader cl : getClassLoaders()) {
-            Enumeration<URL> urlEnum = cl.getResources(resource);
-            ret.addAll(extractUrlAsStringsFromEnumeration(urlEnum));
-        }
-        return ret;
-    }
-
-    private static ClassLoader[] getClassLoaders() {
-        return new ClassLoader[] {
-            Thread.currentThread().getContextClassLoader(),
-            PluginServiceFactory.class.getClassLoader()
-        };
-    }
-
-    private static Set<String> extractUrlAsStringsFromEnumeration(Enumeration<URL> urlEnum) {
-        Set<String> ret = new HashSet<String>();
-        while (urlEnum.hasMoreElements()) {
-            ret.add(urlEnum.nextElement().toExternalForm());
-        }
-        return ret;
     }
 
     private <T> void readServiceDefinitionFromUrl(Map<ServiceEntry, T> extractorMap, String url) {
@@ -149,7 +125,7 @@ public final class PluginServiceFactory<C> {
                     serviceMap.remove(key);
                 }
             } else {
-                Class<T> clazz = classForName(entry.getClassName());
+                Class<T> clazz = ClassUtil.classForName(entry.getClassName());
                 if (clazz == null) {
                     throw new ClassNotFoundException("Class " + entry.getClassName() + " could not be found");
                 }
@@ -162,24 +138,6 @@ public final class PluginServiceFactory<C> {
                 serviceMap.put(entry, service);
             }
         }
-    }
-
-    public static <T> Class<T> classForName(String className) {
-        Set<ClassLoader> tried = new HashSet<>();
-        for (ClassLoader loader : getClassLoaders()) {
-            // Go up the classloader stack to eventually find the server class. Sometimes the WebAppClassLoader
-            // hide the server classes loaded by the parent class loader.
-            while (loader != null) {
-                try {
-                    if (!tried.contains(loader)) {
-                        return (Class<T>) Class.forName(className, true, loader);
-                    }
-                } catch (ClassNotFoundException ignored) {}
-                tried.add(loader);
-                loader = loader.getParent();
-            }
-        }
-        return null;
     }
 
     // =============================================================================

@@ -17,8 +17,8 @@
 package io.fabric8.maven.plugin.generator;
 
 import java.util.List;
-import java.util.Map;
 
+import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.PluginServiceFactory;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.Generator;
@@ -27,25 +27,32 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import org.apache.maven.project.MavenProject;
 
 /**
+ * Manager responsible for finding and calling generators
  * @author roland
  * @since 15/05/16
  */
 public class GeneratorManager {
 
     public static List<ImageConfiguration> generate(List<ImageConfiguration> imageConfigs,
-                                                    Map<String, String> generatorConfigs,
+                                                    ProcessorConfig generatorConfig,
                                                     MavenProject project,
                                                     Logger log) {
 
         List<ImageConfiguration> ret = imageConfigs;
 
         PluginServiceFactory<MavenGeneratorContext> pluginFactory = new PluginServiceFactory<>(
-            new MavenGeneratorContext(project, generatorConfigs));
+            new MavenGeneratorContext(project, generatorConfig));
         List<Generator> generators =
-            pluginFactory.createServiceObjects("META-INF/fabric8-generator-default", "META-INF/fabric8-generator");
+            pluginFactory.createServiceObjects("META-INF/fabric8/generator-default",
+                                               "META-INF/fabric8/fabric8-generator-default",
+                                               "META-INF/fabric8/generator",
+                                               "META-INF/fabric8-generator");
+        generators = generatorConfig.order(generators,"generator");
         for (Generator generator : generators) {
-            log.info("Calling generator %s", generator.getName());
-            ret = generator.customize(ret);
+            if (generatorConfig.use(generator.getName())) {
+                log.info("Calling generator %s", generator.getName());
+                ret = generator.customize(ret);
+            }
         }
         return ret;
     }

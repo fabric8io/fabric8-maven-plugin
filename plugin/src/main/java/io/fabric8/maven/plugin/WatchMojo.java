@@ -17,6 +17,7 @@
 package io.fabric8.maven.plugin;
 
 
+import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -25,7 +26,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Proxy to d-m-p's watch Mojo
@@ -34,7 +34,7 @@ import java.util.Map;
 public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
 
     @Parameter
-    Map<String, String> generator;
+    ProcessorConfig generator;
 
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {

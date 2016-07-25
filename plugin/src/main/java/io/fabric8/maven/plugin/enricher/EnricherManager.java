@@ -19,6 +19,7 @@ package io.fabric8.maven.plugin.enricher;
 import java.util.*;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.PluginServiceFactory;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.Enricher;
@@ -37,6 +38,8 @@ public class EnricherManager {
     // List of enrichers used for customizing the generated deployment descriptors
     private List<Enricher> enrichers;
 
+    private ProcessorConfig enricherConfig;
+
     private Logger log;
 
     // List of visitors used to enrich with labels
@@ -47,9 +50,12 @@ public class EnricherManager {
         PluginServiceFactory<EnricherContext> pluginFactory = new PluginServiceFactory<>(buildContext);
 
         log = buildContext.getLog();
+        enricherConfig = buildContext.getConfig();
 
         enrichers = pluginFactory.createServiceObjects("META-INF/fabric8-enricher-default",
-                                                       "META-INF/fabric8-enricher");
+                                                       "META-INF/fabric8/enricher-default",
+                                                       "META-INF/fabric8-enricher",
+                                                       "META-INF/fabric8/enricher");
         Collections.reverse(enrichers);
 
         metaDataEnricherVisitors = Arrays.asList(
@@ -131,8 +137,10 @@ public class EnricherManager {
 
     private Map<String, String> extract(Extractor extractor, Kind kind) {
         Map <String, String> ret = new HashMap<>();
-        for (Enricher enricher : enrichers) {
-            putAllIfNotNull(ret, extractor.extract(enricher, kind));
+        for (Enricher enricher : enricherConfig.order(enrichers, "enricher")) {
+            if (enricherConfig.use(enricher.getName())) {
+                putAllIfNotNull(ret, extractor.extract(enricher, kind));
+            }
         }
         return ret;
     }

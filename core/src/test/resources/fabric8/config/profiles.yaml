@@ -1,0 +1,10 @@
+- name: simple
+  enricher:
+    includes:
+      - base
+      - default.service
+    config:
+      base.url: http://jolokia.org
+  generator:
+    excludes:
+      - java.app

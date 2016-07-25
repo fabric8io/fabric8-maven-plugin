@@ -18,19 +18,14 @@ package io.fabric8.maven.generator.api;
 
 import java.util.List;
 
+import io.fabric8.maven.core.config.Named;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 
 /**
  * @author roland
  * @since 15/05/16
  */
-public interface Generator {
-
-    /**
-     * Get name of this generator
-     * @return
-     */
-    String getName();
+public interface Generator extends Named {
 
     /**
      * Provide additional image configurations

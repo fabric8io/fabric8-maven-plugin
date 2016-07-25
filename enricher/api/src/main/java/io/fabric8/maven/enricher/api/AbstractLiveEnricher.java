@@ -24,7 +24,7 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.maven.core.config.ResourceConfiguration;
+import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.utils.Strings;
 
@@ -161,7 +161,7 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
     }
 
     private String getNamespaceConfig() {
-        ResourceConfiguration config = getContext().getResourceConfiguration();
+        ResourceConfig config = getContext().getResourceConfig();
         return config != null ? config.getNamespace() : null;
     }
 

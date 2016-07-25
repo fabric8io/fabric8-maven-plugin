@@ -16,11 +16,10 @@
 
 package io.fabric8.maven.enricher.api;
 
-import java.net.URLClassLoader;
 import java.util.List;
-import java.util.Map;
 
-import io.fabric8.maven.core.config.ResourceConfiguration;
+import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.project.MavenProject;
@@ -35,19 +34,20 @@ public class EnricherContext {
     private final Logger log;
 
     private final List<ImageConfiguration> images;
-    private final ResourceConfiguration resourceConfiguration;
+    private final ResourceConfig resourceConfig;
 
-    private Map<String, String> config;
+    private ProcessorConfig config;
+
     public EnricherContext(MavenProject project,
-                           Map<String, String> config,
+                           ProcessorConfig config,
                            List<ImageConfiguration> images,
-                           ResourceConfiguration kubernetesConfig,
+                           ResourceConfig kubernetesConfig,
                            Logger log) {
         this.log = log;
         this.project = project;
         this.config = config;
         this.images = images;
-        this.resourceConfiguration = kubernetesConfig;
+        this.resourceConfig = kubernetesConfig;
     }
 
     public MavenProject getProject() {
@@ -62,12 +62,12 @@ public class EnricherContext {
         return log;
     }
 
-    public Map<String, String> getConfig() {
+    public ProcessorConfig getConfig() {
         return config;
     }
 
-    public ResourceConfiguration getResourceConfiguration() {
-        return resourceConfiguration;
+    public ResourceConfig getResourceConfig() {
+        return resourceConfig;
     }
 
 }

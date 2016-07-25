@@ -19,7 +19,6 @@ package io.fabric8.maven.plugin;
 
 import java.io.*;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -28,6 +27,8 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.BuildRecreateMode;
 import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
@@ -48,19 +49,28 @@ import org.apache.maven.plugins.annotations.*;
 public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     /**
-     * Same as the the <code>generator</code> option. Please use "generator" this
-     * will be removed soon.
-     */
-    @Deprecated
-    @Parameter
-    Map<String, String> customizer;
-
-    /**
      * Generator specific options. This is a generic prefix where the keys have the form
      * <code>&lt;generator-prefix&gt;-&lt;option&gt;</code>.
      */
     @Parameter
-    private Map<String, String> generator;
+    private ProcessorConfig generator;
+
+    /**
+     * Profile to use. A profile contains the enrichers and generators to
+     * use as well as their configuration. Profiles are looked up
+     * in the classpath and can be provided as yaml files.
+     *
+     * However, any given enricher and or generator configuration overrides
+     * the information provided by a profile.
+     */
+    @Parameter(property = "fabric8.profile")
+    private String profile;
+
+    /**
+     * Folder where to find project specific files, e.g a custom profile
+     */
+    @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
+    private File resourceDir;
 
     @Parameter(property = "fabric8.build.skip.pom", defaultValue = "true")
     private boolean skipPomBuilds;
@@ -85,9 +95,10 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      *   <li><strong>imageStream</strong> or <strong>is</strong> :
      *       Only the image stream is recreated</li>
      *   <li><strong>all</strong> : Both, build config and image stream are recreated</li>
+     *   <li><strong>none</strong> : Neither build config nor image stream is recreated</li>
      * </ul>
      */
-    @Parameter(property = "fabric8.build.recreate")
+    @Parameter(property = "fabric8.build.recreate", defaultValue = "none")
     private BuildRecreateMode recreate;
 
     /**
@@ -101,7 +112,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-
         if (project != null && skipPomBuilds
             && Objects.equals("pom", project.getPackaging())) {
             getLog().debug("Disabling docker build for pom packaging");
@@ -131,7 +141,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      */
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-        return GeneratorManager.generate(configs, generator != null ? generator : customizer, project, log);
+        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, log);
     }
 
     @Override
@@ -140,6 +150,15 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
     // ==================================================================================================
+
+    // Get generator config
+    private ProcessorConfig extractGeneratorConfig() {
+        try {
+            return ProfileUtil.extractProcesssorConfiguration(generator, ProfileUtil.GENERATOR_CONFIG, profile, resourceDir);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot extract generator config: " + e,e);
+        }
+    }
 
     // Docker build with a binary source strategy
     private void executeOpenShiftBuild(ServiceHub hub, ImageConfiguration imageConfig) throws MojoExecutionException {
@@ -179,7 +198,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     private void startBuild(File dockerTar, OpenShiftClient client, String buildName) {
         // TODO: Wait unti kubernetes-client support instantiateBinary()
         // PR is underway ....
-        log.info("Starting build %s",buildName);
+        log.info("Starting Build %s",buildName);
         client.buildConfigs().withName(buildName)
               .instantiateBinary()
               .fromFile(dockerTar);

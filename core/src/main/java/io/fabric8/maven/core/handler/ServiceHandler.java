@@ -23,7 +23,7 @@ import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServiceFluent;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
-import io.fabric8.maven.core.config.ServiceConfiguration;
+import io.fabric8.maven.core.config.ServiceConfig;
 import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.utils.Strings;
 
@@ -39,16 +39,16 @@ import java.util.Map;
  */
 public class ServiceHandler {
 
-    public Service getService(ServiceConfiguration service, Map<String, String> annotations) {
+    public Service getService(ServiceConfig service, Map<String, String> annotations) {
         List<Service> ret = getServices(Collections.singletonList(service),annotations);
         return ret.size() > 0 ? ret.get(0) : null;
     }
 
-    public List<Service> getServices(List<ServiceConfiguration> services, Map<String, String> annotations) {
+    public List<Service> getServices(List<ServiceConfig> services, Map<String, String> annotations) {
 
         ArrayList<Service> ret = new ArrayList<>();
 
-        for (ServiceConfiguration service : services) {
+        for (ServiceConfig service : services) {
             Map<String, String> serviceAnnotations = new HashMap<>();
             if (annotations != null) {
                 serviceAnnotations.putAll(annotations);
@@ -75,7 +75,7 @@ public class ServiceHandler {
             // TODO we could add better filters maybe?
             // worst case folks can be specific of what ports to expose?
             int count = 0;
-            for (ServiceConfiguration.Port port : service.getPorts()) {
+            for (ServiceConfig.Port port : service.getPorts()) {
                 ServicePort servicePort = new ServicePortBuilder()
                     .withName(port.getName())
                     .withProtocol(port.getProtocol().name())
@@ -109,8 +109,8 @@ public class ServiceHandler {
         return ret;
     }
 
-    private String findPrometheusPort(List<ServiceConfiguration.Port> ports) {
-        for (ServiceConfiguration.Port port : ports) {
+    private String findPrometheusPort(List<ServiceConfig.Port> ports) {
+        for (ServiceConfig.Port port : ports) {
             int number = port.getPort();
             boolean valid = number == 9779;
             String name = port.getName();

@@ -29,6 +29,7 @@ package io.fabric8.maven.core.config;
  *   <li><strong>imageStream</strong> or <strong>is</strong> :
  *       Only the image stream is recreated</li>
  *   <li><strong>all</strong> : Both, build config and image stream are recreated</li>
+ *   <li><strong>none</strong> : Neither build config nor image stream is recreated</li>
  * </ul>
  *
  * @author roland
@@ -42,7 +43,9 @@ public enum BuildRecreateMode {
     is(false, true),
     imageStream(false, true),
 
-    all(true, true);
+    all(true, true),
+
+    none(false, false);
 
     // ==============================================================
 

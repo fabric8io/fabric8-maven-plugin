@@ -16,9 +16,8 @@
 
 package io.fabric8.maven.generator.api;
 
+import io.fabric8.maven.core.config.ProcessorConfig;
 import org.apache.maven.project.MavenProject;
-
-import java.util.Map;
 
 /**
  * @author roland
@@ -26,9 +25,9 @@ import java.util.Map;
  */
 public class MavenGeneratorContext {
     private final MavenProject project;
-    private final Map<String, String> config;
+    private final ProcessorConfig config;
 
-    public MavenGeneratorContext(MavenProject project, Map<String, String> config) {
+    public MavenGeneratorContext(MavenProject project, ProcessorConfig config) {
         this.project = project;
         this.config = config;
     }
@@ -37,7 +36,7 @@ public class MavenGeneratorContext {
         return project;
     }
 
-    public Map<String, String> getConfig() {
+    public ProcessorConfig getConfig() {
         return config;
     }
 }
