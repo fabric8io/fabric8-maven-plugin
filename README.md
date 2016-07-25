@@ -1,74 +1,46 @@
 ## fabric8-maven-plugin
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.fabric8/fabric8-maven-plugin/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/io.fabric8/fabric8-maven-plugin/)
-[![Coverage](https://img.shields.io/sonar/https/nemo.sonarqube.org/io.fabric8:fabric8-maven-plugin-build/coverage.svg?style=flat-square)](https://nemo.sonarqube.org/overview?id=io.fabric8%3Afabric8-maven-plugin-build)
-[![Technical Debt](https://img.shields.io/sonar/https/nemo.sonarqube.org/io.fabric8:fabric8-maven-plugin-build/tech_debt.svg?style=flat-square)](https://nemo.sonarqube.org/overview?id=io.fabric8%3Afabric8-maven-plugin-build)
+[![Coverage](https://img.shields.io/sonar/https/nemo.sonarqube.org/io.fabric8:fabric8-maven-plugin-build/coverage.svg?style=flat-square)](https://sonarqube.com/overview?id=io.fabric8%3Afabric8-maven-plugin-build)
+[![Technical Debt](https://img.shields.io/sonar/https/nemo.sonarqube.org/io.fabric8:fabric8-maven-plugin-build/tech_debt.svg?style=flat-square)](https://sonarqube.com/overview?id=io.fabric8%3Afabric8-maven-plugin-build)
 [![Dependency Status](https://www.versioneye.com/java/io.fabric8:fabric8-maven-plugin-build/badge?style=flat-square)](https://www.versioneye.com/java/io.fabric8:fabric8-maven-plugin-build/)
 
-This plugin is is a rewrite of the original
-[fabric8-maven-plugin](https://github.com/fabric8io/fabric8/tree/master/fabric8-maven-plugin)
-which includes
-[docker-maven-plugin](https://github.com/fabric8io/docker-maven-plugin)
-and is intended a one-stop-shop for building and deploying Java
-applications for Docker, Kubernetes and OpenShift. Its still work in progress, 
-but already usable. See the [samples](samples/) for some examples.
+This Maven plugin is a one-stop-shop for building and deploying Java
+applications for Docker, Kubernetes and OpenShift.
 
-This plugin makes it easy to get your Java applications on to
-OpenShift or Kubernetes. The main goal is easy of use and a consistent
-usage pattern for different build workflows.
+The full documentation can be found in the [User Manual](https://fabric8io.github.com/fabric8-maven-plugin) [[PDF](https://fabric8io.github.io/fabric8-maven-plugin/fabric8-maven-plugin.pdf)]. It supports the following goals:
 
-It supports two configuration strategies:
+| Goal                                          | Description                           |
+| --------------------------------------------- | ------------------------------------- |
+| [`fabric:resource`](https://fabric8io.github.io/fabric8-maven-plugin/#fabric8:resource) | Create Kubernetes and OpenShift resource descriptors |
+| [`fabric8:build`](https://fabric8io.github.io/fabric8-maven-plugin/#fabric8:build) | Build Docker images |
+| [`fabric8:push`](https://fabric8io.github.io/fabric8-maven-plugin/#fabric8:push) | Push Docker images to a registry  |
+| [`fabric8:deploy`](https://fabric8io.github.io/fabric8-maven-plugin/#fabric8:deploy) | Deploy Kubernetes / OpenShift resource objects to a cluster  |
+| [`fabric8:watch`](https://fabric8io.github.io/fabric8-maven-plugin/#fabric8:watch) | Watch for doing rebuilds and restarts |
 
-* **Inline Configuration** which happens within the plugin
-  configuration itself. All deployment artifacts like Dockerfiles or
-  Kubernetes resource descriptors are created completely from this
-  configuration. This strategy is best suited for a quick ramp-up and
-  simple use cases with the minimal need of extra configuration.
-  
-* **External Configuration** uses templates of the real deployment
-  descriptors which is enriched by build information from the POM. For
-  example LabelEnricher can add to the label metadata of Kubernetes
-  resource objects. External configuration is for supporting complex
-  setups with all possibilities of the original descriptors.
-  
-This approach is already used in
-[docker-maven-plugin](https://github.com/fabric8io/docker-maven-plugin)
-with quite some success.
+#### Features
 
-This plugin supports multiple goals, however at the end it boils down
-to two main Maven goals:
+* Includes [docker-maven-plugin](https://github.com/fabric8io/docker-maven-plugin) for dealing with Docker images and hence inherits its flexible and powerful configuration.
+* Supports both Kubernetes and OpenShift descriptors
+* OpenShift Docker builds with a binary source (as an alternative to a direct image build agains a Docker daemon)
+* Various configuration styles:
+  * **Zero Config** for a quick ramp-up where opinionated defaults will be pre-selected.
+  * **Inline Configuration** within the plugin configuration in an XML syntax
+  * **External Configuration** templates of the real deployment descriptors which are enriched by the plugin.
+* Flexible customization:
+  * **Generators** analyze the Maven build and generated automatic Docker image configurations for certain systems (spring-boot, plain java, karaf ...)
+  * **Enricher** extend the Kubernetes / OpenShift resource descriptors by extra information like SCM labels and can add default objects like Services.
+  * Generators and Enrichers can be individually configured and combined into *profiles*
 
-* `fabric8:build` will build the artefacts required for the target
-  platform. Depending on the selected *build strategy* this can be a
-  Docker image for Kubernetes or an OpenShift `BuildConfig` and
-  `Build` object which create `ImageStream`s. 
-  
-* `fabric8:deploy` will create the resource objects on
-  Kuberentes / OpenShift to run the application. Depending on the
-  configured *deployment strategy* this can be `Templates` for
-  OpenShift or plain `ReplicationController`, `Services`, ... for a
-  direct deployment.
-  
-In addition there are other support goals like `fabric8:watch`,
-`fabric8:tool#create-routes`, `fabric8:tool#helm` ....
+### Documentation and Support
 
-----
+* [User Manual](https://fabric8io.github.com/fabric8-maven-plugin) [[PDF](https://fabric8io.github.io/fabric8-maven-plugin/fabric8-maven-plugin.pdf)]
+* Examples are in the [samples](samples/) directory
+* Many [fabric8 Quickstarts](https://github.com/fabric8-quickstarts) use this plugin and are good showcases, too.
+* You'll find us on IRC freenode in channel #fabric8 and we are happy to answer any questions.
+* Contributions are highly appreciated and encouraged. Simply send us Pull Requests.
 
-For enriching resource descriptors with e.g. meta information like git
-commit ids or icon URL the plugin uses a dynamic service lookup from
-the classpath so that it is easy to chose the kind of *enricher*
-needed. fabric8-maven-plugin comes with a default set of enricher
-which makes it easy to use the generated applications with other
-fabric8 components like DevOps or the fabric8 console. 
+### fabric8-maven-plugin 3 vs. 2
 
-----
-
-It turned out that refactoring the current
-[fabric8-maven-plugin](https://github.com/fabric8io/fabric8/tree/master/fabric8-maven-plugin)
-is quite a challenge, especially because of its size and
-complexity. Also its not sure whether all of (partly experimental)
-features are still needed. 
-
-Therefore in order to allow a clean separation of basic functionality
-and more opinionated enrichement for the very beginning, this plugin
-starts nearly from scratch and adds missing features while we go.
+> This is a complete rewrite of the former fabric8-maven plugin. It does not share the same configuration syntax,
+> but migration should be straight forward. If no, please contact us at freenode, #fabric8 or open an issue in this project.
