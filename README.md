@@ -29,7 +29,7 @@ The full documentation can be found in the [User Manual](https://fabric8io.githu
   * **External Configuration** templates of the real deployment descriptors which are enriched by the plugin.
 * Flexible customization:
   * **Generators** analyze the Maven build and generated automatic Docker image configurations for certain systems (spring-boot, plain java, karaf ...)
-  * **Enricher** extend the Kubernetes / OpenShift resource descriptors by extra information like SCM labels and can add default objects like Services.
+  * **Enrichers** extend the Kubernetes / OpenShift resource descriptors by extra information like SCM labels and can add default objects like Services.
   * Generators and Enrichers can be individually configured and combined into *profiles*
 
 ### Documentation and Support
