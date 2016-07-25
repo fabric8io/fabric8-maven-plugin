@@ -136,12 +136,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     @Component
     private MavenProjectHelper projectHelper;
 
-    /**
-     * The artifact type for attaching the generated kubernetes YAML file to the project
-     */
-    @Parameter(property = "fabric8.artifactType", defaultValue = "yml")
-    private String artifactType;
-
     // Whether to use replica sets or replication controller. Could be configurable
     // but for now leave it hidden.
     private boolean useReplicaSet = true;
@@ -192,14 +186,14 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         File file = KubernetesResourceUtil.writeResource(resources, resourceFileBase, resourceFileType);
 
         // Attach it to the Maven reactor so that it will also get deployed
-        projectHelper.attachArtifact(project, artifactType, classifier.getValue(), file);
+        projectHelper.attachArtifact(project, resourceFileType.getArtifactType(), classifier.getValue(), file);
 
         if (resourceFileType.equals(yaml)) {
             // lets generate JSON too to aid migration from version 2.x to 3.x for packaging templates
             file = KubernetesResourceUtil.writeResource(resources, resourceFileBase, json);
 
             // Attach it to the Maven reactor so that it will also get deployed
-            projectHelper.attachArtifact(project, artifactType, classifier.getValue(), file);
+            projectHelper.attachArtifact(project, yaml.getArtifactType(), classifier.getValue(), file);
         }
 
         // write separate files, one for each resource item
