@@ -14,30 +14,22 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.enricher.api;
+package io.fabric8.maven.generator.api;
 
-import java.util.Properties;
-
-import io.fabric8.maven.core.config.ProcessorConfiguration;
+import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.Configs;
 import org.apache.maven.shared.utils.StringUtils;
 
 /**
- * @author roland
- * @since 24/05/16
  */
-public class EnricherConfiguration {
-
-    private static final String ENRICHER_PROP_PREFIX = "fabri8.enricher";
+public class GeneratorConfig {
 
     private final String prefix;
-    private final ProcessorConfiguration config;
-    private final Properties projectProperties;
+    private final ProcessorConfig config;
 
-    public EnricherConfiguration(Properties projectProperties, String prefix, ProcessorConfiguration config) {
-        this.config = config != null ? config : ProcessorConfiguration.EMPTY;
+    public GeneratorConfig(String prefix, ProcessorConfig config) {
+        this.config = config != null ? config : ProcessorConfig.EMPTY;
         this.prefix = prefix;
-        this.projectProperties = projectProperties;
     }
 
     /**
@@ -51,8 +43,7 @@ public class EnricherConfiguration {
     }
 
     /**
-     * Get a config value with a default. If no value is given, as a last resort, project properties are looked up.
-     *
+     * Get a config value with a default
      * @param key key part to lookup. The whole key is build up from <code>prefix + "." + key</code>. If key is null,
      *            then only the prefix is used for the lookup (this is suitable for enrichers having only one config option)
      * @param defaultVal the default value to use when the no config is set
@@ -60,13 +51,7 @@ public class EnricherConfiguration {
      */
     public String get(Configs.Key key, String defaultVal) {
         String keyVal = key != null ? key.name() : "";
-        String fullKey = prefix + (StringUtils.isNotEmpty(keyVal) ? "." + key : "");
-        String val = config.getConfig(fullKey);
-        if (val == null) {
-            val = projectProperties.getProperty(ENRICHER_PROP_PREFIX + "." + fullKey);
-        } if (val == null) {
-            val = System.getProperty(ENRICHER_PROP_PREFIX + "." + fullKey);
-        }
+        String val = config.getConfig(prefix + (StringUtils.isNotEmpty(keyVal) ? "." + key : ""));
         return val != null ? val : defaultVal;
     }
 

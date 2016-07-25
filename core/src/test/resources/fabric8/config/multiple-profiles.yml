@@ -1,0 +1,12 @@
+- name: one
+  enricher:
+    includes:
+      - base
+      - default.service
+  generator:
+    excludes:
+      - java.app
+- name: second
+  enricher:
+    includes:
+      - default.deployment

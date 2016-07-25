@@ -27,12 +27,12 @@ abstract public class BaseGenerator implements Generator {
 
     private final MavenGeneratorContext context;
     private final String name;
-    private final GeneratorConfiguration config;
+    private final GeneratorConfig config;
 
     public BaseGenerator(MavenGeneratorContext context, String name) {
         this.context = context;
         this.name = name;
-        this.config = new GeneratorConfiguration(getName(), context.getConfig());
+        this.config = new GeneratorConfig(getName(), context.getConfig());
     }
 
     protected MavenProject getProject() {
@@ -47,7 +47,7 @@ abstract public class BaseGenerator implements Generator {
         return context;
     }
 
-    public GeneratorConfiguration getConfig() {
+    public GeneratorConfig getConfig() {
         return config;
     }
 

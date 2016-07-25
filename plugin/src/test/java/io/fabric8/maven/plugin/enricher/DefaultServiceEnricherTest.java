@@ -20,7 +20,7 @@ import java.util.*;
 
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.maven.core.config.ProcessorConfiguration;
+import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -59,7 +59,7 @@ public class DefaultServiceEnricherTest {
 
         // Setup mock behaviour
         new Expectations() {{
-            context.getConfig(); result = new ProcessorConfiguration(null, null, Collections.singletonMap("default.service.type", "LoadBalancer"));
+            context.getConfig(); result = new ProcessorConfig(null, null, Collections.singletonMap("default.service.type", "LoadBalancer"));
             imageConfiguration.getBuildConfiguration(); result = buildConfig;
             context.getImages(); result = Arrays.asList(imageConfiguration);
         }};

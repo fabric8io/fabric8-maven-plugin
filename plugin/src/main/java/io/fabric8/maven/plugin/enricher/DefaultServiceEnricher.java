@@ -22,10 +22,9 @@ import java.util.Objects;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.config.ServiceConfiguration;
+import io.fabric8.maven.core.config.ServiceConfig;
 import io.fabric8.maven.core.config.ServiceProtocol;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ServiceHandler;
@@ -33,7 +32,6 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherConfiguration;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.utils.Strings;
 import org.apache.maven.shared.utils.StringUtils;
@@ -70,7 +68,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
 
     @Override
     public void addDefaultResources(KubernetesListBuilder builder) {
-        final ServiceConfiguration defaultServiceConfig = extractDefaultServiceConfig();
+        final ServiceConfig defaultServiceConfig = extractDefaultServiceConfig();
         final Service defaultService = serviceHandler.getService(defaultServiceConfig,null);
 
         if (hasServices(builder)) {
@@ -95,10 +93,10 @@ public class DefaultServiceEnricher extends BaseEnricher {
     }
 
     // Check for all build configs, extract the exposed ports and create a single service for all of them
-    private ServiceConfiguration extractDefaultServiceConfig() {
-        List<ServiceConfiguration.Port> ports = extractPortsFromImageConfiguration(getImages());
+    private ServiceConfig extractDefaultServiceConfig() {
+        List<ServiceConfig.Port> ports = extractPortsFromImageConfiguration(getImages());
 
-        ServiceConfiguration.Builder ret = new ServiceConfiguration.Builder();
+        ServiceConfig.Builder ret = new ServiceConfig.Builder();
         ret.name(getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject())));
 
         if (ports.size() > 0) {
@@ -117,8 +115,8 @@ public class DefaultServiceEnricher extends BaseEnricher {
 
 
     // Examine images for build configuration and extract all ports
-    private List<ServiceConfiguration.Port> extractPortsFromImageConfiguration(List<ImageConfiguration> images) {
-        List<ServiceConfiguration.Port> ret = new ArrayList<>();
+    private List<ServiceConfig.Port> extractPortsFromImageConfiguration(List<ImageConfiguration> images) {
+        List<ServiceConfig.Port> ret = new ArrayList<>();
         for (ImageConfiguration image : images) {
             BuildImageConfiguration buildConfig = image.getBuildConfiguration();
             if (buildConfig != null) {
@@ -128,7 +126,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
                         /// Todo: Check IANA names (also in case port is not numeric)
                         int portI = Integer.parseInt(port);
                         ret.add(
-                            new ServiceConfiguration.Port.Builder()
+                            new ServiceConfig.Port.Builder()
                                 .protocol(ServiceProtocol.TCP) // TODO: default for the moment
                                 .port(portI)
                                 .targetPort(portI)

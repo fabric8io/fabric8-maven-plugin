@@ -1,0 +1,15 @@
+spring:
+  application:
+    # This ends up as the service name in zipkin
+    name: ${project.artifactId}
+  sleuth:
+    sampler:
+      percentage: 1.0
+
+#Enable / Disable Ribbon Http Client (disabling requires spring-cloud-netflix 1.1.0 (currently unreleased))
+ribbon:
+  http:
+    client:
+      enabled: true
+
+name: default name

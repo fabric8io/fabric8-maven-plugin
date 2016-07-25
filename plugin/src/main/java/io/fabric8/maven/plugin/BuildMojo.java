@@ -19,7 +19,6 @@ package io.fabric8.maven.plugin;
 
 import java.io.*;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -28,7 +27,8 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.BuildRecreateMode;
 import io.fabric8.maven.core.config.PlatformMode;
-import io.fabric8.maven.core.config.ProcessorConfiguration;
+import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
@@ -53,7 +53,24 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      * <code>&lt;generator-prefix&gt;-&lt;option&gt;</code>.
      */
     @Parameter
-    private ProcessorConfiguration generator;
+    private ProcessorConfig generator;
+
+    /**
+     * Profile to use. A profile contains the enrichers and generators to
+     * use as well as their configuration. Profiles are looked up
+     * in the classpath and can be provided as yaml files.
+     *
+     * However, any given enricher and or generator configuration overrides
+     * the information provided by a profile.
+     */
+    @Parameter(property = "fabric8.profile")
+    private String profile;
+
+    /**
+     * Folder where to find project specific files, e.g a custom profile
+     */
+    @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
+    private File resourceDir;
 
     @Parameter(property = "fabric8.build.skip.pom", defaultValue = "true")
     private boolean skipPomBuilds;
@@ -124,7 +141,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      */
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-        return GeneratorManager.generate(configs, generator, project, log);
+        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, log);
     }
 
     @Override
@@ -133,6 +150,15 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
     // ==================================================================================================
+
+    // Get generator config
+    private ProcessorConfig extractGeneratorConfig() {
+        try {
+            return ProfileUtil.extractProcesssorConfiguration(generator, ProfileUtil.GENERATOR_CONFIG, profile, resourceDir);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot extract generator config: " + e,e);
+        }
+    }
 
     // Docker build with a binary source strategy
     private void executeOpenShiftBuild(ServiceHub hub, ImageConfiguration imageConfig) throws MojoExecutionException {

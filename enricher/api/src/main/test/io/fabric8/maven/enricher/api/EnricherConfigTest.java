@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import io.fabric8.maven.core.config.ProcessorConfiguration;
+import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.Configs;
 import org.junit.Test;
 
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertEquals;
  * @author roland
  * @since 03/06/16
  */
-public class EnricherConfigurationTest {
+public class EnricherConfigTest {
 
     private enum Config implements Configs.Key {
         type;
@@ -42,7 +42,7 @@ public class EnricherConfigurationTest {
     public void simple() throws Exception {
         Map<String,String> configMap = new HashMap<>();
         configMap.put("default.service.type", "LoadBalancer");
-        EnricherConfiguration config = new EnricherConfiguration(new Properties(), "default.service", new ProcessorConfiguration(null, null, configMap));
+        EnricherConfig config = new EnricherConfig(new Properties(), "default.service", new ProcessorConfig(null, null, configMap));
         assertEquals("LoadBalancer",config.get(Config.type));
     }
 }

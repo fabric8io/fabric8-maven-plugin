@@ -21,7 +21,7 @@ import java.net.URL;
 import java.util.List;
 
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.maven.core.config.ProbeConfiguration;
+import io.fabric8.maven.core.config.ProbeConfig;
 import io.fabric8.maven.core.util.Commandline;
 import io.fabric8.utils.Strings;
 
@@ -31,7 +31,7 @@ import io.fabric8.utils.Strings;
  */
 public class ProbeHandler {
 
-    public Probe getProbe(ProbeConfiguration probeConfig)  {
+    public Probe getProbe(ProbeConfig probeConfig)  {
         if (probeConfig == null) {
             return null;
         }

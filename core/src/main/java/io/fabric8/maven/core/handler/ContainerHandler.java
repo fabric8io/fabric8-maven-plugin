@@ -26,8 +26,8 @@ import io.fabric8.kubernetes.api.model.SecurityContext;
 import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
-import io.fabric8.maven.core.config.ResourceConfiguration;
-import io.fabric8.maven.core.config.VolumeConfiguration;
+import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.config.VolumeConfig;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootProperties;
 import io.fabric8.maven.docker.access.PortMapping;
@@ -62,7 +62,7 @@ class ContainerHandler {
         this.project = project;
     }
 
-    List<Container> getContainers(ResourceConfiguration config, List<ImageConfiguration> images)  {
+    List<Container> getContainers(ResourceConfig config, List<ImageConfiguration> images)  {
         List<Container> ret = new ArrayList<>();
         int idx = 1;
         for (ImageConfiguration imageConfig : images) {
@@ -117,7 +117,7 @@ class ContainerHandler {
     }
 
 
-    private String getImagePullPolicy(ResourceConfiguration config) {
+    private String getImagePullPolicy(ResourceConfig config) {
         String pullPolicy = config.getImagePullPolicy();
         String version = project.getVersion();
         if (Strings.isNullOrBlank(pullPolicy) &&
@@ -128,19 +128,19 @@ class ContainerHandler {
         return pullPolicy;
     }
 
-    private SecurityContext createSecurityContext(ResourceConfiguration config) {
+    private SecurityContext createSecurityContext(ResourceConfig config) {
         return new SecurityContextBuilder()
             .withPrivileged(config.isContainerPrivileged())
             .build();
     }
 
 
-    private List<VolumeMount> getVolumeMounts(ResourceConfiguration config) {
-        List<VolumeConfiguration> volumeConfigs = config.getVolumes();
+    private List<VolumeMount> getVolumeMounts(ResourceConfig config) {
+        List<VolumeConfig> volumeConfigs = config.getVolumes();
 
         List<VolumeMount> ret = new ArrayList<>();
         if (volumeConfigs != null) {
-            for (VolumeConfiguration volumeConfig : volumeConfigs) {
+            for (VolumeConfig volumeConfig : volumeConfigs) {
                 List<String> mounts = volumeConfig.getMounts();
                 if (mounts != null) {
                     for (String mount : mounts) {

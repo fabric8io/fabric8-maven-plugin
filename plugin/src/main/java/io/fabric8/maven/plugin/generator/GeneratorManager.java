@@ -18,7 +18,7 @@ package io.fabric8.maven.plugin.generator;
 
 import java.util.List;
 
-import io.fabric8.maven.core.config.ProcessorConfiguration;
+import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.PluginServiceFactory;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.Generator;
@@ -34,7 +34,7 @@ import org.apache.maven.project.MavenProject;
 public class GeneratorManager {
 
     public static List<ImageConfiguration> generate(List<ImageConfiguration> imageConfigs,
-                                                    ProcessorConfiguration generatorConfig,
+                                                    ProcessorConfig generatorConfig,
                                                     MavenProject project,
                                                     Logger log) {
 
@@ -43,7 +43,10 @@ public class GeneratorManager {
         PluginServiceFactory<MavenGeneratorContext> pluginFactory = new PluginServiceFactory<>(
             new MavenGeneratorContext(project, generatorConfig));
         List<Generator> generators =
-            pluginFactory.createServiceObjects("META-INF/fabric8-generator-default", "META-INF/fabric8-generator");
+            pluginFactory.createServiceObjects("META-INF/fabric8/generator-default",
+                                               "META-INF/fabric8/fabric8-generator-default",
+                                               "META-INF/fabric8/generator",
+                                               "META-INF/fabric8-generator");
         generators = generatorConfig.order(generators,"generator");
         for (Generator generator : generators) {
             if (generatorConfig.use(generator.getName())) {

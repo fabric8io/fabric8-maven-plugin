@@ -18,39 +18,43 @@ package io.fabric8.maven.core.config;
 
 import java.util.*;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
- * Configuration class for enrichers and generators
+ * Configuration for enrichers and generators
  *
  * @author roland
  * @since 24/07/16
  */
-public class ProcessorConfiguration {
+public class ProcessorConfig {
 
-    public static final ProcessorConfiguration EMPTY = new ProcessorConfiguration();
+    public static final ProcessorConfig EMPTY = new ProcessorConfig();
 
     /**
      * Modules to includes, should holde <code>&lt;include&gt;</code> elements
      */
     @Parameter
+    @JsonProperty(value = "includes")
     private List<String> includes;
 
     /**
      * Modules to excludes, should holde <code>&lt;exclude&gt;</code> elements
      */
     @Parameter
+    @JsonProperty(value = "excludes")
     private Set<String> excludes;
 
     /**
      * Configuration for enricher / generators
      */
     @Parameter
+    @JsonProperty(value = "config")
     Map<String, String> config = new HashMap<>();
 
-    public ProcessorConfiguration() { }
+    public ProcessorConfig() { }
 
-    public ProcessorConfiguration(List<String> includes, Set<String> excludes, Map<String, String> config) {
+    public ProcessorConfig(List<String> includes, Set<String> excludes, Map<String, String> config) {
         this.includes = includes;
         this.excludes = excludes;
         if (config != null) {

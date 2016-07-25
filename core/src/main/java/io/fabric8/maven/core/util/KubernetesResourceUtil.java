@@ -122,10 +122,11 @@ public class KubernetesResourceUtil {
 
     public static File[] listResourceFragments(File resourceDir) {
         final Pattern filenamePattern = Pattern.compile(FILENAME_PATTERN);
+        final Pattern exludePattern = Pattern.compile(PROFILES_PATTERN);
         return resourceDir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                return filenamePattern.matcher(name).matches();
+                return filenamePattern.matcher(name).matches() && !exludePattern.matcher(name).matches();
             }
         });
     }
@@ -158,6 +159,7 @@ public class KubernetesResourceUtil {
     }
 
     private static final String FILENAME_PATTERN = "^(.*?)(-([^-]+))?\\.(yaml|yml|json)$";
+    private static final String PROFILES_PATTERN = "^profiles?\\.ya?ml$";
 
     // Read fragment and add default values
     private static Map<String, Object> readAndEnrichFragment(String defaultApiVersion, String apiExtensionsVersion, File file) throws IOException {

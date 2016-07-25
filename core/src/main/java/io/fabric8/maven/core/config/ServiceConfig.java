@@ -25,7 +25,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author roland
  * @since 22/03/16
  */
-public class ServiceConfiguration {
+public class ServiceConfig {
 
     // Service name
     @Parameter
@@ -62,7 +62,7 @@ public class ServiceConfiguration {
     // =============================================================
 
     public static class Builder {
-        private ServiceConfiguration config = new ServiceConfiguration();
+        private ServiceConfig config = new ServiceConfig();
 
         public Builder name(String name) {
             config.name = name;
@@ -84,7 +84,7 @@ public class ServiceConfiguration {
             return this;
         }
 
-        public ServiceConfiguration build() {
+        public ServiceConfig build() {
             return config;
         }
     }

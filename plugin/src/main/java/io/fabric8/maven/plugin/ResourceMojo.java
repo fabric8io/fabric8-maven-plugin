@@ -22,9 +22,7 @@ import java.util.*;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.*;
-import io.fabric8.maven.core.config.ProcessorConfiguration;
-import io.fabric8.maven.core.config.ResourceConfiguration;
-import io.fabric8.maven.core.config.ServiceConfiguration;
+import io.fabric8.maven.core.config.*;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
@@ -105,24 +103,35 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     // Resource  specific configuration for this plugin
     @Parameter
-    private ResourceConfiguration resources;
+    private ResourceConfig resources;
 
     // Reusing image configuration from d-m-p
     @Parameter
     private List<ImageConfiguration> images;
 
     /**
+     * Profile to use. A profile contains the enrichers and generators to
+     * use as well as their configuration. Profiles are looked up
+     * in the classpath and can be provided as yaml files.
+     *
+     * However, any given enricher and or generator configuration overrides
+     * the information provided by a profile.
+     */
+    @Parameter(property = "fabric8.profile")
+    private String profile;
+
+    /**
      * Enricher specific configuration configuration given through
      * to the various enrichers.
      */
     @Parameter
-    private ProcessorConfiguration enricher;
+    private ProcessorConfig enricher;
 
     /**
      * Configuration passed to generators
      */
     @Parameter
-    private ProcessorConfiguration generator;
+    private ProcessorConfig generator;
 
     @Component
     private MavenProjectHelper projectHelper;
@@ -152,7 +161,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             resolvedImages = getResolvedImages(images, log);
 
             // Manager for calling enrichers.
-            EnricherContext ctx = new EnricherContext(project, enricher, resolvedImages, resources, log);
+            EnricherContext ctx = new EnricherContext(project, extractEnricherConfig(), resolvedImages, resources, log);
             EnricherManager enricherManager = new EnricherManager(ctx);
 
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
@@ -167,6 +176,14 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
         }
+    }
+
+    private ProcessorConfig extractEnricherConfig() throws IOException {
+        return ProfileUtil.extractProcesssorConfiguration(enricher,ProfileUtil.ENRICHER_CONFIG, profile, resourceDir);
+    }
+
+    private ProcessorConfig extractGeneratorConfig() throws IOException {
+        return ProfileUtil.extractProcesssorConfiguration(generator,ProfileUtil.GENERATOR_CONFIG, profile, resourceDir);
     }
 
     private void writeResources(KubernetesList resources, ResourceClassifier classifier) throws IOException {
@@ -331,7 +348,11 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             new ConfigHelper.Customizer() {
                 @Override
                 public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-                    return GeneratorManager.generate(configs, generator, project, log);
+                    try {
+                        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, log);
+                    } catch (IOException e) {
+                        throw new IllegalArgumentException("Cannot extract generator: " + e,e);
+                    }
                 }
             });
 
@@ -341,6 +362,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                                                                 new ImageNameFormatter(project,now), log);
         return ret;
     }
+
 
     private void storeReferenceDateInPluginContext(Date now) {
         Map<String, Object> pluginContext = getPluginContext();
@@ -431,7 +453,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         return ret;
     }
 
-    private void addServices(KubernetesListBuilder builder, List<ServiceConfiguration> serviceConfig, Map<String, String> annotations) {
+    private void addServices(KubernetesListBuilder builder, List<ServiceConfig> serviceConfig, Map<String, String> annotations) {
         if (serviceConfig != null) {
             ServiceHandler serviceHandler = handlerHub.getServiceHandler();
             builder.addToServiceItems(toArray(serviceHandler.getServices(serviceConfig, annotations)));

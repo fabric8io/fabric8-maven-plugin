@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
  * @author roland
  * @since 24/07/16
  */
-public class ProcessorConfigurationTest {
+public class ProcessorConfigTest {
 
     List<String> includes = Arrays.asList("i1", "i2", "i3");
     Set<String> excludes = new HashSet<>(Arrays.asList("e1"));
@@ -34,7 +34,7 @@ public class ProcessorConfigurationTest {
 
     @Test
     public void incAndExc() {
-        ProcessorConfiguration pConfig = new ProcessorConfiguration(includes, excludes, config);
+        ProcessorConfig pConfig = new ProcessorConfig(includes, excludes, config);
 
         assertTrue(pConfig.use("i2"));
         assertFalse(pConfig.use("e1"));
@@ -43,7 +43,7 @@ public class ProcessorConfigurationTest {
 
     @Test
     public void inc() {
-        ProcessorConfiguration pConfig = new ProcessorConfiguration(includes, null, config);
+        ProcessorConfig pConfig = new ProcessorConfig(includes, null, config);
 
         assertTrue(pConfig.use("i2"));
         assertFalse(pConfig.use("e1"));
@@ -52,7 +52,7 @@ public class ProcessorConfigurationTest {
 
     @Test
     public void exc() {
-        ProcessorConfiguration pConfig = new ProcessorConfiguration(null, excludes, config);
+        ProcessorConfig pConfig = new ProcessorConfig(null, excludes, config);
 
         assertTrue(pConfig.use("i2"));
         assertFalse(pConfig.use("e1"));
@@ -62,7 +62,7 @@ public class ProcessorConfigurationTest {
 
     @Test
     public void none() {
-        ProcessorConfiguration pConfig = new ProcessorConfiguration(null, null, config);
+        ProcessorConfig pConfig = new ProcessorConfig(null, null, config);
 
         assertTrue(pConfig.use("i2"));
         assertTrue(pConfig.use("e1"));
@@ -71,7 +71,7 @@ public class ProcessorConfigurationTest {
 
     @Test
     public void config() {
-        ProcessorConfiguration pConfig = new ProcessorConfiguration(null, null, config);
+        ProcessorConfig pConfig = new ProcessorConfig(null, null, config);
 
         assertEquals("v1", pConfig.getConfig("k1"));
         assertNull(pConfig.getConfig("k2"));
@@ -87,7 +87,7 @@ public class ProcessorConfigurationTest {
 
         List<String> inc = Arrays.asList("t4", "t2");
 
-        ProcessorConfiguration pConfig = new ProcessorConfiguration(inc, null, null);
+        ProcessorConfig pConfig = new ProcessorConfig(inc, null, null);
         List<TestNamed> result = pConfig.order(data,"test");
         assertEquals(2,result.size());
         assertEquals("t4", result.get(0).getName());
@@ -99,7 +99,7 @@ public class ProcessorConfigurationTest {
         List<TestNamed> data = Arrays.asList(new TestNamed("t1"));
         List<String> inc = Arrays.asList("t3", "t1");
 
-        ProcessorConfiguration pConfig = new ProcessorConfiguration(inc, null, null);
+        ProcessorConfig pConfig = new ProcessorConfig(inc, null, null);
         try {
             pConfig.order(data, "bla");
             fail();
@@ -112,7 +112,7 @@ public class ProcessorConfigurationTest {
     public void orderWithEmptyInclude() {
         List<TestNamed> data = Arrays.asList(new TestNamed("t1"), new TestNamed("t2"));
 
-        ProcessorConfiguration pConfig = ProcessorConfiguration.EMPTY;
+        ProcessorConfig pConfig = ProcessorConfig.EMPTY;
         List<TestNamed> result = pConfig.order(data, "bla");
         assertEquals(data,result);
     }

@@ -32,7 +32,7 @@ import java.util.Map;
  */
 public abstract class BaseEnricher implements Enricher {
 
-    private final EnricherConfiguration config;
+    private final EnricherConfig config;
     private final String name;
     private EnricherContext buildContext;
 
@@ -41,8 +41,8 @@ public abstract class BaseEnricher implements Enricher {
     public BaseEnricher(EnricherContext buildContext, String name) {
         this.buildContext = buildContext;
         // Pick the configuration which is for us
-        this.config = new EnricherConfiguration(buildContext.getProject().getProperties(),
-                                                name, buildContext.getConfig());
+        this.config = new EnricherConfig(buildContext.getProject().getProperties(),
+                                         name, buildContext.getConfig());
         this.log = new PrefixedLogger(name, buildContext.getLog());
         this.name = name;
     }

@@ -26,7 +26,7 @@ import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
-import io.fabric8.maven.core.config.ResourceConfiguration;
+import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.handler.DeploymentHandler;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicaSetHandler;
@@ -77,8 +77,8 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
     @Override
     public void addDefaultResources(KubernetesListBuilder builder) {
         final String defaultName = getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject()));
-        ResourceConfiguration config =
-            new ResourceConfiguration.Builder()
+        ResourceConfig config =
+            new ResourceConfig.Builder()
                 .replicaSetName(defaultName)
                 .imagePullPolicy(getConfig(Config.imagePullPolicy))
                 .build();

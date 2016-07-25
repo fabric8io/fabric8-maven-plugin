@@ -16,7 +16,7 @@
 
 package io.fabric8.maven.generator.api;
 
-import io.fabric8.maven.core.config.ProcessorConfiguration;
+import io.fabric8.maven.core.config.ProcessorConfig;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -25,9 +25,9 @@ import org.apache.maven.project.MavenProject;
  */
 public class MavenGeneratorContext {
     private final MavenProject project;
-    private final ProcessorConfiguration config;
+    private final ProcessorConfig config;
 
-    public MavenGeneratorContext(MavenProject project, ProcessorConfiguration config) {
+    public MavenGeneratorContext(MavenProject project, ProcessorConfig config) {
         this.project = project;
         this.config = config;
     }
@@ -36,7 +36,7 @@ public class MavenGeneratorContext {
         return project;
     }
 
-    public ProcessorConfiguration getConfig() {
+    public ProcessorConfig getConfig() {
         return config;
     }
 }

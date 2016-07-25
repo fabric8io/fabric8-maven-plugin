@@ -26,7 +26,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author roland
  * @since 22/03/16
  */
-public class ResourceConfiguration {
+public class ResourceConfig {
 
     @Parameter
     private Map<String,String> env;
@@ -35,22 +35,22 @@ public class ResourceConfiguration {
     private Map<String,String> labels;
 
     @Parameter
-    private AnnotationConfiguration annotations;
+    private AnnotationConfig annotations;
 
     @Parameter
-    private List<VolumeConfiguration> volumes;
+    private List<VolumeConfig> volumes;
 
     @Parameter(defaultValue = "${project.artifactId}")
     private String replicaSetName;
 
     @Parameter
-    private List<ServiceConfiguration> services;
+    private List<ServiceConfig> services;
 
     @Parameter
-    private ProbeConfiguration liveness;
+    private ProbeConfig liveness;
 
     @Parameter
-    private ProbeConfiguration readiness;
+    private ProbeConfig readiness;
 
     @Parameter
     private MetricsConfig metrics;
@@ -86,23 +86,23 @@ public class ResourceConfiguration {
         return labels;
     }
 
-    public AnnotationConfiguration getAnnotations() {
-        return annotations != null ? annotations : new AnnotationConfiguration();
+    public AnnotationConfig getAnnotations() {
+        return annotations != null ? annotations : new AnnotationConfig();
     }
 
-    public List<VolumeConfiguration> getVolumes() {
+    public List<VolumeConfig> getVolumes() {
         return volumes;
     }
 
-    public List<ServiceConfiguration> getServices() {
+    public List<ServiceConfig> getServices() {
         return services;
     }
 
-    public ProbeConfiguration getLiveness() {
+    public ProbeConfig getLiveness() {
         return liveness;
     }
 
-    public ProbeConfiguration getReadiness() {
+    public ProbeConfig getReadiness() {
         return readiness;
     }
 
@@ -141,7 +141,7 @@ public class ResourceConfiguration {
     // =============================================================================================
 
     public static class Builder {
-        private ResourceConfiguration config = new ResourceConfiguration();
+        private ResourceConfig config = new ResourceConfig();
 
         public Builder replicaSetName(String name) {
             config.replicaSetName = name;
@@ -153,7 +153,7 @@ public class ResourceConfiguration {
             return this;
         }
 
-        public ResourceConfiguration build() {
+        public ResourceConfig build() {
             return config;
         }
     }

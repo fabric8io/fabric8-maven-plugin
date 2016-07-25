@@ -26,7 +26,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author roland
  * @since 22/03/16
  */
-public class VolumeConfiguration {
+public class VolumeConfig {
 
     @Parameter
     private String type;
