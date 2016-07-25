@@ -18,7 +18,7 @@ The full documentation can be found in the [User Manual](https://fabric8io.githu
 | [`fabric8:deploy`](https://fabric8io.github.io/fabric8-maven-plugin/#fabric8:deploy) | Deploy Kubernetes / OpenShift resource objects to a cluster  |
 | [`fabric8:watch`](https://fabric8io.github.io/fabric8-maven-plugin/#fabric8:watch) | Watch for doing rebuilds and restarts |
 
-#### Features
+### Features
 
 * Includes [docker-maven-plugin](https://github.com/fabric8io/docker-maven-plugin) for dealing with Docker images and hence inherits its flexible and powerful configuration.
 * Supports both Kubernetes and OpenShift descriptors
