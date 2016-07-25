@@ -82,6 +82,11 @@
       <artifactId>fabric8-maven-generator-spring-boot</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>fabric8-maven-generator-karaf</artifactId>
+    </dependency>
+
     <!-- == Fabric8 ===================================== -->
 
     <dependency>

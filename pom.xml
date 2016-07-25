@@ -46,6 +46,7 @@
     <module>generator/api</module>
     <module>generator/java-app</module>
     <module>generator/spring-boot</module>
+    <module>generator/karaf</module>
   </modules>
 
   <scm>
