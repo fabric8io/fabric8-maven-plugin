@@ -39,7 +39,7 @@ public class ProcessorConfig {
     private List<String> includes;
 
     /**
-     * Modules to excludes, should holde <code>&lt;exclude&gt;</code> elements
+     * Modules to excludes, should hold <code>&lt;exclude&gt;</code> elements
      */
     @Parameter
     @JsonProperty(value = "excludes")

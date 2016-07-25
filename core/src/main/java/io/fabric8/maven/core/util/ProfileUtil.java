@@ -88,7 +88,7 @@ public class ProfileUtil {
         if (profileFound != null) {
             return extractor.extract(profileFound);
         }
-        return null;
+        return ProcessorConfig.EMPTY;
     }
 
     /**
