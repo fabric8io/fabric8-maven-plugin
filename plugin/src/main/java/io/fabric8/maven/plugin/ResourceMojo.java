@@ -183,7 +183,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     }
 
     private ProcessorConfig extractGeneratorConfig() throws IOException {
-        return ProfileUtil.extractProcesssorConfiguration(generator,ProfileUtil.GENERATOR_CONFIG, profile, resourceDir);
+        return ProfileUtil.extractProcesssorConfiguration(generator, ProfileUtil.GENERATOR_CONFIG, profile, resourceDir);
     }
 
     private void writeResources(KubernetesList resources, ResourceClassifier classifier) throws IOException {
