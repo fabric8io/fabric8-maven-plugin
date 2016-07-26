@@ -515,8 +515,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/fabric8-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 3.1.1,</span>
-<span id="revdate">2016-07-25</span>
+<span id="revnumber">version 3.0-SNAPSHOT,</span>
+<span id="revdate">2016-07-26</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -524,7 +524,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#introduction">1. Introduction</a>
 <ul class="sectlevel2">
 <li><a href="#building-images">1.1. Building Images</a></li>
-<li><a href="#kubernetes-and-openshift-resource-descriptors">1.2. Kubernetes and OpenShift Resource Descriptors</a></li>
+<li><a href="#resource-descriptors">1.2. Kubernetes and OpenShift Resource Descriptors</a></li>
 <li><a href="#configuration">1.3. Configuration</a></li>
 <li><a href="#examples">1.4. Examples</a>
 <ul class="sectlevel3">
@@ -574,12 +574,12 @@ table.CodeRay td.code>pre{padding:0}
 <h2 id="introduction">1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <strong>fabric8-maven-plugin</strong> brings your Java applications to <a href="http://kubernetes.io/">Kubernetes</a> and <a href="https://www.openshift.com/">OpenShift</a>. It provides a tight integration into <a href="http://maven.apache.org">Maven</a> builds and benefits from the build information already given. It focuses on the following aspect:</p>
+<p>The <strong>fabric8-maven-plugin</strong> brings your Java applications to <a href="http://kubernetes.io/">Kubernetes</a> and <a href="https://www.openshift.com/">OpenShift</a>. It provides a tight integration into <a href="http://maven.apache.org">Maven</a> builds and benefits from the build information already given. The main tasks where fabric8-maven-plugin can help is in <a href="#building-images">building images</a> and creating Kubernetes and OpenShift <a href="#resource-descriptors">resource descriptors</a>.</p>
 </div>
 <div class="sect2">
 <h3 id="building-images">1.1. Building Images</h3>
 <div class="paragraph">
-<p>One main task of this plugin is to create Docker images holding the actual application and which can be deployed on Kubernetes / OpenShift. This is done with the <a href="#fabric8:build"><strong>fabric8:build</strong></a> goal. It is easy to include build artifacts and their dependencies into an image. The plugin uses the assembly descriptor format from the <a href="http://maven.apache.org/plugins/maven-assembly-plugin/">maven-assembly-plugin</a> to specify the content which will be added from a sub-directory in the image (<code>/deployments</code> by default). Images that are built with this plugin can then be pushed to public or private Docker registries with <a href="#fabric8:push"><strong>fabric8:push</strong></a>.</p>
+<p>The <a href="#fabric8:build"><strong>fabric8:build</strong></a> goal is for creating Docker images which carrythe actual application and which can be deployed on Kubernetes or OpenShift. It is easy to include build artifacts and their dependencies. The plugin uses the assembly descriptor format from the <a href="http://maven.apache.org/plugins/maven-assembly-plugin/">maven-assembly-plugin</a> to specify the content which will be added to a sub-directory in the image (<code>/deployments</code> by default). Images that are built with this plugin can then be pushed to public or private Docker registries with <a href="#fabric8:push"><strong>fabric8:push</strong></a>.</p>
 </div>
 <div class="paragraph">
 <p>Depending on the operational mode, for building the actual image either a Docker daemon is contacted directly or an <a href="https://docs.openshift.com/enterprise/3.0/architecture/core_concepts/builds_and_image_streams.html#docker-build">OpenShift Docker Build</a> is performed.</p>
@@ -588,30 +588,33 @@ table.CodeRay td.code>pre{padding:0}
 <p>A special <a href="#fabric8:watch"><strong>fabric8:watch</strong></a> goal allows for reacting on code changes and automatic recreation of images or copying new artifacts into running container.</p>
 </div>
 <div class="paragraph">
-<p>This image related features are inherited from the <a href="https://github.com/fabric8io/docker-maven-plugin">fabric8io/docker-maven-plugin</a> which has a rich configuration syntax for creating images.</p>
+<p>These image related features are inherited from the <a href="https://github.com/fabric8io/docker-maven-plugin">fabric8io/docker-maven-plugin</a> which is transparently included in this plugin.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="kubernetes-and-openshift-resource-descriptors">1.2. Kubernetes and OpenShift Resource Descriptors</h3>
+<h3 id="resource-descriptors">1.2. Kubernetes and OpenShift Resource Descriptors</h3>
 <div class="paragraph">
-<p>With <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> Kubernetes and OpenShift resource descriptors can be created from the build information for creating the corresponding resource object. These files are packaged within the Maven artifacts crearted and can be deployed to a running orchestration platform with <a href="#fabric8:deploy"><strong>fabric8:deploy</strong></a>.</p>
+<p>With <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> Kubernetes and OpenShift resource descriptors can be created from the build information for creating the corresponding resource object. These files are packaged within the Maven artifacts created and can be deployed to a running orchestration platform with <a href="#fabric8:deploy"><strong>fabric8:deploy</strong></a>.</p>
+</div>
+<div class="paragraph">
+<p>You only specify a fragment of the real resource descriptors which will be enriched by this plugin with various extra informations taken from the build. This drastically can reduce boilerplate code for common scenarios. It is also possible to auto-create resource objects like services or replica-set without explicitly declaring it.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="configuration">1.3. Configuration</h3>
 <div class="paragraph">
-<p>In order to capture many use case scenarios, this plugin provides three levels of configuration:</p>
+<p>In order to capture many use case scenarios, there are three levels of configuration:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Zero-Config</strong> which is similar to spring-boot-generator the plugin makes some opinionated decisions based what it finds in the pom.xml (like the base image to use, which ports to expose, &#8230;&#8203;). Great for starting up things and for keeping our quickstarts small and tidy.</p>
+<p><strong>Zero-Config</strong> mode makes some decisions based what is present in the pom.xml like what base image to use or which ports to expose. This is great for starting up things and for keeping quickstart applications small and tidy.</p>
 </li>
 <li>
-<p><strong>XML plugin configuration</strong> which is similar to what the <a href="https://fabric8io.github.io/docker-maven-plugin/#example">docker-maven-plugin</a> provides. This allows for type safe configuration with IDE support.</p>
+<p><strong>XML plugin configuration</strong> mode is similar to what <a href="https://fabric8io.github.io/docker-maven-plugin/#example">docker-maven-plugin</a> provides. This allows for type safe configuration with IDE support, but only a subset of possible resource descriptor festures is provided.</p>
 </li>
 <li>
-<p><strong>Kubernetes &amp; OpenShift YAML files</strong> which are given YAML fragments and that can be <em>enriched</em> by the plugin. This allows expert users to use plain configuration file with all their capabilities, but also to add project specific build information.</p>
+<p><strong>Kubernetes &amp; OpenShift resource descruptors</strong> are user provided YAML fragments that can be <em>enriched</em> by the plugin. This allows expert users to use plain configuration file with all their capabilities, but also to add project specific build information and avoid boilerplate code.</p>
 </li>
 </ul>
 </div>
@@ -619,11 +622,138 @@ table.CodeRay td.code>pre{padding:0}
 <div class="sect2">
 <h3 id="examples">1.4. Examples</h3>
 <div class="paragraph">
-<p>Enough words, lets have a look at some code. The following examples will demonstrate all three configurations variants in different Examples</p>
+<p>But let&#8217;s have a look at some code. The following examples will demonstrate all three configurations variants:</p>
 </div>
 <div class="sect3">
 <h4 id="zero-config">1.4.1. Zero-Config</h4>
+<div class="paragraph">
+<p>This minimal example <code>pom.xml</code> shows how a simple spring boot application can be dockerized and prepared for Kubernetes and OpenShift:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;project&gt;</span>
+  <span class="tag">&lt;modelVersion&gt;</span>4.0.0<span class="tag">&lt;/modelVersion&gt;</span>
 
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-sample-zero-config<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.0-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;packaging&gt;</span>jar<span class="tag">&lt;/packaging&gt;</span>
+
+  <span class="tag">&lt;parent&gt;</span>
+    <span class="tag">&lt;groupId&gt;</span>org.springframework.boot<span class="tag">&lt;/groupId&gt;</span>
+    <span class="tag">&lt;artifactId&gt;</span>spring-boot-starter-parent<span class="tag">&lt;/artifactId&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
+    <span class="tag">&lt;version&gt;</span>1.3.6.RELEASE<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;/parent&gt;</span>
+
+  <span class="tag">&lt;dependencies&gt;</span>
+    <span class="tag">&lt;dependency&gt;</span>
+      <span class="tag">&lt;groupId&gt;</span>org.springframework.boot<span class="tag">&lt;/groupId&gt;</span>
+      <span class="tag">&lt;artifactId&gt;</span>spring-boot-starter-web<span class="tag">&lt;/artifactId&gt;</span> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="tag">&lt;/dependency&gt;</span>
+  <span class="tag">&lt;/dependencies&gt;</span>
+
+  <span class="tag">&lt;build&gt;</span>
+    <span class="tag">&lt;plugins&gt;</span>
+      <span class="tag">&lt;plugin&gt;</span>
+        <span class="tag">&lt;groupId&gt;</span>org.springframework.boot<span class="tag">&lt;/groupId&gt;</span>
+        <span class="tag">&lt;artifactId&gt;</span>spring-boot-maven-plugin<span class="tag">&lt;/artifactId&gt;</span> <i class="conum" data-value="3"></i><b>(3)</b>
+      <span class="tag">&lt;/plugin&gt;</span>
+      <span class="tag">&lt;plugin&gt;</span>
+        <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+        <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span> <i class="conum" data-value="4"></i><b>(4)</b>
+        <span class="tag">&lt;version&gt;</span>3.0-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
+      <span class="tag">&lt;/plugin&gt;</span>
+    <span class="tag">&lt;/plugins&gt;</span>
+  <span class="tag">&lt;/build&gt;</span>
+<span class="tag">&lt;/project&gt;</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This minimalistic spring boot application uses the spring-boot parent POM for setting up dependencies and plugins</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The Spring Boot web starter dependency enables a simple embedded Tomcat for serving Spring MVC apps</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The <code>spring-boot-maven-plugin</code> is responsible for repackagign the application into a fat jar, including all dependencies and the embedded Tomcat</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>The <code>fabric8-maven-plugin</code> enables the automatic generation of a Docker image and Kubernetes / OpenShift descriptors including this Spring application.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>This setup make some opinionated decisions for you:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>As base image <a href="https://github.com/fabric8io-images/java/tree/master/images/alpine/openjdk8/jdk">fabric8/java-alpine-openjdk8-jdk</a> is chosen which enables <a href="https://www.jolokia.org">Jolokia</a> and <a href="https://github.com/prometheus/jmx_exporter">jmx_exporter</a>. It also comes with a sophistacted <a href="https://github.com/fabric8io-images/run-java-sh">startup script</a>.</p>
+</li>
+<li>
+<p>It will create a Kubernetes <a href="http://kubernetes.io/docs/user-guide/deployments/">Deployment</a> and a <a href="http://kubernetes.io/docs/user-guide/services/">Service</a> as resource objects</p>
+</li>
+<li>
+<p>It exports port 8080 as the apllication service port (and 8778 and 9779 for Jolokia and jmx_exporter access, respectively)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>These choices can be influenced by configuration options as decribed in <a href="#generator-spring-boot">Spring Boot Generator</a>.</p>
+</div>
+<div class="paragraph">
+<p>To start the Docker image build, you simply run</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bash">mvn package fabric8:build</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This will create the Docker image against a running Docker daemon (which must be accessible either via Unix Socker or with the URL set in <code>DOCKER_HOST</code>). Alternatively, when using <code>mvn -Dfabric8.mode=openshift package fabric8:build</code> and connected to an OpenShift cluster, then a Docker build will be performed on OpenShift which at the end creates an <a href="https://docs.openshift.com/enterprise/3.1/architecture/core_concepts/builds_and_image_streams.html">ImageStream</a>.</p>
+</div>
+<div class="paragraph">
+<p>To deploy the resources to the cluster call</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bash">mvn fabric8:resource fabric8:deploy</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>By default a <em>Service</em> and a <em>Deployment</em> object pointing to the created Docker image is created. When running in OpenShift mode, a <em>Service</em> and <em>DeploymentConfig</em> which refers the <em>ImageStream</em> created with <code>fabric8:build</code> will be installed.</p>
+</div>
+<div class="paragraph">
+<p>Of course you can bind all those fabric8-goals to execution phases as well, so that they are called along with standard lifecycle goals like <code>install</code>:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example for lifecycle bindings</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+
+  <span class="comment">&lt;!-- ... --&gt;</span>
+
+  <span class="tag">&lt;executions&gt;</span>
+    <span class="tag">&lt;execution&gt;</span>
+      <span class="tag">&lt;goals&gt;</span>
+        <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
+        <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
+        <span class="tag">&lt;goal&gt;</span>deploy<span class="tag">&lt;/goal&gt;</span>
+      <span class="tag">&lt;/goals&gt;</span>
+    <span class="tag">&lt;/execution&gt;</span>
+  <span class="tag">&lt;/executions&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
 </div>
 <div class="sect3">
 <h4 id="xml-configuration">1.4.2. XML Configuration</h4>
@@ -649,7 +779,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>3.1.1<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.0-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1773,8 +1903,8 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 3.1.1<br>
-Last updated 2016-07-25 18:26:15 UTC
+Version 3.0-SNAPSHOT<br>
+Last updated 2016-07-26 07:29:44 UTC
 </div>
 </div>
 </body>
