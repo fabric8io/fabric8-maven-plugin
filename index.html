@@ -536,27 +536,28 @@ table.CodeRay td.code>pre{padding:0}
 </ul>
 </li>
 <li><a href="#installation">2. Installation</a></li>
-<li><a href="#goals">3. Goals</a>
+<li><a href="#image-configuration">3. Image configuration</a></li>
+<li><a href="#goals">4. Goals</a>
 <ul class="sectlevel2">
-<li><a href="#fabric8:resource">3.1. <strong>fabric8:resource</strong></a></li>
-<li><a href="#fabric8:build">3.2. <strong>fabric8:build</strong></a>
+<li><a href="#fabric8:resource">4.1. <strong>fabric8:resource</strong></a></li>
+<li><a href="#fabric8:build">4.2. <strong>fabric8:build</strong></a>
 <ul class="sectlevel3">
-<li><a href="#build-configuration">3.2.1. Configuration</a></li>
-<li><a href="#build-assembly">3.2.2. Assembly</a></li>
-<li><a href="#misc-env">3.2.3. Environment and Labels</a></li>
-<li><a href="#misc-startup">3.2.4. Startup Arguments</a></li>
-<li><a href="#build-buildargs">3.2.5. Build Args</a></li>
+<li><a href="#build-configuration">4.2.1. Configuration</a></li>
+<li><a href="#build-assembly">4.2.2. Assembly</a></li>
+<li><a href="#misc-env">4.2.3. Environment and Labels</a></li>
+<li><a href="#misc-startup">4.2.4. Startup Arguments</a></li>
+<li><a href="#build-buildargs">4.2.5. Build Args</a></li>
 </ul>
 </li>
-<li><a href="#fabric8:push">3.3. <strong>fabric8:push</strong></a></li>
-<li><a href="#fabric8:deploy">3.4. <strong>fabric8:deploy</strong></a></li>
-<li><a href="#fabric8:watch">3.5. <strong>fabric8:watch</strong></a></li>
+<li><a href="#fabric8:push">4.3. <strong>fabric8:push</strong></a></li>
+<li><a href="#fabric8:deploy">4.4. <strong>fabric8:deploy</strong></a></li>
+<li><a href="#fabric8:watch">4.5. <strong>fabric8:watch</strong></a></li>
 </ul>
 </li>
-<li><a href="#extensions">4. Extensions</a>
+<li><a href="#extensions">5. Extensions</a>
 <ul class="sectlevel2">
-<li><a href="#generator">4.1. Generator</a></li>
-<li><a href="#enricher">4.2. Enricher</a></li>
+<li><a href="#generator">5.1. Generator</a></li>
+<li><a href="#enricher">5.2. Enricher</a></li>
 </ul>
 </li>
 </ul>
@@ -770,6 +771,135 @@ XML based configuration is implemented only partially and not recommended to use
 </tr>
 </table>
 </div>
+<div class="paragraph">
+<p>Altough the Zero-config mode with its generators can be tweaked with options up to a certain degree. In many cases more flexibility and power is required, though. For this an XML based plugin configuration can be use, much similar to the <a href="https://fabric8io.github.io/docker-maven-plugin/#configuration">XML configuration</a> used by <code>docker-maven-plugin</code>.</p>
+</div>
+<div class="paragraph">
+<p>The plugin configuration can be roughly divided into the following sections:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>A global configuration options are responsible for tuning the behaviour of plugin goals</p>
+</li>
+<li>
+<p><code>&lt;images&gt;</code> section which defines the Docker <a href="#image-configuratuon">images</a> to build. It has the <a href="https://fabric8io.github.io/docker-maven-plugin/#image-configuration">same syntax</a> as the similar configuration of <code>docker-maven-plugin</code> (except that <code>&lt;run&gt;</code> and <code>&lt;external&gt;</code> sub-elements are ignored)</p>
+</li>
+<li>
+<p><code>&lt;resource&gt;</code> is used to defined the resource descriptors for deploying on an OpenShift or Kuberneres cluster.</p>
+</li>
+<li>
+<p><code>&lt;generator&gt;</code> is for configuring <a href="#generator">generators</a> which are responsible for creating images. Generators are used as an alternative to a dedicates <code>&lt;images&gt;</code> section.</p>
+</li>
+<li>
+<p><code>&lt;enricher&gt;</code> is used to configure various aspects of <a href="#enricher">enrichers</a> for creating or enhancing resource descriptors.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>A working example can be found in the  <a href="https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/xml-config">samples/xml-config</a> directory. An extract of the plugin configuration is shown in the next example</p>
+</div>
+<div class="listingblock">
+<div class="title">Example for an XML configuration</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
+  <span class="tag">&lt;images&gt;</span>  <i class="conum" data-value="1"></i><b>(1)</b>
+    <span class="tag">&lt;image&gt;</span>
+      <span class="tag">&lt;name&gt;</span>xml-config-demo:1.0.0<span class="tag">&lt;/name&gt;</span>
+      <span class="comment">&lt;!-- &quot;alias&quot; is used to correlate to the containers in the pod spec --&gt;</span>
+      <span class="tag">&lt;alias&gt;</span>camel-app<span class="tag">&lt;/alias&gt;</span>
+      <span class="tag">&lt;build&gt;</span>
+        <span class="tag">&lt;from&gt;</span>fabric8/java<span class="tag">&lt;/from&gt;</span>
+        <span class="tag">&lt;assembly&gt;</span>
+          <span class="tag">&lt;basedir&gt;</span>/deployments<span class="tag">&lt;/basedir&gt;</span>
+          <span class="tag">&lt;descriptorRef&gt;</span>artifact-with-dependencies<span class="tag">&lt;/descriptorRef&gt;</span>
+        <span class="tag">&lt;/assembly&gt;</span>
+        <span class="tag">&lt;env&gt;</span>
+          <span class="tag">&lt;JAVA_LIB_DIR&gt;</span>/deployments<span class="tag">&lt;/JAVA_LIB_DIR&gt;</span>
+          <span class="tag">&lt;JAVA_MAIN_CLASS&gt;</span>org.apache.camel.cdi.Main<span class="tag">&lt;/JAVA_MAIN_CLASS&gt;</span>
+        <span class="tag">&lt;/env&gt;</span>
+      <span class="tag">&lt;/build&gt;</span>
+    <span class="tag">&lt;/image&gt;</span>
+  <span class="tag">&lt;/images&gt;</span>
+
+  <span class="tag">&lt;resources&gt;</span> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="tag">&lt;labels&gt;</span> <i class="conum" data-value="3"></i><b>(3)</b>
+      <span class="tag">&lt;group&gt;</span>quickstarts<span class="tag">&lt;/group&gt;</span>
+    <span class="tag">&lt;/labels&gt;</span>
+
+    <span class="tag">&lt;deployment&gt;</span> <i class="conum" data-value="4"></i><b>(4)</b>
+      <span class="tag">&lt;name&gt;</span>${project.artifactId}<span class="tag">&lt;/name&gt;</span>
+      <span class="tag">&lt;replicas&gt;</span>1<span class="tag">&lt;/replicas&gt;</span>
+
+      <span class="tag">&lt;containers&gt;</span> <i class="conum" data-value="5"></i><b>(5)</b>
+        <span class="tag">&lt;container&gt;</span>
+          <span class="tag">&lt;alias&gt;</span>camel-app<span class="tag">&lt;/alias&gt;</span> <i class="conum" data-value="6"></i><b>(6)</b>
+          <span class="tag">&lt;ports&gt;</span>
+            <span class="tag">&lt;port&gt;</span>8778<span class="tag">&lt;/port&gt;</span>
+          <span class="tag">&lt;/ports&gt;</span>
+          <span class="tag">&lt;mounts&gt;</span>
+            <span class="tag">&lt;scratch&gt;</span>/var/scratch<span class="tag">&lt;/scratch&gt;</span>
+          <span class="tag">&lt;/mounts&gt;</span>
+        <span class="tag">&lt;/container&gt;</span>
+      <span class="tag">&lt;/containers&gt;</span>
+
+      <span class="tag">&lt;volumes&gt;</span> <i class="conum" data-value="7"></i><b>(7)</b>
+        <span class="tag">&lt;volume&gt;</span>
+          <span class="tag">&lt;name&gt;</span>scratch<span class="tag">&lt;/name&gt;</span>
+          <span class="tag">&lt;type&gt;</span>emptyDir<span class="tag">&lt;/type&gt;</span>
+        <span class="tag">&lt;/volume&gt;</span>
+      <span class="tag">&lt;/volumes&gt;</span>
+    <span class="tag">&lt;/deployment&gt;</span>
+
+    <span class="tag">&lt;services&gt;</span> <i class="conum" data-value="8"></i><b>(8)</b>
+      <span class="tag">&lt;service&gt;</span>
+        <span class="tag">&lt;name&gt;</span>camel-service<span class="tag">&lt;/name&gt;</span>
+        <span class="tag">&lt;headless&gt;</span>true<span class="tag">&lt;/headless&gt;</span>
+      <span class="tag">&lt;/service&gt;</span>
+    <span class="tag">&lt;/services&gt;</span>
+  <span class="tag">&lt;/resources&gt;</span>
+<span class="tag">&lt;/configuration&gt;</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Standard docker-maven-plugin configuration for building one single Docker image</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Kubernetes / OpenShift resources to create</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Labels which should be applied globally to all resource objects</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Definition of a <a href="http://kubernetes.io/docs/user-guide/deployments/">Deployment</a> to create</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Container to include in the deployment</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>An <em>alias</em> is used to correlate a container&#8217;s image with the image definition in the <code>&lt;images&gt;</code> section where each image carry an alias. Can be omitted if only a single image is used</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td><a href="http://kubernetes.io/docs/user-guide/volumes/">Volume</a> definitions used in a Deployment&#8217;s <em>ReplicaSet</em></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td>One or more <a href="http://kubernetes.io/docs/user-guide/services/">Service</a> definitions.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The XML resource configuration is based on plain Kubernetes resource objects. For creating OpenShift resource descriptor an automatic conversion will happen, e.g. from Kubernetes <a href="http://kubernetes.io/docs/user-guide/deployments/">Deployment</a> to an OpenShift <a href="https://docs.openshift.com/enterprise/3.0/dev_guide/deployments.html">DeploymentConfig</a>.</p>
+</div>
 </div>
 <div class="sect3">
 <h4 id="enhanced-yaml-descriptors">1.4.3. Enhanced YAML Descriptors</h4>
@@ -829,13 +959,127 @@ available goals are described below.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="goals">3. Goals</h2>
+<h2 id="image-configuration">3. Image configuration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The plugin&#8217;s configuration is centered around <em>images</em>. These are
+specified for each image within the <code>&lt;images&gt;</code> element of the
+configuration with one <code>&lt;image&gt;</code> element per image to use.</p>
+</div>
+<div class="paragraph">
+<p>The <code>&lt;image&gt;</code> element can contain the following sub elements:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 1. Image Configuration</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Each <code>&lt;image&gt;</code> configuration has a mandatory, unique docker
+repository <em>name</em>. This can include registry and tag parts, but also placeholder parameters. See below for a detailed explanation.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>alias</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Shortcut name for an image which can be used for
+identifying the image within this configuration. This is used when
+linking images together or for specifying it with the global <strong>image</strong> configuration element.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>registry</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Registry to use for this image. If the <code>name</code> already contains a registry this takes precedence. See <a href="#registry">Registry handling</a> for more details.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>build</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Element which contains all the configuration aspects when doing a <a href="#fabric8:build"><strong>fabric8:build</strong></a>. This element can be omitted if the image is only pulled from a registry e.g. as support for integration tests like database images.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>run</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Eelement which describe how containers should be
+created and run when <a href="#fabric8:start">[fabric8:start]</a> is called. If this image is only used a <em>data container</em> (i.e. is supposed only to be mounted as a volume) for exporting artifacts via volumes this section can be missing.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>external</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specification of external configuration as an alternative to this XML based configuration with <code>&lt;run&gt;</code> and <code>&lt;build&gt;</code>. It contains a <code>&lt;type&gt;</code> element specifying the handler for getting the configuration. See <a href="#external-configuration">External configuration</a> for details.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<div class="title">Name placeholders</div>
+<p>When specifying the name you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 2. Placeholders</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Placeholder</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%g</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The last part of the Maven group name, sanitized so that it can be used as username on GitHub. Only the part after the last dot is used. E.g. for a group id <code>io.fabric8</code> this placeholder would insert <code>fabric8</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%a</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A sanitized version of the artefact id so that it can be used as part of an Docker image name. I.e. it is converted to all lower case (as required by Docker)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%v</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The project version. Synonym to <code>${project.version}</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%l</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If the project version ends with <code>-SNAPSHOT</code> then this placeholder is <code>latest</code>, otherwise its the full version (same as <code>%v</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%t</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If the project version ends with <code>-SNAPSHOT</code> this placeholder resolves to <code>snapshot-&lt;timestamp&gt;</code> where timestamp has the date format <code>yyMMdd-HHmmss-SSSS</code> (eg <code>snapshot-</code>). This feature is especially useful during development in oder to avoid conflicts when images are to be updated which are still in use. You need to take care yourself of cleaning up old images afterwards, though.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Either a <code>&lt;build&gt;</code> or <code>&lt;run&gt;</code> section must be present. These are explained in details in the corresponding goal sections.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
+  ....
+  <span class="tag">&lt;images&gt;</span>
+    <span class="tag">&lt;image&gt;</span>
+      <span class="tag">&lt;name&gt;</span>%g/docker-demo:0.1<span class="tag">&lt;/name&gt;</span>
+      <span class="tag">&lt;alias&gt;</span>service<span class="tag">&lt;/alias&gt;</span>
+      <span class="tag">&lt;run&gt;</span>....<span class="tag">&lt;/run&gt;</span>
+      <span class="tag">&lt;build&gt;</span>....<span class="tag">&lt;/build&gt;</span>
+    <span class="tag">&lt;/image&gt;</span>
+  <span class="tag">&lt;/images&gt;</span>
+<span class="tag">&lt;/configuration&gt;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="goals">4. Goals</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>This plugin supports the following goals, which are explained in the next sections:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 1. Plugin Goals</caption>
+<caption class="title">Table 3. Plugin Goals</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -873,7 +1117,7 @@ available goals are described below.</p>
 <p>Depending on whether the OpenShift or Kubernetes operational mode is used, the workflow and the performed actions differs :</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 2. Strategies</caption>
+<caption class="title">Table 4. Strategies</caption>
 <colgroup>
 <col style="width: 11.1111%;">
 <col style="width: 44.4444%;">
@@ -945,11 +1189,11 @@ available goals are described below.</p>
 </tbody>
 </table>
 <div class="sect2">
-<h3 id="fabric8:resource">3.1. <strong>fabric8:resource</strong></h3>
+<h3 id="fabric8:resource">4.1. <strong>fabric8:resource</strong></h3>
 
 </div>
 <div class="sect2">
-<h3 id="fabric8:build">3.2. <strong>fabric8:build</strong></h3>
+<h3 id="fabric8:build">4.2. <strong>fabric8:build</strong></h3>
 <div class="paragraph">
 <p>This goal will build all images which have a <code>&lt;build&gt;</code> configuration section, or, if the global configuration variable <code>image</code> (property:
 <code>docker.image</code>) is set, only the images contained in this variable (comma separated) will be built.</p>
@@ -1024,14 +1268,14 @@ the <code>&lt;build&gt;</code> configuration section.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-configuration">3.2.1. Configuration</h4>
+<h4 id="build-configuration">4.2.1. Configuration</h4>
 <div class="paragraph">
 <p>All build relevant configuration is contained in the <code>&lt;build&gt;</code> section
 of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
 <code>&lt;dockerFile&gt;</code> the following configuration options are available:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 3. Build configuration</caption>
+<caption class="title">Table 5. Build configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1197,12 +1441,12 @@ remote API.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-assembly">3.2.2. Assembly</h4>
+<h4 id="build-assembly">4.2.2. Assembly</h4>
 <div class="paragraph">
 <p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 4. Assembly Configuration</caption>
+<caption class="title">Table 6. Assembly Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1339,7 +1583,7 @@ predefined assembly descriptor. The following symbolic names can be
 used for <code>descriptorRef</code>:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 5. Predefined Assembly Descriptors</caption>
+<caption class="title">Table 7. Predefined Assembly Descriptors</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -1451,7 +1695,7 @@ possible to change the name of the final build artifact with the following:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="misc-env">3.2.3. Environment and Labels</h4>
+<h4 id="misc-env">4.2.3. Environment and Labels</h4>
 <div class="paragraph">
 <p>When creating a container one or more environment variables can be set via configuration with the <code>env</code> parameter</p>
 </div>
@@ -1485,7 +1729,7 @@ possible to change the name of the final build artifact with the following:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="misc-startup">3.2.4. Startup Arguments</h4>
+<h4 id="misc-startup">4.2.4. Startup Arguments</h4>
 <div class="paragraph">
 <p>Using <code>entryPoint</code> and <code>cmd</code> it is possible to specify the <a href="https://docs.docker.com/reference/builder/#entrypoint">entry point</a>
 or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a container.</p>
@@ -1505,7 +1749,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <p>A entry point or command can be specified in two alternative formats:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 6. Entrypoint and Command Configuration</caption>
+<caption class="title">Table 8. Entrypoint and Command Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1581,7 +1825,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-buildargs">3.2.5. Build Args</h4>
+<h4 id="build-buildargs">4.2.5. Build Args</h4>
 <div class="paragraph">
 <p>As described in section <a href="#build-configuration">Configuration</a> for external Dockerfiles <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg">Docker build arg</a> can be used. In addition to the
 configuration within the plugin configuration you can also use properties to specify them:</p>
@@ -1609,13 +1853,13 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:push">3.3. <strong>fabric8:push</strong></h3>
+<h3 id="fabric8:push">4.3. <strong>fabric8:push</strong></h3>
 <div class="paragraph">
 <p>This goal uploads images to the registry which have a <code>&lt;build&gt;</code> configuration section. The images to push can be restricted with with
 the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code> with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 7. Push options</caption>
+<caption class="title">Table 9. Push options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -1649,11 +1893,11 @@ more details.</p></td>
 </table>
 </div>
 <div class="sect2">
-<h3 id="fabric8:deploy">3.4. <strong>fabric8:deploy</strong></h3>
+<h3 id="fabric8:deploy">4.4. <strong>fabric8:deploy</strong></h3>
 
 </div>
 <div class="sect2">
-<h3 id="fabric8:watch">3.5. <strong>fabric8:watch</strong></h3>
+<h3 id="fabric8:watch">4.5. <strong>fabric8:watch</strong></h3>
 <div class="paragraph">
 <p>When developing and testing applications you will often have to rebuild Docker images and restart containers. Typing <code>fabric8:build</code> and <code>fabric8:start</code> all the time is cumbersome. With <code>fabric8:watch</code> you can enable automatic rebuilding of images and restarting of containers in case of updates.</p>
 </div>
@@ -1724,7 +1968,7 @@ to do this manually.</p>
 <p>This maven goal can be configured with the following top-level parameters:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 8. Watch configuration</caption>
+<caption class="title">Table 10. Watch configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -1805,7 +2049,7 @@ below how this can be specified.</p>
 <p>Image specific watch configuration goes into an extra image-level <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). The following parameters are recognized:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 9. Watch configuration for a single image</caption>
+<caption class="title">Table 11. Watch configuration for a single image</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1885,7 +2129,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 </div>
 </div>
 <div class="sect1">
-<h2 id="extensions">4. Extensions</h2>
+<h2 id="extensions">5. Extensions</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>This plugin provides two major extensions hook how the creation of images and resources descriptors can be customized:</p>
@@ -1904,11 +2148,11 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p>The following sections described which Generators and Enrichers are available and how own customizations can be hooked in.</p>
 </div>
 <div class="sect2">
-<h3 id="generator">4.1. Generator</h3>
+<h3 id="generator">5.1. Generator</h3>
 
 </div>
 <div class="sect2">
-<h3 id="enricher">4.2. Enricher</h3>
+<h3 id="enricher">5.2. Enricher</h3>
 
 </div>
 </div>
@@ -1917,7 +2161,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <div id="footer">
 <div id="footer-text">
 Version 3.0-SNAPSHOT<br>
-Last updated 2016-07-26 08:56:10 UTC
+Last updated 2016-07-26 09:19:44 UTC
 </div>
 </div>
 </body>
