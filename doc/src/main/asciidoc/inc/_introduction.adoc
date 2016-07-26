@@ -30,12 +30,13 @@ In order to capture many use case scenarios, there are three levels of configura
 
 * *XML plugin configuration* mode is similar to what https://fabric8io.github.io/docker-maven-plugin/#example[docker-maven-plugin] provides. This allows for type safe configuration with IDE support, but only a subset of possible resource descriptor festures is provided.
 
-* *Kubernetes &amp; OpenShift resource descruptors* are user provided YAML fragments that can be _enriched_ by the plugin. This allows expert users to use plain configuration file with all their capabilities, but also to add project specific build information and avoid boilerplate code.
+* *Kubernetes &amp; OpenShift resource fragmwnra* are user provided YAML files that can be _enriched_ by the plugin. This allows expert users to use plain configuration file with all their capabilities, but also to add project specific build information and avoid boilerplate code.
 
 == Examples
 
 But let's have a look at some code. The following examples will demonstrate all three configurations variants:
 
+[[zero-config]]
 === Zero-Config
 
 This minimal but full working example `pom.xml` shows how a simple spring boot application can be dockerized and prepared for Kubernetes and OpenShift. The full example can be found in directory https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/zero-config[samples/zero-config].
@@ -150,7 +151,6 @@ The plugin configuration can be roughly divided into the following sections:
 A working example can be found in the  https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/xml-config[samples/xml-config] directory. An extract of the plugin configuration is shown in the next example
 
 .Example for an XML configuration
-
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
 <configuration>
@@ -222,4 +222,44 @@ A working example can be found in the  https://github.com/fabric8io/fabric8-mave
 
 The XML resource configuration is based on plain Kubernetes resource objects. For creating OpenShift resource descriptor an automatic conversion will happen, e.g. from Kubernetes http://kubernetes.io/docs/user-guide/deployments/[Deployment] to an OpenShift https://docs.openshift.com/enterprise/3.0/dev_guide/deployments.html[DeploymentConfig].
 
-=== Enhanced YAML Descriptors
+=== Resource Fragments
+
+The third configuration option is to use an external configuration in form of YAML resource descriptors which are located in the  `src/main/fabric8` directory. Each resource get is own file, which contains some skeleton of a resource description. The plugin will pick up the resource, enriches it and the combines all to a single `kubernetes.yml` and `openshift.yml`. Within these descriptor files you are can freely use any Kubernetes feature. Note, that in order to support simultaneously both OpenShift and Kubernetes, there is currently no way to specify OpenShift feature only this way (but this might change).
+
+Let's have a look at an example from https://github.com/rhuss/fabric8-maven-plugin/tree/master/samples/external-resources[samples/external-resources]. This is a plain spring-boot application, whose images are auto generated like in the <<zero-config, Zero-Config>> case. The resource fragments are in `src/mainfabric8`.
+
+.Example fragment "deployment.yml"
+[source,yaml,indent=0,subs="verbatim,quotes,attributes"]
+----
+  spec:
+    replicas: 1
+    template:
+      spec:
+        volumes:
+          - name: config
+            gitRepo:
+              repository: 'https://github.com/jstrachan/sample-springboot-config.git'
+              revision: 667ee4db6bc842b127825351e5c9bae5a4fb2147
+              directory: .
+        containers:
+          - volumeMounts:
+              - name: config
+                mountPath: /app/config
+            env:
+              - name: KUBERNETES_NAMESPACE
+                valueFrom:
+                  fieldRef:
+                    apiVersion: v1
+                    fieldPath: metadata.namespace
+        serviceAccount: ribbon
+----
+
+As you can see, there is no `metadata` section as expected for each Kubernetes resource object. This section will be created automatically by fabric8-maven-plugin. The object's `Kind`, if not given, will be extracted from the filename. In this case its a `Deployment` because the file is called `deployment.xml`. For each supported resource type such a mapping exists. In addition you could specify a name in like in `myapp-deployment.xml` to give the resource a fixed name. Otherwise it will be automatically extracted from project information (i.e. the artificact id).
+
+Here also the reference to the image is missing. In this case it will be automatically connected to the image you are building with this plugin (And you already know, that the image definition comes either from a generator or by a dedicated image plugin configuration).
+
+NOTE: For building images there is also an alternative mode using external Dockerfiles, in addition to the XML based configuration. Refer to <<build-overview, fabric8:build>> for details.
+
+'''
+
+Now that we have seen some examples for the various ways how this plugin can be used, the following section will describe the plugin goals and extension points in detail.
