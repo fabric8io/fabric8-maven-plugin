@@ -137,4 +137,89 @@ Of course you can bind all those fabric8-goals to execution phases as well, so t
 
 WARNING: XML based configuration is implemented only partially and not recommended to use right now.
 
+Altough the Zero-config mode with its generators can be tweaked with options up to a certain degree. In many cases more flexibility and power is required, though. For this an XML based plugin configuration can be use, much similar to the https://fabric8io.github.io/docker-maven-plugin/#configuration[XML configuration] used by `docker-maven-plugin`.
+
+The plugin configuration can be roughly divided into the following sections:
+
+* A global configuration options are responsible for tuning the behaviour of plugin goals
+* ``<images>`` section which defines the Docker <<image-configuratuon,images>> to build. It has the https://fabric8io.github.io/docker-maven-plugin/#image-configuration[same syntax] as the similar configuration of `docker-maven-plugin` (except that `<run>` and `<external>` sub-elements are ignored)
+* `<resource>` is used to defined the resource descriptors for deploying on an OpenShift or Kuberneres cluster.
+* `<generator>` is for configuring <<generator,generators>> which are responsible for creating images. Generators are used as an alternative to a dedicates `<images>` section.
+* `<enricher>` is used to configure various aspects of <<enricher,enrichers>> for creating or enhancing resource descriptors.
+
+A working example can be found in the  https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/xml-config[samples/xml-config] directory. An extract of the plugin configuration is shown in the next example
+
+.Example for an XML configuration
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+<configuration>
+  <images>  <!--1-->
+    <image>
+      <name>xml-config-demo:1.0.0</name>
+      <!-- "alias" is used to correlate to the containers in the pod spec -->
+      <alias>camel-app</alias>
+      <build>
+        <from>fabric8/java</from>
+        <assembly>
+          <basedir>/deployments</basedir>
+          <descriptorRef>artifact-with-dependencies</descriptorRef>
+        </assembly>
+        <env>
+          <JAVA_LIB_DIR>/deployments</JAVA_LIB_DIR>
+          <JAVA_MAIN_CLASS>org.apache.camel.cdi.Main</JAVA_MAIN_CLASS>
+        </env>
+      </build>
+    </image>
+  </images>
+
+  <resources> <!--2-->
+    <labels> <!--3-->
+      <group>quickstarts</group>
+    </labels>
+
+    <deployment> <!--4-->
+      <name>${project.artifactId}</name>
+      <replicas>1</replicas>
+
+      <containers> <!--5-->
+        <container>
+          <alias>camel-app</alias> <!--6-->
+          <ports>
+            <port>8778</port>
+          </ports>
+          <mounts>
+            <scratch>/var/scratch</scratch>
+          </mounts>
+        </container>
+      </containers>
+
+      <volumes> <!--7-->
+        <volume>
+          <name>scratch</name>
+          <type>emptyDir</type>
+        </volume>
+      </volumes>
+    </deployment>
+
+    <services> <!--8-->
+      <service>
+        <name>camel-service</name>
+        <headless>true</headless>
+      </service>
+    </services>
+  </resources>
+</configuration>
+----
+<1> Standard docker-maven-plugin configuration for building one single Docker image
+<2> Kubernetes / OpenShift resources to create
+<3> Labels which should be applied globally to all resource objects
+<4> Definition of a http://kubernetes.io/docs/user-guide/deployments/[Deployment] to create
+<5> Container to include in the deployment
+<6> An _alias_ is used to correlate a container's image with the image definition in the `<images>` section where each image carry an alias. Can be omitted if only a single image is used
+<7> http://kubernetes.io/docs/user-guide/volumes/[Volume] definitions used in a Deployment's _ReplicaSet_
+<8> One or more http://kubernetes.io/docs/user-guide/services/[Service] definitions.
+
+The XML resource configuration is based on plain Kubernetes resource objects. For creating OpenShift resource descriptor an automatic conversion will happen, e.g. from Kubernetes http://kubernetes.io/docs/user-guide/deployments/[Deployment] to an OpenShift https://docs.openshift.com/enterprise/3.0/dev_guide/deployments.html[DeploymentConfig].
+
 === Enhanced YAML Descriptors
