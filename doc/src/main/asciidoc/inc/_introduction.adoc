@@ -38,7 +38,7 @@ But let's have a look at some code. The following examples will demonstrate all 
 
 === Zero-Config
 
-This minimal example `pom.xml` shows how a simple spring boot application can be dockerized and prepared for Kubernetes and OpenShift:
+This minimal but full working example `pom.xml` shows how a simple spring boot application can be dockerized and prepared for Kubernetes and OpenShift. The full example can be found in directory https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/zero-config[samples/zero-config].
 
 .Example
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
@@ -86,7 +86,7 @@ This minimal example `pom.xml` shows how a simple spring boot application can be
 
 This setup make some opinionated decisions for you:
 
-* As base image https://github.com/fabric8io-images/java/tree/master/images/alpine/openjdk8/jdk[fabric8/java-alpine-openjdk8-jdk] is chosen which enables https://www.jolokia.org[Jolokia] and https://github.com/prometheus/jmx_exporter[jmx_exporter]. It also comes with a sophistacted https://github.com/fabric8io-images/run-java-sh[startup script].
+* As base image https://github.com/fabric8io-images/java/tree/master/images/alpine/openjdk8/jdk[fabric8/java-alpine-openjdk8-jdk] is chosen which enables https://www.jolokia.org[Jolokia] and https://github.com/prometheus/jmx_exporter[jmx_exporter]. It also comes with a sophisticated https://github.com/fabric8io-images/run-java-sh[startup script].
 * It will create a Kubernetes http://kubernetes.io/docs/user-guide/deployments/[Deployment] and a http://kubernetes.io/docs/user-guide/services/[Service] as resource objects
 * It exports port 8080 as the apllication service port (and 8778 and 9779 for Jolokia and jmx_exporter access, respectively)
 
@@ -135,5 +135,6 @@ Of course you can bind all those fabric8-goals to execution phases as well, so t
 
 === XML Configuration
 
+WARNING: XML based configuration is implemented only partially and not recommended to use right now.
 
 === Enhanced YAML Descriptors
