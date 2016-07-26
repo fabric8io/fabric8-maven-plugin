@@ -2,38 +2,136 @@
 [[introduction]]
 = Introduction
 
-The *fabric8-maven-plugin* brings your Java applications to http://kubernetes.io/[Kubernetes] and https://www.openshift.com/[OpenShift]. It provides a tight integration into http://maven.apache.org[Maven] builds and benefits from the build information already given. It focuses on the following aspect:
+The *fabric8-maven-plugin* brings your Java applications to http://kubernetes.io/[Kubernetes] and https://www.openshift.com/[OpenShift]. It provides a tight integration into http://maven.apache.org[Maven] builds and benefits from the build information already given. The main tasks where fabric8-maven-plugin can help is in <<building-images,building images>> and creating Kubernetes and OpenShift <<resource-descriptors,resource descriptors>>.
 
+[[building-images]]
 == Building Images
 
-One main task of this plugin is to create Docker images holding the actual application and which can be deployed on Kubernetes / OpenShift. This is done with the <<fabric8:build>> goal. It is easy to include build artifacts and their dependencies into an image. The plugin uses the assembly descriptor format from the http://maven.apache.org/plugins/maven-assembly-plugin/[maven-assembly-plugin] to specify the content which will be added from a sub-directory in the image (`/deployments` by default). Images that are built with this plugin can then be pushed to public or private Docker registries with <<fabric8:push>>.
+The <<fabric8:build>> goal is for creating Docker images which carrythe actual application and which can be deployed on Kubernetes or OpenShift. It is easy to include build artifacts and their dependencies. The plugin uses the assembly descriptor format from the http://maven.apache.org/plugins/maven-assembly-plugin/[maven-assembly-plugin] to specify the content which will be added to a sub-directory in the image (`/deployments` by default). Images that are built with this plugin can then be pushed to public or private Docker registries with <<fabric8:push>>.
 
 Depending on the operational mode, for building the actual image either a Docker daemon is contacted directly or an https://docs.openshift.com/enterprise/3.0/architecture/core_concepts/builds_and_image_streams.html#docker-build[OpenShift Docker Build] is performed.
 
 A special <<fabric8:watch>> goal allows for reacting on code changes and automatic recreation of images or copying new artifacts into running container.
 
-This image related features are inherited from the https://github.com/fabric8io/docker-maven-plugin[fabric8io/docker-maven-plugin] which has a rich configuration syntax for creating images.
+These image related features are inherited from the https://github.com/fabric8io/docker-maven-plugin[fabric8io/docker-maven-plugin] which is transparently included in this plugin.
 
+[[resource-descriptors]]
 == Kubernetes and OpenShift Resource Descriptors
 
-With <<fabric8:resource>> Kubernetes and OpenShift resource descriptors can be created from the build information for creating the corresponding resource object. These files are packaged within the Maven artifacts crearted and can be deployed to a running orchestration platform with <<fabric8:deploy>>.
+With <<fabric8:resource>> Kubernetes and OpenShift resource descriptors can be created from the build information for creating the corresponding resource object. These files are packaged within the Maven artifacts created and can be deployed to a running orchestration platform with <<fabric8:deploy>>.
+
+You only specify a fragment of the real resource descriptors which will be enriched by this plugin with various extra informations taken from the build. This drastically can reduce boilerplate code for common scenarios. It is also possible to auto-create resource objects like services or replica-set without explicitly declaring it.
 
 == Configuration
 
-In order to capture many use case scenarios, this plugin provides three levels of configuration:
+In order to capture many use case scenarios, there are three levels of configuration:
 
-* *Zero-Config* which is similar to spring-boot-generator the plugin makes some opinionated decisions based what it finds in the pom.xml (like the base image to use, which ports to expose, ...). Great for starting up things and for keeping our quickstarts small and tidy.
+* *Zero-Config* mode makes some decisions based what is present in the pom.xml like what base image to use or which ports to expose. This is great for starting up things and for keeping quickstart applications small and tidy.
 
-* *XML plugin configuration* which is similar to what the https://fabric8io.github.io/docker-maven-plugin/#example[docker-maven-plugin] provides. This allows for type safe configuration with IDE support.
+* *XML plugin configuration* mode is similar to what https://fabric8io.github.io/docker-maven-plugin/#example[docker-maven-plugin] provides. This allows for type safe configuration with IDE support, but only a subset of possible resource descriptor festures is provided.
 
-* *Kubernetes &amp; OpenShift YAML files* which are given YAML fragments and that can be _enriched_ by the plugin. This allows expert users to use plain configuration file with all their capabilities, but also to add project specific build information.
+* *Kubernetes &amp; OpenShift resource descruptors* are user provided YAML fragments that can be _enriched_ by the plugin. This allows expert users to use plain configuration file with all their capabilities, but also to add project specific build information and avoid boilerplate code.
 
 == Examples
 
-Enough words, lets have a look at some code. The following examples will demonstrate all three configurations variants in different Examples
+But let's have a look at some code. The following examples will demonstrate all three configurations variants:
 
 === Zero-Config
 
+This minimal example `pom.xml` shows how a simple spring boot application can be dockerized and prepared for Kubernetes and OpenShift:
+
+.Example
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+<project>
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>io.fabric8</groupId>
+  <artifactId>fabric8-maven-sample-zero-config</artifactId>
+  <version>{version}</version>
+  <packaging>jar</packaging>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId> <!--1-->
+    <version>1.3.6.RELEASE</version>
+  </parent>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId> <!--2-->
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId> <!--3-->
+      </plugin>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-plugin</artifactId> <!--4-->
+        <version>{version}</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+----
+<1> This minimalistic spring boot application uses the spring-boot parent POM for setting up dependencies and plugins
+<2> The Spring Boot web starter dependency enables a simple embedded Tomcat for serving Spring MVC apps
+<3> The `spring-boot-maven-plugin` is responsible for repackagign the application into a fat jar, including all dependencies and the embedded Tomcat
+<4> The `fabric8-maven-plugin` enables the automatic generation of a Docker image and Kubernetes / OpenShift descriptors including this Spring application.
+
+This setup make some opinionated decisions for you:
+
+* As base image https://github.com/fabric8io-images/java/tree/master/images/alpine/openjdk8/jdk[fabric8/java-alpine-openjdk8-jdk] is chosen which enables https://www.jolokia.org[Jolokia] and https://github.com/prometheus/jmx_exporter[jmx_exporter]. It also comes with a sophistacted https://github.com/fabric8io-images/run-java-sh[startup script].
+* It will create a Kubernetes http://kubernetes.io/docs/user-guide/deployments/[Deployment] and a http://kubernetes.io/docs/user-guide/services/[Service] as resource objects
+* It exports port 8080 as the apllication service port (and 8778 and 9779 for Jolokia and jmx_exporter access, respectively)
+
+These choices can be influenced by configuration options as decribed in <<generator-spring-boot,Spring Boot Generator>>.
+
+To start the Docker image build, you simply run
+
+[source,bash]
+----
+mvn package fabric8:build
+----
+
+This will create the Docker image against a running Docker daemon (which must be accessible either via Unix Socker or with the URL set in `DOCKER_HOST`). Alternatively, when using `mvn -Dfabric8.mode=openshift package fabric8:build` and connected to an OpenShift cluster, then a Docker build will be performed on OpenShift which at the end creates an https://docs.openshift.com/enterprise/3.1/architecture/core_concepts/builds_and_image_streams.html[ImageStream].
+
+To deploy the resources to the cluster call
+
+[source,bash]
+----
+mvn fabric8:resource fabric8:deploy
+----
+
+By default a _Service_ and a _Deployment_ object pointing to the created Docker image is created. When running in OpenShift mode, a _Service_ and _DeploymentConfig_ which refers the _ImageStream_ created with `fabric8:build` will be installed.
+
+Of course you can bind all those fabric8-goals to execution phases as well, so that they are called along with standard lifecycle goals like `install`:
+
+.Example for lifecycle bindings
+[source, xml, indent=0]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>fabric8-maven-plugin</artifactId>
+
+  <!-- ... -->
+
+  <executions>
+    <execution>
+      <goals>
+        <goal>resource</goal>
+        <goal>build</goal>
+        <goal>deploy</goal>
+      </goals>
+    </execution>
+  </executions>
+</plugin>
+----
 
 === XML Configuration
 
