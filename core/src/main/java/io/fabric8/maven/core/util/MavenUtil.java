@@ -95,7 +95,11 @@ public class MavenUtil {
 
     public static String createDefaultResourceName(MavenProject project, String ... suffixes) {
         String suffix = StringUtils.join(suffixes, "-");
-        return project.getArtifactId() + (suffix.length() > 0 ? "-" + suffix : suffix);
+        String ret = project.getArtifactId() + (suffix.length() > 0 ? "-" + suffix : suffix);
+        if (ret.length() > 24) {
+            ret = ret.substring(0,24);
+        }
+        return ret.toLowerCase();
     }
 
     // ====================================================
