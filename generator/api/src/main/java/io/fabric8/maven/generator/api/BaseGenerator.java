@@ -16,7 +16,12 @@
 
 package io.fabric8.maven.generator.api;
 
+import java.util.Collections;
+import java.util.List;
+
 import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -57,6 +62,22 @@ abstract public class BaseGenerator implements Generator {
 
     protected String getConfig(Configs.Key key, String defaultVal) {
         return config.get(key, defaultVal);
+    }
+
+    protected void addLatestTagIfSnapshot(BuildImageConfiguration.Builder buildBuilder) {
+        MavenProject project = getProject();
+        if (project.getVersion().endsWith("-SNAPSHOT")) {
+            buildBuilder.tags(Collections.singletonList("latest"));
+        }
+    }
+
+    protected boolean containsBuildConfiguration(List<ImageConfiguration> configs) {
+        for (ImageConfiguration config : configs) {
+            if (config.getBuildConfiguration() != null) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

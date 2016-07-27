@@ -17,16 +17,15 @@
 package io.fabric8.maven.generator.springboot;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.generator.api.BaseGenerator;
-import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.generator.api.BaseGenerator;
+import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
 
@@ -72,16 +71,15 @@ public class SpringBootGenerator extends BaseGenerator {
         }
     }
 
+    @Override
+    public boolean isApplicable() {
+        MavenProject project = getProject();
+        return MavenUtil.hasPlugin(project,"org.springframework.boot:spring-boot-maven-plugin");
+    }
+
     private boolean shouldIncludeDefaultImage(List<ImageConfiguration> configs) {
         boolean combineEnabled = Configs.asBoolean(getConfig(Config.combine));
         return !containsBuildConfiguration(configs) || combineEnabled;
-    }
-
-    private void addLatestTagIfSnapshot(BuildImageConfiguration.Builder buildBuilder) {
-        MavenProject project = getProject();
-        if (project.getVersion().endsWith("-SNAPSHOT")) {
-            buildBuilder.tags(Collections.singletonList("latest"));
-        }
     }
 
     private List<String> extractPorts() {
@@ -105,19 +103,5 @@ public class SpringBootGenerator extends BaseGenerator {
                 .basedir("/app")
                 .descriptorRef("spring-boot")
                 .build();
-    }
-
-    private boolean containsBuildConfiguration(List<ImageConfiguration> configs) {
-        for (ImageConfiguration config : configs) {
-            if (config.getBuildConfiguration() != null) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    protected boolean isApplicable() {
-        MavenProject project = getProject();
-        return MavenUtil.hasPlugin(project,"org.springframework.boot:spring-boot-maven-plugin");
     }
 }

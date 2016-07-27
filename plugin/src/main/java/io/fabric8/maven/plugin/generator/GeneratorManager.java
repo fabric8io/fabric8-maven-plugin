@@ -50,8 +50,10 @@ public class GeneratorManager {
         generators = generatorConfig.order(generators,"generator");
         for (Generator generator : generators) {
             if (generatorConfig.use(generator.getName())) {
-                log.info("Calling generator %s", generator.getName());
-                ret = generator.customize(ret);
+                if (generator.isApplicable()) {
+                    log.info("Calling generator %s", generator.getName());
+                    ret = generator.customize(ret);
+                }
             }
         }
         return ret;

@@ -16,7 +16,6 @@
 package io.fabric8.maven.generator.karaf;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import io.fabric8.maven.core.util.Configs;
@@ -43,8 +42,7 @@ public class KarafGenerator extends BaseGenerator {
         user           {{ d = "jboss:jboss:jboss"; }},
         cmd            {{ d = "/deployments/deploy-and-run.sh"; }},
         webPort        {{ d = "8181"; }},
-        jolokiaPort    {{ d = "8778"; }},
-        prometheusPort {{ d = "9779"; }};
+        jolokiaPort    {{ d = "8778"; }};
 
         public String def() { return d; } protected String d;
     }
@@ -70,16 +68,15 @@ public class KarafGenerator extends BaseGenerator {
         }
     }
 
+    @Override
+    public boolean isApplicable() {
+        MavenProject project = getProject();
+        return MavenUtil.hasPlugin(project, "org.apache.karaf.tooling:karaf-maven-plugin");
+    }
+
     private boolean shouldIncludeDefaultImage(List<ImageConfiguration> configs) {
         boolean combineEnabled = Configs.asBoolean(getConfig(Config.combine));
         return !containsBuildConfiguration(configs) || combineEnabled;
-    }
-
-    private void addLatestTagIfSnapshot(BuildImageConfiguration.Builder buildBuilder) {
-        MavenProject project = getProject();
-        if (project.getVersion().endsWith("-SNAPSHOT")) {
-            buildBuilder.tags(Collections.singletonList("latest"));
-        }
     }
 
     private List<String> extractPorts() {
@@ -87,7 +84,6 @@ public class KarafGenerator extends BaseGenerator {
         List<String> answer = new ArrayList<>();
         addPortIfValid(answer, getConfig(Config.webPort));
         addPortIfValid(answer, getConfig(Config.jolokiaPort));
-        addPortIfValid(answer, getConfig(Config.prometheusPort));
         return answer;
     }
 
@@ -103,19 +99,5 @@ public class KarafGenerator extends BaseGenerator {
             .user(getConfig(Config.user))
             .descriptorRef("karaf")
             .build();
-    }
-
-    private boolean containsBuildConfiguration(List<ImageConfiguration> configs) {
-        for (ImageConfiguration config : configs) {
-            if (config.getBuildConfiguration() != null) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    protected boolean isApplicable() {
-        MavenProject project = getProject();
-        return MavenUtil.hasPlugin(project, "org.apache.karaf.tooling:karaf-maven-plugin");
     }
 }

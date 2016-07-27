@@ -17,19 +17,17 @@
 package io.fabric8.maven.generator.javaapp;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.generator.api.BaseGenerator;
-import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.generator.api.BaseGenerator;
+import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.utils.Strings;
-import org.apache.maven.project.MavenProject;
 
 /**
  */
@@ -79,16 +77,15 @@ public class JavaAppGenerator extends BaseGenerator {
         }
     }
 
+    @Override
+    public boolean isApplicable() {
+        String mainClass = getConfig(Config.mainClass);
+        return Strings.isNotBlank(mainClass);
+    }
+
     private boolean shouldIncludeDefaultImage(List<ImageConfiguration> configs) {
         boolean combineEnabled = Configs.asBoolean(getConfig(Config.combine));
         return !containsBuildConfiguration(configs) || combineEnabled;
-    }
-
-    private void addLatestTagIfSnapshot(BuildImageConfiguration.Builder buildBuilder) {
-        MavenProject project = getProject();
-        if (project.getVersion().endsWith("-SNAPSHOT")) {
-            buildBuilder.tags(Collections.singletonList("latest"));
-        }
     }
 
     private List<String> extractPorts() {
@@ -112,19 +109,5 @@ public class JavaAppGenerator extends BaseGenerator {
                 .basedir("/app")
                 .descriptorRef("java-app")
                 .build();
-    }
-
-    private boolean containsBuildConfiguration(List<ImageConfiguration> configs) {
-        for (ImageConfiguration config : configs) {
-            if (config.getBuildConfiguration() != null) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    protected boolean isApplicable() {
-        String mainClass = getConfig(Config.mainClass);
-        return Strings.isNotBlank(mainClass);
     }
 }
