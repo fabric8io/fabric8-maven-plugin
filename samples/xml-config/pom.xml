@@ -176,19 +176,14 @@
                   </build>
                 </image>
               </images>
-              <!-- Instead of "kubernetes", "openshift" can be used to switch on openshift mode (create templates,
-                  use image stream, use binary builds). When "openshift" is used, it has additional configuration to switch
-                  off openshift features, too) -->
+              <!-- resources to be created -->
               <resources>
-                <!-- Resource directory from where to pick up k8s resource templates which are filled in with
-                     maven properties and enriched by 'enrichers'-->
-                <resourceDir>src/main/fabric8</resourceDir>
                 <!-- Labels that are applied to all created objects -->
                 <labels>
                   <group>quickstarts</group>
                 </labels>
                 <!-- Definition of the ReplicationController / ReplicaSet. Any better name than "containers" ? -->
-                <replicaSet>
+                <deployment>
                   <!-- Name of the replication controller, which will have a sane default (container alisa, mvn coords, ..) -->
                   <name>${project.artifactId}</name>
                   <!-- Replica count-->
@@ -202,7 +197,7 @@
                            if there is only a single image added -->
                       <alias>camel-service</alias>
                       <ports>
-                        <!-- Ports to ex[ose in the pod specs -->
+                        <!-- Ports to expose in the pod specs -->
                         <port>8778</port>
                       </ports>
                       <mounts>
@@ -217,7 +212,7 @@
                       <type>emptyDir</type>
                     </volume>
                   </volumes>
-                </replicaSet>
+                </deployment>
                 <!-- Dedicated section for (multiple) services to define -->
                 <services>
                   <service>
