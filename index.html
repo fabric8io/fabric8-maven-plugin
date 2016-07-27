@@ -524,7 +524,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#introduction">1. Introduction</a>
 <ul class="sectlevel2">
 <li><a href="#building-images">1.1. Building Images</a></li>
-<li><a href="#resource-descriptors">1.2. Kubernetes and OpenShift Resource Descriptors</a></li>
+<li><a href="#resource-descriptors">1.2. Kubernetes and OpenShift Resources</a></li>
 <li><a href="#configuration">1.3. Configuration</a></li>
 <li><a href="#examples">1.4. Examples</a>
 <ul class="sectlevel3">
@@ -576,12 +576,15 @@ table.CodeRay td.code>pre{padding:0}
 <h2 id="introduction">1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <strong>fabric8-maven-plugin</strong> brings your Java applications to <a href="http://kubernetes.io/">Kubernetes</a> and <a href="https://www.openshift.com/">OpenShift</a>. It provides a tight integration into <a href="http://maven.apache.org">Maven</a> builds and benefits from the build information already given. The main tasks where fabric8-maven-plugin can help is in <a href="#building-images">building images</a> and creating Kubernetes and OpenShift <a href="#resource-descriptors">resource descriptors</a>.</p>
+<p>The <strong>fabric8-maven-plugin</strong> (f8-m-p) brings your Java applications on to <a href="http://kubernetes.io/">Kubernetes</a> and <a href="https://www.openshift.com/">OpenShift</a>.  It provides a tight integration into <a href="http://maven.apache.org">Maven</a> builds and benefits from the build information already provided. This plugin focus on two tasks: <em>Building Docker images</em> and <em>creating Kubernetes and OpenShift resource descriptors</em>. It can be configured very flexibly and supports multiple configuration models for creating : A <em>Zero-Config</em> setup allows for a quick ramp-up with some opinionated defaults. For more advanced requirementes an <em>XML configuration</em> provides additional configuration options which can be added to the pom.xml. For the full power in order to tune all facets of the creation external <em>resource fragments</em> and <em>Dockerfiles</em> can be used.</p>
+</div>
+<div class="paragraph">
+<p>This introduction will explain how f8-m-p supports these tasks and demonstrates the different configuration models with examples.</p>
 </div>
 <div class="sect2">
 <h3 id="building-images">1.1. Building Images</h3>
 <div class="paragraph">
-<p>The <a href="#fabric8:build"><strong>fabric8:build</strong></a> goal is for creating Docker images which carrythe actual application and which can be deployed on Kubernetes or OpenShift. It is easy to include build artifacts and their dependencies. The plugin uses the assembly descriptor format from the <a href="http://maven.apache.org/plugins/maven-assembly-plugin/">maven-assembly-plugin</a> to specify the content which will be added to a sub-directory in the image (<code>/deployments</code> by default). Images that are built with this plugin can then be pushed to public or private Docker registries with <a href="#fabric8:push"><strong>fabric8:push</strong></a>.</p>
+<p>The <a href="#fabric8:build"><strong>fabric8:build</strong></a> goal is for creating Docker images which carry the actual application and which can be deployed on Kubernetes or OpenShift. It is easy to include build artifacts and their dependencies. The plugin uses the assembly descriptor format from the <a href="http://maven.apache.org/plugins/maven-assembly-plugin/">maven-assembly-plugin</a> to specify the content which will be added to a sub-directory in the image (<code>/deployments</code> by default). Images that are built with this plugin can then be pushed to public or private Docker registries with <a href="#fabric8:push"><strong>fabric8:push</strong></a>.</p>
 </div>
 <div class="paragraph">
 <p>Depending on the operational mode, for building the actual image either a Docker daemon is contacted directly or an <a href="https://docs.openshift.com/enterprise/3.0/architecture/core_concepts/builds_and_image_streams.html#docker-build">OpenShift Docker Build</a> is performed.</p>
@@ -594,7 +597,7 @@ table.CodeRay td.code>pre{padding:0}
 </div>
 </div>
 <div class="sect2">
-<h3 id="resource-descriptors">1.2. Kubernetes and OpenShift Resource Descriptors</h3>
+<h3 id="resource-descriptors">1.2. Kubernetes and OpenShift Resources</h3>
 <div class="paragraph">
 <p>With <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> Kubernetes and OpenShift resource descriptors can be created from the build information for creating the corresponding resource object. These files are packaged within the Maven artifacts created and can be deployed to a running orchestration platform with <a href="#fabric8:deploy"><strong>fabric8:deploy</strong></a>.</p>
 </div>
@@ -613,18 +616,53 @@ table.CodeRay td.code>pre{padding:0}
 <p><strong>Zero-Config</strong> mode makes some decisions based what is present in the pom.xml like what base image to use or which ports to expose. This is great for starting up things and for keeping quickstart applications small and tidy.</p>
 </li>
 <li>
-<p><strong>XML plugin configuration</strong> mode is similar to what <a href="https://fabric8io.github.io/docker-maven-plugin/#example">docker-maven-plugin</a> provides. This allows for type safe configuration with IDE support, but only a subset of possible resource descriptor festures is provided.</p>
+<p><strong>XML plugin configuration</strong> mode is similar to what <a href="https://fabric8io.github.io/docker-maven-plugin/#example">docker-maven-plugin</a> provides. This allows for type safe configuration with IDE support, but only a subset of possible resource descriptor features is provided.</p>
 </li>
 <li>
-<p><strong>Kubernetes &amp; OpenShift resource fragmwnra</strong> are user provided YAML files that can be <em>enriched</em> by the plugin. This allows expert users to use plain configuration file with all their capabilities, but also to add project specific build information and avoid boilerplate code.</p>
+<p><strong>Kubernetes &amp; OpenShift resource fragments</strong> are user provided YAML files that can be <em>enriched</em> by the plugin. This allows expert users to use plain configuration file with all their capabilities, but also to add project specific build information and avoid boilerplate code.</p>
 </li>
 </ul>
 </div>
+<div class="paragraph">
+<p>The following table gives an overview of the different models.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 1. Configuration Models</caption>
+<colgroup>
+<col style="width: 11.1111%;">
+<col style="width: 44.4444%;">
+<col style="width: 44.4445%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Model</th>
+<th class="tableblock halign-left valign-top">Docker Image</th>
+<th class="tableblock halign-left valign-top">Resource Descriptors</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Zero-Config</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#generator">Generators</a> are used to creatin Docker image configurations. Generators can detect certain aspects of the build (e.g. whether Spring Boot is used) and then choose some default like the base image, which ports to expose and the startup command. The can be configured, but offer only a few options.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Default <a href="#enricher">Enrichers</a> will create a default <em>Service</em> and <em>Deployment</em> (<em>DeploymentConfig</em> for OpenShift) when no other resource objects are provided. Depending on the image they can detect which port to expose in the service. As with Generators, Enrichers support a limited set of configuration options.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>XML configuration</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">f8-m-p inherits the XML based configuration for building images from the <a href="https://fabric8io.github.io/docker-maven-plugin/#docker:build">docker-maven-plugin</a> and provides the same functionality. It supports an <a href="http://maven.apache.org/components/plugins/maven-assembly-plugin/assembly.html">assembly descriptor</a> for specifying the content of the Docker image.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A subset of possible resource objects can be configured with a dedicated XML syntax. With a decent IDE you get autocompletion on most object and inline documentation for the available configuration elements. The provide configuration can be still enhanced by Enhancers which is useful for adding e.g. labels and annotation containing build or other information.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Resource Fragments</strong> and <strong>Dockerfiles</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Like the docker-maven-plugin f8-m-p supports <a href="#external-dockerfile">external Dockerfiles</a> too, which are referenced from the plugin configuration.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Resource descriptors can be provied as external YAML files which specify a skeleton. This skeleton is then filled by Enrichers which add labels and more. Maven properties within these files are resolved to thier values. With this model you can use every Kubernetes / OpenShift resource object with all their flexibility, but still get the benefit of adding build informations.</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="sect2">
 <h3 id="examples">1.4. Examples</h3>
 <div class="paragraph">
-<p>But let&#8217;s have a look at some code. The following examples will demonstrate all three configurations variants:</p>
+<p>Let&#8217;s have a look at some code. The following examples will demonstrate all three configurations variants:</p>
 </div>
 <div class="sect3">
 <h4 id="zero-config">1.4.1. Zero-Config</h4>
@@ -955,7 +993,7 @@ For building images there is also an alternative mode using external Dockerfiles
 </div>
 <hr>
 <div class="paragraph">
-<p>Now that we have seen some examples for the various ways how this plugin can be used, the following section will describe the plugin goals and extension points in detail.</p>
+<p>Now that we have seen some examples for the various ways how this plugin can be used, the following sections will describe the plugin goals and extension points in detail.</p>
 </div>
 </div>
 </div>
@@ -1023,7 +1061,7 @@ configuration with one <code>&lt;image&gt;</code> element per image to use.</p>
 <p>The <code>&lt;image&gt;</code> element can contain the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 1. Image Configuration</caption>
+<caption class="title">Table 2. Image Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1070,7 +1108,7 @@ created and run when <a href="#fabric8:start">[fabric8:start]</a> is called. If 
 <p>When specifying the name you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 2. Placeholders</caption>
+<caption class="title">Table 3. Placeholders</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1132,7 +1170,7 @@ created and run when <a href="#fabric8:start">[fabric8:start]</a> is called. If 
 <p>This plugin supports the following goals, which are explained in the next sections:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 3. Plugin Goals</caption>
+<caption class="title">Table 4. Plugin Goals</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -1170,7 +1208,7 @@ created and run when <a href="#fabric8:start">[fabric8:start]</a> is called. If 
 <p>Depending on whether the OpenShift or Kubernetes operational mode is used, the workflow and the performed actions differs :</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 4. Strategies</caption>
+<caption class="title">Table 5. Strategies</caption>
 <colgroup>
 <col style="width: 11.1111%;">
 <col style="width: 44.4444%;">
@@ -1328,7 +1366,7 @@ of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
 <code>&lt;dockerFile&gt;</code> the following configuration options are available:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 5. Build configuration</caption>
+<caption class="title">Table 6. Build configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1499,7 +1537,7 @@ remote API.</p>
 <p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 6. Assembly Configuration</caption>
+<caption class="title">Table 7. Assembly Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1636,7 +1674,7 @@ predefined assembly descriptor. The following symbolic names can be
 used for <code>descriptorRef</code>:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 7. Predefined Assembly Descriptors</caption>
+<caption class="title">Table 8. Predefined Assembly Descriptors</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -1802,7 +1840,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <p>A entry point or command can be specified in two alternative formats:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 8. Entrypoint and Command Configuration</caption>
+<caption class="title">Table 9. Entrypoint and Command Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1912,7 +1950,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code> with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 9. Push options</caption>
+<caption class="title">Table 10. Push options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2021,7 +2059,7 @@ to do this manually.</p>
 <p>This maven goal can be configured with the following top-level parameters:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 10. Watch configuration</caption>
+<caption class="title">Table 11. Watch configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2102,7 +2140,7 @@ below how this can be specified.</p>
 <p>Image specific watch configuration goes into an extra image-level <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). The following parameters are recognized:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 11. Watch configuration for a single image</caption>
+<caption class="title">Table 12. Watch configuration for a single image</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2214,7 +2252,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <div id="footer">
 <div id="footer-text">
 Version 3.1.1<br>
-Last updated 2016-07-27 09:38:13 UTC
+Last updated 2016-07-27 09:38:21 UTC
 </div>
 </div>
 </body>
