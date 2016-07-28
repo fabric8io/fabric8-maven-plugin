@@ -30,13 +30,13 @@ public class EnricherConfig {
 
     private static final String ENRICHER_PROP_PREFIX = "fabri8.enricher";
 
-    private final String prefix;
+    private final String name;
     private final ProcessorConfig config;
     private final Properties projectProperties;
 
-    public EnricherConfig(Properties projectProperties, String prefix, ProcessorConfig config) {
+    public EnricherConfig(Properties projectProperties, String name, ProcessorConfig config) {
         this.config = config != null ? config : ProcessorConfig.EMPTY;
-        this.prefix = prefix;
+        this.name = name;
         this.projectProperties = projectProperties;
     }
 
@@ -59,13 +59,14 @@ public class EnricherConfig {
      * @return the value looked up or the default value.
      */
     public String get(Configs.Key key, String defaultVal) {
-        String keyVal = key != null ? key.name() : "";
-        String fullKey = prefix + (StringUtils.isNotEmpty(keyVal) ? "." + key : "");
-        String val = config.getConfig(fullKey);
+        String val = config.getConfig(name, key.name());
+
         if (val == null) {
-            val = projectProperties.getProperty(ENRICHER_PROP_PREFIX + "." + fullKey);
-        } if (val == null) {
-            val = System.getProperty(ENRICHER_PROP_PREFIX + "." + fullKey);
+            String fullKey = ENRICHER_PROP_PREFIX + "." + name + "." + key;
+            val = projectProperties.getProperty(fullKey);
+            if (val == null) {
+                val = System.getProperty(fullKey);
+            }
         }
         return val != null ? val : defaultVal;
     }

@@ -72,7 +72,9 @@
               <exclude>build</exclude>
             </excludes>
             <config>
-              <default.service.type>NodePort</default.service.type>
+              <default.service>
+                <type>NodePort</type>
+              </default.service>
             </config>
           </enricher>
           <generator>

@@ -27,6 +27,7 @@ import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentFluent;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetFluent;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
@@ -42,9 +43,14 @@ public class DefaultNameEnricher extends BaseEnricher {
         super(buildContext, "default.name");
     }
 
+    private enum Config implements Configs.Key {
+        name;
+        public String def() { return d; } protected String d;
+    }
+
     @Override
     public void addDefaultResources(KubernetesListBuilder builder) {
-        final String defaultName = getConfig(null, MavenUtil.createDefaultResourceName(getProject()));
+        final String defaultName = getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject()));
 
         builder.accept(new TypedVisitor<HasMetadata>() {
             @Override
