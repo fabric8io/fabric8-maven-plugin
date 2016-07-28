@@ -2,8 +2,23 @@
 [[fabric8:build]]
 == *fabric8:build*
 
-This goal will build all images which have a `<build>` configuration section, or, if the global configuration variable `image` (property:
-`docker.image`) is set, only the images contained in this variable (comma separated) will be built.
+This goal is for building Docker images. Images can be build in two ways which depend on the `mode` (property: `fabric8.mode`). This mode can have be either `kubernetes` for a standard Docker build (the default) or `openshift` for an OpenShift Docker build. These modes are described below.
+
+By default all images are build. If multiple images are configured you can filter images with the property `docker.image`. This property can carry a comma separated list of image alias names so that only these images are created during the build.
+
+=== Standard Docker Build
+
+If the mode is `kubernetes` then a normal Docker build against a Docker daemon is performed. This mode is the default. In order to push it to a registry the goal <<fabric:push>> is used. The
+
+=== OpenShift Docker Build
+
+If the mode is `openshift` then a https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#docker-build[Docker Build] with a https://docs.openshift.com/enterprise/latest/dev_guide/builds.html#binary-source[Binary Source] is used. This means that instead of sending the image information to a Docker daemon it is send directly to OpenShift which will then create the Docker image and automatically push it to its internal Docker registry. It also updates an https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#image-streams[Image Stream] which can be referenced directly from a https://docs.openshift.com/enterprise/latest/architecture/core_concepts/deployments.html#deployments-and-deployment-configurations[Deployment Configuration] created by <<fabric8:resource>>.
+
+
+This goal will create two OpenShift resource objects and hence need access to an OpenShift installation as described <<access,Connection configuration>>
+
+
+The images can be either created by a generator or configured in the plugin configuration. The rest of this chapter describes how an image can be explicitely configured. For Generator based builds please refer to the chapter <<generators, "Generators">>
 
 include::classpath:/META-INF/doc/dmp/inc/build/_overview.adoc[]
 

@@ -41,9 +41,10 @@ a| `fabric8:build` `fabric8:push`
 
 a| `fabric8:build`
 
-* Creates a `BuildConfig`
+* Creates or uses a `BuildConfig`
+* Creates or uses an `ImageStream` which can be referenced by the deployment descriptors in a `DeploymenConfig`
 * Starts an OpenShift build with a `docker.tar` as input
-* Creates an `ImageStream` which can be referenced by the deployment descriptors
+
 
 | Deploy
 a| `fabric8:deploy`

@@ -39,11 +39,11 @@ The following table gives an overview of the different models.
 .Configuration Models
 [cols="1,4,4"]
 |===
-| Model | Docker Image | Resource Descriptors
+| Model | Docker Images | Resource Descriptors
 
 | *Zero-Config*
-| <<generator, Generators>> are used to creatin Docker image configurations. Generators can detect certain aspects of the build (e.g. whether Spring Boot is used) and then choose some default like the base image, which ports to expose and the startup command. The can be configured, but offer only a few options.
-| Default <<enricher, Enrichers>> will create a default _Service_ and _Deployment_ (_DeploymentConfig_ for OpenShift) when no other resource objects are provided. Depending on the image they can detect which port to expose in the service. As with Generators, Enrichers support a limited set of configuration options.
+| <<generators, Generators>> are used to creatin Docker image configurations. Generators can detect certain aspects of the build (e.g. whether Spring Boot is used) and then choose some default like the base image, which ports to expose and the startup command. The can be configured, but offer only a few options.
+| Default <<enrichers, Enrichers>> will create a default _Service_ and _Deployment_ (_DeploymentConfig_ for OpenShift) when no other resource objects are provided. Depending on the image they can detect which port to expose in the service. As with Generators, Enrichers support a limited set of configuration options.
 
 | *XML configuration*
 | f8-m-p inherits the XML based configuration for building images from the https://fabric8io.github.io/docker-maven-plugin/#docker:build[docker-maven-plugin] and provides the same functionality. It supports an http://maven.apache.org/components/plugins/maven-assembly-plugin/assembly.html[assembly descriptor] for specifying the content of the Docker image.
@@ -168,8 +168,8 @@ The plugin configuration can be roughly divided into the following sections:
 * A global configuration options are responsible for tuning the behaviour of plugin goals
 * ``<images>`` section which defines the Docker <<image-configuratuon,images>> to build. It has the https://fabric8io.github.io/docker-maven-plugin/#image-configuration[same syntax] as the similar configuration of `docker-maven-plugin` (except that `<run>` and `<external>` sub-elements are ignored)
 * `<resource>` is used to defined the resource descriptors for deploying on an OpenShift or Kuberneres cluster.
-* `<generator>` is for configuring <<generator,generators>> which are responsible for creating images. Generators are used as an alternative to a dedicates `<images>` section.
-* `<enricher>` is used to configure various aspects of <<enricher,enrichers>> for creating or enhancing resource descriptors.
+* `<generator>` is for configuring <<generators,generators>> which are responsible for creating images. Generators are used as an alternative to a dedicates `<images>` section.
+* `<enricher>` is used to configure various aspects of <<enrichers,enrichers>> for creating or enhancing resource descriptors.
 
 A working example can be found in the  https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/xml-config[samples/xml-config] directory. An extract of the plugin configuration is shown in the next example
 
