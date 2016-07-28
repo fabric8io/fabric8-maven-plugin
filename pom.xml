@@ -45,6 +45,7 @@
     <module>enricher/git</module>
     <module>enricher/icon</module>
     <module>enricher/dependency</module>
+    <module>enricher/misc</module>
     <module>generator/api</module>
     <module>generator/java-app</module>
     <module>generator/spring-boot</module>

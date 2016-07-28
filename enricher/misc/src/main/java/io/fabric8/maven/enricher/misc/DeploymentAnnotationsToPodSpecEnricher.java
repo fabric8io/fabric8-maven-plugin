@@ -13,7 +13,7 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.enricher.template;
+package io.fabric8.maven.enricher.misc;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
@@ -29,9 +29,9 @@ import java.util.List;
 
 /**
  */
-public class TemplateAnnotationEnricher extends BaseEnricher {
-    public TemplateAnnotationEnricher(EnricherContext buildContext) {
-        super(buildContext, "templateAnnotation");
+public class DeploymentAnnotationsToPodSpecEnricher extends BaseEnricher {
+    public DeploymentAnnotationsToPodSpecEnricher(EnricherContext buildContext) {
+        super(buildContext, "fabric8-misc-deploymentAnnoMerge");
     }
 
     @Override
