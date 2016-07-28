@@ -5,7 +5,7 @@
 io.fabric8.maven.enricher.standard.ProjectEnricher
 
 # Add a default ReplicaSet (or ReplicationController if none is given)
-io.fabric8.maven.enricher.standard.ReplicaSetEnricher
+io.fabric8.maven.enricher.standard.ControllerEnricher
 
 # Add a default service if none is given. Enrich also with
 # other information found

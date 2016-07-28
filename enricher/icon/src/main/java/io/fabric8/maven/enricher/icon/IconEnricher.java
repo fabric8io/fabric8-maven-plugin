@@ -72,7 +72,7 @@ public class IconEnricher extends BaseEnricher {
     }
 
     public IconEnricher(EnricherContext buildContext) {
-        super(buildContext, "icon");
+        super(buildContext, "f8-icon");
 
         String baseDir = getProject().getBasedir().getAbsolutePath();
         templateTempDir = new File(getConfig(Config.templateTempDir, baseDir + "/target/fabric8/template-workdir"));
