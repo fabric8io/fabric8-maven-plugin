@@ -105,7 +105,7 @@ This minimal but full working example `pom.xml` shows how a simple spring boot a
 ----
 <1> This minimalistic spring boot application uses the spring-boot parent POM for setting up dependencies and plugins
 <2> The Spring Boot web starter dependency enables a simple embedded Tomcat for serving Spring MVC apps
-<3> The `spring-boot-maven-plugin` is responsible for repackagign the application into a fat jar, including all dependencies and the embedded Tomcat
+<3> The `spring-boot-maven-plugin` is responsible for repackaging the application into a fat jar, including all dependencies and the embedded Tomcat
 <4> The `fabric8-maven-plugin` enables the automatic generation of a Docker image and Kubernetes / OpenShift descriptors including this Spring application.
 
 This setup make some opinionated decisions for you:

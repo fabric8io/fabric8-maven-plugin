@@ -21,6 +21,8 @@ include::inc/_introduction.adoc[]
 
 include::inc/_installation.adoc[]
 
+include::inc/_global-configuration.adoc[]
+
 include::classpath:/META-INF/doc/dmp/inc/_image-configuration.adoc[]
 
 include::inc/_goals.adoc[]
@@ -32,5 +34,8 @@ include::inc/_fabric8-deploy.adoc[]
 include::inc/_fabric8-watch.adoc[]
 
 include::inc/_extensions.adoc[]
+
+include::classpath:/META-INF/doc/dmp/inc/_registry.adoc[]
+include::classpath:/META-INF/doc/dmp/inc/_authentication.adoc[]
 
 // include::classpath:/META-INF/doc/dmp/inc/_docker-build.adoc[]
