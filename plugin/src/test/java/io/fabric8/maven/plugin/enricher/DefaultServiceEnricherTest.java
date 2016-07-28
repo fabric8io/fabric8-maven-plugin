@@ -59,7 +59,8 @@ public class DefaultServiceEnricherTest {
 
         // Setup mock behaviour
         new Expectations() {{
-            context.getConfig(); result = new ProcessorConfig(null, null, Collections.singletonMap("default.service.type", "LoadBalancer"));
+            context.getConfig(); result =
+                new ProcessorConfig(null, null, Collections.singletonMap("default.service", new TreeMap(Collections.singletonMap("type", "LoadBalancer"))));
             imageConfiguration.getBuildConfiguration(); result = buildConfig;
             context.getImages(); result = Arrays.asList(imageConfiguration);
         }};

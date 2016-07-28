@@ -48,13 +48,15 @@ public class ProcessorConfig {
     /**
      * Configuration for enricher / generators
      */
+    // See http://stackoverflow.com/questions/38628399/using-map-of-maps-as-maven-plugin-parameters/38642613 why
+    // a "TreeMap" is used as parameter and not "Map<String, String>"
     @Parameter
     @JsonProperty(value = "config")
-    Map<String, String> config = new HashMap<>();
+    Map<String, TreeMap> config = new HashMap<>();
 
     public ProcessorConfig() { }
 
-    public ProcessorConfig(List<String> includes, Set<String> excludes, Map<String, String> config) {
+    public ProcessorConfig(List<String> includes, Set<String> excludes, Map<String, TreeMap> config) {
         this.includes = includes;
         this.excludes = excludes;
         if (config != null) {
@@ -62,8 +64,9 @@ public class ProcessorConfig {
         }
     }
 
-    public String getConfig(String key) {
-        return config.get(key);
+    public String getConfig(String name, String key) {
+        TreeMap processorMap =  config.get(name);
+        return processorMap != null ? (String) processorMap.get(key) : null;
     }
 
     /**

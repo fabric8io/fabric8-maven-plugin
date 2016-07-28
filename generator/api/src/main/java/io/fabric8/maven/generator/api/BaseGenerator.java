@@ -37,7 +37,7 @@ abstract public class BaseGenerator implements Generator {
     public BaseGenerator(MavenGeneratorContext context, String name) {
         this.context = context;
         this.name = name;
-        this.config = new GeneratorConfig(getName(), context.getConfig());
+        this.config = new GeneratorConfig(context.getProject().getProperties(), getName(), context.getConfig());
     }
 
     protected MavenProject getProject() {

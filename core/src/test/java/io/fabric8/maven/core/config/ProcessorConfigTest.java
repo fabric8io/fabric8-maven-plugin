@@ -30,7 +30,7 @@ public class ProcessorConfigTest {
 
     List<String> includes = Arrays.asList("i1", "i2", "i3");
     Set<String> excludes = new HashSet<>(Arrays.asList("e1"));
-    Map <String, String> config = Collections.singletonMap("k1", "v1");
+    Map <String, TreeMap> config = Collections.singletonMap("k1", new TreeMap(Collections.singletonMap("i1","v1")));
 
     @Test
     public void incAndExc() {
@@ -73,8 +73,9 @@ public class ProcessorConfigTest {
     public void config() {
         ProcessorConfig pConfig = new ProcessorConfig(null, null, config);
 
-        assertEquals("v1", pConfig.getConfig("k1"));
-        assertNull(pConfig.getConfig("k2"));
+        assertEquals("v1", pConfig.getConfig("k1", "i1"));
+        assertNull(pConfig.getConfig("k2", "i1"));
+        assertNull(pConfig.getConfig("k1", "i2"));
     }
 
     @Test

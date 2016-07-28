@@ -16,20 +16,25 @@
 
 package io.fabric8.maven.generator.api;
 
+import java.util.Properties;
+
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.Configs;
-import org.apache.maven.shared.utils.StringUtils;
 
 /**
  */
 public class GeneratorConfig {
 
-    private final String prefix;
-    private final ProcessorConfig config;
+    private static final String GENERATOR_PROP_PREFIX = "fabri8.generator";
 
-    public GeneratorConfig(String prefix, ProcessorConfig config) {
+    private final String name;
+    private final ProcessorConfig config;
+    private final Properties properties;
+
+    public GeneratorConfig(Properties properties, String name, ProcessorConfig config) {
         this.config = config != null ? config : ProcessorConfig.EMPTY;
-        this.prefix = prefix;
+        this.name = name;
+        this.properties = properties;
     }
 
     /**
@@ -51,7 +56,14 @@ public class GeneratorConfig {
      */
     public String get(Configs.Key key, String defaultVal) {
         String keyVal = key != null ? key.name() : "";
-        String val = config.getConfig(prefix + (StringUtils.isNotEmpty(keyVal) ? "." + key : ""));
+        String val = config.getConfig(name, key.name());
+        if (val == null) {
+            String fullKey = GENERATOR_PROP_PREFIX + "." + name + "." + key;
+            val = properties.getProperty(fullKey);
+            if (val == null) {
+                val = System.getProperty(fullKey);
+            }
+        }
         return val != null ? val : defaultVal;
     }
 

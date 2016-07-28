@@ -74,7 +74,7 @@ public class ProfileUtilTest {
         File dir = new File(getClass().getResource("/fabric8/config/profiles.yaml").toURI()).getParentFile();
         Profile profile = ProfileUtil.lookup("simple", dir);
         assertEquals("simple", profile.getName());
-        assertEquals("http://jolokia.org", profile.getEnricherConfig().getConfig("base.url"));
+        assertEquals("http://jolokia.org", profile.getEnricherConfig().getConfig("base","url"));
 
         profile = ProfileUtil.lookup("one", dir);
         assertTrue(profile.getGeneratorConfig().use("foobar"));
