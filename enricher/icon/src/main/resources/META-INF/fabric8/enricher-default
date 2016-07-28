@@ -1,4 +1,1 @@
 io.fabric8.maven.enricher.icon.IconEnricher
-io.fabric8.maven.enricher.links.DocLinkEnricher
-io.fabric8.maven.enricher.links.GrafanaLinkEnricher
-io.fabric8.maven.enricher.template.TemplateAnnotationEnricher

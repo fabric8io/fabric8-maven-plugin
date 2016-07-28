@@ -13,7 +13,7 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.enricher.links;
+package io.fabric8.maven.enricher.cd;
 
 import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.maven.enricher.api.*;
@@ -36,7 +36,7 @@ import java.util.Set;
  */
 public class DocLinkEnricher extends AbstractLiveEnricher {
     public DocLinkEnricher(EnricherContext buildContext) {
-        super(buildContext, "docLink");
+        super(buildContext, "f8-cd-doclink");
     }
 
     @Override

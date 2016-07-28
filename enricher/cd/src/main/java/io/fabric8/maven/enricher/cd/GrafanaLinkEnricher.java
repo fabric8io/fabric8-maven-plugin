@@ -13,7 +13,7 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.enricher.links;
+package io.fabric8.maven.enricher.cd;
 
 import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.maven.core.util.Configs;
@@ -33,7 +33,7 @@ import static io.fabric8.maven.core.util.MavenUtil.hasClass;
  */
 public class GrafanaLinkEnricher extends BaseEnricher {
     public GrafanaLinkEnricher(EnricherContext buildContext) {
-        super(buildContext, "grafanaLink");
+        super(buildContext, "f8-cd-grafanalink");
     }
 
     private enum Config implements Configs.Key {
