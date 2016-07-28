@@ -52,7 +52,7 @@ public class EnricherManager {
         log = buildContext.getLog();
         enricherConfig = buildContext.getConfig();
 
-        enrichers = pluginFactory.createServiceObjects("META-INF/fabric8-enricher-default",
+        enrichers = pluginFactory.createServiceObjects("META-INF/fabric8/fabric8-enricher-default",
                                                        "META-INF/fabric8/enricher-default",
                                                        "META-INF/fabric8-enricher",
                                                        "META-INF/fabric8/enricher");
@@ -111,7 +111,7 @@ public class EnricherManager {
      */
     public void addDefaultResources(KubernetesListBuilder builder) {
         for (Enricher enricher : enrichers) {
-            enricher.addDefaultResources(builder);
+            enricher.addMissingResources(builder);
         }
     }
 

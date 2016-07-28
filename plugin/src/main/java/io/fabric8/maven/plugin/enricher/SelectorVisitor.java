@@ -23,11 +23,10 @@ import io.fabric8.kubernetes.api.model.extensions.DeploymentSpecBuilder;
 import io.fabric8.kubernetes.api.model.extensions.LabelSelector;
 import io.fabric8.kubernetes.api.model.extensions.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpecBuilder;
+import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.enricher.api.Kind;
 
 import java.util.Map;
-
-import static io.fabric8.maven.plugin.enricher.ProjectInfoEnricher.removeVersionSelector;
 
 /**
  * @author roland
@@ -65,7 +64,8 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
 
         @Override
         public void visit(DeploymentSpecBuilder item) {
-            Map<String, String> selectorMatchLabels = removeVersionSelector(enricher.extractSelector(Kind.REPLICATION_CONTROLLER));
+            Map<String, String> selectorMatchLabels =
+                KubernetesResourceUtil.removeVersionSelector(enricher.extractSelector(Kind.REPLICATION_CONTROLLER));
             LabelSelector selector = item.getSelector();
             if (selector == null) {
                 item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();

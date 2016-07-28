@@ -14,7 +14,7 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.plugin.enricher;
+package io.fabric8.maven.enricher.standard;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +42,7 @@ import org.apache.maven.shared.utils.StringUtils;
  * @author roland
  * @since 25/05/16
  */
-public class DefaultServiceEnricher extends BaseEnricher {
+public class ServiceEnricher extends BaseEnricher {
 
     ServiceHandler serviceHandler;
 
@@ -60,14 +60,14 @@ public class DefaultServiceEnricher extends BaseEnricher {
         public String def() { return d; } protected String d;
     }
 
-    public DefaultServiceEnricher(EnricherContext buildContext) {
-        super(buildContext, "default.service");
+    public ServiceEnricher(EnricherContext buildContext) {
+        super(buildContext, "f8-service");
         HandlerHub handlers = new HandlerHub(buildContext.getProject());
         serviceHandler = handlers.getServiceHandler();
     }
 
     @Override
-    public void addDefaultResources(KubernetesListBuilder builder) {
+    public void addMissingResources(KubernetesListBuilder builder) {
         final ServiceConfig defaultServiceConfig = extractDefaultServiceConfig();
         final Service defaultService = serviceHandler.getService(defaultServiceConfig,null);
 

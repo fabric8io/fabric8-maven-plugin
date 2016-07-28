@@ -14,12 +14,11 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.plugin.enricher;
+package io.fabric8.maven.enricher.standard;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.EnvVar;
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
@@ -32,24 +31,37 @@ import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicaSetHandler;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.utils.Strings;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
+
+import static io.fabric8.utils.Strings.isNullOrBlank;
 
 /**
+ * Enriche with controller if not already present.
+ *
+ * By default the following objects will be added
+ *
+ * <ul>
+ *     <li>ReplicationController</li>
+ *     <li>ReplicaSet</li>
+ *     <li>Deployment (for Kubernetes)</li>
+ *     <li>DeploymentConfig (for OpenShift)</li>
+ * </ul>
+ *
+ * TODO: There is a certain overlap with the ImageEnricher with adding default images etc.. This must be resolved.
+ *
  * @author roland
  * @since 25/05/16
  */
-public class DefaultReplicaSetEnricher extends BaseEnricher {
-    protected static final String[] POD_CONTROLLER_KINDS = {"ReplicationController", "ReplicaSet", "Deployment", "DeploymentConfig"};
+public class ControllerEnricher extends BaseEnricher {
+    protected static final String[] POD_CONTROLLER_KINDS =
+        { "ReplicationController", "ReplicaSet", "Deployment", "DeploymentConfig" };
 
     private final DeploymentHandler deployHandler;
     private final ReplicationControllerHandler rcHandler;
@@ -58,16 +70,17 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
     // Available configuration keys
     private enum Config implements Configs.Key {
         name,
-        imagePullPolicy     {{ d = "IfNotPresent"; }},
-        deployment          {{ d = "true"; }},
-        replicaSet          {{ d = "true"; }},
-        replicaController   {{ d = "true"; }};
+        pullPolicy           {{ d = "IfNotPresent"; }},
+        addDeployment        {{ d = "true"; }},
+        addReplicaSet        {{ d = "true"; }},
+        addReplicaController {{ d = "true"; }};
 
         public String def() { return d; } protected String d;
     }
 
-    public DefaultReplicaSetEnricher(EnricherContext buildContext) {
-        super(buildContext, "default.deployment");
+    public ControllerEnricher(EnricherContext buildContext) {
+        super(buildContext, "f8-controller");
+
         HandlerHub handlers = new HandlerHub(buildContext.getProject());
         rcHandler = handlers.getReplicationControllerHandler();
         rsHandler = handlers.getReplicaSetHandler();
@@ -75,17 +88,17 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addDefaultResources(KubernetesListBuilder builder) {
+    public void addMissingResources(KubernetesListBuilder builder) {
         final String defaultName = getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject()));
         ResourceConfig config =
             new ResourceConfig.Builder()
                 .replicaSetName(defaultName)
-                .imagePullPolicy(getConfig(Config.imagePullPolicy))
+                .imagePullPolicy(getConfig(Config.pullPolicy))
                 .build();
         final Deployment defaultDeployment = deployHandler.getDeployment(config, getImages());
 
         // Check if at least a replica set is added. If not add a default one
-        if (hasPodControllers(builder)) {
+        if (KubernetesResourceUtil.checkForKind(builder, POD_CONTROLLER_KINDS)) {
             final DeploymentSpec spec = defaultDeployment.getSpec();
             if (spec != null) {
                 PodTemplateSpec template = spec.getTemplate();
@@ -102,13 +115,13 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
                 }
             }
         } else {
-            if (Configs.asBoolean(getConfig(Config.deployment))) {
+            if (Configs.asBoolean(getConfig(Config.addDeployment))) {
                 log.info("Adding a default Deployment");
                 builder.addToDeploymentItems(defaultDeployment);
-            } else if (Configs.asBoolean(getConfig(Config.replicaSet))) {
+            } else if (Configs.asBoolean(getConfig(Config.addReplicaSet))) {
                 log.info("Adding a default ReplicaSet");
                 builder.addToReplicaSetItems(rsHandler.getReplicaSet(config, getImages()));
-            } else if (Configs.asBoolean(getConfig(Config.replicaController))) {
+            } else if (Configs.asBoolean(getConfig(Config.addReplicaController))) {
                 log.info("Adding a default ReplicationController");
                 builder.addToReplicationControllerItems(rcHandler.getReplicationController(config, getImages()));
             }
@@ -132,13 +145,13 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
                         container = new Container();
                         containers.add(container);
                     }
-                    if (Strings.isNullOrBlank(container.getImagePullPolicy())) {
+                    if (isNullOrBlank(container.getImagePullPolicy())) {
                         container.setImagePullPolicy(defaultContainer.getImagePullPolicy());
                     }
-                    if (Strings.isNullOrBlank(container.getImage())) {
+                    if (isNullOrBlank(container.getImage())) {
                         container.setImage(defaultContainer.getImage());
                     }
-                    if (Strings.isNullOrBlank(container.getName())) {
+                    if (isNullOrBlank(container.getName())) {
                         container.setName(defaultContainer.getName());
                     }
                     List<EnvVar> defaultEnv = defaultContainer.getEnv();
@@ -154,7 +167,7 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
         } else if (!containers.isEmpty()) {
             // lets default the container name if there's none specified in the custom yaml file
             Container container = containers.get(0);
-            if (Strings.isNullOrBlank(container.getName())) {
+            if (isNullOrBlank(container.getName())) {
                 container.setName(defaultName);
             }
             builder.withContainers(containers);
@@ -175,17 +188,4 @@ public class DefaultReplicaSetEnricher extends BaseEnricher {
         envVars.add(envVar);
     }
 
-    private boolean hasPodControllers(KubernetesListBuilder builder) {
-        return checkForKind(builder, POD_CONTROLLER_KINDS);
-    }
-
-    private boolean checkForKind(KubernetesListBuilder builder, String ... kinds) {
-        Set<String> kindSet = new HashSet<>(Arrays.asList(kinds));
-        for (HasMetadata item : builder.getItems()) {
-            if (kindSet.contains(item.getKind())) {
-                return true;
-            }
-        }
-        return false;
-    }
 }

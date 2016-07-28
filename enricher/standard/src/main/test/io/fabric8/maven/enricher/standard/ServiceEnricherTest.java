@@ -14,10 +14,11 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.plugin.enricher;
+package io.fabric8.maven.enricher.standard;
 
 import java.util.*;
 
+import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.ProcessorConfig;
@@ -27,11 +28,10 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import mockit.*;
 import mockit.integration.junit4.JMockit;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static com.jayway.jsonpath.matchers.JsonPathMatchers.*;
-import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -40,7 +40,7 @@ import static org.junit.Assert.assertThat;
  * @since 03/06/16
  */
 @RunWith(JMockit.class)
-public class DefaultServiceEnricherTest {
+public class ServiceEnricherTest {
 
     @Mocked
     private EnricherContext context;
@@ -66,16 +66,16 @@ public class DefaultServiceEnricherTest {
         }};
 
         // Enrich
-        DefaultServiceEnricher serviceEnricher = new DefaultServiceEnricher(context);
+        ServiceEnricher serviceEnricher = new ServiceEnricher(context);
         KubernetesListBuilder builder = new KubernetesListBuilder();
-        serviceEnricher.addDefaultResources(builder);
+        serviceEnricher.addMissingResources(builder);
 
         // Validate that the generated resource contains
         KubernetesList list = builder.build();
         assertEquals(list.getItems().size(),1);
 
         String json = KubernetesResourceUtil.toJson(list.getItems().get(0));
-        assertThat(json,isJson());
-        assertThat(json, hasJsonPath("$.spec.type", equalTo("LoadBalancer")));
+        assertThat(json, JsonPathMatchers.isJson());
+        assertThat(json, JsonPathMatchers.hasJsonPath("$.spec.type", Matchers.equalTo("LoadBalancer")));
     }
 }
