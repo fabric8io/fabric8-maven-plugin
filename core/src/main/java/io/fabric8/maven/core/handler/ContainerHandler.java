@@ -28,6 +28,7 @@ import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.VolumeConfig;
+import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootProperties;
 import io.fabric8.maven.docker.access.PortMapping;
@@ -79,7 +80,7 @@ class ContainerHandler {
                     }
                 }
                 Container container = new ContainerBuilder()
-                    .withName(Containers.getKubernetesContainerName(project, imageConfig))
+                    .withName(KubernetesResourceUtil.extractContainerName(project, imageConfig))
                     .withImage(imageConfig.getName())
                     .withImagePullPolicy(getImagePullPolicy(config))
                     .withEnv(envVarHandler.getEnvironmentVariables(config.getEnv()))

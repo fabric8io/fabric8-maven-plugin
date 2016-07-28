@@ -14,24 +14,35 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.plugin.enricher;
+package io.fabric8.maven.enricher.standard;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 import org.apache.maven.project.MavenProject;
 
 /**
+ * Add project labels to any object.
+ * For selectors, the 'version' part is removed.
+ *
+ * The following labels are added:
+ * <ul>
+ *     <li>version</li>
+ *     <li>project</li>
+ *     <li>group</li>
+ *     <li>provider (is set to fabric8)</li>
+ * </ul>
  * @author roland
  * @since 01/04/16
  */
-public class ProjectInfoEnricher extends BaseEnricher {
+public class ProjectEnricher extends BaseEnricher {
 
-    public ProjectInfoEnricher(EnricherContext buildContext) {
-        super(buildContext, "label.project");
+    public ProjectEnricher(EnricherContext buildContext) {
+        super(buildContext, "f8-project");
     }
 
     // For the moment return labels for all objects
@@ -53,14 +64,8 @@ public class ProjectInfoEnricher extends BaseEnricher {
     public Map<String, String> getSelector(Kind kind) {
         Map ret = getLabels(kind);
         if  (kind == Kind.SERVICE || kind == Kind.DEPLOYMENT || kind == Kind.DEPLOYMENT_CONFIG) {
-            return removeVersionSelector(ret);
+            return KubernetesResourceUtil.removeVersionSelector(ret);
         }
         return ret;
-    }
-
-    public static Map<String, String> removeVersionSelector(Map<String, String> selector) {
-        Map<String, String> answer = new HashMap<>(selector);
-        answer.remove("version");
-        return answer;
     }
 }

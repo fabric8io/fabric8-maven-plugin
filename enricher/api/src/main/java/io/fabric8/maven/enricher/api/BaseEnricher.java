@@ -62,7 +62,7 @@ public abstract class BaseEnricher implements Enricher {
     public void adapt(KubernetesListBuilder builder) { }
 
     @Override
-    public void addDefaultResources(KubernetesListBuilder builder) { }
+    public void addMissingResources(KubernetesListBuilder builder) { }
 
     @Override
     public Map<String, String> getSelector(Kind kind) { return null; }

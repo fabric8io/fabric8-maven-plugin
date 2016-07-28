@@ -56,15 +56,15 @@ public interface Enricher extends Named {
     /**
      * Add default resources when they are missing. Each enricher should be responsible
      * for a certain kind of resource and should detect whether a default resource
-     * should be added
+     * should be added. This should be done defensive, so that when an object is
+     * already set it must not be overwritten.
      *
      * @param builder the build to examine and add to
      */
-    void addDefaultResources(KubernetesListBuilder builder);
+    void addMissingResources(KubernetesListBuilder builder);
 
     /**
-     * Final customization of the overall resource
-     * descriptor
+     * Final customization of the overall resource descriptor. Fine tuning happens here.
      *
      * @param builder list to customer used to customize
      */

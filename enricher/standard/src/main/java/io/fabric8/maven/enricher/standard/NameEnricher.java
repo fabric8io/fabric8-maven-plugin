@@ -14,7 +14,7 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.plugin.enricher;
+package io.fabric8.maven.enricher.standard;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.builder.Visitor;
@@ -34,13 +34,18 @@ import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.utils.Strings;
 
 /**
+ * Enricher for adding a "name" to the metadata to various objects we create.
+ * The name is only added if not already set.
+ *
+ * The name is added to the following objects:
+ *
  * @author roland
  * @since 25/05/16
  */
-public class DefaultNameEnricher extends BaseEnricher {
+public class NameEnricher extends BaseEnricher {
 
-    public DefaultNameEnricher(EnricherContext buildContext) {
-        super(buildContext, "default.name");
+    public NameEnricher(EnricherContext buildContext) {
+        super(buildContext, "f8-name");
     }
 
     private enum Config implements Configs.Key {
@@ -49,7 +54,7 @@ public class DefaultNameEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addDefaultResources(KubernetesListBuilder builder) {
+    public void addMissingResources(KubernetesListBuilder builder) {
         final String defaultName = getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject()));
 
         builder.accept(new TypedVisitor<HasMetadata>() {

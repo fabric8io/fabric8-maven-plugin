@@ -1,3 +1,6 @@
 
 [[enrichers]]
 == Enrichers
+
+
+* Should be passive. E.g. if already set don't override.

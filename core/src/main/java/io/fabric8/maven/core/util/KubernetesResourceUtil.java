@@ -20,11 +20,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,8 +34,11 @@ import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Strings;
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
 
 /**
@@ -250,5 +249,32 @@ public class KubernetesResourceUtil {
     public static String getNameWithSuffix(String name, String kind) {
         String suffix =  KIND_TO_FILENAME_MAPPER.get(kind);
         return suffix != null ? name +  "-" + suffix : name;
+    }
+
+    public static String extractContainerName(MavenProject project, ImageConfiguration imageConfig) {
+        String alias = imageConfig.getAlias();
+        return alias != null ? alias : extractImageUser(imageConfig.getName(), project) + "-" + project.getArtifactId();
+    }
+
+    private static String extractImageUser(String image, MavenProject project) {
+        ImageName name = new ImageName(image);
+        String imageUser = name.getUser();
+        return imageUser != null ? imageUser : project.getGroupId();
+    }
+
+    public static Map<String, String> removeVersionSelector(Map<String, String> selector) {
+        Map<String, String> answer = new HashMap<>(selector);
+        answer.remove("version");
+        return answer;
+    }
+
+    public static boolean checkForKind(KubernetesListBuilder builder, String... kinds) {
+        Set<String> kindSet = new HashSet<>(Arrays.asList(kinds));
+        for (HasMetadata item : builder.getItems()) {
+            if (kindSet.contains(item.getKind())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
