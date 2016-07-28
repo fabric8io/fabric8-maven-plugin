@@ -562,6 +562,14 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#enrichers">5.2. Enrichers</a></li>
 </ul>
 </li>
+<li><a href="#registry">6. Registry handling</a></li>
+<li><a href="#authentication">7. Authentication</a>
+<ul class="sectlevel2">
+<li><a href="#pull-vs-push-authentication">7.1. Pull vs. Push Authentication</a></li>
+<li><a href="#openshift-authentication">7.2. OpenShift Authentication</a></li>
+<li><a href="#password-encryption">7.3. Password encryption</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -723,7 +731,7 @@ table.CodeRay td.code>pre{padding:0}
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>The <code>spring-boot-maven-plugin</code> is responsible for repackagign the application into a fat jar, including all dependencies and the embedded Tomcat</td>
+<td>The <code>spring-boot-maven-plugin</code> is responsible for repackaging the application into a fat jar, including all dependencies and the embedded Tomcat</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
@@ -2276,11 +2284,333 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="registry">6. Registry handling</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Docker uses registries to store images. The registry is typically
+specified as part of the name. I.e. if the first part (everything
+before the first <code>/</code>) contains a dot (<code>.</code>) or colon (<code>:</code>) this part is
+interpreted as an address (with an optionally port) of a remote
+registry. This registry (or the default <code>docker.io</code> if no
+registry is given) is used during push and pull operations. This
+plugin follows the same semantics, so if an image name is specified
+with a registry part, this registry is contacted. Authentication is
+explained in the next <a href="#_authentication">section</a>.</p>
+</div>
+<div class="paragraph">
+<p>There are some situations however where you want to have more
+flexibility for specifying a remote registry. This might be, because
+you do not want to hard code a registry into <code>pom.xml</code> but
+provide it from the outside with an environment variable or a system
+property.</p>
+</div>
+<div class="paragraph">
+<p>This plugin supports various ways of specifying a registry:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>If the image name contains a registry part, this registry is used
+unconditionally and can not be overwritten from the outside.</p>
+</li>
+<li>
+<p>If an image name doesn&#8217;t contain a registry, then by default the
+default Docker registry <code>docker.io</code> is used for push and pull
+operations. But this can be overwritten through various means:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>If the <code>&lt;image&gt;</code> configuration contains a <code>&lt;registry&gt;</code> subelement
+this registry is used.</p>
+</li>
+<li>
+<p>Otherwise, a global configuration element <code>&lt;registry&gt;</code> is
+evaluated which can be also provided as system property via
+<code>-Ddocker.registry</code>.</p>
+</li>
+<li>
+<p>Finally an environment variable <code>DOCKER_REGISTRY</code> is looked up for
+detecting a registry.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This registry is used for pulling (i.e. for autopull the base image
+when doing a <code>fabric8:build</code>) and pushing with <code>docker.push</code>. However,
+when these two goals a are combined on the command line like in <code>mvn
+-Ddocker.registry=myregistry:5000 package fabric8:build fabric8:push</code>
+the same registry is used for both operation. For a more fine grained
+control, separate registries for <em>pull</em> and <em>push</em> can be specified.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>In the plugin&#8217;s configuration with the parameters <code>&lt;pullRegistry&gt;</code> and
+<code>&lt;pushRegistry&gt;</code>, respectively.</p>
+</li>
+<li>
+<p>With the system properties <code>docker.pull.registry</code> and
+<code>docker.push.registry</code>, respectively.</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
+  <span class="tag">&lt;registry&gt;</span>docker.jolokia.org:443<span class="tag">&lt;/registry&gt;</span>
+  <span class="tag">&lt;images&gt;</span>
+    <span class="tag">&lt;image&gt;</span>
+      <span class="comment">&lt;!-- Without an explicit registry ... --&gt;</span>
+      <span class="tag">&lt;name&gt;</span>jolokia/jolokia-java<span class="tag">&lt;/name&gt;</span>
+      <span class="comment">&lt;!-- ... hence use this registry --&gt;</span>
+      <span class="tag">&lt;registry&gt;</span>docker.ro14nd.de<span class="tag">&lt;/registry&gt;</span>
+      ....
+    <span class="tag">&lt;image&gt;</span>
+    <span class="tag">&lt;image&gt;</span>
+      <span class="tag">&lt;name&gt;</span>postgresql<span class="tag">&lt;/name&gt;</span>
+      <span class="comment">&lt;!-- No registry in the name, hence use the globally
+           configured docker.jolokia.org:443 as registry --&gt;</span>
+      ....
+    <span class="tag">&lt;/image&gt;</span>
+    <span class="tag">&lt;image&gt;</span>
+      <span class="comment">&lt;!-- Explicitely specified always wins --&gt;</span>
+      <span class="tag">&lt;name&gt;</span>docker.example.com:5000/another/server<span class="tag">&lt;/name&gt;</span>
+    <span class="tag">&lt;/image&gt;</span>
+  <span class="tag">&lt;/images&gt;</span>
+<span class="tag">&lt;/configuration&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There is some special behaviour when using an externally provided
+registry like described above:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>When <em>pulling</em>, the image pulled will be also tagged with a repository
+name <strong>without</strong> registry. The reasoning behind this is that this
+image then can be referenced also by the configuration when the
+registry is not specified anymore explicitly.</p>
+</li>
+<li>
+<p>When <em>pushing</em> a local image, temporarily a tag including the
+registry is added and removed after the push. This is required
+because Docker can only push registry-named images.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="authentication">7. Authentication</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When pulling (via the <code>autoPull</code> mode of <code>fabric8:start</code>) or pushing image, it
+might be necessary to authenticate against a Docker registry.</p>
+</div>
+<div class="paragraph">
+<p>There are three different ways for providing credentials:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Using a <code>&lt;authConfig&gt;</code> section in the plugin configuration with
+<code>&lt;username&gt;</code> and <code>&lt;password&gt;</code> elements.</p>
+</li>
+<li>
+<p>Providing system properties <code>docker.username</code> and <code>docker.password</code>
+from the outside</p>
+</li>
+<li>
+<p>Using a <code>&lt;server&gt;</code> configuration in <code>~/.m2/settings.xml</code></p>
+</li>
+<li>
+<p>Login into a registry with <code>docker login</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Using the username and password directly in the <code>pom.xml</code> is not
+recommended since this is widely visible. This is most easiest and
+transparent way, though. Using an <code>&lt;authConfig&gt;</code> is straight forward:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;configuration&gt;</span>
+    <span class="tag">&lt;image&gt;</span>consol/tomcat-7.0<span class="tag">&lt;/image&gt;</span>
+    ...
+    <span class="tag">&lt;authConfig&gt;</span>
+      <span class="tag">&lt;username&gt;</span>jolokia<span class="tag">&lt;/username&gt;</span>
+      <span class="tag">&lt;password&gt;</span>s!cr!t<span class="tag">&lt;/password&gt;</span>
+    <span class="tag">&lt;/authConfig&gt;</span>
+  <span class="tag">&lt;/configuration&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The system property provided credentials are a good compromise when
+using CI servers like Jenkins. You simply provide the credentials from
+the outside:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t fabric8:push</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The most secure and also the most <em>mavenish</em> way is to add a server to
+the Maven settings file <code>~/.m2/settings.xml</code>:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;servers&gt;</span>
+  <span class="tag">&lt;server&gt;</span>
+    <span class="tag">&lt;id&gt;</span>docker.io<span class="tag">&lt;/id&gt;</span>
+    <span class="tag">&lt;username&gt;</span>jolokia<span class="tag">&lt;/username&gt;</span>
+    <span class="tag">&lt;password&gt;</span>s!cr!t<span class="tag">&lt;/password&gt;</span>
+  <span class="tag">&lt;/server&gt;</span>
+  ....
+<span class="tag">&lt;/servers&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The server id must specify the registry to push to/pull from, which by
+default is central index <code>docker.io</code> (or <code>index.docker.io</code> / <code>registry.hub.docker.com</code> as fallbacks).
+Here you should add your docker.io account for your repositories. If you have multiple accounts
+for the same registry, the second user can be specified as part of the ID. In the example above, if you
+have a second accorunt 'fabric8io' then use an <code>&lt;id&gt;docker.io/fabric8io&lt;/id&gt;</code> for this second entry. I.e. add the
+username with a slash to the id name. The default without username is only taken if no server entry with
+a username appended id is chosen.</p>
+</div>
+<div class="paragraph">
+<p>As a final fallback, this plugin consults <code>~/.docker/config.json</code> for getting to the credentials. Within this
+file credentials are stored when connecting to a registry with the command <code>docker login</code> from the command line.</p>
+</div>
+<div class="sect2">
+<h3 id="pull-vs-push-authentication">7.1. Pull vs. Push Authentication</h3>
+<div class="paragraph">
+<p>The credentials lookup described above is valid for both push and
+pull operations. In order to narrow things down, credentials can be be
+provided for pull or push operations alone:</p>
+</div>
+<div class="paragraph">
+<p>In an <code>&lt;authConfig&gt;</code> section a sub-section <code>&lt;pull&gt;</code> and/or <code>&lt;push&gt;</code>
+can be added. In the example below the credentials provider are only
+used for image push operations:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;configuration&gt;</span>
+    <span class="tag">&lt;image&gt;</span>consol/tomcat-7.0<span class="tag">&lt;/image&gt;</span>
+    ...
+    <span class="tag">&lt;authConfig&gt;</span>
+      <span class="tag">&lt;push&gt;</span>
+         <span class="tag">&lt;username&gt;</span>jolokia<span class="tag">&lt;/username&gt;</span>
+         <span class="tag">&lt;password&gt;</span>s!cr!t<span class="tag">&lt;/password&gt;</span>
+      <span class="tag">&lt;/push&gt;</span>
+    <span class="tag">&lt;/authConfig&gt;</span>
+  <span class="tag">&lt;/configuration&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the credentials are given on the command line as system
+properties, then the properties <code>docker.pull.username</code> /
+<code>docker.pull.password</code> and <code>docker.push.username</code> /
+<code>docker.push.password</code> are used for pull and push operations,
+respectively (when given). Either way, the standard lookup algorithm
+as described in the previous section is used as fallback.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="openshift-authentication">7.2. OpenShift Authentication</h3>
+<div class="paragraph">
+<p>When working with the default registry in OpenShift, the credentials
+to authtenticate are the OpenShift username and access token. So, a
+typical interaction with the OpenShift registry from the outside is:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>oc login
+...
+mvn -Ddocker.registry=docker-registry.domain.com:80/default/myimage \
+    -Ddocker.username=$(oc whoami) \
+    -Ddocker.password=$(oc whoami -t)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>(note, that the image&#8217;s user name part ("default" here") must
+correspond to an OpenShift project with the same name to which you
+currently connected account has access).</p>
+</div>
+<div class="paragraph">
+<p>This can be simplified by using the system property
+<code>docker.useOpenShiftAuth</code> in which case the plugin does the
+lookup. The equivalent to the example above is</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>oc login
+...
+mvn -Ddocker.registry=docker-registry.domain.com:80/default/myimage \
+    -Ddocker.useOpenShiftAuth</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Alternatively the configuration option <code>&lt;useOpenShiftAuth&gt;</code> can be
+added to the <code>&lt;authConfig&gt;</code> section.</p>
+</div>
+<div class="paragraph">
+<p>For dedicted <em>pull</em> and <em>push</em> configuration the system properties
+<code>docker.pull.useOpenShiftAuth</code> and <code>docker.push.useOpenShiftAuth</code> are
+available as well as the configuration option <code>&lt;useOpenShiftAuth&gt;</code> in
+an <code>&lt;pull&gt;</code> or <code>&lt;push&gt;</code> section within the <code>&lt;authConfig&gt;</code>
+configuration.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="password-encryption">7.3. Password encryption</h3>
+<div class="paragraph">
+<p>Regardless which mode you choose you can encrypt password as described
+in the
+<a href="http://maven.apache.org/guides/mini/guide-encryption.html">Maven documentation</a>. Assuming
+that you have setup a <em>master password</em> in
+<code>~/.m2/security-settings.xml</code> you can create easily encrypted
+passwords:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bash">$ mvn --encrypt-password
+Password:
+{QJ6wvuEfacMHklqsmrtrn1/ClOLqLm8hB7yUL23KOKo=}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This password then can be used in <code>authConfig</code>, <code>docker.password</code>
+and/or the <code>&lt;server&gt;</code> setting configuration. However, putting an
+encrypted password into <code>authConfig</code> in the <code>pom.xml</code> doesn&#8217;t make
+much sense, since this password is encrypted with an individual master
+password.</p>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 3.1.1<br>
-Last updated 2016-07-28 21:51:11 UTC
+Last updated 2016-07-28 21:59:56 UTC
 </div>
 </div>
 </body>
