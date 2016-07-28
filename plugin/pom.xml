@@ -54,7 +54,17 @@
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-enricher-build</artifactId>
+      <artifactId>fabric8-maven-enricher-git</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>fabric8-maven-enricher-standard</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>fabric8-maven-enricher-cd</artifactId>
     </dependency>
 
     <dependency>

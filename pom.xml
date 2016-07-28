@@ -41,7 +41,8 @@
     <module>plugin</module>
     <module>enricher/api</module>
     <module>enricher/standard</module>
-    <module>enricher/build</module>
+    <module>enricher/cd</module>
+    <module>enricher/git</module>
     <module>enricher/icon</module>
     <module>enricher/dependency</module>
     <module>generator/api</module>

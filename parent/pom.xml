@@ -101,7 +101,7 @@
         <version>${version.docker-maven-plugin}</version>
       </dependency>
 
-      <!-- == fabric8-maven-plugin ===================================== -->
+      <!-- == fabric8-maven-plugin ==================================== -->
 
       <dependency>
         <groupId>io.fabric8</groupId>
@@ -117,7 +117,19 @@
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-enricher-build</artifactId>
+        <artifactId>fabric8-maven-enricher-standard</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-enricher-git</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-enricher-cd</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -155,6 +167,14 @@
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-generator-karaf</artifactId>
         <version>${project.version}</version>
+      </dependency>
+
+      <!-- == external deps =============================== -->
+
+      <dependency>
+        <groupId>org.eclipse.jgit</groupId>
+        <artifactId>org.eclipse.jgit</artifactId>
+        <version>4.4.0.201606070830-r</version>
       </dependency>
 
       <!-- == fabric8 ===================================== -->

@@ -53,7 +53,7 @@ public class DependencyEnricher extends BaseEnricher {
   private Set<File> dependencyArtifacts = new HashSet<>();
 
   public DependencyEnricher(EnricherContext buildContext) {
-    super(buildContext, "dependency");
+    super(buildContext, "f8-dependency");
 
     Set<Artifact> artifacts = isIncludeTransitive() ?
         buildContext.getProject().getArtifacts() : buildContext.getProject().getDependencyArtifacts();
