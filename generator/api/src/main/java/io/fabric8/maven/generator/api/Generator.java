@@ -28,6 +28,11 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 public interface Generator extends Named {
 
     /**
+     * @return true if the generator is applicable
+     */
+    boolean isApplicable();
+
+    /**
      * Provide additional image configurations
      *
      * @param existingConfigs the already detected and resolved configuration

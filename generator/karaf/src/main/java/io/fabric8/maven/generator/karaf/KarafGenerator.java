@@ -13,8 +13,7 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
-package io.fabric8.maven.generator.springboot;
+package io.fabric8.maven.generator.karaf;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,24 +28,21 @@ import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
 
-/**
- * @author roland
- * @since 15/05/16
- */
-public class SpringBootGenerator extends BaseGenerator {
-
-    public SpringBootGenerator(MavenGeneratorContext context) {
-        super(context, "spring.boot");
+public class KarafGenerator extends BaseGenerator {
+    public KarafGenerator(MavenGeneratorContext context) {
+        super(context, "karaf");
     }
 
     private enum Config implements Configs.Key {
         combine        {{ d = "false"; }},
         name           {{ d = "%g/%a:%l"; }},
-        alias          {{ d = "springboot"; }},
-        from           {{ d = "fabric8/java-alpine-openjdk8-jdk"; }},
-        webPort        {{ d = "8080"; }},
-        jolokiaPort    {{ d = "8778"; }},
-        prometheusPort {{ d = "9779"; }};
+        alias          {{ d = "karaf"; }},
+        baseImage      {{ d = "fabric8/s2i-karaf:1.3"; }},
+        baseDir        {{ d = "/deployments/"; }},
+        user           {{ d = "jboss:jboss:jboss"; }},
+        cmd            {{ d = "/deployments/deploy-and-run.sh"; }},
+        webPort        {{ d = "8181"; }},
+        jolokiaPort    {{ d = "8778"; }};
 
         public String def() { return d; } protected String d;
     }
@@ -57,8 +53,9 @@ public class SpringBootGenerator extends BaseGenerator {
             ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
             BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
                 .assembly(createAssembly())
-                .from(getConfig(Config.from))
-                .ports(extractPorts());
+                .from(getConfig(Config.baseImage))
+                .ports(extractPorts())
+                .cmd(getConfig(Config.cmd));
             addLatestTagIfSnapshot(buildBuilder);
             imageBuilder
                 .name(getConfig(Config.name))
@@ -74,7 +71,7 @@ public class SpringBootGenerator extends BaseGenerator {
     @Override
     public boolean isApplicable() {
         MavenProject project = getProject();
-        return MavenUtil.hasPlugin(project,"org.springframework.boot:spring-boot-maven-plugin");
+        return MavenUtil.hasPlugin(project, "org.apache.karaf.tooling:karaf-maven-plugin");
     }
 
     private boolean shouldIncludeDefaultImage(List<ImageConfiguration> configs) {
@@ -87,7 +84,6 @@ public class SpringBootGenerator extends BaseGenerator {
         List<String> answer = new ArrayList<>();
         addPortIfValid(answer, getConfig(Config.webPort));
         addPortIfValid(answer, getConfig(Config.jolokiaPort));
-        addPortIfValid(answer, getConfig(Config.prometheusPort));
         return answer;
     }
 
@@ -98,10 +94,10 @@ public class SpringBootGenerator extends BaseGenerator {
     }
 
     private AssemblyConfiguration createAssembly() {
-        return
-            new AssemblyConfiguration.Builder()
-                .basedir("/app")
-                .descriptorRef("spring-boot")
-                .build();
+        return new AssemblyConfiguration.Builder()
+            .basedir(getConfig(Config.baseDir))
+            .user(getConfig(Config.user))
+            .descriptorRef("karaf")
+            .build();
     }
 }
