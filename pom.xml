@@ -47,7 +47,7 @@
     <module>enricher/dependency</module>
     <module>enricher/misc</module>
     <module>generator/api</module>
-    <module>generator/java-app</module>
+    <module>generator/java-exec</module>
     <module>generator/spring-boot</module>
     <module>generator/karaf</module>
   </modules>

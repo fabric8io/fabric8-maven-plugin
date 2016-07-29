@@ -31,10 +31,12 @@ import io.fabric8.utils.Strings;
 
 /**
  */
-public class JavaAppGenerator extends BaseGenerator {
+public class JavaExecExecGenerator extends BaseGenerator {
 
-    public JavaAppGenerator(MavenGeneratorContext context) {
-        super(context, "java.app");
+    public static final String JAVA_MAIN_CLASS = "JAVA_MAIN_CLASS";
+
+    public JavaExecExecGenerator(MavenGeneratorContext context) {
+        super(context, "java-exec");
     }
 
     private enum Config implements Configs.Key {
@@ -56,7 +58,7 @@ public class JavaAppGenerator extends BaseGenerator {
             Map<String, String> envVars = new HashMap<>();
             String mainClass = getConfig(Config.mainClass);
             if (Strings.isNotBlank(mainClass)) {
-                envVars.put(EnvironmentVariables.JAVA_MAIN_CLASS, mainClass);
+                envVars.put(JAVA_MAIN_CLASS, mainClass);
             }
 
             ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();

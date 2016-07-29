@@ -107,7 +107,7 @@ public class DocLinkEnricher extends AbstractLiveEnricher {
     }
 
     /**
-     * Replaces all text of the form <code>{foo}</code>$ with the value in the properties object
+     * Replaces all text of the form <code>${foo}</code> with the value in the properties object
      */
     protected static String replaceProperties(String text, Properties properties) {
         Set<Map.Entry<Object, Object>> entries = properties.entrySet();

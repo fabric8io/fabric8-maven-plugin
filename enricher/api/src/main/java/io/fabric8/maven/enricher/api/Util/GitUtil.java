@@ -1,4 +1,4 @@
-package io.fabric8.maven.core.util;
+package io.fabric8.maven.enricher.api.Util;
 /*
  *
  * Copyright 2016 Roland Huss
@@ -19,6 +19,7 @@ package io.fabric8.maven.core.util;
 import java.io.File;
 import java.io.IOException;
 
+import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.utils.GitHelpers;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.jgit.api.Git;

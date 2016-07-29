@@ -23,7 +23,7 @@ import java.util.Map;
 import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.kubernetes.api.ServiceNames;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.GitUtil;
+import io.fabric8.maven.enricher.api.Util.GitUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.AbstractLiveEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
