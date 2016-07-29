@@ -14,7 +14,7 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.generator.javaapp;
+package io.fabric8.maven.generator.javaexec;
 
 import java.util.ArrayList;
 import java.util.HashMap;
