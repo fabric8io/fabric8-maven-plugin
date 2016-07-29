@@ -25,10 +25,10 @@
     <relativePath>../../parent/pom.xml</relativePath>
   </parent>
 
-  <artifactId>fabric8-maven-generator-java-app</artifactId>
+  <artifactId>fabric8-maven-generator-java-exec</artifactId>
   <version>3.1-SNAPSHOT</version>
 
-  <name>Fabric8 Maven :: Generator :: Java App</name>
+  <name>Fabric8 Maven :: Generator :: Java Exec</name>
 
   <dependencies>
     <dependency>

@@ -159,7 +159,7 @@
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-java-app</artifactId>
+        <artifactId>fabric8-maven-generator-java-exec</artifactId>
         <version>${project.version}</version>
       </dependency>
 

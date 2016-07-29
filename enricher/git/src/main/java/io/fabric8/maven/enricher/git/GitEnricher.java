@@ -17,7 +17,7 @@
 package io.fabric8.maven.enricher.git;
 
 import io.fabric8.kubernetes.api.Annotations;
-import io.fabric8.maven.core.util.GitUtil;
+import io.fabric8.maven.enricher.api.Util.GitUtil;
 import io.fabric8.maven.enricher.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;

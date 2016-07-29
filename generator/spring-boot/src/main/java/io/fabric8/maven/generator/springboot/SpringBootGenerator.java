@@ -36,7 +36,7 @@ import org.apache.maven.project.MavenProject;
 public class SpringBootGenerator extends BaseGenerator {
 
     public SpringBootGenerator(MavenGeneratorContext context) {
-        super(context, "spring.boot");
+        super(context, "spring-boot");
     }
 
     private enum Config implements Configs.Key {
