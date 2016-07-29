@@ -31,11 +31,11 @@ import io.fabric8.utils.Strings;
 
 /**
  */
-public class JavaExecExecGenerator extends BaseGenerator {
+public class JavaExecGenerator extends BaseGenerator {
 
     public static final String JAVA_MAIN_CLASS = "JAVA_MAIN_CLASS";
 
-    public JavaExecExecGenerator(MavenGeneratorContext context) {
+    public JavaExecGenerator(MavenGeneratorContext context) {
         super(context, "java-exec");
     }
 
