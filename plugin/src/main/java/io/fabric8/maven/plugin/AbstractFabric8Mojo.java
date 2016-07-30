@@ -16,12 +16,12 @@
  */
 package io.fabric8.maven.plugin;
 
-import java.util.Properties;
-
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
@@ -33,20 +33,22 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
     @Parameter(defaultValue = "${session}", readonly = true)
     protected MavenSession session;
 
-    // Logger to use
-    protected Logger log = new AnsiLogger(getLog(),
-                                          getBooleanConfigProperty("useColor",true),
-                                          getBooleanConfigProperty("verbose", false), "F8> ");
+    // Whether to use color
+    @Parameter(property = "fabric8.useColor", defaultValue = "true")
+    protected boolean useColor;
 
-    // Resolve properties with both `docker` (as used in d-m-p) and `fabric8` prefix
-    protected boolean getBooleanConfigProperty(String key, boolean defaultVal) {
-        Properties props = System.getProperties();
-        for (String prefix : new String[] { "fabric8", "docker"}) {
-            String lookup = prefix + "." + key;
-            if (props.containsKey(lookup)) {
-                return Boolean.parseBoolean(lookup);
-            }
-        }
-        return defaultVal;
+    // For verbose output
+    @Parameter(property = "fabric8.verbose", defaultValue = "false")
+    protected boolean verbose;
+
+    protected Logger log;
+
+    @Override
+    public void execute() throws MojoExecutionException, MojoFailureException {
+        log = new AnsiLogger(getLog(), useColor, verbose, "F8> ");
+        executeInternal();
     }
+
+    public abstract void executeInternal() throws MojoExecutionException, MojoFailureException;
+
 }

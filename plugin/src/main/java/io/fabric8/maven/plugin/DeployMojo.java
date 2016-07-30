@@ -176,8 +176,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
 
     private ClusterAccess clusterAccess;
 
-    @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
+    public void executeInternal() throws MojoExecutionException, MojoFailureException {
         clusterAccess = new ClusterAccess(namespace);
 
         KubernetesClient kubernetes = clusterAccess.createKubernetesClient();
