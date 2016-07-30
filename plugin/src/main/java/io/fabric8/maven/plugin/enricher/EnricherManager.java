@@ -25,6 +25,7 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.Enricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
+import io.fabric8.utils.Function;
 
 import static io.fabric8.maven.plugin.enricher.EnricherManager.Extractor.*;
 
@@ -52,11 +53,14 @@ public class EnricherManager {
         log = buildContext.getLog();
         enricherConfig = buildContext.getConfig();
 
-        enrichers = pluginFactory.createServiceObjects("META-INF/fabric8/fabric8-enricher-default",
+        enrichers = pluginFactory.createServiceObjects("META-INF/fabric8-enricher-default",
                                                        "META-INF/fabric8/enricher-default",
                                                        "META-INF/fabric8-enricher",
                                                        "META-INF/fabric8/enricher");
         Collections.reverse(enrichers);
+        enrichers = filterEnrichers(enrichers);
+        logEnrichers(enrichers);
+
 
         metaDataEnricherVisitors = Arrays.asList(
             new MetadataEnricherVisitor.Deployment(this),
@@ -72,6 +76,12 @@ public class EnricherManager {
             new SelectorVisitor.Service(this));
     }
 
+    private void logEnrichers(List<Enricher> enrichers) {
+        log.verbose("Enrichers:");
+        for (Enricher enricher : enrichers) {
+            log.verbose("- %s", enricher.getName());
+        }
+    }
 
     /**
      * Enrich the given list with labels.
@@ -98,10 +108,14 @@ public class EnricherManager {
      *
      * @param builder builder to customize
      */
-    public void adapt(KubernetesListBuilder builder) {
-        for (Enricher enricher : enrichers) {
-            enricher.adapt(builder);
-        }
+    public void adapt(final KubernetesListBuilder builder) {
+        loop(new Function<Enricher, Void>() {
+            @Override
+            public Void apply(Enricher enricher) {
+                enricher.adapt(builder);
+                return null;
+            }
+        });
     }
 
     /**
@@ -109,10 +123,14 @@ public class EnricherManager {
      *
      * @param builder builder to examine for missing resources and used for adding default resources to it
      */
-    public void addDefaultResources(KubernetesListBuilder builder) {
-        for (Enricher enricher : enrichers) {
-            enricher.addMissingResources(builder);
-        }
+    public void addDefaultResources(final KubernetesListBuilder builder) {
+        loop(new Function<Enricher, Void>() {
+            @Override
+            public Void apply(Enricher enricher) {
+                enricher.addMissingResources(builder);
+                return null;
+            }
+        });
     }
 
     // =============================================================================================
@@ -135,12 +153,27 @@ public class EnricherManager {
         return extract(SELECTOR_EXTRACTOR, kind);
     }
 
-    private Map<String, String> extract(Extractor extractor, Kind kind) {
-        Map <String, String> ret = new HashMap<>();
+
+    private List<Enricher> filterEnrichers(List<Enricher> enrichers) {
+        List<Enricher> ret = new ArrayList<>();
         for (Enricher enricher : enricherConfig.order(enrichers, "enricher")) {
             if (enricherConfig.use(enricher.getName())) {
-                putAllIfNotNull(ret, extractor.extract(enricher, kind));
+                ret.add(enricher);
             }
+        }
+        return ret;
+    }
+
+    private void loop(Function<Enricher, Void> function) {
+        for (Enricher enricher : enrichers) {
+            function.apply(enricher);
+        }
+    }
+
+    private Map<String, String> extract(Extractor extractor, Kind kind) {
+        Map <String, String> ret = new HashMap<>();
+        for (Enricher enricher : enrichers) {
+            putAllIfNotNull(ret, extractor.extract(enricher, kind));
         }
         return ret;
     }

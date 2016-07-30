@@ -16,6 +16,7 @@
 
 package io.fabric8.maven.plugin.generator;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
@@ -48,12 +49,18 @@ public class GeneratorManager {
                                                "META-INF/fabric8/generator",
                                                "META-INF/fabric8-generator");
         generators = generatorConfig.order(generators,"generator");
+        List<Generator> usableGenerators = new ArrayList<>();
+        log.verbose("Generators:");
         for (Generator generator : generators) {
             if (generatorConfig.use(generator.getName())) {
-                if (generator.isApplicable()) {
-                    log.info("Calling generator %s", generator.getName());
-                    ret = generator.customize(ret);
-                }
+                log.verbose(" - %s",generator.getName());
+                usableGenerators.add(generator);
+            }
+        }
+        for (Generator generator : usableGenerators) {
+            if (generator.isApplicable()) {
+                log.info("Running generator %s", generator.getName());
+                ret = generator.customize(ret);
             }
         }
         return ret;

@@ -146,8 +146,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     // Services
     private HandlerHub handlerHub;
 
-    @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
+    public void executeInternal() throws MojoExecutionException, MojoFailureException {
         try {
             handlerHub = new HandlerHub(project);
 
