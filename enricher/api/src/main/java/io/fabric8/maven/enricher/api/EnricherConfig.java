@@ -28,7 +28,7 @@ import org.apache.maven.shared.utils.StringUtils;
  */
 public class EnricherConfig {
 
-    private static final String ENRICHER_PROP_PREFIX = "fabri8.enricher";
+    private static final String ENRICHER_PROP_PREFIX = "fabric8.enricher";
 
     private final String name;
     private final ProcessorConfig config;
