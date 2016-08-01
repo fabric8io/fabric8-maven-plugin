@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import org.apache.maven.project.MavenProject;
@@ -33,11 +34,13 @@ abstract public class BaseGenerator implements Generator {
     private final MavenGeneratorContext context;
     private final String name;
     private final GeneratorConfig config;
+    protected final PrefixedLogger log;
 
     public BaseGenerator(MavenGeneratorContext context, String name) {
         this.context = context;
         this.name = name;
         this.config = new GeneratorConfig(context.getProject().getProperties(), getName(), context.getConfig());
+        this.log = new PrefixedLogger(name, context.getLog());
     }
 
     protected MavenProject getProject() {
