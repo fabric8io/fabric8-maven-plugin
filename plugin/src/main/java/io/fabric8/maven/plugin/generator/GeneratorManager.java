@@ -42,7 +42,7 @@ public class GeneratorManager {
         List<ImageConfiguration> ret = imageConfigs;
 
         PluginServiceFactory<MavenGeneratorContext> pluginFactory = new PluginServiceFactory<>(
-            new MavenGeneratorContext(project, generatorConfig));
+            new MavenGeneratorContext(project, generatorConfig, log));
         List<Generator> generators =
             pluginFactory.createServiceObjects("META-INF/fabric8/generator-default",
                                                "META-INF/fabric8/fabric8-generator-default",

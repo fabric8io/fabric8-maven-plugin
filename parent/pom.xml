@@ -286,7 +286,15 @@
         <version>1.5.4</version>
       </dependency>
 
+      <!-- == util ====================================== -->
+
+      <dependency>
+        <groupId>org.javassist</groupId>
+        <artifactId>javassist</artifactId>
+        <version>3.20.0-GA</version>
+      </dependency>
     </dependencies>
+
   </dependencyManagement>
 
   <build>

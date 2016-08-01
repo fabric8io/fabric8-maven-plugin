@@ -17,6 +17,7 @@
 package io.fabric8.maven.generator.api;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -27,16 +28,23 @@ public class MavenGeneratorContext {
     private final MavenProject project;
     private final ProcessorConfig config;
 
-    public MavenGeneratorContext(MavenProject project, ProcessorConfig config) {
+    private final Logger log;
+
+    public MavenGeneratorContext(MavenProject project, ProcessorConfig config, Logger log) {
         this.project = project;
         this.config = config;
+        this.log = log;
     }
 
-    protected MavenProject getProject() {
+    public MavenProject getProject() {
         return project;
     }
 
     public ProcessorConfig getConfig() {
         return config;
+    }
+
+    public Logger getLog() {
+        return log;
     }
 }

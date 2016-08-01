@@ -16,11 +16,14 @@
 
 package io.fabric8.maven.generator.javaexec;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -35,17 +38,20 @@ public class JavaExecGenerator extends BaseGenerator {
 
     public static final String JAVA_MAIN_CLASS = "JAVA_MAIN_CLASS";
 
+
     public JavaExecGenerator(MavenGeneratorContext context) {
         super(context, "java-exec");
     }
 
     private enum Config implements Configs.Key {
-        mainClass      {{ d = ""; }},
+        // The name of the main class. If not speficied it is tried
+        // to find a main class within target/classes
+        mainClass,
         combine        {{ d = "false"; }},
         name           {{ d = "%g/%a:%l"; }},
-        alias          {{ d = "javaapp"; }},
+        alias          {{ d = "java-exec"; }},
         from           {{ d = "fabric8/java-alpine-openjdk8-jdk"; }},
-        webPort        {{ d = ""; }},
+        port,
         jolokiaPort    {{ d = "8778"; }},
         prometheusPort {{ d = "9779"; }};
 
@@ -56,10 +62,7 @@ public class JavaExecGenerator extends BaseGenerator {
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {
         if (isApplicable() && shouldIncludeDefaultImage(configs)) {
             Map<String, String> envVars = new HashMap<>();
-            String mainClass = getConfig(Config.mainClass);
-            if (Strings.isNotBlank(mainClass)) {
-                envVars.put(JAVA_MAIN_CLASS, mainClass);
-            }
+            envVars.put(JAVA_MAIN_CLASS, getMainClass());
 
             ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
             BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
@@ -79,10 +82,42 @@ public class JavaExecGenerator extends BaseGenerator {
         }
     }
 
+    // Only extract one time
+    private String mainClass = null;
+    private boolean alreadySearchedForMainClass = false;
+
+    private String getMainClass() {
+        if (this.alreadySearchedForMainClass) {
+            return this.mainClass;
+        }
+
+        String mc = getConfig(Config.mainClass);
+        if (mc != null) {
+            return mc;
+        }
+
+        // Try to detect a single main class from target/classes
+        try {
+            List<String> foundMainClasses =
+                ClassUtil.findMainClasses(new File(getContext().getProject().getBuild().getOutputDirectory()));
+            if (foundMainClasses.size() == 0) {
+                return mainClass = null;
+            } else if (foundMainClasses.size() == 1) {
+                return mainClass = foundMainClasses.get(0);
+            } else {
+                log.warn("Found more than one main class : " + foundMainClasses + ". Ignoring ....");
+                return mainClass = null;
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot examine main classes: " + e,e);
+        } finally {
+            alreadySearchedForMainClass = true;
+        }
+    }
+
     @Override
     public boolean isApplicable() {
-        String mainClass = getConfig(Config.mainClass);
-        return Strings.isNotBlank(mainClass);
+        return Strings.isNotBlank(getMainClass());
     }
 
     private boolean shouldIncludeDefaultImage(List<ImageConfiguration> configs) {
@@ -93,7 +128,7 @@ public class JavaExecGenerator extends BaseGenerator {
     private List<String> extractPorts() {
         // TODO would rock to look at the base image and find the exposed ports!
         List<String> answer = new ArrayList<>();
-        addPortIfValid(answer, getConfig(Config.webPort));
+        addPortIfValid(answer, getConfig(Config.port));
         addPortIfValid(answer, getConfig(Config.jolokiaPort));
         addPortIfValid(answer, getConfig(Config.prometheusPort));
         return answer;

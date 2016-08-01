@@ -285,6 +285,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                     specBuilder.withTemplate(template);
                     List<Container> containers = template.getSpec().getContainers();
                     for (Container container : containers) {
+                        validateContainer(container);
                         containerToImageMap.put(container.getName(), container.getImage());
                     }
                 }
@@ -322,6 +323,13 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
         }
         return item;
+    }
+
+    private void validateContainer(Container container) {
+        if (container.getImage() == null) {
+            throw new IllegalArgumentException("Container " + container.getName() + " has no Docker image configured. " +
+                                               "Please check your Docker image configuration (including the generators which are supposed to run)");
+        }
     }
 
     // ==================================================================================
