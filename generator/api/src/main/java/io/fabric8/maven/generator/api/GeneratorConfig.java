@@ -25,7 +25,7 @@ import io.fabric8.maven.core.util.Configs;
  */
 public class GeneratorConfig {
 
-    private static final String GENERATOR_PROP_PREFIX = "fabri8.generator";
+    private static final String GENERATOR_PROP_PREFIX = "fabric8.generator";
 
     private final String name;
     private final ProcessorConfig config;
