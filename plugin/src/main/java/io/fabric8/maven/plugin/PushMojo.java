@@ -17,9 +17,15 @@
 package io.fabric8.maven.plugin;
 
 
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.ResolutionScope;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.util.ProfileUtil;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.plugin.generator.GeneratorManager;
+import org.apache.maven.plugins.annotations.*;
 
 /**
  * Proxy to d-m-p's build push
@@ -30,8 +36,51 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 @Mojo(name = "push", defaultPhase = LifecyclePhase.INSTALL, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class PushMojo extends io.fabric8.maven.docker.PushMojo {
 
+    /**
+     * Generator specific options. This is a generic prefix where the keys have the form
+     * <code>&lt;generator-prefix&gt;-&lt;option&gt;</code>.
+     */
+    @Parameter
+    private ProcessorConfig generator;
+
+    /**
+     * Profile to use. A profile contains the enrichers and generators to
+     * use as well as their configuration. Profiles are looked up
+     * in the classpath and can be provided as yaml files.
+     *
+     * However, any given enricher and or generator configuration overrides
+     * the information provided by a profile.
+     */
+    @Parameter(property = "fabric8.profile")
+    private String profile;
+
+    /**
+     * Folder where to find project specific files, e.g a custom profile
+     */
+    @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
+    private File resourceDir;
+
     @Override
     protected String getLogPrefix() {
         return "F8> ";
+    }
+
+    /**
+     * Customization hook called by the base plugin.
+     *
+     * @param configs configuration to customize
+     * @return the configuration customized by our generators.
+     */
+    @Override
+    public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
+        try {
+            ProcessorConfig generatorConcfig =
+                ProfileUtil.extractProcesssorConfiguration(generator,
+                                                           ProfileUtil.GENERATOR_CONFIG,
+                                                           profile, resourceDir);
+            return GeneratorManager.generate(configs, generatorConcfig, project, log);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot extract generator config: " + e,e);
+        }
     }
 }
