@@ -19,6 +19,8 @@ package io.fabric8.maven.generator.springboot;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
@@ -35,6 +37,10 @@ import org.apache.maven.project.MavenProject;
  */
 public class SpringBootGenerator extends BaseGenerator {
 
+    private static final String S2I_BUILDER_IMAGE = "fabric8/s2i-java";
+    private static final String BASE_IMAGE = "fabric8/java-alpine-openjdk8-jdk";
+
+
     public SpringBootGenerator(MavenGeneratorContext context) {
         super(context, "spring-boot");
     }
@@ -43,7 +49,7 @@ public class SpringBootGenerator extends BaseGenerator {
         combine        {{ d = "false"; }},
         name           {{ d = "%g/%a:%l"; }},
         alias          {{ d = "springboot"; }},
-        from           {{ d = "fabric8/java-alpine-openjdk8-jdk"; }},
+        from,
         webPort        {{ d = "8080"; }},
         jolokiaPort    {{ d = "8778"; }},
         prometheusPort {{ d = "9779"; }};
@@ -57,7 +63,7 @@ public class SpringBootGenerator extends BaseGenerator {
             ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
             BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
                 .assembly(createAssembly())
-                .from(getConfig(Config.from))
+                .from(getFrom())
                 .ports(extractPorts());
             addLatestTagIfSnapshot(buildBuilder);
             imageBuilder
@@ -69,6 +75,19 @@ public class SpringBootGenerator extends BaseGenerator {
         } else {
             return configs;
         }
+    }
+
+    private String getFrom() {
+        String from = getConfig(Config.from);
+        if (from != null) {
+            return from;
+        }
+        MavenGeneratorContext ctx = getContext();
+        PlatformMode mode = ctx.getMode();
+        OpenShiftBuildStrategy strategy = ctx.getStrategy();
+        return mode == PlatformMode.openshift && strategy == OpenShiftBuildStrategy.s2i ?
+            S2I_BUILDER_IMAGE :
+            BASE_IMAGE;
     }
 
     @Override
@@ -101,7 +120,7 @@ public class SpringBootGenerator extends BaseGenerator {
         return
             new AssemblyConfiguration.Builder()
                 .basedir("/app")
-                .descriptorRef("spring-boot")
+                .descriptorRef("artifact")
                 .build();
     }
 }

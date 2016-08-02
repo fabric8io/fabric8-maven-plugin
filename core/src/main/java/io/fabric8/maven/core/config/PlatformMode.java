@@ -25,26 +25,26 @@ public enum PlatformMode {
     /**
      * Create resources descriptors for vanilla Kubernetes
      */
-    kubernetes("kubernetes"),
+    kubernetes(false),
 
     /**
      * Use special OpenShift features like BuildConfigs
      */
-    openshift("openshift"),
+    openshift(false),
 
     /**
-     * Operate offline, e.g. create only the docker.tar but do not build. Otherwise like
-     * plain kubernetes (not sure whether this is needed or maybe it should be a parallel config)
+     * Detect automatically whether running on OpenShift or Kuberentes.
+     * This is done by contacting an API server
      */
-    offline("kubernetes");
+    auto(true);
 
-    private final String fileName;
+    private boolean autoFlag;
 
-    PlatformMode(String fileName) {
-        this.fileName = fileName;
+    PlatformMode(boolean autoFlag) {
+        this.autoFlag = autoFlag;
     }
 
-    public String getFileName() {
-        return fileName;
+    public boolean isAuto() {
+        return autoFlag;
     }
 }

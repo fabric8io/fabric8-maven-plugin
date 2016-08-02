@@ -72,16 +72,11 @@
               <exclude>build</exclude>
             </excludes>
             <config>
-              <default.service>
+              <f8-service>
                 <type>NodePort</type>
-              </default.service>
+              </f8-service>
             </config>
           </enricher>
-          <generator>
-            <excludes>
-              <exclude>java.app</exclude>
-            </excludes>
-          </generator>
         </configuration>
 
         <executions>

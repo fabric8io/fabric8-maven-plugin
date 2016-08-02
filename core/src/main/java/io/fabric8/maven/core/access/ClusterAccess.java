@@ -44,7 +44,6 @@ public class ClusterAccess {
     }
 
     public KubernetesClient createKubernetesClient() {
-        Config config = createDefaultConfig();
         return new DefaultKubernetesClient(createDefaultConfig());
     }
 
@@ -59,6 +58,10 @@ public class ClusterAccess {
     }
     public String getNamespace() {
         return namespace;
+    }
+
+    public boolean isOpenShift() {
+        return KubernetesHelper.isOpenShift(createKubernetesClient());
     }
 }
 

@@ -33,6 +33,9 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.util.*;
 import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.plugin.converter.DeploymentOpenShiftConverter;
+import io.fabric8.maven.plugin.converter.KubernetesToOpenShiftConverter;
+import io.fabric8.maven.plugin.converter.ReplicSetOpenShiftConverter;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
@@ -110,6 +113,21 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     private List<ImageConfiguration> images;
 
     /**
+     * Whether to perform a Kubernetes build (i.e. agains a vanilla Docker daemon) or
+     * an OpenShift build (with a Docker build against the OpenShift API server.
+     */
+    @Parameter(property = "fabric8.mode")
+    private PlatformMode mode = PlatformMode.auto;
+
+    /**
+     * OpenShift build mode when an OpenShift build is performed.
+     * Can be either "s2i" for an s2i binary build mode or "docker" for a binary
+     * docker mode.
+     */
+    @Parameter(property = "fabric8.build.strategy" )
+    private OpenShiftBuildStrategy buildStrategy = OpenShiftBuildStrategy.s2i;
+
+    /**
      * Profile to use. A profile contains the enrichers and generators to
      * use as well as their configuration. Profiles are looked up
      * in the classpath and can be provided as yaml files.
@@ -145,6 +163,15 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     // Services
     private HandlerHub handlerHub;
+
+    // Converters for going from Kubernertes objects to openshift objects
+    private Map<String, KubernetesToOpenShiftConverter> openShiftConverters;
+
+    public ResourceMojo() {
+        openShiftConverters = new HashMap<>();
+        openShiftConverters.put("ReplicaSet", new ReplicSetOpenShiftConverter());
+        openShiftConverters.put("Deployment", new DeploymentOpenShiftConverter());
+    }
 
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         try {
@@ -221,10 +248,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         List<HasMetadata> items = resources.getItems();
         if (items != null) {
             for (HasMetadata item : items) {
-                HasMetadata openshiftItem = convertKubernetesItemToOpenShift(item);
-                if (openshiftItem != null) {
-                    builder.addToItems(openshiftItem);
-                }
+                builder.addToItems(convertKubernetesItemToOpenShift(item));
             }
         }
         return builder.build();
@@ -236,100 +260,8 @@ public class ResourceMojo extends AbstractFabric8Mojo {
      * @return the converted kubernetes resource or null if it should be ignored
      */
     private HasMetadata convertKubernetesItemToOpenShift(HasMetadata item) {
-        if (item instanceof ReplicaSet) {
-            ReplicaSet resource = (ReplicaSet) item;
-            ReplicationControllerBuilder builder = new ReplicationControllerBuilder();
-            builder.withMetadata(resource.getMetadata());
-            ReplicaSetSpec spec = resource.getSpec();
-            if (spec != null) {
-                ReplicationControllerFluent.SpecNested<ReplicationControllerBuilder> specBuilder = builder.withNewSpec();
-                Integer replicas = spec.getReplicas();
-                if (replicas != null) {
-                    specBuilder.withReplicas(replicas);
-                }
-                LabelSelector selector = spec.getSelector();
-                if (selector  != null) {
-                    Map<String, String> matchLabels = selector.getMatchLabels();
-                    if (matchLabels != null && !matchLabels.isEmpty()) {
-                        specBuilder.withSelector(matchLabels);
-                    }
-                }
-                PodTemplateSpec template = spec.getTemplate();
-                if (template != null) {
-                    specBuilder.withTemplate(template);
-                }
-                specBuilder.endSpec();
-            }
-            return builder.build();
-        } else if (item instanceof Deployment) {
-            Deployment resource = (Deployment) item;
-            DeploymentConfigBuilder builder = new DeploymentConfigBuilder();
-            builder.withMetadata(resource.getMetadata());
-            DeploymentSpec spec = resource.getSpec();
-            if (spec != null) {
-                DeploymentConfigFluent.SpecNested<DeploymentConfigBuilder> specBuilder = builder.withNewSpec();
-                Integer replicas = spec.getReplicas();
-                if (replicas != null) {
-                    specBuilder.withReplicas(replicas);
-                }
-                LabelSelector selector = spec.getSelector();
-                if (selector  != null) {
-                    Map<String, String> matchLabels = selector.getMatchLabels();
-                    if (matchLabels != null && !matchLabels.isEmpty()) {
-                        specBuilder.withSelector(matchLabels);
-                    }
-                }
-                Map<String, String> containerToImageMap = new HashMap<>();
-                PodTemplateSpec template = spec.getTemplate();
-                if (template != null) {
-                    specBuilder.withTemplate(template);
-                    List<Container> containers = template.getSpec().getContainers();
-                    for (Container container : containers) {
-                        validateContainer(container);
-                        containerToImageMap.put(container.getName(), container.getImage());
-                    }
-                }
-                DeploymentStrategy strategy = spec.getStrategy();
-                if (strategy != null) {
-                    // TODO is there any values we can copy across?
-                    //specBuilder.withStrategy(strategy);
-                }
-
-                // lets add a default trigger so that its triggered when we change its config
-                specBuilder.addNewTrigger().withType("ConfigChange").endTrigger();
-
-                // add a new image change trigger for the build stream
-                if (containerToImageMap.size() != 0) {
-                    for (Map.Entry<String, String> entry : containerToImageMap.entrySet()) {
-                        String containerName = entry.getKey();
-                        ImageName image = new ImageName(entry.getValue());
-                        specBuilder.addNewTrigger()
-                                     .withType("ImageChange")
-                                     .withNewImageChangeParams()
-                                       .withAutomatic(true)
-                                       .withNewFrom()
-                                         .withKind("ImageStreamTag")
-                                         .withName(image.getSimpleName() + ":" + image.getTag())
-                                       .endFrom()
-                                       .withContainerNames(containerName)
-                                     .endImageChangeParams()
-                                   .endTrigger();
-                    }
-                }
-
-                specBuilder.endSpec();
-            }
-            return builder.build();
-
-        }
-        return item;
-    }
-
-    private void validateContainer(Container container) {
-        if (container.getImage() == null) {
-            throw new IllegalArgumentException("Container " + container.getName() + " has no Docker image configured. " +
-                                               "Please check your Docker image configuration (including the generators which are supposed to run)");
-        }
+        KubernetesToOpenShiftConverter converter = openShiftConverters.get(item.getKind());
+        return converter != null ? converter.convert(item) : item;
     }
 
     // ==================================================================================
@@ -350,7 +282,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                 @Override
                 public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
                     try {
-                        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, log);
+                        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, log, mode, buildStrategy);
                     } catch (IOException e) {
                         throw new IllegalArgumentException("Cannot extract generator: " + e,e);
                     }

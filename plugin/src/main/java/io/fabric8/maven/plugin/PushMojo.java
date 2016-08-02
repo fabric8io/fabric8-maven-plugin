@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -60,6 +62,21 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
     private File resourceDir;
 
+    /**
+     * Whether to perform a Kubernetes build (i.e. agains a vanilla Docker daemon) or
+     * an OpenShift build (with a Docker build against the OpenShift API server.
+     */
+    @Parameter(property = "fabric8.mode")
+    private PlatformMode mode = PlatformMode.auto;
+
+    /**
+     * OpenShift build mode when an OpenShift build is performed.
+     * Can be either "s2i" for an s2i binary build mode or "docker" for a binary
+     * docker mode.
+     */
+    @Parameter(property = "fabric8.build.strategy" )
+    private OpenShiftBuildStrategy buildStrategy = OpenShiftBuildStrategy.s2i;
+
     @Override
     protected String getLogPrefix() {
         return "F8> ";
@@ -78,7 +95,7 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
                 ProfileUtil.extractProcesssorConfiguration(generator,
                                                            ProfileUtil.GENERATOR_CONFIG,
                                                            profile, resourceDir);
-            return GeneratorManager.generate(configs, generatorConcfig, project, log);
+            return GeneratorManager.generate(configs, generatorConcfig, project, log, mode, buildStrategy);
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot extract generator config: " + e,e);
         }
