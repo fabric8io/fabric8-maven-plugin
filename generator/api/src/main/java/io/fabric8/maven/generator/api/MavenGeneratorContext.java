@@ -16,6 +16,8 @@
 
 package io.fabric8.maven.generator.api;
 
+import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.project.MavenProject;
@@ -29,11 +31,16 @@ public class MavenGeneratorContext {
     private final ProcessorConfig config;
 
     private final Logger log;
+    private final PlatformMode mode;
+    private final OpenShiftBuildStrategy strategy;
 
-    public MavenGeneratorContext(MavenProject project, ProcessorConfig config, Logger log) {
+    public MavenGeneratorContext(MavenProject project, ProcessorConfig generatorConfig, Logger log,
+                                 PlatformMode mode, OpenShiftBuildStrategy strategy) {
         this.project = project;
-        this.config = config;
+        this.config = generatorConfig;
         this.log = log;
+        this.mode = mode;
+        this.strategy = strategy;
     }
 
     public MavenProject getProject() {
@@ -46,5 +53,13 @@ public class MavenGeneratorContext {
 
     public Logger getLog() {
         return log;
+    }
+
+    public PlatformMode getMode() {
+        return mode;
+    }
+
+    public OpenShiftBuildStrategy getStrategy() {
+        return strategy;
     }
 }

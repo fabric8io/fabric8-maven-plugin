@@ -17,6 +17,8 @@
 package io.fabric8.maven.plugin;
 
 
+import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
@@ -33,12 +35,27 @@ import java.util.List;
 @Mojo(name = "watch", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
 
+    /**
+     * Whether to perform a Kubernetes build (i.e. agains a vanilla Docker daemon) or
+     * an OpenShift build (with a Docker build against the OpenShift API server.
+     */
+    @Parameter(property = "fabric8.mode")
+    private PlatformMode mode = PlatformMode.auto;
+
+    /**
+     * OpenShift build mode when an OpenShift build is performed.
+     * Can be either "s2i" for an s2i binary build mode or "docker" for a binary
+     * docker mode.
+     */
+    @Parameter(property = "fabric8.build.strategy" )
+    private OpenShiftBuildStrategy buildStrategy = OpenShiftBuildStrategy.s2i;
+
     @Parameter
     ProcessorConfig generator;
 
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-        return GeneratorManager.generate(configs, generator, project, log);
+        return GeneratorManager.generate(configs, generator, project, log, mode, buildStrategy);
     }
 
     @Override

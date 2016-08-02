@@ -25,18 +25,20 @@ import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.access.ClusterAccess;
-import io.fabric8.maven.core.config.BuildRecreateMode;
-import io.fabric8.maven.core.config.PlatformMode;
-import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.config.*;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
+import io.fabric8.openshift.api.model.BuildStrategy;
+import io.fabric8.openshift.api.model.BuildStrategyBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 
 /**
@@ -80,11 +82,20 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      * an OpenShift build (with a Docker build against the OpenShift API server.
      */
     @Parameter(property = "fabric8.mode")
-    private PlatformMode mode = PlatformMode.kubernetes;
+    private PlatformMode mode = PlatformMode.auto;
+
+    /**
+     * OpenShift build mode when an OpenShift build is performed.
+     * Can be either "s2i" for an s2i binary build mode or "docker" for a binary
+     * docker mode.
+     */
+    @Parameter(property = "fabric8.build.strategy" )
+    private OpenShiftBuildStrategy buildStrategy = OpenShiftBuildStrategy.s2i;
 
     /**
      * How to recreate the build config and/or image stream created by the build.
-     * Only in effect when <code>mode == openshift</code>. If not set, existing
+     * Only in effect when <code>mode == openshift</code> or mode is <code>auto</code>
+     * and openshift is detected. If not set, existing
      * build config will not be recreated.
      *
      * The possible values are:
@@ -111,6 +122,12 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     private ClusterAccess clusterAccess;
 
     @Override
+    public void execute() throws MojoExecutionException, MojoFailureException {
+        clusterAccess = new ClusterAccess(namespace);
+        super.execute();
+    }
+
+    @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
         if (project != null && skipPomBuilds
             && Objects.equals("pom", project.getPackaging())) {
@@ -123,13 +140,21 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Override
     protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
         throws MojoExecutionException, DockerAccessException {
-
-        if (mode == PlatformMode.kubernetes) {
+        PlatformMode platformMode = resolvePlatformMode();
+        if (platformMode == PlatformMode.kubernetes) {
             super.buildAndTag(hub, imageConfig);
-        } else if (mode == PlatformMode.openshift) {
+        } else if (platformMode == PlatformMode.openshift) {
             executeOpenShiftBuild(hub, imageConfig);
         } else {
             throw new MojoExecutionException("Unknown platform mode " + mode);
+        }
+    }
+
+    private PlatformMode resolvePlatformMode() {
+        if (mode.isAuto()) {
+            return clusterAccess.isOpenShift() ? PlatformMode.openshift : PlatformMode.kubernetes;
+        } else {
+            return mode;
         }
     }
 
@@ -141,7 +166,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      */
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, log);
+        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, log, resolvePlatformMode(), buildStrategy);
     }
 
     @Override
@@ -171,22 +196,27 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         OpenShiftClient client = getOpenShiftClient();
 
         KubernetesListBuilder builder = new KubernetesListBuilder();
-        String buildName = imageName.getSimpleName() + "-build";
-        String imageStreamName = imageName.getSimpleName();
 
         // Check for buildconfig / imagestream and create them if necessary
-        checkOrCreateBuildConfig(client, builder, buildName, imageStreamName, imageName.getTag());
-        checkOrCreateImageStream(client, builder, imageStreamName);
-        createResourceObjects(client, builder);
+        String buildName = checkOrCreateBuildConfig(client, builder, imageConfig);
+        checkOrCreateImageStream(client, builder, getImageStreamName(imageName));
+        applyResourceObjects(client, builder);
 
         // Start the actual build
         startBuild(dockerTar, client, buildName);
     }
 
+    private String getBuildName(ImageName imageName) {
+        return imageName.getSimpleName() + "-build";
+    }
+
+    private String getImageStreamName(ImageName name) {
+        return name.getSimpleName();
+    }
+
     // Create the openshift client
     private OpenShiftClient getOpenShiftClient() throws MojoExecutionException {
-        ClusterAccess access = new ClusterAccess(namespace);
-        OpenShiftClient client = access.createOpenShiftClient();
+        OpenShiftClient client = clusterAccess.createOpenShiftClient();
         if (!KubernetesHelper.isOpenShift(client)) {
             throw new MojoExecutionException(
                 "Cannot create OpenShift Docker build with a non-OpenShift cluster at " + client.getMasterUrl());
@@ -204,7 +234,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
               .fromFile(dockerTar);
     }
 
-    private void createResourceObjects(OpenShiftClient client, KubernetesListBuilder builder) {
+    private void applyResourceObjects(OpenShiftClient client, KubernetesListBuilder builder) {
         KubernetesList k8sList = builder.build();
         if (k8sList.getItems().size() != 0) {
             client.lists().create(k8sList);
@@ -230,36 +260,59 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         }
     }
 
-    private void checkOrCreateBuildConfig(OpenShiftClient client, KubernetesListBuilder builder,
-                                          String buildName, String imageStreamName, String imageTag) {
+    private String checkOrCreateBuildConfig(OpenShiftClient client, KubernetesListBuilder builder, ImageConfiguration imageConfig) {
+        ImageName imageName = new ImageName(imageConfig.getName());
+        String buildName = getBuildName(imageName);
+        String imageStreamName = getImageStreamName(imageName);
+
         boolean hasBuildConfig = client.buildConfigs().withName(buildName).get() != null;
         if (hasBuildConfig && recreate.isBuildConfig()) {
             client.buildConfigs().withName(buildName).delete();
             hasBuildConfig = false;
         }
         if (!hasBuildConfig) {
-            log.info("Creating BuildConfig %s for Docker build", buildName);
+            log.info("Creating BuildConfig %s for %s build", buildName, buildStrategy == OpenShiftBuildStrategy.s2i ? "S2I" : "Docker");
             builder.addNewBuildConfigItem()
                      .withNewMetadata()
                        .withName(buildName)
                      .endMetadata()
                      .withNewSpec()
-                       .withNewStrategy()
-                         .withType("Docker")
-                       .endStrategy()
+                       .withStrategy(createBuildStrategy(imageConfig))
                        .withNewSource()
                          .withType("Binary")
                        .endSource()
                        .withNewOutput()
                          .withNewTo()
                            .withKind("ImageStreamTag")
-                           .withName(imageStreamName + ":" + imageTag)
+                           .withName(imageStreamName + ":" + imageName.getTag())
                          .endTo()
                        .endOutput()
                      .endSpec()
                    .endBuildConfigItem();
         } else {
             log.info("Using BuildConfig %s", buildName);
+        }
+        return buildName;
+    }
+
+    private BuildStrategy createBuildStrategy(ImageConfiguration imageConfig) {
+        if (buildStrategy == OpenShiftBuildStrategy.docker) {
+            return new BuildStrategyBuilder().withType("Docker").build();
+        } else if (buildStrategy == OpenShiftBuildStrategy.s2i) {
+            BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+            String fromImage = buildConfig.getFrom();
+
+            return new BuildStrategyBuilder()
+                .withType("Source")
+                .withNewSourceStrategy()
+                  .withNewFrom()
+                     .withKind("DockerImage")
+                     .withName(fromImage)
+                  .endFrom()
+                .endSourceStrategy()
+                .build();
+        } else {
+            throw new IllegalArgumentException("Unsupported BuildStrategy " + buildStrategy);
         }
     }
 
