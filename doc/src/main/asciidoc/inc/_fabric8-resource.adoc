@@ -1,2 +1,4 @@
 [[fabric8:resource]]
 == *fabric8:resource*
+
+WARNING: This is a placeholder. Will be filled soon.

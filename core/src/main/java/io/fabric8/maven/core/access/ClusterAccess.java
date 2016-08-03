@@ -16,8 +16,11 @@
 
 package io.fabric8.maven.core.access;
 
+import java.net.UnknownHostException;
+
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.client.*;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.utils.Strings;
@@ -60,8 +63,17 @@ public class ClusterAccess {
         return namespace;
     }
 
-    public boolean isOpenShift() {
-        return KubernetesHelper.isOpenShift(createKubernetesClient());
+    public boolean isOpenShift(Logger log) {
+        try {
+            return KubernetesHelper.isOpenShift(createKubernetesClient());
+        } catch (KubernetesClientException exp) {
+            Throwable cause = exp.getCause();
+            String prefix = cause instanceof UnknownHostException ? "Unknown host " : "";
+            log.warn("Cannot access cluster for detecting mode: %s%s",
+                     prefix,
+                     cause != null ? cause.getMessage() : exp.getMessage());
+            return false;
+        }
     }
 }
 

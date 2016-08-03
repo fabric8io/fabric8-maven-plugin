@@ -28,7 +28,7 @@ This plugin supports the following goals, which are explained in the next sectio
 
 Depending on whether the OpenShift or Kubernetes operational mode is used, the workflow and the performed actions differs :
 
-.Strategies
+.Workflows
 [cols="1,4,4"]
 |===
 | Use Case | Kubernetes | OpenShift
