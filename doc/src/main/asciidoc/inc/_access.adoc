@@ -4,7 +4,7 @@
 
 == Docker Access
 
-WARNING:: This section is work-in-progress and not yet finished
+WARNING: This section is work-in-progress and not yet finished
 
 For Kubernetes builds the fabric8-maven-plugin uses the Docker remote API so the URL of your Docker Daemon must be specified. The URL can be specified by the dockerHost or machine configuration, or by the `DOCKER_HOST` environment variable. If not given
 
