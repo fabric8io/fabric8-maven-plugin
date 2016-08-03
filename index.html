@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 3.1.1,</span>
-<span id="revdate">2016-08-02</span>
+<span id="revdate">2016-08-03</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -536,30 +536,37 @@ table.CodeRay td.code>pre{padding:0}
 </ul>
 </li>
 <li><a href="#installation">2. Installation</a></li>
-<li><a href="#image-configuration">3. Image configuration</a></li>
-<li><a href="#goals">4. Goals</a>
+<li><a href="#goals">3. Goals</a>
 <ul class="sectlevel2">
-<li><a href="#fabric8:resource">4.1. <strong>fabric8:resource</strong></a></li>
-<li><a href="#fabric8:build">4.2. <strong>fabric8:build</strong></a>
+<li><a href="#fabric8:resource">3.1. <strong>fabric8:resource</strong></a></li>
+<li><a href="#fabric8:build">3.2. <strong>fabric8:build</strong></a>
 <ul class="sectlevel3">
-<li><a href="#standard-docker-build">4.2.1. Standard Docker Build</a></li>
-<li><a href="#openshift-docker-build">4.2.2. OpenShift Docker Build</a></li>
-<li><a href="#build-configuration">4.2.3. Configuration</a></li>
-<li><a href="#build-assembly">4.2.4. Assembly</a></li>
-<li><a href="#misc-env">4.2.5. Environment and Labels</a></li>
-<li><a href="#misc-startup">4.2.6. Startup Arguments</a></li>
-<li><a href="#build-buildargs">4.2.7. Build Args</a></li>
+<li><a href="#build-kubernetes">3.2.1. Kubernetes Build</a></li>
+<li><a href="#build-openshift">3.2.2. OpenShift Build</a></li>
+<li><a href="#build-goal-configuration">3.2.3. Configuration</a></li>
+<li><a href="#image-configuration">3.2.4. Image Configuration</a></li>
+<li><a href="#build-configuration">3.2.5. Build Configuration</a></li>
+<li><a href="#build-assembly">3.2.6. Assembly</a></li>
+<li><a href="#misc-env">3.2.7. Environment and Labels</a></li>
+<li><a href="#misc-startup">3.2.8. Startup Arguments</a></li>
+<li><a href="#build-buildargs">3.2.9. Build Args</a></li>
 </ul>
 </li>
-<li><a href="#fabric8:push">4.3. <strong>fabric8:push</strong></a></li>
-<li><a href="#fabric8:deploy">4.4. <strong>fabric8:deploy</strong></a></li>
-<li><a href="#fabric8:watch">4.5. <strong>fabric8:watch</strong></a></li>
+<li><a href="#fabric8:push">3.3. <strong>fabric8:push</strong></a></li>
+<li><a href="#fabric8:deploy">3.4. <strong>fabric8:deploy</strong></a></li>
+<li><a href="#fabric8:watch">3.5. <strong>fabric8:watch</strong></a></li>
 </ul>
 </li>
-<li><a href="#extensions">5. Extensions</a>
+<li><a href="#extensions">4. Extensions</a>
 <ul class="sectlevel2">
-<li><a href="#generators">5.1. Generators</a></li>
-<li><a href="#enrichers">5.2. Enrichers</a></li>
+<li><a href="#generators">4.1. Generators</a></li>
+<li><a href="#enrichers">4.2. Enrichers</a></li>
+</ul>
+</li>
+<li><a href="#access-configuration">5. Access configuration</a>
+<ul class="sectlevel2">
+<li><a href="#docker-access">5.1. Docker Access</a></li>
+<li><a href="#openshift-and-kubernetes-access">5.2. OpenShift and Kubernetes Access</a></li>
 </ul>
 </li>
 <li><a href="#registry">6. Registry handling</a></li>
@@ -580,6 +587,18 @@ table.CodeRay td.code>pre{padding:0}
 <p>&#169; 2016 The original authors.</p>
 </div>
 <!-- toc disabled -->
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+This document is work-in-progress. The most matures chaters are the <a href="#introduction">Introduction</a> and the description of the <a href="#fabric8:build"><strong>fabric8:build</strong></a> goal.
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -1051,136 +1070,16 @@ available goals are described below.</p>
 <span class="tag">&lt;/plugin&gt;</span></code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>When working with this plugin you can use an own packaging with a specialized lifecycle in order to keep your pom files small. Three packaging variants are available:</p>
-</div>
-<div class="paragraph">
-<p>The rest of this manual is now about how to configure the plugin for your images.</p>
-</div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="image-configuration">3. Image configuration</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>The plugin&#8217;s configuration is centered around <em>images</em>. These are
-specified for each image within the <code>&lt;images&gt;</code> element of the
-configuration with one <code>&lt;image&gt;</code> element per image to use.</p>
-</div>
-<div class="paragraph">
-<p>The <code>&lt;image&gt;</code> element can contain the following sub elements:</p>
-</div>
-<table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 2. Image Configuration</caption>
-<colgroup>
-<col style="width: 16.6666%;">
-<col style="width: 83.3334%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Element</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Each <code>&lt;image&gt;</code> configuration has a mandatory, unique docker
-repository <em>name</em>. This can include registry and tag parts, but also placeholder parameters. See below for a detailed explanation.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>alias</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Shortcut name for an image which can be used for
-identifying the image within this configuration. This is used when
-linking images together or for specifying it with the global <strong>image</strong> configuration element.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>registry</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Registry to use for this image. If the <code>name</code> already contains a registry this takes precedence. See <a href="#registry">Registry handling</a> for more details.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>build</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Element which contains all the configuration aspects when doing a <a href="#fabric8:build"><strong>fabric8:build</strong></a>. This element can be omitted if the image is only pulled from a registry e.g. as support for integration tests like database images.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>run</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Eelement which describe how containers should be
-created and run when <a href="#fabric8:start">[fabric8:start]</a> is called. If this image is only used a <em>data container</em> (i.e. is supposed only to be mounted as a volume) for exporting artifacts via volumes this section can be missing.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>external</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Specification of external configuration as an alternative to this XML based configuration with <code>&lt;run&gt;</code> and <code>&lt;build&gt;</code>. It contains a <code>&lt;type&gt;</code> element specifying the handler for getting the configuration. See <a href="#external-configuration">External configuration</a> for details.</p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<div class="title">Name placeholders</div>
-<p>When specifying the name you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.</p>
-</div>
-<table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 3. Placeholders</caption>
-<colgroup>
-<col style="width: 16.6666%;">
-<col style="width: 83.3334%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Placeholder</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%g</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The last part of the Maven group name, sanitized so that it can be used as username on GitHub. Only the part after the last dot is used. E.g. for a group id <code>io.fabric8</code> this placeholder would insert <code>fabric8</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%a</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A sanitized version of the artefact id so that it can be used as part of an Docker image name. I.e. it is converted to all lower case (as required by Docker)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%v</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The project version. Synonym to <code>${project.version}</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%l</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">If the project version ends with <code>-SNAPSHOT</code> then this placeholder is <code>latest</code>, otherwise its the full version (same as <code>%v</code>)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%t</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">If the project version ends with <code>-SNAPSHOT</code> this placeholder resolves to <code>snapshot-&lt;timestamp&gt;</code> where timestamp has the date format <code>yyMMdd-HHmmss-SSSS</code> (eg <code>snapshot-</code>). This feature is especially useful during development in oder to avoid conflicts when images are to be updated which are still in use. You need to take care yourself of cleaning up old images afterwards, though.</p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>Either a <code>&lt;build&gt;</code> or <code>&lt;run&gt;</code> section must be present. These are explained in details in the corresponding goal sections.</p>
-</div>
-<div class="listingblock">
-<div class="title">Example</div>
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
-  ....
-  <span class="tag">&lt;images&gt;</span>
-    <span class="tag">&lt;image&gt;</span>
-      <span class="tag">&lt;name&gt;</span>%g/docker-demo:0.1<span class="tag">&lt;/name&gt;</span>
-      <span class="tag">&lt;alias&gt;</span>service<span class="tag">&lt;/alias&gt;</span>
-      <span class="tag">&lt;run&gt;</span>....<span class="tag">&lt;/run&gt;</span>
-      <span class="tag">&lt;build&gt;</span>....<span class="tag">&lt;/build&gt;</span>
-    <span class="tag">&lt;/image&gt;</span>
-  <span class="tag">&lt;/images&gt;</span>
-<span class="tag">&lt;/configuration&gt;</span></code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="goals">4. Goals</h2>
+<h2 id="goals">3. Goals</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>This plugin supports the following goals, which are explained in the next sections:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 4. Plugin Goals</caption>
+<caption class="title">Table 2. Plugin Goals</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -1218,7 +1117,7 @@ created and run when <a href="#fabric8:start">[fabric8:start]</a> is called. If 
 <p>Depending on whether the OpenShift or Kubernetes operational mode is used, the workflow and the performed actions differs :</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 5. Strategies</caption>
+<caption class="title">Table 3. Workflows</caption>
 <colgroup>
 <col style="width: 11.1111%;">
 <col style="width: 44.4444%;">
@@ -1290,36 +1189,377 @@ created and run when <a href="#fabric8:start">[fabric8:start]</a> is called. If 
 </tbody>
 </table>
 <div class="sect2">
-<h3 id="fabric8:resource">4.1. <strong>fabric8:resource</strong></h3>
-
+<h3 id="fabric8:resource">3.1. <strong>fabric8:resource</strong></h3>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+This is a placeholder. Will be filled soon.
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:build">4.2. <strong>fabric8:build</strong></h3>
+<h3 id="fabric8:build">3.2. <strong>fabric8:build</strong></h3>
 <div class="paragraph">
-<p>This goal is for building Docker images. Images can be build in two ways which depend on the <code>mode</code> (property: <code>fabric8.mode</code>). This mode can have be either <code>kubernetes</code> for a standard Docker build (the default) or <code>openshift</code> for an OpenShift Docker build. These modes are described below.</p>
+<p>This goal is for building Docker images. Images can be build in two ways which depend on the <code>mode</code> (property: <code>fabric8.mode</code>). This mode can have be either <code>kubernetes</code> for a standard Docker build (the default) or <code>openshift</code> for an OpenShift build.</p>
 </div>
 <div class="paragraph">
-<p>By default all images are build. If multiple images are configured you can filter images with the property <code>docker.image</code>. This property can carry a comma separated list of image alias names so that only these images are created during the build.</p>
+<p>By default the mode is set to <code>auto</code>. In this case the plugin tries to detect which kind of build should be performed by contaction the API server. If this fails or if no cluster access is conigured e.g. with <code>oc login</code> then the mode is set to <code>kubernetes</code>.</p>
 </div>
 <div class="sect3">
-<h4 id="standard-docker-build">4.2.1. Standard Docker Build</h4>
+<h4 id="build-kubernetes">3.2.1. Kubernetes Build</h4>
 <div class="paragraph">
-<p>If the mode is <code>kubernetes</code> then a normal Docker build against a Docker daemon is performed. This mode is the default. In order to push it to a registry the goal <a href="#fabric:push">[fabric:push]</a> is used. The</p>
+<p>If the mode is set to <code>kubernetes</code> then a normal Docker build is performed. The connection configuration to access the Docker daemon is described in <a href="#access-configuration">Access Configuration</a>.</p>
+</div>
+<div class="paragraph">
+<p>In order to make the generated images available to the Kubernetes cluster the generated images need to be pushed to a registry with the goal <a href="#fabric8:push"><strong>fabric8:push</strong></a>. This is not necessary for single node clusters, though as their is no need to distribute images.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="openshift-docker-build">4.2.2. OpenShift Docker Build</h4>
+<h4 id="build-openshift">3.2.2. OpenShift Build</h4>
 <div class="paragraph">
-<p>If the mode is <code>openshift</code> then a <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#docker-build">Docker Build</a> with a <a href="https://docs.openshift.com/enterprise/latest/dev_guide/builds.html#binary-source">Binary Source</a> is used. This means that instead of sending the image information to a Docker daemon it is send directly to OpenShift which will then create the Docker image and automatically push it to its internal Docker registry. It also updates an <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#image-streams">Image Stream</a> which can be referenced directly from a <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/deployments.html#deployments-and-deployment-configurations">Deployment Configuration</a> created by <a href="#fabric8:resource"><strong>fabric8:resource</strong></a>.</p>
+<p>For the mode <code>openshift</code> OpenShift specific <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html">Builds</a> can be performed. These are so called <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html">Binary Source</a> builds ("binary builds" in short), where the data specified with the <a href="#build-configuration">build configuration</a>  is send directly to OpenShift as a binary archive.</p>
 </div>
 <div class="paragraph">
-<p>This goal will create two OpenShift resource objects and hence need access to an OpenShift installation as described <a href="#access">Connection configuration</a></p>
+<p>There are two kind of binary builds supporte by this plugin, which can be selected with the configuration option <code>buildStrategy</code> (property <code>fabric8.build.strategy</code>)</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 4. Build Strategies</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 85.7143%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"><code>buildStrategy</code></th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>s2i</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#source-build">Source-to-Image</a> (S2I) build strategy uses so called builder images for creating new application images from binary build data. The builder image to use is taken from the base image configuration specified with <a href="#build-config-from">from</a> in the image build configuration. See below for a list of builder images which can be used with this plugin.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#docker-build">Docker Build</a> is similar to a normal Docker build except that it is done by the OpenShift cluster and not by a Docker daemon. In addition this build pushes the generated image to the OpenShift internal registry so that it is accessbile in the whole cluster.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Both build strategies update an <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#image-streams">Image Stream</a> after the image creation.</p>
 </div>
 <div class="paragraph">
-<p>The images can be either created by a generator or configured in the plugin configuration. The rest of this chapter describes how an image can be explicitely configured. For Generator based builds please refer to the chapter <a href="#generators">Generators</a></p>
+<p>The <a href="https://docs.openshift.com/enterprise/latest/dev_guide/builds.html#defining-a-buildconfig">Build Config</a> and <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#image-streams">Image streams</a> can be managed by this plugin. If they do not exist, they will be automatically created by <code>fabric8:build</code>. If they do already exist, they are reused, except when the config option <code>recreate</code> (property <code>fabric8.build.recreate</code>) is set to a value as described in <a href="#build-goal-configuration">Configuration</a>.</p>
 </div>
+<div class="paragraph">
+<p>This image stream created can then be referenced directly from a <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/deployments.html#deployments-and-deployment-configurations">Deployment Configuration</a> objects created by <a href="#fabric8:resource"><strong>fabric8:resource</strong></a>.</p>
+</div>
+<div class="paragraph">
+<p>In order to be able to to create these OpenShift resource objects access to an OpenShift installation is required. The access parameters are described in <a href="#access-configuration">Access Configuration</a>.</p>
+</div>
+<div class="paragraph">
+<p>Regardless which build mode is used, the images are configured in the same way.</p>
+</div>
+<div class="paragraph">
+<p>The configuration consists of two parts: A global section which defines the overall behaviour of this plugin. And a <code>&lt;images&gt;</code> section which defines how the one or more images should be build.</p>
+</div>
+<div class="paragraph">
+<p>Many of the options below are relevant for the <a href="#build-kubernetes">Kubernetes Workflow</a> or the <a href="#build-openshift">OpenShift Workflow</a> with Docker builds as they influence how the Docker image is build.</p>
+</div>
+<div class="paragraph">
+<p>For an S2I binary build mostly the <a href="#build-assembly">Assembly</a> is relevant because it depends on the buider image how to interpret the content of the uploaded <code>docker.tar</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="build-goal-configuration">3.2.3. Configuration</h4>
+<div class="paragraph">
+<p>The following sections describe the usual configuration, which is similar to the build configuration used in the <a href="https://dmp.fabric8.io">docker-maven-plugin</a>.</p>
+</div>
+<div class="paragraph">
+<p>In addition a more automatic way for creating predefined build configuration can be performed with so called <a href="#generators">Generators</a>. Generators are very flexibel and can be easily created. These are described in an extra <a href="#generators">section</a>.</p>
+</div>
+<div class="paragraph">
+<p>Global configuration parameters specify overall behavior common for all images to build. Some of the configuration options are shared with other goals.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 5. Global configuration</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 71.4285%;">
+<col style="width: 14.2858%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>apiVersion</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use this variable if you are using an older version of docker not compatible with the current default use to communicate with the server.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.apiVersion</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>authConfig</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Authentication information when pulling from or pushing to Docker registry. There is a dedicated section <a href="#authentication">Authentication</a> for how doing security.</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>autoPull</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Decide how to pull missing base images or images to start:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>on</code> : Automatic download any missing images (default)</p>
+</li>
+<li>
+<p><code>off</code> : Automatic pulling is switched off</p>
+</li>
+<li>
+<p><code>always</code> : Pull images always even when they are already exist locally</p>
+</li>
+<li>
+<p><code>once</code> : For multi-module builds images are only checked once and pulled for the whole build.</p>
+</li>
+</ul>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.autoPull</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>certPath</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to SSL certificate when SSL is used for communicating with the Docker daemon. These certificates are normally stored in <code>~/.docker/</code>. With this configuration the path can be set explicitly. If not set, the fallback is first taken from the environment variable <code>DOCKER_CERT_PATH</code> and then as last resort <code>~/.docker/</code>. The keys in this are expected with it standard names <code>ca.pem</code>, <code>cert.pem</code> and <code>key.pem</code>. Please refer to the <a href="https://docs.docker.com/articles/https">Docker documentation</a> for more information about SSL security with Docker.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.certPath</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerHost</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>The URL of the Docker Daemon. If this configuration option is not given, then the optional <code>&lt;machine&gt;</code> configuration section is consulted. The scheme of the URL can be either given directly as <code>http</code> or <code>https</code>
+depending on whether plain HTTP communication is enabled or SSL should
+be used. Alternatively the scheme could be <code>tcp</code> in which case the
+protocol is determined via the IANA assigned port: 2375 for <code>http</code>
+and 2376 for <code>https</code>. Finally, Unix sockets are supported by using
+the scheme <code>unix</code> together with the filesystem path to the unix socket.
+The discovery sequence used by the docker-maven-plugin to determine
+the URL is:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>value of <strong>dockerHost</strong> (<code>docker.host</code>)</p>
+</li>
+<li>
+<p>the Docker host associated with the docker-machine named in <code>&lt;machine&gt;</code>, i.e. the <code>DOCKER_HOST</code> from <code>docker-machine env</code>. See <a href="#docker-machine">below</a> for more information about Docker machine support.</p>
+</li>
+<li>
+<p>the value of the environment variable <code>DOCKER_HOST</code>.</p>
+</li>
+<li>
+<p><code>unix:///var/run/docker.sock</code> if it is a readable socket.</p>
+</li>
+</ol>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.host</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>image</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">In order to temporarily restrict the operation of plugin goals this configuration option can be used. Typically this will be set via the system property <code>docker.image</code> when Maven is called. The value can be a single image name (either its alias or full name) or it can be a comma separated list with multiple image names. Any name which doesn&#8217;t refer an image in the configuration will be ignored.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.image</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>machine</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Docker machine configuration. See <a href="#docker-machine">Docker Machine</a> for possible values</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>maxConnections</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of parallel connections are allowed to be opened to the Docker Host. For parsing log output, a connection needs to be kept open (as well for the wait features), so don&#8217;t put that number to low. Default is 100 which should be suitable for most of the cases.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.maxConnections</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>outputDirectory</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Default output directory to be used by this plugin. The default value is <code>target/docker</code> and is only used for the goal <code>fabric8:build</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.target.dir</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>portPropertyFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Global property file into which the mapped properties should be written to. The format of this file and its purpose are also described in <a href="#start-port-mapping">Port Mapping</a>.</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>registry</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specify globally a registry to use for pulling and pushing images. See <a href="#registry">Registry handling</a> for details.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.registry</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skip</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">With this parameter the execution of this plugin can be skipped completely.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipBuild</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set not images will be build (which implies also <em>skip.tag</em>) with <code>fabric8:build</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip.build</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipTag</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> this plugin won&#8217;t add any tags to images that have been built with <code>fabric8:build</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip.tag</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipMachine</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Skip using docker machine in any case</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip.machine</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>sourceDirectory</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Default directory that contains the assembly descriptor(s) used by the plugin. The default value is <code>src/main/docker</code>. This option is only relevant for the <code>fabric8:build</code> goal.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.source.dir</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>verbose</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Boolean attribute for switching on verbose output like the build steps when doing a Docker build. Default is <code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.verbose</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="image-configuration">3.2.4. Image Configuration</h4>
+<div class="paragraph">
+<p>The configuration how images should be created a defined in a dedicated <code>&lt;images&gt;</code> sections. These are specified for each image within the <code>&lt;images&gt;</code> element of the configuration with one <code>&lt;image&gt;</code> element per image to use.</p>
+</div>
+<div class="paragraph">
+<p>The <code>&lt;image&gt;</code> element can contain the following sub elements:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 6. Image Configuration</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Each <code>&lt;image&gt;</code> configuration has a mandatory, unique docker
+repository <em>name</em>. This can include registry and tag parts, but also placeholder parameters. See below for a detailed explanation.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>alias</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Shortcut name for an image which can be used for
+identifying the image within this configuration. This is used when
+linking images together or for specifying it with the global <strong>image</strong> configuration element.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>registry</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Registry to use for this image. If the <code>name</code> already contains a registry this takes precedence. See <a href="#registry">Registry handling</a> for more details.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>build</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Element which contains all the configuration aspects when doing a <a href="#fabric8:build"><strong>fabric8:build</strong></a>. This element can be omitted if the image is only pulled from a registry e.g. as support for integration tests like database images.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<div class="title">Name placeholders</div>
+<p>When specifying the name you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 7. Placeholders</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Placeholder</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%g</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The last part of the Maven group name, sanitized so that it can be used as username on GitHub. Only the part after the last dot is used. E.g. for a group id <code>io.fabric8</code> this placeholder would insert <code>fabric8</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%a</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A sanitized version of the artefact id so that it can be used as part of an Docker image name. I.e. it is converted to all lower case (as required by Docker)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%v</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The project version. Synonym to <code>${project.version}</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%l</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If the project version ends with <code>-SNAPSHOT</code> then this placeholder is <code>latest</code>, otherwise its the full version (same as <code>%v</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%t</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If the project version ends with <code>-SNAPSHOT</code> this placeholder resolves to <code>snapshot-&lt;timestamp&gt;</code> where timestamp has the date format <code>yyMMdd-HHmmss-SSSS</code> (eg <code>snapshot-</code>). This feature is especially useful during development in oder to avoid conflicts when images are to be updated which are still in use. You need to take care yourself of cleaning up old images afterwards, though.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The <code>&lt;build&gt;</code> section is mandatory and is explained in <a href="#build-configuration">below</a>.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example for &lt;image&gt;</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
+  ....
+  <span class="tag">&lt;images&gt;</span>
+    <span class="tag">&lt;image&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
+      <span class="tag">&lt;name&gt;</span>%g/docker-demo:0.1<span class="tag">&lt;/name&gt;</span> <i class="conum" data-value="2"></i><b>(2)</b>
+      <span class="tag">&lt;alias&gt;</span>service<span class="tag">&lt;/alias&gt;</span> <i class="conum" data-value="3"></i><b>(3)</b>
+      <span class="tag">&lt;build&gt;</span>....<span class="tag">&lt;/build&gt;</span> <i class="conum" data-value="4"></i><b>(4)</b>
+    <span class="tag">&lt;/image&gt;</span>
+    <span class="tag">&lt;image&gt;</span>
+      ....
+    <span class="tag">&lt;/image&gt;</span>
+  <span class="tag">&lt;/images&gt;</span>
+<span class="tag">&lt;/configuration&gt;</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>One or more <code>&lt;image&gt;`</code> definitions</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The Docker image name used when creating the image.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>An alias which can be used in other parts of the plugin to reference to this image. This alias must be unique.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>A <code>&lt;build&gt;</code> section as described in <a href="#buid-configuration">Build Configuration</a></td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="build-configuration">3.2.5. Build Configuration</h4>
 <div id="build-overview" class="paragraph">
-<p>Images can be build in two different ways:</p>
+<p>There are two different modes how Images can be built:</p>
 </div>
 <div class="paragraph">
 <div class="title">Inline plugin configuration</div>
@@ -1328,7 +1568,7 @@ created and run when <a href="#fabric8:start">[fabric8:start]</a> is called. If 
 <div class="paragraph">
 <p>When using this mode, the Dockerfile is created on the fly with all instructions extracted from the configuration given.</p>
 </div>
-<div class="paragraph">
+<div id="external-dockerfile" class="paragraph">
 <div class="title">External Dockerfile</div>
 <p>Alternatively an external Dockerfile template can be used. This mode is switch on by using one of these two configuration options within
 the <code>&lt;build&gt;</code> configuration section.</p>
@@ -1387,16 +1627,13 @@ the <code>&lt;build&gt;</code> configuration section.</p>
 <span class="tag">&lt;/plugin&gt;</span></code></pre>
 </div>
 </div>
-</div>
-<div class="sect3">
-<h4 id="build-configuration">4.2.3. Configuration</h4>
 <div class="paragraph">
 <p>All build relevant configuration is contained in the <code>&lt;build&gt;</code> section
 of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
 <code>&lt;dockerFile&gt;</code> the following configuration options are available:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 6. Build configuration</caption>
+<caption class="title">Table 8. Build configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1440,8 +1677,9 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The environments as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>from</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The base image which should be used for this image. If not given this default to <code>busybox:latest</code> and is suitable for a pure data image.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="build-config-from"></a><strong>from</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The base image which should be used for this image. If not given this default to <code>busybox:latest</code> and is suitable for a pure data image.
+In case of an <a href="#build-openshift">S2I Binary build</a> this parameter specifies the S2I Builder Image to use, which by default is <code>fabric8/s2i-java:latest</code>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>labels</strong></p></td>
@@ -1476,28 +1714,6 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">List of additional <code>tag</code> elements with which an image is to be tagged after the build.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ulimits</strong></p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p>ulimits for the container. This list contains <code>&lt;ulimit&gt;</code> elements which three sub elements:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>&lt;name&gt;</code> : The ulimit to set (e.g. <code>memlock</code>). Please refer to the Docker documentation for the possible values to set</p>
-</li>
-<li>
-<p><code>&lt;hard&gt;</code> : The hard limit</p>
-</li>
-<li>
-<p><code>&lt;soft&gt;</code> : The soft limit</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>See below for an example.</p>
-</div></div></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>user</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">User to which the Dockerfile should switch to the end (corresponds to the <code>USER</code> Dockerfile directive).</p></td>
 </tr>
@@ -1529,13 +1745,6 @@ remote API.</p>
   <span class="tag">&lt;ports&gt;</span>
     <span class="tag">&lt;port&gt;</span>8080<span class="tag">&lt;/port&gt;</span>
   <span class="tag">&lt;/ports&gt;</span>
-  <span class="tag">&lt;ulimits&gt;</span>
-    <span class="tag">&lt;ulimit&gt;</span>
-       <span class="tag">&lt;name&gt;</span>memlock<span class="tag">&lt;/name&gt;</span>
-       <span class="tag">&lt;hard&gt;</span>-1<span class="tag">&lt;/hard&gt;</span>
-       <span class="tag">&lt;soft&gt;</span>-1<span class="tag">&lt;/soft&gt;</span>
-    <span class="tag">&lt;/ulimit&gt;</span>
-  <span class="tag">&lt;ulimits&gt;</span>
   <span class="tag">&lt;volumes&gt;</span>
     <span class="tag">&lt;volume&gt;</span>/path/to/expose<span class="tag">&lt;/volume&gt;</span>
   <span class="tag">&lt;/volumes&gt;</span>
@@ -1562,12 +1771,12 @@ remote API.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-assembly">4.2.4. Assembly</h4>
+<h4 id="build-assembly">3.2.6. Assembly</h4>
 <div class="paragraph">
 <p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 7. Assembly Configuration</caption>
+<caption class="title">Table 9. Assembly Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1704,7 +1913,7 @@ predefined assembly descriptor. The following symbolic names can be
 used for <code>descriptorRef</code>:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 8. Predefined Assembly Descriptors</caption>
+<caption class="title">Table 10. Predefined Assembly Descriptors</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -1816,7 +2025,7 @@ possible to change the name of the final build artifact with the following:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="misc-env">4.2.5. Environment and Labels</h4>
+<h4 id="misc-env">3.2.7. Environment and Labels</h4>
 <div class="paragraph">
 <p>When creating a container one or more environment variables can be set via configuration with the <code>env</code> parameter</p>
 </div>
@@ -1850,7 +2059,7 @@ possible to change the name of the final build artifact with the following:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="misc-startup">4.2.6. Startup Arguments</h4>
+<h4 id="misc-startup">3.2.8. Startup Arguments</h4>
 <div class="paragraph">
 <p>Using <code>entryPoint</code> and <code>cmd</code> it is possible to specify the <a href="https://docs.docker.com/reference/builder/#entrypoint">entry point</a>
 or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a container.</p>
@@ -1870,7 +2079,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <p>A entry point or command can be specified in two alternative formats:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 9. Entrypoint and Command Configuration</caption>
+<caption class="title">Table 11. Entrypoint and Command Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1944,9 +2153,17 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <span class="tag">&lt;/entryPoint&gt;</span></code></pre>
 </div>
 </div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">INFO</dt>
+<dd>
+<p>Startup arguments are not used in S2I builds</p>
+</dd>
+</dl>
+</div>
 </div>
 <div class="sect3">
-<h4 id="build-buildargs">4.2.7. Build Args</h4>
+<h4 id="build-buildargs">3.2.9. Build Args</h4>
 <div class="paragraph">
 <p>As described in section <a href="#build-configuration">Configuration</a> for external Dockerfiles <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg">Docker build arg</a> can be used. In addition to the
 configuration within the plugin configuration you can also use properties to specify them:</p>
@@ -1974,13 +2191,25 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:push">4.3. <strong>fabric8:push</strong></h3>
+<h3 id="fabric8:push">3.3. <strong>fabric8:push</strong></h3>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Section needs review and rearrangments
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>This goal uploads images to the registry which have a <code>&lt;build&gt;</code> configuration section. The images to push can be restricted with with
 the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code> with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 10. Push options</caption>
+<caption class="title">Table 12. Push options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2001,7 +2230,7 @@ the global option <code>image</code> (see <a href="#global-configuration">Global
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>pushRegistry</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The registry to use when pushing the image. <a href="#registry">Registry Handling</a> for
+<td class="tableblock halign-left valign-top"><p class="tableblock">The registry to use when pushing the image. See <a href="#registry">Registry Handling</a> for
 more details.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.push.registry</code></p></td>
 </tr>
@@ -2014,11 +2243,34 @@ more details.</p></td>
 </table>
 </div>
 <div class="sect2">
-<h3 id="fabric8:deploy">4.4. <strong>fabric8:deploy</strong></h3>
-
+<h3 id="fabric8:deploy">3.4. <strong>fabric8:deploy</strong></h3>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+This is a placeholder. Will be filled soon.
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:watch">4.5. <strong>fabric8:watch</strong></h3>
+<h3 id="fabric8:watch">3.5. <strong>fabric8:watch</strong></h3>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Section needs review and rearrangments
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>When developing and testing applications you will often have to rebuild Docker images and restart containers. Typing <code>fabric8:build</code> and <code>fabric8:start</code> all the time is cumbersome. With <code>fabric8:watch</code> you can enable automatic rebuilding of images and restarting of containers in case of updates.</p>
 </div>
@@ -2089,7 +2341,7 @@ to do this manually.</p>
 <p>This maven goal can be configured with the following top-level parameters:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 11. Watch configuration</caption>
+<caption class="title">Table 13. Watch configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2170,7 +2422,7 @@ below how this can be specified.</p>
 <p>Image specific watch configuration goes into an extra image-level <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). The following parameters are recognized:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 12. Watch configuration for a single image</caption>
+<caption class="title">Table 14. Watch configuration for a single image</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2250,7 +2502,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 </div>
 </div>
 <div class="sect1">
-<h2 id="extensions">5. Extensions</h2>
+<h2 id="extensions">4. Extensions</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>This plugin provides two major extensions hook how the creation of images and resources descriptors can be customized:</p>
@@ -2269,11 +2521,34 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p>The following sections described which Generators and Enrichers are available and how own customizations can be hooked in.</p>
 </div>
 <div class="sect2">
-<h3 id="generators">5.1. Generators</h3>
-
+<h3 id="generators">4.1. Generators</h3>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+This is a placeholder. Will be filled soon.
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect2">
-<h3 id="enrichers">5.2. Enrichers</h3>
+<h3 id="enrichers">4.2. Enrichers</h3>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+This is a placeholder. Will be filled soon.
+</td>
+</tr>
+</table>
+</div>
 <div class="ulist">
 <ul>
 <li>
@@ -2281,6 +2556,35 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 </li>
 </ul>
 </div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="access-configuration">5. Access configuration</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="docker-access">5.1. Docker Access</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">WARNING</dt>
+<dd>
+<p>This section is work-in-progress and not yet finished</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>For Kubernetes builds the fabric8-maven-plugin uses the Docker remote API so the URL of your Docker Daemon must be specified. The URL can be specified by the dockerHost or machine configuration, or by the <code>DOCKER_HOST</code> environment variable. If not given</p>
+</div>
+<div class="paragraph">
+<p>The Docker remote API supports communication via SSL and
+authentication with certificates.  The path to the certificates can
+be specified by the certPath or machine configuration, or by the
+<code>DOCKER_CERT_PATH</code> environment variable.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="openshift-and-kubernetes-access">5.2. OpenShift and Kubernetes Access</h3>
+
 </div>
 </div>
 </div>
@@ -2610,7 +2914,7 @@ password.</p>
 <div id="footer">
 <div id="footer-text">
 Version 3.1.1<br>
-Last updated 2016-08-02 19:55:01 UTC
+Last updated 2016-08-03 10:41:22 UTC
 </div>
 </div>
 </body>
