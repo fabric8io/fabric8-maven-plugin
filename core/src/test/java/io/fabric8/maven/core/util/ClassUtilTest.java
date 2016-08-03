@@ -33,7 +33,6 @@ import static org.junit.Assert.assertTrue;
  * @since 01/08/16
  */
 
-@Ignore
 public class ClassUtilTest {
 
     @Test
