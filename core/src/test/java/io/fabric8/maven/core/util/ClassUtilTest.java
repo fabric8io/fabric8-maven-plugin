@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -31,6 +32,8 @@ import static org.junit.Assert.assertTrue;
  * @author roland
  * @since 01/08/16
  */
+
+@Ignore
 public class ClassUtilTest {
 
     @Test
