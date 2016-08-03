@@ -2,32 +2,212 @@
 [[fabric8:build]]
 == *fabric8:build*
 
-This goal is for building Docker images. Images can be build in two ways which depend on the `mode` (property: `fabric8.mode`). This mode can have be either `kubernetes` for a standard Docker build (the default) or `openshift` for an OpenShift Docker build. These modes are described below.
+This goal is for building Docker images. Images can be build in two ways which depend on the `mode` (property: `fabric8.mode`). This mode can have be either `kubernetes` for a standard Docker build (the default) or `openshift` for an OpenShift build.
 
-By default all images are build. If multiple images are configured you can filter images with the property `docker.image`. This property can carry a comma separated list of image alias names so that only these images are created during the build.
+By default the mode is set to `auto`. In this case the plugin tries to detect which kind of build should be performed by contaction the API server. If this fails or if no cluster access is conigured e.g. with `oc login` then the mode is set to `kubernetes`.
 
-=== Standard Docker Build
+[[build-kubernetes]]
+=== Kubernetes Build
 
-If the mode is `kubernetes` then a normal Docker build against a Docker daemon is performed. This mode is the default. In order to push it to a registry the goal <<fabric:push>> is used. The
+If the mode is set to `kubernetes` then a normal Docker build is performed. The connection configuration to access the Docker daemon is described in <<access-configuration, Access Configuration>>.
 
-=== OpenShift Docker Build
+In order to make the generated images available to the Kubernetes cluster the generated images need to be pushed to a registry with the goal <<fabric8:push>>. This is not necessary for single node clusters, though as their is no need to distribute images.
 
-If the mode is `openshift` then a https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#docker-build[Docker Build] with a https://docs.openshift.com/enterprise/latest/dev_guide/builds.html#binary-source[Binary Source] is used. This means that instead of sending the image information to a Docker daemon it is send directly to OpenShift which will then create the Docker image and automatically push it to its internal Docker registry. It also updates an https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#image-streams[Image Stream] which can be referenced directly from a https://docs.openshift.com/enterprise/latest/architecture/core_concepts/deployments.html#deployments-and-deployment-configurations[Deployment Configuration] created by <<fabric8:resource>>.
+[[build-openshift]]
+=== OpenShift Build
+
+For the mode `openshift` OpenShift specific https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html[Builds] can be performed. These are so called https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html[Binary Source] builds ("binary builds" in short), where the data specified with the <<build-configuration, build configuration>>  is send directly to OpenShift as a binary archive.
+
+There are two kind of binary builds supporte by this plugin, which can be selected with the configuration option `buildStrategy` (property `fabric8.build.strategy`)
+
+.Build Strategies
+[cols="1,6"]
+|===
+| `buildStrategy` | Description
+
+| `s2i`
+| The https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#source-build[Source-to-Image] (S2I) build strategy uses so called builder images for creating new application images from binary build data. The builder image to use is taken from the base image configuration specified with <<build-config-from, from>> in the image build configuration. See below for a list of builder images which can be used with this plugin.
+
+| `docker`
+| A https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#docker-build[Docker Build] is similar to a normal Docker build except that it is done by the OpenShift cluster and not by a Docker daemon. In addition this build pushes the generated image to the OpenShift internal registry so that it is accessbile in the whole cluster.
+|===
+
+Both build strategies update an https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#image-streams[Image Stream] after the image creation.
+
+The https://docs.openshift.com/enterprise/latest/dev_guide/builds.html#defining-a-buildconfig[Build Config] and https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#image-streams[Image streams] can be managed by this plugin. If they do not exist, they will be automatically created by `fabric8:build`. If they do already exist, they are reused, except when the config option `recreate` (property `fabric8.build.recreate`) is set to a value as described in <<build-goal-configuration, Configuration>>.
+
+This image stream created can then be referenced directly from a https://docs.openshift.com/enterprise/latest/architecture/core_concepts/deployments.html#deployments-and-deployment-configurations[Deployment Configuration] objects created by <<fabric8:resource>>.
+
+In order to be able to to create these OpenShift resource objects access to an OpenShift installation is required. The access parameters are described in <<access-configuration, Access Configuration>>.
+
+Regardless which build mode is used, the images are configured in the same way.
 
 
-This goal will create two OpenShift resource objects and hence need access to an OpenShift installation as described <<access,Connection configuration>>
+The configuration consists of two parts: A global section which defines the overall behaviour of this plugin. And a `<images>` section which defines how the one or more images should be build.
+
+Many of the options below are relevant for the <<build-kubernetes, Kubernetes Workflow>> or the <<build-openshift, OpenShift Workflow>> with Docker builds as they influence how the Docker image is build.
+
+For an S2I binary build mostly the <<build-assembly, Assembly>> is relevant because it depends on the buider image how to interpret the content of the uploaded `docker.tar`.
+
+[[build-goal-configuration]]
+=== Configuration
+
+The following sections describe the usual configuration, which is similar to the build configuration used in the https://dmp.fabric8.io[docker-maven-plugin].
+
+In addition a more automatic way for creating predefined build configuration can be performed with so called <<generators, Generators>>. Generators are very flexibel and can be easily created. These are described in an extra <<generators, section>>.
+
+Global configuration parameters specify overall behavior common for all images to build. Some of the configuration options are shared with other goals.
+
+.Global configuration
+[cols="1,5,1"]
+|===
+| Element | Description | Property
+
+| *apiVersion*
+| Use this variable if you are using an older version of docker not compatible with the current default use to communicate with the server.
+| `fabric8.apiVersion`
+
+| *authConfig*
+| Authentication information when pulling from or pushing to Docker registry. There is a dedicated section <<authentication, Authentication>> for how doing security.
+|
+
+| *autoPull*
+a| Decide how to pull missing base images or images to start:
+
+ * `on` : Automatic download any missing images (default)
+ * `off` : Automatic pulling is switched off
+ * `always` : Pull images always even when they are already exist locally
+ * `once` : For multi-module builds images are only checked once and pulled for the whole build.
+
+| `docker.autoPull`
+
+| *certPath*
+| Path to SSL certificate when SSL is used for communicating with the Docker daemon. These certificates are normally stored in `~/.docker/`. With this configuration the path can be set explicitly. If not set, the fallback is first taken from the environment variable `DOCKER_CERT_PATH` and then as last resort `~/.docker/`. The keys in this are expected with it standard names `ca.pem`, `cert.pem` and `key.pem`. Please refer to the https://docs.docker.com/articles/https[Docker documentation] for more information about SSL security with Docker.
+| `docker.certPath`
+
+| *dockerHost*
+a| The URL of the Docker Daemon. If this configuration option is not given, then the optional `<machine>` configuration section is consulted. The scheme of the URL can be either given directly as `http` or `https`
+depending on whether plain HTTP communication is enabled or SSL should
+be used. Alternatively the scheme could be `tcp` in which case the
+protocol is determined via the IANA assigned port: 2375 for `http`
+and 2376 for `https`. Finally, Unix sockets are supported by using
+the scheme `unix` together with the filesystem path to the unix socket.
+The discovery sequence used by the docker-maven-plugin to determine
+the URL is:
+
+. value of *dockerHost* (`docker.host`)
+. the Docker host associated with the docker-machine named in `<machine>`, i.e. the `DOCKER_HOST` from `docker-machine env`. See <<docker-machine,below>> for more information about Docker machine support.
+. the value of the environment variable `DOCKER_HOST`.
+. `unix:///var/run/docker.sock` if it is a readable socket.
+| `docker.host`
+
+| *image*
+| In order to temporarily restrict the operation of plugin goals this configuration option can be used. Typically this will be set via the system property `docker.image` when Maven is called. The value can be a single image name (either its alias or full name) or it can be a comma separated list with multiple image names. Any name which doesn't refer an image in the configuration will be ignored.
+| `docker.image`
+
+| *machine*
+| Docker machine configuration. See <<docker-machine, Docker Machine>> for possible values
+|
+
+| *maxConnections*
+| Number of parallel connections are allowed to be opened to the Docker Host. For parsing log output, a connection needs to be kept open (as well for the wait features), so don't put that number to low. Default is 100 which should be suitable for most of the cases.
+| `docker.maxConnections`
+
+| *outputDirectory*
+| Default output directory to be used by this plugin. The default value is `target/docker` and is only used for the goal `{plugin}:build`.
+| `docker.target.dir`
+
+| *portPropertyFile*
+| Global property file into which the mapped properties should be written to. The format of this file and its purpose are also described in <<start-port-mapping,Port Mapping>>.
+|
+
+| *registry*
+| Specify globally a registry to use for pulling and pushing images. See <<registry,Registry handling>> for details.
+| `docker.registry`
+
+| *skip*
+| With this parameter the execution of this plugin can be skipped completely.
+| `docker.skip`
+
+| *skipBuild*
+| If set not images will be build (which implies also _skip.tag_) with `{plugin}:build`
+| `docker.skip.build`
+
+| *skipTag*
+| If set to `true` this plugin won't add any tags to images that have been built with `{plugin}:build`
+| `docker.skip.tag`
+
+| *skipMachine*
+| Skip using docker machine in any case
+| `docker.skip.machine`
+
+| *sourceDirectory*
+| Default directory that contains the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This option is only relevant for the `{plugin}:build` goal.
+| `docker.source.dir`
+
+| *verbose*
+| Boolean attribute for switching on verbose output like the build steps when doing a Docker build. Default is `false`
+| `docker.verbose`
+|===
+
+=== Image Configuration
+
+The configuration how images should be created a defined in a dedicated `<images>` sections. These are specified for each image within the `<images>` element of the configuration with one `<image>` element per image to use.
+
+The `<image>` element can contain the following sub elements:
+
+include::classpath:/META-INF/doc/dmp/inc/image/_configuration.adoc[]
+
+The `<build>` section is mandatory and is explained in <<build-configuration, below>>.
+
+.Example for <image>
+[source,xml]
+----
+<configuration>
+  ....
+  <images>
+    <image> <!--1-->
+      <name>%g/docker-demo:0.1</name> <!--2-->
+      <alias>service</alias> <!--3-->
+      <build>....</build> <!--4-->
+    </image>
+    <image>
+      ....
+    </image>
+  </images>
+</configuration>
+----
+<1> One or more `<image>`` definitions
+<2> The Docker image name used when creating the image.
+<3> An alias which can be used in other parts of the plugin to reference to this image. This alias must be unique.
+<4> A `<build>` section as described in <<buid-configuration, Build Configuration>>
 
 
-The images can be either created by a generator or configured in the plugin configuration. The rest of this chapter describes how an image can be explicitely configured. For Generator based builds please refer to the chapter <<generators, "Generators">>
+[[build-configuration]]
+=== Build Configuration
 
 include::classpath:/META-INF/doc/dmp/inc/build/_overview.adoc[]
 
 include::classpath:/META-INF/doc/dmp/inc/build/_configuration.adoc[]
 
+[[build-assembly]]
+=== Assembly
+
 include::classpath:/META-INF/doc/dmp/inc/build/_assembly.adoc[]
+
+[[misc-env]]
+=== Environment and Labels
 
 include::classpath:/META-INF/doc/dmp/inc/misc/_env.adoc[]
 
+[[misc-startup]]
+=== Startup Arguments
+
 include::classpath:/META-INF/doc/dmp/inc/misc/_startup.adoc[]
+
+INFO:: Startup arguments are not used in S2I builds
+
+[[build-buildargs]]
+=== Build Args
 
 include::classpath:/META-INF/doc/dmp/inc/build/_buildargs.adoc[]

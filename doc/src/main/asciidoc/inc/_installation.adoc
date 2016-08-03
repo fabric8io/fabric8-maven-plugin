@@ -39,7 +39,3 @@ available goals are described below.
   </executions>
 </plugin>
 ----
-
-When working with this plugin you can use an own packaging with a specialized lifecycle in order to keep your pom files small. Three packaging variants are available:
-
-The rest of this manual is now about how to configure the plugin for your images.

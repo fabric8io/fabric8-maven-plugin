@@ -25,26 +25,32 @@ public enum PlatformMode {
     /**
      * Create resources descriptors for vanilla Kubernetes
      */
-    kubernetes(false),
+    kubernetes(false, "Kubernetes"),
 
     /**
      * Use special OpenShift features like BuildConfigs
      */
-    openshift(false),
+    openshift(false, "OpenShift"),
 
     /**
      * Detect automatically whether running on OpenShift or Kuberentes.
      * This is done by contacting an API server
      */
-    auto(true);
+    auto(true, "Auto");
 
     private boolean autoFlag;
+    private String label;
 
-    PlatformMode(boolean autoFlag) {
+    PlatformMode(boolean autoFlag, String label) {
         this.autoFlag = autoFlag;
+        this.label = label;
     }
 
     public boolean isAuto() {
         return autoFlag;
+    }
+
+    public String getLabel() {
+        return label;
     }
 }

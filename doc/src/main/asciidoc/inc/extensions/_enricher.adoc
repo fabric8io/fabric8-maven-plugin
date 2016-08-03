@@ -2,5 +2,6 @@
 [[enrichers]]
 == Enrichers
 
+WARNING: This is a placeholder. Will be filled soon.
 
 * Should be passive. E.g. if already set don't override.

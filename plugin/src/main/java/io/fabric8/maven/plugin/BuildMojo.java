@@ -121,6 +121,9 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
 
+    // Mode which is resolved, also when 'auto' is set
+    private PlatformMode resolvedMode;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         clusterAccess = new ClusterAccess(namespace);
@@ -151,11 +154,15 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
     private PlatformMode resolvePlatformMode() {
-        if (mode.isAuto()) {
-            return clusterAccess.isOpenShift() ? PlatformMode.openshift : PlatformMode.kubernetes;
-        } else {
-            return mode;
+        if (resolvedMode == null) {
+            if (mode.isAuto()) {
+                resolvedMode = clusterAccess.isOpenShift(log) ? PlatformMode.openshift : PlatformMode.kubernetes;
+            } else {
+                resolvedMode = mode;
+            }
+            log.info("Running in %s mode", resolvedMode.getLabel());
         }
+        return resolvedMode;
     }
 
     /**
