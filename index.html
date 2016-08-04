@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 3.1.1,</span>
-<span id="revdate">2016-08-03</span>
+<span id="revdate">2016-08-04</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -1305,7 +1305,7 @@ This is a placeholder. Will be filled soon.
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>apiVersion</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Use this variable if you are using an older version of docker not compatible with the current default use to communicate with the server.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.apiVersion</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.apiVersion</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>authConfig</strong></p></td>
@@ -1334,6 +1334,52 @@ This is a placeholder. Will be filled soon.
 </ul>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.autoPull</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>buildRecreate</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>If the effective <a href="#build-mode">mode</a> is <code>openshift</code> then this option decides how the OpenShift resource objects associated with the build should be treated when they already exist:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>buildConfig</code> or <code>bc</code> : Only the BuildConfig is recreated</p>
+</li>
+<li>
+<p><code>imageStream</code> or <code>is</code> : Only the ImageStream is recreated</p>
+</li>
+<li>
+<p><code>all</code> : Both, BuildConfig and ImageStream are recreated</p>
+</li>
+<li>
+<p><code>none</code> : Neither BuildConfig nor ImageStream is recreated</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The default is <code>none</code>.</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.build.recreate</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>buildStrategy</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>If the effective <a href="#build-mode">mode</a> is <code>openshift</code> then this option sets the build strategy. This can be:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>s2i</code> for a <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#source-build">Source-to-Image build</a> with a binary source</p>
+</li>
+<li>
+<p><code>docker</code> for a <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#docker-build">Docker build</a> with a binary source</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>By default S2I is used</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.buildStrategy</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>certPath</strong></p></td>
@@ -1381,9 +1427,37 @@ the URL is:</p>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="build-mode"></a> <strong>mode</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>The build mode which can be</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>kubernetes</code> : A Docker image will be created by calling a Docker daemon. See <a href="#build-kubernetes">Kubernetes Build</a> for details.</p>
+</li>
+<li>
+<p><code>openshift</code> : An OpenShift Build will be triggered, which can be either a <em>Docker binary build</em> or a <em>S2I binary build</em>, depending on the configuration <code>buildStrategy</code>. See <a href="#build-openshift">OpenShift Build</a> for details.</p>
+</li>
+<li>
+<p><code>auto</code> : The plugin tries to detect the mode by contacting the configured cluster.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><code>auto</code> is the default.</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.mode</code></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>maxConnections</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Number of parallel connections are allowed to be opened to the Docker Host. For parsing log output, a connection needs to be kept open (as well for the wait features), so don&#8217;t put that number to low. Default is 100 which should be suitable for most of the cases.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.maxConnections</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>namespace</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Namespace to use when accessing Kubernetes or OpenShift</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.namespace</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>outputDirectory</strong></p></td>
@@ -1396,9 +1470,19 @@ the URL is:</p>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>profile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Profile to which contains enricher and generators configuration. See <a href="#profiles">Profiles</a> for details.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.profile</code></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>registry</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Specify globally a registry to use for pulling and pushing images. See <a href="#registry">Registry handling</a> for details.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.registry</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>resourceDir</strong>*</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Directory where fabric8 resources are stored. This is also the directory where a custom profile is looked up</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.resourceDir</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skip</strong></p></td>
@@ -1409,6 +1493,11 @@ the URL is:</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipBuild</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If set not images will be build (which implies also <em>skip.tag</em>) with <code>fabric8:build</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip.build</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipBuildPom</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set the build step will be skipped for modules of type <code>pom</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip.build.pom</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipTag</strong></p></td>
@@ -2918,7 +3007,7 @@ password.</p>
 <div id="footer">
 <div id="footer-text">
 Version 3.1.1<br>
-Last updated 2016-08-03 21:38:17 UTC
+Last updated 2016-08-04 08:38:10 UTC
 </div>
 </div>
 </body>
