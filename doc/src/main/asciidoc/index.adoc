@@ -17,7 +17,7 @@ ifdef::basebackend-html[toc::[]]
 
 :numbered:
 
-WARNING: This document is work-in-progress. The most matured chapters are the <<introduction>>, the description of the <<fabric8:buidld>> goal and the <<generators,Generator>> chapter is growing constantly.
+WARNING: This document is work-in-progress. The most matured chaptervs are the <<introduction>>, the description of the <<fabric8:buidld>> goal and the <<generators,Generator>> chapter is growing constantly.
 
 include::inc/_introduction.adoc[]
 
