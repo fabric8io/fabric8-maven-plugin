@@ -1,6 +1,6 @@
 
 [[enrichers]]
-== Enrichers
+= Enrichers
 
 WARNING: This is a placeholder. Will be filled soon.
 

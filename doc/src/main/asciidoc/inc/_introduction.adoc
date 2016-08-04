@@ -67,7 +67,7 @@ This minimal but full working example `pom.xml` shows how a simple spring boot a
 .Example
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
-<project>
+< project>
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.fabric8</groupId>
