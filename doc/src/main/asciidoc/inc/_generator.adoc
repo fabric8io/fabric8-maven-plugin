@@ -6,7 +6,7 @@ The usual way to define Docker images is with the plugin configuration as explai
 
 However, this plugin provides an additional route for defining image configurations. This is done by so called _Generators_. A generator is a Java component providing an auto-detection mechanism for certain build type like a Spring Boot build or a plain Java build. As soon as a generator detects that it is applicable it will be called with the list of images configured in the pom.xml. Typically a generator only creates dynamically an image configuration if this list is empty. But a generator is free to also add new images to an existing list or even change the current image list.
 
-You can easily create your own generator as explained in <<building-generators, Creating Generators>>. This section however will focus on existing generators and how you can configure them.
+You can easily create your own generator as explained in <<generators-api, Generator API>>. This section however will focus on existing generators and how you can configure them.
 
 By default, this plugin includes already a set of generators,  which are explained in detail below. These generators are enabled by default, but you can easil disable them or only select a certain set of generators. Each generator has a _name_, which is unique for a generator.
 
@@ -54,7 +54,7 @@ Generators can be configured with a `<generator>` section. The following sub-ele
 | Configuration for all generators. Each generator support a specific set of configuration values as described in the documentation. The subelements of this section are tags named as the generator to configure. E.g. for generator `spring-boot`, the sub-element is called `<spring-boot>`. This element then holds the specific generator configuration like `<name>` for specifying the final image name. See above for an example
 |===
 
-fabric8-maven-plugin comes with a set of default generators which are described in the next secion <<generators-stock, Stock Generators>>. These are enabled by default. In addition, custom generators can be easily added by simply declaring a compile scoped dependency in the `pom.xml`. How this can be done and how such a generator can be implemented is described in <<generators-API, Generator API>>.
+fabric8-maven-plugin comes with a set of default generators which are described in the next secion <<generators-stock, Stock Generators>>. These are enabled by default. In addition, custom generators can be easily added by simply declaring a compile scoped dependency in the `pom.xml`. How this can be done and how such a generator can be implemented is described in <<generators-api, Generator API>>.
 
 [[generators-stock]]
 == Stock Generators
