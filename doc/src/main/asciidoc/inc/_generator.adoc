@@ -1,0 +1,69 @@
+
+[[generators]]
+= Generators
+
+The usual way to define Docker images is with the plugin configuration as explained in <<fabric8:build>>. This can either be done completly within the pom.xml or by refering to an external Dockerfile. Since fabric8-maven-plugin includes our https://github.com/fabric8io/docker-maven-plugin[docker-maven-plugin] the way how images are built is identical.
+
+However, this plugin provides an additional route for defining image configurations. This is done by so called _Generators_. A generator is a Java component providing an auto-detection mechanism for certain build type like a Spring Boot build or a plain Java build. As soon as a generator detects that it is applicable it will be called with the list of images configured in the pom.xml. Typically a generator only creates dynamically an image configuration if this list is empty. But a generator is free to also add new images to an existing list or even change the current image list.
+
+You can easily create your own generator as explained in <<generators-api, Generator API>>. This section however will focus on existing generators and how you can configure them.
+
+By default, this plugin includes already a set of generators,  which are explained in detail below. These generators are enabled by default, but you can easil disable them or only select a certain set of generators. Each generator has a _name_, which is unique for a generator.
+
+The generator configuration is embedded in a `<generator>` configuration section:
+
+.Example for a generator configuration
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+<plugin>
+  ....
+  <configuration>
+    ....
+    <generator> <!--1-->
+      <includes> <!--2-->
+        <include>spring-boot</include>
+      </includes>
+      <config> <!--3-->
+        <spring-boot> <!--4-->
+          <alias>ping</alias>
+        </spring-boot>
+      </config>
+    </generator>
+  </configuration>
+</plugin>
+----
+<1> Start of generators' configuration.
+<2> Generators can be included and excluded. Includes have precedence, and the generators are called in the given order.
+<3> Configuration for individual generators.
+<4> The config is a map of supported config values. Each section is embedded in a tag named after the generator.
+
+Generators can be configured with a `<generator>` section. The following sub-elements are supported.
+
+.Generator configuration
+[cols="1,6"]
+|===
+| Element | Description
+
+| `<includes>`
+| Contains one ore more `<include>` elements with generator names which should be include. If given, only this list of generators are included in this order.
+
+| `<excludes>`
+| Holds one or more `<exclude>` elemens with generator names to exclude. This mean all the detected generators are used except the ones mentioned in this section.
+
+| `<config>`
+| Configuration for all generators. Each generator support a specific set of configuration values as described in the documentation. The subelements of this section are tags named as the generator to configure. E.g. for generator `spring-boot`, the sub-element is called `<spring-boot>`. This element then holds the specific generator configuration like `<name>` for specifying the final image name. See above for an example
+|===
+
+fabric8-maven-plugin comes with a set of default generators which are described in the next secion <<generators-stock, Stock Generators>>. These are enabled by default. In addition, custom generators can be easily added by simply declaring a compile scoped dependency in the `pom.xml`. How this can be done and how such a generator can be implemented is described in <<generators-api, Generator API>>.
+
+[[generators-stock]]
+== Stock Generators
+
+=== spring-boot
+
+=== java-exec
+
+=== karaf
+
+[[generators-api]]
+== Generator API

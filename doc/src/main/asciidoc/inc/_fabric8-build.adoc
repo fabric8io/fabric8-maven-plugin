@@ -25,7 +25,7 @@ There are two kind of binary builds supporte by this plugin, which can be select
 |===
 | `buildStrategy` | Description
 
-| `s2i`
+ | `s2i`
 | The https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#source-build[Source-to-Image] (S2I) build strategy uses so called builder images for creating new application images from binary build data. The builder image to use is taken from the base image configuration specified with <<build-config-from, from>> in the image build configuration. See below for a list of builder images which can be used with this plugin.
 
 | `docker`

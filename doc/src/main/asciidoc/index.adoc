@@ -31,7 +31,9 @@ include::inc/_fabric8-push.adoc[]
 include::inc/_fabric8-deploy.adoc[]
 include::inc/_fabric8-watch.adoc[]
 
-include::inc/_extensions.adoc[]
+include::inc/_generator.adoc[]
+include::inc/_enricher.adoc[]
+include::inc/_profile.adoc[]
 
 include::inc/_access.adoc[]
 
