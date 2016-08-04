@@ -65,7 +65,7 @@ Global configuration parameters specify overall behavior common for all images t
 
 | *apiVersion*
 | Use this variable if you are using an older version of docker not compatible with the current default use to communicate with the server.
-| `fabric8.apiVersion`
+| `docker.apiVersion`
 
 | *authConfig*
 | Authentication information when pulling from or pushing to Docker registry. There is a dedicated section <<authentication, Authentication>> for how doing security.
@@ -80,6 +80,26 @@ a| Decide how to pull missing base images or images to start:
  * `once` : For multi-module builds images are only checked once and pulled for the whole build.
 
 | `docker.autoPull`
+
+| *buildRecreate*
+a| If the effective <<build-mode,mode>> is `openshift` then this option decides how the OpenShift resource objects associated with the build should be treated when they already exist:
+
+* `buildConfig` or `bc` : Only the BuildConfig is recreated
+* `imageStream` or `is` : Only the ImageStream is recreated
+* `all` : Both, BuildConfig and ImageStream are recreated
+* `none` : Neither BuildConfig nor ImageStream is recreated
+
+The default is `none`.
+| `fabric8.build.recreate`
+
+| *buildStrategy*
+a| If the effective <<build-mode,mode>> is `openshift` then this option sets the build strategy. This can be:
+
+* `s2i` for a https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#source-build[Source-to-Image build] with a binary source
+* `docker` for a https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#docker-build[Docker build] with a binary source
+
+By default S2I is used
+| `fabric8.buildStrategy`
 
 | *certPath*
 | Path to SSL certificate when SSL is used for communicating with the Docker daemon. These certificates are normally stored in `~/.docker/`. With this configuration the path can be set explicitly. If not set, the fallback is first taken from the environment variable `DOCKER_CERT_PATH` and then as last resort `~/.docker/`. The keys in this are expected with it standard names `ca.pem`, `cert.pem` and `key.pem`. Please refer to the https://docs.docker.com/articles/https[Docker documentation] for more information about SSL security with Docker.
@@ -109,9 +129,23 @@ the URL is:
 | Docker machine configuration. See <<docker-machine, Docker Machine>> for possible values
 |
 
+| [[build-mode]] *mode*
+a| The build mode which can be
+
+* `kubernetes` : A Docker image will be created by calling a Docker daemon. See <<build-kubernetes, Kubernetes Build>> for details.
+* `openshift` : An OpenShift Build will be triggered, which can be either a _Docker binary build_ or a _S2I binary build_, depending on the configuration `buildStrategy`. See <<build-openshift, OpenShift Build>> for details.
+* `auto` : The plugin tries to detect the mode by contacting the configured cluster.
+
+`auto` is the default.
+| `fabric8.mode`
+
 | *maxConnections*
 | Number of parallel connections are allowed to be opened to the Docker Host. For parsing log output, a connection needs to be kept open (as well for the wait features), so don't put that number to low. Default is 100 which should be suitable for most of the cases.
 | `docker.maxConnections`
+
+| *namespace*
+| Namespace to use when accessing Kubernetes or OpenShift
+| `fabric8.namespace`
 
 | *outputDirectory*
 | Default output directory to be used by this plugin. The default value is `target/docker` and is only used for the goal `{plugin}:build`.
@@ -121,9 +155,17 @@ the URL is:
 | Global property file into which the mapped properties should be written to. The format of this file and its purpose are also described in <<start-port-mapping,Port Mapping>>.
 |
 
+| *profile*
+| Profile to which contains enricher and generators configuration. See <<profiles,Profiles>> for details.
+| `fabric8.profile`
+
 | *registry*
 | Specify globally a registry to use for pulling and pushing images. See <<registry,Registry handling>> for details.
 | `docker.registry`
+
+| *resourceDir**
+| Directory where fabric8 resources are stored. This is also the directory where a custom profile is looked up
+| `fabric8.resourceDir`
 
 | *skip*
 | With this parameter the execution of this plugin can be skipped completely.
@@ -132,6 +174,10 @@ the URL is:
 | *skipBuild*
 | If set not images will be build (which implies also _skip.tag_) with `{plugin}:build`
 | `docker.skip.build`
+
+| *skipBuildPom*
+| If set the build step will be skipped for modules of type `pom`
+| `docker.skip.build.pom`
 
 | *skipTag*
 | If set to `true` this plugin won't add any tags to images that have been built with `{plugin}:build`

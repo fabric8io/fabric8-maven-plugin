@@ -74,8 +74,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
     private File resourceDir;
 
-    @Parameter(property = "fabric8.build.skip.pom", defaultValue = "true")
-    private boolean skipPomBuilds;
+    @Parameter(property = "fabric8.skip.build.pom", defaultValue = "true")
+    private boolean skipBuildPom;
 
     /**
      * Whether to perform a Kubernetes build (i.e. agains a vanilla Docker daemon) or
@@ -110,10 +110,10 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      * </ul>
      */
     @Parameter(property = "fabric8.build.recreate", defaultValue = "none")
-    private BuildRecreateMode recreate;
+    private BuildRecreateMode buildRecreate;
 
     /**
-     * Namespace to use when doing a Docker build against OpenShift
+     * Namespace to use when accessing Kubernetes or OpenShift
      */
     @Parameter(property = "fabric8.namespace")
     private String namespace;
@@ -132,7 +132,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-        if (project != null && skipPomBuilds
+        if (project != null && skipBuildPom
             && Objects.equals("pom", project.getPackaging())) {
             getLog().debug("Disabling docker build for pom packaging");
             return;
@@ -251,7 +251,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     //
     private void checkOrCreateImageStream(OpenShiftClient client, KubernetesListBuilder builder, String imageStreamName) {
         boolean hasImageStream = client.imageStreams().withName(imageStreamName).get() != null;
-        if (hasImageStream && recreate.isImageStream()) {
+        if (hasImageStream && buildRecreate.isImageStream()) {
             client.imageStreams().withName(imageStreamName).delete();
             hasImageStream = false;
         }
@@ -273,7 +273,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         String imageStreamName = getImageStreamName(imageName);
 
         boolean hasBuildConfig = client.buildConfigs().withName(buildName).get() != null;
-        if (hasBuildConfig && recreate.isBuildConfig()) {
+        if (hasBuildConfig && buildRecreate.isBuildConfig()) {
             client.buildConfigs().withName(buildName).delete();
             hasBuildConfig = false;
         }
