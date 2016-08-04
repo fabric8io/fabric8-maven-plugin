@@ -38,7 +38,7 @@ public class ClassUtilTest {
     @Test
     public void findOne() throws IOException {
         File root = getRelativePackagePath("mainclass/one");
-        List<String> ret =ClassUtil.findMainClasses(root);
+        List<String> ret = ClassUtil.findMainClasses(root);
         assertEquals(1,ret.size());
         assertEquals("sub.OneMain", ret.get(0));
     }
@@ -55,7 +55,7 @@ public class ClassUtilTest {
     @Test
     public void findNone() throws IOException {
         File root = getRelativePackagePath("mainclass/zero");
-        List<String> ret =ClassUtil.findMainClasses(root);
+        List<String> ret = ClassUtil.findMainClasses(root);
         assertEquals(0,ret.size());
     }
 
