@@ -538,7 +538,11 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#installation">2. Installation</a></li>
 <li><a href="#goals">3. Goals</a>
 <ul class="sectlevel2">
-<li><a href="#fabric8:resource">3.1. <strong>fabric8:resource</strong></a></li>
+<li><a href="#fabric8:resource">3.1. <strong>fabric8:resource</strong></a>
+<ul class="sectlevel3">
+<li><a href="#resource-labels-annotations">3.1.1. Labels and Annotations</a></li>
+</ul>
+</li>
 <li><a href="#fabric8:build">3.2. <strong>fabric8:build</strong></a>
 <ul class="sectlevel3">
 <li><a href="#build-kubernetes">3.2.1. Kubernetes Build</a></li>
@@ -1205,9 +1209,123 @@ available goals are described below.</p>
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-This is a placeholder. Will be filled soon.
+This is chapter is incomplete, but there is work in progress.
 </td>
 </tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="resource-labels-annotations">3.1.1. Labels and Annotations</h4>
+<div class="paragraph">
+<p>Labels and annotations can be easily added to any resource object. This is best explained by an example.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example for label and annotations</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  ...
+  <span class="tag">&lt;configuration&gt;</span>
+    ...
+    <span class="tag">&lt;resources&gt;</span>
+      <span class="tag">&lt;labels&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
+        <span class="tag">&lt;all&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
+          <span class="tag">&lt;organisation&gt;</span>unesco<span class="tag">&lt;/organisation&gt;</span> <i class="conum" data-value="2"></i><b>(2)</b>
+        <span class="tag">&lt;/all&gt;</span>
+        <span class="tag">&lt;service&gt;</span> <i class="conum" data-value="3"></i><b>(3)</b>
+          <span class="tag">&lt;persistent&gt;</span>true<span class="tag">&lt;/persistent&gt;</span>
+          <span class="tag">&lt;database&gt;</span>mysql<span class="tag">&lt;/dabatabase&gt;</span>
+        <span class="tag">&lt;/service&gt;</span>
+        <span class="tag">&lt;replicaSet&gt;</span> <i class="conum" data-value="4"></i><b>(4)</b>
+          ...
+        <span class="tag">&lt;/replicaSet&gt;</span>
+        <span class="tag">&lt;pod&gt;</span> <i class="conum" data-value="5"></i><b>(5)</b>
+          ...
+        <span class="tag">&lt;/pod&gt;</span>
+        <span class="tag">&lt;deployment&gt;</span> <i class="conum" data-value="6"></i><b>(6)</b>
+          ...
+        <span class="tag">&lt;/deployment&gt;</span>
+      <span class="tag">&lt;/labels&gt;</span>
+
+      <span class="tag">&lt;annotations&gt;</span> <i class="conum" data-value="7"></i><b>(7)</b>
+         ...
+      <span class="tag">&lt;/annotations&gt;</span>
+    <span class="tag">&lt;/resource&gt;</span>
+  <span class="tag">&lt;/configuration&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>&lt;labels&gt;</code> section with <code>&lt;resources&gt;</code> contains labels which should be applied to objects of various kinds</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Within <code>&lt;all&gt;</code> labels which should be applied to <strong>every</strong> object can be specified</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td><code>&lt;service&gt;</code> labels are used to label services</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td><code>&lt;replicaSet&gt;</code> labels are for replica set and replication controller</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td><code>&lt;pod&gt;</code> holds lables for pod specifications in replication controller, replica sets and deployments</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td><code>&lt;deployment&gt;</code> is for labels on deployments (kubernetes) and deployment configs (openshift)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>The subelements are also available for specifying annotations.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Labels and annotations can be specified in free form as a map. In this map the element name is the name of the label or annotation respectively, whereas the content is the value to set.</p>
+</div>
+<div class="paragraph">
+<p>The following subelements are possible for <code>&lt;labels&gt;</code> and <code>&lt;annotations&gt;</code> :</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 4. Label and annotation configuration</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 85.7143%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>all</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All entries specified in the <code>&lt;all&gt;</code> sections are applied to all resource objects created. This also implies build object like image stream and build configs which are create implicitely for an <a href="#build-openshift">OpenShift build</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>deployment</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Labels and annotations applied to <code>Deployment</code> (for Kubernetes) and <code>DeploymentConfig</code> (for OpenShift) objects</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>pod</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Labels and annotations applied pod specification as used in <code>ReplicationController</code>,  <code>ReplicaSets</code>, <code>Deployments</code> and <code>DeploymentConfigs</code> objects.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>replicaSet</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Labels and annotations applied to <code>ReplicaSet</code> and <code>ReplicationController</code> objects.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>service</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Labels and annotations applied to <code>Service</code> objects.</p></td>
+</tr>
+</tbody>
 </table>
 </div>
 </div>
@@ -1237,7 +1355,7 @@ This is a placeholder. Will be filled soon.
 <p>There are two kind of binary builds supporte by this plugin, which can be selected with the configuration option <code>buildStrategy</code> (property <code>fabric8.build.strategy</code>)</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 4. Build Strategies</caption>
+<caption class="title">Table 5. Build Strategies</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -1296,7 +1414,7 @@ This is a placeholder. Will be filled soon.
 <p>Global configuration parameters specify overall behavior common for all images to build. Some of the configuration options are shared with other goals.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 5. Global configuration</caption>
+<caption class="title">Table 6. Global configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -1539,7 +1657,7 @@ the URL is:</p>
 <p>The <code>&lt;image&gt;</code> element can contain the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 6. Image Configuration</caption>
+<caption class="title">Table 7. Image Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1577,7 +1695,7 @@ linking images together or for specifying it with the global <strong>image</stro
 <p>When specifying the name you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 7. Placeholders</caption>
+<caption class="title">Table 8. Placeholders</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1730,7 +1848,7 @@ of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
 <code>&lt;dockerFile&gt;</code> the following configuration options are available:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 8. Build configuration</caption>
+<caption class="title">Table 9. Build configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1873,7 +1991,7 @@ remote API.</p>
 <p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 9. Assembly Configuration</caption>
+<caption class="title">Table 10. Assembly Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2010,7 +2128,7 @@ predefined assembly descriptor. The following symbolic names can be
 used for <code>descriptorRef</code>:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 10. Predefined Assembly Descriptors</caption>
+<caption class="title">Table 11. Predefined Assembly Descriptors</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -2176,7 +2294,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <p>A entry point or command can be specified in two alternative formats:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 11. Entrypoint and Command Configuration</caption>
+<caption class="title">Table 12. Entrypoint and Command Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2306,7 +2424,7 @@ Section needs review and rearrangments
 the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code> with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 12. Push options</caption>
+<caption class="title">Table 13. Push options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2438,7 +2556,7 @@ to do this manually.</p>
 <p>This maven goal can be configured with the following top-level parameters:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 13. Watch configuration</caption>
+<caption class="title">Table 14. Watch configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2519,7 +2637,7 @@ below how this can be specified.</p>
 <p>Image specific watch configuration goes into an extra image-level <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). The following parameters are recognized:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 14. Watch configuration for a single image</caption>
+<caption class="title">Table 15. Watch configuration for a single image</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2661,7 +2779,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p>Generators can be configured with a <code>&lt;generator&gt;</code> section. The following sub-elements are supported.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 15. Generator configuration</caption>
+<caption class="title">Table 16. Generator configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -3122,7 +3240,7 @@ password.</p>
 <div id="footer">
 <div id="footer-text">
 Version 3.1.1<br>
-Last updated 2016-08-05 05:07:42 UTC
+Last updated 2016-08-05 12:59:07 UTC
 </div>
 </div>
 </body>
