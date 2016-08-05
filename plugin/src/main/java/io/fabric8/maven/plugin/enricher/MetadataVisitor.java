@@ -20,22 +20,23 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
 import io.fabric8.maven.enricher.api.Kind;
 
 /**
+ * Visitor which adds labels and annotations
+ *
  * @author roland
  * @since 02/05/16
  */
-public abstract class MetadataEnricherVisitor<T> extends TypedVisitor<T> {
+public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
     private final EnricherManager enricher;
 
 
-    private MetadataEnricherVisitor(EnricherManager enricher) {
+    private MetadataVisitor(EnricherManager enricher) {
         this.enricher = enricher;
     }
 
@@ -66,15 +67,15 @@ public abstract class MetadataEnricherVisitor<T> extends TypedVisitor<T> {
 
     // =======================================================================================
 
-    public static class PodTemplate extends MetadataEnricherVisitor<PodTemplateSpecBuilder> {
+    public static class PodSpec extends MetadataVisitor<PodTemplateSpecBuilder> {
 
-        public PodTemplate(EnricherManager enricher) {
+        public PodSpec(EnricherManager enricher) {
             super(enricher);
         }
 
         @Override
         protected Kind getKind() {
-            return Kind.POD_TEMPLATE;
+            return Kind.POD_SPEC;
         }
 
         @Override
@@ -84,7 +85,7 @@ public abstract class MetadataEnricherVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    public static class Service extends MetadataEnricherVisitor<ServiceBuilder> {
+    public static class Service extends MetadataVisitor<ServiceBuilder> {
 
         public Service(EnricherManager enricher) {
             super(enricher);
@@ -102,7 +103,7 @@ public abstract class MetadataEnricherVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    public static class ReplicaSet extends MetadataEnricherVisitor<ReplicaSetBuilder> {
+    public static class ReplicaSet extends MetadataVisitor<ReplicaSetBuilder> {
         public ReplicaSet(EnricherManager enricher) {
             super(enricher);
         }
@@ -119,7 +120,7 @@ public abstract class MetadataEnricherVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    public static class ReplicationController extends MetadataEnricherVisitor<ReplicationControllerBuilder> {
+    public static class ReplicationController extends MetadataVisitor<ReplicationControllerBuilder> {
         public ReplicationController(EnricherManager enricher) {
             super(enricher);
         }
@@ -136,7 +137,7 @@ public abstract class MetadataEnricherVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    public static class Deployment extends MetadataEnricherVisitor<DeploymentBuilder> {
+    public static class Deployment extends MetadataVisitor<DeploymentBuilder> {
         public Deployment(EnricherManager enricher) {
             super(enricher);
         }

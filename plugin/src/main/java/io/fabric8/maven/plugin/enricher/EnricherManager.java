@@ -19,7 +19,9 @@ package io.fabric8.maven.plugin.enricher;
 import java.util.*;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.config.MetaDataConfig;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.PluginServiceFactory;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.Enricher;
@@ -39,41 +41,56 @@ public class EnricherManager {
     // List of enrichers used for customizing the generated deployment descriptors
     private List<Enricher> enrichers;
 
-    private ProcessorConfig enricherConfig;
+    // context used by enrichers
+    private final ProcessorConfig enricherConfig;
 
     private Logger log;
 
     // List of visitors used to enrich with labels
-    private final List<? extends MetadataEnricherVisitor<?>> metaDataEnricherVisitors;
+    private final List<? extends MetadataVisitor<?>> metaDataVisitors;
     private final List<? extends SelectorVisitor<?>> selectorVisitors;
 
-    public EnricherManager(EnricherContext buildContext) {
-        PluginServiceFactory<EnricherContext> pluginFactory = new PluginServiceFactory<>(buildContext);
+    public EnricherManager(EnricherContext enricherContext) {
+        PluginServiceFactory<EnricherContext> pluginFactory = new PluginServiceFactory<>(enricherContext);
 
-        log = buildContext.getLog();
-        enricherConfig = buildContext.getConfig();
 
-        enrichers = pluginFactory.createServiceObjects("META-INF/fabric8-enricher-default",
+        this.log = enricherContext.getLog();
+        this.enricherConfig = enricherContext.getConfig();
+
+        this.enrichers = pluginFactory.createServiceObjects("META-INF/fabric8-enricher-default",
                                                        "META-INF/fabric8/enricher-default",
                                                        "META-INF/fabric8-enricher",
                                                        "META-INF/fabric8/enricher");
         Collections.reverse(enrichers);
+
+        ResourceConfig resources = enricherContext.getResourceConfig();
+        if (resources != null) {
+            addMetaDataEnricher(enrichers, enricherContext, MetadataEnricher.Type.LABEL, resources.getLabels());
+            addMetaDataEnricher(enrichers, enricherContext, MetadataEnricher.Type.ANNOTATION, resources.getAnnotations());
+        }
+
         enrichers = filterEnrichers(enrichers);
         logEnrichers(enrichers);
 
 
-        metaDataEnricherVisitors = Arrays.asList(
-            new MetadataEnricherVisitor.Deployment(this),
-            new MetadataEnricherVisitor.ReplicaSet(this),
-            new MetadataEnricherVisitor.ReplicationController(this),
-            new MetadataEnricherVisitor.Service(this),
-            new MetadataEnricherVisitor.PodTemplate(this));
+        metaDataVisitors = Arrays.asList(
+            new MetadataVisitor.Deployment(this),
+            new MetadataVisitor.ReplicaSet(this),
+            new MetadataVisitor.ReplicationController(this),
+            new MetadataVisitor.Service(this),
+            new MetadataVisitor.PodSpec(this));
 
         selectorVisitors = Arrays.asList(
             new SelectorVisitor.Deployment(this),
             new SelectorVisitor.ReplicaSet(this),
             new SelectorVisitor.ReplicationController(this),
             new SelectorVisitor.Service(this));
+    }
+
+    private void addMetaDataEnricher(List<Enricher> enrichers, EnricherContext ctx, MetadataEnricher.Type type, MetaDataConfig metaData) {
+        if (metaData != null) {
+            enrichers.add(new MetadataEnricher(ctx, type, metaData));
+        }
     }
 
     private void logEnrichers(List<Enricher> enrichers) {
@@ -83,13 +100,30 @@ public class EnricherManager {
         }
     }
 
+    public void createDefaultResources(KubernetesListBuilder builder) {
+        // Add default resources
+        addDefaultResources(builder);
+    }
+
+    public void enrich(KubernetesListBuilder builder) {
+        // Enrich labels
+        enrichLabels(builder);
+
+        // Add missing selectors
+        addMissingSelectors(builder);
+
+        // Final customization step
+        adapt(builder);
+    }
+
+
     /**
      * Enrich the given list with labels.
      *
      * @param builder the build to enrich with labels
      */
-    public void enrichLabels(KubernetesListBuilder builder) {
-        visit(builder, metaDataEnricherVisitors);
+    private void enrichLabels(KubernetesListBuilder builder) {
+        visit(builder, metaDataVisitors);
     }
 
     /**
@@ -97,7 +131,7 @@ public class EnricherManager {
      *
      * @param builder builder to add selectors to.
      */
-    public void addMissingSelectors(KubernetesListBuilder builder) {
+    private void addMissingSelectors(KubernetesListBuilder builder) {
         for (SelectorVisitor visitor : selectorVisitors) {
             builder.accept(visitor);
         }
@@ -108,7 +142,7 @@ public class EnricherManager {
      *
      * @param builder builder to customize
      */
-    public void adapt(final KubernetesListBuilder builder) {
+    private void adapt(final KubernetesListBuilder builder) {
         loop(new Function<Enricher, Void>() {
             @Override
             public Void apply(Enricher enricher) {
@@ -123,7 +157,7 @@ public class EnricherManager {
      *
      * @param builder builder to examine for missing resources and used for adding default resources to it
      */
-    public void addDefaultResources(final KubernetesListBuilder builder) {
+    private void addDefaultResources(final KubernetesListBuilder builder) {
         loop(new Function<Enricher, Void>() {
             @Override
             public Void apply(Enricher enricher) {
@@ -178,15 +212,6 @@ public class EnricherManager {
         return ret;
     }
 
-    /**
-     * Add programmatically an enricher at the end of the enricher list
-     *
-     * @param enricher enricher to add
-     */
-    public void addEnricher(Enricher enricher) {
-        enrichers.add(enricher);
-    }
-
     // ========================================================================================================
     // Simple extractors
     enum Extractor {
@@ -215,8 +240,8 @@ public class EnricherManager {
         }
     }
 
-    private void visit(KubernetesListBuilder builder, List<? extends MetadataEnricherVisitor<?>> visitors) {
-        for (MetadataEnricherVisitor visitor : visitors) {
+    private void visit(KubernetesListBuilder builder, List<? extends MetadataVisitor<?>> visitors) {
+        for (MetadataVisitor visitor : visitors) {
             builder.accept(visitor);
         }
     }

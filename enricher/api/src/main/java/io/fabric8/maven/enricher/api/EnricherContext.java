@@ -39,13 +39,13 @@ public class EnricherContext {
     private ProcessorConfig config;
 
     public EnricherContext(MavenProject project,
-                           ProcessorConfig config,
+                           ProcessorConfig enricherConfig,
                            List<ImageConfiguration> images,
                            ResourceConfig kubernetesConfig,
                            Logger log) {
         this.log = log;
         this.project = project;
-        this.config = config;
+        this.config = enricherConfig;
         this.images = images;
         this.resourceConfig = kubernetesConfig;
     }

@@ -21,7 +21,6 @@ import java.util.*;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.extensions.*;
 import io.fabric8.maven.core.config.*;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
@@ -38,9 +37,8 @@ import io.fabric8.maven.plugin.converter.KubernetesToOpenShiftConverter;
 import io.fabric8.maven.plugin.converter.ReplicSetOpenShiftConverter;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.core.util.GoalFinder;
+import io.fabric8.maven.plugin.enricher.MetadataEnricher;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
-import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
-import io.fabric8.openshift.api.model.DeploymentConfigFluent;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.*;
 import org.apache.maven.plugins.annotations.*;
@@ -198,6 +196,36 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         }
     }
 
+    private KubernetesList generateKubernetesResources(final EnricherManager enricherManager, List<ImageConfiguration> images)
+        throws IOException, MojoExecutionException {
+        File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
+        KubernetesListBuilder builder;
+
+        // Add resource files found in the fabric8 directory
+        if (resourceFiles != null && resourceFiles.length > 0) {
+            log.info("Using resource templates from %s", resourceDir);
+            builder = KubernetesResourceUtil.readResourceFragmentsFrom(
+                KubernetesResourceUtil.API_VERSION,
+                KubernetesResourceUtil.API_EXTENSIONS_VERSION,
+                filterFiles(resourceFiles));
+        } else {
+            builder = new KubernetesListBuilder();
+        }
+
+        // Add locally configured objects
+        if (resources != null) {
+            addConfiguredResources(builder, images);
+        }
+
+        // Create default resources
+        enricherManager.createDefaultResources(builder);
+
+        // Enrich descriptors
+        enricherManager.enrich(builder);
+
+        return builder.build();
+    }
+
     private ProcessorConfig extractEnricherConfig() throws IOException {
         return ProfileUtil.extractProcesssorConfiguration(enricher,ProfileUtil.ENRICHER_CONFIG, profile, resourceDir);
     }
@@ -205,6 +233,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     private ProcessorConfig extractGeneratorConfig() throws IOException {
         return ProfileUtil.extractProcesssorConfiguration(generator, ProfileUtil.GENERATOR_CONFIG, profile, resourceDir);
     }
+
 
     private void writeResources(KubernetesList resources, ResourceClassifier classifier) throws IOException {
         // write kubernetes.yml / openshift.yml
@@ -240,7 +269,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         }
     }
 
-
     // Converts the kubernetes resources into OpenShift resources
     private KubernetesList convertToOpenShiftResources(KubernetesList resources) {
         KubernetesListBuilder builder = new KubernetesListBuilder();
@@ -265,6 +293,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     }
 
     // ==================================================================================
+
 
     private List<ImageConfiguration> getResolvedImages(List<ImageConfiguration> images, final Logger log) throws MojoExecutionException {
         List<ImageConfiguration> ret;
@@ -296,11 +325,11 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         return ret;
     }
 
-
     private void storeReferenceDateInPluginContext(Date now) {
         Map<String, Object> pluginContext = getPluginContext();
         pluginContext.put(AbstractDockerMojo.CONTEXT_KEY_BUILD_TIMESTAMP, now);
     }
+
 
     // get a reference date
     private Date getBuildReferenceDate() throws MojoExecutionException {
@@ -322,46 +351,19 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         }
     }
 
+    private void addConfiguredResources(KubernetesListBuilder builder, List<ImageConfiguration> images) {
 
-    private KubernetesList generateKubernetesResources(final EnricherManager enricherManager, List<ImageConfiguration> images)
-        throws IOException, MojoExecutionException {
-        File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
+        log.info("Adding resources from plugin configuration");
+        addServices(builder, resources.getServices());
+        addController(builder, images);
+    }
+
+    private void addController(KubernetesListBuilder builder, List<ImageConfiguration> images) {
+        // TODO: Change to ReplicaSet
         ReplicationControllerHandler rcHandler = handlerHub.getReplicationControllerHandler();
-
-        KubernetesListBuilder builder;
-
-        // Add resource files found in the fabric8 directory
-        if (resourceFiles != null && resourceFiles.length > 0) {
-            log.info("Using resource templates from %s", resourceDir);
-            builder = KubernetesResourceUtil.readResourceFragmentsFrom(
-                KubernetesResourceUtil.API_VERSION,
-                KubernetesResourceUtil.API_EXTENSIONS_VERSION,
-                filterFiles(resourceFiles));
-        } else {
-            builder = new KubernetesListBuilder();
-        }
-
-        // Add services + replicaSet if configured in plugin config
-        if (resources != null) {
-            log.info("Adding resources from plugin configuration");
-            addServices(builder, resources.getServices(), resources.getAnnotations().getService());
-            // TODO: Change to ReplicaSet ...
+        if (resources.getReplicaSetName() != null) {
             builder.addToReplicationControllerItems(rcHandler.getReplicationController(resources, images));
         }
-
-        // Add default resources
-        enricherManager.addDefaultResources(builder);
-
-        // Enrich labels
-        enricherManager.enrichLabels(builder);
-
-        // Add missing selectors
-        enricherManager.addMissingSelectors(builder);
-
-        // Final customization step
-        enricherManager.adapt(builder);
-
-        return builder.build();
     }
 
     private File[] filterFiles(File[] resourceFiles) throws MojoExecutionException {
@@ -386,10 +388,10 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         return ret;
     }
 
-    private void addServices(KubernetesListBuilder builder, List<ServiceConfig> serviceConfig, Map<String, String> annotations) {
+    private void addServices(KubernetesListBuilder builder, List<ServiceConfig> serviceConfig) {
         if (serviceConfig != null) {
             ServiceHandler serviceHandler = handlerHub.getServiceHandler();
-            builder.addToServiceItems(toArray(serviceHandler.getServices(serviceConfig, annotations)));
+            builder.addToServiceItems(toArray(serviceHandler.getServices(serviceConfig)));
         }
     }
 
@@ -408,7 +410,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             return ret;
         }
     }
-
 
     private boolean hasFabric8Dir() {
         return resourceDir.isDirectory();

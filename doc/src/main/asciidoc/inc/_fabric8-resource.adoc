@@ -1,4 +1,79 @@
 [[fabric8:resource]]
 == *fabric8:resource*
 
-WARNING: This is a placeholder. Will be filled soon.
+WARNING: This is chapter is incomplete, but there is work in progress.
+
+[[resource-labels-annotations]]
+=== Labels and Annotations
+
+Labels and annotations can be easily added to any resource object. This is best explained by an example.
+
+
+.Example for label and annotations
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+<plugin>
+  ...
+  <configuration>
+    ...
+    <resources>
+      <labels> <!--1-->
+        <all> <!--1-->
+          <organisation>unesco</organisation> <!--2-->
+        </all>
+        <service> <!--3-->
+          <persistent>true</persistent>
+          <database>mysql</dabatabase>
+        </service>
+        <replicaSet> <!--4-->
+          ...
+        </replicaSet>
+        <pod> <!--5-->
+          ...
+        </pod>
+        <deployment> <!--6-->
+          ...
+        </deployment>
+      </labels>
+
+      <annotations> <!--7-->
+         ...
+      </annotations>
+    </resource>
+  </configuration>
+</plugin>
+----
+<1> `<labels>` section with `<resources>` contains labels which should be applied to objects of various kinds
+<2> Within `<all>` labels which should be applied to *every* object can be specified
+<3> `<service>` labels are used to label services
+<4> `<replicaSet>` labels are for replica set and replication controller
+<5> `<pod>` holds lables for pod specifications in replication controller, replica sets and deployments
+<6> `<deployment>` is for labels on deployments (kubernetes) and deployment configs (openshift)
+<7> The subelements are also available for specifying annotations.
+
+Labels and annotations can be specified in free form as a map. In this map the element name is the name of the label or annotation respectively, whereas the content is the value to set.
+
+The following subelements are possible for `<labels>` and `<annotations>` :
+
+.Label and annotation configuration
+[cols="1,6"]
+|===
+| Element | Description
+
+| *all*
+| All entries specified in the `<all>` sections are applied to all resource objects created. This also implies build object like image stream and build configs which are create implicitely for an <<build-openshift, OpenShift build>>.
+
+| *deployment*
+| Labels and annotations applied to `Deployment` (for Kubernetes) and `DeploymentConfig` (for OpenShift) objects
+
+
+| *pod*
+| Labels and annotations applied pod specification as used in `ReplicationController`,  `ReplicaSets`, `Deployments` and `DeploymentConfigs` objects.
+
+
+| *replicaSet*
+| Labels and annotations applied to `ReplicaSet` and `ReplicationController` objects.
+
+| *service*
+| Labels and annotations applied to `Service` objects.
+|===
