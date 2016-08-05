@@ -39,31 +39,21 @@ import java.util.Map;
  */
 public class ServiceHandler {
 
-    public Service getService(ServiceConfig service, Map<String, String> annotations) {
-        List<Service> ret = getServices(Collections.singletonList(service),annotations);
+    public Service getService(ServiceConfig service) {
+        List<Service> ret = getServices(Collections.singletonList(service));
         return ret.size() > 0 ? ret.get(0) : null;
     }
 
-    public List<Service> getServices(List<ServiceConfig> services, Map<String, String> annotations) {
+    public List<Service> getServices(List<ServiceConfig> services) {
 
         ArrayList<Service> ret = new ArrayList<>();
 
         for (ServiceConfig service : services) {
-            Map<String, String> serviceAnnotations = new HashMap<>();
-            if (annotations != null) {
-                serviceAnnotations.putAll(annotations);
-            }
-            // lets add the prometheus annotations if required
-            String prometheusPort = findPrometheusPort(service.getPorts());
-            if (Strings.isNotBlank(prometheusPort)) {
-                        MapUtil.putIfAbsent(serviceAnnotations, Annotations.Management.PROMETHEUS_PORT, prometheusPort);
-                MapUtil.putIfAbsent(serviceAnnotations, Annotations.Management.PROMETHEUS_SCRAPE, "true");
-            }
 
             ServiceBuilder serviceBuilder = new ServiceBuilder()
                 .withNewMetadata()
                   .withName(service.getName())
-                  .withAnnotations(serviceAnnotations)
+                  .withAnnotations(getPrometheusAnnotations(service))
                 .endMetadata();
 
             ServiceFluent.SpecNested<ServiceBuilder> serviceSpecBuilder =
@@ -107,6 +97,18 @@ public class ServiceHandler {
             }
         }
         return ret;
+    }
+
+    private Map<String, String> getPrometheusAnnotations(ServiceConfig service) {
+        Map<String, String> serviceAnnotations = new HashMap<>();
+        // TODO: Use a prometheus enricher
+        // lets add the prometheus annotations if required
+        String prometheusPort = findPrometheusPort(service.getPorts());
+        if (Strings.isNotBlank(prometheusPort)) {
+                    MapUtil.putIfAbsent(serviceAnnotations, Annotations.Management.PROMETHEUS_PORT, prometheusPort);
+            MapUtil.putIfAbsent(serviceAnnotations, Annotations.Management.PROMETHEUS_SCRAPE, "true");
+        }
+        return serviceAnnotations;
     }
 
     private String findPrometheusPort(List<ServiceConfig.Port> ports) {

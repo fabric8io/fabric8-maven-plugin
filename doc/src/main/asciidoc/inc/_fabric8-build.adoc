@@ -67,7 +67,7 @@ Global configuration parameters specify overall behavior common for all images t
 | Use this variable if you are using an older version of docker not compatible with the current default use to communicate with the server.
 | `docker.apiVersion`
 
-| *authConfig*
+ | *authConfig*
 | Authentication information when pulling from or pushing to Docker registry. There is a dedicated section <<authentication, Authentication>> for how doing security.
 |
 

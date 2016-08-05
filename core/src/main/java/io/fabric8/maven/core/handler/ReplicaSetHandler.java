@@ -50,7 +50,6 @@ public class ReplicaSetHandler {
     private ObjectMeta createRsMetaData(ResourceConfig config) {
         return new ObjectMetaBuilder()
             .withName(KubernetesHelper.validateKubernetesId(config.getReplicaSetName(), "replica set name"))
-            .withAnnotations(config.getAnnotations().getReplicaSet())
             .build();
     }
 

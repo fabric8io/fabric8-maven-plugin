@@ -32,10 +32,10 @@ public class ResourceConfig {
     private Map<String,String> env;
 
     @Parameter
-    private Map<String,String> labels;
+    private MetaDataConfig labels = new MetaDataConfig();
 
     @Parameter
-    private AnnotationConfig annotations;
+    private MetaDataConfig annotations = new MetaDataConfig();;
 
     @Parameter
     private List<VolumeConfig> volumes;
@@ -82,12 +82,12 @@ public class ResourceConfig {
         return env != null ? env : Collections.<String, String>emptyMap();
     }
 
-    public Map<String, String> getLabels() {
+    public MetaDataConfig getLabels() {
         return labels;
     }
 
-    public AnnotationConfig getAnnotations() {
-        return annotations != null ? annotations : new AnnotationConfig();
+    public MetaDataConfig getAnnotations() {
+        return annotations;
     }
 
     public List<VolumeConfig> getVolumes() {

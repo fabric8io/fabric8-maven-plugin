@@ -18,6 +18,7 @@ package io.fabric8.maven.plugin;
 
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -33,6 +34,8 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.MojoParameters;
+import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.BuildStrategy;
 import io.fabric8.openshift.api.model.BuildStrategyBuilder;
@@ -56,6 +59,18 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      */
     @Parameter
     private ProcessorConfig generator;
+
+    /**
+     * Enrichers used for enricher build objects
+     */
+    @Parameter
+    private ProcessorConfig enricher;
+
+    /**
+     * Resource config for getting annotation and labels to be apllied to enriched build objects
+     */
+    @Parameter
+    private ResourceConfig resources;
 
     /**
      * Profile to use. A profile contains the enrichers and generators to
@@ -143,13 +158,17 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Override
     protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
         throws MojoExecutionException, DockerAccessException {
-        PlatformMode platformMode = resolvePlatformMode();
-        if (platformMode == PlatformMode.kubernetes) {
-            super.buildAndTag(hub, imageConfig);
-        } else if (platformMode == PlatformMode.openshift) {
-            executeOpenShiftBuild(hub, imageConfig);
-        } else {
-            throw new MojoExecutionException("Unknown platform mode " + mode);
+        try {
+            PlatformMode platformMode = resolvePlatformMode();
+            if (platformMode == PlatformMode.kubernetes) {
+                super.buildAndTag(hub, imageConfig);
+            } else if (platformMode == PlatformMode.openshift) {
+                executeOpenShiftBuild(hub, imageConfig);
+            } else {
+                throw new MojoExecutionException("Unknown platform mode " + mode + " for image " + imageConfig.getDescription());
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException("I/O Error executing build for image " + imageConfig.getDescription() + ":" + e,e);
         }
     }
 
@@ -193,7 +212,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
     // Docker build with a binary source strategy
-    private void executeOpenShiftBuild(ServiceHub hub, ImageConfiguration imageConfig) throws MojoExecutionException {
+    private void executeOpenShiftBuild(ServiceHub hub, ImageConfiguration imageConfig) throws MojoExecutionException, IOException {
         MojoParameters params = createMojoParameters();
         ImageName imageName = new ImageName(imageConfig.getName());
 
@@ -207,6 +226,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         // Check for buildconfig / imagestream and create them if necessary
         String buildName = checkOrCreateBuildConfig(client, builder, imageConfig);
         checkOrCreateImageStream(client, builder, getImageStreamName(imageName));
+
         applyResourceObjects(client, builder);
 
         // Start the actual build
@@ -233,19 +253,26 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
 
     private void startBuild(File dockerTar, OpenShiftClient client, String buildName) {
-        // TODO: Wait unti kubernetes-client support instantiateBinary()
-        // PR is underway ....
         log.info("Starting Build %s",buildName);
         client.buildConfigs().withName(buildName)
               .instantiateBinary()
               .fromFile(dockerTar);
     }
 
-    private void applyResourceObjects(OpenShiftClient client, KubernetesListBuilder builder) {
-        KubernetesList k8sList = builder.build();
-        if (k8sList.getItems().size() != 0) {
+    private void applyResourceObjects(OpenShiftClient client, KubernetesListBuilder builder) throws IOException {
+        if (builder.getItems().size() > 0) {
+            enrich(builder);
+            KubernetesList k8sList = builder.build();
             client.lists().create(k8sList);
         }
+    }
+
+    // Build up an enricher manager to enrich also our implicit created build ojects
+    private void enrich(KubernetesListBuilder builder) throws IOException {
+        ProcessorConfig resolvedEnricherConfig = ProfileUtil.extractProcesssorConfiguration(enricher, ProfileUtil.ENRICHER_CONFIG, profile, resourceDir);
+        EnricherContext enricherContext = new EnricherContext(project, resolvedEnricherConfig, getResolvedImages(), resources, log);
+        EnricherManager enricherManager = new EnricherManager(enricherContext);
+        enricherManager.enrich(builder);
     }
 
     //

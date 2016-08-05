@@ -27,7 +27,7 @@ public enum Kind {
     REPLICATION_CONTROLLER,
     DEPLOYMENT,
     DEPLOYMENT_CONFIG,
-    POD_TEMPLATE;
+    POD_SPEC;
 
     /**
      * Returns true if the kind is a Deployment/DeploymentConfig or ReplicaSet/ReplicationController

@@ -46,7 +46,6 @@ public class PodTemplateHandler {
 
     private ObjectMeta createPodMetaData(ResourceConfig config) {
         return new ObjectMetaBuilder()
-            .withAnnotations(config.getAnnotations().getPod())
             .build();
     }
 

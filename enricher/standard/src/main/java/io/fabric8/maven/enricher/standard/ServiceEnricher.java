@@ -69,7 +69,7 @@ public class ServiceEnricher extends BaseEnricher {
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
         final ServiceConfig defaultServiceConfig = extractDefaultServiceConfig();
-        final Service defaultService = serviceHandler.getService(defaultServiceConfig,null);
+        final Service defaultService = serviceHandler.getService(defaultServiceConfig);
 
         if (hasServices(builder)) {
             builder.accept(new TypedVisitor<ServiceBuilder>() {
@@ -124,6 +124,7 @@ public class ServiceEnricher extends BaseEnricher {
                 if (ports != null) {
                     for (String port : ports) {
                         /// Todo: Check IANA names (also in case port is not numeric)
+                        // TODO: Check Image labels for port specification
                         int portI = Integer.parseInt(port);
                         ret.add(
                             new ServiceConfig.Port.Builder()

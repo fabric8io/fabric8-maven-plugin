@@ -49,7 +49,6 @@ public class ReplicationControllerHandler {
     private ObjectMeta createRcMetaData(ResourceConfig config) {
         return new ObjectMetaBuilder()
             .withName(KubernetesHelper.validateKubernetesId(config.getReplicaSetName(), "replication controller name"))
-            .withAnnotations(config.getAnnotations().getReplicaSet())
             .build();
     }
 

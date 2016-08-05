@@ -18,25 +18,47 @@ package io.fabric8.maven.core.config;
 
 import java.util.Map;
 
+import javax.validation.constraints.Pattern;
+
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
+ * Configuration for labels or annotations
+ *
  * @author roland
  * @since 22/03/16
  */
-public class AnnotationConfig {
+public class MetaDataConfig {
+    /**
+     * Labels or annotations which should be applied to every object
+     */
+    @Parameter
+    private Map<String, String> all;
 
+
+    /**
+     * Labels or annoations for a Pod within a controller or deployment
+     */
     @Parameter
     private Map<String, String> pod;
 
+    /**
+     * Labels or annotations for replica sets (or replication controller)
+     */
     @Parameter
     private Map<String, String> replicaSet;
 
+    /**
+     * Labels or annotation for services
+     */
     @Parameter
     private Map<String, String> service;
 
+    /**
+     * Labels or annotations for deployment or deployment configs
+     */
     @Parameter
-    private Map<String, String> template;
+    private Map<String, String> deployment;
 
     public Map<String, String> getPod() {
         return pod;
@@ -50,7 +72,11 @@ public class AnnotationConfig {
         return service;
     }
 
-    public Map<String, String> getTemplate() {
-        return template;
+    public Map<String, String> getAll() {
+        return all;
+    }
+
+    public Map<String, String> getDeployment() {
+        return deployment;
     }
 }
