@@ -67,3 +67,5 @@ fabric8-maven-plugin comes with a set of default generators which are described 
 
 [[generators-api]]
 == Generator API
+
+WARNING: The API is still a bit in flux and will be documented later. Please refer to the  https://github.com/fabric8io/fabric8-maven-plugin/blob/master/generator/api/src/main/java/io/fabric8/maven/generator/api/Generator.java[Generator] Interface in the meantime.
