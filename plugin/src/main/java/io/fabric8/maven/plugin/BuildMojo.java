@@ -36,6 +36,7 @@ import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
+import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.BuildStrategy;
 import io.fabric8.openshift.api.model.BuildStrategyBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -233,7 +234,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
     private String getBuildName(ImageName imageName) {
-        return imageName.getSimpleName() + "-build";
+        return imageName.getSimpleName();
     }
 
     private String getImageStreamName(ImageName name) {
@@ -302,14 +303,30 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         String buildName = getBuildName(imageName);
         String imageStreamName = getImageStreamName(imageName);
 
-        boolean hasBuildConfig = client.buildConfigs().withName(buildName).get() != null;
-        if (hasBuildConfig && getBuildRecreateMode().isBuildConfig()) {
-            client.buildConfigs().withName(buildName).delete();
-            hasBuildConfig = false;
+        BuildConfig buildConfig = client.buildConfigs().withName(buildName).get();
+
+        if (buildConfig != null) {
+            if (!getBuildRecreateMode().isBuildConfig()) {
+                String type = buildConfig.getSpec().getStrategy().getType();
+                if (!buildStrategy.isSame(type)) {
+                    client.buildConfigs().withName(buildName).edit()
+                          .editSpec()
+                          .withStrategy(createBuildStrategy(imageConfig))
+                          .endSpec()
+                          .done();
+                    log.info("Editing BuildConfig %s for %s build", buildName, getStrategyLabel());
+                } else {
+                    log.info("Using BuildConfig %s for %s build", buildName, getStrategyLabel());
+                }
+                return buildName;
+            } else {
+                client.buildConfigs().withName(buildName).delete();
+            }
         }
-        if (!hasBuildConfig) {
-            log.info("Creating BuildConfig %s for %s build", buildName, buildStrategy == OpenShiftBuildStrategy.s2i ? "S2I" : "Docker");
-            builder.addNewBuildConfigItem()
+
+        // Create afresh
+        log.info("Creating BuildConfig %s for %s build", buildName, getStrategyLabel());
+        builder.addNewBuildConfigItem()
                      .withNewMetadata()
                        .withName(buildName)
                      .endMetadata()
@@ -326,10 +343,11 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                        .endOutput()
                      .endSpec()
                    .endBuildConfigItem();
-        } else {
-            log.info("Using BuildConfig %s", buildName);
-        }
         return buildName;
+    }
+
+    private String getStrategyLabel() {
+        return buildStrategy == OpenShiftBuildStrategy.s2i ? "S2I" : "Docker";
     }
 
     private BuildStrategy createBuildStrategy(ImageConfiguration imageConfig) {

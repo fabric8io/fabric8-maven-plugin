@@ -32,5 +32,17 @@ public enum OpenShiftBuildStrategy {
     /**
      * Docker build with a binary source
      */
-    docker
+    docker;
+
+    /**
+     * Check if the given type is same as this type stored in OpenShift
+     *
+     * @param type to check
+     * @return
+     */
+    public boolean isSame(String type) {
+        return type != null &&
+               (type.equalsIgnoreCase("source") && this == s2i) ||
+               (type.equalsIgnoreCase("docker") && this == docker);
+    }
 }
