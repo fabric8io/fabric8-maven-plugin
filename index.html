@@ -1381,7 +1381,7 @@ This is chapter is incomplete, but there is work in progress.
 <p>Both build strategies update an <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#image-streams">Image Stream</a> after the image creation.</p>
 </div>
 <div class="paragraph">
-<p>The <a href="https://docs.openshift.com/enterprise/latest/dev_guide/builds.html#defining-a-buildconfig">Build Config</a> and <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#image-streams">Image streams</a> can be managed by this plugin. If they do not exist, they will be automatically created by <code>fabric8:build</code>. If they do already exist, they are reused, except when the configuration option <code>buildRecreate</code> (property <code>fabric8.build.recreate</code>) is set to a value as described in <a href="#build-goal-configuration">Configuration</a>.</p>
+<p>The <a href="https://docs.openshift.com/enterprise/latest/dev_guide/builds.html#defining-a-buildconfig">Build Config</a> and <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#image-streams">Image streams</a> can be managed by this plugin. If they do not exist, they will be automatically created by <code>fabric8:build</code>. If they do already exist, they are reused, except when the configuration option <code>buildRecreate</code> (property <code>fabric8.build.recreate</code>) is set to a value as described in <a href="#build-goal-configuration">Configuration</a>. Also if the provided build strategy is different than for the existing build configuration, the Build Config is edited to reflect the new type (which in turn removes all build associated with the previous build).</p>
 </div>
 <div class="paragraph">
 <p>This image stream created can then be referenced directly from a <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/deployments.html#deployments-and-deployment-configurations">Deployment Configuration</a> objects created by <a href="#fabric8:resource"><strong>fabric8:resource</strong></a>.</p>
@@ -1483,7 +1483,7 @@ This is chapter is incomplete, but there is work in progress.
 </ul>
 </div>
 <div class="paragraph">
-<p>The default is <code>none</code>. If you provide the property without value then <code>all</code> is assumed.</p>
+<p>The default is <code>none</code>. If you provide the property without value then <code>all</code> is assumed, so everything gets recreated.</p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.build.recreate</code></p></td>
 </tr>
@@ -3240,7 +3240,7 @@ password.</p>
 <div id="footer">
 <div id="footer-text">
 Version 3.1.1<br>
-Last updated 2016-08-08 14:40:12 UTC
+Last updated 2016-08-08 14:46:14 UTC
 </div>
 </div>
 </body>
