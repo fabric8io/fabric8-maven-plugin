@@ -18,7 +18,6 @@ package io.fabric8.maven.plugin;
 
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -125,7 +124,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      * </ul>
      */
     @Parameter(property = "fabric8.build.recreate", defaultValue = "none")
-    private BuildRecreateMode buildRecreate;
+    private String buildRecreate;
 
     /**
      * Namespace to use when accessing Kubernetes or OpenShift
@@ -278,7 +277,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     //
     private void checkOrCreateImageStream(OpenShiftClient client, KubernetesListBuilder builder, String imageStreamName) {
         boolean hasImageStream = client.imageStreams().withName(imageStreamName).get() != null;
-        if (hasImageStream && buildRecreate.isImageStream()) {
+        if (hasImageStream && getBuildRecreateMode().isImageStream()) {
             client.imageStreams().withName(imageStreamName).delete();
             hasImageStream = false;
         }
@@ -294,13 +293,17 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         }
     }
 
+    private BuildRecreateMode getBuildRecreateMode() {
+        return BuildRecreateMode.fromParameter(buildRecreate);
+    }
+
     private String checkOrCreateBuildConfig(OpenShiftClient client, KubernetesListBuilder builder, ImageConfiguration imageConfig) {
         ImageName imageName = new ImageName(imageConfig.getName());
         String buildName = getBuildName(imageName);
         String imageStreamName = getImageStreamName(imageName);
 
         boolean hasBuildConfig = client.buildConfigs().withName(buildName).get() != null;
-        if (hasBuildConfig && buildRecreate.isBuildConfig()) {
+        if (hasBuildConfig && getBuildRecreateMode().isBuildConfig()) {
             client.buildConfigs().withName(buildName).delete();
             hasBuildConfig = false;
         }

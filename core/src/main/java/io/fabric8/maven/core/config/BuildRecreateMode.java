@@ -16,6 +16,10 @@
 
 package io.fabric8.maven.core.config;
 
+import org.apache.maven.shared.utils.StringUtils;
+
+import static io.fabric8.utils.Strings.isNullOrBlank;
+
 /**
  * How to recreate the build config and/or image stream created by the build.
  * Only in effect when <code>mode == openshift</code>. If not set, existing
@@ -50,6 +54,15 @@ public enum BuildRecreateMode {
     // ==============================================================
 
     private boolean isBuildConfig, isImageStream;
+
+    public static BuildRecreateMode fromParameter(String param) {
+        if (isNullOrBlank(param)) {
+            return none;
+        } else if (param.equalsIgnoreCase("true")) {
+            return all;
+        }
+        return valueOf(param.toLowerCase());
+    }
 
     private BuildRecreateMode(boolean bc, boolean is) {
         this.isBuildConfig = bc;
