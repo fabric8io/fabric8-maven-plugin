@@ -58,7 +58,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.maven>3.3.1</version.maven>
-    <version.fabric8>2.2.146</version.fabric8>
+    <version.fabric8>2.2.147</version.fabric8>
     <version.docker-maven-plugin>0.15.16</version.docker-maven-plugin>
     <version.fmp-release>3.1.1</version.fmp-release>
   </properties>
