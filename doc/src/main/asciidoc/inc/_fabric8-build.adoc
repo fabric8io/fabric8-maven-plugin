@@ -89,7 +89,7 @@ a| If the effective <<build-mode,mode>> is `openshift` then this option decides 
 * `all` : Both, BuildConfig and ImageStream are recreated
 * `none` : Neither BuildConfig nor ImageStream is recreated
 
-The default is `none`.
+The default is `none`. If you provide the property without value then `all` is assumed.
 | `fabric8.build.recreate`
 
 | *buildStrategy*
