@@ -21,6 +21,7 @@ import java.util.*;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.*;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
@@ -114,7 +115,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
      * Whether to perform a Kubernetes build (i.e. agains a vanilla Docker daemon) or
      * an OpenShift build (with a Docker build against the OpenShift API server.
      */
-    @Parameter(property = "fabric8.mode")
+    @Parameter(property = "fabric8.mode", defaultValue = "auto")
     private PlatformMode mode = PlatformMode.auto;
 
     /**
@@ -165,14 +166,27 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     // Converters for going from Kubernertes objects to openshift objects
     private Map<String, KubernetesToOpenShiftConverter> openShiftConverters;
 
+    /**
+     * Namespace to use when accessing Kubernetes or OpenShift
+     */
+    @Parameter(property = "fabric8.namespace")
+    private String namespace;
+
+    // Access for creating OpenShift binary builds
+    private ClusterAccess clusterAccess;
+
+    private PlatformMode resolvedMode;
+
     public ResourceMojo() {
-        openShiftConverters = new HashMap<>();
-        openShiftConverters.put("ReplicaSet", new ReplicSetOpenShiftConverter());
-        openShiftConverters.put("Deployment", new DeploymentOpenShiftConverter());
     }
 
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         try {
+            clusterAccess = new ClusterAccess(namespace);
+            openShiftConverters = new HashMap<>();
+            openShiftConverters.put("ReplicaSet", new ReplicSetOpenShiftConverter());
+            openShiftConverters.put("Deployment", new DeploymentOpenShiftConverter(resolvePlatformMode()));
+
             handlerHub = new HandlerHub(project);
 
             // Resolve the Docker image build configuration
@@ -194,6 +208,18 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
         }
+    }
+
+    private PlatformMode resolvePlatformMode() {
+        if (resolvedMode == null) {
+            if (mode.isAuto()) {
+                resolvedMode = clusterAccess.isOpenShift(log) ? PlatformMode.openshift : PlatformMode.kubernetes;
+            } else {
+                resolvedMode = mode;
+            }
+            log.info("Running in %s mode", resolvedMode.getLabel());
+        }
+        return resolvedMode;
     }
 
     private KubernetesList generateKubernetesResources(final EnricherManager enricherManager, List<ImageConfiguration> images)

@@ -25,6 +25,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.extensions.*;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfigFluent;
@@ -38,6 +39,11 @@ import static io.fabric8.utils.Objects.notNull;
  * @since 01/08/16
  */
 public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConverter {
+    private final PlatformMode mode;
+
+    public DeploymentOpenShiftConverter(PlatformMode mode) {
+        this.mode = mode;
+    }
 
     @Override
     public HasMetadata convert(HasMetadata item) {
@@ -82,20 +88,22 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
 
                 // add a new image change trigger for the build stream
                 if (containerToImageMap.size() != 0) {
-                    for (Map.Entry<String, String> entry : containerToImageMap.entrySet()) {
-                        String containerName = entry.getKey();
-                        ImageName image = new ImageName(entry.getValue());
-                        specBuilder.addNewTrigger()
-                                     .withType("ImageChange")
-                                     .withNewImageChangeParams()
-                                       .withAutomatic(true)
-                                       .withNewFrom()
-                                         .withKind("ImageStreamTag")
-                                         .withName(image.getSimpleName() + ":" + image.getTag())
-                                       .endFrom()
-                                       .withContainerNames(containerName)
-                                     .endImageChangeParams()
-                                   .endTrigger();
+                    if (mode.equals(PlatformMode.openshift)) {
+                        for (Map.Entry<String, String> entry : containerToImageMap.entrySet()) {
+                            String containerName = entry.getKey();
+                            ImageName image = new ImageName(entry.getValue());
+                            specBuilder.addNewTrigger()
+                                    .withType("ImageChange")
+                                    .withNewImageChangeParams()
+                                    .withAutomatic(true)
+                                    .withNewFrom()
+                                    .withKind("ImageStreamTag")
+                                    .withName(image.getSimpleName() + ":" + image.getTag())
+                                    .endFrom()
+                                    .withContainerNames(containerName)
+                                    .endImageChangeParams()
+                                    .endTrigger();
+                        }
                     }
                 }
 
