@@ -1,0 +1,15 @@
+metadata:
+  labels:
+    project: ${project.artifactId}
+    hystrix.enabled: true
+    hystrix.cluster: default
+    version: ${project.version}
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        project: ${project.artifactId}
+        hystrix.enabled: true
+        hystrix.cluster: default
+        version: ${project.version}
