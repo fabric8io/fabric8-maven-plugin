@@ -26,6 +26,7 @@ import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.*;
+import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -97,7 +98,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      * an OpenShift build (with a Docker build against the OpenShift API server.
      */
     @Parameter(property = "fabric8.mode")
-    private PlatformMode mode = PlatformMode.auto;
+    private PlatformMode mode = KubernetesResourceUtil.defaultPlatformMode;
 
     /**
      * OpenShift build mode when an OpenShift build is performed.
@@ -137,11 +138,12 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     private ClusterAccess clusterAccess;
 
     // Mode which is resolved, also when 'auto' is set
-    private PlatformMode resolvedMode;
+    private PlatformMode platformMode;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         clusterAccess = new ClusterAccess(namespace);
+        platformMode = KubernetesResourceUtil.resolvePlatformMode(mode, clusterAccess, log);
         super.execute();
     }
 
@@ -159,7 +161,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
         throws MojoExecutionException, DockerAccessException {
         try {
-            PlatformMode platformMode = resolvePlatformMode();
             if (platformMode == PlatformMode.kubernetes) {
                 super.buildAndTag(hub, imageConfig);
             } else if (platformMode == PlatformMode.openshift) {
@@ -172,18 +173,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         }
     }
 
-    private PlatformMode resolvePlatformMode() {
-        if (resolvedMode == null) {
-            if (mode.isAuto()) {
-                resolvedMode = clusterAccess.isOpenShift(log) ? PlatformMode.openshift : PlatformMode.kubernetes;
-            } else {
-                resolvedMode = mode;
-            }
-            log.info("Running in %s mode", resolvedMode.getLabel());
-        }
-        return resolvedMode;
-    }
-
     /**
      * Customization hook called by the base plugin.
      *
@@ -192,7 +181,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      */
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, log, resolvePlatformMode(), buildStrategy);
+        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, log, platformMode, buildStrategy);
     }
 
     @Override

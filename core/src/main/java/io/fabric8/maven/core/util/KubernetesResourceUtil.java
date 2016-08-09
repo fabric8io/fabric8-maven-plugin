@@ -16,30 +16,37 @@
 
 package io.fabric8.maven.core.util;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.access.ClusterAccess;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Files;
-import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
+
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utility class for handling Kubernetes resource descriptors
@@ -51,6 +58,7 @@ public class KubernetesResourceUtil {
 
     public static final String API_VERSION = "v1";
     public static final String API_EXTENSIONS_VERSION = "extensions/v1beta1";
+    public static final PlatformMode defaultPlatformMode = PlatformMode.auto;
 
     /**
      * Read all Kubernetes resource fragments from a directory and create a {@link KubernetesListBuilder} which
@@ -276,5 +284,13 @@ public class KubernetesResourceUtil {
             }
         }
         return false;
+    }
+
+    public static PlatformMode resolvePlatformMode(PlatformMode mode, ClusterAccess clusterAccess, Logger log) {
+        if (mode.isAuto()) {
+            return clusterAccess.isOpenShift(log) ? PlatformMode.openshift : PlatformMode.kubernetes;
+        } else {
+            return mode;
+        }
     }
 }

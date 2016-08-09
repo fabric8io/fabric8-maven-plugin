@@ -112,11 +112,11 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     private List<ImageConfiguration> images;
 
     /**
-     * Whether to perform a Kubernetes build (i.e. agains a vanilla Docker daemon) or
+     * Whether to perform a Kubernetes build (i.e. against a vanilla Docker daemon) or
      * an OpenShift build (with a Docker build against the OpenShift API server.
      */
-    @Parameter(property = "fabric8.mode", defaultValue = "auto")
-    private PlatformMode mode = PlatformMode.auto;
+    @Parameter(property = "fabric8.mode")
+    private PlatformMode mode = KubernetesResourceUtil.defaultPlatformMode;
 
     /**
      * OpenShift build mode when an OpenShift build is performed.
@@ -175,7 +175,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
 
-    private PlatformMode resolvedMode;
+    private PlatformMode platformMode;
 
     public ResourceMojo() {
     }
@@ -183,9 +183,10 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         try {
             clusterAccess = new ClusterAccess(namespace);
+            platformMode = KubernetesResourceUtil.resolvePlatformMode(mode, clusterAccess, log);
             openShiftConverters = new HashMap<>();
             openShiftConverters.put("ReplicaSet", new ReplicSetOpenShiftConverter());
-            openShiftConverters.put("Deployment", new DeploymentOpenShiftConverter(resolvePlatformMode()));
+            openShiftConverters.put("Deployment", new DeploymentOpenShiftConverter(platformMode));
 
             handlerHub = new HandlerHub(project);
 
@@ -208,18 +209,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
         }
-    }
-
-    private PlatformMode resolvePlatformMode() {
-        if (resolvedMode == null) {
-            if (mode.isAuto()) {
-                resolvedMode = clusterAccess.isOpenShift(log) ? PlatformMode.openshift : PlatformMode.kubernetes;
-            } else {
-                resolvedMode = mode;
-            }
-            log.info("Running in %s mode", resolvedMode.getLabel());
-        }
-        return resolvedMode;
     }
 
     private KubernetesList generateKubernetesResources(final EnricherManager enricherManager, List<ImageConfiguration> images)
