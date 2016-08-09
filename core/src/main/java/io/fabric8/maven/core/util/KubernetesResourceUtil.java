@@ -288,12 +288,17 @@ public class KubernetesResourceUtil {
 
     public static PlatformMode resolvePlatformMode(PlatformMode mode, ClusterAccess clusterAccess, Logger log) {
         PlatformMode resolvedMode;
+        if (mode == null) {
+            mode = defaultPlatformMode;
+        }
         if (mode.isAuto()) {
             resolvedMode = clusterAccess.isOpenShift(log) ? PlatformMode.openshift : PlatformMode.kubernetes;
         } else {
             resolvedMode = mode;
         }
-        log.info("Running in %s mode", resolvedMode.getLabel());
+        if (log != null) {
+            log.info("Running in %s mode", resolvedMode.getLabel());
+        }
         return resolvedMode;
     }
 }
