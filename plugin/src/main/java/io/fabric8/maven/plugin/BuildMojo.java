@@ -142,13 +142,13 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        clusterAccess = new ClusterAccess(namespace);
-        platformMode = KubernetesResourceUtil.resolvePlatformMode(mode, clusterAccess, log);
         super.execute();
     }
 
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
+        clusterAccess = new ClusterAccess(namespace);
+        platformMode = KubernetesResourceUtil.resolvePlatformMode(mode, clusterAccess, log);
         if (project != null && skipBuildPom
             && Objects.equals("pom", project.getPackaging())) {
             getLog().debug("Disabling docker build for pom packaging");
