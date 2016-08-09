@@ -37,7 +37,7 @@ public class KarafGenerator extends BaseGenerator {
         combine        {{ d = "false"; }},
         name           {{ d = "%g/%a:%l"; }},
         alias          {{ d = "karaf"; }},
-        baseImage      {{ d = "fabric8/s2i-karaf:1.3"; }},
+        baseImage      {{ d = "fabric8/s2i-karaf"; }},
         baseDir        {{ d = "/deployments/"; }},
         user           {{ d = "jboss:jboss:jboss"; }},
         cmd            {{ d = "/deployments/deploy-and-run.sh"; }},
