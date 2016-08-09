@@ -22,11 +22,14 @@ import java.util.Map;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.extensions.*;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfigFluent;
+
+import static io.fabric8.utils.Objects.notNull;
 
 /**
  * Convert a Kubernetes <code>Deployment</code> to an OpenShift <code>DeploymentConfig</code>
@@ -59,7 +62,10 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                 PodTemplateSpec template = spec.getTemplate();
                 if (template != null) {
                     specBuilder.withTemplate(template);
-                    List<Container> containers = template.getSpec().getContainers();
+                    PodSpec podSpec = template.getSpec();
+                    notNull(podSpec, "No PodSpec for PodTemplate:" + template);
+                    List<Container> containers = podSpec.getContainers();
+                    notNull(podSpec, "No containers for PodTemplate.spec: " + template);
                     for (Container container : containers) {
                         validateContainer(container);
                         containerToImageMap.put(container.getName(), container.getImage());
