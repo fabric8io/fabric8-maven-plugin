@@ -58,7 +58,13 @@ public class KubernetesResourceUtil {
 
     public static final String API_VERSION = "v1";
     public static final String API_EXTENSIONS_VERSION = "extensions/v1beta1";
-    public static final PlatformMode defaultPlatformMode = PlatformMode.auto;
+
+    // TODO see https://github.com/fabric8io/fabric8-maven-plugin/issues/240
+    // we are temporarily switching to kubernetes mode by default
+    // until we can get openshift mode working with Arquillian and Jenkins pipeilnes
+    //
+    // public static final PlatformMode defaultPlatformMode = PlatformMode.auto;
+    public static final PlatformMode defaultPlatformMode = PlatformMode.kubernetes;
 
     /**
      * Read all Kubernetes resource fragments from a directory and create a {@link KubernetesListBuilder} which
