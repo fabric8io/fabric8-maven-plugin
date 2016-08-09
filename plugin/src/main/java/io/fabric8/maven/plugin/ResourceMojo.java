@@ -21,6 +21,7 @@ import java.util.*;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.*;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
@@ -111,11 +112,11 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     private List<ImageConfiguration> images;
 
     /**
-     * Whether to perform a Kubernetes build (i.e. agains a vanilla Docker daemon) or
+     * Whether to perform a Kubernetes build (i.e. against a vanilla Docker daemon) or
      * an OpenShift build (with a Docker build against the OpenShift API server.
      */
     @Parameter(property = "fabric8.mode")
-    private PlatformMode mode = PlatformMode.auto;
+    private PlatformMode mode = KubernetesResourceUtil.defaultPlatformMode;
 
     /**
      * OpenShift build mode when an OpenShift build is performed.
@@ -165,14 +166,28 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     // Converters for going from Kubernertes objects to openshift objects
     private Map<String, KubernetesToOpenShiftConverter> openShiftConverters;
 
+    /**
+     * Namespace to use when accessing Kubernetes or OpenShift
+     */
+    @Parameter(property = "fabric8.namespace")
+    private String namespace;
+
+    // Access for creating OpenShift binary builds
+    private ClusterAccess clusterAccess;
+
+    private PlatformMode platformMode;
+
     public ResourceMojo() {
-        openShiftConverters = new HashMap<>();
-        openShiftConverters.put("ReplicaSet", new ReplicSetOpenShiftConverter());
-        openShiftConverters.put("Deployment", new DeploymentOpenShiftConverter());
     }
 
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         try {
+            clusterAccess = new ClusterAccess(namespace);
+            platformMode = KubernetesResourceUtil.resolvePlatformMode(mode, clusterAccess, log);
+            openShiftConverters = new HashMap<>();
+            openShiftConverters.put("ReplicaSet", new ReplicSetOpenShiftConverter());
+            openShiftConverters.put("Deployment", new DeploymentOpenShiftConverter(platformMode));
+
             handlerHub = new HandlerHub(project);
 
             // Resolve the Docker image build configuration
