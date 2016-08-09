@@ -23,8 +23,13 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.PodTemplateSpecFluent;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentFluent;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentSpecBuilder;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentSpecFluent;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.handler.DeploymentHandler;
 import io.fabric8.maven.core.handler.HandlerHub;
@@ -43,7 +48,7 @@ import java.util.Objects;
 import static io.fabric8.utils.Strings.isNullOrBlank;
 
 /**
- * Enriche with controller if not already present.
+ * Enrich with controller if not already present.
  *
  * By default the following objects will be added
  *
@@ -109,6 +114,32 @@ public class ControllerEnricher extends BaseEnricher {
                             @Override
                             public void visit(PodSpecBuilder builder) {
                                 mergePodSpec(builder, podSpec, defaultName);
+                            }
+                        });
+
+                        // handle Deployment YAML which may not have a DeploymentSpec, PodTemplateSpec or PodSpec
+                        // or if it does lets enrich with the defaults
+                        builder.accept(new TypedVisitor<DeploymentBuilder>() {
+                            @Override
+                            public void visit(DeploymentBuilder builder) {
+                                DeploymentSpec deploymentSpec = builder.getSpec();
+                                if (deploymentSpec == null) {
+                                    builder.withNewSpec().endSpec();
+                                    deploymentSpec = builder.getSpec();
+                                }
+                                PodTemplateSpec template = deploymentSpec.getTemplate();
+                                DeploymentFluent.SpecNested<DeploymentBuilder> specBuilder = builder.editSpec();
+                                if (template == null) {
+                                    specBuilder.withNewTemplate().withNewSpecLike(podSpec).endSpec().endTemplate().endSpec();
+                                } else {
+                                    PodSpec builderSpec = template.getSpec();
+                                    if (builderSpec == null) {
+                                        specBuilder.editTemplate().withNewSpecLike(podSpec).endSpec().endTemplate().endSpec();
+                                    } else {
+                                        PodSpecBuilder podSpecBuilder = new PodSpecBuilder(builderSpec);
+                                        mergePodSpec(podSpecBuilder, podSpec, defaultName);
+                                    }
+                                }
                             }
                         });
                     }
