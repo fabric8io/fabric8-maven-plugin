@@ -563,7 +563,7 @@ table.CodeRay td.code>pre{padding:0}
 </li>
 <li><a href="#generators">4. Generators</a>
 <ul class="sectlevel2">
-<li><a href="#generators-fabric8">4.1. Fabric8 Generators</a>
+<li><a href="#generators-fabric8">4.1. Default Generators</a>
 <ul class="sectlevel3">
 <li><a href="#spring-boot">4.1.1. spring-boot</a></li>
 <li><a href="#java-exec">4.1.2. java-exec</a></li>
@@ -575,10 +575,10 @@ table.CodeRay td.code>pre{padding:0}
 </li>
 <li><a href="#enrichers">5. Enrichers</a>
 <ul class="sectlevel2">
-<li><a href="#fabric8-enrichers">5.1. Fabric8 Enrichers</a>
+<li><a href="#default-enrichers">5.1. Default Enrichers</a>
 <ul class="sectlevel3">
-<li><a href="#fabric8-enrichers-2">5.1.1. Fabric8 Enrichers</a></li>
-<li><a href="#standard-enrichers">5.1.2. Standard enrichers</a></li>
+<li><a href="#fabric8-enrichers">5.1.1. Fabric8 Enrichers</a></li>
+<li><a href="#default-enrichers-2">5.1.2. Default Enrichers</a></li>
 </ul>
 </li>
 </ul>
@@ -2818,7 +2818,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p>fabric8-maven-plugin comes with a set of default generators which are described in the next secion <a href="#generators-fabric8">Fabric8 Generators</a>. These are enabled by default. In addition, custom generators can be easily added by simply declaring a compile scoped dependency in the <code>pom.xml</code>. This and how a generator can be implemented is described in <a href="#generators-api">Generator API</a>.</p>
 </div>
 <div class="sect2">
-<h3 id="generators-fabric8">4.1. Fabric8 Generators</h3>
+<h3 id="generators-fabric8">4.1. Default Generators</h3>
 <div class="sect3">
 <h4 id="spring-boot">4.1.1. spring-boot</h4>
 
@@ -2889,8 +2889,8 @@ This is a placeholder. Will be filled soon.
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 17. Enricher configuration</caption>
 <colgroup>
-<col style="width: 14.2857%;">
-<col style="width: 85.7143%;">
+<col style="width: 25%;">
+<col style="width: 75%;">
 </colgroup>
 <thead>
 <tr>
@@ -2917,7 +2917,7 @@ This is a placeholder. Will be filled soon.
 <p>This plugin comes with a set of default enrichers. In addition custom enrichers can be easily added by providing implementation of the <a href="#enricher-api">Enricher API</a> and adding these as a dependency to the build.</p>
 </div>
 <div class="sect2">
-<h3 id="fabric8-enrichers">5.1. Fabric8 Enrichers</h3>
+<h3 id="default-enrichers">5.1. Default Enrichers</h3>
 <div class="paragraph">
 <p>fabric8-maven-plugin comes with a set of enrichers which are enabled by default.</p>
 </div>
@@ -2981,11 +2981,11 @@ This is a placeholder. Will be filled soon.
 </tbody>
 </table>
 <div class="sect3">
-<h4 id="fabric8-enrichers-2">5.1.1. Fabric8 Enrichers</h4>
+<h4 id="fabric8-enrichers">5.1.1. Fabric8 Enrichers</h4>
 
 </div>
 <div class="sect3">
-<h4 id="standard-enrichers">5.1.2. Standard enrichers</h4>
+<h4 id="default-enrichers-2">5.1.2. Default Enrichers</h4>
 
 </div>
 </div>
@@ -3367,7 +3367,7 @@ password.</p>
 <div id="footer">
 <div id="footer-text">
 Version 3.1.1<br>
-Last updated 2016-08-10 08:09:07 UTC
+Last updated 2016-08-10 09:59:14 UTC
 </div>
 </div>
 </body>
