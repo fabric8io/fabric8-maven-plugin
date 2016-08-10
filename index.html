@@ -563,7 +563,7 @@ table.CodeRay td.code>pre{padding:0}
 </li>
 <li><a href="#generators">4. Generators</a>
 <ul class="sectlevel2">
-<li><a href="#generators-fabric8">4.1. Default Generators</a>
+<li><a href="#generators-default">4.1. Default Generators</a>
 <ul class="sectlevel3">
 <li><a href="#spring-boot">4.1.1. spring-boot</a></li>
 <li><a href="#java-exec">4.1.2. java-exec</a></li>
@@ -575,12 +575,13 @@ table.CodeRay td.code>pre{padding:0}
 </li>
 <li><a href="#enrichers">5. Enrichers</a>
 <ul class="sectlevel2">
-<li><a href="#default-enrichers">5.1. Default Enrichers</a>
+<li><a href="#enrichers-default">5.1. Default Enrichers</a>
 <ul class="sectlevel3">
-<li><a href="#fabric8-enrichers">5.1.1. Fabric8 Enrichers</a></li>
-<li><a href="#default-enrichers-2">5.1.2. Default Enrichers</a></li>
+<li><a href="#enrichers-standard">5.1.1. Standard Enrichers</a></li>
+<li><a href="#enrichers-fabric8">5.1.2. Fabric8 Enrichers</a></li>
 </ul>
 </li>
+<li><a href="#enricher-api">5.2. Enricher API</a></li>
 </ul>
 </li>
 <li><a href="#profiles">6. Profiles</a></li>
@@ -2818,7 +2819,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p>fabric8-maven-plugin comes with a set of default generators which are described in the next secion <a href="#generators-fabric8">Fabric8 Generators</a>. These are enabled by default. In addition, custom generators can be easily added by simply declaring a compile scoped dependency in the <code>pom.xml</code>. This and how a generator can be implemented is described in <a href="#generators-api">Generator API</a>.</p>
 </div>
 <div class="sect2">
-<h3 id="generators-fabric8">4.1. Default Generators</h3>
+<h3 id="generators-default">4.1. Default Generators</h3>
 <div class="sect3">
 <h4 id="spring-boot">4.1.1. spring-boot</h4>
 
@@ -2852,18 +2853,6 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <div class="sect1">
 <h2 id="enrichers">5. Enrichers</h2>
 <div class="sectionbody">
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-This is a placeholder. Will be filled soon.
-</td>
-</tr>
-</table>
-</div>
 <div class="paragraph">
 <p>Enriching is the complementary concept to <a href="#generators">Generators</a>. Whereas Generators are used to create and customize Docker images, Enrichers are use to create and customize Kubernetes and OpenShift resource objects.</p>
 </div>
@@ -2917,15 +2906,25 @@ This is a placeholder. Will be filled soon.
 <p>This plugin comes with a set of default enrichers. In addition custom enrichers can be easily added by providing implementation of the <a href="#enricher-api">Enricher API</a> and adding these as a dependency to the build.</p>
 </div>
 <div class="sect2">
-<h3 id="default-enrichers">5.1. Default Enrichers</h3>
+<h3 id="enrichers-default">5.1. Default Enrichers</h3>
 <div class="paragraph">
-<p>fabric8-maven-plugin comes with a set of enrichers which are enabled by default.</p>
+<p>fabric8-maven-plugin comes with a set of enrichers which are enabled by default. There are two categories of default enrichers:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Standard Enrichers</strong> are used to add default resource object when they are missing or add common metadata extracted from the given build information</p>
+</li>
+<li>
+<p><strong>Fabric8 Enrichers</strong> are specific to the <a href="https://fabric8.io">fabric8 Microservice&#8217;s platform</a>. It adds icon annotations which are visible in the fabric8 console or connections to the Continous Deliverys systems like Jenkins or Gogs.</p>
+</li>
+</ul>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 18. Fabric8 Enrichers</caption>
+<caption class="title">Table 18. Default Enrichers Overview</caption>
 <colgroup>
-<col style="width: 14.2857%;">
-<col style="width: 85.7143%;">
+<col style="width: 22.2222%;">
+<col style="width: 77.7778%;">
 </colgroup>
 <thead>
 <tr>
@@ -2935,58 +2934,112 @@ This is a placeholder. Will be filled soon.
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">f8-cd</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#f8-cd">f8-cd</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add CD metadata as annotations.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">f8-doc-link</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#f8-doc-link">f8-doc-link</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add URL to documentation configured in the POM as annotation.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">f8-grafana-link</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#f8-grafana-link">f8-grafana-link</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add a Grafana Dashboard URL as annotation.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">f8-icon</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#f8-icon">f8-icon</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add an URL to icons for well known application types.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">fmp-controller</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-controller">fmp-controller</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Create default controller (replication controller, replica set or deployment) if missing.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">fmp-dependency</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-dependency">fmp-dependency</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Examine build dependencies for <code>kubernetes.yml</code> and add the objects found therein.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">fmp-git</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-git">fmp-git</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Check local <code>.git</code> directory and add build information as annotations.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">fmp-image</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-image">fmp-image</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add the image name into a <code>PodSpec</code> of replication controller, replication sets and deployments, if missing.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">fmp-name</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-name">fmp-name</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add a default name to every object which misses a name.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">fmp-project</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-project">fmp-project</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add Maven coordinates as labels to all objects.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">fmp-service</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-service">fmp-service</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Create a default service if missing and extrac ports from the Docker image configuration.</p></td>
 </tr>
 </tbody>
 </table>
 <div class="sect3">
-<h4 id="fabric8-enrichers">5.1.1. Fabric8 Enrichers</h4>
+<h4 id="enrichers-standard">5.1.1. Standard Enrichers</h4>
+<div class="paragraph">
+<p>Default enrichers are used for adding missing resources or adding metadata to given resource objects. The following default enhancers are availables out of the box</p>
+</div>
+<div class="sect4">
+<h5 id="fmp-controller">fmp-controller</h5>
 
 </div>
-<div class="sect3">
-<h4 id="default-enrichers-2">5.1.2. Default Enrichers</h4>
+<div class="sect4">
+<h5 id="fmp-service">fmp-service</h5>
 
+</div>
+<div class="sect4">
+<h5 id="fmp-image">fmp-image</h5>
+
+</div>
+<div class="sect4">
+<h5 id="fmp-name">fmp-name</h5>
+
+</div>
+<div class="sect4">
+<h5 id="fmp-project">fmp-project</h5>
+
+</div>
+<div class="sect4">
+<h5 id="fmp-git">fmp-git</h5>
+
+</div>
+<div class="sect4">
+<h5 id="fmp-dependency">fmp-dependency</h5>
+
+</div>
+</div>
+<div class="sect3">
+<h4 id="enrichers-fabric8">5.1.2. Fabric8 Enrichers</h4>
+<div class="paragraph">
+<p>Fabric8 enrichers are used for providing the connection to other components of the fabric8 Microservices platform. They are useful to add icons to to application or links to documentation sites.</p>
+</div>
+<div class="sect4">
+<h5 id="f8-cd">f8-cd</h5>
+
+</div>
+<div class="sect4">
+<h5 id="f8-doc-link">f8-doc-link</h5>
+
+</div>
+<div class="sect4">
+<h5 id="f8-grafana-link">f8-grafana-link</h5>
+
+</div>
+<div class="sect4">
+<h5 id="f8-icon">f8-icon</h5>
+
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="enricher-api">5.2. Enricher API</h3>
+<div class="paragraph">
+<p><em>howto write your own enricher and install them</em></p>
 </div>
 </div>
 </div>
@@ -3367,7 +3420,7 @@ password.</p>
 <div id="footer">
 <div id="footer-text">
 Version 3.1.1<br>
-Last updated 2016-08-10 14:10:48 UTC
+Last updated 2016-08-10 15:04:08 UTC
 </div>
 </div>
 </body>
