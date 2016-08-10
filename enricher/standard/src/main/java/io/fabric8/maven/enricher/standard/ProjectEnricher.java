@@ -47,7 +47,7 @@ import org.apache.maven.project.MavenProject;
 public class ProjectEnricher extends BaseEnricher {
 
     public ProjectEnricher(EnricherContext buildContext) {
-        super(buildContext, "f8-project");
+        super(buildContext, "fmp-project");
     }
 
     @Override

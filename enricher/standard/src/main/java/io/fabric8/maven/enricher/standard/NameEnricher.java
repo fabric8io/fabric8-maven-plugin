@@ -45,7 +45,7 @@ import io.fabric8.utils.Strings;
 public class NameEnricher extends BaseEnricher {
 
     public NameEnricher(EnricherContext buildContext) {
-        super(buildContext, "f8-name");
+        super(buildContext, "fmp-name");
     }
 
     private enum Config implements Configs.Key {

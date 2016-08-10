@@ -41,11 +41,7 @@
     <module>plugin</module>
     <module>enricher/api</module>
     <module>enricher/standard</module>
-    <module>enricher/cd</module>
-    <module>enricher/git</module>
-    <module>enricher/icon</module>
-    <module>enricher/dependency</module>
-    <module>enricher/misc</module>
+    <module>enricher/fabric8</module>
     <module>generator/api</module>
     <module>generator/java-exec</module>
     <module>generator/spring-boot</module>

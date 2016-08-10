@@ -61,7 +61,7 @@ public class ServiceEnricher extends BaseEnricher {
     }
 
     public ServiceEnricher(EnricherContext buildContext) {
-        super(buildContext, "f8-service");
+        super(buildContext, "fmp-service");
         HandlerHub handlers = new HandlerHub(buildContext.getProject());
         serviceHandler = handlers.getServiceHandler();
     }
