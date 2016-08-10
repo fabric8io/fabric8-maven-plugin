@@ -258,12 +258,14 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         // Attach it to the Maven reactor so that it will also get deployed
         projectHelper.attachArtifact(project, resourceFileType.getArtifactType(), classifier.getValue(), file);
 
+        // TODO: Remove the following block when devops and other apps used by gofabric8 are migrated
+        // to fmp-v3. See also https://github.com/fabric8io/fabric8-maven-plugin/issues/167
         if (resourceFileType.equals(yaml)) {
             // lets generate JSON too to aid migration from version 2.x to 3.x for packaging templates
             file = KubernetesResourceUtil.writeResource(resources, resourceFileBase, json);
 
             // Attach it to the Maven reactor so that it will also get deployed
-            projectHelper.attachArtifact(project, yaml.getArtifactType(), classifier.getValue(), file);
+            projectHelper.attachArtifact(project, json.getArtifactType(), classifier.getValue(), file);
         }
 
         // write separate files, one for each resource item

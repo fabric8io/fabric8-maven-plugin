@@ -58,7 +58,7 @@ Generators can be configured with a `<generator>` section. The following sub-ele
 fabric8-maven-plugin comes with a set of default generators which are described in the next secion <<generators-fabric8, Fabric8 Generators>>. These are enabled by default. In addition, custom generators can be easily added by simply declaring a compile scoped dependency in the `pom.xml`. This and how a generator can be implemented is described in <<generators-api, Generator API>>.
 
 [[generators-fabric8]]
-== Fabric8 Generators
+== Default Generators
 
 === spring-boot
 

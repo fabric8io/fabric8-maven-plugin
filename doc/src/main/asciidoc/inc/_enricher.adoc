@@ -15,7 +15,7 @@ There are a lot similarities to Generatos:
 The <<generator-example,Generator example>> is a good bluebprint, simply replace `<generator>` with `<enricher>`. The configuration is structural identical:
 
 .Enricher configuration
-[cols="1,6"]
+[cols="2,6"]
 |===
 | Element | Description
 
@@ -31,7 +31,7 @@ The <<generator-example,Generator example>> is a good bluebprint, simply replace
 
 This plugin comes with a set of default enrichers. In addition custom enrichers can be easily added by providing implementation of the <<enricher-api, Enricher API>> and adding these as a dependency to the build.
 
-== Fabric8 Enrichers
+== Default Enrichers
 
 fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 
@@ -77,4 +77,4 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 
 === Fabric8 Enrichers
 
-=== Standard enrichers
+=== Default Enrichers
