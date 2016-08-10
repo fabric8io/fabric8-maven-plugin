@@ -2,8 +2,6 @@
 [[enrichers]]
 = Enrichers
 
-WARNING: This is a placeholder. Will be filled soon.
-
 Enriching is the complementary concept to <<generators, Generators>>. Whereas Generators are used to create and customize Docker images, Enrichers are use to create and customize Kubernetes and OpenShift resource objects.
 
 There are a lot similarities to Generatos:
@@ -31,50 +29,96 @@ The <<generator-example,Generator example>> is a good bluebprint, simply replace
 
 This plugin comes with a set of default enrichers. In addition custom enrichers can be easily added by providing implementation of the <<enricher-api, Enricher API>> and adding these as a dependency to the build.
 
+[[enrichers-default]]
 == Default Enrichers
 
-fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
+fabric8-maven-plugin comes with a set of enrichers which are enabled by default. There are two categories of default enrichers:
 
-.Fabric8 Enrichers
-[cols="1,6"]
+* *Standard Enrichers* are used to add default resource object when they are missing or add common metadata extracted from the given build information
+* *Fabric8 Enrichers* are specific to the https://fabric8.io[fabric8 Microservice's platform]. It adds icon annotations which are visible in the fabric8 console or connections to the Continous Deliverys systems like Jenkins or Gogs.
+
+.Default Enrichers Overview
+[cols="2,7"]
 |===
 | Enricher | Description
 
-| f8-cd
+| <<f8-cd>>
 | Add CD metadata as annotations.
 
-| f8-doc-link
+| <<f8-doc-link>>
 | Add URL to documentation configured in the POM as annotation.
 
-| f8-grafana-link
+| <<f8-grafana-link>>
 | Add a Grafana Dashboard URL as annotation.
 
-| f8-icon
+| <<f8-icon>>
 | Add an URL to icons for well known application types.
 
-| fmp-controller
+| <<fmp-controller>>
 | Create default controller (replication controller, replica set or deployment) if missing.
 
-| fmp-dependency
+| <<fmp-dependency>>
 | Examine build dependencies for `kubernetes.yml` and add the objects found therein.
 
-| fmp-git
+| <<fmp-git>>
 | Check local `.git` directory and add build information as annotations.
 
-| fmp-image
+| <<fmp-image>>
 | Add the image name into a `PodSpec` of replication controller, replication sets and deployments, if missing.
 
-| fmp-name
+| <<fmp-name>>
 | Add a default name to every object which misses a name.
 
-| fmp-project
+| <<fmp-project>>
 | Add Maven coordinates as labels to all objects.
 
-| fmp-service
+| <<fmp-service>>
 | Create a default service if missing and extrac ports from the Docker image configuration.
-
 |===
 
+[[enrichers-standard]]
+=== Standard Enrichers
+
+Default enrichers are used for adding missing resources or adding metadata to given resource objects. The following default enhancers are availables out of the box
+
+[[fmp-controller]]
+==== fmp-controller
+
+[[fmp-service]]
+==== fmp-service
+
+[[fmp-image]]
+==== fmp-image
+
+[[fmp-name]]
+==== fmp-name
+
+[[fmp-project]]
+==== fmp-project
+
+[[fmp-git]]
+==== fmp-git
+
+[[fmp-dependency]]
+==== fmp-dependency
+
+[[enrichers-fabric8]]
 === Fabric8 Enrichers
 
-=== Default Enrichers
+Fabric8 enrichers are used for providing the connection to other components of the fabric8 Microservices platform. They are useful to add icons to to application or links to documentation sites.
+
+[[f8-cd]]
+==== f8-cd
+
+[[f8-doc-link]]
+==== f8-doc-link
+
+[[f8-grafana-link]]
+==== f8-grafana-link
+
+[[f8-icon]]
+==== f8-icon
+
+== Enricher API
+
+_howto write your own enricher and install them_
