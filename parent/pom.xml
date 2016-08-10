@@ -123,31 +123,7 @@
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-enricher-git</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-enricher-cd</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-enricher-icon</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-enricher-misc</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-enricher-dependency</artifactId>
+        <artifactId>fabric8-maven-enricher-fabric8</artifactId>
         <version>${project.version}</version>
       </dependency>
 

@@ -76,15 +76,13 @@ public class ControllerEnricher extends BaseEnricher {
     private enum Config implements Configs.Key {
         name,
         pullPolicy           {{ d = "IfNotPresent"; }},
-        addDeployment        {{ d = "true"; }},
-        addReplicaSet        {{ d = "true"; }},
-        addReplicaController {{ d = "true"; }};
+        type                 {{ d = "deployment"; }};
 
         public String def() { return d; } protected String d;
     }
 
     public ControllerEnricher(EnricherContext buildContext) {
-        super(buildContext, "f8-controller");
+        super(buildContext, "fmp-controller");
 
         HandlerHub handlers = new HandlerHub(buildContext.getProject());
         rcHandler = handlers.getReplicationControllerHandler();
@@ -146,13 +144,14 @@ public class ControllerEnricher extends BaseEnricher {
                 }
             }
         } else {
-            if (Configs.asBoolean(getConfig(Config.addDeployment))) {
+            String type = getConfig(Config.type);
+            if (type.equalsIgnoreCase("deployment")) {
                 log.info("Adding a default Deployment");
                 builder.addToDeploymentItems(defaultDeployment);
-            } else if (Configs.asBoolean(getConfig(Config.addReplicaSet))) {
+            } else if (type.equalsIgnoreCase("replicaSet")) {
                 log.info("Adding a default ReplicaSet");
                 builder.addToReplicaSetItems(rsHandler.getReplicaSet(config, getImages()));
-            } else if (Configs.asBoolean(getConfig(Config.addReplicaController))) {
+            } else if (type.equalsIgnoreCase("replicationController")) {
                 log.info("Adding a default ReplicationController");
                 builder.addToReplicationControllerItems(rcHandler.getReplicationController(config, getImages()));
             }

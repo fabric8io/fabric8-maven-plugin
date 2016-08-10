@@ -21,8 +21,7 @@ import java.util.List;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
+import io.fabric8.kubernetes.api.model.extensions.*;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
@@ -32,7 +31,7 @@ import static io.fabric8.maven.core.util.KubernetesResourceUtil.extractContainer
 import static io.fabric8.utils.Strings.isNullOrBlank;
 
 /**
- * Metge in image configuration like the image name into ReplicaSet and ReplicationController's
+ * Merge in image configuration like the image name into ReplicaSet and ReplicationController's
  * Pod specification.
  *
  * <ul>
@@ -50,7 +49,7 @@ import static io.fabric8.utils.Strings.isNullOrBlank;
 public class ImageEnricher extends BaseEnricher {
 
     public ImageEnricher(EnricherContext buildContext) {
-        super(buildContext, "f8-image");
+        super(buildContext, "fmp-image");
     }
 
 
@@ -78,6 +77,13 @@ public class ImageEnricher extends BaseEnricher {
                 getOrCreateContainerList(item);
             }
         });
+
+        builder.accept(new TypedVisitor<DeploymentBuilder>() {
+            @Override
+            public void visit(DeploymentBuilder item) {
+                getOrCreateContainerList(item);
+            }
+        });
     }
 
     private List<Container> getOrCreateContainerList(ReplicaSetBuilder rs) {
@@ -88,6 +94,12 @@ public class ImageEnricher extends BaseEnricher {
 
     private List<Container> getOrCreateContainerList(ReplicationControllerBuilder rc) {
         ReplicationControllerSpec spec = getOrCreateReplicationControllerSpec(rc);
+        PodTemplateSpec template = getOrCreatePodTemplateSpec(spec);
+        return getOrCreateContainerList(template);
+    }
+
+    private List<Container> getOrCreateContainerList(DeploymentBuilder d) {
+        DeploymentSpec spec = getOrCreateDeploymentSpec(d);
         PodTemplateSpec template = getOrCreatePodTemplateSpec(spec);
         return getOrCreateContainerList(template);
     }
@@ -112,6 +124,15 @@ public class ImageEnricher extends BaseEnricher {
         return spec;
     }
 
+    private DeploymentSpec getOrCreateDeploymentSpec(DeploymentBuilder d) {
+        DeploymentSpec spec = d.getSpec();
+        if (spec == null) {
+            spec = new DeploymentSpec();
+            d.withSpec(spec);
+        }
+        return spec;
+    }
+
     // ==============================================================================================
 
     private PodTemplateSpec getOrCreatePodTemplateSpec(ReplicaSetSpec spec) {
@@ -124,6 +145,15 @@ public class ImageEnricher extends BaseEnricher {
     }
 
     private PodTemplateSpec getOrCreatePodTemplateSpec(ReplicationControllerSpec spec) {
+        PodTemplateSpec template = spec.getTemplate();
+        if (template == null) {
+            template = new PodTemplateSpec();
+            spec.setTemplate(template);
+        }
+        return template;
+    }
+
+    private PodTemplateSpec getOrCreatePodTemplateSpec(DeploymentSpec spec) {
         PodTemplateSpec template = spec.getTemplate();
         if (template == null) {
             template = new PodTemplateSpec();

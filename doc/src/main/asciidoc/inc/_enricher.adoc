@@ -4,4 +4,77 @@
 
 WARNING: This is a placeholder. Will be filled soon.
 
-* Should be passive. E.g. if already set don't override.
+Enriching is the complementary concept to <<generators, Generators>>. Whereas Generators are used to create and customize Docker images, Enrichers are use to create and customize Kubernetes and OpenShift resource objects.
+
+There are a lot similarities to Generatos:
+
+* Each Enricher has a unique name.
+* Enrichers are looked up automatically from dependencies provied and there is a set of default enrichers delivered with this plugin.
+* Enrichers are configured the same ways as generators
+
+The <<generator-example,Generator example>> is a good bluebprint, simply replace `<generator>` with `<enricher>`. The configuration is structural identical:
+
+.Enricher configuration
+[cols="1,6"]
+|===
+| Element | Description
+
+| `<includes>`
+| Contains one ore more `<include>` elements with enricher names which should be included. If given, only this list of enrichers are included in this order.
+
+| `<excludes>`
+| Holds one or more `<exclude>` elements with enricher names to exclude. This means all the detected enrichers are used except the ones mentioned in this section.
+
+| `<config>`
+| Configuration for all enrichers. Each enricher supports a specific set of configuration values as described in its documentation. The subelements of this section are enricher names. E.g. for enricher `f8-service`, the sub-element is called `<f8-service>`. This element then holds the specific enricher configuration like `<name>` for the service name.
+|===
+
+This plugin comes with a set of default enrichers. In addition custom enrichers can be easily added by providing implementation of the <<enricher-api, Enricher API>> and adding these as a dependency to the build.
+
+== Fabric8 Enrichers
+
+fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
+
+.Fabric8 Enrichers
+[cols="1,6"]
+|===
+| Enricher | Description
+
+| f8-cd
+| Add CD metadata as annotations.
+
+| f8-doc-link
+| Add URL to documentation configured in the POM as annotation.
+
+| f8-grafana-link
+| Add a Grafana Dashboard URL as annotation.
+
+| f8-icon
+| Add an URL to icons for well known application types.
+
+| fmp-controller
+| Create default controller (replication controller, replica set or deployment) if missing.
+
+| fmp-dependency
+| Examine build dependencies for `kubernetes.yml` and add the objects found therein.
+
+| fmp-git
+| Check local `.git` directory and add build information as annotations.
+
+| fmp-image
+| Add the image name into a `PodSpec` of replication controller, replication sets and deployments, if missing.
+
+| fmp-name
+| Add a default name to every object which misses a name.
+
+| fmp-project
+| Add Maven coordinates as labels to all objects.
+
+| fmp-service
+| Create a default service if missing and extrac ports from the Docker image configuration.
+
+|===
+
+=== Fabric8 Enrichers
+
+=== Standard enrichers

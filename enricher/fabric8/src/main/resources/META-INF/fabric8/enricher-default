@@ -1,0 +1,4 @@
+io.fabric8.maven.enricher.fabric8.CdEnricher
+io.fabric8.maven.enricher.fabric8.DocLinkEnricher
+io.fabric8.maven.enricher.fabric8.GrafanaLinkEnricher
+io.fabric8.maven.enricher.fabric8.IconEnricher

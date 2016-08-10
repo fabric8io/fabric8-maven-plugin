@@ -97,7 +97,7 @@ a| If the effective <<build-mode,mode>> is `openshift` then this option sets the
 * `s2i` for a https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#source-build[Source-to-Image build] with a binary source
 * `docker` for a https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#docker-build[Docker build] with a binary source
 
-By default S2I is used
+By default S2I is used.
 | `fabric8.buildStrategy`
 
 | *certPath*
@@ -135,7 +135,7 @@ a| The build mode which can be
 * `openshift` : An OpenShift Build will be triggered, which can be either a _Docker binary build_ or a _S2I binary build_, depending on the configuration `buildStrategy`. See <<build-openshift, OpenShift Build>> for details.
 * `auto` : The plugin tries to detect the mode by contacting the configured cluster.
 
-`auto` is the default.
+`auto` is the default. (_Because of technical reasons, "kubernetes" is currently the default, but will change to "auto" eventually_)
 | `fabric8.mode`
 
 | *maxConnections*

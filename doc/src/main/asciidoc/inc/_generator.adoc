@@ -12,6 +12,7 @@ By default, this plugin includes already a set of generators,  which are explain
 
 The generator configuration is embedded in a `<generator>` configuration section:
 
+[[generator-example]]
 .Example for a generator configuration
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
@@ -45,19 +46,19 @@ Generators can be configured with a `<generator>` section. The following sub-ele
 | Element | Description
 
 | `<includes>`
-| Contains one ore more `<include>` elements with generator names which should be include. If given, only this list of generators are included in this order.
+| Contains one ore more `<include>` elements with generator names which should be included. If given, only this list of generators are included in this order.
 
 | `<excludes>`
-| Holds one or more `<exclude>` elemens with generator names to exclude. This mean all the detected generators are used except the ones mentioned in this section.
+| Holds one or more `<exclude>` elements with generator names to exclude. This mean all detected generators are used except the ones mentioned in this section.
 
 | `<config>`
-| Configuration for all generators. Each generator support a specific set of configuration values as described in the documentation. The subelements of this section are tags named as the generator to configure. E.g. for generator `spring-boot`, the sub-element is called `<spring-boot>`. This element then holds the specific generator configuration like `<name>` for specifying the final image name. See above for an example
+| Configuration for all generators. Each generator support a specific set of configuration values as described in the documentation. The subelements of this section are generator names to configure. E.g. for generator `spring-boot`, the sub-element is called `<spring-boot>`. This element then holds the specific generator configuration like `<name>` for specifying the final image name. See above for an example.
 |===
 
-fabric8-maven-plugin comes with a set of default generators which are described in the next secion <<generators-stock, Stock Generators>>. These are enabled by default. In addition, custom generators can be easily added by simply declaring a compile scoped dependency in the `pom.xml`. How this can be done and how such a generator can be implemented is described in <<generators-api, Generator API>>.
+fabric8-maven-plugin comes with a set of default generators which are described in the next secion <<generators-fabric8, Fabric8 Generators>>. These are enabled by default. In addition, custom generators can be easily added by simply declaring a compile scoped dependency in the `pom.xml`. This and how a generator can be implemented is described in <<generators-api, Generator API>>.
 
-[[generators-stock]]
-== Stock Generators
+[[generators-fabric8]]
+== Fabric8 Generators
 
 === spring-boot
 
