@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 3.1.1,</span>
-<span id="revdate">2016-08-09</span>
+<span id="revdate">2016-08-10</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -563,7 +563,7 @@ table.CodeRay td.code>pre{padding:0}
 </li>
 <li><a href="#generators">4. Generators</a>
 <ul class="sectlevel2">
-<li><a href="#generators-stock">4.1. Stock Generators</a>
+<li><a href="#generators-fabric8">4.1. Fabric8 Generators</a>
 <ul class="sectlevel3">
 <li><a href="#spring-boot">4.1.1. spring-boot</a></li>
 <li><a href="#java-exec">4.1.2. java-exec</a></li>
@@ -573,7 +573,16 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#generators-api">4.2. Generator API</a></li>
 </ul>
 </li>
-<li><a href="#enrichers">5. Enrichers</a></li>
+<li><a href="#enrichers">5. Enrichers</a>
+<ul class="sectlevel2">
+<li><a href="#fabric8-enrichers">5.1. Fabric8 Enrichers</a>
+<ul class="sectlevel3">
+<li><a href="#fabric8-enrichers-2">5.1.1. Fabric8 Enrichers</a></li>
+<li><a href="#standard-enrichers">5.1.2. Standard enrichers</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a href="#profiles">6. Profiles</a></li>
 <li><a href="#access-configuration">7. Access configuration</a>
 <ul class="sectlevel2">
@@ -1503,7 +1512,7 @@ This is chapter is incomplete, but there is work in progress.
 </ul>
 </div>
 <div class="paragraph">
-<p>By default S2I is used</p>
+<p>By default S2I is used.</p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.buildStrategy</code></p></td>
 </tr>
@@ -1571,7 +1580,7 @@ the URL is:</p>
 </ul>
 </div>
 <div class="paragraph">
-<p><code>auto</code> is the default.</p>
+<p><code>auto</code> is the default. (<em>Because of technical reasons, "kubernetes" is currently the default, but will change to "auto" eventually</em>)</p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.mode</code></p></td>
 </tr>
@@ -2734,7 +2743,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <div class="paragraph">
 <p>The generator configuration is embedded in a <code>&lt;generator&gt;</code> configuration section:</p>
 </div>
-<div class="listingblock">
+<div id="generator-example" class="listingblock">
 <div class="title">Example for a generator configuration</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
@@ -2793,23 +2802,23 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>&lt;includes&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Contains one ore more <code>&lt;include&gt;</code> elements with generator names which should be include. If given, only this list of generators are included in this order.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Contains one ore more <code>&lt;include&gt;</code> elements with generator names which should be included. If given, only this list of generators are included in this order.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>&lt;excludes&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Holds one or more <code>&lt;exclude&gt;</code> elemens with generator names to exclude. This mean all the detected generators are used except the ones mentioned in this section.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Holds one or more <code>&lt;exclude&gt;</code> elements with generator names to exclude. This mean all detected generators are used except the ones mentioned in this section.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>&lt;config&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Configuration for all generators. Each generator support a specific set of configuration values as described in the documentation. The subelements of this section are tags named as the generator to configure. E.g. for generator <code>spring-boot</code>, the sub-element is called <code>&lt;spring-boot&gt;</code>. This element then holds the specific generator configuration like <code>&lt;name&gt;</code> for specifying the final image name. See above for an example</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configuration for all generators. Each generator support a specific set of configuration values as described in the documentation. The subelements of this section are generator names to configure. E.g. for generator <code>spring-boot</code>, the sub-element is called <code>&lt;spring-boot&gt;</code>. This element then holds the specific generator configuration like <code>&lt;name&gt;</code> for specifying the final image name. See above for an example.</p></td>
 </tr>
 </tbody>
 </table>
 <div class="paragraph">
-<p>fabric8-maven-plugin comes with a set of default generators which are described in the next secion <a href="#generators-stock">Stock Generators</a>. These are enabled by default. In addition, custom generators can be easily added by simply declaring a compile scoped dependency in the <code>pom.xml</code>. How this can be done and how such a generator can be implemented is described in <a href="#generators-api">Generator API</a>.</p>
+<p>fabric8-maven-plugin comes with a set of default generators which are described in the next secion <a href="#generators-fabric8">Fabric8 Generators</a>. These are enabled by default. In addition, custom generators can be easily added by simply declaring a compile scoped dependency in the <code>pom.xml</code>. This and how a generator can be implemented is described in <a href="#generators-api">Generator API</a>.</p>
 </div>
 <div class="sect2">
-<h3 id="generators-stock">4.1. Stock Generators</h3>
+<h3 id="generators-fabric8">4.1. Fabric8 Generators</h3>
 <div class="sect3">
 <h4 id="spring-boot">4.1.1. spring-boot</h4>
 
@@ -2855,12 +2864,130 @@ This is a placeholder. Will be filled soon.
 </tr>
 </table>
 </div>
+<div class="paragraph">
+<p>Enriching is the complementary concept to <a href="#generators">Generators</a>. Whereas Generators are used to create and customize Docker images, Enrichers are use to create and customize Kubernetes and OpenShift resource objects.</p>
+</div>
+<div class="paragraph">
+<p>There are a lot similarities to Generatos:</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
-<p>Should be passive. E.g. if already set don&#8217;t override.</p>
+<p>Each Enricher has a unique name.</p>
+</li>
+<li>
+<p>Enrichers are looked up automatically from dependencies provied and there is a set of default enrichers delivered with this plugin.</p>
+</li>
+<li>
+<p>Enrichers are configured the same ways as generators</p>
 </li>
 </ul>
+</div>
+<div class="paragraph">
+<p>The <a href="#generator-example">Generator example</a> is a good bluebprint, simply replace <code>&lt;generator&gt;</code> with <code>&lt;enricher&gt;</code>. The configuration is structural identical:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 17. Enricher configuration</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 85.7143%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>&lt;includes&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Contains one ore more <code>&lt;include&gt;</code> elements with enricher names which should be included. If given, only this list of enrichers are included in this order.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>&lt;excludes&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Holds one or more <code>&lt;exclude&gt;</code> elements with enricher names to exclude. This means all the detected enrichers are used except the ones mentioned in this section.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>&lt;config&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configuration for all enrichers. Each enricher supports a specific set of configuration values as described in its documentation. The subelements of this section are enricher names. E.g. for enricher <code>f8-service</code>, the sub-element is called <code>&lt;f8-service&gt;</code>. This element then holds the specific enricher configuration like <code>&lt;name&gt;</code> for the service name.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>This plugin comes with a set of default enrichers. In addition custom enrichers can be easily added by providing implementation of the <a href="#enricher-api">Enricher API</a> and adding these as a dependency to the build.</p>
+</div>
+<div class="sect2">
+<h3 id="fabric8-enrichers">5.1. Fabric8 Enrichers</h3>
+<div class="paragraph">
+<p>fabric8-maven-plugin comes with a set of enrichers which are enabled by default.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 18. Fabric8 Enrichers</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 85.7143%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Enricher</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">f8-cd</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add CD metadata as annotations.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">f8-doc-link</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add URL to documentation configured in the POM as annotation.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">f8-grafana-link</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add a Grafana Dashboard URL as annotation.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">f8-icon</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add an URL to icons for well known application types.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fmp-controller</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Create default controller (replication controller, replica set or deployment) if missing.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fmp-dependency</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Examine build dependencies for <code>kubernetes.yml</code> and add the objects found therein.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fmp-git</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Check local <code>.git</code> directory and add build information as annotations.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fmp-image</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add the image name into a <code>PodSpec</code> of replication controller, replication sets and deployments, if missing.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fmp-name</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add a default name to every object which misses a name.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fmp-project</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add Maven coordinates as labels to all objects.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fmp-service</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Create a default service if missing and extrac ports from the Docker image configuration.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect3">
+<h4 id="fabric8-enrichers-2">5.1.1. Fabric8 Enrichers</h4>
+
+</div>
+<div class="sect3">
+<h4 id="standard-enrichers">5.1.2. Standard enrichers</h4>
+
+</div>
 </div>
 </div>
 </div>
@@ -3240,7 +3367,7 @@ password.</p>
 <div id="footer">
 <div id="footer-text">
 Version 3.1.1<br>
-Last updated 2016-08-09 18:14:10 UTC
+Last updated 2016-08-10 07:57:51 UTC
 </div>
 </div>
 </body>
