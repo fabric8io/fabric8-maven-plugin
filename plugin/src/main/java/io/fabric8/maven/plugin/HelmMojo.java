@@ -15,9 +15,10 @@
  */
 package io.fabric8.maven.plugin;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.maven.plugin.helm.Chart;
-import io.fabric8.maven.plugin.helm.Maintainer;
+import io.fabric8.maven.core.config.HelmConfig;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Strings;
 import org.apache.maven.model.Developer;
@@ -28,6 +29,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.tar.TarArchiver;
@@ -36,9 +38,7 @@ import org.codehaus.plexus.archiver.tar.TarLongFileMode;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * Generates a Helm chart for the kubernetes resources
@@ -46,46 +46,8 @@ import java.util.Locale;
 @Mojo(name = "helm", defaultPhase = LifecyclePhase.PACKAGE)
 public class HelmMojo extends AbstractFabric8Mojo {
 
-    public static final String HELM_YAML_EXTENSION = ".yaml";
-    public static final String PROPERTY_HELM_CHART_NAME = "fabric8.helm.chart";
-
-    /**
-     * The Helm chart name
-     */
-    @Parameter(property = PROPERTY_HELM_CHART_NAME, defaultValue = "${project.artifactId}")
-    private String chartName;
-
-    /**
-     * The kubernetes helm distro output dir
-     */
-    @Parameter(property = "fabric8.helm.outputDir", defaultValue = "${basedir}/target/fabric8/helm")
-    private File kubernetesOutputDir;
-
-    /**
-     * The openshift helm distro output dir
-     */
-    @Parameter(property = "fabric8.helm.openshift.outputDir", defaultValue = "${basedir}/target/fabric8/helm-openshift")
-    private File openshiftOutputDir;
-
-    /**
-     * The kubernetes YAML source directory
-     */
-    @Parameter(property = "fabric8.helm.sourceDir", defaultValue = "${basedir}/target/classes/META-INF/fabric8/kubernetes")
-    private File kubernetesSourceDir;
-
-    /**
-     * The OpenShift YAML source directory
-     */
-    @Parameter(property = "fabric8.helm.sourceDir", defaultValue = "${basedir}/target/classes/META-INF/fabric8/kubernetes")
-    private File openshiftSourceDir;
-
-
-    @Parameter(property = "keywords")
-    private List<String> keywords;
-
-    @Parameter(property = "fabric8.helm.engine")
-    private String engine;
-
+    @Parameter
+    private HelmConfig helm;
 
     @Component
     private MavenProjectHelper projectHelper;
@@ -93,98 +55,133 @@ public class HelmMojo extends AbstractFabric8Mojo {
     @Component(role = Archiver.class, hint = "tar")
     private TarArchiver archiver;
 
-
     @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
-        if (Strings.isNullOrBlank(chartName)) {
-            throw new MojoExecutionException("No Chart name defined! Please specify the `" + PROPERTY_HELM_CHART_NAME + "` property");
+        String chartName = getChartName();
+
+        for (HelmConfig.HelmType type : getHelmTypes()) {
+            generateHelmChartDirectory(chartName, type);
         }
-        generateHelmChartDirectory(this.kubernetesSourceDir, this.kubernetesOutputDir, "helm");
-        generateHelmChartDirectory(this.openshiftSourceDir, this.openshiftOutputDir, "helm-openshift");
     }
 
-    protected void generateHelmChartDirectory(File sourceDir, File outputDir, String classifier) throws MojoExecutionException {
-        getLog().info("Creating Helm Chart " + chartName + " in " + outputDir + " for manifest folder : " + sourceDir);
+    protected void generateHelmChartDirectory(String chartName, HelmConfig.HelmType type) throws MojoExecutionException {
+        File outputDir = prepareOutputDir(type);
+        File sourceDir = checkSourceDir(chartName, type);
+        if (sourceDir == null) {
+            return;
+        }
+        log.info("Creating Helm Chart \"%s\" for %s", chartName, type.getDescription());
+        log.verbose("SourceDir: %s", sourceDir);
+        log.verbose("OutputDir: %s", outputDir);
 
-        if (Files.isDirectory(outputDir)) {
-            Files.recursiveDelete(outputDir);
+        // Copy over all resource descriptors into the helm templates dir
+        copyResourceFilesToTemplatesDir(outputDir, sourceDir);
+
+        // Save Helm chart
+        createChartYaml(chartName, outputDir);
+
+        // Copy over support files
+        copyTextFile(outputDir, "README");
+        copyTextFile(outputDir, "LICENSE");
+
+        // now lets create the tarball
+        String classifier = "helm-" + type;
+        File destinationFile = new File(project.getBuild().getDirectory(),
+                                        chartName + "-" + project.getVersion() + "-" + classifier + ".tar.gz");
+        createAndAttachArchive(outputDir, destinationFile , classifier);
+    }
+
+    private String getChartName() {
+        String ret = helm != null ? helm.getChart() : null;
+        return ret != null ? ret : project.getArtifactId();
+    }
+
+    private File prepareOutputDir(HelmConfig.HelmType type) {
+        String dir = project.getProperties().getProperty("fabric8.helm.outputDir");
+        if (dir == null) {
+            dir = project.getBuild().getDirectory() + "/fabric8/helm/" + type.getClassifier();
         }
-        if (!sourceDir.isDirectory() || !sourceDir.exists()) {
-            getLog().warn("Chart source directory " + sourceDir + " does not exist so cannot make chart " + chartName);
-            return;
+        File dirF = new File(dir);
+        if (Files.isDirectory(dirF)) {
+            Files.recursiveDelete(dirF);
         }
-        if (!containsYamlFiles(sourceDir)) {
-            getLog().warn("Chart source directory " + sourceDir + " does not contain any YAML manifests or templates so cannot make chart " + chartName);
-            return;
+        return dirF;
+    }
+
+    private File checkSourceDir(String chartName, HelmConfig.HelmType type) {
+        String dir = project.getProperties().getProperty("fabric8.helm.sourceDir");
+        if (dir == null) {
+            dir = project.getBuild().getOutputDirectory() + "/META-INF/fabric8/" + type.getSourceDir();
         }
+        File dirF = new File(dir);
+        if (!dirF.isDirectory() || !dirF.exists()) {
+            log.warn("Chart source directory %s does not exist so cannot make chart %s. " +
+                     "Probably you need run 'mvn fabric8:resource' before.", dirF, chartName);
+            return null;
+        }
+        if (!containsYamlFiles(dirF)) {
+            log.warn("Chart source directory %s does not contain any YAML manifest to make chart %s. " +
+                     "Probably you need run 'mvn fabric8:resource' before.", dirF, chartName);
+            return null;
+        }
+        return dirF;
+    }
+
+    private List<HelmConfig.HelmType> getHelmTypes() {
+        if (helm != null) {
+            List<HelmConfig.HelmType> types = helm.getType();
+            if (types != null && types.size() > 0) {
+                return types;
+            }
+        }
+        for (Properties properties : new Properties[] { project.getProperties(), System.getProperties() } ) {
+            String helmTypeProp = properties.getProperty("fabric8.helm.type");
+            if (!Strings.isNullOrBlank(helmTypeProp)) {
+                List<String> propTypes = Strings.splitAsList(helmTypeProp, ",");
+                    List<HelmConfig.HelmType> ret = new ArrayList<>();
+                for (String prop : propTypes) {
+                    ret.add(HelmConfig.HelmType.valueOf(prop.trim().toLowerCase()));
+                }
+                return ret;
+            }
+        }
+        return Arrays.asList(HelmConfig.HelmType.kubernetes);
+    }
+
+    private void createChartYaml(String chartName, File outputDir) throws MojoExecutionException {
+        Chart chart = helm != null ?
+            new Chart(chartName, project, helm.getKeywords(), helm.getEngine()) :
+            new Chart(chartName, project);
+        File outputChartFile = new File(outputDir, "Chart.yaml");
+        try {
+            KubernetesHelper.saveYaml(chart, outputChartFile);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to save chart " + outputChartFile + ": " + e, e);
+        }
+    }
+
+    private void copyResourceFilesToTemplatesDir(File outputDir, File sourceDir) throws MojoExecutionException {
         File templatesDir = new File(outputDir, "templates");
         templatesDir.mkdirs();
         try {
             Files.copy(sourceDir, templatesDir);
         } catch (IOException e) {
-            throw new MojoExecutionException("Failed to copy manifest files from " + sourceDir + " to chart templates directory: " + templatesDir + ". Reason: " + e, e);
+            throw new MojoExecutionException("Failed to copy manifest files from " + sourceDir +
+                                             " to chart templates directory: " + templatesDir + ": " + e, e);
         }
-
-        File outputChartFile = new File(outputDir, "Chart" + HELM_YAML_EXTENSION);
-        Chart chart = createChart();
-        try {
-            KubernetesHelper.saveYaml(chart, outputChartFile);
-        } catch (IOException e) {
-            throw new MojoExecutionException("Failed to save chart " + outputChartFile + ". Reason: " + e, e);
-        }
-
-        File basedir = null;
-        if (project != null) {
-            basedir = project.getBasedir();
-            if (basedir != null) {
-                String outputReadMeFileName = "README.md";
-                try {
-                    FilenameFilter filter = new FilenameFilter() {
-                        @Override
-                        public boolean accept(File dir, String name) {
-                            return name.toLowerCase(Locale.ENGLISH).startsWith("readme.");
-                        }
-                    };
-                    copyTextFile(basedir, filter, new File(outputDir, outputReadMeFileName));
-                } catch (IOException e) {
-                    throw new MojoExecutionException("Failed to save " + outputReadMeFileName + ". Reason: " + e, e);
-                }
-                String outputLicenseFileName = "LICENSE";
-                try {
-                    FilenameFilter filter = new FilenameFilter() {
-                        @Override
-                        public boolean accept(File dir, String name) {
-                            String lower = name.toLowerCase(Locale.ENGLISH);
-                            return lower.equals("license") || lower.startsWith("license.");
-                        }
-                    };
-                    copyTextFile(basedir, filter, new File(outputDir, outputLicenseFileName));
-                } catch (IOException e) {
-                    throw new MojoExecutionException("Failed to save " + outputLicenseFileName + ". Reason: " + e, e);
-                }
-            }
-        }
-
-        getLog().info("Generated Helm Chart " + chartName + " at " + outputDir);
-
-        // now lets create the tarball
-        if (basedir != null) {
-            createTarGzip(outputDir, new File(basedir, "target/" + chartName + "-" + project.getVersion() + "-" + classifier + ".tar.gz"), classifier);
-        }
-
     }
 
-    protected void createTarGzip(File sourceDir, File outputFile, String classifier) throws MojoExecutionException {
+    protected void createAndAttachArchive(File contentDir, File destinationFile, String classifier) throws MojoExecutionException {
         try {
             archiver.setCompression(TarArchiver.TarCompressionMethod.gzip);
             archiver.setLongfile(TarLongFileMode.posix);
-            archiver.addDirectory(sourceDir);
-            archiver.setDestFile(outputFile);
+            archiver.addDirectory(contentDir);
+            archiver.setDestFile(destinationFile);
             archiver.createArchive();
         } catch (IOException e) {
-            throw new MojoExecutionException("Failed to create helm archive " + outputFile + ". " + e, e);
+            throw new MojoExecutionException("Failed to create Helm archive " + destinationFile + ": " + e, e);
         }
-        projectHelper.attachArtifact(project, "tar.gz", classifier, outputFile);
+        projectHelper.attachArtifact(project, "tar.gz", classifier, destinationFile);
     }
 
     private boolean containsYamlFiles(File sourceDir) {
@@ -200,49 +197,115 @@ public class HelmMojo extends AbstractFabric8Mojo {
         return false;
     }
 
-    protected static File copyTextFile(File sourceDir, FilenameFilter filter, File outFile) throws IOException {
-        File[] files = sourceDir.listFiles(filter);
-        if (files != null && files.length == 1) {
-            File sourceFile = files[0];
-            Files.copy(sourceFile, outFile);
-            return outFile;
+    private void copyTextFile(File outputDir, final String srcFile) throws MojoExecutionException {
+        try {
+            FilenameFilter filter = new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    String lower = name.toLowerCase(Locale.ENGLISH);
+                    return lower.equals(srcFile.toLowerCase()) || lower.startsWith(srcFile.toLowerCase() + ".");
+                }
+            };
+            copyFirstFile(project.getBasedir(), filter, new File(outputDir, srcFile));
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to save " + srcFile + ": " + e, e);
         }
-        return null;
     }
 
+    protected void copyFirstFile(File sourceDir, FilenameFilter filter, File outFile) throws IOException {
+        File[] files = sourceDir.listFiles(filter);
+        if (files != null && files.length > 0) {
+            File sourceFile = files[0];
+            Files.copy(sourceFile, outFile);
+        }
+        if (files.length > 1) {
+            log.warn("Found %d of %s files. Using first one %s", files.length, outFile, files[0]);
+        }
+    }
 
-    protected Chart createChart() {
-        Chart answer = new Chart();
-        answer.setName(chartName);
-        if (project != null) {
-            answer.setVersion(project.getVersion());
-            answer.setDescription(project.getDescription());
-            answer.setHome(project.getUrl());
-            answer.setKeywords(keywords);
-            answer.setEngine(engine);
-            Scm scm = project.getScm();
-            if (scm != null) {
-                String url = scm.getUrl();
-                if (url != null) {
-                    List<String> sources = new ArrayList<>();
-                    sources.add(url);
-                    answer.setSources(sources);
-                }
-            }
-            List<Developer> developers = project.getDevelopers();
-            if (developers != null) {
-                List<Maintainer> maintainers = new ArrayList<>();
-                for (Developer developer : developers) {
-                    String email = developer.getEmail();
-                    String name = developer.getName();
-                    if (Strings.isNotBlank(name) || Strings.isNotBlank(email)) {
-                        Maintainer maintainer = new Maintainer(name, email);
-                        maintainers.add(maintainer);
+    // =================================================================================================================
+    /**
+     * Represents the <a href="https://github.com/kubernetes/helm">Helm</a>
+     * <a href="https://github.com/kubernetes/helm/blob/master/pkg/proto/hapi/chart/metadata.pb.go#L50">Chart.yaml file</a>
+     */
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public static class Chart {
+        @JsonProperty
+        private String name;
+        @JsonProperty
+        private String home;
+        @JsonProperty
+        private List<String> sources;
+        @JsonProperty
+        private String version;
+        @JsonProperty
+        private String description;
+        @JsonProperty
+        private List<String> keywords;
+        @JsonProperty
+        private List<Maintainer> maintainers;
+        @JsonProperty
+        private String engine;
+
+        public Chart(String name, MavenProject project) {
+            this(name, project, null, null);
+        }
+
+        public Chart(String name, MavenProject project, List<String> keywords, String engine) {
+            this.name = name;
+            this.keywords = keywords;
+            this.engine = engine;
+
+            this.name = name;
+            if (project != null) {
+                this.version = project.getVersion();
+                this.description = project.getDescription();
+                this.home = project.getUrl();
+                this.keywords = keywords;
+                this.engine = engine;
+
+                Scm scm = project.getScm();
+                if (scm != null) {
+                    String url = scm.getUrl();
+                    if (url != null) {
+                        List<String> sources1 = new ArrayList<>();
+                        sources1.add(url);
+                        this.sources = sources1;
                     }
                 }
-                answer.setMaintainers(maintainers);
+                List<Developer> developers = project.getDevelopers();
+                if (developers != null) {
+                    List<Maintainer> maintainers1 = new ArrayList<>();
+                    for (Developer developer : developers) {
+                        String email = developer.getEmail();
+                        String devName = developer.getName();
+                        if (Strings.isNotBlank(devName) || Strings.isNotBlank(email)) {
+                            Maintainer maintainer = new Maintainer(devName, email);
+                            maintainers1.add(maintainer);
+                        }
+                    }
+                    this.maintainers = maintainers1;
+                }
             }
         }
-        return answer;
+
+        /**
+         */
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        public static class Maintainer {
+
+            @JsonProperty
+            private String name;
+
+            @JsonProperty
+            private String email;
+
+            public Maintainer() {}
+
+            public Maintainer(String name, String email) {
+                this.name = name;
+                this.email = email;
+            }
+        }
     }
 }
