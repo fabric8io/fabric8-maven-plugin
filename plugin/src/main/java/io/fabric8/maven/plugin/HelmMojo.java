@@ -85,10 +85,9 @@ public class HelmMojo extends AbstractFabric8Mojo {
         copyTextFile(outputDir, "LICENSE");
 
         // now lets create the tarball
-        String classifier = "helm-" + type;
         File destinationFile = new File(project.getBuild().getDirectory(),
-                                        chartName + "-" + project.getVersion() + "-" + classifier + ".tar.gz");
-        createAndAttachArchive(outputDir, destinationFile , classifier);
+                                        chartName + "-" + project.getVersion() + "-" + type.getClassifier() + ".tar.gz");
+        createAndAttachArchive(outputDir, destinationFile , type.getClassifier());
     }
 
     private String getChartName() {
