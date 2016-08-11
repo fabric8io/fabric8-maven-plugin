@@ -1,0 +1,49 @@
+
+[[fabric8:helm]]
+== *fabric8:helm*
+
+This goal is for creating https://github.com/kubernetes/helm/blob/master/docs/charts.md#the-chart-file-structure[Helm Charts] for your maven project so that you can install, update or delete your app in Kubernetes using https://github.com/kubernetes/helm[Helm]
+
+If you invoke the maven `fabric8:helm` goal on the command line:
+
+[source, sh, indent=2]
+----
+mvn fabric8:helm
+----
+
+Then the helm chart will be created in the directory: `target/fabric8/helm`
+
+You can then install this via the https://github.com/kubernetes/helm/releases[helm command line tool] as follows:
+
+[source, sh, indent=2]
+----
+helm install target/fabric8/helm
+----
+
+[[add-execution]]
+=== Add the Helm goal to your pom.xml
+
+To add the `helm` goal to your project just add the `helm` goal to the `executions` section of the `fabric8-maven-plugin` section of your `pom.xml`.
+
+.Add helm goal
+[source, xml, indent=0]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>fabric8-maven-plugin</artifactId>
+
+  <!-- ... -->
+
+  <executions>
+    <execution>
+      <goals>
+        <goal>resource</goal>
+        <goal>helm</goal>
+        <goal>build</goal>
+        <goal>deploy</goal>
+      </goals>
+    </execution>
+  </executions>
+</plugin>
+----
+
