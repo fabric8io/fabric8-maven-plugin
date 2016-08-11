@@ -18,6 +18,9 @@ This plugin supports the following goals, which are explained in the next sectio
 | *<<fabric8:resource>>*
 | Create Kubernetes or OpenShift resource descriptors
 
+| *<<fabric8:helm>>*
+| Create a [Helm Chart](https://github.com/kubernetes/helm/blob/master/docs/charts.md#the-chart-file-structure)
+
 | *<<fabric8:deploy>>*
 | Deploy resources decriptors to a cluster
 
