@@ -545,7 +545,7 @@ table.CodeRay td.code>pre{padding:0}
 </li>
 <li><a href="#fabric8:helm">3.2. <strong>fabric8:helm</strong></a>
 <ul class="sectlevel3">
-<li><a href="#add-execution">3.2.1. Add the Helm goal to your pom.xml</a></li>
+<li><a href="#add-execution">3.2.1. Installation</a></li>
 </ul>
 </li>
 <li><a href="#fabric8:build">3.3. <strong>fabric8:build</strong></a>
@@ -1351,7 +1351,7 @@ This is chapter is incomplete, but there is work in progress.
 <div class="sect2">
 <h3 id="fabric8:helm">3.2. <strong>fabric8:helm</strong></h3>
 <div class="paragraph">
-<p>This goal is for creating <a href="https://github.com/kubernetes/helm/blob/master/docs/charts.md#the-chart-file-structure">Helm Charts</a> for your maven project so that you can install, update or delete your app in Kubernetes using <a href="https://github.com/kubernetes/helm">Helm</a></p>
+<p>This goal is for creating <a href="https://github.com/kubernetes/helm/blob/master/docs/charts.md#the-chart-file-structure">Helm Charts</a> for your mMven project so that you can install, update or delete your app in Kubernetes using <a href="https://github.com/kubernetes/helm">Helm</a></p>
 </div>
 <div class="paragraph">
 <p>If you invoke the maven <code>fabric8:helm</code> goal on the command line:</p>
@@ -1362,7 +1362,7 @@ This is chapter is incomplete, but there is work in progress.
 </div>
 </div>
 <div class="paragraph">
-<p>Then the helm chart will be created in the directory: <code>target/fabric8/helm</code></p>
+<p>Then the helm chart will be created in <code>target/fabric8/helm</code> for the Kubernetes</p>
 </div>
 <div class="paragraph">
 <p>You can then install this via the <a href="https://github.com/kubernetes/helm/releases">helm command line tool</a> as follows:</p>
@@ -1373,7 +1373,7 @@ This is chapter is incomplete, but there is work in progress.
 </div>
 </div>
 <div class="sect3">
-<h4 id="add-execution">3.2.1. Add the Helm goal to your pom.xml</h4>
+<h4 id="add-execution">3.2.1. Installation</h4>
 <div class="paragraph">
 <p>To add the <code>helm</code> goal to your project just add the <code>helm</code> goal to the <code>executions</code> section of the <code>fabric8-maven-plugin</code> section of your <code>pom.xml</code>.</p>
 </div>
@@ -3482,7 +3482,7 @@ password.</p>
 <div id="footer">
 <div id="footer-text">
 Version 3.1.1<br>
-Last updated 2016-08-11 11:55:53 UTC
+Last updated 2016-08-11 16:33:05 UTC
 </div>
 </div>
 </body>
