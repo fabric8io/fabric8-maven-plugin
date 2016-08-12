@@ -34,10 +34,6 @@ public class KarafGenerator extends BaseGenerator {
     }
 
     private enum Config implements Configs.Key {
-        combine        {{ d = "false"; }},
-        name           {{ d = "%g/%a:%l"; }},
-        alias          {{ d = "karaf"; }},
-        baseImage      {{ d = "fabric8/s2i-karaf"; }},
         baseDir        {{ d = "/deployments/"; }},
         user           {{ d = "jboss:jboss:jboss"; }},
         cmd            {{ d = "/deployments/deploy-and-run.sh"; }},
@@ -49,17 +45,17 @@ public class KarafGenerator extends BaseGenerator {
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {
-        if (isApplicable() && shouldIncludeDefaultImage(configs)) {
+        if (isApplicable() && shouldAddDefaultImage(configs)) {
             ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
             BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
                 .assembly(createAssembly())
-                .from(getConfig(Config.baseImage))
+                .from(getFrom())
                 .ports(extractPorts())
                 .cmd(getConfig(Config.cmd));
             addLatestTagIfSnapshot(buildBuilder);
             imageBuilder
-                .name(getConfig(Config.name))
-                .alias(getConfig(Config.alias))
+                .name(getImageName())
+                .alias(getAlias())
                 .buildConfig(buildBuilder.build());
             configs.add(imageBuilder.build());
             return configs;
@@ -72,11 +68,6 @@ public class KarafGenerator extends BaseGenerator {
     public boolean isApplicable() {
         MavenProject project = getProject();
         return MavenUtil.hasPlugin(project, "org.apache.karaf.tooling:karaf-maven-plugin");
-    }
-
-    private boolean shouldIncludeDefaultImage(List<ImageConfiguration> configs) {
-        boolean combineEnabled = Configs.asBoolean(getConfig(Config.combine));
-        return !containsBuildConfiguration(configs) || combineEnabled;
     }
 
     private List<String> extractPorts() {

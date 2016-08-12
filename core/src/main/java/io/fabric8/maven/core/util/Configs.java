@@ -16,6 +16,10 @@
 
 package io.fabric8.maven.core.util;
 
+import java.util.Properties;
+
+import org.apache.maven.project.MavenProject;
+
 /**
  * Helper functions for working with typesafe configs
  */
@@ -33,5 +37,13 @@ public class Configs {
 
     public static boolean asBoolean(String value) {
         return value != null ? Boolean.parseBoolean(value) : false;
+    }
+
+    public static String getPropertyWithSystemAsFallback(Properties properties, String key) {
+        String val = properties.getProperty(key);
+        if (val == null) {
+            val = System.getProperty(key);
+        }
+        return val;
     }
 }

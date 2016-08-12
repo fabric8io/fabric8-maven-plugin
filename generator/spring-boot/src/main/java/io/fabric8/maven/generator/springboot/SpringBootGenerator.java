@@ -19,8 +19,6 @@ package io.fabric8.maven.generator.springboot;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
@@ -45,9 +43,6 @@ public class SpringBootGenerator extends BaseGenerator {
     }
 
     private enum Config implements Configs.Key {
-        combine        {{ d = "false"; }},
-        name           {{ d = "%g/%a:%l"; }},
-        alias          {{ d = "springboot"; }},
         webPort        {{ d = "8080"; }},
         jolokiaPort    {{ d = "8778"; }},
         prometheusPort {{ d = "9779"; }};
@@ -57,7 +52,7 @@ public class SpringBootGenerator extends BaseGenerator {
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {
-        if (isApplicable() && shouldIncludeDefaultImage(configs)) {
+        if (isApplicable() && shouldAddDefaultImage(configs)) {
             ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
             BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
                 .assembly(createAssembly())
@@ -65,8 +60,8 @@ public class SpringBootGenerator extends BaseGenerator {
                 .ports(extractPorts());
             addLatestTagIfSnapshot(buildBuilder);
             imageBuilder
-                .name(getConfig(Config.name))
-                .alias(getConfig(Config.alias))
+                .name(getImageName())
+                .alias(getAlias())
                 .buildConfig(buildBuilder.build());
             configs.add(imageBuilder.build());
             return configs;
@@ -79,11 +74,6 @@ public class SpringBootGenerator extends BaseGenerator {
     public boolean isApplicable() {
         MavenProject project = getProject();
         return MavenUtil.hasPlugin(project,"org.springframework.boot:spring-boot-maven-plugin");
-    }
-
-    private boolean shouldIncludeDefaultImage(List<ImageConfiguration> configs) {
-        boolean combineEnabled = Configs.asBoolean(getConfig(Config.combine));
-        return !containsBuildConfiguration(configs) || combineEnabled;
     }
 
     private List<String> extractPorts() {

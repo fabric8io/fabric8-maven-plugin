@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
+import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -53,7 +54,8 @@ public abstract class FromSelector {
 
     public boolean isRedHat() {
         MavenProject project = context.getProject();
-        String version = project.getVersion();
+        Plugin plugin = project.getPlugin("io.fabric8:fabric8-maven-plugin");
+        String version = plugin.getVersion();
         return REDHAT_VERSION_PATTERN.matcher(version).matches();
     }
 

@@ -63,10 +63,7 @@ public class EnricherConfig {
 
         if (val == null) {
             String fullKey = ENRICHER_PROP_PREFIX + "." + name + "." + key;
-            val = projectProperties.getProperty(fullKey);
-            if (val == null) {
-                val = System.getProperty(fullKey);
-            }
+            val = Configs.getPropertyWithSystemAsFallback(projectProperties, fullKey);
         }
         return val != null ? val : defaultVal;
     }
