@@ -50,10 +50,7 @@ public class JavaExecGenerator extends BaseGenerator {
         // The name of the main class. If not speficied it is tried
         // to find a main class within target/classes
         mainClass,
-        combine        {{ d = "false"; }},
-        name           {{ d = "%g/%a:%l"; }},
-        alias          {{ d = "java-exec"; }},
-        port,
+        webPort,
         jolokiaPort    {{ d = "8778"; }},
         prometheusPort {{ d = "9779"; }};
 
@@ -62,7 +59,7 @@ public class JavaExecGenerator extends BaseGenerator {
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {
-        if (isApplicable() && shouldIncludeDefaultImage(configs)) {
+        if (isApplicable() && shouldAddDefaultImage(configs)) {
             Map<String, String> envVars = new HashMap<>();
             envVars.put(JAVA_MAIN_CLASS, getMainClass());
 
@@ -74,8 +71,8 @@ public class JavaExecGenerator extends BaseGenerator {
                 .env(envVars);
             addLatestTagIfSnapshot(buildBuilder);
             imageBuilder
-                .name(getConfig(Config.name))
-                .alias(getConfig(Config.alias))
+                .name(getImageName())
+                .alias(getAlias())
                 .buildConfig(buildBuilder.build());
             configs.add(imageBuilder.build());
             return configs;
@@ -122,15 +119,10 @@ public class JavaExecGenerator extends BaseGenerator {
         return Strings.isNotBlank(getMainClass());
     }
 
-    private boolean shouldIncludeDefaultImage(List<ImageConfiguration> configs) {
-        boolean combineEnabled = Configs.asBoolean(getConfig(Config.combine));
-        return !containsBuildConfiguration(configs) || combineEnabled;
-    }
-
     private List<String> extractPorts() {
         // TODO would rock to look at the base image and find the exposed ports!
         List<String> answer = new ArrayList<>();
-        addPortIfValid(answer, getConfig(Config.port));
+        addPortIfValid(answer, getConfig(Config.webPort));
         addPortIfValid(answer, getConfig(Config.jolokiaPort));
         addPortIfValid(answer, getConfig(Config.prometheusPort));
         return answer;

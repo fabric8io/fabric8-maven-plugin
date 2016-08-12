@@ -59,10 +59,7 @@ public class GeneratorConfig {
         String val = config.getConfig(name, key.name());
         if (val == null) {
             String fullKey = GENERATOR_PROP_PREFIX + "." + name + "." + key;
-            val = properties.getProperty(fullKey);
-            if (val == null) {
-                val = System.getProperty(fullKey);
-            }
+            val = Configs.getPropertyWithSystemAsFallback(properties, fullKey);
         }
         return val != null ? val : defaultVal;
     }

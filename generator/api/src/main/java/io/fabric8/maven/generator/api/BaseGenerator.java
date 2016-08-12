@@ -38,11 +38,21 @@ abstract public class BaseGenerator implements Generator {
     private final FromSelector fromSelector;
 
     private enum Config implements Configs.Key {
+        // Whether to merge in existing configuration or not
+        merge,
+
+        // The image name
+        name,
+
+        // The alias to use (default to the generator name)
+        alias,
+
+        // Base image
         from;
 
         public String def() { return d; } protected String d;
-    }
 
+    }
     public BaseGenerator(MavenGeneratorContext context, String name) {
         this(context, name, null);
     }
@@ -85,13 +95,42 @@ abstract public class BaseGenerator implements Generator {
      * @return the base image or <code>null</code> when none could be detected.
      */
     protected String getFrom() {
-        String from = getConfig(Config.from);
+        String from = getConfigWithSystemFallbackAndDefault(Config.from, "fabric8.generator.from", null);
         if (from != null) {
             return from;
         }
         return fromSelector != null ? fromSelector.getFrom() : null;
     }
 
+    /**
+     * Get Image name with a standard default
+     *
+     * @return Docker image name which is never null
+     */
+    protected String getImageName() {
+        return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", "%g/%a:%l");
+    }
+
+    /**
+     * Get alias name with the generator name as default
+     * @return an alias which is never null;
+     */
+    protected String getAlias() {
+        return getConfigWithSystemFallbackAndDefault(Config.alias, "fabric8.generator.alias", getName());
+    }
+
+    protected boolean shouldAddDefaultImage(List<ImageConfiguration> configs) {
+        String merge =  getConfigWithSystemFallbackAndDefault(Config.alias, "fabric8.generator.alias", "false");
+        return !containsBuildConfiguration(configs) || Boolean.parseBoolean(merge);
+    }
+
+    private String getConfigWithSystemFallbackAndDefault(Config name, String key, String defaultVal) {
+        String value = getConfig(name);
+        if (value == null) {
+            value = Configs.getPropertyWithSystemAsFallback(getProject().getProperties(), key);
+        }
+        return value != null ? value : defaultVal;
+    }
     protected void addLatestTagIfSnapshot(BuildImageConfiguration.Builder buildBuilder) {
         MavenProject project = getProject();
         if (project.getVersion().endsWith("-SNAPSHOT")) {
@@ -99,7 +138,7 @@ abstract public class BaseGenerator implements Generator {
         }
     }
 
-    protected boolean containsBuildConfiguration(List<ImageConfiguration> configs) {
+    private boolean containsBuildConfiguration(List<ImageConfiguration> configs) {
         for (ImageConfiguration config : configs) {
             if (config.getBuildConfiguration() != null) {
                 return true;

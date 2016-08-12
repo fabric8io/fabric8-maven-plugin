@@ -46,7 +46,7 @@ Generators can be configured with a `<generator>` section. The following sub-ele
 | Element | Description
 
 | `<includes>`
-| Contains one ore more `<include>` elements with generator names which should be included. If given, only this list of generators are included in this order.
+| Contains one ore more `<include>` elements with generator names which should be included. If given, only this list of generators are included in this given order. The order is important because by default only the first matching generator kicks in.
 
 | `<excludes>`
 | Holds one or more `<exclude>` elements with generator names to exclude. This mean all detected generators are used except the ones mentioned in this section.
@@ -55,6 +55,17 @@ Generators can be configured with a `<generator>` section. The following sub-ele
 | Configuration for all generators. Each generator support a specific set of configuration values as described in the documentation. The subelements of this section are generator names to configure. E.g. for generator `spring-boot`, the sub-element is called `<spring-boot>`. This element then holds the specific generator configuration like `<name>` for specifying the final image name. See above for an example.
 |===
 
+
+Beside the specifying generator configuration in the plugin's configuration it can be set with properties, too:
+
+.Example generator property config
+[source, sh]
+----
+mvn -Dfabric8.generator.spring-boot.alias="myapp"
+----
+
+The general scheme is a prefix `fabric8.generator.` followed by the unique generator name and then the generator specific key.
+
 fabric8-maven-plugin comes with a set of default generators which are described in the next secion <<generators-fabric8, Fabric8 Generators>>. These are enabled by default. In addition, custom generators can be easily added by simply declaring a compile scoped dependency in the `pom.xml`. This and how a generator can be implemented is described in <<generators-api, Generator API>>.
 
 [[generators-default]]
@@ -62,9 +73,73 @@ fabric8-maven-plugin comes with a set of default generators which are described 
 
 All default generators examine the build information for certain aspect and generate a Docker build information on the fly. They can be configured to a certrain degree, where the configuration is generator specific.
 
-However, there is one configuration option which is shared by all generators: The base image from where to start from when creating the images. By default the generators make an opinionated decision for the base image and which are described in the respective generator section.
 
-=== spring-boot
+
+There are some configuration options which are shared by all generators:
+
+[[generator-options-common]]
+.Common generator options
+[cols="1,6,1"]
+|===
+| Element | Description | Property
+
+| *from*
+| This is the base image from where to start when creating the images. By default the generators make an opinionated decision for the base image which are described in the respective generator section.
+| `fabric8.generator.from`
+
+| *alias*
+| An alias name for referencing this image in various other parts of the configuration. This is also used in the log output. The default alias name is the name of the generator.
+| `fabric8.generator.alias`
+
+| *name*
+| The Docker image name used when doing Docker builds. For OpenShift S2I builds its the name of the image stream. This can be a pattern as descibed in <<image-name-placeholders, Name Placeholders>>. The default is `%g/%a:%l`.
+| `fabric8.generator.name`
+
+| *merge*
+| When this set to `true`, then the generator _adds_ to an existing image configuration. By default this is disabled, so that a generator only kicks in when there are no other image configurations in the build, which are either configured directly for a `fabric8:build` or already by a generator which has been run previously.
+|===
+
+When used as properties they can be directly referenced with the property names above.
+
+=== Spring Boot
+
+The name of this generator is `spring-boot` and gets activated when it finds a `spring-boot-maven-plugin` among the configured plugins. This plugin can be also a included as a dependency. It will use the following base image by default, but as explained <<generator-options-common, above>> and can be changeda `from` configuration.
+
+.Spring-Boot Base Images
+[cols="1,4,4"]
+|===
+| | Docker Build | S2I Build
+
+| *Community*
+| `fabric8/java-alpine-openjdk8-jdk`
+| `fabric8/s2i-java`
+
+| **Red Hat*
+| `jboss-fuse-6/fis-java-openshift`
+| `jboss-fuse-6/fis-java-openshift`
+|===
+
+These images refer always to the latest tag. The _Red Hat_ base images are selected, when the plugin itself is a Red Hat supported version (which is detected by the plugins version number).
+
+The following additional configuration options can be set:
+
+.Spring-Boot configuration options
+[cols="1,6,1"]
+|===
+| Element | Description | Default
+
+| *webPort*
+| Port to expose as service
+| 8080
+
+| *jolokiaPort*
+| Port of the Jolokia agent exposed by the base image
+| 8778
+
+| *prometheusPort*
+| Port of the Prometheus jmx_exporter exposed by the base image
+| 9779
+|===
 
 === java-exec
 
