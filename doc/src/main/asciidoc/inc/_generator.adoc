@@ -97,6 +97,7 @@ There are some configuration options which are shared by all generators:
 
 | *merge*
 | When this set to `true`, then the generator _adds_ to an existing image configuration. By default this is disabled, so that a generator only kicks in when there are no other image configurations in the build, which are either configured directly for a `fabric8:build` or already by a generator which has been run previously.
+|
 |===
 
 When used as properties they can be directly referenced with the property names above.
@@ -142,6 +143,32 @@ The following additional configuration options can be set:
 |===
 
 === Java Applications
+
+This generator is named `java-exec` and is responsible to start up arbitrary Java application. It kicks in if eithe the main class is explicitely configured in this generator's configuration or when it finds a singel class with a `public static void main(String[] args)` method. If it finds more than one class, the generator is a no op.
+
+Beside the common configuration parameters described in the table <<generator-options-common, Commong Generator Options>> it knows the following additional configuration options:
+
+.Java Application configuration options
+[cols="1,6,1"]
+|===
+| Element | Description | Default
+
+| *mainClass*
+| Main class to call. If not given a class is tried to be found by scanning `target/classes` for a single class with a main method. If no if found or more than one is found, this generator does nothing.
+|
+
+| *webPort*
+| Port to expose as service
+| 8080
+
+| *jolokiaPort*
+| Port of the Jolokia agent exposed by the base image
+| 8778
+
+| *prometheusPort*
+| Port of the Prometheus jmx_exporter exposed by the base image
+| 9779
+|===
 
 === Karaf
 
