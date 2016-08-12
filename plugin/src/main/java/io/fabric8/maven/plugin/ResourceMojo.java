@@ -116,7 +116,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
      * an OpenShift build (with a Docker build against the OpenShift API server.
      */
     @Parameter(property = "fabric8.mode")
-    private PlatformMode mode = KubernetesResourceUtil.defaultPlatformMode;
+    private PlatformMode mode = PlatformMode.DEFAULT;
 
     /**
      * OpenShift build mode when an OpenShift build is performed.
@@ -180,10 +180,15 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     public ResourceMojo() {
     }
 
+    @Override
+    public void execute() throws MojoExecutionException, MojoFailureException {
+        clusterAccess = new ClusterAccess(namespace);
+    }
+
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         try {
-            clusterAccess = new ClusterAccess(namespace);
-            platformMode = KubernetesResourceUtil.resolvePlatformMode(mode, clusterAccess, log);
+            platformMode = clusterAccess.resolvePlatformMode(mode, log);
+
             openShiftConverters = new HashMap<>();
             openShiftConverters.put("ReplicaSet", new ReplicSetOpenShiftConverter());
             openShiftConverters.put("Deployment", new DeploymentOpenShiftConverter(platformMode));

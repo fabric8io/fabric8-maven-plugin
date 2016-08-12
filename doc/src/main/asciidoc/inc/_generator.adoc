@@ -60,6 +60,10 @@ fabric8-maven-plugin comes with a set of default generators which are described 
 [[generators-default]]
 == Default Generators
 
+All default generators examine the build information for certain aspect and generate a Docker build information on the fly. They can be configured to a certrain degree, where the configuration is generator specific.
+
+However, there is one configuration option which is shared by all generators: The base image from where to start from when creating the images. By default the generators make an opinionated decision for the base image and which are described in the respective generator section.
+
 === spring-boot
 
 === java-exec

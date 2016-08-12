@@ -22,6 +22,7 @@ package io.fabric8.maven.core.config;
  * @since 25/05/16
  */
 public enum PlatformMode {
+
     /**
      * Create resources descriptors for vanilla Kubernetes
      */
@@ -37,6 +38,13 @@ public enum PlatformMode {
      * This is done by contacting an API server
      */
     auto(true, "Auto");
+
+    // TODO see https://github.com/fabric8io/fabric8-maven-plugin/issues/240
+    // we are temporarily switching to kubernetes mode by default
+    // until we can get openshift mode working with Arquillian and Jenkins pipeilnes
+    //
+    // public static final PlatformMode defaultPlatformMode = PlatformMode.auto;
+    public static final PlatformMode DEFAULT = PlatformMode.kubernetes;
 
     private boolean autoFlag;
     private String label;
