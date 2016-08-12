@@ -543,11 +543,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#resource-labels-annotations">3.1.1. Labels and Annotations</a></li>
 </ul>
 </li>
-<li><a href="#fabric8:helm">3.2. <strong>fabric8:helm</strong></a>
-<ul class="sectlevel3">
-<li><a href="#add-execution">3.2.1. Installation</a></li>
-</ul>
-</li>
+<li><a href="#fabric8:helm">3.2. <strong>fabric8:helm</strong></a></li>
 <li><a href="#fabric8:build">3.3. <strong>fabric8:build</strong></a>
 <ul class="sectlevel3">
 <li><a href="#build-kubernetes">3.3.1. Kubernetes Build</a></li>
@@ -1351,31 +1347,96 @@ This is chapter is incomplete, but there is work in progress.
 <div class="sect2">
 <h3 id="fabric8:helm">3.2. <strong>fabric8:helm</strong></h3>
 <div class="paragraph">
-<p>This goal is for creating <a href="https://github.com/kubernetes/helm/blob/master/docs/charts.md#the-chart-file-structure">Helm Charts</a> for your mMven project so that you can install, update or delete your app in Kubernetes using <a href="https://github.com/kubernetes/helm">Helm</a></p>
+<p>This goal is for creating <a href="https://github.com/kubernetes/helm/blob/master/docs/charts.md#the-chart-file-structure">Helm charts</a> for your Maven project so that you can install, update or delete your app in Kubernetes using <a href="https://github.com/kubernetes/helm">Helm</a>.</p>
 </div>
 <div class="paragraph">
-<p>If you invoke the maven <code>fabric8:helm</code> goal on the command line:</p>
+<p>For creating a Helm chart you simply call <code>fabric8:helm</code> goal on the command line:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">  mvn fabric8:helm</code></pre>
+<pre class="CodeRay highlight"><code data-lang="sh">  mvn fabric8:resource fabric8:helm</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Then the helm chart will be created in <code>target/fabric8/helm</code> for the Kubernetes</p>
+<p>The <code>fabric8:resource</code> goal is required to create the resource descriptors which are included in the Helm chart.</p>
 </div>
 <div class="paragraph">
-<p>You can then install this via the <a href="https://github.com/kubernetes/helm/releases">helm command line tool</a> as follows:</p>
+<p>The configuration happens in a <code>&lt;helm&gt;</code> section within the plugin&#8217;s configuration:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example Helm configuration</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;configuration&gt;</span>
+    <span class="tag">&lt;helm&gt;</span>
+      <span class="tag">&lt;chart&gt;</span>Jenkins<span class="tag">&lt;/chart&gt;</span>
+      <span class="tag">&lt;keywords&gt;</span>ci,cd,server<span class="tag">&lt;/keywords&gt;</span>
+    <span class="tag">&lt;/helm&gt;</span>
+    ...
+  <span class="tag">&lt;/configuration&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This configuration section know the following subelements in order to configure your Helm chart.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 5. Helm configuration</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 71.4285%;">
+<col style="width: 14.2858%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>chart</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The Chart name, which is <code>${project.artifactId}</code> if not given.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.helm.chart</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>type</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">For which platform to generate the chart. By default this is <code>kubernetes</code>, but can be also <code>openshift</code> for using OpenShift specific resources in the chart. <em>Please note that there is no OpenShift support yet for charts, so this is experimental</em>. You can also add both values as a comma separated list.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.helm.type</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>sourceDir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Where to find the resource descriptors generated with <code>fabric8:resource</code>. By default this is <code>${basedir}/target/classes/META-INF/fabric8</code>, which is also the output directory used by <code>fabric8:resource</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.helm.sourceDir</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>outputDir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Where to create the the Helm chart, which is <code>${basedir}/target/fabric8/helm</code> by default for Kubernetes (and <code>${basedir}/target/fabric8/helmshift</code> for OpenShift).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.helm.outputDir</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keywords</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Comma separated list of keywords to add to the chart</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>engine</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The template engine to use</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>In a next step you can install this via the <a href="https://github.com/kubernetes/helm/releases">helm command line tool</a> as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="sh">  helm install target/fabric8/helm</code></pre>
 </div>
 </div>
-<div class="sect3">
-<h4 id="add-execution">3.2.1. Installation</h4>
 <div class="paragraph">
-<p>To add the <code>helm</code> goal to your project just add the <code>helm</code> goal to the <code>executions</code> section of the <code>fabric8-maven-plugin</code> section of your <code>pom.xml</code>.</p>
+<p>To add the <code>helm</code> goal to your project so that it is automatically executed just add the <code>helm</code> goal to the <code>executions</code> section of the <code>fabric8-maven-plugin</code> section of your <code>pom.xml</code>.</p>
 </div>
 <div class="listingblock">
 <div class="title">Add helm goal</div>
@@ -1399,6 +1460,8 @@ This is chapter is incomplete, but there is work in progress.
 <span class="tag">&lt;/plugin&gt;</span></code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>In addition this goal will also create a tar-archive below <code>${basedir}/target</code> which contains the chart with its template. This tar is added as an aritfact with classifier <code>helm</code> to the build (<code>helmshift</code> for the OpenShift mode).</p>
 </div>
 </div>
 <div class="sect2">
@@ -1427,7 +1490,7 @@ This is chapter is incomplete, but there is work in progress.
 <p>There are two kind of binary builds supporte by this plugin, which can be selected with the configuration option <code>buildStrategy</code> (property <code>fabric8.build.strategy</code>)</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 5. Build Strategies</caption>
+<caption class="title">Table 6. Build Strategies</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -1486,7 +1549,7 @@ This is chapter is incomplete, but there is work in progress.
 <p>Global configuration parameters specify overall behavior common for all images to build. Some of the configuration options are shared with other goals.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 6. Global configuration</caption>
+<caption class="title">Table 7. Global configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -1729,7 +1792,7 @@ the URL is:</p>
 <p>The <code>&lt;image&gt;</code> element can contain the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 7. Image Configuration</caption>
+<caption class="title">Table 8. Image Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1767,7 +1830,7 @@ linking images together or for specifying it with the global <strong>image</stro
 <p>When specifying the name you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 8. Placeholders</caption>
+<caption class="title">Table 9. Placeholders</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1920,7 +1983,7 @@ of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
 <code>&lt;dockerFile&gt;</code> the following configuration options are available:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 9. Build configuration</caption>
+<caption class="title">Table 10. Build configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2063,7 +2126,7 @@ remote API.</p>
 <p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 10. Assembly Configuration</caption>
+<caption class="title">Table 11. Assembly Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2200,7 +2263,7 @@ predefined assembly descriptor. The following symbolic names can be
 used for <code>descriptorRef</code>:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 11. Predefined Assembly Descriptors</caption>
+<caption class="title">Table 12. Predefined Assembly Descriptors</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -2366,7 +2429,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <p>A entry point or command can be specified in two alternative formats:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 12. Entrypoint and Command Configuration</caption>
+<caption class="title">Table 13. Entrypoint and Command Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2496,7 +2559,7 @@ Section needs review and rearrangments
 the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code> with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 13. Push options</caption>
+<caption class="title">Table 14. Push options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2628,7 +2691,7 @@ to do this manually.</p>
 <p>This maven goal can be configured with the following top-level parameters:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 14. Watch configuration</caption>
+<caption class="title">Table 15. Watch configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2709,7 +2772,7 @@ below how this can be specified.</p>
 <p>Image specific watch configuration goes into an extra image-level <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). The following parameters are recognized:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 15. Watch configuration for a single image</caption>
+<caption class="title">Table 16. Watch configuration for a single image</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2851,7 +2914,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p>Generators can be configured with a <code>&lt;generator&gt;</code> section. The following sub-elements are supported.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 16. Generator configuration</caption>
+<caption class="title">Table 17. Generator configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -2938,7 +3001,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <p>The <a href="#generator-example">Generator example</a> is a good bluebprint, simply replace <code>&lt;generator&gt;</code> with <code>&lt;enricher&gt;</code>. The configuration is structural identical:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 17. Enricher configuration</caption>
+<caption class="title">Table 18. Enricher configuration</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -2983,7 +3046,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </ul>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 18. Default Enrichers Overview</caption>
+<caption class="title">Table 19. Default Enrichers Overview</caption>
 <colgroup>
 <col style="width: 22.2222%;">
 <col style="width: 77.7778%;">
@@ -3482,7 +3545,7 @@ password.</p>
 <div id="footer">
 <div id="footer-text">
 Version 3.1.1<br>
-Last updated 2016-08-12 05:51:10 UTC
+Last updated 2016-08-12 06:25:58 UTC
 </div>
 </div>
 </body>
