@@ -49,6 +49,14 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
         executeInternal();
     }
 
+    protected String getProperty(String key) {
+        String value = System.getProperty(key);
+        if (value == null) {
+            value = project.getProperties().getProperty(key);
+        }
+        return value;
+    }
+
     public abstract void executeInternal() throws MojoExecutionException, MojoFailureException;
 
 }

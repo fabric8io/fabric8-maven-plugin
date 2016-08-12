@@ -2,28 +2,74 @@
 [[fabric8:helm]]
 == *fabric8:helm*
 
-This goal is for creating https://github.com/kubernetes/helm/blob/master/docs/charts.md#the-chart-file-structure[Helm Charts] for your mMven project so that you can install, update or delete your app in Kubernetes using https://github.com/kubernetes/helm[Helm]
+This goal is for creating https://github.com/kubernetes/helm/blob/master/docs/charts.md#the-chart-file-structure[Helm charts] for your Maven project so that you can install, update or delete your app in Kubernetes using https://github.com/kubernetes/helm[Helm].
 
-If you invoke the maven `fabric8:helm` goal on the command line:
+For creating a Helm chart you simply call `fabric8:helm` goal on the command line:
 
 [source, sh, indent=2]
 ----
-mvn fabric8:helm
+mvn fabric8:resource fabric8:helm
 ----
 
-Then the helm chart will be created in `target/fabric8/helm` for the Kubernetes
+The `fabric8:resource` goal is required to create the resource descriptors which are included in the Helm chart.
 
-You can then install this via the https://github.com/kubernetes/helm/releases[helm command line tool] as follows:
+The configuration happens in a `<helm>` section within the plugin's configuration:
+
+.Example Helm configuration
+[source, xml]
+----
+<plugin>
+  <configuration>
+    <helm>
+      <chart>Jenkins</chart>
+      <keywords>ci,cd,server</keywords>
+    </helm>
+    ...
+  </configuration>
+</plugin>
+----
+
+This configuration section know the following subelements in order to configure your Helm chart.
+
+.Helm configuration
+[cols="1,5,1"]
+|===
+| Element | Description | Property
+
+| *chart*
+| The Chart name, which is `${project.artifactId}` if not given.
+| `fabric8.helm.chart`
+
+| *type*
+| For which platform to generate the chart. By default this is `kubernetes`, but can be also `openshift` for using OpenShift specific resources in the chart. _Please note that there is no OpenShift support yet for charts, so this is experimental_. You can also add both values as a comma separated list.
+| `fabric8.helm.type`
+
+| *sourceDir*
+| Where to find the resource descriptors generated with `fabric8:resource`. By default this is `${basedir}/target/classes/META-INF/fabric8`, which is also the output directory used by `fabric8:resource`.
+| `fabric8.helm.sourceDir`
+
+| *outputDir*
+| Where to create the the Helm chart, which is `${basedir}/target/fabric8/helm` by default for Kubernetes (and `${basedir}/target/fabric8/helmshift` for OpenShift).
+| `fabric8.helm.outputDir`
+
+| *keywords*
+| Comma separated list of keywords to add to the chart
+|
+
+| *engine*
+| The template engine to use
+|
+|===
+
+
+In a next step you can install this via the https://github.com/kubernetes/helm/releases[helm command line tool] as follows:
 
 [source, sh, indent=2]
 ----
 helm install target/fabric8/helm
 ----
 
-[[add-execution]]
-=== Installation
-
-To add the `helm` goal to your project just add the `helm` goal to the `executions` section of the `fabric8-maven-plugin` section of your `pom.xml`.
+To add the `helm` goal to your project so that it is automatically executed just add the `helm` goal to the `executions` section of the `fabric8-maven-plugin` section of your `pom.xml`.
 
 .Add helm goal
 [source, xml, indent=0]
@@ -47,3 +93,4 @@ To add the `helm` goal to your project just add the `helm` goal to the `executio
 </plugin>
 ----
 
+In addition this goal will also create a tar-archive below `${basedir}/target` which contains the chart with its template. This tar is added as an aritfact with classifier `helm` to the build (`helmshift` for the OpenShift mode).
