@@ -35,7 +35,7 @@ public enum OpenShiftBuildStrategy {
     docker;
 
     /**
-     * Check if the given type is same as this type stored in OpenShift
+     * Check if the given type is same as the type stored in OpenShift
      *
      * @param type to check
      * @return

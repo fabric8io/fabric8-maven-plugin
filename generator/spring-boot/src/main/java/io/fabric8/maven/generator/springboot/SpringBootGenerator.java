@@ -27,6 +27,7 @@ import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.BaseGenerator;
+import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
@@ -37,19 +38,16 @@ import org.apache.maven.project.MavenProject;
  */
 public class SpringBootGenerator extends BaseGenerator {
 
-    private static final String S2I_BUILDER_IMAGE = "fabric8/s2i-java";
-    private static final String BASE_IMAGE = "fabric8/java-alpine-openjdk8-jdk";
-
-
     public SpringBootGenerator(MavenGeneratorContext context) {
-        super(context, "spring-boot");
+        super(context, "spring-boot", new FromSelector.Default(context,
+                                                               "fabric8/java-alpine-openjdk8-jdk", "fabric8/s2i-java",
+                                                               "jboss-fuse-6/fis-java-openshift", "jboss-fuse-6/fis-java-openshift"));
     }
 
     private enum Config implements Configs.Key {
         combine        {{ d = "false"; }},
         name           {{ d = "%g/%a:%l"; }},
         alias          {{ d = "springboot"; }},
-        from,
         webPort        {{ d = "8080"; }},
         jolokiaPort    {{ d = "8778"; }},
         prometheusPort {{ d = "9779"; }};
@@ -75,19 +73,6 @@ public class SpringBootGenerator extends BaseGenerator {
         } else {
             return configs;
         }
-    }
-
-    private String getFrom() {
-        String from = getConfig(Config.from);
-        if (from != null) {
-            return from;
-        }
-        MavenGeneratorContext ctx = getContext();
-        PlatformMode mode = ctx.getMode();
-        OpenShiftBuildStrategy strategy = ctx.getStrategy();
-        return mode == PlatformMode.openshift && strategy == OpenShiftBuildStrategy.s2i ?
-            S2I_BUILDER_IMAGE :
-            BASE_IMAGE;
     }
 
     @Override

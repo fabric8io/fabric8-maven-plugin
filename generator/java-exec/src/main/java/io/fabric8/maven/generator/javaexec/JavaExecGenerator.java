@@ -29,6 +29,7 @@ import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.BaseGenerator;
+import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.utils.Strings;
 
@@ -40,7 +41,9 @@ public class JavaExecGenerator extends BaseGenerator {
 
 
     public JavaExecGenerator(MavenGeneratorContext context) {
-        super(context, "java-exec");
+        super(context, "java-exec", new FromSelector.Default(context,
+                                                             "fabric8/java-alpine-openjdk8-jdk", "fabric8/s2i-java",
+                                                             "jboss-fuse-6/fis-java-openshift", "jboss-fuse-6/fis-java-openshift"));
     }
 
     private enum Config implements Configs.Key {
@@ -50,7 +53,6 @@ public class JavaExecGenerator extends BaseGenerator {
         combine        {{ d = "false"; }},
         name           {{ d = "%g/%a:%l"; }},
         alias          {{ d = "java-exec"; }},
-        from           {{ d = "fabric8/java-alpine-openjdk8-jdk"; }},
         port,
         jolokiaPort    {{ d = "8778"; }},
         prometheusPort {{ d = "9779"; }};
@@ -67,7 +69,7 @@ public class JavaExecGenerator extends BaseGenerator {
             ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
             BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
                 .assembly(createAssembly())
-                .from(getConfig(Config.from))
+                .from(getFrom())
                 .ports(extractPorts())
                 .env(envVars);
             addLatestTagIfSnapshot(buildBuilder);

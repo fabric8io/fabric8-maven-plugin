@@ -35,10 +35,22 @@ abstract public class BaseGenerator implements Generator {
     private final String name;
     private final GeneratorConfig config;
     protected final PrefixedLogger log;
+    private final FromSelector fromSelector;
+
+    private enum Config implements Configs.Key {
+        from;
+
+        public String def() { return d; } protected String d;
+    }
 
     public BaseGenerator(MavenGeneratorContext context, String name) {
+        this(context, name, null);
+    }
+
+    public BaseGenerator(MavenGeneratorContext context, String name, FromSelector fromSelector) {
         this.context = context;
         this.name = name;
+        this.fromSelector = fromSelector;
         this.config = new GeneratorConfig(context.getProject().getProperties(), getName(), context.getConfig());
         this.log = new PrefixedLogger(name, context.getLog());
     }
@@ -65,6 +77,19 @@ abstract public class BaseGenerator implements Generator {
 
     protected String getConfig(Configs.Key key, String defaultVal) {
         return config.get(key, defaultVal);
+    }
+
+    /**
+     * Get base image either from configuration or from a given selector
+     *
+     * @return the base image or <code>null</code> when none could be detected.
+     */
+    protected String getFrom() {
+        String from = getConfig(Config.from);
+        if (from != null) {
+            return from;
+        }
+        return fromSelector != null ? fromSelector.getFrom() : null;
     }
 
     protected void addLatestTagIfSnapshot(BuildImageConfiguration.Builder buildBuilder) {
