@@ -98,7 +98,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      * an OpenShift build (with a Docker build against the OpenShift API server.
      */
     @Parameter(property = "fabric8.mode")
-    private PlatformMode mode = KubernetesResourceUtil.defaultPlatformMode;
+    private PlatformMode mode = PlatformMode.DEFAULT;
 
     /**
      * OpenShift build mode when an OpenShift build is performed.
@@ -142,15 +142,15 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        clusterAccess = new ClusterAccess(namespace);
+
+        // Platform mode is already used in executeInternal()
         super.execute();
     }
 
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-        clusterAccess = new ClusterAccess(namespace);
-        platformMode = KubernetesResourceUtil.resolvePlatformMode(mode, clusterAccess, log);
-        if (project != null && skipBuildPom
-            && Objects.equals("pom", project.getPackaging())) {
+        if (project != null && skipBuildPom && Objects.equals("pom", project.getPackaging())) {
             getLog().debug("Disabling docker build for pom packaging");
             return;
         }
@@ -181,6 +181,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      */
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
+        platformMode = clusterAccess.resolvePlatformMode(mode, log);
+
         return GeneratorManager.generate(configs, extractGeneratorConfig(), project, log, platformMode, buildStrategy);
     }
 

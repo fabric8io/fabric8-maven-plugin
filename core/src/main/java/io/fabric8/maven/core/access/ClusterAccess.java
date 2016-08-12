@@ -20,6 +20,7 @@ import java.net.UnknownHostException;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.client.*;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -74,6 +75,21 @@ public class ClusterAccess {
                      cause != null ? cause.getMessage() : exp.getMessage());
             return false;
         }
+    }
+
+    public PlatformMode resolvePlatformMode(PlatformMode mode, Logger log) {
+        PlatformMode resolvedMode;
+        if (mode == null) {
+            mode = PlatformMode.DEFAULT;
+        }
+        if (mode.isAuto()) {
+            ClusterAccess clusterAccess = new ClusterAccess(namespace);
+            resolvedMode = clusterAccess.isOpenShift(log) ? PlatformMode.openshift : PlatformMode.kubernetes;
+        } else {
+            resolvedMode = mode;
+        }
+        log.info("Running in %s mode", resolvedMode.getLabel());
+        return resolvedMode;
     }
 }
 
