@@ -91,12 +91,15 @@ public class HelmMojo extends AbstractFabric8Mojo {
     }
 
     private String getChartName() {
-        String ret = helm != null ? helm.getChart() : null;
+        String ret = getProperty("fabric8.helm.chart");
+        if (ret == null) {
+            ret = helm != null ? helm.getChart() : null;
+        }
         return ret != null ? ret : project.getArtifactId();
     }
 
     private File prepareOutputDir(HelmConfig.HelmType type) {
-        String dir = project.getProperties().getProperty("fabric8.helm.outputDir");
+        String dir = getProperty("fabric8.helm.outputDir");
         if (dir == null) {
             dir = project.getBuild().getDirectory() + "/fabric8/helm/" + type.getClassifier();
         }
@@ -108,7 +111,7 @@ public class HelmMojo extends AbstractFabric8Mojo {
     }
 
     private File checkSourceDir(String chartName, HelmConfig.HelmType type) {
-        String dir = project.getProperties().getProperty("fabric8.helm.sourceDir");
+        String dir = getProperty("fabric8.helm.sourceDir");
         if (dir == null) {
             dir = project.getBuild().getOutputDirectory() + "/META-INF/fabric8/" + type.getSourceDir();
         }
@@ -127,21 +130,19 @@ public class HelmMojo extends AbstractFabric8Mojo {
     }
 
     private List<HelmConfig.HelmType> getHelmTypes() {
+        String helmTypeProp = getProperty("fabric8.helm.type");
+        if (!Strings.isNullOrBlank(helmTypeProp)) {
+            List<String> propTypes = Strings.splitAsList(helmTypeProp, ",");
+            List<HelmConfig.HelmType> ret = new ArrayList<>();
+            for (String prop : propTypes) {
+                ret.add(HelmConfig.HelmType.valueOf(prop.trim().toLowerCase()));
+            }
+            return ret;
+        }
         if (helm != null) {
             List<HelmConfig.HelmType> types = helm.getType();
             if (types != null && types.size() > 0) {
                 return types;
-            }
-        }
-        for (Properties properties : new Properties[] { project.getProperties(), System.getProperties() } ) {
-            String helmTypeProp = properties.getProperty("fabric8.helm.type");
-            if (!Strings.isNullOrBlank(helmTypeProp)) {
-                List<String> propTypes = Strings.splitAsList(helmTypeProp, ",");
-                    List<HelmConfig.HelmType> ret = new ArrayList<>();
-                for (String prop : propTypes) {
-                    ret.add(HelmConfig.HelmType.valueOf(prop.trim().toLowerCase()));
-                }
-                return ret;
             }
         }
         return Arrays.asList(HelmConfig.HelmType.kubernetes);
