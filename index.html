@@ -1354,11 +1354,11 @@ This is chapter is incomplete, but there is work in progress.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">  mvn fabric8:resource fabric8:helm</code></pre>
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:resource fabric8:helm</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The <code>fabric8:resource</code> goal is required to create the resource descriptors which are included in the Helm chart.</p>
+<p>The <code>fabric8:resource</code> goal is required to create the resource descriptors which are included in the Helm chart. If you have already built the resource then you can ommit this goal.</p>
 </div>
 <div class="paragraph">
 <p>The configuration happens in a <code>&lt;helm&gt;</code> section within the plugin&#8217;s configuration:</p>
@@ -1432,7 +1432,7 @@ This is chapter is incomplete, but there is work in progress.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">  helm install target/fabric8/helm</code></pre>
+<pre class="CodeRay highlight"><code data-lang="sh">helm install target/fabric8/helm</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3545,7 +3545,7 @@ password.</p>
 <div id="footer">
 <div id="footer-text">
 Version 3.1.1<br>
-Last updated 2016-08-12 06:25:58 UTC
+Last updated 2016-08-12 07:00:59 UTC
 </div>
 </div>
 </body>
