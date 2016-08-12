@@ -6,12 +6,12 @@ This goal is for creating https://github.com/kubernetes/helm/blob/master/docs/ch
 
 For creating a Helm chart you simply call `fabric8:helm` goal on the command line:
 
-[source, sh, indent=2]
+[source, sh]
 ----
 mvn fabric8:resource fabric8:helm
 ----
 
-The `fabric8:resource` goal is required to create the resource descriptors which are included in the Helm chart.
+The `fabric8:resource` goal is required to create the resource descriptors which are included in the Helm chart. If you have already built the resource then you can ommit this goal.
 
 The configuration happens in a `<helm>` section within the plugin's configuration:
 
@@ -64,7 +64,7 @@ This configuration section know the following subelements in order to configure 
 
 In a next step you can install this via the https://github.com/kubernetes/helm/releases[helm command line tool] as follows:
 
-[source, sh, indent=2]
+[source, sh]
 ----
 helm install target/fabric8/helm
 ----
