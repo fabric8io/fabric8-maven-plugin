@@ -183,6 +183,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         clusterAccess = new ClusterAccess(namespace);
+        super.execute();
     }
 
     public void executeInternal() throws MojoExecutionException, MojoFailureException {

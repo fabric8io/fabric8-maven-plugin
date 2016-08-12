@@ -151,6 +151,7 @@ public class KubernetesResourceUtil {
             "deployment", "Deployment",
             "dc", "DeploymentConfig",
             "deploymentconfig", "DeploymentConfig",
+            "secret", "Secret",
             "service", "Service",
             "svc", "Service",
             "sa", "ServiceAccount",
