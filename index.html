@@ -2945,6 +2945,12 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 </div>
 <div class="sect2">
 <h3 id="generators-default">4.1. Default Generators</h3>
+<div class="paragraph">
+<p>All default generators examine the build information for certain aspect and generate a Docker build information on the fly. They can be configured to a certrain degree, where the configuration is generator specific.</p>
+</div>
+<div class="paragraph">
+<p>However, there is one configuration option which is shared by all generators: The base image from where to start from when creating the images. By default the generators make an opinionated decision for the base image and which are described in the respective generator section.</p>
+</div>
 <div class="sect3">
 <h4 id="spring-boot">4.1.1. spring-boot</h4>
 
@@ -3545,7 +3551,7 @@ password.</p>
 <div id="footer">
 <div id="footer-text">
 Version 3.1.1<br>
-Last updated 2016-08-12 09:51:18 UTC
+Last updated 2016-08-12 10:08:40 UTC
 </div>
 </div>
 </body>
