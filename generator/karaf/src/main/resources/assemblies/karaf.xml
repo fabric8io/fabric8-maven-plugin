@@ -21,7 +21,7 @@
   <files>
     <!-- copy karaf archive -->
     <file>
-      <source>${project.build.directory}/${project.artifactId}-${project.version}.tar.gz</source>
+      <source>${project.build.directory}/${project.artifactId}-${project.version}.zip</source>
       <outputDirectory>/</outputDirectory>
       <fileMode>0644</fileMode>
     </file>
