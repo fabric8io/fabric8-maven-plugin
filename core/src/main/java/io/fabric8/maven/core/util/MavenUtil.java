@@ -16,6 +16,20 @@
 
 package io.fabric8.maven.core.util;
 
+import io.fabric8.utils.Objects;
+import io.fabric8.utils.Zips;
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.utils.StringUtils;
+import org.codehaus.plexus.archiver.jar.JarArchiver;
+import org.codehaus.plexus.archiver.tar.TarArchiver;
+import org.codehaus.plexus.archiver.tar.TarLongFileMode;
+import org.codehaus.plexus.archiver.zip.ZipArchiver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -23,24 +37,13 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
-
-import io.fabric8.utils.Objects;
-import io.fabric8.utils.Zips;
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
-import org.apache.maven.execution.MavenSession;
-import org.apache.maven.lifecycle.Lifecycle;
-import org.apache.maven.lifecycle.LifecycleMappingDelegate;
-import org.apache.maven.lifecycle.mapping.LifecycleMapping;
-import org.apache.maven.plugin.MojoExecution;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.utils.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author roland
@@ -209,5 +212,38 @@ public class MavenUtil {
             project = parent;
         }
         return project;
+    }
+
+    public static void createArchive(File sourceDir, File destinationFile, TarArchiver archiver) throws MojoExecutionException {
+        try {
+            archiver.setCompression(TarArchiver.TarCompressionMethod.gzip);
+            archiver.setLongfile(TarLongFileMode.posix);
+            archiver.addDirectory(sourceDir);
+            archiver.setDestFile(destinationFile);
+            archiver.createArchive();
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to create archive " + destinationFile + ": " + e, e);
+        }
+    }
+
+
+    public static void createArchive(File sourceDir, File destinationFile, ZipArchiver archiver) throws MojoExecutionException {
+        try {
+            archiver.addDirectory(sourceDir);
+            archiver.setDestFile(destinationFile);
+            archiver.createArchive();
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to create archive " + destinationFile + ": " + e, e);
+        }
+    }
+
+    public static void createArchive(File sourceDir, File destinationFile, JarArchiver archiver) throws MojoExecutionException {
+        try {
+            archiver.addDirectory(sourceDir);
+            archiver.setDestFile(destinationFile);
+            archiver.createArchive();
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to create archive " + destinationFile + ": " + e, e);
+        }
     }
 }
