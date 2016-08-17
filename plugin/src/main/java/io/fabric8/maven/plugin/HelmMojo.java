@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.maven.core.config.HelmConfig;
+import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Strings;
 import org.apache.maven.model.Developer;
@@ -33,7 +34,6 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.tar.TarArchiver;
-import org.codehaus.plexus.archiver.tar.TarLongFileMode;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -87,7 +87,8 @@ public class HelmMojo extends AbstractFabric8Mojo {
         // now lets create the tarball
         File destinationFile = new File(project.getBuild().getDirectory(),
                                         chartName + "-" + project.getVersion() + "-" + type.getClassifier() + ".tar.gz");
-        createAndAttachArchive(outputDir, destinationFile , type.getClassifier());
+        MavenUtil.createArchive(outputDir, destinationFile, this.archiver);
+        projectHelper.attachArtifact(project, "tar.gz", type.getClassifier(), destinationFile);
     }
 
     private String getChartName() {
@@ -169,19 +170,6 @@ public class HelmMojo extends AbstractFabric8Mojo {
             throw new MojoExecutionException("Failed to copy manifest files from " + sourceDir +
                                              " to chart templates directory: " + templatesDir + ": " + e, e);
         }
-    }
-
-    protected void createAndAttachArchive(File contentDir, File destinationFile, String classifier) throws MojoExecutionException {
-        try {
-            archiver.setCompression(TarArchiver.TarCompressionMethod.gzip);
-            archiver.setLongfile(TarLongFileMode.posix);
-            archiver.addDirectory(contentDir);
-            archiver.setDestFile(destinationFile);
-            archiver.createArchive();
-        } catch (IOException e) {
-            throw new MojoExecutionException("Failed to create Helm archive " + destinationFile + ": " + e, e);
-        }
-        projectHelper.attachArtifact(project, "tar.gz", classifier, destinationFile);
     }
 
     private boolean containsYamlFiles(File sourceDir) {
