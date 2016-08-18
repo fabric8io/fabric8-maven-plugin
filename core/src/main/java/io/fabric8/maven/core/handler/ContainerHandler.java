@@ -141,7 +141,7 @@ class ContainerHandler {
                     return null;
 
                 for (Xpp3Dom feature : startupFeatures.getChildren("feature")) {
-                    if( "fabric8-karaf-check".equals(feature.getValue())  ) {
+                    if( "fabric8-karaf-checks".equals(feature.getValue())  ) {
                         // Use the default 8181 port
                         // TODO: handle the case where the user changes the default port
                         return new ProbeBuilder().withNewHttpGet().
