@@ -18,18 +18,16 @@ package io.fabric8.maven.enricher.standard;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.PodTemplateSpecFluent;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentFluent;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpecBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpecFluent;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.handler.DeploymentHandler;
 import io.fabric8.maven.core.handler.HandlerHub;
@@ -190,6 +188,12 @@ public class ControllerEnricher extends BaseEnricher {
                             ensureHasEnv(container, envVar);
                         }
                     }
+                    List<ContainerPort> defaultPorts = defaultContainer.getPorts();
+                    if (defaultPorts != null) {
+                        for (ContainerPort port : defaultPorts) {
+                            ensureHasPort(container, port);
+                        }
+                    }
                     idx++;
                 }
                 builder.withContainers(containers);
@@ -218,4 +222,18 @@ public class ControllerEnricher extends BaseEnricher {
         envVars.add(envVar);
     }
 
+    private void ensureHasPort(Container container, ContainerPort port) {
+        List<ContainerPort> ports = container.getPorts();
+        if (ports == null) {
+            ports = new ArrayList<>();
+            container.setPorts(ports);
+        }
+        for (ContainerPort cp : ports) {
+            if (Objects.equals(cp.getContainerPort(), port.getContainerPort()) &&
+                Objects.equals(cp.getProtocol(), port.getProtocol())) {
+                return;
+            }
+        }
+        ports.add(port);
+    }
 }
