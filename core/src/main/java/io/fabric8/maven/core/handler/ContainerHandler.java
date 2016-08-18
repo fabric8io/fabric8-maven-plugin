@@ -35,7 +35,9 @@ import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.utils.Strings;
+import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -97,12 +99,19 @@ class ContainerHandler {
     }
 
     private Probe discoverReadinessProbe() {
-        return discoverSpringBootHealthCheck(10);
+        Probe probe = discoverSpringBootHealthCheck(10);
+        if( probe!=null)
+            return probe;
+        probe = discoverKarafProbe("/readiness-check", 180);
+        return probe;
     }
 
     private Probe discoverLivenessProbe() {
-        // lets leave long enough for the app to actually start :)
-        return discoverSpringBootHealthCheck(180);
+        Probe probe = discoverSpringBootHealthCheck(180);
+        if( probe!=null)
+            return probe;
+        probe = discoverKarafProbe("/health-check", 10);
+        return probe;
     }
 
     private Probe discoverSpringBootHealthCheck(int initialDelay) {
@@ -113,6 +122,33 @@ class ContainerHandler {
             // lets default to adding a spring boot actuator health check
             return new ProbeBuilder().withNewHttpGet().
                     withNewPort(port).withPath("/health").endHttpGet().withInitialDelaySeconds(initialDelay).build();
+        }
+        return null;
+    }
+
+    //
+    // Karaf has a readiness/health URL exposed if the fabric8-karaf-check feature is installed.
+    //
+    private Probe discoverKarafProbe(String path, int initialDelay) {
+
+        for (Plugin plugin : project.getBuildPlugins()) {
+            if( "karaf-maven-plugin".equals(plugin.getArtifactId()) ) {
+                Xpp3Dom configuration = (Xpp3Dom) plugin.getConfiguration();
+                if( configuration == null )
+                    return null;
+                Xpp3Dom startupFeatures = configuration.getChild("startupFeatures");
+                if( startupFeatures == null)
+                    return null;
+
+                for (Xpp3Dom feature : startupFeatures.getChildren("feature")) {
+                    if( "fabric8-karaf-check".equals(feature.getValue())  ) {
+                        // Use the default 8181 port
+                        // TODO: handle the case where the user changes the default port
+                        return new ProbeBuilder().withNewHttpGet().
+                                withNewPort(8181).withPath(path).endHttpGet().withInitialDelaySeconds(initialDelay).build();
+                    }
+                }
+            }
         }
         return null;
     }
