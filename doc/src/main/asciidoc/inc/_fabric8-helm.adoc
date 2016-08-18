@@ -66,7 +66,7 @@ In a next step you can install this via the https://github.com/kubernetes/helm/r
 
 [source, sh]
 ----
-helm install target/fabric8/helm
+helm install target/fabric8/helm/kubernetes
 ----
 
 To add the `helm` goal to your project so that it is automatically executed just add the `helm` goal to the `executions` section of the `fabric8-maven-plugin` section of your `pom.xml`.

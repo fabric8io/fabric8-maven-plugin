@@ -102,7 +102,7 @@ public class HelmMojo extends AbstractFabric8Mojo {
     private File prepareOutputDir(HelmConfig.HelmType type) {
         String dir = getProperty("fabric8.helm.outputDir");
         if (dir == null) {
-            dir = project.getBuild().getDirectory() + "/fabric8/helm/" + type.getClassifier();
+            dir = project.getBuild().getDirectory() + "/fabric8/helm/" + type.getSourceDir();
         }
         File dirF = new File(dir);
         if (Files.isDirectory(dirF)) {
