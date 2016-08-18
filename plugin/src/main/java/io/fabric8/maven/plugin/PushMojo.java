@@ -95,7 +95,7 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
                 ProfileUtil.extractProcesssorConfiguration(generator,
                                                            ProfileUtil.GENERATOR_CONFIG,
                                                            profile, resourceDir);
-            return GeneratorManager.generate(configs, generatorConcfig, project, log, mode, buildStrategy);
+            return GeneratorManager.generate(configs, generatorConcfig, project, log, mode, buildStrategy, false);
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot extract generator config: " + e,e);
         }

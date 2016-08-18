@@ -26,7 +26,6 @@ import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.*;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -109,6 +108,12 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     private OpenShiftBuildStrategy buildStrategy = OpenShiftBuildStrategy.s2i;
 
     /**
+     * Should we use the project's compmile-time classpath to scan for additional enrichers/generators?
+     */
+    @Parameter(property = "fabric8.useProjectClasspath", defaultValue = "false")
+    private boolean useProjectClasspath = false;
+
+    /**
      * How to recreate the build config and/or image stream created by the build.
      * Only in effect when <code>mode == openshift</code> or mode is <code>auto</code>
      * and openshift is detected. If not set, existing
@@ -183,7 +188,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
         platformMode = clusterAccess.resolvePlatformMode(mode, log);
 
-        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, log, platformMode, buildStrategy);
+        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, log, platformMode, buildStrategy, useProjectClasspath);
     }
 
     @Override
@@ -261,7 +266,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     // Build up an enricher manager to enrich also our implicit created build ojects
     private void enrich(KubernetesListBuilder builder) throws IOException {
         ProcessorConfig resolvedEnricherConfig = ProfileUtil.extractProcesssorConfiguration(enricher, ProfileUtil.ENRICHER_CONFIG, profile, resourceDir);
-        EnricherContext enricherContext = new EnricherContext(project, resolvedEnricherConfig, getResolvedImages(), resources, log);
+        EnricherContext enricherContext = new EnricherContext(project, resolvedEnricherConfig, getResolvedImages(), resources, log, useProjectClasspath);
         EnricherManager enricherManager = new EnricherManager(enricherContext);
         enricherManager.enrich(builder);
     }

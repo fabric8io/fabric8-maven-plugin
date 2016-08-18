@@ -39,7 +39,6 @@ import io.fabric8.maven.plugin.converter.NamespaceOpenShiftConverter;
 import io.fabric8.maven.plugin.converter.ReplicSetOpenShiftConverter;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.core.util.GoalFinder;
-import io.fabric8.maven.plugin.enricher.MetadataEnricher;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.*;
@@ -78,6 +77,12 @@ public class ResourceMojo extends AbstractFabric8Mojo {
      */
     @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
     private File resourceDir;
+
+    /**
+     * Should we use the project's compmile-time classpath to scan for additional enrichers/generators?
+     */
+    @Parameter(property = "fabric8.useProjectClasspath", defaultValue = "false")
+    private boolean useProjectClasspath = false;
 
     /**
      * The artifact type for attaching the generated resource file to the project.
@@ -202,7 +207,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             resolvedImages = getResolvedImages(images, log);
 
             // Manager for calling enrichers.
-            EnricherContext ctx = new EnricherContext(project, extractEnricherConfig(), resolvedImages, resources, log);
+            EnricherContext ctx = new EnricherContext(project, extractEnricherConfig(), resolvedImages, resources, log, useProjectClasspath);
             EnricherManager enricherManager = new EnricherManager(ctx);
 
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
@@ -356,7 +361,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                 @Override
                 public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
                     try {
-                        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, log, mode, buildStrategy);
+                        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, log, mode, buildStrategy, useProjectClasspath);
                     } catch (IOException e) {
                         throw new IllegalArgumentException("Cannot extract generator: " + e,e);
                     }
