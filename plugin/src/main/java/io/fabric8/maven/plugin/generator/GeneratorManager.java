@@ -22,6 +22,7 @@ import java.util.List;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.PluginServiceFactory;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.Generator;
@@ -41,12 +42,18 @@ public class GeneratorManager {
                                                     MavenProject project,
                                                     Logger log,
                                                     PlatformMode mode,
-                                                    OpenShiftBuildStrategy strategy) {
+                                                    OpenShiftBuildStrategy strategy,
+                                                    boolean useProjectClasspath) {
 
         List<ImageConfiguration> ret = imageConfigs;
 
         PluginServiceFactory<MavenGeneratorContext> pluginFactory = new PluginServiceFactory<>(
             new MavenGeneratorContext(project, generatorConfig, log, mode, strategy));
+
+        if (useProjectClasspath) {
+            pluginFactory.addAdditionalClassLoader(ClassUtil.createProjectClassLoader(project, log));
+        }
+
         List<Generator> generators =
             pluginFactory.createServiceObjects("META-INF/fabric8/generator-default",
                                                "META-INF/fabric8/fabric8-generator-default",

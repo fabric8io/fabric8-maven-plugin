@@ -55,7 +55,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
 
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-        return GeneratorManager.generate(configs, generator, project, log, mode, buildStrategy);
+        return GeneratorManager.generate(configs, generator, project, log, mode, buildStrategy, false);
     }
 
     @Override

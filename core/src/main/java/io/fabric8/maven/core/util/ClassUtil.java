@@ -18,9 +18,13 @@ package io.fabric8.maven.core.util;
 
 import java.io.*;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.*;
 
+import io.fabric8.maven.docker.util.Logger;
 import javassist.*;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.maven.project.MavenProject;
 
 /**
  * @author roland
@@ -29,13 +33,33 @@ import javassist.*;
 public class ClassUtil {
 
     public static Set<String> getResources(String resource) throws IOException {
+        return getResources(resource, null);
+    }
+
+    public static Set<String> getResources(String resource, List<ClassLoader> additionalClassLoaders) throws IOException {
+
+        ClassLoader[] classLoaders = mergeClassLoaders(additionalClassLoaders);
+
         Set<String> ret = new HashSet<>();
-        for (ClassLoader cl : getClassLoaders()) {
+        for (ClassLoader cl : classLoaders) {
             Enumeration<URL> urlEnum = cl.getResources(resource);
             ret.addAll(extractUrlAsStringsFromEnumeration(urlEnum));
         }
         return ret;
     }
+
+    private static ClassLoader[] mergeClassLoaders(List<ClassLoader> additionalClassLoaders) {
+        ClassLoader[] classLoaders;
+
+        if (additionalClassLoaders != null && !additionalClassLoaders.isEmpty()) {
+            classLoaders = ArrayUtils.addAll(getClassLoaders(), additionalClassLoaders.toArray(new ClassLoader[additionalClassLoaders.size()]));
+        }
+        else {
+            classLoaders = getClassLoaders();
+        }
+        return classLoaders;
+    }
+
 
     private static ClassLoader[] getClassLoaders() {
         return new ClassLoader[] {
@@ -52,9 +76,11 @@ public class ClassUtil {
         return ret;
     }
 
-    public static <T> Class<T> classForName(String className) {
+
+    public static <T> Class<T> classForName(String className, List<ClassLoader> additionalClassLoaders) {
+        ClassLoader[] classLoaders = mergeClassLoaders(additionalClassLoaders);
         Set<ClassLoader> tried = new HashSet<>();
-        for (ClassLoader loader : getClassLoaders()) {
+        for (ClassLoader loader : classLoaders) {
             // Go up the classloader stack to eventually find the server class. Sometimes the WebAppClassLoader
             // hide the server classes loaded by the parent class loader.
             while (loader != null) {
@@ -69,6 +95,7 @@ public class ClassUtil {
         }
         return null;
     }
+
 
     /**
      * Find all classes below a certain directory which contain
@@ -139,5 +166,28 @@ public class ClassUtil {
         String ret = name.replaceAll("[/\\\\]", ".");
         ret = ret.substring(0, name.length() - ".class".length());
         return ret.substring(prefix.length());
+    }
+
+
+    public static URLClassLoader createProjectClassLoader(final MavenProject project, Logger log) {
+
+        try {
+
+            List<URL> compileJars = new ArrayList<>();
+
+            for (String element : project.getCompileClasspathElements()) {
+                compileJars.add(new File(element).toURI().toURL());
+            }
+
+            return new URLClassLoader(compileJars.toArray(new URL[compileJars.size()]),
+                    PluginServiceFactory.class.getClassLoader());
+
+        } catch (Exception e) {
+            log.warn("Instructed to use project classpath, but cannot. Continuing build if we can: ", e);
+        }
+
+        // return an empty CL .. don't want to have to deal with NULL later
+        // if somehow we incorrectly call this method
+        return new URLClassLoader(new URL[]{});
     }
 }

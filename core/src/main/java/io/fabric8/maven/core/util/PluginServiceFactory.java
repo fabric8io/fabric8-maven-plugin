@@ -43,6 +43,8 @@ import java.util.regex.Pattern;
  */
 public final class PluginServiceFactory<C> {
 
+    private List<ClassLoader> additionalClassLoaders = new ArrayList<>();
+
     // Parameters for service constructors
     private C context;
 
@@ -82,7 +84,7 @@ public final class PluginServiceFactory<C> {
 
     private <T> void readServiceDefinitions(Map<ServiceEntry, T> extractorMap, String defPath) {
         try {
-            for (String url : ClassUtil.getResources(defPath)) {
+            for (String url : ClassUtil.getResources(defPath, additionalClassLoaders)) {
                 readServiceDefinitionFromUrl(extractorMap, url);
             }
         } catch (IOException e) {
@@ -125,7 +127,7 @@ public final class PluginServiceFactory<C> {
                     serviceMap.remove(key);
                 }
             } else {
-                Class<T> clazz = ClassUtil.classForName(entry.getClassName());
+                Class<T> clazz = ClassUtil.classForName(entry.getClassName(), additionalClassLoaders);
                 if (clazz == null) {
                     throw new ClassNotFoundException("Class " + entry.getClassName() + " could not be found");
                 }
@@ -139,6 +141,11 @@ public final class PluginServiceFactory<C> {
             }
         }
     }
+
+    public void addAdditionalClassLoader(ClassLoader classLoader) {
+        this.additionalClassLoaders.add(classLoader);
+    }
+
 
     // =============================================================================
 
