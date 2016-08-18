@@ -24,13 +24,16 @@ import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.BaseGenerator;
+import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
 
 public class KarafGenerator extends BaseGenerator {
     public KarafGenerator(MavenGeneratorContext context) {
-        super(context, "karaf");
+        super(context, "karaf", new FromSelector.Default(context,
+            "fabric8/s2i-karaf", "fabric8/s2i-karaf",
+            "jboss-fuse-6/fis-karaf-openshift", "jboss-fuse-6/fis-karaf-openshift"));
     }
 
     private enum Config implements Configs.Key {
