@@ -35,6 +35,7 @@ import io.fabric8.maven.docker.util.*;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.plugin.converter.DeploymentOpenShiftConverter;
 import io.fabric8.maven.plugin.converter.KubernetesToOpenShiftConverter;
+import io.fabric8.maven.plugin.converter.NamespaceOpenShiftConverter;
 import io.fabric8.maven.plugin.converter.ReplicSetOpenShiftConverter;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.core.util.GoalFinder;
@@ -193,6 +194,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             openShiftConverters = new HashMap<>();
             openShiftConverters.put("ReplicaSet", new ReplicSetOpenShiftConverter());
             openShiftConverters.put("Deployment", new DeploymentOpenShiftConverter(platformMode));
+            openShiftConverters.put("Namespace", new NamespaceOpenShiftConverter());
 
             handlerHub = new HandlerHub(project);
 
@@ -206,14 +208,34 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
                 // Generate & write Kubernetes resources
                 KubernetesList kubernetesResources = generateKubernetesResources(enricherManager, resolvedImages);
-                writeResources(kubernetesResources, ResourceClassifier.KUBERNETES);
 
                 // Adapt list to use OpenShift specific resource objects
                 KubernetesList openShiftResources = convertToOpenShiftResources(kubernetesResources);
                 writeResources(openShiftResources, ResourceClassifier.OPENSHIFT);
+
+                filterOpenShiftResources(kubernetesResources);
+                writeResources(kubernetesResources, ResourceClassifier.KUBERNETES);
+
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
+        }
+    }
+
+    private void filterOpenShiftResources(KubernetesList list) {
+        List<HasMetadata> items = list.getItems();
+        boolean changed = false;
+        for (HasMetadata item : new ArrayList<>(items)) {
+            String name = item.getClass().getPackage().getName();
+            if (name.contains("openshift")) {
+                if (items.remove(item)) {
+                    changed = true;
+                    getLog().info("Filtered " + KubernetesHelper.getKind(item) + " " + KubernetesHelper.getName(item) + " from the kubernetes yaml");
+                }
+            }
+        }
+        if (changed) {
+            list.setItems(items);
         }
     }
 
