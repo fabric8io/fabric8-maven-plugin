@@ -2,4 +2,6 @@
 target
 *.iml
 notes.md
-
+.project
+.classpath
+.settings
