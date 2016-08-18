@@ -194,6 +194,12 @@ public class ControllerEnricher extends BaseEnricher {
                             ensureHasPort(container, port);
                         }
                     }
+                    if (container.getReadinessProbe()==null) {
+                        container.setReadinessProbe(defaultContainer.getReadinessProbe());
+                    }
+                    if (container.getLivenessProbe()==null) {
+                        container.setLivenessProbe(defaultContainer.getLivenessProbe());
+                    }
                     idx++;
                 }
                 builder.withContainers(containers);
