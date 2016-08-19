@@ -39,7 +39,6 @@ import io.fabric8.maven.plugin.converter.NamespaceOpenShiftConverter;
 import io.fabric8.maven.plugin.converter.ReplicSetOpenShiftConverter;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.core.util.GoalFinder;
-import io.fabric8.maven.plugin.enricher.MetadataEnricher;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.*;
@@ -62,6 +61,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     // THe key how we got the the docker maven plugin
     private static final String DOCKER_MAVEN_PLUGIN_KEY = "io.fabric8:docker-maven-plugin";
+    public static final long DEFAULT_OPENSHIFT_DEPLOY_TIMEOUT_SECONDS = 3L * 60 * 60;
 
     @Component(role = MavenFileFilter.class, hint = "default")
     private MavenFileFilter mavenFileFilter;
@@ -173,6 +173,14 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     @Parameter(property = "fabric8.namespace")
     private String namespace;
 
+    /**
+     * The OpenShift deploy timeout in seconds:
+     * See this issue for background of why for end users on slow wifi on their laptops
+     * DeploymentConfigs usually barf: https://github.com/openshift/origin/issues/10531
+     */
+    @Parameter(property = "fabric8.openshift.deployTimeoutSeconds")
+    private Long openshiftDeployTimeoutSeconds;
+
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
 
@@ -193,7 +201,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
             openShiftConverters = new HashMap<>();
             openShiftConverters.put("ReplicaSet", new ReplicSetOpenShiftConverter());
-            openShiftConverters.put("Deployment", new DeploymentOpenShiftConverter(platformMode));
+            openShiftConverters.put("Deployment", new DeploymentOpenShiftConverter(platformMode, getOpenshiftDeployTimeoutSeconds()));
             openShiftConverters.put("Namespace", new NamespaceOpenShiftConverter());
 
             handlerHub = new HandlerHub(project);
@@ -220,6 +228,18 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
         }
+    }
+
+    public Long getOpenshiftDeployTimeoutSeconds() {
+        if (openshiftDeployTimeoutSeconds == null) {
+            // lets default to a large amount of time which should be enough to download most docker images
+            openshiftDeployTimeoutSeconds = DEFAULT_OPENSHIFT_DEPLOY_TIMEOUT_SECONDS;
+        }
+        return openshiftDeployTimeoutSeconds;
+    }
+
+    public void setOpenshiftDeployTimeoutSeconds(Long openshiftDeployTimeoutSeconds) {
+        this.openshiftDeployTimeoutSeconds = openshiftDeployTimeoutSeconds;
     }
 
     private void filterOpenShiftResources(KubernetesList list) {
