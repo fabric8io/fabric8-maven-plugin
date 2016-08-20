@@ -84,7 +84,6 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                     // TODO is there any values we can copy across?
                     //specBuilder.withStrategy(strategy);
                 }
-                System.out.println("Using timeout: " + openshiftDeployTimeoutSeconds);
                 if (openshiftDeployTimeoutSeconds != null && openshiftDeployTimeoutSeconds > 0) {
                     specBuilder.withNewStrategy().
                             withNewRecreateParams().withTimeoutSeconds(openshiftDeployTimeoutSeconds).endRecreateParams().endStrategy();
