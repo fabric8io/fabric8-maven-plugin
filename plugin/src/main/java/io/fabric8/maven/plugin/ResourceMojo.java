@@ -33,6 +33,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.util.*;
 import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.plugin.converter.DeploymentConfigOpenShiftConverter;
 import io.fabric8.maven.plugin.converter.DeploymentOpenShiftConverter;
 import io.fabric8.maven.plugin.converter.KubernetesToOpenShiftConverter;
 import io.fabric8.maven.plugin.converter.NamespaceOpenShiftConverter;
@@ -202,6 +203,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             openShiftConverters = new HashMap<>();
             openShiftConverters.put("ReplicaSet", new ReplicSetOpenShiftConverter());
             openShiftConverters.put("Deployment", new DeploymentOpenShiftConverter(platformMode, getOpenshiftDeployTimeoutSeconds()));
+            openShiftConverters.put("DeploymentConfig", new DeploymentConfigOpenShiftConverter(getOpenshiftDeployTimeoutSeconds()));
             openShiftConverters.put("Namespace", new NamespaceOpenShiftConverter());
 
             handlerHub = new HandlerHub(project);
