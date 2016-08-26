@@ -43,6 +43,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import static io.fabric8.maven.core.util.MavenUtil.hasClass;
@@ -87,7 +88,7 @@ class ContainerHandler {
                     .withImagePullPolicy(getImagePullPolicy(config))
                     .withEnv(envVarHandler.getEnvironmentVariables(config.getEnv()))
                     .withSecurityContext(createSecurityContext(config))
-                    .withPorts(getContainerPorts(imageConfig))
+                    .withPorts(getContainerPorts(config, imageConfig))
                     .withVolumeMounts(getVolumeMounts(config))
                     .withLivenessProbe(livenessProbe)
                     .withReadinessProbe(readinessProbe)
@@ -192,7 +193,7 @@ class ContainerHandler {
         return ret;
     }
 
-    private List<ContainerPort> getContainerPorts(ImageConfiguration imageConfig) {
+    private List<ContainerPort> getContainerPorts(ResourceConfig config, ImageConfiguration imageConfig) {
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
         List<String> ports = buildConfig.getPorts();
         if (ports != null) {
@@ -201,7 +202,7 @@ class ContainerHandler {
             JSONArray portSpecs = portMapping.toJson();
             for (int i = 0; i < portSpecs.length(); i ++) {
                 JSONObject portSpec = portSpecs.getJSONObject(i);
-                ret.add(extractContainerPort(portSpec));
+                ret.add(extractContainerPort(portSpec, config.getPorts()));
             }
             return ret;
         } else {
@@ -209,7 +210,7 @@ class ContainerHandler {
         }
     }
 
-    private ContainerPort extractContainerPort(JSONObject portSpec) {
+    private ContainerPort extractContainerPort(JSONObject portSpec, Map<String, Integer> ports) {
         ContainerPortBuilder portBuilder = new ContainerPortBuilder()
             .withContainerPort(portSpec.getInt("containerPort"));
         if (portSpec.has("hostPort")) {
@@ -221,7 +222,27 @@ class ContainerHandler {
         if (portSpec.has("hostIP")) {
             portBuilder.withHostIP(portSpec.getString("hostIP"));
         }
+        if (portSpec.has("name")) {
+            portBuilder.withName(portSpec.getString("name"));
+        } else {
+            String portName = getPortName(ports, portBuilder.getContainerPort());
+            if (portName != null) {
+                portBuilder.withName(portName);
+            }
+        }
         return portBuilder.build();
+    }
+
+    private String getPortName(Map<String, Integer> portMapping, Integer portNumber) {
+        if (portMapping == null) {
+            return null;
+        }
+        for (Map.Entry<String, Integer> pm : portMapping.entrySet()) {
+            if (pm.getValue() != null && pm.getValue().equals(portNumber)) {
+                return pm.getKey();
+            }
+        }
+        return null;
     }
 
 }

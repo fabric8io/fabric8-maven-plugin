@@ -16,17 +16,26 @@
 
 package io.fabric8.maven.core.config;
 
+import org.apache.maven.plugins.annotations.Parameter;
+
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland
  * @since 22/03/16
  */
 public class ResourceConfig {
+
+    public static final Map<String, Integer> DEFAULT_PORT_MAPPING;
+    static {
+        Map<String, Integer> temp = new HashMap<>();
+        temp.put("jolokia", 8778);
+        temp.put("prometheus", 9779);
+        DEFAULT_PORT_MAPPING = Collections.unmodifiableMap(temp);
+    }
 
     @Parameter
     private Map<String,String> env;
@@ -123,7 +132,10 @@ public class ResourceConfig {
     }
 
     public Map<String, Integer> getPorts() {
-        return ports;
+        if (ports != null) {
+            return ports;
+        }
+        return DEFAULT_PORT_MAPPING;
     }
 
     public int getReplicas() {
