@@ -235,6 +235,14 @@ public class HelmMojo extends AbstractFabric8Mojo {
         @JsonProperty
         private String engine;
 
+        public Chart() {
+        }
+
+        public Chart(String name, String version) {
+            this.name = name;
+            this.version = version;
+        }
+
         public Chart(String name, MavenProject project) {
             this(name, project, null, null);
         }
@@ -277,6 +285,79 @@ public class HelmMojo extends AbstractFabric8Mojo {
             }
         }
 
+        @Override
+        public String toString() {
+            return "Chart{" +
+                    "name='" + name + '\'' +
+                    ", home='" + home + '\'' +
+                    ", version='" + version + '\'' +
+                    '}';
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getHome() {
+            return home;
+        }
+
+        public void setHome(String home) {
+            this.home = home;
+        }
+
+        public List<String> getSources() {
+            return sources;
+        }
+
+        public void setSources(List<String> sources) {
+            this.sources = sources;
+        }
+
+        public String getVersion() {
+            return version;
+        }
+
+        public void setVersion(String version) {
+            this.version = version;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public List<String> getKeywords() {
+            return keywords;
+        }
+
+        public void setKeywords(List<String> keywords) {
+            this.keywords = keywords;
+        }
+
+        public List<Maintainer> getMaintainers() {
+            return maintainers;
+        }
+
+        public void setMaintainers(List<Maintainer> maintainers) {
+            this.maintainers = maintainers;
+        }
+
+        public String getEngine() {
+            return engine;
+        }
+
+        public void setEngine(String engine) {
+            this.engine = engine;
+        }
+
         /**
          */
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -292,6 +373,22 @@ public class HelmMojo extends AbstractFabric8Mojo {
 
             public Maintainer(String name, String email) {
                 this.name = name;
+                this.email = email;
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public void setName(String name) {
+                this.name = name;
+            }
+
+            public String getEmail() {
+                return email;
+            }
+
+            public void setEmail(String email) {
                 this.email = email;
             }
         }

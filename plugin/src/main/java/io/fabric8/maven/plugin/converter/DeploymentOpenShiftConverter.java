@@ -40,9 +40,11 @@ import static io.fabric8.utils.Objects.notNull;
  */
 public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConverter {
     private final PlatformMode mode;
+    private final Long openshiftDeployTimeoutSeconds;
 
-    public DeploymentOpenShiftConverter(PlatformMode mode) {
+    public DeploymentOpenShiftConverter(PlatformMode mode, Long openshiftDeployTimeoutSeconds) {
         this.mode = mode;
+        this.openshiftDeployTimeoutSeconds = openshiftDeployTimeoutSeconds;
     }
 
     @Override
@@ -81,6 +83,10 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                 if (strategy != null) {
                     // TODO is there any values we can copy across?
                     //specBuilder.withStrategy(strategy);
+                }
+                if (openshiftDeployTimeoutSeconds != null && openshiftDeployTimeoutSeconds > 0) {
+                    specBuilder.withNewStrategy().withType("Rolling").
+                        withNewRollingParams().withTimeoutSeconds(openshiftDeployTimeoutSeconds).endRollingParams().endStrategy();
                 }
 
                 // lets add a default trigger so that its triggered when we change its config
