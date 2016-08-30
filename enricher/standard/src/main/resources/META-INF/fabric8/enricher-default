@@ -1,6 +1,12 @@
 # Default enrichers
 # =================
 
+# Add port names from IANA service definitions
+io.fabric8.maven.enricher.standard.IANAServicePortNameEnricher
+
+# Add port names from IANA service definitions
+io.fabric8.maven.enricher.standard.PortNameEnricher
+
 # Add a default Deployment, ReplicaSet or ReplicationController if none is given
 io.fabric8.maven.enricher.standard.ControllerEnricher
 
