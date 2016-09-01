@@ -19,16 +19,14 @@ package io.fabric8.maven.core.util;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.maven.core.access.ClusterAccess;
-import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.ImageName;
-import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Files;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
@@ -154,8 +152,12 @@ public class KubernetesResourceUtil {
             "ns", "Namespace",
             "namespace", "Namespace",
             "oauthclient", "OAuthClient",
+            "pv", "PersistentVolume",
+            "pvc", "PersistentVolumeClaim",
             "project", "Project",
             "pr", "ProjectRequest",
+            "rb", "RoleBinding",
+            "rolebinding", "RoleBinding",
             "secret", "Secret",
             "service", "Service",
             "svc", "Service",
@@ -257,7 +259,12 @@ public class KubernetesResourceUtil {
     private static Map<String,Object> readFragment(File file, String ext) throws IOException {
         ObjectMapper mapper = new ObjectMapper("json".equals(ext) ? new JsonFactory() : new YAMLFactory());
         TypeReference<HashMap<String,Object>> typeRef = new TypeReference<HashMap<String,Object>>() {};
-        return mapper.readValue(file, typeRef);
+        try {
+            return mapper.readValue(file, typeRef);
+        } catch (JsonProcessingException e) {
+            // TODO is there a cleaner way to associate the file information in the exception message?
+            throw new JsonMappingException("file: " + file + ". " + e.getMessage(), e.getLocation(), e);
+        }
     }
 
     public static String getNameWithSuffix(String name, String kind) {
