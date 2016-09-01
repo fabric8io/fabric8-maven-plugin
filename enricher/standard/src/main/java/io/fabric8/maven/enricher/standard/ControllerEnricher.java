@@ -39,7 +39,11 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -123,6 +127,7 @@ public class ControllerEnricher extends BaseEnricher {
                                     builder.withNewSpec().endSpec();
                                     deploymentSpec = builder.getSpec();
                                 }
+                                mergeDeploymentSpec(builder, spec);
                                 PodTemplateSpec template = deploymentSpec.getTemplate();
                                 DeploymentFluent.SpecNested<DeploymentBuilder> specBuilder = builder.editSpec();
                                 if (template == null) {
@@ -156,6 +161,92 @@ public class ControllerEnricher extends BaseEnricher {
         }
     }
 
+    private void mergeDeploymentSpec(DeploymentBuilder builder, DeploymentSpec spec) {
+        DeploymentFluent.SpecNested<DeploymentBuilder> specBuilder = builder.editSpec();
+        mergeSimpleFields(specBuilder, spec);
+        specBuilder.endSpec();
+    }
+
+    /**
+     * Uses reflection to copy over default values from the defaultValues object to the targetValues
+     * object similar to the following:
+     *
+     * <code>
+\    * if( values.get${FIELD}() == null ) {
+     *   values.(with|set){FIELD}(defaultValues.get${FIELD});
+     * }
+     * </code>
+     *
+     * Only fields that which use primitives, boxed primitives, or String object are copied.
+     *
+     * @param targetValues
+     * @param defaultValues
+     */
+    private static void mergeSimpleFields(Object targetValues, Object defaultValues) {
+        Class<?> tc = targetValues.getClass();
+        Class<?> sc = defaultValues.getClass();
+        for (Method targetGetMethod : tc.getMethods()) {
+            if( !targetGetMethod.getName().startsWith("get") )
+                continue;
+
+            Class<?> fieldType = targetGetMethod.getReturnType();
+            if( !SIMPLE_FIELD_TYPES.contains(fieldType) )
+                continue;
+
+
+            String fieldName = targetGetMethod.getName().substring(3);
+            Method withMethod = null;
+            try {
+                withMethod = tc.getMethod("with" + fieldName, fieldType);
+            } catch (NoSuchMethodException e) {
+                try {
+                    withMethod = tc.getMethod("set" + fieldName, fieldType);
+                } catch (NoSuchMethodException e2) {
+                    continue;
+                }
+            }
+
+
+            Method sourceGetMethod = null;
+            try {
+                sourceGetMethod = sc.getMethod("get" + fieldName);
+            } catch (NoSuchMethodException e) {
+                continue;
+            }
+
+            try {
+                if( targetGetMethod.invoke(targetValues) == null ) {
+                    withMethod.invoke(targetValues, sourceGetMethod.invoke(defaultValues));
+                }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            } catch (InvocationTargetException e) {
+                throw new RuntimeException(e.getCause());
+            }
+        }
+    }
+
+
+    private static final HashSet<Class<?>> SIMPLE_FIELD_TYPES = new HashSet<>();
+    static {
+        SIMPLE_FIELD_TYPES.add(String.class);
+        SIMPLE_FIELD_TYPES.add(Double.class);
+        SIMPLE_FIELD_TYPES.add(Float.class);
+        SIMPLE_FIELD_TYPES.add(Long.class);
+        SIMPLE_FIELD_TYPES.add(Integer.class);
+        SIMPLE_FIELD_TYPES.add(Short.class);
+        SIMPLE_FIELD_TYPES.add(Character.class);
+        SIMPLE_FIELD_TYPES.add(Byte.class);
+        SIMPLE_FIELD_TYPES.add(double.class);
+        SIMPLE_FIELD_TYPES.add(float.class);
+        SIMPLE_FIELD_TYPES.add(long.class);
+        SIMPLE_FIELD_TYPES.add(int.class);
+        SIMPLE_FIELD_TYPES.add(short.class);
+        SIMPLE_FIELD_TYPES.add(char.class);
+        SIMPLE_FIELD_TYPES.add(byte.class);
+    }
+
+
     private void mergePodSpec(PodSpecBuilder builder, PodSpec defaultPodSpec, String defaultName) {
         List<Container> containers = builder.getContainers();
         List<Container> defaultContainers = defaultPodSpec.getContainers();
@@ -173,15 +264,7 @@ public class ControllerEnricher extends BaseEnricher {
                         container = new Container();
                         containers.add(container);
                     }
-                    if (isNullOrBlank(container.getImagePullPolicy())) {
-                        container.setImagePullPolicy(defaultContainer.getImagePullPolicy());
-                    }
-                    if (isNullOrBlank(container.getImage())) {
-                        container.setImage(defaultContainer.getImage());
-                    }
-                    if (isNullOrBlank(container.getName())) {
-                        container.setName(defaultContainer.getName());
-                    }
+                    mergeSimpleFields(container, defaultContainer);
                     List<EnvVar> defaultEnv = defaultContainer.getEnv();
                     if (defaultEnv != null) {
                         for (EnvVar envVar : defaultEnv) {
@@ -199,6 +282,9 @@ public class ControllerEnricher extends BaseEnricher {
                     }
                     if (container.getLivenessProbe()==null) {
                         container.setLivenessProbe(defaultContainer.getLivenessProbe());
+                    }
+                    if (container.getSecurityContext()==null) {
+                        container.setSecurityContext(defaultContainer.getSecurityContext());
                     }
                     idx++;
                 }
