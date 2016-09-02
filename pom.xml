@@ -45,6 +45,7 @@
     <module>generator/api</module>
     <module>generator/java-exec</module>
     <module>generator/spring-boot</module>
+    <module>generator/wildfly-swarm</module>
     <module>generator/karaf</module>
   </modules>
 
