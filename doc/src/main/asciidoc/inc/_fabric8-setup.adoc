@@ -19,3 +19,20 @@ mvn farbic8:run
 ----
 
 To build the kubernetes manifests, docker image and to run your project on kubernetes or openshift!
+
+
+=== Migrating from 2.x fabric8-maven plugin
+
+Note that the `fabric8:setup` goal is aimed at adding or updating fabric8-maven-plugin configurations for versions 3.x or later.
+
+If you have a maven project with a 2.x fabric8-maven-plugin then we recommend you run the http://fabric8.io/guide/mavenFabric8Migrate.html[mvn fabric8:migrate] goal directly on your project to do the migration
+
+[source, sh]
+----
+# in a fabric8-maven-plugin 2.x project
+mvn farbic8:migrate
+# now the project is using 3.x or later
+----
+
+Once the project is migrated to 3.x or later of the fabric8-maven-plugin you can then run this `fabric8:setup` goal at any time to update to the latest plugin and goals
+
