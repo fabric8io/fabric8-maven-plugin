@@ -17,6 +17,7 @@
 package io.fabric8.maven.core.util;
 
 import io.fabric8.utils.Objects;
+import io.fabric8.utils.Strings;
 import io.fabric8.utils.Zips;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
@@ -33,13 +34,16 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.jar.JarEntry;
@@ -53,6 +57,7 @@ public class MavenUtil {
     private static final transient Logger LOG = LoggerFactory.getLogger(MavenUtil.class);
 
     private static final String DEFAULT_CONFIG_FILE_NAME = "kubernetes.json";
+    private static Map<String, String> groupArtifactVersionMap;
 
     public static boolean isKubernetesJsonArtifact(String classifier, String type) {
         return "json".equals(type) && "kubernetes".equals(classifier);
@@ -246,4 +251,56 @@ public class MavenUtil {
             throw new MojoExecutionException("Failed to create archive " + destinationFile + ": " + e, e);
         }
     }
+
+    /**
+     * Returns the version from the list of pre-configured versions of common groupId/artifact pairs
+     */
+    public static String getVersion(String groupId, String artifactId) {
+        String key = "" + groupId + "/" + artifactId;
+        Map<String, String> map = getGroupArtifactVersionMap();
+        String version = map.get(key);
+        if (version == null) {
+            LOG.warn("Could not find the version for groupId: " + groupId + " artifactId: " + artifactId + " in: " + map);
+        }
+        return version;
+    }
+
+    /**
+     * Returns the version from the list of pre-configured versions of common groupId/artifact pairs
+     */
+    public static String getVersion(String groupId, String artifactId, String defaultVersion) {
+        String answer = getVersion(groupId, artifactId);
+        if (Strings.isNullOrBlank(answer)) {
+            answer = defaultVersion;
+        }
+        return answer;
+    }
+
+    protected static Map<String, String> getGroupArtifactVersionMap() {
+        if (groupArtifactVersionMap == null) {
+            groupArtifactVersionMap = new HashMap<>();
+
+            InputStream in = MavenUtil.class.getResourceAsStream("versions.properties");
+            if (in == null) {
+                LOG.warn("Could not find versions.properties on the classpath!");
+            } else {
+                Properties properties = new Properties();
+                try {
+                    properties.load(in);
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to load versions.properties: " + e, e);
+                }
+                Set<Map.Entry<Object, Object>> entries = properties.entrySet();
+                for (Map.Entry<Object, Object> entry : entries) {
+                    Object key = entry.getKey();
+                    Object value = entry.getValue();
+                    if (key != null && value != null) {
+                        groupArtifactVersionMap.put(key.toString(), value.toString());
+                    }
+                }
+            }
+        }
+        return groupArtifactVersionMap;
+    }
+
 }
