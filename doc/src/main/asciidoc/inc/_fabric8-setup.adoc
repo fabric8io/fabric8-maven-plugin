@@ -1,0 +1,21 @@
+
+[[fabric8:setup]]
+== *fabric8:setup*
+
+This goal is for setting up maven projects to use the fabric8 maven plugin which either use an old version of the maven plugin or have not yet been modified to use it.
+
+To use this goal type:
+
+[source, sh]
+----
+mvn io.fabric8:fabric8-maven-plugin:3.1.19:setup
+----
+
+Now your pom.xml should be modified to use the fabric8 maven plugin. So you should be able to now run the following:
+
+[source, sh]
+----
+mvn farbic8:run
+----
+
+To build the kubernetes manifests, docker image and to run your project on kubernetes or openshift!
