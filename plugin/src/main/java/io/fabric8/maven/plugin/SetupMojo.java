@@ -32,6 +32,7 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 
 import static io.fabric8.utils.DomHelper.firstChild;
@@ -45,7 +46,6 @@ public class SetupMojo extends AbstractFabric8Mojo {
 
     public static final String PLUGIN_GROUPID = "io.fabric8";
     public static final String PLUGIN_ARTIFACTID = "fabric8-maven-plugin";
-    public static final String PLUGIN_DEFAULT_VERSION = "3.1.18";
     public static final String FABRIC8_MAVEN_PLUGIN_VERSION_PROPERTY = "fabric8.maven.plugin.version";
 
     /**
@@ -54,13 +54,12 @@ public class SetupMojo extends AbstractFabric8Mojo {
     @Parameter(property = "generateBackupPoms")
     private Boolean generateBackupPoms;
 
-    @Component
-    private MavenProjectHelper projectHelper;
+    @Parameter(name = "backupPomFileName", defaultValue = "${basedir}/pom.xml-backup")
+    private File backupPomFileName;
 
     @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         File pom = project.getFile();
-        boolean updated = false;
         Document doc;
         try {
             doc = XmlUtils.parseDoc(pom);
@@ -70,9 +69,14 @@ public class SetupMojo extends AbstractFabric8Mojo {
         }
 
         if (createOrUpdateFabric8MavenPlugin(doc)) {
-            updated = true;
-        }
-        if (updated) {
+            if (generateBackupPoms != null && generateBackupPoms.booleanValue()) {
+                try {
+                    pom.renameTo(backupPomFileName);
+                    getLog().info("Created backup pom.xml file at: " + backupPomFileName);
+                } catch (Exception e) {
+                    throw new MojoExecutionException("Failed to create backup: " + backupPomFileName + ". " + e, e);
+                }
+            }
             getLog().info("Updating the pom " + pom);
             try {
                 DomHelper.save(doc, pom);
@@ -83,9 +87,14 @@ public class SetupMojo extends AbstractFabric8Mojo {
         }
     }
 
-    private boolean createOrUpdateFabric8MavenPlugin(Document doc) {
+    private boolean createOrUpdateFabric8MavenPlugin(Document doc) throws MojoExecutionException {
         boolean updated = false;
-        String latestVersion = MavenUtil.getVersion(PLUGIN_GROUPID, PLUGIN_ARTIFACTID, PLUGIN_DEFAULT_VERSION);
+        String latestVersion;
+        try {
+            latestVersion = MavenUtil.getVersion(PLUGIN_GROUPID, PLUGIN_ARTIFACTID);
+        } catch (IOException e) {
+            throw new MojoExecutionException(e.getMessage(), e);
+        }
 
         // lets check that there's a property defined
         String currentVersion = project.getProperties().getProperty(FABRIC8_MAVEN_PLUGIN_VERSION_PROPERTY);

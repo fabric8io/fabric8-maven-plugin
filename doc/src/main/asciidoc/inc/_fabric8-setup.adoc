@@ -15,7 +15,7 @@ Now your pom.xml should be modified to use the fabric8 maven plugin. So you shou
 
 [source, sh]
 ----
-mvn farbic8:run
+mvn fabric8:run
 ----
 
 To build the kubernetes manifests, docker image and to run your project on kubernetes or openshift!
@@ -30,7 +30,7 @@ If you have a maven project with a 2.x fabric8-maven-plugin then we recommend yo
 [source, sh]
 ----
 # in a fabric8-maven-plugin 2.x project
-mvn farbic8:migrate
+mvn fabric8:migrate
 # now the project is using 3.x or later
 ----
 

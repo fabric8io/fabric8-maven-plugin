@@ -41,7 +41,6 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -255,52 +254,24 @@ public class MavenUtil {
     /**
      * Returns the version from the list of pre-configured versions of common groupId/artifact pairs
      */
-    public static String getVersion(String groupId, String artifactId) {
-        String key = "" + groupId + "/" + artifactId;
-        Map<String, String> map = getGroupArtifactVersionMap();
-        String version = map.get(key);
-        if (version == null) {
-            LOG.warn("Could not find the version for groupId: " + groupId + " artifactId: " + artifactId + " in: " + map);
+    public static String getVersion(String groupId, String artifactId) throws IOException {
+        String path = "META-INF/maven/" + groupId + "/" + artifactId + "/pom.properties";
+        InputStream in = MavenUtil.class.getClassLoader().getResourceAsStream(path);
+        if (in == null) {
+            throw new IOException("Could not find " + path + " on classath!");
+        }
+        Properties properties = new Properties();
+        try {
+            properties.load(in);
+        } catch (IOException e) {
+            throw new IOException("Failed to load " + path + ". " + e, e);
+        }
+        String version = properties.getProperty("version");
+        if (Strings.isNullOrBlank(version)) {
+            throw new IOException("No version property in " + path);
+
         }
         return version;
-    }
-
-    /**
-     * Returns the version from the list of pre-configured versions of common groupId/artifact pairs
-     */
-    public static String getVersion(String groupId, String artifactId, String defaultVersion) {
-        String answer = getVersion(groupId, artifactId);
-        if (Strings.isNullOrBlank(answer)) {
-            answer = defaultVersion;
-        }
-        return answer;
-    }
-
-    protected static Map<String, String> getGroupArtifactVersionMap() {
-        if (groupArtifactVersionMap == null) {
-            groupArtifactVersionMap = new HashMap<>();
-
-            InputStream in = MavenUtil.class.getResourceAsStream("versions.properties");
-            if (in == null) {
-                LOG.warn("Could not find versions.properties on the classpath!");
-            } else {
-                Properties properties = new Properties();
-                try {
-                    properties.load(in);
-                } catch (IOException e) {
-                    throw new RuntimeException("Failed to load versions.properties: " + e, e);
-                }
-                Set<Map.Entry<Object, Object>> entries = properties.entrySet();
-                for (Map.Entry<Object, Object> entry : entries) {
-                    Object key = entry.getKey();
-                    Object value = entry.getValue();
-                    if (key != null && value != null) {
-                        groupArtifactVersionMap.put(key.toString(), value.toString());
-                    }
-                }
-            }
-        }
-        return groupArtifactVersionMap;
     }
 
 }
