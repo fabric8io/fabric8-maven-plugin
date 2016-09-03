@@ -106,6 +106,7 @@ When used as properties they can be directly referenced with the property names 
 
 The name of this generator is `spring-boot` and gets activated when it finds a `spring-boot-maven-plugin` among the configured plugins. This plugin can be also a included as a dependency. It will use the following base image by default, but as explained <<generator-options-common, above>> and can be changeda `from` configuration.
 
+[[spring-boot-from]]
 .Spring-Boot Base Images
 [cols="1,4,4"]
 |===
@@ -145,6 +146,8 @@ The following additional configuration options can be set:
 === Java Applications
 
 This generator is named `java-exec` and is responsible to start up arbitrary Java application. It kicks in if eithe the main class is explicitely configured in this generator's configuration or when it finds a singel class with a `public static void main(String[] args)` method. If it finds more than one class, the generator is a no op.
+
+It use the same default images as the <<spring-boot-from, Spring Boot generator>>.
 
 Beside the common configuration parameters described in the table <<generator-options-common, Commong Generator Options>> it knows the following additional configuration options:
 
