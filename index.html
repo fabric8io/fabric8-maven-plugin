@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 3.1.1,</span>
-<span id="revdate">2016-09-02</span>
+<span id="revdate">2016-09-03</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -3008,7 +3008,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <div class="paragraph">
 <p>The name of this generator is <code>spring-boot</code> and gets activated when it finds a <code>spring-boot-maven-plugin</code> among the configured plugins. This plugin can be also a included as a dependency. It will use the following base image by default, but as explained <a href="#generator-options-common">above</a> and can be changeda <code>from</code> configuration.</p>
 </div>
-<table class="tableblock frame-all grid-all spread">
+<table id="spring-boot-from" class="tableblock frame-all grid-all spread">
 <caption class="title">Table 19. Spring-Boot Base Images</caption>
 <colgroup>
 <col style="width: 11.1111%;">
@@ -3078,6 +3078,9 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <h4 id="java-applications">4.1.2. Java Applications</h4>
 <div class="paragraph">
 <p>This generator is named <code>java-exec</code> and is responsible to start up arbitrary Java application. It kicks in if eithe the main class is explicitely configured in this generator&#8217;s configuration or when it finds a singel class with a <code>public static void main(String[] args)</code> method. If it finds more than one class, the generator is a no op.</p>
+</div>
+<div class="paragraph">
+<p>It use the same default images as the <a href="#spring-boot-from">Spring Boot generator</a>.</p>
 </div>
 <div class="paragraph">
 <p>Beside the common configuration parameters described in the table <a href="#generator-options-common">Commong Generator Options</a> it knows the following additional configuration options:</p>
@@ -3712,7 +3715,7 @@ password.</p>
 <div id="footer">
 <div id="footer-text">
 Version 3.1.1<br>
-Last updated 2016-09-02 14:31:43 UTC
+Last updated 2016-09-03 14:52:12 UTC
 </div>
 </div>
 </body>
