@@ -21,10 +21,8 @@ import io.fabric8.utils.Strings;
 import io.fabric8.utils.XmlUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProjectHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -36,7 +34,6 @@ import java.io.IOException;
 import java.util.Objects;
 
 import static io.fabric8.utils.DomHelper.firstChild;
-import static org.eclipse.jgit.lib.ObjectChecker.parent;
 
 /**
  * Ensures that the fabric8 maven plugin is defined and setup correctly in the projects pom.xml
@@ -49,10 +46,15 @@ public class SetupMojo extends AbstractFabric8Mojo {
     public static final String FABRIC8_MAVEN_PLUGIN_VERSION_PROPERTY = "fabric8.maven.plugin.version";
 
     /**
+     * Whether we should use a version property for the plugin
+     */
+    @Parameter(property = "useVersionProperty")
+    private boolean useVersionProperty;
+    /**
      * Controls whether a backup pom should be created (default is true).
      */
     @Parameter(property = "generateBackupPoms")
-    private Boolean generateBackupPoms;
+    private boolean generateBackupPoms;
 
     @Parameter(name = "backupPomFileName", defaultValue = "${basedir}/pom.xml-backup")
     private File backupPomFileName;
@@ -69,7 +71,7 @@ public class SetupMojo extends AbstractFabric8Mojo {
         }
 
         if (createOrUpdateFabric8MavenPlugin(doc)) {
-            if (generateBackupPoms != null && generateBackupPoms.booleanValue()) {
+            if (generateBackupPoms) {
                 try {
                     pom.renameTo(backupPomFileName);
                     getLog().info("Created backup pom.xml file at: " + backupPomFileName);
@@ -98,25 +100,30 @@ public class SetupMojo extends AbstractFabric8Mojo {
 
         // lets check that there's a property defined
         String currentVersion = project.getProperties().getProperty(FABRIC8_MAVEN_PLUGIN_VERSION_PROPERTY);
-        Element documentElement = doc.getDocumentElement();
-        Element properties = firstChild(documentElement, "properties");
-        if (properties == null) {
-            properties = addChildAfter(appendAfterLastElement(properties, doc.createTextNode("\n      ")), "properties");
-        }
-        if (Strings.isNullOrBlank(currentVersion)) {
-            addChildAfter(appendAfterLastElement(properties, doc.createTextNode("\n    ")), FABRIC8_MAVEN_PLUGIN_VERSION_PROPERTY, latestVersion);
-            updated = true;
-        } else if (!Objects.equals(currentVersion, latestVersion)) {
-            Element propertyElement = DomHelper.firstChild(properties, FABRIC8_MAVEN_PLUGIN_VERSION_PROPERTY);
-            if (propertyElement != null) {
-                propertyElement.setTextContent(latestVersion);
-                updated = true;
+        String versionExpression = "${" + FABRIC8_MAVEN_PLUGIN_VERSION_PROPERTY + "}";
+
+        if (useVersionProperty) {
+            Element documentElement = doc.getDocumentElement();
+            Element properties = firstChild(documentElement, "properties");
+            if (properties == null) {
+                properties = addChildAfter(appendAfterLastElement(properties, doc.createTextNode("\n      ")), "properties");
             }
+            if (Strings.isNullOrBlank(currentVersion)) {
+                addChildAfter(appendAfterLastElement(properties, doc.createTextNode("\n    ")), FABRIC8_MAVEN_PLUGIN_VERSION_PROPERTY, latestVersion);
+                updated = true;
+            } else if (!Objects.equals(currentVersion, latestVersion)) {
+                Element propertyElement = DomHelper.firstChild(properties, FABRIC8_MAVEN_PLUGIN_VERSION_PROPERTY);
+                if (propertyElement != null) {
+                    propertyElement.setTextContent(latestVersion);
+                    updated = true;
+                }
+            }
+        } else {
+            versionExpression = latestVersion;
         }
 
         Element configuration = null;
         Element fmpPlugin = findPlugin(doc, PLUGIN_GROUPID, PLUGIN_ARTIFACTID);
-        String versionExpression = "${" + FABRIC8_MAVEN_PLUGIN_VERSION_PROPERTY + "}";
         if (fmpPlugin == null) {
             fmpPlugin = findOrAddPlugin(doc, PLUGIN_GROUPID, PLUGIN_ARTIFACTID, versionExpression, configuration);
             updated = true;

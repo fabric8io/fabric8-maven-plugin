@@ -56,7 +56,6 @@ public class MavenUtil {
     private static final transient Logger LOG = LoggerFactory.getLogger(MavenUtil.class);
 
     private static final String DEFAULT_CONFIG_FILE_NAME = "kubernetes.json";
-    private static Map<String, String> groupArtifactVersionMap;
 
     public static boolean isKubernetesJsonArtifact(String classifier, String type) {
         return "json".equals(type) && "kubernetes".equals(classifier);
