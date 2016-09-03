@@ -46,10 +46,17 @@ public class SetupMojo extends AbstractFabric8Mojo {
     public static final String FABRIC8_MAVEN_PLUGIN_VERSION_PROPERTY = "fabric8.maven.plugin.version";
 
     /**
+     * Should we update the version if the fabric8-maven-plugin is already used on a project?
+     */
+    @Parameter(property = "updateVersion", defaultValue = "true")
+    private boolean updateVersion;
+
+    /**
      * Whether we should use a version property for the plugin
      */
     @Parameter(property = "useVersionProperty")
     private boolean useVersionProperty;
+
     /**
      * Controls whether a backup pom should be created (default is true).
      */
@@ -101,49 +108,53 @@ public class SetupMojo extends AbstractFabric8Mojo {
         // lets check that there's a property defined
         String currentVersion = project.getProperties().getProperty(FABRIC8_MAVEN_PLUGIN_VERSION_PROPERTY);
         String versionExpression = "${" + FABRIC8_MAVEN_PLUGIN_VERSION_PROPERTY + "}";
-
-        if (useVersionProperty) {
-            Element documentElement = doc.getDocumentElement();
-            Element properties = firstChild(documentElement, "properties");
-            if (properties == null) {
-                properties = addChildAfter(appendAfterLastElement(properties, doc.createTextNode("\n      ")), "properties");
-            }
-            if (Strings.isNullOrBlank(currentVersion)) {
-                addChildAfter(appendAfterLastElement(properties, doc.createTextNode("\n    ")), FABRIC8_MAVEN_PLUGIN_VERSION_PROPERTY, latestVersion);
-                updated = true;
-            } else if (!Objects.equals(currentVersion, latestVersion)) {
-                Element propertyElement = DomHelper.firstChild(properties, FABRIC8_MAVEN_PLUGIN_VERSION_PROPERTY);
-                if (propertyElement != null) {
-                    propertyElement.setTextContent(latestVersion);
-                    updated = true;
-                }
-            }
-        } else {
-            versionExpression = latestVersion;
-        }
-
         Element configuration = null;
         Element fmpPlugin = findPlugin(doc, PLUGIN_GROUPID, PLUGIN_ARTIFACTID);
+        boolean pluginInserted = fmpPlugin == null;
+        if (updateVersion || pluginInserted) {
+            if (useVersionProperty) {
+                Element documentElement = doc.getDocumentElement();
+                Element properties = firstChild(documentElement, "properties");
+                if (properties == null) {
+                    properties = addChildAfter(appendAfterLastElement(properties, doc.createTextNode("\n      ")), "properties");
+                }
+                if (Strings.isNullOrBlank(currentVersion)) {
+                    addChildAfter(appendAfterLastElement(properties, doc.createTextNode("\n    ")), FABRIC8_MAVEN_PLUGIN_VERSION_PROPERTY, latestVersion);
+                    updated = true;
+                } else if (!Objects.equals(currentVersion, latestVersion)) {
+                    Element propertyElement = DomHelper.firstChild(properties, FABRIC8_MAVEN_PLUGIN_VERSION_PROPERTY);
+                    if (propertyElement != null) {
+                        propertyElement.setTextContent(latestVersion);
+                        updated = true;
+                    }
+                }
+            } else {
+                versionExpression = latestVersion;
+            }
+        }
+
         if (fmpPlugin == null) {
             fmpPlugin = findOrAddPlugin(doc, PLUGIN_GROUPID, PLUGIN_ARTIFACTID, versionExpression, configuration);
             updated = true;
         } else {
-            String version = DomHelper.firstChildTextContent(fmpPlugin, "version");
-            if (version == null || !version.equals(versionExpression)) {
-                Element versionElement = DomHelper.firstChild(fmpPlugin, "version");
-                if (versionElement == null) {
-                    Element artifactId = DomHelper.firstChild(fmpPlugin, "artifactId");
-                    Text textNode = doc.createTextNode("\n        ");
-                    if (artifactId != null) {
-                        addChildAfter(artifactId, textNode);
+            if (updateVersion || pluginInserted) {
+                String version = DomHelper.firstChildTextContent(fmpPlugin, "version");
+                if (version == null || !version.equals(versionExpression)) {
+                    Element versionElement = DomHelper.firstChild(fmpPlugin, "version");
+                    if (versionElement == null) {
+                        Element artifactId = DomHelper.firstChild(fmpPlugin, "artifactId");
+                        Text textNode = doc.createTextNode("\n        ");
+                        if (artifactId != null) {
+                            addChildAfter(artifactId, textNode);
+                        } else {
+                            appendAfterLastElement(fmpPlugin, textNode);
+                        }
+                        addChildAfter(textNode, "version", versionExpression);
                     } else {
-                        appendAfterLastElement(fmpPlugin, textNode);
+                        versionElement.setTextContent(versionExpression);
                     }
-                    addChildAfter(textNode, "version", versionExpression);
-                } else {
-                    versionElement.setTextContent(versionExpression);
+                    updated = true;
                 }
-                updated = true;
             }
             if (configuration != null) {
                 Element oldConfig = firstChild(fmpPlugin, "configuration");
