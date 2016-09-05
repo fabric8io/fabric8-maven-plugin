@@ -8,7 +8,7 @@ To use this goal type:
 
 [source, sh]
 ----
-mvn io.fabric8:fabric8-maven-plugin:3.1.19:setup
+mvn io.fabric8:fabric8-maven-plugin:{version}:setup
 ----
 
 Now your pom.xml should be modified to use the fabric8 maven plugin. So you should be able to now run the following:
