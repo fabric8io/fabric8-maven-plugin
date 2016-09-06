@@ -157,9 +157,13 @@ public class DeployMojo extends AbstractFabric8Mojo {
     private boolean ignoreRunningOAuthClients;
 
     /**
-     * Should we create external Ingress/Routes for any LoadBalancer services which don't already have them.
+     * Should we create external Ingress/Routes for any LoadBalancer Services which don't already have them.
+     *
+     * We now do not do this by default and defer this to the
+     * <a href="https://github.com/fabric8io/exposecontroller/">exposecontroller</a> to decide
+     * if Ingress or Router is being used or whether we should use LoadBalancer or NodePorts for single node clusters
      */
-    @Parameter(property = "fabric8.deploy.createExternalUrls", defaultValue = "true")
+    @Parameter(property = "fabric8.deploy.createExternalUrls", defaultValue = "false")
     private boolean createExternalUrls;
 
     /**
