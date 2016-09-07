@@ -17,7 +17,11 @@ package io.fabric8.maven.plugin;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.maven.core.config.HelmConfig;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.utils.Files;
@@ -49,11 +53,18 @@ public class HelmMojo extends AbstractFabric8Mojo {
     @Parameter
     private HelmConfig helm;
 
+    /**
+     * The generated kubernetes YAML file
+     */
+    @Parameter(property = "fabric8.kubernetesManifest", defaultValue = "${basedir}/target/classes/META-INF/fabric8/kubernetes.yml")
+    private File kubernetesManifest;
+
     @Component
     private MavenProjectHelper projectHelper;
 
     @Component(role = Archiver.class, hint = "tar")
     private TarArchiver archiver;
+
 
     @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
@@ -153,12 +164,48 @@ public class HelmMojo extends AbstractFabric8Mojo {
         Chart chart = helm != null ?
             new Chart(chartName, project, helm.getKeywords(), helm.getEngine()) :
             new Chart(chartName, project);
+
+        String iconUrl = findIconURL();
+        getLog().debug("Found icon: " + iconUrl);
+        if (Strings.isNotBlank(iconUrl)) {
+            chart.setIcon(iconUrl);
+        }
         File outputChartFile = new File(outputDir, "Chart.yaml");
         try {
             KubernetesHelper.saveYaml(chart, outputChartFile);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to save chart " + outputChartFile + ": " + e, e);
         }
+    }
+
+    private String findIconURL() throws MojoExecutionException {
+        String answer = null;
+        if (kubernetesManifest != null && kubernetesManifest.isFile()) {
+            Object dto = null;
+            try {
+                dto = KubernetesHelper.loadYaml(kubernetesManifest, KubernetesResource.class);
+            } catch (IOException e) {
+                throw new MojoExecutionException("Failed to load kubernetes YAML " + kubernetesManifest + ". " + e, e);
+            }
+            if (dto instanceof HasMetadata) {
+                answer = KubernetesHelper.getOrCreateAnnotations((HasMetadata) dto).get(Annotations.Builds.ICON_URL);
+            }
+            if (Strings.isNullOrBlank(answer) && dto instanceof KubernetesList) {
+                KubernetesList list = (KubernetesList) dto;
+                List<HasMetadata> items = list.getItems();
+                if (items != null) {
+                    for (HasMetadata item : items) {
+                        answer = KubernetesHelper.getOrCreateAnnotations(item).get(Annotations.Builds.ICON_URL);
+                        if (Strings.isNotBlank(answer)) {
+                            break;
+                        }
+                    }
+                }
+            }
+        } else {
+            getLog().warn("No kubernetes manifest file has been generated yet by the fabric8:resource goal at: " + kubernetesManifest);
+        }
+        return answer;
     }
 
     private void copyResourceFilesToTemplatesDir(File outputDir, File sourceDir) throws MojoExecutionException {
@@ -234,6 +281,8 @@ public class HelmMojo extends AbstractFabric8Mojo {
         private List<Maintainer> maintainers;
         @JsonProperty
         private String engine;
+        @JsonProperty
+        private String icon;
 
         public Chart() {
         }
@@ -356,6 +405,14 @@ public class HelmMojo extends AbstractFabric8Mojo {
 
         public void setEngine(String engine) {
             this.engine = engine;
+        }
+
+        public String getIcon() {
+            return icon;
+        }
+
+        public void setIcon(String icon) {
+            this.icon = icon;
         }
 
         /**
