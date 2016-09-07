@@ -1,5 +1,0 @@
-
-[[profiles]]
-= Profiles
-
-WARNING: This is a placeholder. Will be filled soon.

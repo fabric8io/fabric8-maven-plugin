@@ -102,6 +102,7 @@ There are some configuration options which are shared by all generators:
 
 When used as properties they can be directly referenced with the property names above.
 
+[[generator-spring-boot]]
 === Spring Boot
 
 The name of this generator is `spring-boot` and gets activated when it finds a `spring-boot-maven-plugin` among the configured plugins. This plugin can be also a included as a dependency. It will use the following base image by default, but as explained <<generator-options-common, above>> and can be changeda `from` configuration.
