@@ -19,6 +19,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.maven.core.util.VersionUtil;
+import io.fabric8.utils.IOHelpers;
+import io.fabric8.utils.Strings;
 import org.apache.maven.artifact.repository.MavenArtifactRepository;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -36,13 +39,20 @@ import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResult;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
+
+import static org.bouncycastle.asn1.x500.style.RFC4519Style.st;
 
 /**
  * Generates a Helm <code>index.yaml</code> file by querying a maven repository
@@ -51,32 +61,35 @@ import java.util.TreeMap;
 @Mojo(name = "helm-index")
 public class HelmIndexMojo extends AbstractFabric8Mojo {
 
-    @Component
-    private MavenProjectHelper projectHelper;
+    /**
+     * The HTML title
+     */
+    @Parameter(property = "fabric8.helm.indexTitle", defaultValue = "Chart Repository")
+    private String title;
 
     /**
-     * Folder where to find project specific files
+     * The HTML title
      */
-    @Parameter(property = "fabric8.helm.indexFile", defaultValue = "${project.build.directory}/fabric8/helm-index.yaml")
+    @Parameter(property = "fabric8.helm.introductionHtmlFile", defaultValue = "${basedir}/introduction.html")
+    private File introductionHtmlFile;
+
+    /**
+     * The output YAML file
+     */
+    @Parameter(property = "fabric8.helm.outputYamlFile", defaultValue = "${project.build.directory}/fabric8/helm-index.yaml")
     private File outputFile;
+
+    /**
+     * The output HTML file
+     */
+    @Parameter(property = "fabric8.helm.outputHtmlFile", defaultValue = "${project.build.directory}/fabric8/helm-index.html")
+    private File outputHtmlFile;
 
     /**
      * Folder where to find project specific files
      */
     @Parameter(property = "fabric8.helm.tempDir", defaultValue = "${project.build.directory}/fabric8/tmp-charts")
     private File tempDir;
-
-    @Component
-    protected ArtifactResolver artifactResolver;
-
-    @Parameter(defaultValue = "${project.remoteArtifactRepositories}")
-    protected List<MavenArtifactRepository> remoteRepositories;
-
-    @Component(role = UnArchiver.class, hint = "tar")
-    private TarUnArchiver unArchiver;
-
-    @Parameter(defaultValue = "${repositorySystemSession}")
-    private RepositorySystemSession repoSession;
 
     @Parameter(property = "fabric8.helm.index.maxSearchResults", defaultValue = "50000")
     private int maxSearchResults = 2;
@@ -86,6 +99,20 @@ public class HelmIndexMojo extends AbstractFabric8Mojo {
 
     @Parameter(property = "fabric8.helm.index.mavenRepoSearchUrl", defaultValue = "http://search.maven.org/solrsearch/select")
     private String mavenRepoSearchUrl;
+
+    @Parameter(defaultValue = "${project.remoteArtifactRepositories}")
+    protected List<MavenArtifactRepository> remoteRepositories;
+
+    @Parameter(defaultValue = "${repositorySystemSession}")
+    private RepositorySystemSession repoSession;
+
+
+    @Component
+    protected ArtifactResolver artifactResolver;
+
+    @Component(role = UnArchiver.class, hint = "tar")
+    private TarUnArchiver unArchiver;
+
 
     @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
@@ -129,7 +156,133 @@ public class HelmIndexMojo extends AbstractFabric8Mojo {
             throw new MojoExecutionException("Failed to write results as YAML to: " + outputFile + ". " + e, e);
         }
 
+        generateHTML(outputHtmlFile, charts);
+
         // projectHelper.attachArtifact(project, "yaml", "helm-index", destinationFile);
+    }
+
+    protected void generateHTML(File outputHtmlFile, Map<String, ChartInfo> charts) throws MojoExecutionException {
+        Map<String,SortedSet<ChartInfo>> chartMap = new TreeMap<>();
+        for ( ChartInfo chartInfo : charts.values()) {
+            String key = chartInfo.getName();
+            SortedSet<ChartInfo> set = chartMap.get(key);
+            if (set == null) {
+                set = new TreeSet(createChartComparator());
+                chartMap.put(key, set);
+            }
+            set.add(chartInfo);
+        }
+        try (PrintWriter writer = new PrintWriter(new FileWriter(outputHtmlFile))) {
+            writer.println("<html>");
+            writer.println("<head>");
+            writer.println("<link href='style.css' rel=stylesheet>");
+            writer.println("<link href='custom.css' rel=stylesheet>");
+            writer.println("<title>" + title + "</title>");
+            writer.println("</head>");
+            writer.println("<body>");
+            if (introductionHtmlFile != null && introductionHtmlFile.isFile()) {
+                try {
+                    String introduction = IOHelpers.readFully(introductionHtmlFile);
+                    writer.println(introduction);
+                } catch (IOException e) {
+                    throw new MojoExecutionException("Failed to load intoduction HTML: " + introductionHtmlFile + ". " + e, e);
+                }
+            } else {
+                writer.println("<h1>" + title + "</h1>");
+            }
+            writer.println("<table class='table table-striped table-hover'>");
+            writer.println("  <hhead>");
+            writer.println("    <tr>");
+            writer.println("      <th>Chart</th>");
+            writer.println("      <th>Versions</th>");
+            writer.println("    </tr>");
+            writer.println("  </hhead>");
+            writer.println("  <tbody>");
+            for (Map.Entry<String, SortedSet<ChartInfo>> entry : chartMap.entrySet()) {
+                String key = entry.getKey();
+                SortedSet<ChartInfo> set = entry.getValue();
+                if (!set.isEmpty()) {
+                    ChartInfo first = set.first();
+                    HelmMojo.Chart firstChartfile = first.getChartfile();
+                    if (firstChartfile == null) {
+                        continue;
+                    }
+                    String chartDescription = getDescription(firstChartfile);
+                    writer.println("    <tr>");
+                    writer.println("      <td title='" + chartDescription + "'>");
+                    String iconHtml = "";
+                    String iconUrl = findIconURL(set);
+                    if (Strings.isNotBlank(iconUrl)) {
+                        iconHtml = "<img class='logo' src='" + iconUrl + "'>";
+                    }
+                    writer.println("        " + iconHtml + "<span class='chart-name'>" + key + "</span>");
+                    writer.println("      </td>");
+                    writer.println("      <td class='versions'>");
+                    for (ChartInfo chartInfo : set) {
+                        HelmMojo.Chart chartfile = chartInfo.getChartfile();
+                        if (chartfile == null) {
+                            continue;
+                        }
+                        String description = getDescription(chartfile);
+                        String version = chartfile.getVersion();
+                        String href = chartInfo.getUrl();
+                        writer.println("        <a href='" + href + "' title='" + description + "'>" + version + "</a>");
+                    }
+                    writer.println("      </td>");
+                    writer.println("    </tr>");
+                }
+            }
+            writer.println("  </tbody>");
+            writer.println("  </table>");
+            writer.println("</body>");
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to write to " + outputHtmlFile + ". " + e, e);
+        }
+    }
+
+    private String findIconURL(Iterable<ChartInfo> chartInfos) {
+        for (ChartInfo chartInfo : chartInfos) {
+            HelmMojo.Chart chartfile = chartInfo.getChartfile();
+            if (chartfile != null) {
+                String icon = chartfile.getIcon();
+                if (Strings.isNotBlank(icon)) {
+                    return icon;
+                }
+            }
+        }
+        return "https://fabric8.io/images/logos/kubernetes.png";
+    }
+
+    private static String getDescription(HelmMojo.Chart firstChartfile) {
+        String answer = firstChartfile.getDescription();
+        return answer != null ? answer : "";
+    }
+
+    private Comparator<ChartInfo> createChartComparator() {
+        return new Comparator<ChartInfo>() {
+            @Override
+            public int compare(ChartInfo c1, ChartInfo c2) {
+                String v1 = getVersion(c1);
+                String v2 = getVersion(c2);
+                int answer = VersionUtil.compareVersions(v1, v2);
+                // lets sort in reverse order
+                if (answer > 0) {
+                    return -1;
+                } else if (answer < 0) {
+                    return 1;
+                }
+                return 0;
+            }
+        };
+    }
+
+    protected static String getVersion(ChartInfo c1) {
+        HelmMojo.Chart chartfile = c1.getChartfile();
+        if (chartfile != null) {
+            return chartfile.getVersion();
+        } else {
+            return null;
+        }
     }
 
     protected void addChartInfo(Map<String, ChartInfo> charts, ArtifactDTO artifact) {
