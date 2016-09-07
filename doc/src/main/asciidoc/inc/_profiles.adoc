@@ -1,0 +1,50 @@
+
+[[profiles]]
+= Profiles
+
+Profiles can be used to combine a set of enrichers and generators and gives this combination a referencable name. Profiles can be defined externally either directly as a build resource in `src/main/fabric8/profiles.yml` or provided as part of a plugin's dependency where it is supposed to be included as `META-INF/fabric8/profiles.yml`. Multiple profiles can be added in these `profiles.yml` descriptors.
+
+Profiles are defined in YAML. The following example shows a simple profiles which uses only the <<generator-spring-boot, Spring Boot generator>> and only those enrichers adding default objects:
+
+.Profile Definition
+[source, yaml]
+----
+- name: my-spring-boot-apps
+  generator:
+    includes:
+      - spring-boot
+  enrichers:
+    includes:
+      # Default Deployment object
+      - fmp-controller
+      # Add a default service
+      - fmp-service
+  config:
+    fmp-service:
+      # Expose service as NodePort
+      type: NodePort
+----
+
+This profile then can be referenced from various plugin goals. The easiest way is to add the profile as top-level configuration parameter.
+
+.Specification of profile in plugin configuration
+[source, xml]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>fabric8-maven-plugin</artifactId>
+  <configuration>
+    <profile>my-spring-boot-apps</profile>
+    .....
+  </configuration>
+</plugin>
+----
+
+Alternative a profile can be also specified on the command line when calling Maven:
+
+[source, sh]
+----
+mvn -Dfabric8.profile=my-spring-boot-apps fabric8:build fabric8:deploy
+----
+
+If a configuration for enrichers and generators are provided as part of the plugin's `<configuration>` then this takes precedence over any profile specified. 
