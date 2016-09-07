@@ -21,7 +21,7 @@
   <files>
     <!-- copy uberjar -->
     <file>
-      <source>${project.build.directory}/${project.artifactId}-${project.version}-swarm.jar</source>
+      <source>${project.build.directory}/${project.build.finalName}-swarm.jar</source>
       <outputDirectory>/</outputDirectory>
     </file>
   </files>
