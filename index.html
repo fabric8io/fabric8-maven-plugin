@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 3.1.1,</span>
-<span id="revdate">2016-09-06</span>
+<span id="revdate">2016-09-07</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -566,7 +566,7 @@ table.CodeRay td.code>pre{padding:0}
 <ul class="sectlevel2">
 <li><a href="#generators-default">4.1. Default Generators</a>
 <ul class="sectlevel3">
-<li><a href="#spring-boot">4.1.1. Spring Boot</a></li>
+<li><a href="#generator-spring-boot">4.1.1. Spring Boot</a></li>
 <li><a href="#java-applications">4.1.2. Java Applications</a></li>
 <li><a href="#karaf">4.1.3. Karaf</a></li>
 </ul>
@@ -617,7 +617,7 @@ table.CodeRay td.code>pre{padding:0}
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-This document is work-in-progress. The most matured chapters are the <a href="#introduction">Introduction</a>, the description of the <a href="#fabric8:buidld">[fabric8:buidld]</a> goal and the <a href="#generators">Generator</a> chapter is growing constantly.
+This document is work-in-progress. The most matured chapters are the <a href="#introduction">Introduction</a>, the description of the <a href="#fabric8:build"><strong>fabric8:build</strong></a> goal and the <a href="#generators">Generator</a> chapter is growing constantly.
 </td>
 </tr>
 </table>
@@ -3004,7 +3004,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p>When used as properties they can be directly referenced with the property names above.</p>
 </div>
 <div class="sect3">
-<h4 id="spring-boot">4.1.1. Spring Boot</h4>
+<h4 id="generator-spring-boot">4.1.1. Spring Boot</h4>
 <div class="paragraph">
 <p>The name of this generator is <code>spring-boot</code> and gets activated when it finds a <code>spring-boot-maven-plugin</code> among the configured plugins. This plugin can be also a included as a dependency. It will use the following base image by default, but as explained <a href="#generator-options-common">above</a> and can be changeda <code>from</code> configuration.</p>
 </div>
@@ -3342,17 +3342,57 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <div class="sect1">
 <h2 id="profiles">6. Profiles</h2>
 <div class="sectionbody">
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-This is a placeholder. Will be filled soon.
-</td>
-</tr>
-</table>
+<div class="paragraph">
+<p>Profiles can be used to combine a set of enrichers and generators and gives this combination a referencable name. Profiles can be defined externally either directly as a build resource in <code>src/main/fabric8/profiles.yml</code> or provided as part of a plugin&#8217;s dependency where it is supposed to be included as <code>META-INF/fabric8/profiles.yml</code>. Multiple profiles can be added in these <code>profiles.yml</code> descriptors.</p>
+</div>
+<div class="paragraph">
+<p>Profiles are defined in YAML. The following example shows a simple profiles which uses only the <a href="#generator-spring-boot">Spring Boot generator</a> and only those enrichers adding default objects:</p>
+</div>
+<div class="listingblock">
+<div class="title">Profile Definition</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml">- <span class="string"><span class="content">name: my-spring-boot-apps</span></span>
+  <span class="key">generator</span>:
+    <span class="key">includes</span>:
+      - <span class="string"><span class="content">spring-boot</span></span>
+  <span class="key">enrichers</span>:
+    <span class="key">includes</span>:
+      <span class="comment"># Default Deployment object</span>
+      - <span class="string"><span class="content">fmp-controller</span></span>
+      <span class="comment"># Add a default service</span>
+      - <span class="string"><span class="content">fmp-service</span></span>
+  <span class="key">config</span>:
+    <span class="key">fmp-service</span>:
+      <span class="comment"># Expose service as NodePort</span>
+      <span class="key">type</span>: <span class="string"><span class="content">NodePort</span></span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This profile then can be referenced from various plugin goals. The easiest way is to add the profile as top-level configuration parameter.</p>
+</div>
+<div class="listingblock">
+<div class="title">Specification of profile in plugin configuration</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="tag">&lt;configuration&gt;</span>
+    <span class="tag">&lt;profile&gt;</span>my-spring-boot-apps<span class="tag">&lt;/profile&gt;</span>
+    .....
+  <span class="tag">&lt;/configuration&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Alternative a profile can be also specified on the command line when calling Maven:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn -Dfabric8.profile=my-spring-boot-apps fabric8:build fabric8:deploy</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If a configuration for enrichers and generators are provided as part of the plugin&#8217;s <code>&lt;configuration&gt;</code> then this takes precedence over any profile specified.</p>
 </div>
 </div>
 </div>
@@ -3715,7 +3755,7 @@ password.</p>
 <div id="footer">
 <div id="footer-text">
 Version 3.1.1<br>
-Last updated 2016-09-06 10:05:34 UTC
+Last updated 2016-09-07 05:04:16 UTC
 </div>
 </div>
 </body>
