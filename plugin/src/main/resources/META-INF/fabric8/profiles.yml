@@ -1,0 +1,7 @@
+# Default profiles delivered with f-m-p
+
+# Use only the Spring Boot generator
+- name: fmp-spring-boot
+  generator:
+    includes:
+      - spring-boot

@@ -38,16 +38,20 @@ public class EnricherContext {
 
     private ProcessorConfig config;
 
+    private boolean useProjectClasspath;
+
     public EnricherContext(MavenProject project,
                            ProcessorConfig enricherConfig,
                            List<ImageConfiguration> images,
                            ResourceConfig kubernetesConfig,
-                           Logger log) {
+                           Logger log,
+                           boolean useProjectClasspath) {
         this.log = log;
         this.project = project;
         this.config = enricherConfig;
         this.images = images;
         this.resourceConfig = kubernetesConfig;
+        this.useProjectClasspath = useProjectClasspath;
     }
 
     public MavenProject getProject() {
@@ -70,4 +74,7 @@ public class EnricherContext {
         return resourceConfig;
     }
 
+    public boolean isUseProjectClasspath() {
+        return useProjectClasspath;
+    }
 }
