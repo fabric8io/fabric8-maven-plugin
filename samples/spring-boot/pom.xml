@@ -81,9 +81,9 @@
               <exclude>build</exclude>
             </excludes>
             <config>
-              <f8-service>
+              <fmp-service>
                 <type>NodePort</type>
-              </f8-service>
+              </fmp-service>
             </config>
           </enricher>
         </configuration>

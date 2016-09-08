@@ -22,7 +22,8 @@ import java.util.Map;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
- * Intermediate class to allow flexible nested map configuration
+ * Intermediate class to allow flexible nested map configuration. Must be in the same package
+ * as Mojos to be usable by Maven.
  * @author roland
  * @since 28/07/16
  */

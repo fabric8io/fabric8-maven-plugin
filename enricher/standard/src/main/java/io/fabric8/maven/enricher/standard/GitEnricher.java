@@ -39,7 +39,7 @@ import java.util.Map;
 public class GitEnricher extends BaseEnricher {
 
     public GitEnricher(EnricherContext buildContext) {
-        super(buildContext, "f8-git");
+        super(buildContext, "fmp-git");
     }
 
     @Override

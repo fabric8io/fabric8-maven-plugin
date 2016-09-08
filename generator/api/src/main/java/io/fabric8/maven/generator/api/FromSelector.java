@@ -55,6 +55,10 @@ public abstract class FromSelector {
     public boolean isRedHat() {
         MavenProject project = context.getProject();
         Plugin plugin = project.getPlugin("io.fabric8:fabric8-maven-plugin");
+        if (plugin == null) {
+            // Can happen if not configured in a build section
+            return false;
+        }
         String version = plugin.getVersion();
         return REDHAT_VERSION_PATTERN.matcher(version).matches();
     }
