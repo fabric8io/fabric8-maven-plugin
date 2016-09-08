@@ -15,35 +15,25 @@
  */
 package io.fabric8.maven.plugin;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.maven.core.util.VersionUtil;
 import io.fabric8.utils.IOHelpers;
 import io.fabric8.utils.Strings;
-import org.apache.maven.artifact.repository.MavenArtifactRepository;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archiver.tar.TarUnArchiver;
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.impl.ArtifactResolver;
-import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.resolution.ArtifactRequest;
-import org.eclipse.aether.resolution.ArtifactResult;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -52,37 +42,35 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import static org.bouncycastle.asn1.x500.style.RFC4519Style.st;
-
 /**
  * Generates a Helm <code>index.yaml</code> file by querying a maven repository
  * to find all the charts available and their releases.
  */
 @Mojo(name = "helm-index")
-public class HelmIndexMojo extends AbstractFabric8Mojo {
+public class HelmIndexMojo extends AbstractArtifactSearchMojo {
 
     /**
      * The HTML title
      */
     @Parameter(property = "fabric8.helm.indexTitle", defaultValue = "Chart Repository")
-    private String title;
+    private String helmTitle;
 
     /**
-     * The HTML title
+     * The introduction HTML output before the table
      */
-    @Parameter(property = "fabric8.helm.introductionHtmlFile", defaultValue = "${basedir}/introduction.html")
+    @Parameter(property = "fabric8.helm.introductionHtmlFile", defaultValue = "${basedir}/src/main/fabric8/site/helm-introduction.html")
     private File introductionHtmlFile;
 
     /**
      * The output YAML file
      */
-    @Parameter(property = "fabric8.helm.outputYamlFile", defaultValue = "${project.build.directory}/fabric8/helm-index.yaml")
+    @Parameter(property = "fabric8.helm.outputYamlFile", defaultValue = "${project.build.directory}/fabric8/site/helm/index.yaml")
     private File outputFile;
 
     /**
      * The output HTML file
      */
-    @Parameter(property = "fabric8.helm.outputHtmlFile", defaultValue = "${project.build.directory}/fabric8/helm-index.html")
+    @Parameter(property = "fabric8.helm.outputHtmlFile", defaultValue = "${project.build.directory}/fabric8/site/helm/index.html")
     private File outputHtmlFile;
 
     /**
@@ -90,25 +78,6 @@ public class HelmIndexMojo extends AbstractFabric8Mojo {
      */
     @Parameter(property = "fabric8.helm.tempDir", defaultValue = "${project.build.directory}/fabric8/tmp-charts")
     private File tempDir;
-
-    @Parameter(property = "fabric8.helm.index.maxSearchResults", defaultValue = "50000")
-    private int maxSearchResults = 2;
-
-    @Parameter(property = "fabric8.helm.index.mavenRepoUrl", defaultValue = "http://central.maven.org/maven2/")
-    private String mavenRepoUrl;
-
-    @Parameter(property = "fabric8.helm.index.mavenRepoSearchUrl", defaultValue = "http://search.maven.org/solrsearch/select")
-    private String mavenRepoSearchUrl;
-
-    @Parameter(defaultValue = "${project.remoteArtifactRepositories}")
-    protected List<MavenArtifactRepository> remoteRepositories;
-
-    @Parameter(defaultValue = "${repositorySystemSession}")
-    private RepositorySystemSession repoSession;
-
-
-    @Component
-    protected ArtifactResolver artifactResolver;
 
     @Component(role = UnArchiver.class, hint = "tar")
     private TarUnArchiver unArchiver;
@@ -119,27 +88,7 @@ public class HelmIndexMojo extends AbstractFabric8Mojo {
         outputFile.getParentFile().mkdirs();
 
         log.info("Creating Helm Chart Index file at: %s", outputFile);
-        Result result = null;
-        String urlText = mavenRepoSearchUrl + "?q=l:%22helm%22&wt=json&rows=" + maxSearchResults;
-        try {
-            URL url = new URL(urlText);
-            ObjectMapper mapper = new ObjectMapper();
-            result = mapper.readerFor(Result.class).readValue(url);
-        } catch (IOException e) {
-            throw new MojoExecutionException("Could not query " + urlText + " : " + e, e);
-        }
-
-        if (result == null) {
-            throw new MojoExecutionException("No result!");
-        }
-        Response response = result.getResponse();
-        if (response == null) {
-            throw new MojoExecutionException("No response!");
-        }
-        List<ArtifactDTO> artifacts = response.getDocs();
-        if (artifacts == null) {
-            throw new MojoExecutionException("No docs!");
-        }
+        List<ArtifactDTO> artifacts = searchMaven("?q=l:%22helm%22");
         Map<String, ChartInfo> charts = new TreeMap<>();
         for (ArtifactDTO artifact : artifacts) {
             addChartInfo(charts, artifact);
@@ -157,9 +106,8 @@ public class HelmIndexMojo extends AbstractFabric8Mojo {
         }
 
         generateHTML(outputHtmlFile, charts);
-
-        // projectHelper.attachArtifact(project, "yaml", "helm-index", destinationFile);
     }
+
 
     protected void generateHTML(File outputHtmlFile, Map<String, ChartInfo> charts) throws MojoExecutionException {
         Map<String,SortedSet<ChartInfo>> chartMap = new TreeMap<>();
@@ -177,7 +125,7 @@ public class HelmIndexMojo extends AbstractFabric8Mojo {
             writer.println("<head>");
             writer.println("<link href='style.css' rel=stylesheet>");
             writer.println("<link href='custom.css' rel=stylesheet>");
-            writer.println("<title>" + title + "</title>");
+            writer.println("<title>" + helmTitle + "</title>");
             writer.println("</head>");
             writer.println("<body>");
             if (introductionHtmlFile != null && introductionHtmlFile.isFile()) {
@@ -188,7 +136,7 @@ public class HelmIndexMojo extends AbstractFabric8Mojo {
                     throw new MojoExecutionException("Failed to load intoduction HTML: " + introductionHtmlFile + ". " + e, e);
                 }
             } else {
-                writer.println("<h1>" + title + "</h1>");
+                writer.println("<h1>" + helmTitle + "</h1>");
             }
             writer.println("<table class='table table-striped table-hover'>");
             writer.println("  <hhead>");
@@ -204,14 +152,14 @@ public class HelmIndexMojo extends AbstractFabric8Mojo {
                 if (!set.isEmpty()) {
                     ChartInfo first = set.first();
                     HelmMojo.Chart firstChartfile = first.getChartfile();
-                    if (firstChartfile == null) {
+                    if (firstChartfile == null ) {
                         continue;
                     }
                     String chartDescription = getDescription(firstChartfile);
                     writer.println("    <tr>");
                     writer.println("      <td title='" + chartDescription + "'>");
                     String iconHtml = "";
-                    String iconUrl = findIconURL(set);
+                    String iconUrl = findIconURL(first, set);
                     if (Strings.isNotBlank(iconUrl)) {
                         iconHtml = "<img class='logo' src='" + iconUrl + "'>";
                     }
@@ -240,17 +188,23 @@ public class HelmIndexMojo extends AbstractFabric8Mojo {
         }
     }
 
-    private String findIconURL(Iterable<ChartInfo> chartInfos) {
+    private String findIconURL(ChartInfo first, Iterable<ChartInfo> chartInfos) throws MojoExecutionException {
         for (ChartInfo chartInfo : chartInfos) {
             HelmMojo.Chart chartfile = chartInfo.getChartfile();
             if (chartfile != null) {
                 String icon = chartfile.getIcon();
                 if (Strings.isNotBlank(icon)) {
-                    return icon;
+                    return convertRelativeIcon(icon);
                 }
             }
         }
-        return "https://fabric8.io/images/logos/kubernetes.png";
+
+        // lets try find the icon from the kubernetes manifest
+        String answer = convertRelativeIcon(findManifestIcon(first.getKubernetesManifest()));
+        if (Strings.isNullOrBlank(answer)) {
+            answer = "https://fabric8.io/images/logos/kubernetes.png";
+        }
+        return answer;
     }
 
     private static String getDescription(HelmMojo.Chart firstChartfile) {
@@ -288,7 +242,7 @@ public class HelmIndexMojo extends AbstractFabric8Mojo {
     protected void addChartInfo(Map<String, ChartInfo> charts, ArtifactDTO artifact) {
         // lets create the latest chart
         ChartInfo latest = new ChartInfo(mavenRepoUrl, artifact);
-        String key = createChartKey(artifact);
+        String key = artifact.createKey();
 
         // if we could load the chartfile lets add it
         HelmMojo.Chart chartfile = createChartFile(artifact);
@@ -300,48 +254,8 @@ public class HelmIndexMojo extends AbstractFabric8Mojo {
         }
     }
 
-    private String createChartKey(ArtifactDTO artifact) {
-        return artifact.getA() + "-" + artifact.getV();
-    }
-
     private HelmMojo.Chart createChartFile(ArtifactDTO artifactDTO) {
-        File file = null;
-        try {
-            ArtifactRequest artifactRequest = new ArtifactRequest();
-            org.eclipse.aether.artifact.Artifact artifact = new DefaultArtifact(artifactDTO.getG(), artifactDTO.getA(), "helm", "tar.gz", artifactDTO.getV());
-            artifactRequest.setArtifact(artifact);
-
-            // convert maven remote repositories to Aether repos
-            List<RemoteRepository> aetherRepoList = new ArrayList<>();
-            for (MavenArtifactRepository remoteRepository : remoteRepositories) {
-                RemoteRepository.Builder builder = new RemoteRepository.Builder(remoteRepository.getId(), remoteRepository.getLayout().getId(), remoteRepository.getUrl());
-                RemoteRepository aetherRepo = builder.build();
-                aetherRepoList.add(aetherRepo);
-            }
-            artifactRequest.setRepositories(aetherRepoList);
-
-            ArtifactResult artifactResult = artifactResolver.resolveArtifact(repoSession, artifactRequest);
-            org.eclipse.aether.artifact.Artifact resolvedArtifact = artifactResult.getArtifact();
-            if (resolvedArtifact == null) {
-                getLog().warn("Could not resolve artifact " + artifactDTO.description());
-                return null;
-            }
-            file = resolvedArtifact.getFile();
-
-        } catch (Exception e) {
-            getLog().warn("Failed to resolve helm chart for " + artifactDTO.description() + ". " + e, e);
-            return null;
-        }
-
-        if (file == null) {
-            getLog().warn("Could not resolve artifact file for " + artifactDTO.description());
-            return null;
-        }
-        if (!file.isFile() || !file.exists()) {
-            getLog().warn("Resolved artifact file does not exist for " + artifactDTO.description());
-            return null;
-        }
-
+        File file = resolveArtifactFile(artifactDTO, "helm", "tar.gz");
 
         File untarDestDir = new File(tempDir, artifactDTO.getG() + "/" + artifactDTO.getA() + "-" + artifactDTO.getV() + "-chart");
         untarDestDir.mkdirs();
@@ -364,97 +278,20 @@ public class HelmIndexMojo extends AbstractFabric8Mojo {
         }
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class Result {
-        private Response response;
-
-        public Response getResponse() {
-            return response;
-        }
-
-        public void setResponse(Response response) {
-            this.response = response;
-        }
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class Response {
-        private List<ArtifactDTO> docs;
-
-        public List<ArtifactDTO> getDocs() {
-            return docs;
-        }
-
-        public void setDocs(List<ArtifactDTO> docs) {
-            this.docs = docs;
-        }
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class ArtifactDTO {
-        private String id;
-        private String g;
-        private String a;
-        private String v;
-        private String p;
-
-        @Override
-        public String toString() {
-            return "ArtifactDTO: " + g + ":" + a + ":" + v;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public void setId(String id) {
-            this.id = id;
-        }
-
-        public String getG() {
-            return g;
-        }
-
-        public void setG(String g) {
-            this.g = g;
-        }
-
-        public String getA() {
-            return a;
-        }
-
-        public void setA(String a) {
-            this.a = a;
-        }
-
-        public String getV() {
-            return v;
-        }
-
-        public void setV(String v) {
-            this.v = v;
-        }
-
-        public String getP() {
-            return p;
-        }
-
-        public void setP(String p) {
-            this.p = p;
-        }
-
-        public String description() {
-            return "" + g + ":" + a + ":" + v;
-        }
-    }
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    protected static class ChartInfo {
+    protected class ChartInfo {
         private String url;
         private String name;
         private HelmMojo.Chart chartfile;
 
+        @JsonIgnore
+        private final ArtifactDTO artifact;
+        @JsonIgnore
+        private Object kubernetesManifest;
+
         public ChartInfo(String mavenRepoUrl, ArtifactDTO artifact) {
+            this.artifact = artifact;
             String artifactId = artifact.getA();
             String version = artifact.getV();
             this.url = mavenRepoUrl + artifact.getG().replace('.', '/') +
@@ -493,6 +330,17 @@ public class HelmIndexMojo extends AbstractFabric8Mojo {
 
         public void setChartfile(HelmMojo.Chart chartfile) {
             this.chartfile = chartfile;
+        }
+
+        public ArtifactDTO getArtifact() {
+            return artifact;
+        }
+
+        public Object getKubernetesManifest() {
+            if (kubernetesManifest == null) {
+                kubernetesManifest = loadKubernetesManifestFile(artifact);
+            }
+            return kubernetesManifest;
         }
     }
 }
