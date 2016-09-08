@@ -25,6 +25,7 @@ include::inc/_installation.adoc[]
 
 include::inc/_goals.adoc[]
 
+include::inc/_fabric8-setup.adoc[]
 include::inc/_fabric8-resource.adoc[]
 include::inc/_fabric8-helm.adoc[]
 include::inc/_fabric8-build.adoc[]

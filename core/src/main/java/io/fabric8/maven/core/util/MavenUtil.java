@@ -17,6 +17,7 @@
 package io.fabric8.maven.core.util;
 
 import io.fabric8.utils.Objects;
+import io.fabric8.utils.Strings;
 import io.fabric8.utils.Zips;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -40,6 +42,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.jar.JarEntry;
@@ -246,4 +249,28 @@ public class MavenUtil {
             throw new MojoExecutionException("Failed to create archive " + destinationFile + ": " + e, e);
         }
     }
+
+    /**
+     * Returns the version from the list of pre-configured versions of common groupId/artifact pairs
+     */
+    public static String getVersion(String groupId, String artifactId) throws IOException {
+        String path = "META-INF/maven/" + groupId + "/" + artifactId + "/pom.properties";
+        InputStream in = MavenUtil.class.getClassLoader().getResourceAsStream(path);
+        if (in == null) {
+            throw new IOException("Could not find " + path + " on classath!");
+        }
+        Properties properties = new Properties();
+        try {
+            properties.load(in);
+        } catch (IOException e) {
+            throw new IOException("Failed to load " + path + ". " + e, e);
+        }
+        String version = properties.getProperty("version");
+        if (Strings.isNullOrBlank(version)) {
+            throw new IOException("No version property in " + path);
+
+        }
+        return version;
+    }
+
 }
