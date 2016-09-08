@@ -23,6 +23,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.openshift.api.model.Template;
 import io.fabric8.utils.Function;
+import io.fabric8.utils.IOHelpers;
 import io.fabric8.utils.URLUtils;
 import org.apache.maven.artifact.repository.MavenArtifactRepository;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -111,6 +112,18 @@ public abstract class AbstractArtifactSearchMojo extends AbstractFabric8Mojo {
             }
         }
         return null;
+    }
+
+    protected static String getHtmlFileContentOrDefault(File htmlFile, String defaultValue) throws MojoExecutionException {
+        if (htmlFile != null && htmlFile.isFile()) {
+            try {
+                return IOHelpers.readFully(htmlFile);
+            } catch (IOException e) {
+                throw new MojoExecutionException("Failed to load HTML: " + htmlFile + ". " + e, e);
+            }
+        } else {
+            return defaultValue;
+        }
     }
 
     public Map<String, String> getIconMappingsMap() {

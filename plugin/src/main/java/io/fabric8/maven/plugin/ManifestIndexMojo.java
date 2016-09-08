@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.maven.core.util.VersionUtil;
-import io.fabric8.utils.IOHelpers;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -64,6 +63,26 @@ public class ManifestIndexMojo extends AbstractArtifactSearchMojo {
      */
     @Parameter(property = "fabric8.manifest.openshift.introductionHtmlFile", defaultValue = "${basedir}/src/main/fabric8/site/openshift-introduction.html")
     private File openshiftIntroductionHtmlFile;
+    /**
+     * The Kubernetes HTML for the &lt;head&gt; element
+     */
+    @Parameter(property = "fabric8.manifest.kubernetes.headHtmlFile", defaultValue = "${basedir}/src/main/fabric8/site/kubernetes-head.html")
+    private File kubernetesHeadHtmlFile;
+    /**
+     * The OpenShift HTML for the &lt;head&gt; element
+     */
+    @Parameter(property = "fabric8.manifest.openshift.headHtmlFile", defaultValue = "${basedir}/src/main/fabric8/site/openshift-head.html")
+    private File openshiftHeadHtmlFile;
+    /**
+     * The Kubernetes HTML for the footer at the end of the &lt;body&gt; element
+     */
+    @Parameter(property = "fabric8.manifest.kubernetes.headHtmlFile", defaultValue = "${basedir}/src/main/fabric8/site/kubernetes-footer.html")
+    private File kubernetesFooterHtmlFile;
+    /**
+     * The OpenShift HTML for the footer at the end of the &lt;body&gt; element
+     */
+    @Parameter(property = "fabric8.manifest.openshift.headHtmlFile", defaultValue = "${basedir}/src/main/fabric8/site/openshift-footer.html")
+    private File openshiftFooterHtmlFile;
     /**
      * The output YAML file
      */
@@ -113,11 +132,11 @@ public class ManifestIndexMojo extends AbstractArtifactSearchMojo {
             throw new MojoExecutionException("Failed to write results as YAML to: " + outputFile + ". " + e, e);
         }
 
-        generateHTML(new File(outputHtmlDir, "kubernetes.html"), manifests, true, kubernetesIntroductionHtmlFile);
-        generateHTML(new File(outputHtmlDir, "openshift.html"), manifests, false, openshiftIntroductionHtmlFile);
+        generateHTML(new File(outputHtmlDir, "kubernetes.html"), manifests, true, kubernetesIntroductionHtmlFile, kubernetesHeadHtmlFile, kubernetesFooterHtmlFile);
+        generateHTML(new File(outputHtmlDir, "openshift.html"), manifests, false, openshiftIntroductionHtmlFile, openshiftHeadHtmlFile, openshiftFooterHtmlFile);
     }
 
-    protected void generateHTML(File outputHtmlFile, Map<String, ManifestInfo> manifests, boolean kubernetes, File introductionHtmlFile) throws MojoExecutionException {
+    protected void generateHTML(File outputHtmlFile, Map<String, ManifestInfo> manifests, boolean kubernetes, File introductionHtmlFile, File headHtmlFile, File footerHtmlFile) throws MojoExecutionException {
         Map<String, SortedSet<ManifestInfo>> manifestMap = new TreeMap<>();
         for (ManifestInfo manifestInfo : manifests.values()) {
             String key = manifestInfo.getName();
@@ -131,21 +150,15 @@ public class ManifestIndexMojo extends AbstractArtifactSearchMojo {
         try (PrintWriter writer = new PrintWriter(new FileWriter(outputHtmlFile))) {
             writer.println("<html>");
             writer.println("<head>");
-            writer.println("<link href='style.css' rel=stylesheet>");
-            writer.println("<link href='custom.css' rel=stylesheet>");
-            writer.println("<title>" + manifestTitle + "</title>");
+            writer.println(getHtmlFileContentOrDefault(headHtmlFile,
+                    "<link href='style.css' rel=stylesheet>\n" +
+                            "<link href='custom.css' rel=stylesheet>\n" +
+                            "<title>" + manifestTitle + "</title>\n"));
             writer.println("</head>");
             writer.println("<body>");
-            if (introductionHtmlFile != null && introductionHtmlFile.isFile()) {
-                try {
-                    String introduction = IOHelpers.readFully(introductionHtmlFile);
-                    writer.println(introduction);
-                } catch (IOException e) {
-                    throw new MojoExecutionException("Failed to load intoduction HTML: " + introductionHtmlFile + ". " + e, e);
-                }
-            } else {
-                writer.println("<h1>" + manifestTitle + "</h1>");
-            }
+
+            writer.println(getHtmlFileContentOrDefault(introductionHtmlFile, "<h1>" + manifestTitle + "</h1>"));
+
             writer.println("<table class='table table-striped table-hover'>");
             writer.println("  <hhead>");
             writer.println("    <tr>");
@@ -183,7 +196,19 @@ public class ManifestIndexMojo extends AbstractArtifactSearchMojo {
                         String description = getDescription(manifestInfo);
                         String version = manifestInfo.getVersion();
                         String href = kubernetes ? manifestInfo.getKubernetesUrl() : manifestInfo.getOpenShiftUrl();
-                        writer.println("        <a href='" + href + "' title='" + description + "'>" + version + "</a>");
+                        String versionId = manifestInfo.getId();
+                        String command = kubernetes ? "kubectl" : "oc";
+                        writer.println("        <a class='btn btn-default' role='button' data-toggle='collapse' href='#" + versionId + "' aria-expanded='false' aria-controls='" + versionId + "' title='" + description + "'>\n" +
+                                version + "\n" +
+                                "</a>\n" +
+                                "<div class='collapse' id='" + versionId + "'>\n" +
+                                "  <div class='well'>\n" +
+                                "    <p>To install version <b>" + version + "</b> of <b>" + key + "</b> type the following command:</p>\n" +
+                                "    <code>" + command + " apply -f " + href + "</code>\n" +
+                                "    <div class='version-buttons'><a class='btn btn-primary' title='Download the YAML manifest for " + key + " version " + version + "' href='" + href + "'><i class='fa fa-download' aria-hidden='true'></i> Download Manifest</a> " +
+                                "<a class='btn btn-primary' target='gofabric8' title='Run this application via the go.fabric8.io website' href='https://go.fabric8.io/?manifest=" + href + "'><i class='fa fa-external-link' aria-hidden='true'></i> Run via browser</a></div>\n" +
+                                "  </div>\n" +
+                                "</div>");
                     }
                     writer.println("      </td>");
                     writer.println("    </tr>");
@@ -191,6 +216,7 @@ public class ManifestIndexMojo extends AbstractArtifactSearchMojo {
             }
             writer.println("  </tbody>");
             writer.println("  </table>");
+            writer.println(getHtmlFileContentOrDefault(footerHtmlFile, ""));
             writer.println("</body>");
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to write to " + outputHtmlFile + ". " + e, e);
@@ -237,6 +263,8 @@ public class ManifestIndexMojo extends AbstractArtifactSearchMojo {
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     protected class ManifestInfo {
+        @JsonIgnore
+        private final ArtifactDTO artifact;
         private String kubernetesUrl;
         private String openShiftUrl;
         private String icon;
@@ -247,9 +275,6 @@ public class ManifestIndexMojo extends AbstractArtifactSearchMojo {
         private String gitUrl;
         private String gitCommit;
         private String docsUrl;
-
-        @JsonIgnore
-        private final ArtifactDTO artifact;
         @JsonIgnore
         private Object kubernetesManifest;
         @JsonIgnore
@@ -313,6 +338,7 @@ public class ManifestIndexMojo extends AbstractArtifactSearchMojo {
             }
 
         }
+
         public String getKubernetesUrl() {
             return kubernetesUrl;
         }
@@ -413,6 +439,16 @@ public class ManifestIndexMojo extends AbstractArtifactSearchMojo {
 
         public boolean isValid() {
             return kubernetesManifest != null && openShiftManifest != null && kubernetesUrl != null && openShiftUrl != null;
+        }
+
+        /**
+         * Returns an ID we can use as a target in HTML / bootstrap / kquery
+         * @return
+         */
+        public String getId() {
+            String answer = name + "_" + version;
+            answer = answer.replace('.', '_').replace('-', '_');
+            return answer;
         }
     }
 
