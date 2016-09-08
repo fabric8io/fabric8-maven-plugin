@@ -62,6 +62,18 @@ public class HelmIndexMojo extends AbstractArtifactSearchMojo {
     private File introductionHtmlFile;
 
     /**
+     * The HTML for the &lt;head&gt; element
+     */
+    @Parameter(property = "fabric8.helm.headHtmlFile", defaultValue = "${basedir}/src/main/fabric8/site/helm-head.html")
+    private File headHtmlFile;
+
+    /**
+     * The HTML for the footer at the end of the &lt;body&gt; element
+     */
+    @Parameter(property = "fabric8.helm.footerHtmlFile", defaultValue = "${basedir}/src/main/fabric8/site/helm-footer.html")
+    private File footerHtmlFile;
+
+    /**
      * The output YAML file
      */
     @Parameter(property = "fabric8.helm.outputYamlFile", defaultValue = "${project.build.directory}/fabric8/site/helm/index.yaml")
@@ -123,21 +135,15 @@ public class HelmIndexMojo extends AbstractArtifactSearchMojo {
         try (PrintWriter writer = new PrintWriter(new FileWriter(outputHtmlFile))) {
             writer.println("<html>");
             writer.println("<head>");
-            writer.println("<link href='style.css' rel=stylesheet>");
-            writer.println("<link href='custom.css' rel=stylesheet>");
-            writer.println("<title>" + helmTitle + "</title>");
+            writer.println(getHtmlFileContentOrDefault(headHtmlFile,
+                    "<link href='style.css' rel=stylesheet>\n" +
+                            "<link href='custom.css' rel=stylesheet>\n" +
+                            "<title>" + helmTitle + "</title>\n"));
             writer.println("</head>");
             writer.println("<body>");
-            if (introductionHtmlFile != null && introductionHtmlFile.isFile()) {
-                try {
-                    String introduction = IOHelpers.readFully(introductionHtmlFile);
-                    writer.println(introduction);
-                } catch (IOException e) {
-                    throw new MojoExecutionException("Failed to load intoduction HTML: " + introductionHtmlFile + ". " + e, e);
-                }
-            } else {
-                writer.println("<h1>" + helmTitle + "</h1>");
-            }
+
+            writer.println(getHtmlFileContentOrDefault(introductionHtmlFile, "<h1>" + helmTitle + "</h1>"));
+
             writer.println("<table class='table table-striped table-hover'>");
             writer.println("  <hhead>");
             writer.println("    <tr>");
@@ -182,6 +188,7 @@ public class HelmIndexMojo extends AbstractArtifactSearchMojo {
             }
             writer.println("  </tbody>");
             writer.println("  </table>");
+            writer.println(getHtmlFileContentOrDefault(footerHtmlFile, ""));
             writer.println("</body>");
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to write to " + outputHtmlFile + ". " + e, e);
