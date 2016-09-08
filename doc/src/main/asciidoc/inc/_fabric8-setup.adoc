@@ -6,7 +6,7 @@ This goal is for setting up maven projects to use the fabric8 maven plugin which
 
 To use this goal type:
 
-[source, sh]
+[source,sh,subs="attributes"]
 ----
 mvn io.fabric8:fabric8-maven-plugin:{version}:setup
 ----
