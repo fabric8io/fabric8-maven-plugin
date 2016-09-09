@@ -77,7 +77,7 @@ public class InstallMojo extends AbstractFabric8Mojo {
 
                     File homeDir = getUserHome();
                     File rcFile = null;
-                    String[] rcFiles = {".bashrc", ".profile", ".bash_profile"};
+                    String[] rcFiles = {".zshrc", ".bashrc"};
                     for (String fileName : rcFiles) {
                         rcFile = new File(homeDir, fileName);
                         if (rcFile.exists()) {
