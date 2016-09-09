@@ -75,18 +75,26 @@ public class InstallMojo extends AbstractFabric8Mojo {
                     log.warn("Please add the following to your ~/.bashrc:");
                     log.warn(commandIndent + bashrcLine);
 
-                    File bashrcFile = new File(getUserHome(), ".bashrc");
-                    if (prompter != null && bashrcFile.exists() && bashrcFile.isFile()) {
+                    File homeDir = getUserHome();
+                    File rcFile = null;
+                    String[] rcFiles = {".bashrc", ".profile", ".bash_profile"};
+                    for (String fileName : rcFiles) {
+                        rcFile = new File(homeDir, fileName);
+                        if (rcFile.exists()) {
+                            break;
+                        }
+                    }
+                    if (prompter != null && rcFile.getParentFile().isDirectory()) {
                         String answer = null;
                         try {
-                            answer = prompter.prompt("Would you like to add this line to your ~/.bashrc now? (Y/n)");
+                            answer = prompter.prompt("Would you like to add this line to your ~/" + rcFile.getName() + " now? (Y/n)");
                         } catch (PrompterException e) {
                             log.warn("Failed to ask user prompt: " + e, e);
                         }
                         if (answer != null && answer.startsWith("Y")) {
-                            addToBashRC(bashrcFile, bashrcLine);
-                            log.info("Updated " + bashrcFile + ". Please type the following command to update your current shell:");
-                            log.info(commandIndent + "source ~/.bashrc");
+                            addToBashRC(rcFile, bashrcLine);
+                            log.info("Updated " + rcFile + ". Please type the following command to update your current shell:");
+                            log.info(commandIndent + "source ~/" + rcFile.getName());
                         }
                     }
                 }
