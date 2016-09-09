@@ -135,6 +135,11 @@
       <artifactId>maven-plugin-annotations</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-interactivity-api</artifactId>
+    </dependency>
+
     <!-- == Test =============================================== -->
 
     <dependency>
