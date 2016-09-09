@@ -238,6 +238,8 @@ public class DeployMojo extends AbstractFabric8Mojo {
             controller.applyNamespace(namespace);
             controller.setNamespace(namespace);
 
+            log.info("Deploying manifests to cluster " + kubernetes.getMasterUrl() + " in namespace: " + namespace);
+
             if (dto instanceof Template) {
                 Template template = (Template) dto;
                 dto = applyTemplates(template, kubernetes, controller, fileName);
