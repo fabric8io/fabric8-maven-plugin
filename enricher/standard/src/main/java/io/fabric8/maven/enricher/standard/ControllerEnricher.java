@@ -321,8 +321,14 @@ public class ControllerEnricher extends BaseEnricher {
             container.setPorts(ports);
         }
         for (ContainerPort cp : ports) {
-            if (Objects.equals(cp.getContainerPort(), port.getContainerPort()) &&
-                Objects.equals(cp.getProtocol(), port.getProtocol())) {
+            String n1 = cp.getName();
+            String n2 = port.getName();
+            if (n1 != null && n2 != null && n1.equals(n2)) {
+                return;
+            }
+            Integer p1 = cp.getContainerPort();
+            Integer p2 = port.getContainerPort();
+            if (p1 != null && p2 != null && p1.intValue() == p2.intValue()) {
                 return;
             }
         }
