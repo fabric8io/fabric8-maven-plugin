@@ -38,10 +38,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static org.bouncycastle.asn1.x500.style.RFC4519Style.o;
-import static org.eclipse.jgit.lib.ObjectChecker.type;
-import static org.eclipse.jgit.transport.TransportProtocol.URIishField.PATH;
-
 /**
  * Ensures that the fabric8 tools are installed on the current machine such as gofabric8
  */
@@ -65,7 +61,7 @@ public class InstallMojo extends AbstractFabric8Mojo {
             File binDir = getFabric8Dir();
             file = new File(binDir, "gofabric8");
             if (!file.exists() || !file.isFile() || !file.canExecute()) {
-                downloadFabric8(file);
+                downloadGoFabric8(file);
             }
 
             // lets check if the binary directory is on the path
@@ -100,9 +96,9 @@ public class InstallMojo extends AbstractFabric8Mojo {
             }
         } else {
             getLog().info("Found gofabric8 at: " + file);
+            runCommand(file.getAbsolutePath() + " version", "gofabric8 version");
         }
 
-        runCommand(file.getAbsolutePath() + " version", "gofabric8 version");
     }
 
     protected void addToBashRC(File bashrcFile, String text) throws MojoExecutionException {
@@ -118,13 +114,20 @@ public class InstallMojo extends AbstractFabric8Mojo {
     }
 
     /**
-     * Returns the platform we found
+     * Downloads the latest <code>gofabric8</code> binary and runs the version command
+     * to check the binary works before installing it.
      */
-    protected String downloadFabric8(File file) throws MojoExecutionException {
+    protected void downloadGoFabric8(File destFile) throws MojoExecutionException {
+        File file = null;
+        try {
+            file = File.createTempFile("fabric8", ".bin");
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to create a temporary file for the download");
+        }
         String version;
         try {
             version = IOHelpers.readFully(new URL(gofabric8VersionURL));
-            log.info("Downloading version " + version + " of gofabric8 to " + file + " ...");
+            log.info("Downloading version " + version + " of gofabric8 to " + destFile + " ...");
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to load gofabric8 version from: " + gofabric8VersionURL + ". " + e, e);
         }
@@ -153,9 +156,13 @@ public class InstallMojo extends AbstractFabric8Mojo {
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to download URL: " + releaseUrl + " to file: " + file + ". " + e, e);
         }
-        log.info("Downloaded gofabric8 version " + version + " platform: " + platform + " arch:" + arch + " on: " + System.getProperty("os.name") + " " + arch + " to: " + file);
         file.setExecutable(true);
-        return platform;
+
+        // lets check we can execute the binary before we try to replace it if it already exists
+        runCommand(file.getAbsolutePath() + " version", "gofabric8 version");
+
+        file.renameTo(destFile);
+        log.info("Downloaded gofabric8 version " + version + " platform: " + platform + " arch:" + arch + " on: " + System.getProperty("os.name") + " " + arch + " to: " + destFile);
     }
 
     protected String getPlatform() {

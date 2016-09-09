@@ -54,9 +54,6 @@ public class ProcessUtil {
         return process.exitValue();
     }
 
-    protected static void processInput(Logger log, InputStream inputStream, String message) throws Exception {
-        readProcessOutput(log, inputStream, "stdout for ", message);
-    }
 
     protected static void processErrors(Logger log, InputStream inputStream, String message) throws Exception {
         readProcessOutput(log, inputStream, "stderr for ", message);
