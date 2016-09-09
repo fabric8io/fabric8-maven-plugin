@@ -44,15 +44,12 @@ import java.util.List;
 @Mojo(name = "install", requiresProject = false)
 public class InstallMojo extends AbstractFabric8Mojo {
     private static final String gofabric8VersionURL = "https://raw.githubusercontent.com/fabric8io/gofabric8/master/version/VERSION";
-
-    @Parameter(property = "fabric8.dir", defaultValue = "${user.home}/fabric8")
+    private static final String batchModeArgument = " --batch";
+    @Parameter(property = "fabric8.dir", defaultValue = "${user.home}/fabric8/bin")
     private File fabric8Dir;
-
     @Component
     private Prompter prompter;
-
     private List<File> pathDirectories;
-
 
     @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
@@ -71,7 +68,7 @@ public class InstallMojo extends AbstractFabric8Mojo {
                 log.warn("Note that the fabric8 folder " + absolutePath + " is not on the PATH!");
                 if (getPlatform().equals(Platforms.WINDOWS)) {
                     log.warn("Please add the following to PATH environment variable:");
-                    log.warn(commandIndent+ "set PATH=%PATH%;" + absolutePath);
+                    log.warn(commandIndent + "set PATH=%PATH%;" + absolutePath);
                 } else {
                     String bashrcLine = "export PATH=$PATH:" + absolutePath;
 
@@ -96,9 +93,11 @@ public class InstallMojo extends AbstractFabric8Mojo {
             }
         } else {
             getLog().info("Found gofabric8 at: " + file);
-            runCommand(file.getAbsolutePath() + " version", "gofabric8 version");
+            runCommand(file.getAbsolutePath() + " version" + batchModeArgument, "gofabric8 version" + batchModeArgument);
         }
 
+        // now lets install any dependencies like kubectl, minikube, minishift etc
+        runCommand(file.getAbsolutePath() + " install" + batchModeArgument, "gofabric8 install" + batchModeArgument);
     }
 
     protected void addToBashRC(File bashrcFile, String text) throws MojoExecutionException {
@@ -124,6 +123,8 @@ public class InstallMojo extends AbstractFabric8Mojo {
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to create a temporary file for the download");
         }
+        log.debug("Downloading gofabric8 to temporary file: " + file.getAbsolutePath());
+
         String version;
         try {
             version = IOHelpers.readFully(new URL(gofabric8VersionURL));
@@ -159,7 +160,7 @@ public class InstallMojo extends AbstractFabric8Mojo {
         file.setExecutable(true);
 
         // lets check we can execute the binary before we try to replace it if it already exists
-        runCommand(file.getAbsolutePath() + " version", "gofabric8 version");
+        runCommand(file.getAbsolutePath() + " version" + batchModeArgument, "gofabric8 version" + batchModeArgument);
 
         file.renameTo(destFile);
         log.info("Downloaded gofabric8 version " + version + " platform: " + platform + " arch:" + arch + " on: " + System.getProperty("os.name") + " " + arch + " to: " + destFile);
