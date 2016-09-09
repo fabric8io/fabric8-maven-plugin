@@ -98,7 +98,7 @@ public class HelmMojo extends AbstractFabric8Mojo {
         // now lets create the tarball
         File destinationFile = new File(project.getBuild().getDirectory(),
                                         chartName + "-" + project.getVersion() + "-" + type.getClassifier() + ".tar.gz");
-        MavenUtil.createArchive(outputDir, destinationFile, this.archiver);
+        MavenUtil.createArchive(outputDir.getParentFile(), destinationFile, this.archiver);
         projectHelper.attachArtifact(project, "tar.gz", type.getClassifier(), destinationFile);
     }
 
@@ -113,7 +113,7 @@ public class HelmMojo extends AbstractFabric8Mojo {
     private File prepareOutputDir(HelmConfig.HelmType type) {
         String dir = getProperty("fabric8.helm.outputDir");
         if (dir == null) {
-            dir = project.getBuild().getDirectory() + "/fabric8/helm/" + type.getSourceDir();
+            dir = project.getBuild().getDirectory() + "/fabric8/helm/" + type.getSourceDir() + "/" + getChartName();
         }
         File dirF = new File(dir);
         if (Files.isDirectory(dirF)) {
