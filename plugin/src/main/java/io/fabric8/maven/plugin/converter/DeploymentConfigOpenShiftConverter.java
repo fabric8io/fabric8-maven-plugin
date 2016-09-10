@@ -39,7 +39,12 @@ public class DeploymentConfigOpenShiftConverter implements KubernetesToOpenShift
 
             if (openshiftDeployTimeoutSeconds != null && openshiftDeployTimeoutSeconds > 0) {
                 DeploymentConfigBuilder builder = new DeploymentConfigBuilder(resource);
-                DeploymentConfigFluent.SpecNested<DeploymentConfigBuilder> specBuilder = builder.withNewSpec();
+                DeploymentConfigFluent.SpecNested<DeploymentConfigBuilder> specBuilder;
+                if (resource.getSpec() != null) {
+                    specBuilder = builder.editSpec();
+                } else {
+                    specBuilder = builder.withNewSpec();
+                }
                 specBuilder.withNewStrategy().withType("Rolling").
                         withNewRollingParams().withTimeoutSeconds(openshiftDeployTimeoutSeconds).endRollingParams().endStrategy();
                 specBuilder.endSpec();

@@ -21,6 +21,7 @@ import java.util.*;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.*;
 import io.fabric8.maven.core.handler.HandlerHub;
@@ -41,6 +42,7 @@ import io.fabric8.maven.plugin.converter.ReplicSetOpenShiftConverter;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
+import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.*;
 import org.apache.maven.plugins.annotations.*;
@@ -349,10 +351,31 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         List<HasMetadata> items = resources.getItems();
         if (items != null) {
             for (HasMetadata item : items) {
+                if (item instanceof Deployment) {
+                    // if we have a Deployment and a DeploymentConfig of the same name
+                    // since we have a different manifest for OpenShift then lets filter out
+                    // the Kubernetes specific Deployment
+                    String name = KubernetesHelper.getName(item);
+                    if (hasDeploymentConfigNamed(items, name)) {
+                        continue;
+                    }
+                }
                 builder.addToItems(convertKubernetesItemToOpenShift(item));
             }
         }
         return builder.build();
+    }
+
+    private boolean hasDeploymentConfigNamed(List<HasMetadata> items, String name) {
+        for (HasMetadata item : items) {
+            if (item instanceof DeploymentConfig) {
+                String dcName = KubernetesHelper.getName(item);
+                if (Objects.equals(name, dcName)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
