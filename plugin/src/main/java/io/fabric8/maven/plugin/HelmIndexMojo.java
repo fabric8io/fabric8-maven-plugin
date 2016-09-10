@@ -272,7 +272,7 @@ public class HelmIndexMojo extends AbstractArtifactSearchMojo {
         unArchiver.setCompression(TarUnArchiver.UntarCompressionMethod.GZIP);
         unArchiver.extract();
 
-        File tempChartFile = new File(untarDestDir, "Chart.yaml");
+        File tempChartFile = findChartFile(untarDestDir);
         if (!tempChartFile.isFile() || !tempChartFile.exists()) {
             getLog().warn("No Chart.yaml exists at " + tempChartFile);
             return null;
@@ -283,6 +283,23 @@ public class HelmIndexMojo extends AbstractArtifactSearchMojo {
             getLog().warn("Failed to parse " + tempChartFile + ". " + e, e);
             return null;
         }
+    }
+
+    private File findChartFile(File chartDir) {
+        File answer = new File(chartDir, "Chart.yaml");
+        if (answer.isFile() && answer.exists()) {
+            return answer;
+        }
+        File[] files = chartDir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                answer = new File(file, "Chart.yaml");
+                if (answer.isFile() && answer.exists()) {
+                    return answer;
+                }
+            }
+        }
+        return answer;
     }
 
 
