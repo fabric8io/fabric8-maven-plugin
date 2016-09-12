@@ -163,7 +163,8 @@ public class KubernetesResourceUtil {
             "svc", "Service",
             "sa", "ServiceAccount",
             "rc", "ReplicationController",
-            "rs", "ReplicaSet"
+            "rs", "ReplicaSet",
+            "template", "Template"
         };
 
     static {
