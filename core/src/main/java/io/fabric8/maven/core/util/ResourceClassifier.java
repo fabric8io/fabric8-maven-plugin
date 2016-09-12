@@ -22,7 +22,8 @@ package io.fabric8.maven.core.util;
 public enum ResourceClassifier {
 
     OPENSHIFT("openshift"),
-    KUBERNETES("kubernetes");
+    KUBERNETES("kubernetes"),
+    KUBERNETES_TEMPLATE("k8s-template");
 
     private final String classifier;
 

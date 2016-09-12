@@ -15,24 +15,33 @@
  */
 package io.fabric8.maven.plugin;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.extensions.Templates;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.maven.core.access.ClusterAccess;
-import io.fabric8.maven.core.config.*;
+import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
+import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.config.ServiceConfig;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
-import io.fabric8.maven.core.util.*;
+import io.fabric8.maven.core.util.GoalFinder;
+import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.ProfileUtil;
+import io.fabric8.maven.core.util.ResourceClassifier;
 import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
-import io.fabric8.maven.docker.util.*;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageNameFormatter;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.plugin.converter.DeploymentConfigOpenShiftConverter;
 import io.fabric8.maven.plugin.converter.DeploymentOpenShiftConverter;
@@ -40,19 +49,30 @@ import io.fabric8.maven.plugin.converter.KubernetesToOpenShiftConverter;
 import io.fabric8.maven.plugin.converter.NamespaceOpenShiftConverter;
 import io.fabric8.maven.plugin.converter.ReplicSetOpenShiftConverter;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
-import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.DeploymentConfig;
-import io.fabric8.utils.Strings;
-import org.apache.maven.plugin.*;
-import org.apache.maven.plugins.annotations.*;
+import io.fabric8.openshift.api.model.Template;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.project.MavenProjectHelper;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 
-import static io.fabric8.maven.core.util.ResourceFileType.json;
-import static io.fabric8.maven.core.util.ResourceFileType.yaml;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+
+import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateAnnotations;
 
 
 /**
@@ -60,7 +80,7 @@ import static io.fabric8.maven.core.util.ResourceFileType.yaml;
  * installed and released to maven repositories like other build artifacts.
  */
 @Mojo(name = "resource", defaultPhase = LifecyclePhase.PROCESS_RESOURCES, requiresDependencyResolution = ResolutionScope.COMPILE)
-public class ResourceMojo extends AbstractFabric8Mojo {
+public class ResourceMojo extends AbstractResourceMojo {
 
     // THe key how we got the the docker maven plugin
     private static final String DOCKER_MAVEN_PLUGIN_KEY = "io.fabric8:docker-maven-plugin";
@@ -72,7 +92,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     @Component
     private ImageConfigResolver imageConfigResolver;
 
-    // Used for determining which mojos a called durin a run
+    // Used for determining which mojos are called during a run
     @Component
     private GoalFinder goalFinder;
 
@@ -83,23 +103,10 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     private File resourceDir;
 
     /**
-     * Should we use the project's compmile-time classpath to scan for additional enrichers/generators?
+     * Should we use the project's compile-time classpath to scan for additional enrichers/generators?
      */
     @Parameter(property = "fabric8.useProjectClasspath", defaultValue = "false")
     private boolean useProjectClasspath = false;
-
-    /**
-     * The artifact type for attaching the generated resource file to the project.
-     * Can be either 'json' or 'yaml'
-     */
-    @Parameter(property = "fabric8.resourceType")
-    private ResourceFileType resourceFileType = yaml;
-
-    /**
-     * The generated kubernetes JSON file
-     */
-    @Parameter(property = "fabric8.targetDir", defaultValue = "${project.build.outputDirectory}/META-INF/fabric8")
-    private File targetDir;
 
     /**
      * The fabric8 working directory
@@ -159,9 +166,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
      */
     @Parameter
     private ProcessorConfig generator;
-
-    @Component
-    private MavenProjectHelper projectHelper;
 
     // Whether to use replica sets or replication controller. Could be configurable
     // but for now leave it hidden.
@@ -232,12 +236,58 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                 writeResources(openShiftResources, ResourceClassifier.OPENSHIFT);
 
                 filterOpenShiftResources(kubernetesResources);
+
+                // if the list contains a single Template lets unwrap it
+                Template template = getSingletonTemplate(openShiftResources);
+
+                if (template != null) {
+                    KubernetesList kubernetesTemplateList = createKubernetesTemplate(kubernetesResources, template);
+                    if (kubernetesTemplateList != null) {
+                        writeResources(kubernetesTemplateList, ResourceClassifier.KUBERNETES_TEMPLATE);
+                    }
+
+                    kubernetesResources = replaceTemplateExpressions(kubernetesResources, template);
+                }
                 writeResources(kubernetesResources, ResourceClassifier.KUBERNETES);
 
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
         }
+    }
+
+    private KubernetesList createKubernetesTemplate(KubernetesList kubernetesResources, Template template) {
+        Template customTemplate = createTemplateWithObjects(kubernetesResources, template);
+        if (customTemplate != null) {
+            return new KubernetesListBuilder().withItems(customTemplate).build();
+        }
+        return null;
+    }
+
+    private KubernetesList replaceTemplateExpressions(KubernetesList kubernetesResources, Template template) throws MojoExecutionException {
+        Template customTemplate = createTemplateWithObjects(kubernetesResources, template);
+        if (customTemplate != null) {
+            try {
+                return Templates.processTemplatesLocally(customTemplate, false);
+            } catch (IOException e) {
+                throw new MojoExecutionException("Failed to replace template expressions in kubernetes manifest: " + e, e);
+            }
+        }
+        return kubernetesResources;
+    }
+
+    private static Template createTemplateWithObjects(KubernetesList kubernetesResources, Template template) {
+        List<io.fabric8.openshift.api.model.Parameter> parameters = template.getParameters();
+        List<HasMetadata> items = kubernetesResources.getItems();
+        Template tempTemplate = null;
+        if (parameters != null && parameters.size() > 0 && items != null && items.size() > 0) {
+            tempTemplate = new Template();
+            tempTemplate.setMetadata(template.getMetadata());
+            tempTemplate.setParameters(parameters);
+            tempTemplate.setObjects(items);
+            defaultAnnotationsFromResources(getOrCreateAnnotations(tempTemplate), items);
+        }
+        return tempTemplate;
     }
 
     public Long getOpenshiftDeployTimeoutSeconds() {
@@ -308,47 +358,12 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     }
 
 
-    private void writeResources(KubernetesList resources, ResourceClassifier classifier) throws IOException {
-        // write kubernetes.yml / openshift.yml
-        File resourceFileBase = new File(this.targetDir, classifier.getValue());
-        File file = KubernetesResourceUtil.writeResource(resources, resourceFileBase, resourceFileType);
-
-        // Attach it to the Maven reactor so that it will also get deployed
-        projectHelper.attachArtifact(project, resourceFileType.getArtifactType(), classifier.getValue(), file);
-
-        // TODO: Remove the following block when devops and other apps used by gofabric8 are migrated
-        // to fmp-v3. See also https://github.com/fabric8io/fabric8-maven-plugin/issues/167
-        if (resourceFileType.equals(yaml)) {
-            // lets generate JSON too to aid migration from version 2.x to 3.x for packaging templates
-            file = KubernetesResourceUtil.writeResource(resources, resourceFileBase, json);
-
-            // Attach it to the Maven reactor so that it will also get deployed
-            projectHelper.attachArtifact(project, json.getArtifactType(), classifier.getValue(), file);
-        }
-
-        // write separate files, one for each resource item
-        writeIndividualResources(resources, resourceFileBase);
-    }
-
-
-    private void writeIndividualResources(KubernetesList resources, File targetDir) throws IOException {
-        for (HasMetadata item : resources.getItems()) {
-            String name = KubernetesHelper.getName(item);
-            if (Strings.isNullOrBlank(name)) {
-                log.error("No name for generated item " + item);
-                continue;
-            }
-            String itemFile = KubernetesResourceUtil.getNameWithSuffix(name, item.getKind());
-            File itemTarget = new File(targetDir, itemFile);
-            KubernetesResourceUtil.writeResource(item, itemTarget, resourceFileType);
-        }
-    }
-
     // Converts the kubernetes resources into OpenShift resources
     private KubernetesList convertToOpenShiftResources(KubernetesList resources) {
         KubernetesListBuilder builder = new KubernetesListBuilder();
         builder.withMetadata(resources.getMetadata());
         List<HasMetadata> items = resources.getItems();
+        List<HasMetadata> objects = new ArrayList<>();
         if (items != null) {
             for (HasMetadata item : items) {
                 if (item instanceof Deployment) {
@@ -360,10 +375,39 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                         continue;
                     }
                 }
-                builder.addToItems(convertKubernetesItemToOpenShift(item));
+                HasMetadata converted = convertKubernetesItemToOpenShift(item);
+                if (converted != null) {
+                    objects.add(converted);
+                }
+            }
+        }
+        Template template = removeFirstTemplate(objects);
+        if (template != null) {
+            template.setObjects(objects);
+            defaultAnnotationsFromResources(getOrCreateAnnotations(template), objects);
+            builder.addToItems(template);
+        } else {
+            for (HasMetadata object : objects) {
+                builder.addToItems(object);
             }
         }
         return builder.build();
+    }
+
+    private Template removeFirstTemplate(List<HasMetadata> items) {
+        Template firstTemplate = null;
+        for (HasMetadata item : new ArrayList<>(items)) {
+            if (item instanceof Template) {
+                Template template = (Template) item;
+                if (firstTemplate == null) {
+                    firstTemplate = template;
+                } else {
+                    firstTemplate = Templates.combineTemplates(firstTemplate, template);
+                }
+                items.remove(item);
+            }
+        }
+        return firstTemplate;
     }
 
     private boolean hasDeploymentConfigNamed(List<HasMetadata> items, String name) {
