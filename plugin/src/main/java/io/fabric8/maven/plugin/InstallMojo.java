@@ -77,12 +77,16 @@ public class InstallMojo extends AbstractFabric8Mojo {
 
                     File homeDir = getUserHome();
                     File rcFile = null;
-                    String[] rcFiles = {".zshrc", ".bashrc"};
+                    String[] rcFiles = {".bashrc", ".zshrc", ".profile", ".bash_profile"};
                     for (String fileName : rcFiles) {
-                        rcFile = new File(homeDir, fileName);
-                        if (rcFile.exists()) {
+                        File testFile = new File(homeDir, fileName);
+                        if (fileExists(testFile)) {
+                            rcFile = testFile;
                             break;
                         }
+                    }
+                    if (rcFile == null) {
+                        rcFile = new File(".bashrc");
                     }
                     if (prompter != null && rcFile.getParentFile().isDirectory()) {
                         String answer = null;
@@ -106,6 +110,10 @@ public class InstallMojo extends AbstractFabric8Mojo {
 
         // now lets install any dependencies like kubectl, minikube, minishift etc
         runCommand(file.getAbsolutePath() + " install" + batchModeArgument, "gofabric8 install" + batchModeArgument);
+    }
+
+    protected static boolean fileExists(File testFile) {
+        return testFile.exists() && testFile.isFile();
     }
 
     protected void addToBashRC(File bashrcFile, String text) throws MojoExecutionException {
@@ -239,7 +247,7 @@ public class InstallMojo extends AbstractFabric8Mojo {
         List<File> pathDirectories = getPathDirectories();
         for (File directory : pathDirectories) {
             File file = new File(directory, name);
-            if (file.exists() && file.isFile()) {
+            if (fileExists(file)) {
                 if (!file.canExecute()) {
                     getLog().warn("Found " + file + " on the PATH but it is not executable!");
                 } else {
@@ -247,7 +255,6 @@ public class InstallMojo extends AbstractFabric8Mojo {
                     break;
                 }
             }
-
         }
         return executable;
     }
