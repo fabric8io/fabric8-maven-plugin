@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 3.1.32,</span>
-<span id="revdate">2016-09-12</span>
+<span id="revdate">2016-09-13</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -540,7 +540,8 @@ table.CodeRay td.code>pre{padding:0}
 <ul class="sectlevel2">
 <li><a href="#fabric8:setup">3.1. <strong>fabric8:setup</strong></a>
 <ul class="sectlevel3">
-<li><a href="#migrating-from-2-x-fabric8-maven-plugin">3.1.1. Migrating from 2.x fabric8-maven plugin</a></li>
+<li><a href="#setting-up-your-project-by-hand">3.1.1. Setting up your project by hand</a></li>
+<li><a href="#migrating-from-2-x-fabric8-maven-plugin">3.1.2. Migrating from 2.x fabric8-maven plugin</a></li>
 </ul>
 </li>
 <li><a href="#fabric8:resource">3.2. <strong>fabric8:resource</strong></a>
@@ -1246,7 +1247,48 @@ available goals are described below.</p>
 <p>To build the kubernetes manifests, docker image and to run your project on kubernetes or openshift!</p>
 </div>
 <div class="sect3">
-<h4 id="migrating-from-2-x-fabric8-maven-plugin">3.1.1. Migrating from 2.x fabric8-maven plugin</h4>
+<h4 id="setting-up-your-project-by-hand">3.1.1. Setting up your project by hand</h4>
+<div class="paragraph">
+<p>if you prefer to do it all by hand, then add the following to your <code>pom.xml</code> file:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.1.32<span class="tag">&lt;/version&gt;</span>
+
+  <span class="tag">&lt;configuration&gt;</span>
+     ....
+     <span class="tag">&lt;images&gt;</span>
+        <span class="comment">&lt;!-- A single's image configuration --&gt;</span>
+        <span class="tag">&lt;image&gt;</span>
+          ...
+          <span class="tag">&lt;build&gt;</span>
+           ....
+          <span class="tag">&lt;/build&gt;</span>
+        <span class="tag">&lt;/image&gt;</span>
+        ....
+     <span class="tag">&lt;/images&gt;</span>
+  <span class="tag">&lt;/configuration&gt;</span>
+
+  <span class="comment">&lt;!-- Connect fabric8:resource and fabric8:build to lifecycle phases --&gt;</span>
+  <span class="tag">&lt;executions&gt;</span>
+    <span class="tag">&lt;execution&gt;</span>
+       <span class="tag">&lt;id&gt;</span>fabric8<span class="tag">&lt;/id&gt;</span>
+       <span class="tag">&lt;goals&gt;</span>
+         <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
+         <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
+         <span class="tag">&lt;goal&gt;</span>helm<span class="tag">&lt;/goal&gt;</span>
+       <span class="tag">&lt;/goals&gt;</span>
+    <span class="tag">&lt;/execution&gt;</span>
+  <span class="tag">&lt;/executions&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="migrating-from-2-x-fabric8-maven-plugin">3.1.2. Migrating from 2.x fabric8-maven plugin</h4>
 <div class="paragraph">
 <p>Note that the <code>fabric8:setup</code> goal is aimed at adding or updating fabric8-maven-plugin configurations for versions 3.x or later.</p>
 </div>
@@ -3805,7 +3847,7 @@ password.</p>
 <div id="footer">
 <div id="footer-text">
 Version 3.1.32<br>
-Last updated 2016-09-12 17:47:10 UTC
+Last updated 2016-09-13 10:12:14 UTC
 </div>
 </div>
 </body>
