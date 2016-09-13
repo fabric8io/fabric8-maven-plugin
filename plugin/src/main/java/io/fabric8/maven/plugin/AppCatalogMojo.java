@@ -99,6 +99,10 @@ public class AppCatalogMojo extends AbstractResourceMojo {
                     Map<String, String> labels = new HashMap<>();
                     Map<String, String> annotations = new HashMap<>();
                     String name = extractNameFromURL(url, labels);
+                    if (name.equals("META-INF")) {
+                        log.debug("Ignoring local build dependency " + url);
+                        continue;
+                    }
                     if (Strings.isNullOrBlank(name)) {
                         log.warn("Cannot generate a template name from URL: " + url);
                         continue;
@@ -122,12 +126,6 @@ public class AppCatalogMojo extends AbstractResourceMojo {
                 openshiftResources.add(template);
             }
         }
-        if (openshiftResources.isEmpty()) {
-            log.warn("No OpenShift resources generated");
-        } else {
-            writeResources(new KubernetesListBuilder().withItems(openshiftResources).build(), ResourceClassifier.OPENSHIFT);
-        }
-
         Map<String, Template> kubernetesTemplates = new HashMap<>();
         Map<URL, KubernetesResource> kubernetesTemplateMap = loadYamlResourcesOnClassPath("META-INF/fabric8/" + KUBERNETES_TEMPLATE.getValue() + ".yml");
         for (Map.Entry<URL, KubernetesResource> entry : kubernetesTemplateMap.entrySet()) {
@@ -140,6 +138,9 @@ public class AppCatalogMojo extends AbstractResourceMojo {
                     log.warn("Ignoring Template from " + url + " as it has no name!");
                     continue;
                 }
+                if (kubernetesTemplates.containsKey(name)) {
+                    log.warn("Found duplicate template named: " + name + " for url: " + url);
+                }
                 kubernetesTemplates.put(name, template);
             }
         }
@@ -151,11 +152,16 @@ public class AppCatalogMojo extends AbstractResourceMojo {
             Map<String, String> labels = new HashMap<>();
             Map<String, String> annotations = new HashMap<>();
             String name = extractNameFromURL(url, labels);
+            if (name.equals("META-INF")) {
+                log.debug("Ignoring local build dependency " + url);
+                continue;
+            }
             if (Strings.isNullOrBlank(name)) {
                 log.warn("Cannot generate a template name from URL: " + url);
                 continue;
             }
             if (kubernetesTemplates.containsKey(name)) {
+                log.info("Ignoring duplicate template " + name + " from url: " + url);
                 continue;
             }
             populateLabelsFromResources(resource, name, labels, annotations);
@@ -202,12 +208,17 @@ public class AppCatalogMojo extends AbstractResourceMojo {
                     withData(data).build();
             kubernetesResources.add(configMap);
         }
+        if (openshiftResources.isEmpty()) {
+            log.warn("No OpenShift resources generated");
+        } else {
+            writeResources(new KubernetesListBuilder().withItems(openshiftResources).build(), ResourceClassifier.OPENSHIFT);
+        }
+
         if (kubernetesResources.isEmpty()) {
             log.warn("No Kubernetes resources generated");
         } else {
             writeResources(new KubernetesListBuilder().withItems(kubernetesResources).build(), ResourceClassifier.KUBERNETES);
         }
-
     }
 
     /**
