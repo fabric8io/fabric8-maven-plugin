@@ -20,6 +20,46 @@ mvn fabric8:run
 
 To build the kubernetes manifests, docker image and to run your project on kubernetes or openshift!
 
+=== Setting up your project by hand
+
+if you prefer to do it all by hand, then add the following to your `pom.xml` file:
+
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>fabric8-maven-plugin</artifactId>
+  <version>{version}</version>
+
+  <configuration>
+     ....
+     <images>
+        <!-- A single's image configuration -->
+        <image>
+          ...
+          <build>
+           ....
+          </build>
+        </image>
+        ....
+     </images>
+  </configuration>
+
+  <!-- Connect fabric8:resource and fabric8:build to lifecycle phases -->
+  <executions>
+    <execution>
+       <id>fabric8</id>
+       <goals>
+         <goal>resource</goal>
+         <goal>build</goal>
+         <goal>helm</goal>
+       </goals>
+    </execution>
+  </executions>
+</plugin>
+----
+
 
 === Migrating from 2.x fabric8-maven plugin
 
