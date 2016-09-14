@@ -41,7 +41,7 @@ import java.util.List;
  */
 public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     private static final String gofabric8VersionURL = "https://raw.githubusercontent.com/fabric8io/gofabric8/master/version/VERSION";
-    private static final String batchModeArgument = " --batch";
+    public static final String batchModeArgument = " --batch";
     public static final String GOFABRIC8 = "gofabric8";
 
     @Parameter(property = "fabric8.dir", defaultValue = "${user.home}/fabric8/bin")

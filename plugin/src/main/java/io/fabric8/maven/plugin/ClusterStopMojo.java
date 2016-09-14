@@ -43,9 +43,9 @@ public class ClusterStopMojo extends AbstractInstallMojo {
         if (!gofabric8.isFile() || !gofabric8.exists() || !gofabric8.canExecute()) {
             throw new MojoFailureException("File " + gofabric8.getAbsolutePath() + " is not an executable file. Did you create the cluster via `mvn fabric8:cluster-start`?");
         }
-        String arguments = "";
+        String arguments = batchModeArgument;
         // TODO have an option to stop and delete?
-        String cli = " stop";
+        String cli = " stop" + arguments;
         String message = "gofabric8" + cli;
         log.info("running: " + message);
         runCommand(gofabric8.getAbsolutePath() + cli, message);

@@ -60,7 +60,7 @@ public class ClusterStartMojo extends AbstractInstallMojo {
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         File gofabric8 = installBinaries();
 
-        String arguments = "";
+        String arguments = batchModeArgument;
         if (Strings.isNotBlank(clusterKind)) {
             String text = clusterKind.toLowerCase().trim();
             if (text.equals("minishift") || text.equals("openshift")) {
