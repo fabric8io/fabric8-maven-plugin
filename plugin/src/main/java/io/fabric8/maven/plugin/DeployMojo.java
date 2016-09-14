@@ -36,7 +36,8 @@ import io.fabric8.kubernetes.api.model.extensions.IngressBuilder;
 import io.fabric8.kubernetes.api.model.extensions.IngressList;
 import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import io.fabric8.kubernetes.api.model.extensions.IngressSpec;
-import io.fabric8.kubernetes.client.*;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.internal.HasMetadataComparator;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.openshift.api.model.Route;
@@ -56,6 +57,8 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -183,30 +186,31 @@ public class DeployMojo extends AbstractFabric8Mojo {
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         clusterAccess = new ClusterAccess(namespace);
 
-        KubernetesClient kubernetes = clusterAccess.createKubernetesClient();
-        File manifest;
-        String clusterKind = "Kubernetes";
-        if (KubernetesHelper.isOpenShift(kubernetes)) {
-            manifest = openshiftManifest;
-            clusterKind = "OpenShift";
-        } else {
-            manifest = kubernetesManifest;
-        }
-        if (!Files.isFile(manifest)) {
-            if (failOnNoKubernetesJson) {
-                throw new MojoFailureException("No such generated manifest file: " + manifest);
-            } else {
-                log.warn("No such generated manifest file %s for this project so ignoring", manifest);
-                return;
-            }
-        }
-
-        if (kubernetes.getMasterUrl() == null || Strings.isNullOrBlank(kubernetes.getMasterUrl().toString())) {
-            throw new MojoFailureException("Cannot find Kubernetes master URL");
-        }
-        log.info("Using %s at %s in namespace %s with manifest %s ", clusterKind, kubernetes.getMasterUrl(), clusterAccess.getNamespace(), manifest);
-
         try {
+            KubernetesClient kubernetes = clusterAccess.createKubernetesClient();
+            URL masterUrl = kubernetes.getMasterUrl();
+            File manifest;
+            String clusterKind = "Kubernetes";
+            if (KubernetesHelper.isOpenShift(kubernetes)) {
+                manifest = openshiftManifest;
+                clusterKind = "OpenShift";
+            } else {
+                manifest = kubernetesManifest;
+            }
+            if (!Files.isFile(manifest)) {
+                if (failOnNoKubernetesJson) {
+                    throw new MojoFailureException("No such generated manifest file: " + manifest);
+                } else {
+                    log.warn("No such generated manifest file %s for this project so ignoring", manifest);
+                    return;
+                }
+            }
+
+            if (masterUrl == null || Strings.isNullOrBlank(masterUrl.toString())) {
+                throw new MojoFailureException("Cannot find Kubernetes master URL. Have you started a cluster via `mvn fabric8:cluster-start` or connected to a remote cluster via `kubectl`?");
+            }
+            log.info("Using %s at %s in namespace %s with manifest %s ", clusterKind, masterUrl, clusterAccess.getNamespace(), manifest);
+
             Controller controller = createController();
             controller.setAllowCreate(createNewResources);
             controller.setServicesOnlyMode(servicesOnly);
@@ -259,24 +263,41 @@ public class DeployMojo extends AbstractFabric8Mojo {
                     createIngress(controller, kubernetes, entities);
                 }
             }
+            applyEntities(controller, fileName, entities);
 
-            // Apply all items
-            for (HasMetadata entity : entities) {
-                if (entity instanceof Pod) {
-                    Pod pod = (Pod) entity;
-                    controller.applyPod(pod, fileName);
-                } else if (entity instanceof Service) {
-                    Service service = (Service) entity;
-                    controller.applyService(service, fileName);
-                } else if (entity instanceof ReplicationController) {
-                    ReplicationController replicationController = (ReplicationController) entity;
-                    controller.applyReplicationController(replicationController, fileName);
-                } else if (entity != null) {
-                    controller.apply(entity, fileName);
-                }
+        } catch (KubernetesClientException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof UnknownHostException) {
+                log.error("Could not connect to kubernetes cluster!");
+                log.error("Have you started a local cluster via `mvn fabric8:cluster-start` or connected to a remote cluster via `kubectl`?");
+                log.info("For more help see: http://fabric8.io/guide/getStarted/");
+                log.error("Connection error: " + cause);
+
+                String message = "Could not connect to kubernetes cluster. Have you started a cluster via `mvn fabric8:cluster-start` or connected to a remote cluster via `kubectl`? Error: " + cause;
+                throw new MojoExecutionException(message, e);
+            } else {
+                throw new MojoExecutionException(e.getMessage(), e);
             }
         } catch (Exception e) {
             throw new MojoExecutionException(e.getMessage(), e);
+        }
+    }
+
+    protected void applyEntities(Controller controller, String fileName, Set<HasMetadata> entities) throws Exception {
+        // Apply all items
+        for (HasMetadata entity : entities) {
+            if (entity instanceof Pod) {
+                Pod pod = (Pod) entity;
+                controller.applyPod(pod, fileName);
+            } else if (entity instanceof Service) {
+                Service service = (Service) entity;
+                controller.applyService(service, fileName);
+            } else if (entity instanceof ReplicationController) {
+                ReplicationController replicationController = (ReplicationController) entity;
+                controller.applyReplicationController(replicationController, fileName);
+            } else if (entity != null) {
+                controller.apply(entity, fileName);
+            }
         }
     }
 
