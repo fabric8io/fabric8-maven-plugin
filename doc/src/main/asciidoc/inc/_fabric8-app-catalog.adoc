@@ -1,0 +1,9 @@
+
+[[fabric8:app-catalog]]
+== *fabric8:app-catalog*
+
+Generates an App Catalog for kubernetes and openshift
+
+On OpenShift this just means getting the `openshift.yml` and if its not a `Template` wrapping it in an empty `Template`.
+
+For Kubernetes this means checking if there is a kubernetes `template.yaml` and if so wrapping that in a `ConfigMap` otherwise it uses the regular `kubernetes.yaml` file.

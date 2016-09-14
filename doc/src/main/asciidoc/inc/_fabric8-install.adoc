@@ -1,0 +1,5 @@
+
+[[fabric8:install]]
+== *fabric8:install*
+
+Ensures that the fabric8 tools are installed on the current machine such as gofabric8

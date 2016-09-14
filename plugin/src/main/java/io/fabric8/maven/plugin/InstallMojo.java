@@ -45,8 +45,13 @@ import java.util.List;
 public class InstallMojo extends AbstractFabric8Mojo {
     private static final String gofabric8VersionURL = "https://raw.githubusercontent.com/fabric8io/gofabric8/master/version/VERSION";
     private static final String batchModeArgument = " --batch";
+
     @Parameter(property = "fabric8.dir", defaultValue = "${user.home}/fabric8/bin")
     private File fabric8Dir;
+
+    // X-TODO: Add update semantics similar to setup
+    // X-TODO: Maybe combine fabric8:setup and fabric8:install
+
     @Component
     private Prompter prompter;
     private List<File> pathDirectories;
@@ -54,6 +59,7 @@ public class InstallMojo extends AbstractFabric8Mojo {
     @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         File file = findExecutable("gofabric8");
+        // X-TODO: Maybe allow for an update of gofabric8 itself ?
         if (file == null) {
             File binDir = getFabric8Dir();
             file = new File(binDir, "gofabric8");
@@ -174,6 +180,7 @@ public class InstallMojo extends AbstractFabric8Mojo {
             throw new MojoExecutionException("Failed to download URL: " + releaseUrl + " to file: " + file + ". " + e, e);
         }
         file.setExecutable(true);
+        // TODO: Very checksum and potentially signature
 
         // lets check we can execute the binary before we try to replace it if it already exists
         runCommand(file.getAbsolutePath() + " version" + batchModeArgument, "gofabric8 version" + batchModeArgument);

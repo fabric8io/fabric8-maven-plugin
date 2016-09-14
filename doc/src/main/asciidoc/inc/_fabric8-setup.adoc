@@ -2,7 +2,7 @@
 [[fabric8:setup]]
 == *fabric8:setup*
 
-This goal is for setting up maven projects to use the fabric8 maven plugin which either use an old version of the maven plugin or have not yet been modified to use it.
+This goal is for setting up maven projects to use f8-m-p. It can be used to set up afresh this plugin in the `pom.xml` or to update an existing configuration.
 
 To use this goal type:
 
@@ -11,18 +11,17 @@ To use this goal type:
 mvn io.fabric8:fabric8-maven-plugin:{version}:setup
 ----
 
-Now your pom.xml should be modified to use the fabric8 maven plugin. So you should be able to now run the following:
+Now your `pom.xml` is modified to use f8-m-p. The plugin will be bound some goals to Maven execution phases, so you can test it by running:
 
 [source, sh]
 ----
-mvn fabric8:run
+mvn clean install
 ----
 
-To build the kubernetes manifests, docker image and to run your project on kubernetes or openshift!
+After this, a Docker image from your application is created (if some of the default generators could detect your setup) and the Kubernetes and OpenShift descriptors are created in `target/classes/META-INF/fabric8`.
 
-=== Setting up your project by hand
-
-if you prefer to do it all by hand, then add the following to your `pom.xml` file:
+.Manual Setup
+Alternatively, if you prefer to do it all by hand, then add the following to your `pom.xml` file:
 
 
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
@@ -60,19 +59,26 @@ if you prefer to do it all by hand, then add the following to your `pom.xml` fil
 </plugin>
 ----
 
+The setup can be influenced with the following configuration options:
 
-=== Migrating from 2.x fabric8-maven plugin
+.Setup configuration
+[cols="1,5,1"]
+|===
+| Element | Description | Property
 
-Note that the `fabric8:setup` goal is aimed at adding or updating fabric8-maven-plugin configurations for versions 3.x or later.
+| *updateVersion*
+| If set to `true` then an already existing plugin configuration will be updated. Otherwise an existing configuration is left untouched. Default is `true`.
+| `updateVersion`
 
-If you have a maven project with a 2.x fabric8-maven-plugin then we recommend you run the http://fabric8.io/guide/mavenFabric8Migrate.html[mvn fabric8:migrate] goal directly on your project to do the migration
+| *useVersionProperty*
+| Whether we should use a version property for the plugin which is defined in a dedicates `<properties>` section with the name `fabric8.maven.plugin.version`
+| `useVersionProperty`
 
-[source, sh]
-----
-# in a fabric8-maven-plugin 2.x project
-mvn fabric8:migrate
-# now the project is using 3.x or later
-----
+| *generateBackupPoms*
+| Controls whether a backup pom should be created when the `pom.xml` is modified. Ddefault is `true`.
+| `generateBackupPoms`
 
-Once the project is migrated to 3.x or later of the fabric8-maven-plugin you can then run this `fabric8:setup` goal at any time to update to the latest plugin and goals
-
+| *backupPomFileName*
+| Name of the backup file to create. Default is `${basedir}/pom.xml-backup`
+| `backupPomFileName`
+|===
