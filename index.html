@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 3.1.32,</span>
-<span id="revdate">2016-09-13</span>
+<span id="revdate">2016-09-14</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -538,34 +538,33 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#installation">2. Installation</a></li>
 <li><a href="#goals">3. Goals</a>
 <ul class="sectlevel2">
-<li><a href="#fabric8:setup">3.1. <strong>fabric8:setup</strong></a>
+<li><a href="#fabric8:setup">3.1. <strong>fabric8:setup</strong></a></li>
+<li><a href="#fabric8:install">3.2. <strong>fabric8:install</strong></a></li>
+<li><a href="#fabric8:resource">3.3. <strong>fabric8:resource</strong></a>
 <ul class="sectlevel3">
-<li><a href="#setting-up-your-project-by-hand">3.1.1. Setting up your project by hand</a></li>
-<li><a href="#migrating-from-2-x-fabric8-maven-plugin">3.1.2. Migrating from 2.x fabric8-maven plugin</a></li>
+<li><a href="#resource-labels-annotations">3.3.1. Labels and Annotations</a></li>
 </ul>
 </li>
-<li><a href="#fabric8:resource">3.2. <strong>fabric8:resource</strong></a>
+<li><a href="#fabric8:helm">3.4. <strong>fabric8:helm</strong></a></li>
+<li><a href="#fabric8:helm-index">3.5. <strong>fabric8:helm-index</strong></a></li>
+<li><a href="#fabric8:app-catalog">3.6. <strong>fabric8:app-catalog</strong></a></li>
+<li><a href="#fabric8:distro">3.7. <strong>fabric8:distro</strong></a></li>
+<li><a href="#fabric8:build">3.8. <strong>fabric8:build</strong></a>
 <ul class="sectlevel3">
-<li><a href="#resource-labels-annotations">3.2.1. Labels and Annotations</a></li>
+<li><a href="#build-kubernetes">3.8.1. Kubernetes Build</a></li>
+<li><a href="#build-openshift">3.8.2. OpenShift Build</a></li>
+<li><a href="#build-goal-configuration">3.8.3. Configuration</a></li>
+<li><a href="#image-configuration">3.8.4. Image Configuration</a></li>
+<li><a href="#build-configuration">3.8.5. Build Configuration</a></li>
+<li><a href="#build-assembly">3.8.6. Assembly</a></li>
+<li><a href="#misc-env">3.8.7. Environment and Labels</a></li>
+<li><a href="#misc-startup">3.8.8. Startup Arguments</a></li>
+<li><a href="#build-buildargs">3.8.9. Build Args</a></li>
 </ul>
 </li>
-<li><a href="#fabric8:helm">3.3. <strong>fabric8:helm</strong></a></li>
-<li><a href="#fabric8:build">3.4. <strong>fabric8:build</strong></a>
-<ul class="sectlevel3">
-<li><a href="#build-kubernetes">3.4.1. Kubernetes Build</a></li>
-<li><a href="#build-openshift">3.4.2. OpenShift Build</a></li>
-<li><a href="#build-goal-configuration">3.4.3. Configuration</a></li>
-<li><a href="#image-configuration">3.4.4. Image Configuration</a></li>
-<li><a href="#build-configuration">3.4.5. Build Configuration</a></li>
-<li><a href="#build-assembly">3.4.6. Assembly</a></li>
-<li><a href="#misc-env">3.4.7. Environment and Labels</a></li>
-<li><a href="#misc-startup">3.4.8. Startup Arguments</a></li>
-<li><a href="#build-buildargs">3.4.9. Build Args</a></li>
-</ul>
-</li>
-<li><a href="#fabric8:push">3.5. <strong>fabric8:push</strong></a></li>
-<li><a href="#fabric8:deploy">3.6. <strong>fabric8:deploy</strong></a></li>
-<li><a href="#fabric8:watch">3.7. <strong>fabric8:watch</strong></a></li>
+<li><a href="#fabric8:push">3.9. <strong>fabric8:push</strong></a></li>
+<li><a href="#fabric8:deploy">3.10. <strong>fabric8:deploy</strong></a></li>
+<li><a href="#fabric8:watch">3.11. <strong>fabric8:watch</strong></a></li>
 </ul>
 </li>
 <li><a href="#generators">4. Generators</a>
@@ -606,6 +605,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#password-encryption">9.3. Password encryption</a></li>
 </ul>
 </li>
+<li><a href="#migration">10. Migration from version 2</a></li>
 </ul>
 </div>
 </div>
@@ -1225,7 +1225,7 @@ available goals are described below.</p>
 <div class="sect2">
 <h3 id="fabric8:setup">3.1. <strong>fabric8:setup</strong></h3>
 <div class="paragraph">
-<p>This goal is for setting up maven projects to use the fabric8 maven plugin which either use an old version of the maven plugin or have not yet been modified to use it.</p>
+<p>This goal is for setting up maven projects to use f8-m-p. It can be used to set up afresh this plugin in the <code>pom.xml</code> or to update an existing configuration.</p>
 </div>
 <div class="paragraph">
 <p>To use this goal type:</p>
@@ -1236,20 +1236,19 @@ available goals are described below.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Now your pom.xml should be modified to use the fabric8 maven plugin. So you should be able to now run the following:</p>
+<p>Now your <code>pom.xml</code> is modified to use f8-m-p. The plugin will be bound some goals to Maven execution phases, so you can test it by running:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:run</code></pre>
+<pre class="CodeRay highlight"><code data-lang="sh">mvn clean install</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>To build the kubernetes manifests, docker image and to run your project on kubernetes or openshift!</p>
+<p>After this, a Docker image from your application is created (if some of the default generators could detect your setup) and the Kubernetes and OpenShift descriptors are created in <code>target/classes/META-INF/fabric8</code>.</p>
 </div>
-<div class="sect3">
-<h4 id="setting-up-your-project-by-hand">3.1.1. Setting up your project by hand</h4>
 <div class="paragraph">
-<p>if you prefer to do it all by hand, then add the following to your <code>pom.xml</code> file:</p>
+<div class="title">Manual Setup</div>
+<p>Alternatively, if you prefer to do it all by hand, then add the following to your <code>pom.xml</code> file:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1286,29 +1285,55 @@ available goals are described below.</p>
 <span class="tag">&lt;/plugin&gt;</span></code></pre>
 </div>
 </div>
-</div>
-<div class="sect3">
-<h4 id="migrating-from-2-x-fabric8-maven-plugin">3.1.2. Migrating from 2.x fabric8-maven plugin</h4>
 <div class="paragraph">
-<p>Note that the <code>fabric8:setup</code> goal is aimed at adding or updating fabric8-maven-plugin configurations for versions 3.x or later.</p>
+<p>The setup can be influenced with the following configuration options:</p>
 </div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 4. Setup configuration</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 71.4285%;">
+<col style="width: 14.2858%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>updateVersion</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> then an already existing plugin configuration will be updated. Otherwise an existing configuration is left untouched. Default is <code>true</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>updateVersion</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>useVersionProperty</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Whether we should use a version property for the plugin which is defined in a dedicates <code>&lt;properties&gt;</code> section with the name <code>fabric8.maven.plugin.version</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>useVersionProperty</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>generateBackupPoms</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Controls whether a backup pom should be created when the <code>pom.xml</code> is modified. Ddefault is <code>true</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>generateBackupPoms</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>backupPomFileName</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of the backup file to create. Default is <code>${basedir}/pom.xml-backup</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>backupPomFileName</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="fabric8:install">3.2. <strong>fabric8:install</strong></h3>
 <div class="paragraph">
-<p>If you have a maven project with a 2.x fabric8-maven-plugin then we recommend you run the <a href="http://fabric8.io/guide/mavenFabric8Migrate.html">mvn fabric8:migrate</a> goal directly on your project to do the migration</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh"># in a fabric8-maven-plugin 2.x project
-mvn fabric8:migrate
-# now the project is using 3.x or later</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Once the project is migrated to 3.x or later of the fabric8-maven-plugin you can then run this <code>fabric8:setup</code> goal at any time to update to the latest plugin and goals</p>
-</div>
+<p>Ensures that the fabric8 tools are installed on the current machine such as gofabric8</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:resource">3.2. <strong>fabric8:resource</strong></h3>
+<h3 id="fabric8:resource">3.3. <strong>fabric8:resource</strong></h3>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -1322,7 +1347,7 @@ This is chapter is incomplete, but there is work in progress.
 </table>
 </div>
 <div class="sect3">
-<h4 id="resource-labels-annotations">3.2.1. Labels and Annotations</h4>
+<h4 id="resource-labels-annotations">3.3.1. Labels and Annotations</h4>
 <div class="paragraph">
 <p>Labels and annotations can be easily added to any resource object. This is best explained by an example.</p>
 </div>
@@ -1400,7 +1425,7 @@ This is chapter is incomplete, but there is work in progress.
 <p>The following subelements are possible for <code>&lt;labels&gt;</code> and <code>&lt;annotations&gt;</code> :</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 4. Label and annotation configuration</caption>
+<caption class="title">Table 5. Label and annotation configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -1437,7 +1462,7 @@ This is chapter is incomplete, but there is work in progress.
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:helm">3.3. <strong>fabric8:helm</strong></h3>
+<h3 id="fabric8:helm">3.4. <strong>fabric8:helm</strong></h3>
 <div class="paragraph">
 <p>This goal is for creating <a href="https://github.com/kubernetes/helm/blob/master/docs/charts.md#the-chart-file-structure">Helm charts</a> for your Maven project so that you can install, update or delete your app in Kubernetes using <a href="https://github.com/kubernetes/helm">Helm</a>.</p>
 </div>
@@ -1473,7 +1498,7 @@ This is chapter is incomplete, but there is work in progress.
 <p>This configuration section know the following subelements in order to configure your Helm chart.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 5. Helm configuration</caption>
+<caption class="title">Table 6. Helm configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -1557,7 +1582,31 @@ This is chapter is incomplete, but there is work in progress.
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:build">3.4. <strong>fabric8:build</strong></h3>
+<h3 id="fabric8:helm-index">3.5. <strong>fabric8:helm-index</strong></h3>
+<div class="paragraph">
+<p>Generates a Manifest index file by querying a maven repository to find all the Kubernetes and OpenShift manifests available and their releases.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fabric8:app-catalog">3.6. <strong>fabric8:app-catalog</strong></h3>
+<div class="paragraph">
+<p>Generates an App Catalog for kubernetes and openshift</p>
+</div>
+<div class="paragraph">
+<p>On OpenShift this just means getting the <code>openshift.yml</code> and if its not a <code>Template</code> wrapping it in an empty <code>Template</code>.</p>
+</div>
+<div class="paragraph">
+<p>For Kubernetes this means checking if there is a kubernetes <code>template.yaml</code> and if so wrapping that in a <code>ConfigMap</code> otherwise it uses the regular <code>kubernetes.yaml</code> file.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fabric8:distro">3.7. <strong>fabric8:distro</strong></h3>
+<div class="paragraph">
+<p>Generates a tarball of all the dependent kubernetes and openshift templates</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fabric8:build">3.8. <strong>fabric8:build</strong></h3>
 <div class="paragraph">
 <p>This goal is for building Docker images. Images can be build in two ways which depend on the <code>mode</code> (property: <code>fabric8.mode</code>). This mode can have be either <code>kubernetes</code> for a standard Docker build (the default) or <code>openshift</code> for an OpenShift build.</p>
 </div>
@@ -1565,7 +1614,7 @@ This is chapter is incomplete, but there is work in progress.
 <p>By default the mode is set to <code>auto</code>. In this case the plugin tries to detect which kind of build should be performed by contaction the API server. If this fails or if no cluster access is conigured e.g. with <code>oc login</code> then the mode is set to <code>kubernetes</code>.</p>
 </div>
 <div class="sect3">
-<h4 id="build-kubernetes">3.4.1. Kubernetes Build</h4>
+<h4 id="build-kubernetes">3.8.1. Kubernetes Build</h4>
 <div class="paragraph">
 <p>If the mode is set to <code>kubernetes</code> then a normal Docker build is performed. The connection configuration to access the Docker daemon is described in <a href="#access-configuration">Access Configuration</a>.</p>
 </div>
@@ -1574,7 +1623,7 @@ This is chapter is incomplete, but there is work in progress.
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-openshift">3.4.2. OpenShift Build</h4>
+<h4 id="build-openshift">3.8.2. OpenShift Build</h4>
 <div class="paragraph">
 <p>For the mode <code>openshift</code> OpenShift specific <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html">Builds</a> can be performed. These are so called <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html">Binary Source</a> builds ("binary builds" in short), where the data specified with the <a href="#build-configuration">build configuration</a>  is send directly to OpenShift as a binary archive.</p>
 </div>
@@ -1582,7 +1631,7 @@ This is chapter is incomplete, but there is work in progress.
 <p>There are two kind of binary builds supporte by this plugin, which can be selected with the configuration option <code>buildStrategy</code> (property <code>fabric8.build.strategy</code>)</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 6. Build Strategies</caption>
+<caption class="title">Table 7. Build Strategies</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -1630,7 +1679,7 @@ This is chapter is incomplete, but there is work in progress.
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-goal-configuration">3.4.3. Configuration</h4>
+<h4 id="build-goal-configuration">3.8.3. Configuration</h4>
 <div class="paragraph">
 <p>The following sections describe the usual configuration, which is similar to the build configuration used in the <a href="https://dmp.fabric8.io">docker-maven-plugin</a>.</p>
 </div>
@@ -1641,7 +1690,7 @@ This is chapter is incomplete, but there is work in progress.
 <p>Global configuration parameters specify overall behavior common for all images to build. Some of the configuration options are shared with other goals.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 7. Global configuration</caption>
+<caption class="title">Table 8. Global configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -1876,7 +1925,7 @@ the URL is:</p>
 </table>
 </div>
 <div class="sect3">
-<h4 id="image-configuration">3.4.4. Image Configuration</h4>
+<h4 id="image-configuration">3.8.4. Image Configuration</h4>
 <div class="paragraph">
 <p>The configuration how images should be created a defined in a dedicated <code>&lt;images&gt;</code> sections. These are specified for each image within the <code>&lt;images&gt;</code> element of the configuration with one <code>&lt;image&gt;</code> element per image to use.</p>
 </div>
@@ -1884,7 +1933,7 @@ the URL is:</p>
 <p>The <code>&lt;image&gt;</code> element can contain the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 8. Image Configuration</caption>
+<caption class="title">Table 9. Image Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1922,7 +1971,7 @@ linking images together or for specifying it with the global <strong>image</stro
 <p>When specifying the name you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 9. Placeholders</caption>
+<caption class="title">Table 10. Placeholders</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1999,7 +2048,7 @@ linking images together or for specifying it with the global <strong>image</stro
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-configuration">3.4.5. Build Configuration</h4>
+<h4 id="build-configuration">3.8.5. Build Configuration</h4>
 <div id="build-overview" class="paragraph">
 <p>There are two different modes how Images can be built:</p>
 </div>
@@ -2075,7 +2124,7 @@ of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
 <code>&lt;dockerFile&gt;</code> the following configuration options are available:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 10. Build configuration</caption>
+<caption class="title">Table 11. Build configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2213,12 +2262,12 @@ remote API.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-assembly">3.4.6. Assembly</h4>
+<h4 id="build-assembly">3.8.6. Assembly</h4>
 <div class="paragraph">
 <p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 11. Assembly Configuration</caption>
+<caption class="title">Table 12. Assembly Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2355,7 +2404,7 @@ predefined assembly descriptor. The following symbolic names can be
 used for <code>descriptorRef</code>:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 12. Predefined Assembly Descriptors</caption>
+<caption class="title">Table 13. Predefined Assembly Descriptors</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -2467,7 +2516,7 @@ possible to change the name of the final build artifact with the following:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="misc-env">3.4.7. Environment and Labels</h4>
+<h4 id="misc-env">3.8.7. Environment and Labels</h4>
 <div class="paragraph">
 <p>When creating a container one or more environment variables can be set via configuration with the <code>env</code> parameter</p>
 </div>
@@ -2501,7 +2550,7 @@ possible to change the name of the final build artifact with the following:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="misc-startup">3.4.8. Startup Arguments</h4>
+<h4 id="misc-startup">3.8.8. Startup Arguments</h4>
 <div class="paragraph">
 <p>Using <code>entryPoint</code> and <code>cmd</code> it is possible to specify the <a href="https://docs.docker.com/reference/builder/#entrypoint">entry point</a>
 or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a container.</p>
@@ -2521,7 +2570,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <p>A entry point or command can be specified in two alternative formats:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 13. Entrypoint and Command Configuration</caption>
+<caption class="title">Table 14. Entrypoint and Command Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2605,7 +2654,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-buildargs">3.4.9. Build Args</h4>
+<h4 id="build-buildargs">3.8.9. Build Args</h4>
 <div class="paragraph">
 <p>As described in section <a href="#build-configuration">Configuration</a> for external Dockerfiles <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg">Docker build arg</a> can be used. In addition to the
 configuration within the plugin configuration you can also use properties to specify them:</p>
@@ -2633,7 +2682,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:push">3.5. <strong>fabric8:push</strong></h3>
+<h3 id="fabric8:push">3.9. <strong>fabric8:push</strong></h3>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -2651,7 +2700,7 @@ Section needs review and rearrangments
 the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code> with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 14. Push options</caption>
+<caption class="title">Table 15. Push options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2685,7 +2734,7 @@ more details.</p></td>
 </table>
 </div>
 <div class="sect2">
-<h3 id="fabric8:deploy">3.6. <strong>fabric8:deploy</strong></h3>
+<h3 id="fabric8:deploy">3.10. <strong>fabric8:deploy</strong></h3>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -2700,7 +2749,7 @@ This is a placeholder. Will be filled soon.
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:watch">3.7. <strong>fabric8:watch</strong></h3>
+<h3 id="fabric8:watch">3.11. <strong>fabric8:watch</strong></h3>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -2783,7 +2832,7 @@ to do this manually.</p>
 <p>This maven goal can be configured with the following top-level parameters:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 15. Watch configuration</caption>
+<caption class="title">Table 16. Watch configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2864,7 +2913,7 @@ below how this can be specified.</p>
 <p>Image specific watch configuration goes into an extra image-level <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). The following parameters are recognized:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 16. Watch configuration for a single image</caption>
+<caption class="title">Table 17. Watch configuration for a single image</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3006,7 +3055,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p>Generators can be configured with a <code>&lt;generator&gt;</code> section. The following sub-elements are supported.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 17. Generator configuration</caption>
+<caption class="title">Table 18. Generator configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -3056,7 +3105,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p>There are some configuration options which are shared by all generators:</p>
 </div>
 <table id="generator-options-common" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 18. Common generator options</caption>
+<caption class="title">Table 19. Common generator options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -3101,7 +3150,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p>The name of this generator is <code>spring-boot</code> and gets activated when it finds a <code>spring-boot-maven-plugin</code> among the configured plugins. This plugin can be also a included as a dependency. It will use the following base image by default, but as explained <a href="#generator-options-common">above</a> and can be changeda <code>from</code> configuration.</p>
 </div>
 <table id="spring-boot-from" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 19. Spring-Boot Base Images</caption>
+<caption class="title">Table 20. Spring-Boot Base Images</caption>
 <colgroup>
 <col style="width: 11.1111%;">
 <col style="width: 44.4444%;">
@@ -3134,7 +3183,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p>The following additional configuration options can be set:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 20. Spring-Boot configuration options</caption>
+<caption class="title">Table 21. Spring-Boot configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -3178,7 +3227,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p>Beside the common configuration parameters described in the table <a href="#generator-options-common">Commong Generator Options</a> it knows the following additional configuration options:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 21. Java Application configuration options</caption>
+<caption class="title">Table 22. Java Application configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -3263,7 +3312,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <p>The <a href="#generator-example">Generator example</a> is a good bluebprint, simply replace <code>&lt;generator&gt;</code> with <code>&lt;enricher&gt;</code>. The configuration is structural identical:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 22. Enricher configuration</caption>
+<caption class="title">Table 23. Enricher configuration</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -3308,7 +3357,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </ul>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 23. Default Enrichers Overview</caption>
+<caption class="title">Table 24. Default Enrichers Overview</caption>
 <colgroup>
 <col style="width: 22.2222%;">
 <col style="width: 77.7778%;">
@@ -3843,11 +3892,32 @@ password.</p>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="migration">10. Migration from version 2</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This version 3 of f8-m-p is using a completely new configuration syntax compated to version 2.</p>
+</div>
+<div class="paragraph">
+<p>If you have a maven project with a 2.x fabric8-maven-plugin then we recommend you run the <a href="http://fabric8.io/guide/mavenFabric8Migrate.html">mvn fabric8:migrate</a> goal directly on your project to do the migration</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh"># in a fabric8-maven-plugin 2.x project
+mvn fabric8:migrate
+# now the project is using 3.x or later</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Once the project is migrated to 3.x or later of the fabric8-maven-plugin you can then run this <code>fabric8:setup</code> goal at any time to update to the latest plugin and goals.</p>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 3.1.32<br>
-Last updated 2016-09-13 15:23:50 UTC
+Last updated 2016-09-14 06:10:20 UTC
 </div>
 </div>
 </body>
