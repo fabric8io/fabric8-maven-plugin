@@ -36,7 +36,7 @@ import java.util.Objects;
 import static io.fabric8.utils.DomHelper.firstChild;
 
 /**
- * Ensures that the fabric8 maven plugin is defined and setup correctly in the projects pom.xml
+ * Sets up the current maven project so that the fabric8 maven plugin is defined and setup correctly in the projects pom.xml
  */
 @Mojo(name = "setup", requiresProject = true)
 public class SetupMojo extends AbstractFabric8Mojo {
