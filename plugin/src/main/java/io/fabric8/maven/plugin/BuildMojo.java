@@ -45,7 +45,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 
 /**
- * Proxy to d-m-p's build Mojo
+ * Builds the docker images configured for this project via a Docker or S2I binary build.
  *
  * @author roland
  * @since 16/03/16

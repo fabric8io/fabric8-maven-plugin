@@ -30,7 +30,7 @@ import io.fabric8.maven.plugin.generator.GeneratorManager;
 import org.apache.maven.plugins.annotations.*;
 
 /**
- * Proxy to d-m-p's build push
+ * Uploads the built Docker images to a Docker registry
  *
  * @author roland
  * @since 16/03/16

@@ -30,7 +30,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import java.util.List;
 
 /**
- * Proxy to d-m-p's watch Mojo
+ * Used to automatically rebuild Docker images and restart containers in case of updates.
  */
 @Mojo(name = "watch", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
