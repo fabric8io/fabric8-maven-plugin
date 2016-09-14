@@ -36,17 +36,23 @@ public class ProcessUtil {
                 log.info(outputLine);
                 return null;
             }
+        },  new Function<String, Void>() {
+            @Override
+            public Void apply(String outputLine) {
+                log.error(outputLine);
+                return null;
+            }
         }, message);
     }
 
 
-    public static int runCommand(Logger log, String commands, Function<String, Void> outputHandler, String message) throws IOException {
+    public static int runCommand(Logger log, String commands, Function<String, Void> outputHandler, Function<String, Void> errorHandler, String message) throws IOException {
         log.debug("Executing commands: " + commands);
         Process process;
         try {
             process = Runtime.getRuntime().exec(commands);
             processOutput(log, process.getInputStream(), outputHandler, message);
-            processErrors(log, process.getErrorStream(), message);
+            processOutput(log, process.getErrorStream(), errorHandler, message);
         } catch (Exception e) {
             throw new IOException("Failed to execute process " + "stdin" + " for " +
                     message + ": " + e, e);
