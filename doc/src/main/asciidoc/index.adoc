@@ -26,8 +26,12 @@ include::inc/_installation.adoc[]
 include::inc/_goals.adoc[]
 
 include::inc/_fabric8-setup.adoc[]
+include::inc/_fabric8-install.adoc[]
 include::inc/_fabric8-resource.adoc[]
 include::inc/_fabric8-helm.adoc[]
+include::inc/_fabric8-helm-index.adoc[]
+include::inc/_fabric8-app-catalog.adoc[]
+include::inc/_fabric8-distro.adoc[]
 include::inc/_fabric8-build.adoc[]
 include::inc/_fabric8-push.adoc[]
 include::inc/_fabric8-deploy.adoc[]
@@ -41,5 +45,7 @@ include::inc/_access.adoc[]
 
 include::classpath:/META-INF/doc/dmp/inc/_registry.adoc[]
 include::classpath:/META-INF/doc/dmp/inc/_authentication.adoc[]
+
+include::inc/_migration_2.adoc[]
 
 // include::classpath:/META-INF/doc/dmp/inc/_docker-build.adoc[]

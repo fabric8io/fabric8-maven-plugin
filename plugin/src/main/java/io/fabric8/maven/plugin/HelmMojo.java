@@ -65,7 +65,6 @@ public class HelmMojo extends AbstractFabric8Mojo {
     @Component(role = Archiver.class, hint = "tar")
     private TarArchiver archiver;
 
-
     @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         String chartName = getChartName();
@@ -104,8 +103,11 @@ public class HelmMojo extends AbstractFabric8Mojo {
 
     private String getChartName() {
         String ret = getProperty("fabric8.helm.chart");
-        if (ret == null) {
-            ret = helm != null ? helm.getChart() : null;
+        if (ret != null) {
+            return ret;
+        }
+        if (helm != null) {
+            ret = helm.getChart();
         }
         return ret != null ? ret : project.getArtifactId();
     }
@@ -113,7 +115,10 @@ public class HelmMojo extends AbstractFabric8Mojo {
     private File prepareOutputDir(HelmConfig.HelmType type) {
         String dir = getProperty("fabric8.helm.outputDir");
         if (dir == null) {
-            dir = project.getBuild().getDirectory() + "/fabric8/helm/" + type.getSourceDir() + "/" + getChartName();
+            dir = String.format("%s/fabric8/helm/%s/%s",
+                                project.getBuild().getDirectory(),
+                                type.getSourceDir(),
+                                getChartName());
         }
         File dirF = new File(dir);
         if (Files.isDirectory(dirF)) {
