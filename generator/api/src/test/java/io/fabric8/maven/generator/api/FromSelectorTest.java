@@ -23,6 +23,7 @@ import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
+import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,20 +43,23 @@ public class FromSelectorTest {
     MavenProject project;
 
     @Mocked
+    Plugin plugin;
+
+    @Mocked
     Logger logger;
 
     @Test
     public void simple() {
         final Object[] data = new Object[] {
-            openshift, s2i, "1.2.3-redhat-00009", "redhat-s2i",
-            openshift, docker, "1.2.3-redhat-00009", "redhat-docker",
+            openshift, s2i, "1.2.3.redhat-00009", "redhat-s2i",
+            openshift, docker, "1.2.3.redhat-00009", "redhat-docker",
             openshift, s2i, "1.2.3", "s2i",
             openshift, docker, "1.2.3", "docker",
-            null, s2i, "1.2.3-redhat-00009", "redhat-docker",
-            null, docker, "1.2.3-redhat-00009", "redhat-docker",
+            null, s2i, "1.2.3.redhat-00009", "redhat-docker",
+            null, docker, "1.2.3.redhat-00009", "redhat-docker",
             null, s2i, "1.2.3", "docker",
             null, docker, "1.2.3", "docker",
-            openshift, null, "1.2.3-redhat-00009", "redhat-docker",
+            openshift, null, "1.2.3.redhat-00009", "redhat-docker",
             openshift, null, "1.2.3", "docker",
         };
 
@@ -65,18 +69,12 @@ public class FromSelectorTest {
 
             final String version = (String) data[i + 2];
             new Expectations() {{
-                project.getVersion(); result = version;
+               plugin.getVersion(); result = version;
             }};
 
             FromSelector selector = new FromSelector.Default(ctx, "docker", "s2i", "redhat-docker", "redhat-s2i");
 
             assertEquals(data[i + 3], selector.getFrom());
-
         }
-    }
-
-    @Test
-    public void defaulFrom() {
-
     }
 }
