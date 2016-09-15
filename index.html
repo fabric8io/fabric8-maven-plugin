@@ -3758,7 +3758,9 @@ be specified by the certPath or machine configuration, or by the
 </div>
 <div class="sect2">
 <h3 id="openshift-and-kubernetes-access">7.2. OpenShift and Kubernetes Access</h3>
-
+<div class="paragraph">
+<p>If no <code>DOCKER_HOST</code> is set and no unix socket could be accessed under <code>/var/run/docker.sock</code> then f-m-p checks whethe <a href="https://github.com/fabric8io/gofabric8">gofabric8</a> is in the path and uses <code>gofabric8 docker-env</code> to get the connection parameter to the Docker host exposed by</p>
+</div>
 </div>
 </div>
 </div>
@@ -4091,7 +4093,7 @@ password.</p>
 <p>This version 3 of f8-m-p is using a completely new configuration syntax compated to version 2.</p>
 </div>
 <div class="paragraph">
-<p>If you have a maven project with a 2.x fabric8-maven-plugin then we recommend you run the <a href="http://fabric8.io/guide/mavenFabric8Migrate.html">mvn fabric8:migrate</a> goal directly on your project to do the migration</p>
+<p>If you have a maven project with a 2.x fabric8-maven-plugin then we recommend you run the <a href="http://fabric8.io/guide/mavenFabric8Migrate.html">mvn fabric8:migrate</a> goal directly on your project to do the migration:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -4109,7 +4111,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.32<br>
-Last updated 2016-09-15 14:01:40 UTC
+Last updated 2016-09-15 14:04:18 UTC
 </div>
 </div>
 </body>
