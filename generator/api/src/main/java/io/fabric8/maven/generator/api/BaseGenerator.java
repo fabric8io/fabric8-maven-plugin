@@ -108,7 +108,7 @@ abstract public class BaseGenerator implements Generator {
      * @return Docker image name which is never null
      */
     protected String getImageName() {
-        return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", "%g/%a:%l");
+        return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", "%g/%a:%t");
     }
 
     /**
