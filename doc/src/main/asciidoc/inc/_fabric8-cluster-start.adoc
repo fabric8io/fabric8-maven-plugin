@@ -1,0 +1,64 @@
+
+[[fabric8:cluster-start]]
+== *fabric8:cluster-start*
+
+This goal will start a local kubernetes cluster for local development.
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:cluster-start
+----
+
+This will internally invoke the <<fabric8:install>> goal to ensure that all the required binaries are installed (like https://github.com/fabric8io/gofabric8/[gofabric8]
+ and for kubernetes: http://kubernetes.io/docs/user-guide/kubectl-overview/[kubectl] and https://github.com/kubernetes/minikube[minikube] or for OpenShift: https://docs.openshift.com/enterprise/latest/cli_reference/basic_cli_operations.html[oc] and https://github.com/jimmidyson/minishift[minishift])
+
+
+=== Using OpenShift
+
+By default `fabric8:cluster-start` will use `minikube` to create a local single node kubernetes cluster. To specify OpenShift use:
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:cluster-start -Dfabric8.cluster.kind=openshift
+----
+
+This will then use `minishift` instead to create a single node local OpenShift cluster.
+
+=== Configure apps
+
+By default the cluster contains only the http://fabric8.io/guide/console.html[fabric8 developer console] as often developers laptops don't have lots of RAM.
+
+If you want to deploy the full fabric8 platform (with Nexus, Jenkins, Gogs, JBoss Forge etc) then use the following command:
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:cluster-start -Dfabric8.cluster.app=platform
+----
+
+=== Configure cluster resources
+
+You can specify the number of CPUs or memory via additional parameters:
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:cluster-start -Dfabric8.cluster.cpus=2 -Dfabric8.cluster.memory=4096
+----
+
+The above configures `2` CPUs and `4Gb` of memory
+
+=== Stop
+
+You can stop the cluster at any time via <<fabric8:cluster-stop>>
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:cluster-stop
+----
+
+Once stopped you can restart again with all the images, resources and pods intact later on by running `fabric8:cluster-start` again
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:cluster-start
+----
+
