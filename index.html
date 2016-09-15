@@ -557,7 +557,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#undeploy">3.4.1. Undeploy</a></li>
 </ul>
 </li>
-<li><a href="#fabric8:delete">3.5. <strong>fabric8:delete</strong></a></li>
+<li><a href="#fabric8:undeploy">3.5. <strong>fabric8:undeploy</strong></a></li>
 <li><a href="#fabric8:watch">3.6. <strong>fabric8:watch</strong></a></li>
 <li><a href="#fabric8:resource">3.7. <strong>fabric8:resource</strong></a>
 <ul class="sectlevel3">
@@ -1478,17 +1478,17 @@ available goals are described below.</p>
 <div class="sect3">
 <h4 id="undeploy">3.4.1. Undeploy</h4>
 <div class="paragraph">
-<p>You can delete the kubernetes resources deployed into kubernetes via <code>fabric8:run</code> via the <a href="#fabric8:delete"><strong>fabric8:delete</strong></a> goal</p>
+<p>You can delete the kubernetes resources deployed into kubernetes via <code>fabric8:run</code> via the <a href="#fabric8:undeploy"><strong>fabric8:undeploy</strong></a> goal</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:delete</code></pre>
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:undeploy</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:delete">3.5. <strong>fabric8:delete</strong></h3>
+<h3 id="fabric8:undeploy">3.5. <strong>fabric8:undeploy</strong></h3>
 <div class="paragraph">
 <p>This goal is for deleting the kubernetes resources that you deployed via the  <a href="#fabric8:run"><strong>fabric8:run</strong></a> or <a href="#fabric8:deploy"><strong>fabric8:deploy</strong></a> goals</p>
 </div>
@@ -1497,7 +1497,7 @@ available goals are described below.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:delete</code></pre>
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:undeploy</code></pre>
 </div>
 </div>
 </div>
@@ -3024,11 +3024,11 @@ more details.</p></td>
 <div class="sect3">
 <h4 id="undeploy-2">3.10.1. Undeploy</h4>
 <div class="paragraph">
-<p>You can delete the kubernetes resources deployed into kubernetes via <code>fabric8:deploy</code> via the <a href="#fabric8:delete"><strong>fabric8:delete</strong></a> goal</p>
+<p>You can delete the kubernetes resources deployed into kubernetes via <code>fabric8:deploy</code> via the <a href="#fabric8:undeploy"><strong>fabric8:undeploy</strong></a> goal</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:delete</code></pre>
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:undeploy</code></pre>
 </div>
 </div>
 </div>
@@ -4118,7 +4118,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.32<br>
-Last updated 2016-09-15 13:21:14 UTC
+Last updated 2016-09-15 13:33:49 UTC
 </div>
 </div>
 </body>
