@@ -263,7 +263,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
                     createIngress(controller, kubernetes, entities);
                 }
             }
-            applyEntities(controller, fileName, entities);
+            applyEntities(controller, kubernetes, namespace, fileName, entities);
 
         } catch (KubernetesClientException e) {
             Throwable cause = e.getCause();
@@ -283,7 +283,7 @@ public class DeployMojo extends AbstractFabric8Mojo {
         }
     }
 
-    protected void applyEntities(Controller controller, String fileName, Set<HasMetadata> entities) throws Exception {
+    protected void applyEntities(Controller controller, KubernetesClient kubernetes, String namespace, String fileName, Set<HasMetadata> entities) throws Exception {
         // Apply all items
         for (HasMetadata entity : entities) {
             if (entity instanceof Pod) {
