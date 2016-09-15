@@ -38,9 +38,9 @@ public class ClusterStartMojo extends AbstractInstallMojo {
     private String clusterKind;
 
     /**
-     * Which app to startup such as <code>console</code>
+     * Which app to startup such as <code>console</code> or <code>platform</code>
      */
-    @Parameter(property = "fabric8.cluster.app")
+    @Parameter(property = "fabric8.cluster.app", defaultValue = "console")
     private String clusterApp;
 
     /**
@@ -71,7 +71,11 @@ public class ClusterStartMojo extends AbstractInstallMojo {
             }
         }
         if (Strings.isNotBlank(clusterApp)) {
-            arguments += " --" + clusterApp;
+            String appArg = this.clusterApp;
+            if (clusterApp.equals("fabric8") || clusterApp.equals("platform")) {
+                appArg = "cd-pipeline";
+            }
+            arguments += " --" + appArg;
         }
         if (Strings.isNotBlank(clusterCPUs)) {
             arguments += " --cpus " + clusterCPUs;
