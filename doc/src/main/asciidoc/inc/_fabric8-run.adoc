@@ -21,13 +21,3 @@ Effectively this builds your project then invokes these goals:
 * <<fabric8:resource>>
 * <<fabric8:build>>
 * <<fabric8:deploy>>
-
-
-=== Undeploy
-
-You can delete the kubernetes resources deployed into kubernetes via `fabric8:run` via the <<fabric8:undeploy>> goal
-
-[source,sh,subs="attributes"]
-----
-mvn fabric8:undeploy
-----
