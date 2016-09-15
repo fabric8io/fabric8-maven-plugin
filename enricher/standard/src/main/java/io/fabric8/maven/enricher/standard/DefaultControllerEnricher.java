@@ -66,7 +66,7 @@ import static io.fabric8.utils.Strings.isNullOrBlank;
  * @author roland
  * @since 25/05/16
  */
-public class ControllerEnricher extends BaseEnricher {
+public class DefaultControllerEnricher extends BaseEnricher {
     protected static final String[] POD_CONTROLLER_KINDS =
         { "ReplicationController", "ReplicaSet", "Deployment", "DeploymentConfig" };
 
@@ -83,7 +83,7 @@ public class ControllerEnricher extends BaseEnricher {
         public String def() { return d; } protected String d;
     }
 
-    public ControllerEnricher(EnricherContext buildContext) {
+    public DefaultControllerEnricher(EnricherContext buildContext) {
         super(buildContext, "fmp-controller");
 
         HandlerHub handlers = new HandlerHub(buildContext.getProject());

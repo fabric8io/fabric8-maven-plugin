@@ -105,7 +105,7 @@ public class ServiceHandler {
         // lets add the prometheus annotations if required
         String prometheusPort = findPrometheusPort(service.getPorts());
         if (Strings.isNotBlank(prometheusPort)) {
-                    MapUtil.putIfAbsent(serviceAnnotations, Annotations.Management.PROMETHEUS_PORT, prometheusPort);
+            MapUtil.putIfAbsent(serviceAnnotations, Annotations.Management.PROMETHEUS_PORT, prometheusPort);
             MapUtil.putIfAbsent(serviceAnnotations, Annotations.Management.PROMETHEUS_SCRAPE, "true");
         }
         return serviceAnnotations;

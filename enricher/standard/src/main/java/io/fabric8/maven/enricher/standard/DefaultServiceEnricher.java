@@ -42,7 +42,7 @@ import org.apache.maven.shared.utils.StringUtils;
  * @author roland
  * @since 25/05/16
  */
-public class ServiceEnricher extends BaseEnricher {
+public class DefaultServiceEnricher extends BaseEnricher {
 
     ServiceHandler serviceHandler;
 
@@ -60,7 +60,7 @@ public class ServiceEnricher extends BaseEnricher {
         public String def() { return d; } protected String d;
     }
 
-    public ServiceEnricher(EnricherContext buildContext) {
+    public DefaultServiceEnricher(EnricherContext buildContext) {
         super(buildContext, "fmp-service");
         HandlerHub handlers = new HandlerHub(buildContext.getProject());
         serviceHandler = handlers.getServiceHandler();
