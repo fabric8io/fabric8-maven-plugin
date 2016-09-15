@@ -58,7 +58,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <assertj.core.version>2.4.1</assertj.core.version>
-    <fabric8.maven.plugin.version>3.1.40</fabric8.maven.plugin.version>
+    <fabric8.maven.plugin.version>3.1.42</fabric8.maven.plugin.version>
     <version.maven>3.3.1</version.maven>
     <version.fabric8>2.2.158</version.fabric8>
     <version.docker-maven-plugin>0.16.2</version.docker-maven-plugin>
