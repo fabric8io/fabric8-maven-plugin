@@ -35,6 +35,8 @@ include::inc/_fabric8-distro.adoc[]
 include::inc/_fabric8-build.adoc[]
 include::inc/_fabric8-push.adoc[]
 include::inc/_fabric8-deploy.adoc[]
+include::inc/_fabric8-delete.adoc[]
+include::inc/_fabric8-run.adoc[]
 include::inc/_fabric8-watch.adoc[]
 
 include::inc/_generator.adoc[]
