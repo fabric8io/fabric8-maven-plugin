@@ -35,7 +35,6 @@ public class MetaDataConfig {
     @Parameter
     private Map<String, String> all;
 
-
     /**
      * Labels or annoations for a Pod within a controller or deployment
      */

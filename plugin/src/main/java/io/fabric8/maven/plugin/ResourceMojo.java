@@ -439,6 +439,7 @@ public class ResourceMojo extends AbstractResourceMojo {
         List<ImageConfiguration> ret;
         final Properties resolveProperties = project.getProperties();
         ret = ConfigHelper.resolveImages(
+            log,
             images,
             new ConfigHelper.Resolver() {
                 @Override

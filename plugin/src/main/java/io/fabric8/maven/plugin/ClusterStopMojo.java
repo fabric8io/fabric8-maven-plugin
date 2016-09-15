@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.plugin;
 
+import io.fabric8.maven.core.util.ProcessUtil;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -36,7 +37,7 @@ public class ClusterStopMojo extends AbstractInstallMojo {
 
     @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
-        File gofabric8 = findExecutable(GOFABRIC8);
+        File gofabric8 = ProcessUtil.findExecutable(log, GOFABRIC8);
         if (gofabric8 == null) {
             throw new MojoFailureException("No binary `" + GOFABRIC8 + "` found on the PATH. Did you create the cluster via `mvn fabric8:cluster-start`?");
         }
