@@ -158,6 +158,11 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
     @Override
+    protected boolean isDockerAccessRequired() {
+        return platformMode == PlatformMode.kubernetes;
+    }
+
+    @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
         if (project != null && skipBuildPom && Objects.equals("pom", project.getPackaging())) {
             getLog().debug("Disabling docker build for pom packaging");
