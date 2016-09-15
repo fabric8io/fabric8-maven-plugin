@@ -56,7 +56,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     private List<File> pathDirectories;
 
     protected File installBinaries() throws MojoExecutionException {
-        File file = findExecutable(GOFABRIC8);
+        File file = ProcessUtil.findExecutable(log, GOFABRIC8);
         // X-TODO: Maybe allow for an update of gofabric8 itself ?
         if (file == null) {
             File binDir = getFabric8Dir();
@@ -66,7 +66,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
             }
 
             // lets check if the binary directory is on the path
-            if (!folderIsOnPath(binDir)) {
+            if (!ProcessUtil.folderIsOnPath(log, binDir)) {
                 String absolutePath = binDir.getAbsolutePath();
                 String commandIndent = "  ";
                 log.warn("Note that the fabric8 folder " + absolutePath + " is not on the PATH!");
@@ -219,76 +219,6 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         return fabric8Dir;
     }
 
-    protected boolean isExecutableOnPath(String name) {
-        return findExecutable(name) != null;
-    }
-
-
-    protected boolean folderIsOnPath(File dir) {
-        String absolutePath = dir.getAbsolutePath();
-        String canonicalPath = canonicalPath(dir);
-        List<File> paths = getPathDirectories();
-        for (File path : paths) {
-            if (path.equals(dir) ||
-                    path.getAbsolutePath().equals(absolutePath) ||
-                    canonicalPath(path).equals(canonicalPath)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private String canonicalPath(File file) {
-        try {
-            return file.getCanonicalPath();
-        } catch (IOException e) {
-            String absolutePath = file.getAbsolutePath();
-            getLog().debug("Failed to get canonical path for " + absolutePath);
-            return absolutePath;
-        }
-    }
-
-    protected File findExecutable(String name) {
-        File executable = null;
-        List<File> pathDirectories = getPathDirectories();
-        for (File directory : pathDirectories) {
-            File file = new File(directory, name);
-            if (fileExists(file)) {
-                if (!file.canExecute()) {
-                    getLog().warn("Found " + file + " on the PATH but it is not executable!");
-                } else {
-                    executable = file;
-                    break;
-                }
-            }
-        }
-        return executable;
-    }
-
-
-    protected List<File> getPathDirectories() {
-        if (pathDirectories == null) {
-            pathDirectories = new ArrayList<>();
-            String pathText = System.getenv("PATH");
-            if (Strings.isNullOrBlank(pathText)) {
-                getLog().warn("The $PATH environment variable is empty! Usually you have a PATH defined to find binaries. " +
-                        "Please report this to the fabric8 team: https://github.com/fabric8io/fabric8-maven-plugin/issues/new");
-            } else {
-                String[] pathTexts = pathText.split(File.pathSeparator);
-                for (String text : pathTexts) {
-                    File dir = new File(text);
-                    if (!dir.exists()) {
-                        getLog().debug("PATH entry: " + dir + " does not exist");
-                    } else if (!dir.isDirectory()) {
-                        getLog().debug("PATH entry: " + dir + " is a file not a directory");
-                    } else {
-                        pathDirectories.add(dir);
-                    }
-                }
-            }
-        }
-        return pathDirectories;
-    }
 
     public static class Platforms {
         public static final String LINUX = "linux";

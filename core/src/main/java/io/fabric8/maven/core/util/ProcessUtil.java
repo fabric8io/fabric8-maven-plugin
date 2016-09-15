@@ -18,11 +18,11 @@ package io.fabric8.maven.core.util;
 import io.fabric8.utils.Closeables;
 import io.fabric8.utils.Function;
 import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.utils.Strings;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A helper class for running external processes
@@ -92,4 +92,58 @@ public class ProcessUtil {
             Closeables.closeQuietly(reader);
         }
     }
+
+    public static File findExecutable(Logger log, String name) {
+        File executable = null;
+        List<File> pathDirectories = getPathDirectories(log);
+        for (File directory : pathDirectories) {
+            File file = new File(directory, name);
+            if (file.exists() && file.isFile()) {
+                if (!file.canExecute()) {
+                    log.warn("Found " + file + " on the PATH but it is not executable!");
+                } else {
+                    return file;
+                }
+            }
+        }
+        return null;
+    }
+
+    public static boolean folderIsOnPath(Logger logger, File dir) {
+        List<File> paths = getPathDirectories(logger);
+        for (File path : paths) {
+            if (canonicalPath(path).equals(canonicalPath(dir))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String canonicalPath(File file) {
+        try {
+            return file.getCanonicalPath();
+        } catch (IOException e) {
+            String absolutePath = file.getAbsolutePath();
+            return absolutePath;
+        }
+    }
+
+    private static List<File> getPathDirectories(Logger log) {
+        List<File> pathDirectories = new ArrayList<>();
+        String pathText = System.getenv("PATH");
+        if (Strings.isNullOrBlank(pathText)) {
+            log.warn("The $PATH environment variable is empty! Usually you have a PATH defined to find binaries. ");
+            log.warn("Please report this to the fabric8 team: https://github.com/fabric8io/fabric8-maven-plugin/issues/new");
+        } else {
+            String[] pathTexts = pathText.split(File.pathSeparator);
+            for (String text : pathTexts) {
+                File dir = new File(text);
+                if (dir.exists() && dir.isDirectory()) {
+                    pathDirectories.add(dir);
+                }
+            }
+        }
+        return pathDirectories;
+    }
+
 }

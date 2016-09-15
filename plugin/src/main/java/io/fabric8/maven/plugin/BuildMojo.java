@@ -18,6 +18,7 @@ package io.fabric8.maven.plugin;
 
 
 import java.io.*;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,8 +27,11 @@ import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.*;
+import io.fabric8.maven.core.util.Gofabric8Util;
+import io.fabric8.maven.core.util.ProcessUtil;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.DockerConnectionDetector;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
@@ -160,6 +164,15 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             return;
         }
         super.executeInternal(hub);
+    }
+
+    public BuildMojo() {
+        super();
+    }
+
+    @Override
+    protected List<DockerConnectionDetector.DockerEnvProvider> getDockerEnvProviders() {
+        return Gofabric8Util.extractEnvProvider(log);
     }
 
     @Override
