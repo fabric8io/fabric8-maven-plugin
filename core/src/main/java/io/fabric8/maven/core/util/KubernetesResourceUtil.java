@@ -174,7 +174,7 @@ public class KubernetesResourceUtil {
         }
     }
 
-    private static final String FILENAME_PATTERN = "^(.*?)(-([^-]+))?\\.(yaml|yml|json)$";
+    private static final String FILENAME_PATTERN = "^(?<name>.*?)(-(?<type>[^-]+))?\\.(?<ext>yaml|yml|json)$";
     private static final String PROFILES_PATTERN = "^profiles?\\.ya?ml$";
 
     // Read fragment and add default values
@@ -185,9 +185,9 @@ public class KubernetesResourceUtil {
             throw new IllegalArgumentException(
                 String.format("Resource file name '%s' does not match pattern <name>-<type>.(yaml|yml|json)", file.getName()));
         }
-        String name = matcher.group(1);
-        String type = matcher.group(3);
-        String ext = matcher.group(4).toLowerCase();
+        String name = matcher.group("name");
+        String type = matcher.group("type");
+        String ext = matcher.group("ext").toLowerCase();
         String kind;
 
         Map<String,Object> fragment = readFragment(file, ext);

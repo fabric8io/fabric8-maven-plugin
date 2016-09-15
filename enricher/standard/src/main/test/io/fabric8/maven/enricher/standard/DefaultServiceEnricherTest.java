@@ -40,7 +40,7 @@ import static org.junit.Assert.assertThat;
  * @since 03/06/16
  */
 @RunWith(JMockit.class)
-public class ServiceEnricherTest {
+public class DefaultServiceEnricherTest {
 
     @Mocked
     private EnricherContext context;
@@ -66,7 +66,7 @@ public class ServiceEnricherTest {
         }};
 
         // Enrich
-        ServiceEnricher serviceEnricher = new ServiceEnricher(context);
+        DefaultServiceEnricher serviceEnricher = new DefaultServiceEnricher(context);
         KubernetesListBuilder builder = new KubernetesListBuilder();
         serviceEnricher.addMissingResources(builder);
 
