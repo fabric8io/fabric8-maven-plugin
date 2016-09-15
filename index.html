@@ -1347,6 +1347,9 @@ available goals are described below.</p>
 <p>This will internally invoke the <a href="#fabric8:install"><strong>fabric8:install</strong></a> goal to ensure that all the required binaries are installed (like <a href="https://github.com/fabric8io/gofabric8/">gofabric8</a>
  and for kubernetes: <a href="http://kubernetes.io/docs/user-guide/kubectl-overview/">kubectl</a> and <a href="https://github.com/kubernetes/minikube">minikube</a> or for OpenShift: <a href="https://docs.openshift.com/enterprise/latest/cli_reference/basic_cli_operations.html">oc</a> and <a href="https://github.com/jimmidyson/minishift">minishift</a>)</p>
 </div>
+<div class="paragraph">
+<p>By default the binaries are installed in <code>~/.fabric8/bin</code></p>
+</div>
 <div class="sect3">
 <h4 id="using-openshift">3.2.1. Using OpenShift</h4>
 <div class="paragraph">
@@ -3031,6 +3034,9 @@ more details.</p></td>
 <div class="paragraph">
 <p>An alternative is to just run the <a href="#fabric8:cluster-start"><strong>fabric8:cluster-start</strong></a> goal to install the binaries and start a local cluster</p>
 </div>
+<div class="paragraph">
+<p>By default the binaries are installed in <code>~/.fabric8/bin</code></p>
+</div>
 </div>
 <div class="sect2">
 <h3 id="fabric8:helm">3.12. <strong>fabric8:helm</strong></h3>
@@ -4103,7 +4109,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.32<br>
-Last updated 2016-09-15 13:58:38 UTC
+Last updated 2016-09-15 14:01:40 UTC
 </div>
 </div>
 </body>
