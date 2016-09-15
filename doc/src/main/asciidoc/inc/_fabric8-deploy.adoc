@@ -20,9 +20,9 @@ The resources applied are from `target/classes/META-INF/fabric8/kubernetes/*.yml
 
 === Undeploy
 
-You can delete the kubernetes resources deployed into kubernetes via `fabric8:deploy` via the <<fabric8:delete>> goal
+You can delete the kubernetes resources deployed into kubernetes via `fabric8:deploy` via the <<fabric8:undeploy>> goal
 
 [source,sh,subs="attributes"]
 ----
-mvn fabric8:delete
+mvn fabric8:undeploy
 ----
