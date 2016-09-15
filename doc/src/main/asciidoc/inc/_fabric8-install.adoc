@@ -10,3 +10,5 @@ mvn fabric8:install
 ----
 
 An alternative is to just run the <<fabric8:cluster-start>> goal to install the binaries and start a local cluster
+
+By default the binaries are installed in `~/.fabric8/bin`

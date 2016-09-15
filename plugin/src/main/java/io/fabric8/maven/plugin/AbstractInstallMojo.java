@@ -44,7 +44,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     public static final String batchModeArgument = " --batch";
     public static final String GOFABRIC8 = "gofabric8";
 
-    @Parameter(property = "fabric8.dir", defaultValue = "${user.home}/fabric8/bin")
+    @Parameter(property = "fabric8.dir", defaultValue = "${user.home}/.fabric8/bin")
     private File fabric8Dir;
 
     // X-TODO: Add update semantics similar to setup

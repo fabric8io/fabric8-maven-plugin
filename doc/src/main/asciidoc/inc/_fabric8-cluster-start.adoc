@@ -12,6 +12,7 @@ mvn fabric8:cluster-start
 This will internally invoke the <<fabric8:install>> goal to ensure that all the required binaries are installed (like https://github.com/fabric8io/gofabric8/[gofabric8]
  and for kubernetes: http://kubernetes.io/docs/user-guide/kubectl-overview/[kubectl] and https://github.com/kubernetes/minikube[minikube] or for OpenShift: https://docs.openshift.com/enterprise/latest/cli_reference/basic_cli_operations.html[oc] and https://github.com/jimmidyson/minishift[minishift])
 
+By default the binaries are installed in `~/.fabric8/bin`
 
 === Using OpenShift
 
