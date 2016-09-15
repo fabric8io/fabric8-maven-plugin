@@ -19,7 +19,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>fabric8-maven-parent</artifactId>
-  <version>3.1-SNAPSHOT</version>
+  <version>3.1.0.redhat-000024</version>
   <packaging>pom</packaging>
 
   <prerequisites>
@@ -61,7 +61,7 @@
     <fabric8.maven.plugin.version>3.1.42</fabric8.maven.plugin.version>
     <version.maven>3.3.1</version.maven>
     <version.fabric8>2.2.158</version.fabric8>
-    <version.docker-maven-plugin>0.16.2</version.docker-maven-plugin>
+    <version.docker-maven-plugin>0.15.0.redhat-000002</version.docker-maven-plugin>
   </properties>
 
   <repositories>
