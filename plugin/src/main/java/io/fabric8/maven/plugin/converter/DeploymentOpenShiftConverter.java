@@ -75,11 +75,7 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                     List<Container> containers = podSpec.getContainers();
                     notNull(podSpec, "No containers for PodTemplate.spec: " + template);
                     for (Container container : containers) {
-                        // the containers may not be valid yet - e.g. they may be container fragments
-                        // like volume mounts or resources in the src/main/fabric8/deployment.yml file
-                        // before it has been enriched with real image metadata etc
-                        //
-                        //validateContainer(container);
+                        validateContainer(container);
                         containerToImageMap.put(container.getName(), container.getImage());
                     }
                 }
