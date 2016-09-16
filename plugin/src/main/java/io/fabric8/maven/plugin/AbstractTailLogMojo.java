@@ -21,7 +21,9 @@ import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
@@ -50,6 +52,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +65,7 @@ import java.util.concurrent.CountDownLatch;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getPodStatus;
+import static io.fabric8.kubernetes.api.KubernetesHelper.isPodRunning;
 import static io.fabric8.kubernetes.api.KubernetesHelper.parseDate;
 
 /**
@@ -71,8 +77,9 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
     private Map<String, Pod> addedPods = new ConcurrentHashMap<>();
     private CountDownLatch terminateLatch = new CountDownLatch(1);
     private String watchingPodName;
+    private CountDownLatch logWatchTerminateLatch;
 
-    protected void tailAppPodsLogs(final KubernetesClient kubernetes, final String namespace, final Set<HasMetadata> entities, boolean watchAddedPodsOnly, boolean deleteAppOnExit, boolean followLog) {
+    protected void tailAppPodsLogs(final KubernetesClient kubernetes, final String namespace, final Set<HasMetadata> entities, boolean watchAddedPodsOnly, boolean deleteAppOnExit, boolean followLog, Date ignorePodsOlderThan) {
         LabelSelector selector = null;
         for (HasMetadata entity : entities) {
             selector = getPodLabelSelector(entity);
@@ -91,19 +98,17 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
                         if (podWatcher != null) {
                             podWatcher.close();
                         }
-                        if (logWatcher != null) {
-                            logWatcher.close();
-                        }
+                        closeLogWatcher();
                     }
                 });
             }
-            waitAndLogPods(kubernetes, namespace, selector, watchAddedPodsOnly, deleteAppOnExit, followLog);
+            waitAndLogPods(kubernetes, namespace, selector, watchAddedPodsOnly, deleteAppOnExit, followLog, ignorePodsOlderThan);
         } else {
             log.warn("No selector in deployment so cannot watch pods!");
         }
     }
 
-    private void waitAndLogPods(final KubernetesClient kubernetes, final String namespace, LabelSelector selector, final boolean watchAddedPodsOnly, final boolean deleteAppOnExit, final boolean followLog) {
+    private void waitAndLogPods(final KubernetesClient kubernetes, final String namespace, LabelSelector selector, final boolean watchAddedPodsOnly, final boolean deleteAppOnExit, final boolean followLog, Date ignorePodsOlderThan) {
         FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> pods = withSelector(kubernetes.pods().inNamespace(namespace), selector);
         log.info("Watching pods with selector " + selector + " waiting for a running pod...");
         Pod latestPod = null;
@@ -118,7 +123,14 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
                         case WAIT:
                         case OK:
                             if (latestPod == null || isNewerPod(pod, latestPod)) {
-                                latestPod = pod;
+                                if (ignorePodsOlderThan != null) {
+                                    Date podCreateTime = getCreationTimestamp(pod);
+                                    if (podCreateTime != null && podCreateTime.compareTo(ignorePodsOlderThan) > 0) {
+                                        latestPod = pod;
+                                    }
+                                } else {
+                                    latestPod = pod;
+                                }
                             }
                             runningPod = true;
                             break;
@@ -132,7 +144,7 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
         }
         // we may have missed the ADDED event so lets simulate one
         if (latestPod != null) {
-            onPod(Watcher.Action.ADDED, latestPod, kubernetes, namespace, watchAddedPodsOnly, deleteAppOnExit, followLog);
+            onPod(Watcher.Action.ADDED, latestPod, kubernetes, namespace, deleteAppOnExit, followLog);
         }
         if (!watchAddedPodsOnly) {
             // lets watch the current pods then watch for changes
@@ -144,7 +156,7 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
         podWatcher = pods.watch(new Watcher<Pod>() {
             @Override
             public void eventReceived(Action action, Pod pod) {
-                onPod(action, pod, kubernetes, namespace, watchAddedPodsOnly, deleteAppOnExit, followLog);
+                onPod(action, pod, kubernetes, namespace, deleteAppOnExit, followLog);
             }
 
             @Override
@@ -164,79 +176,90 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
         }
     }
 
-    private boolean isNewerPod(HasMetadata newer, HasMetadata older) {
-        ObjectMeta metadata1 = newer.getMetadata();
-        ObjectMeta metadata2 = older.getMetadata();
-        if (metadata1 != null) {
-            if (metadata2 == null) {
-                return true;
-            }
-            Date t1 = parseTimestamp(metadata1.getCreationTimestamp());
-            Date t2 = parseTimestamp(metadata2.getCreationTimestamp());
-            if (t1 != null) {
-                return t2 == null || t1.compareTo(t2) > 0;
-            }
-        }
-        return false;
-    }
-
-    private Date parseTimestamp(String text) {
-        if (text == null) {
-            return null;
-        }
-        return parseDate(text);
-    }
-
-    private void onPod(Watcher.Action action, Pod pod, KubernetesClient kubernetes, String namespace, boolean watchAddedPodsOnly, boolean deleteAppOnExit, boolean followLog) {
+    private void onPod(Watcher.Action action, Pod pod, KubernetesClient kubernetes, String namespace, boolean deleteAppOnExit, boolean followLog) {
         String name = getName(pod);
-        log.info("" + action + " pod " + name + " status: " + KubernetesHelper.getPodStatusText(pod));
+        if (!action.equals(Watcher.Action.MODIFIED) || watchingPodName == null || !watchingPodName.equals(name)) {
+            log.info("" + action + " pod " + name + " status: " + KubernetesHelper.getPodStatusText(pod) + " " + getPodCondition(pod));
+        }
         if (action.equals(Watcher.Action.DELETED)) {
             addedPods.remove(name);
             if (Objects.equals(watchingPodName, name)) {
                 watchingPodName = null;
+                addedPods.remove(name);
             }
         } else {
-            if (action.equals(Watcher.Action.ADDED)) {
+            if (action.equals(Watcher.Action.ADDED) || action.equals(Watcher.Action.MODIFIED)) {
                 addedPods.put(name, pod);
-            } else if (action.equals(Watcher.Action.MODIFIED)) {
-                if (watchAddedPodsOnly) {
-                    // lets keep track of pods added since we did the deploy
-                    // so that we don't start tailing the old pods when a rolling upgrade kicks in
-                } else {
-                    addedPods.put(name, pod);
-                }
             }
-            if (addedPods.containsKey(name) && KubernetesHelper.isPodRunning(pod) && addedPods.containsKey(name)) {
-                if (watchingPodName == null || !watchingPodName.equals(name)) {
-                    if (logWatcher != null) {
-                        log.info("Closing log watcher for " + watchingPodName + " as now watching " + name);
-                        logWatcher.close();
-                    }
-                    watchingPodName = name;
-                    ClientPodResource<Pod, DoneablePod> podResource = kubernetes.pods().inNamespace(namespace).withName(name);
-                    if (followLog || deleteAppOnExit) {
-                        logWatcher = podResource.watchLog();
-                        watchLog(logWatcher, name, "Failed to read log of pod " + name + ".", deleteAppOnExit);
-                    } else {
-                        String logText = podResource.getLog();
-                        if (logText != null) {
-                            String[] lines = logText.split("\n");
-                            Logger log = createPodLogger();
-                            log.info("Log of pod: " + name);
-                            log.info("");
-                            for (String line : lines) {
-                                log.info(line);
-                            }
+        }
+
+        if (!addedPods.isEmpty()) {
+            List<Pod> sortedPods = new ArrayList<>(addedPods.values());
+            Collections.sort(sortedPods, new Comparator<Pod>() {
+                @Override
+                public int compare(Pod p1, Pod p2) {
+                    Date t1 = getCreationTimestamp(p1);
+                    Date t2 = getCreationTimestamp(p2);
+                    if (t1 != null) {
+                        if (t2 == null) {
+                            return 1;
+                        } else {
+                            return t1.compareTo(t2);
                         }
-                        terminateLatch.countDown();
+                    } else if (t2 == null) {
+                        return 0;
                     }
+                    return -1;
                 }
+            });
+
+            Pod watchPod = sortedPods.get(sortedPods.size() - 1);
+            if (isPodRunning(watchPod)) {
+                watchLogOfPodName(kubernetes, namespace, deleteAppOnExit, followLog, getName(watchPod));
             }
         }
     }
 
+    private void watchLogOfPodName(KubernetesClient kubernetes, String namespace, boolean deleteAppOnExit, boolean followLog, String name) {
+        if (watchingPodName == null || !watchingPodName.equals(name)) {
+            if (logWatcher != null) {
+                log.info("Closing log watcher for " + watchingPodName + " as now watching " + name);
+                closeLogWatcher();
 
-    private void watchLog(LogWatch logWatcher, String podName, final String failureMessage, boolean deleteAppOnExit) {
+            }
+            ClientPodResource<Pod, DoneablePod> podResource = kubernetes.pods().inNamespace(namespace).withName(name);
+            if (followLog || deleteAppOnExit) {
+                watchingPodName = name;
+                logWatchTerminateLatch = new CountDownLatch(1);
+                logWatcher = podResource.watchLog();
+                watchLog(logWatcher, name, "Failed to read log of pod " + name + ".", deleteAppOnExit);
+            } else {
+                String logText = podResource.getLog();
+                if (logText != null) {
+                    String[] lines = logText.split("\n");
+                    Logger log = createPodLogger();
+                    log.info("Log of pod: " + name);
+                    log.info("");
+                    for (String line : lines) {
+                        log.info(line);
+                    }
+                }
+                terminateLatch.countDown();
+            }
+        }
+    }
+
+    private void closeLogWatcher() {
+        if (logWatcher != null) {
+            logWatcher.close();
+            logWatcher = null;
+        }
+        if (logWatchTerminateLatch != null) {
+            logWatchTerminateLatch.countDown();
+        }
+    }
+
+    private void watchLog(final LogWatch logWatcher, String podName, final String failureMessage, boolean deleteAppOnExit) {
         final InputStream in = logWatcher.getOutput();
         final Logger log = createPodLogger();
         log.info("Tailing log of pod: " + podName);
@@ -251,6 +274,9 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
                         String line = reader.readLine();
                         if (line == null) {
                             log.info("Log closed");
+                            return;
+                        }
+                        if (logWatchTerminateLatch.getCount() <= 0L) {
                             return;
                         }
                         log.info(line);
@@ -269,6 +295,33 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
             prefix += Ansi.ansi().fg(COLOR_POD_LOG);
         }
         return new AnsiLogger(getLog(), useColor, verbose, prefix);
+    }
+
+    private String getPodCondition(Pod pod) {
+        PodStatus podStatus = pod.getStatus();
+        if (podStatus == null) {
+            return "";
+        }
+        List<PodCondition> conditions = podStatus.getConditions();
+        if (conditions == null || conditions.isEmpty()) {
+            return "";
+        }
+
+
+        for (PodCondition condition : conditions) {
+            String type = condition.getType();
+            if (Strings.isNotBlank(type)) {
+                if ("ready".equalsIgnoreCase(type)) {
+                    String statusText = condition.getStatus();
+                    if (Strings.isNotBlank(statusText)) {
+                        if (Boolean.parseBoolean(statusText)) {
+                            return type;
+                        }
+                    }
+                }
+            }
+        }
+        return "";
     }
 
     private FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> withSelector(ClientNonNamespaceOperation<Pod, PodList, DoneablePod, ClientPodResource<Pod, DoneablePod>> pods, LabelSelector selector) {
@@ -343,4 +396,29 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
         }
         return null;
     }
+
+    private Date getCreationTimestamp(HasMetadata hasMetadata) {
+        ObjectMeta metadata = hasMetadata.getMetadata();
+        if (metadata != null) {
+            return parseTimestamp(metadata.getCreationTimestamp());
+        }
+        return null;
+    }
+
+    private boolean isNewerPod(HasMetadata newer, HasMetadata older) {
+        Date t1 = getCreationTimestamp(newer);
+        Date t2 = getCreationTimestamp(older);
+        if (t1 != null) {
+            return t2 == null || t1.compareTo(t2) > 0;
+        }
+        return false;
+    }
+
+    private Date parseTimestamp(String text) {
+        if (text == null) {
+            return null;
+        }
+        return parseDate(text);
+    }
+
 }

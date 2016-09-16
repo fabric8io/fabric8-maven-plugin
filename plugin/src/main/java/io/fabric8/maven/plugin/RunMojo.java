@@ -25,9 +25,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
+import java.util.Date;
 import java.util.Set;
-
-import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 
 /**
  * This goal forks the install goal then applies the generated kubernetes resources to the current cluster,
@@ -48,9 +47,10 @@ public class RunMojo extends AbstractTailLogMojo {
 
     @Override
     protected void applyEntities(Controller controller, final KubernetesClient kubernetes, final String namespace, String fileName, final Set<HasMetadata> entities) throws Exception {
+        Date ignorePodsOlderThan = new Date();
         super.applyEntities(controller, kubernetes, namespace, fileName, entities);
 
-        tailAppPodsLogs(kubernetes, namespace, entities, true, this.deleteOnExit, true);
+        tailAppPodsLogs(kubernetes, namespace, entities, true, this.deleteOnExit, true, ignorePodsOlderThan);
     }
 
 
