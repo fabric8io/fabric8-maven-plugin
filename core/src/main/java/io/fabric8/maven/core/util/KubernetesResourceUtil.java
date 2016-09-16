@@ -63,18 +63,27 @@ public class KubernetesResourceUtil {
      * can be adapted later.
      *
      * @param apiVersion the api version to use
+     * @param apiExtensionsVersion the extension version to use
+     * @param defaultName the default name to use when none is given
+     * @param appResourcesOnly if only resource with the defaultName should be returned ?
      * @param resourceFiles files to add.
      * @return the list builder
      * @throws IOException
      */
     public static KubernetesListBuilder readResourceFragmentsFrom(String apiVersion,
-                                                                  String apiExtensionsVersion, File[] resourceFiles) throws IOException {
+                                                                  String apiExtensionsVersion,
+                                                                  String defaultName,
+                                                                  boolean appResourcesOnly,
+                                                                  File[] resourceFiles) throws IOException {
         KubernetesListBuilder k8sBuilder = new KubernetesListBuilder();
         if (resourceFiles != null) {
             List<HasMetadata> items = new ArrayList<>();
             for (File file : resourceFiles) {
-                HasMetadata resource = getKubernetesResource(apiVersion, apiExtensionsVersion, file);
-                items.add(resource);
+                HasMetadata resource = getKubernetesResource(apiVersion, apiExtensionsVersion, file, defaultName);
+                if ( (appResourcesOnly && resource.getMetadata().getName().equals(defaultName)) ||
+                     (!appResourcesOnly && !resource.getMetadata().getName().equals(defaultName))) {
+                    items.add(resource);
+                }
             }
             k8sBuilder.withItems(items);
         }
@@ -94,10 +103,12 @@ public class KubernetesResourceUtil {
      *
      * @param defaultApiVersion the API version to add if not given.
      * @param apiExtensionsVersion the API version for extensions
-     *@param file file to read, whose name must match {@link #FILENAME_PATTERN}.  @return map holding the fragment
+     * @param file file to read, whose name must match {@link #FILENAME_PATTERN}.  @return map holding the fragment
+     * @param appName resource name specifying resources belonging to this application
      */
-    public static HasMetadata getKubernetesResource(String defaultApiVersion, String apiExtensionsVersion, File file) throws IOException {
-        Map<String,Object> fragment = readAndEnrichFragment(defaultApiVersion, apiExtensionsVersion, file);
+    public static HasMetadata getKubernetesResource(String defaultApiVersion, String apiExtensionsVersion,
+                                                    File file, String appName) throws IOException {
+        Map<String,Object> fragment = readAndEnrichFragment(defaultApiVersion, apiExtensionsVersion, file, appName);
         ObjectMapper mapper = new ObjectMapper();
         return mapper.convertValue(fragment, HasMetadata.class);
     }
@@ -178,7 +189,8 @@ public class KubernetesResourceUtil {
     private static final String PROFILES_PATTERN = "^profiles?\\.ya?ml$";
 
     // Read fragment and add default values
-    private static Map<String, Object> readAndEnrichFragment(String defaultApiVersion, String apiExtensionsVersion, File file) throws IOException {
+    private static Map<String, Object> readAndEnrichFragment(String defaultApiVersion, String apiExtensionsVersion,
+                                                             File file, String appName) throws IOException {
         Pattern pattern = Pattern.compile(FILENAME_PATTERN, Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(file.getName());
         if (!matcher.matches()) {
@@ -212,9 +224,8 @@ public class KubernetesResourceUtil {
         addIfNotExistent(fragment, "apiVersion", apiVersion);
 
         Map<String, Object> metaMap = getMetadata(fragment);
-        if (StringUtils.isNotBlank(name)) {
-            addIfNotExistent(metaMap, "name", name);
-        }
+        // No name means: generated app name should be taken as resource name
+        addIfNotExistent(metaMap, "name", StringUtils.isNotBlank(name) ? name : appName);
 
         addIfNotExistent(fragment, "apiVersion", defaultApiVersion);
         return fragment;

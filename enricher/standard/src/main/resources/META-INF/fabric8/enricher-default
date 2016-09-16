@@ -1,22 +1,6 @@
 # Default enrichers
 # =================
 
-# Add port names from IANA service definitions
-io.fabric8.maven.enricher.standard.IANAServicePortNameEnricher
-
-# Add port names from IANA service definitions
-io.fabric8.maven.enricher.standard.PortNameEnricher
-
-# Add a default Deployment, ReplicaSet or ReplicationController if none is given
-io.fabric8.maven.enricher.standard.DefaultControllerEnricher
-
-# Add a default service if none is given. Enrich also with
-# other information found
-io.fabric8.maven.enricher.standard.DefaultServiceEnricher
-
-# Add Maven coordinates as labels
-io.fabric8.maven.enricher.standard.ProjectEnricher
-
 # Add a default name for any resource missing
 io.fabric8.maven.enricher.standard.NameEnricher
 
@@ -25,6 +9,22 @@ io.fabric8.maven.enricher.standard.NameEnricher
 # in an given external descriptor (if more than one images are used within
 # a pod)
 io.fabric8.maven.enricher.standard.ImageEnricher
+
+# Add a default Deployment, ReplicaSet or ReplicationController if none is given
+io.fabric8.maven.enricher.standard.DefaultControllerEnricher
+
+# Add a default service if none is given. Enrich also with
+# other information found
+io.fabric8.maven.enricher.standard.DefaultServiceEnricher
+
+# Add port names from IANA service definitions
+io.fabric8.maven.enricher.standard.PortNameEnricher
+
+# Add port names from IANA service definitions
+io.fabric8.maven.enricher.standard.IANAServicePortNameEnricher
+
+# Add Maven coordinates as labels
+io.fabric8.maven.enricher.standard.ProjectEnricher
 
 # Copy over annotation from a deployment to its pod spec
 io.fabric8.maven.enricher.standard.PodAnnotationEnricher

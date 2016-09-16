@@ -31,10 +31,7 @@ import io.fabric8.maven.core.config.ServiceConfig;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
-import io.fabric8.maven.core.util.GoalFinder;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
-import io.fabric8.maven.core.util.ProfileUtil;
-import io.fabric8.maven.core.util.ResourceClassifier;
+import io.fabric8.maven.core.util.*;
 import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -322,31 +319,47 @@ public class ResourceMojo extends AbstractResourceMojo {
     private KubernetesList generateKubernetesResources(final EnricherManager enricherManager, List<ImageConfiguration> images)
         throws IOException, MojoExecutionException {
         File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
-        KubernetesListBuilder builder;
+        KubernetesListBuilder builderApp, builderSupport;
 
         // Add resource files found in the fabric8 directory
         if (resourceFiles != null && resourceFiles.length > 0) {
             log.info("Using resource templates from %s", resourceDir);
-            builder = KubernetesResourceUtil.readResourceFragmentsFrom(
+            String defaultName = MavenUtil.createDefaultResourceName(project);
+            builderApp = KubernetesResourceUtil.readResourceFragmentsFrom(
                 KubernetesResourceUtil.API_VERSION,
                 KubernetesResourceUtil.API_EXTENSIONS_VERSION,
+                defaultName, true,
+                filterFiles(resourceFiles));
+            builderSupport = KubernetesResourceUtil.readResourceFragmentsFrom(
+                KubernetesResourceUtil.API_VERSION,
+                KubernetesResourceUtil.API_EXTENSIONS_VERSION,
+                defaultName, false,
                 filterFiles(resourceFiles));
         } else {
-            builder = new KubernetesListBuilder();
+            builderApp = new KubernetesListBuilder();
+            builderSupport = new KubernetesListBuilder();
         }
 
         // Add locally configured objects
         if (resources != null) {
-            addConfiguredResources(builder, images);
+            // TODO: Allow also support resources to be specified via XML
+            addConfiguredResources(builderApp, builderSupport, images);
         }
 
-        // Create default resources
-        enricherManager.createDefaultResources(builder);
+        // Create default resources for app resources only
+        enricherManager.createDefaultResources(builderApp);
+
+        // ----------------------------------------------
+        // Rest is done for all resources:
+        KubernetesListBuilder builderCombined = new KubernetesListBuilder();
+        builderCombined.withItems(builderApp.getItems());
+        builderCombined.addToItems(
+            new ArrayList<HasMetadata>(builderSupport.getItems()).toArray(new HasMetadata[0]));
 
         // Enrich descriptors
-        enricherManager.enrich(builder);
+        enricherManager.enrich(builderCombined);
 
-        return builder.build();
+        return builderCombined.build();
     }
 
     private ProcessorConfig extractEnricherConfig() throws IOException {
@@ -492,7 +505,7 @@ public class ResourceMojo extends AbstractResourceMojo {
         }
     }
 
-    private void addConfiguredResources(KubernetesListBuilder builder, List<ImageConfiguration> images) {
+    private void addConfiguredResources(KubernetesListBuilder builder, KubernetesListBuilder builderSupport, List<ImageConfiguration> images) {
 
         log.info("Adding resources from plugin configuration");
         addServices(builder, resources.getServices());
