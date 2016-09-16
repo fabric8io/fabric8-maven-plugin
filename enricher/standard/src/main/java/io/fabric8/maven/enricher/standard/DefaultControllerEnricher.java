@@ -103,7 +103,19 @@ public class DefaultControllerEnricher extends BaseEnricher {
         final Deployment defaultDeployment = deployHandler.getDeployment(config, getImages());
 
         // Check if at least a replica set is added. If not add a default one
-        if (KubernetesResourceUtil.checkForKind(builder, POD_CONTROLLER_KINDS)) {
+        if (!KubernetesResourceUtil.checkForKind(builder, POD_CONTROLLER_KINDS)) {
+            String type = getConfig(Config.type);
+            if (type.equalsIgnoreCase("deployment")) {
+                log.info("Adding a default Deployment");
+                builder.addToDeploymentItems(defaultDeployment);
+            } else if (type.equalsIgnoreCase("replicaSet")) {
+                log.info("Adding a default ReplicaSet");
+                builder.addToReplicaSetItems(rsHandler.getReplicaSet(config, getImages()));
+            } else if (type.equalsIgnoreCase("replicationController")) {
+                log.info("Adding a default ReplicationController");
+                builder.addToReplicationControllerItems(rcHandler.getReplicationController(config, getImages()));
+            }
+        } else {
             final DeploymentSpec spec = defaultDeployment.getSpec();
             if (spec != null) {
                 PodTemplateSpec template = spec.getTemplate();
@@ -145,18 +157,6 @@ public class DefaultControllerEnricher extends BaseEnricher {
                         });
                     }
                 }
-            }
-        } else {
-            String type = getConfig(Config.type);
-            if (type.equalsIgnoreCase("deployment")) {
-                log.info("Adding a default Deployment");
-                builder.addToDeploymentItems(defaultDeployment);
-            } else if (type.equalsIgnoreCase("replicaSet")) {
-                log.info("Adding a default ReplicaSet");
-                builder.addToReplicaSetItems(rsHandler.getReplicaSet(config, getImages()));
-            } else if (type.equalsIgnoreCase("replicationController")) {
-                log.info("Adding a default ReplicationController");
-                builder.addToReplicationControllerItems(rcHandler.getReplicationController(config, getImages()));
             }
         }
     }
@@ -206,7 +206,6 @@ public class DefaultControllerEnricher extends BaseEnricher {
                 }
             }
 
-
             Method sourceGetMethod = null;
             try {
                 sourceGetMethod = sc.getMethod("get" + fieldName);
@@ -228,6 +227,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
 
 
     private static final HashSet<Class<?>> SIMPLE_FIELD_TYPES = new HashSet<>();
+
     static {
         SIMPLE_FIELD_TYPES.add(String.class);
         SIMPLE_FIELD_TYPES.add(Double.class);
