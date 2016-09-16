@@ -165,12 +165,12 @@ public class ImageEnricher extends BaseEnricher {
                 container.setImagePullPolicy(policy);
             }
             if (isNullOrBlank(container.getImage())) {
-                log.info("Setting image %s",imageConfiguration.getName());
+                log.verbose("Setting image %s",imageConfiguration.getName());
                 container.setImage(imageConfiguration.getName());
             }
             if (isNullOrBlank(container.getName())) {
                 String containerName = extractContainerName(getProject(), imageConfiguration);
-                log.info("Setting container name %s",containerName);
+                log.verbose("Setting container name %s",containerName);
                 container.setName(containerName);
             }
             idx++;
