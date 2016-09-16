@@ -27,6 +27,7 @@ import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPath;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPathBuilder;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressRuleValue;
@@ -36,10 +37,13 @@ import io.fabric8.kubernetes.api.model.extensions.IngressBuilder;
 import io.fabric8.kubernetes.api.model.extensions.IngressList;
 import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import io.fabric8.kubernetes.api.model.extensions.IngressSpec;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.dsl.Scaleable;
 import io.fabric8.kubernetes.internal.HasMetadataComparator;
 import io.fabric8.maven.core.access.ClusterAccess;
+import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteList;
 import io.fabric8.openshift.api.model.RouteSpec;
@@ -50,10 +54,7 @@ import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
@@ -163,7 +164,7 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
 
     /**
      * Should we create external Ingress/Routes for any LoadBalancer Services which don't already have them.
-     *
+     * <p>
      * We now do not do this by default and defer this to the
      * <a href="https://github.com/fabric8io/exposecontroller/">exposecontroller</a> to decide
      * if Ingress or Router is being used or whether we should use LoadBalancer or NodePorts for single node clusters
@@ -184,6 +185,115 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
     private String namespace;
 
     private ClusterAccess clusterAccess;
+
+    public static Route createRouteForService(String routeDomainPostfix, String namespace, Service service, Log log) {
+        Route route = null;
+        String id = KubernetesHelper.getName(service);
+        if (Strings.isNotBlank(id) && shouldCreateExternalURLForService(log, service, id)) {
+            route = new Route();
+            String routeId = id;
+            KubernetesHelper.setName(route, namespace, routeId);
+            RouteSpec routeSpec = new RouteSpec();
+            ObjectReference objectRef = new ObjectReference();
+            objectRef.setName(id);
+            objectRef.setNamespace(namespace);
+            routeSpec.setTo(objectRef);
+            if (!Strings.isNullOrBlank(routeDomainPostfix)) {
+                String host = Strings.stripSuffix(Strings.stripSuffix(id, "-service"), ".");
+                routeSpec.setHost(host + "." + Strings.stripPrefix(routeDomainPostfix, "."));
+            } else {
+                routeSpec.setHost("");
+            }
+            route.setSpec(routeSpec);
+            String json;
+            try {
+                json = KubernetesHelper.toJson(route);
+            } catch (JsonProcessingException e) {
+                json = e.getMessage() + ". object: " + route;
+            }
+            log.debug("Created route: " + json);
+        }
+        return route;
+    }
+
+    public static Ingress createIngressForService(String routeDomainPostfix, String namespace, Service service, Log log) {
+        Ingress ingress = null;
+        String serviceName = KubernetesHelper.getName(service);
+        ServiceSpec serviceSpec = service.getSpec();
+        if (serviceSpec != null && Strings.isNotBlank(serviceName) &&
+                shouldCreateExternalURLForService(log, service, serviceName)) {
+            String ingressId = serviceName;
+            String host = "";
+            if (Strings.isNotBlank(routeDomainPostfix)) {
+                host = serviceName + "." + namespace + "." + Strings.stripPrefix(routeDomainPostfix, ".");
+            }
+            List<HTTPIngressPath> paths = new ArrayList<>();
+            List<ServicePort> ports = serviceSpec.getPorts();
+            if (ports != null) {
+                for (ServicePort port : ports) {
+                    Integer portNumber = port.getPort();
+                    if (portNumber != null) {
+                        HTTPIngressPath path = new HTTPIngressPathBuilder().withNewBackend().
+                                withServiceName(serviceName).withServicePort(createIntOrString(portNumber.intValue())).
+                                endBackend().build();
+                        paths.add(path);
+                    }
+                }
+            }
+            if (paths.isEmpty()) {
+                return ingress;
+            }
+            ingress = new IngressBuilder().
+                    withNewMetadata().withName(ingressId).withNamespace(namespace).endMetadata().
+                    withNewSpec().
+                    addNewRule().
+                    withHost(host).
+                    withNewHttp().
+                    withPaths(paths).
+                    endHttp().
+                    endRule().
+                    endSpec().build();
+
+            String json;
+            try {
+                json = KubernetesHelper.toJson(ingress);
+            } catch (JsonProcessingException e) {
+                json = e.getMessage() + ". object: " + ingress;
+            }
+            log.debug("Created ingress: " + json);
+        }
+        return ingress;
+    }
+
+    /**
+     * Should we try to create an external URL for the given service?
+     * <p/>
+     * By default lets ignore the kubernetes services and any service which does not expose ports 80 and 443
+     *
+     * @return true if we should create an OpenShift Route for this service.
+     */
+    protected static boolean shouldCreateExternalURLForService(Log log, Service service, String id) {
+        if ("kubernetes".equals(id) || "kubernetes-ro".equals(id)) {
+            return false;
+        }
+        Set<Integer> ports = KubernetesHelper.getPorts(service);
+        log.debug("Service " + id + " has ports: " + ports);
+        if (ports.size() == 1) {
+            String type = null;
+            ServiceSpec spec = service.getSpec();
+            if (spec != null) {
+                type = spec.getType();
+                if (Objects.equals(type, "LoadBalancer")) {
+                    return true;
+                }
+            }
+            log.info("Not generating route for service " + id + " type is not LoadBalancer: " + type);
+            return false;
+        } else {
+            log.info("Not generating route for service " + id + " as only single port services are supported. Has ports: " + ports);
+            return false;
+        }
+    }
 
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         clusterAccess = new ClusterAccess(namespace);
@@ -300,115 +410,6 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
             } else if (entity != null) {
                 controller.apply(entity, fileName);
             }
-        }
-    }
-
-    public static Route createRouteForService(String routeDomainPostfix, String namespace, Service service, Log log) {
-        Route route = null;
-        String id = KubernetesHelper.getName(service);
-        if (Strings.isNotBlank(id) && shouldCreateExternalURLForService(log, service, id)) {
-            route = new Route();
-            String routeId = id;
-            KubernetesHelper.setName(route, namespace, routeId);
-            RouteSpec routeSpec = new RouteSpec();
-            ObjectReference objectRef = new ObjectReference();
-            objectRef.setName(id);
-            objectRef.setNamespace(namespace);
-            routeSpec.setTo(objectRef);
-            if (!Strings.isNullOrBlank(routeDomainPostfix)) {
-                String host = Strings.stripSuffix(Strings.stripSuffix(id, "-service"), ".");
-                routeSpec.setHost(host + "." + Strings.stripPrefix(routeDomainPostfix, "."));
-            } else {
-                routeSpec.setHost("");
-            }
-            route.setSpec(routeSpec);
-            String json;
-            try {
-                json = KubernetesHelper.toJson(route);
-            } catch (JsonProcessingException e) {
-                json = e.getMessage() + ". object: " + route;
-            }
-            log.debug("Created route: " + json);
-        }
-        return route;
-    }
-
-    public static Ingress createIngressForService(String routeDomainPostfix, String namespace, Service service, Log log) {
-        Ingress ingress = null;
-        String serviceName = KubernetesHelper.getName(service);
-        ServiceSpec serviceSpec = service.getSpec();
-        if (serviceSpec != null && Strings.isNotBlank(serviceName) &&
-                shouldCreateExternalURLForService(log, service, serviceName)) {
-            String ingressId = serviceName;
-            String host = "";
-            if (Strings.isNotBlank(routeDomainPostfix)) {
-                host = serviceName  + "." + namespace + "." + Strings.stripPrefix(routeDomainPostfix, ".");
-            }
-            List<HTTPIngressPath> paths  = new ArrayList<>();
-            List<ServicePort> ports = serviceSpec.getPorts();
-            if (ports != null) {
-                for (ServicePort port : ports) {
-                    Integer portNumber = port.getPort();
-                    if (portNumber != null) {
-                        HTTPIngressPath path = new HTTPIngressPathBuilder().withNewBackend().
-                                withServiceName(serviceName).withServicePort(createIntOrString(portNumber.intValue())).
-                                endBackend().build();
-                        paths.add(path);
-                    }
-                }
-            }
-            if (paths.isEmpty()) {
-                return ingress;
-            }
-            ingress = new IngressBuilder().
-                    withNewMetadata().withName(ingressId).withNamespace(namespace).endMetadata().
-                    withNewSpec().
-                    addNewRule().
-                    withHost(host).
-                    withNewHttp().
-                    withPaths(paths).
-                    endHttp().
-                    endRule().
-                    endSpec().build();
-
-            String json;
-            try {
-                json = KubernetesHelper.toJson(ingress);
-            } catch (JsonProcessingException e) {
-                json = e.getMessage() + ". object: " + ingress;
-            }
-            log.debug("Created ingress: " + json);
-        }
-        return ingress;
-    }
-
-    /**
-     * Should we try to create an external URL for the given service?
-     * <p/>
-     * By default lets ignore the kubernetes services and any service which does not expose ports 80 and 443
-     *
-     * @return true if we should create an OpenShift Route for this service.
-     */
-    protected static boolean shouldCreateExternalURLForService(Log log, Service service, String id) {
-        if ("kubernetes".equals(id) || "kubernetes-ro".equals(id)) {
-            return false;
-        }
-        Set<Integer> ports = KubernetesHelper.getPorts(service);
-        log.debug("Service " + id + " has ports: " + ports);
-        if (ports.size() == 1) {
-            String type = null;
-            ServiceSpec spec = service.getSpec();
-            if (spec != null) {
-                type = spec.getType();
-                if (Objects.equals(type, "LoadBalancer")) {
-                    return true;
-                }
-            }
-            log.info("Not generating route for service " + id + " type is not LoadBalancer: " + type);
-            return false;
-        } else {
-            log.info("Not generating route for service " + id + " as only single port services are supported. Has ports: " + ports);
-            return false;
         }
     }
 
@@ -640,6 +641,32 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
         for (HasMetadata entity : list) {
             log.info("Deleting resource " + getKind(entity) + " " + namespace + "/" + getName(entity));
             kubernetes.resource(entity).inNamespace(namespace).delete();
+        }
+    }
+
+    protected void resizeApp(KubernetesClient kubernetes, String namespace, Set<HasMetadata> entities, int replicas) {
+        for (HasMetadata entity : entities) {
+            String name = getName(entity);
+            Scaleable scalable = null;
+            if (entity instanceof Deployment) {
+                scalable = kubernetes.extensions().deployments().inNamespace(namespace).withName(name);
+            } else if (entity instanceof ReplicaSet) {
+                scalable = kubernetes.extensions().replicaSets().inNamespace(namespace).withName(name);
+            } else if (entity instanceof ReplicationController) {
+                scalable = kubernetes.replicationControllers().inNamespace(namespace).withName(name);
+            } else if (entity instanceof DeploymentConfig) {
+                OpenShiftClient openshiftClient = new Controller(kubernetes).getOpenShiftClientOrNull();
+                if (openshiftClient == null) {
+                    log.warn("Ignoring DeploymentConfig " + name + " as not connected to an OpenShift cluster");
+                    continue;
+                }
+                // TODO uncomment when kubernetes-client supports Scaleable<T> for DC!
+                // scalable = openshiftClient.deploymentConfigs().inNamespace(namespace).withName(name);
+            }
+            if (scalable != null) {
+                log.info("Scaling " + getKind(entity) + " " + namespace + "/" + name + " to replicas: " + replicas);
+                scalable.scale(replicas, true);
+            }
         }
     }
 }

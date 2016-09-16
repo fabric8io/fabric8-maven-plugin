@@ -29,6 +29,8 @@ include::inc/_fabric8-cluster-stop.adoc[]
 include::inc/_fabric8-run.adoc[]
 include::inc/_fabric8-deploy.adoc[]
 include::inc/_fabric8-undeploy.adoc[]
+include::inc/_fabric8-start.adoc[]
+include::inc/_fabric8-stop.adoc[]
 include::inc/_fabric8-watch.adoc[]
 
 include::inc/_fabric8-resource.adoc[]
