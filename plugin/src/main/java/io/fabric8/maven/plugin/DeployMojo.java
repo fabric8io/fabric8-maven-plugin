@@ -61,6 +61,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -69,6 +70,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.createIntOrString;
+import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
+import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 
 /**
  * Applies the Kubernetes UYAML to a namespace in a kubernetes environment
@@ -627,5 +630,17 @@ public class DeployMojo extends AbstractFabric8Mojo {
             project = parent;
         }
         return project;
+    }
+
+    protected void deleteEntities(KubernetesClient kubernetes, String namespace, Set<HasMetadata> entities) {
+        List<HasMetadata> list = new ArrayList<>(entities);
+
+        // lets delete in reverse order
+        Collections.reverse(list);
+
+        for (HasMetadata entity : list) {
+            log.info("Deleting resource " + getKind(entity) + " " + namespace + "/" + getName(entity));
+            kubernetes.resource(entity).inNamespace(namespace).delete();
+        }
     }
 }

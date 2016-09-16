@@ -39,15 +39,7 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 public class UndeployMojo extends DeployMojo {
     @Override
     protected void applyEntities(Controller controller, KubernetesClient kubernetes, String namespace, String fileName, Set<HasMetadata> entities) throws Exception {
-        List<HasMetadata> list = new ArrayList<>(entities);
-
-        // lets delete in reverse order
-        Collections.reverse(list);
-
-        for (HasMetadata entity : list) {
-            log.info("Deleting resource " + getKind(entity) + " " + namespace + "/" + getName(entity));
-            kubernetes.resource(entity).inNamespace(namespace).delete();
-        }
+        deleteEntities(kubernetes, namespace, entities);
     }
 }
 
