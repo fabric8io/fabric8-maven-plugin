@@ -64,129 +64,79 @@ public class ImageEnricher extends BaseEnricher {
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
 
+        // Ensure that all contoller have template specs
+        ensureTemplateSpecs(builder);
+
+        // Update containers in template specs
+        updateContainers(builder);
+    }
+
+    // ============================================================================================================
+
+    private void ensureTemplateSpecs(KubernetesListBuilder builder) {
+        ensureTemplateSpecsInReplicationControllers(builder);
+        ensureTemplateSpecsInRelicaSet(builder);
+        ensureTemplateSpecsInDeployments(builder);
+    }
+
+    private void ensureTemplateSpecsInReplicationControllers(KubernetesListBuilder builder) {
         builder.accept(new TypedVisitor<ReplicationControllerBuilder>() {
             @Override
             public void visit(ReplicationControllerBuilder item) {
-                getOrCreateContainerList(item);
+                ReplicationControllerFluent.SpecNested<ReplicationControllerBuilder> spec =
+                    item.getSpec() == null ? item.withNewSpec() : item.editSpec();
+                ReplicationControllerSpecFluent.TemplateNested<ReplicationControllerFluent.SpecNested<ReplicationControllerBuilder>>
+                    template =
+                    spec.getTemplate() == null ? spec.withNewTemplate() : spec.editTemplate();
+                template.endTemplate().endSpec();
             }
         });
+    }
 
+    private void ensureTemplateSpecsInRelicaSet(KubernetesListBuilder builder) {
         builder.accept(new TypedVisitor<ReplicaSetBuilder>() {
             @Override
             public void visit(ReplicaSetBuilder item) {
-                getOrCreateContainerList(item);
+                ReplicaSetFluent.SpecNested<ReplicaSetBuilder> spec =
+                    item.getSpec() == null ? item.withNewSpec() : item.editSpec();
+                ReplicaSetSpecFluent.TemplateNested<ReplicaSetFluent.SpecNested<ReplicaSetBuilder>> template =
+                    spec.getTemplate() == null ? spec.withNewTemplate() : spec.editTemplate();
+                template.endTemplate().endSpec();
             }
         });
+    }
 
+    private void ensureTemplateSpecsInDeployments(KubernetesListBuilder builder) {
         builder.accept(new TypedVisitor<DeploymentBuilder>() {
             @Override
             public void visit(DeploymentBuilder item) {
-                getOrCreateContainerList(item);
+                DeploymentFluent.SpecNested<DeploymentBuilder> spec =
+                    item.getSpec() == null ? item.withNewSpec() : item.editSpec();
+                DeploymentSpecFluent.TemplateNested<DeploymentFluent.SpecNested<DeploymentBuilder>> template =
+                    spec.getTemplate() == null ? spec.withNewTemplate() : spec.editTemplate();
+                template.endTemplate().endSpec();
             }
         });
     }
 
-    private List<Container> getOrCreateContainerList(ReplicaSetBuilder rs) {
-        ReplicaSetSpec spec = getOrCreateReplicaSetSpec(rs);
-        PodTemplateSpec template = getOrCreatePodTemplateSpec(spec);
-        return getOrCreateContainerList(template);
-    }
 
-    private List<Container> getOrCreateContainerList(ReplicationControllerBuilder rc) {
-        ReplicationControllerSpec spec = getOrCreateReplicationControllerSpec(rc);
-        PodTemplateSpec template = getOrCreatePodTemplateSpec(spec);
-        return getOrCreateContainerList(template);
-    }
+    // ============================================================================================================
 
-    private List<Container> getOrCreateContainerList(DeploymentBuilder d) {
-        DeploymentSpec spec = getOrCreateDeploymentSpec(d);
-        PodTemplateSpec template = getOrCreatePodTemplateSpec(spec);
-        return getOrCreateContainerList(template);
-    }
+    private void updateContainers(KubernetesListBuilder builder) {
+        builder.accept(new TypedVisitor<PodTemplateSpecBuilder>() {
+            @Override
+            public void visit(PodTemplateSpecBuilder templateBuilder) {
+                PodTemplateSpecFluent.SpecNested<PodTemplateSpecBuilder> podSpec =
+                    templateBuilder.getSpec() == null ? templateBuilder.withNewSpec() : templateBuilder.editSpec();
 
-    // ===================================================================================
-
-    private ReplicaSetSpec getOrCreateReplicaSetSpec(ReplicaSetBuilder rs) {
-        ReplicaSetSpec spec = rs.getSpec();
-        if (spec == null) {
-            spec = new ReplicaSetSpec();
-            rs.withSpec(spec);
-        }
-        return spec;
-    }
-
-    private ReplicationControllerSpec getOrCreateReplicationControllerSpec(ReplicationControllerBuilder rc) {
-        ReplicationControllerSpec spec = rc.getSpec();
-        if (spec == null) {
-            spec = new ReplicationControllerSpec();
-            rc.withSpec(spec);
-        }
-        return spec;
-    }
-
-    private DeploymentSpec getOrCreateDeploymentSpec(DeploymentBuilder d) {
-        DeploymentSpec spec = d.getSpec();
-        if (spec == null) {
-            spec = new DeploymentSpec();
-            d.withSpec(spec);
-        }
-        return spec;
-    }
-
-    // ==============================================================================================
-
-    private PodTemplateSpec getOrCreatePodTemplateSpec(ReplicaSetSpec spec) {
-        PodTemplateSpec template = spec.getTemplate();
-        if (template == null) {
-            template = new PodTemplateSpec();
-            spec.setTemplate(template);
-        }
-        return template;
-    }
-
-    private PodTemplateSpec getOrCreatePodTemplateSpec(ReplicationControllerSpec spec) {
-        PodTemplateSpec template = spec.getTemplate();
-        if (template == null) {
-            template = new PodTemplateSpec();
-            spec.setTemplate(template);
-        }
-        return template;
-    }
-
-    private PodTemplateSpec getOrCreatePodTemplateSpec(DeploymentSpec spec) {
-        PodTemplateSpec template = spec.getTemplate();
-        if (template == null) {
-            template = new PodTemplateSpec();
-            spec.setTemplate(template);
-        }
-        return template;
-    }
-
-    // ==============================================================================================
-
-    private List<Container> getOrCreateContainerList(PodTemplateSpec template) {
-        PodSpec podSpec = getOrCreatePodSpec(template);
-        List<Container> containers = getOrCreateContainers(podSpec);
-        mergeImageConfigurationWithContainerSpec(containers);
-        return containers;
-    }
-
-    private PodSpec getOrCreatePodSpec(PodTemplateSpec template) {
-        PodSpec podSpec = template.getSpec();
-        if (podSpec == null) {
-            podSpec = new PodSpec();
-            template.setSpec(podSpec);
-        }
-        return podSpec;
-    }
-
-    private List<Container> getOrCreateContainers(PodSpec podSpec) {
-        List<Container> containers = podSpec.getContainers();
-        if (containers == null) {
-            containers = new ArrayList<Container>();
-            podSpec.setContainers(containers);
-        }
-        return containers;
+                List<Container> containers = podSpec.getContainers();
+                if (containers == null) {
+                    containers = new ArrayList<Container>();
+                }
+                mergeImageConfigurationWithContainerSpec(containers);
+                podSpec.withContainers(containers).endSpec();
+            }
+        });
     }
 
     // Add missing information to the given containers as found
