@@ -32,7 +32,7 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
  * This goal is the opposite to the <code>fabric8:run</code> or <code>fabric8:deploy</code> goals.
  */
 @Mojo(name = "undeploy", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.INSTALL)
-public class UndeployMojo extends ApplyMojo {
+public class UndeployMojo extends AbstractDeployMojo {
     @Override
     protected void applyEntities(Controller controller, KubernetesClient kubernetes, String namespace, String fileName, Set<HasMetadata> entities) throws Exception {
         deleteEntities(kubernetes, namespace, entities);

@@ -1,0 +1,47 @@
+
+[[fabric8:resource-apply]]
+== *fabric8:resource-apply*
+
+This goal will generate the kubernetes resources via the <<fabric8:resource>> goal and apply them into the current kubernetes cluster.
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:resource-apply
+----
+
+Its usually simpler to just use the <<fabric8:deploy>> goal which performs a build, creates the docker image and runs `fabric8:resource-apply`:
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:deploy
+----
+
+However if you have built your code and docker image but find some issue with the generated manifests; you can update the configuration of the <<fabric8:resource>> goal in your `pom.xml` or modify the YAML files in `src/main/fabric8` and then run:
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:resource-apply
+----
+
+Which will skip running unit tests and generating the docker build via <<fabric8:build>> but will only regenerate the manifests and apply them. This can help speed up the round trip time when fixing up resource generation issues.
+
+**Note** to use this goal you must have the <<fabric8:resource>> goal bound to your executions in your pom.xml. e.g. like this:
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>fabric8-maven-plugin</artifactId>
+  <version>{version}</version>
+
+  <!-- Connect fabric8:resource to the lifecycle phases -->
+  <executions>
+    <execution>
+       <id>fabric8</id>
+       <goals>
+         <goal>resource</goal>
+       </goals>
+    </execution>
+  </executions>
+</plugin>
+----

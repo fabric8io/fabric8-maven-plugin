@@ -74,12 +74,9 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 
 /**
- * Applies the Kubernetes YAML to a namespace in a kubernetes environment after the package goals have been invoked.
- * <BR>
- * To be able to invoke a single goal to deploy the application use the <code>mvn fabric8:deploy</code> goal instead.
+ * Base class for goals which deploy the generated artifacts into the Kubernetes cluster
  */
-@Mojo(name = "apply", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.INSTALL)
-public class ApplyMojo extends AbstractFabric8Mojo {
+public class AbstractDeployMojo extends AbstractFabric8Mojo {
 
     /**
      * The domain added to the service ID when creating OpenShift routes

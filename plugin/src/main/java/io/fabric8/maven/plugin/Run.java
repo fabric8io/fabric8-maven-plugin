@@ -76,7 +76,7 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
  */
 @Mojo(name = "run", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.VALIDATE)
 @Execute(phase = LifecyclePhase.INSTALL)
-public class Run extends ApplyMojo {
+public class Run extends AbstractDeployMojo {
     public static final Ansi.Color COLOR_POD_LOG = Ansi.Color.BLUE;
 
     @Parameter(property = "fabric8.deleteOnExit", defaultValue = "true")
