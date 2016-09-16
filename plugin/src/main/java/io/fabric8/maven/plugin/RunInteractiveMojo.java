@@ -172,7 +172,6 @@ public class RunInteractiveMojo extends DeployMojo {
 
     private void watchLog(LogWatch logWatcher, String podName, final String failureMessage) {
         final InputStream in = logWatcher.getOutput();
-        //String prefix = "F8> Pod " + podName + "> ";
         String prefix = "Pod> ";
         if (useColor) {
             prefix += Ansi.ansi().fg(COLOR_POD_LOG);
