@@ -13,13 +13,13 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.plugin;
 
-import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.PodStatusType;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.ReplicationController;
@@ -44,17 +44,13 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.utils.Strings;
-import org.apache.maven.plugins.annotations.Execute;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.fusesource.jansi.Ansi;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -63,35 +59,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+import static io.fabric8.kubernetes.api.KubernetesHelper.getPodStatus;
+import static io.fabric8.kubernetes.api.KubernetesHelper.parseDate;
 
 /**
- * This goal forks the install goal then applies the generated kubernetes resources to the current cluster,
- * waits for the new pod to start and tails it to the console.
- * Pressing <code>Ctrl+C</code> will then terminate the application.
- * <p>
- * You can think of this goal as like a combination of `fabric8:deploy`, `fabric8:logs` then `fabric8:undeploy` once you hit
- * <code>Ctrl+C</code>
- * <p>
- * Note that the goals fabric8:resource and fabric8:build must be bound to the proper execution phases.
  */
-@Mojo(name = "run", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.VALIDATE)
-@Execute(phase = LifecyclePhase.INSTALL)
-public class Run extends AbstractDeployMojo {
+public class AbstractTailLogMojo extends AbstractDeployMojo {
     public static final Ansi.Color COLOR_POD_LOG = Ansi.Color.BLUE;
-
-    @Parameter(property = "fabric8.deleteOnExit", defaultValue = "true")
-    private boolean deleteOnExit;
-
     private Watch podWatcher;
-    private Map<String, Pod> addedPods = new ConcurrentHashMap<>();
     private LogWatch logWatcher;
+    private Map<String, Pod> addedPods = new ConcurrentHashMap<>();
     private CountDownLatch terminateLatch = new CountDownLatch(1);
     private String watchingPodName;
 
-    @Override
-    protected void applyEntities(Controller controller, final KubernetesClient kubernetes, final String namespace, String fileName, final Set<HasMetadata> entities) throws Exception {
-        super.applyEntities(controller, kubernetes, namespace, fileName, entities);
-
+    protected void tailAppPodsLogs(final KubernetesClient kubernetes, final String namespace, final Set<HasMetadata> entities, boolean watchAddedPodsOnly, boolean deleteAppOnExit, boolean followLog) {
         LabelSelector selector = null;
         for (HasMetadata entity : entities) {
             selector = getPodLabelSelector(entity);
@@ -100,28 +81,70 @@ public class Run extends AbstractDeployMojo {
             }
         }
         if (selector != null) {
-            if (deleteOnExit) {
+            if (deleteAppOnExit) {
                 Runtime.getRuntime().addShutdownHook(new Thread("mvn fabric8:run-interactive shutdown hook") {
                     @Override
                     public void run() {
-                        log.info("Terminating so removing the kubernetes resources:");
+                        log.info("Undeploying the app:");
                         deleteEntities(kubernetes, namespace, entities);
+
+                        if (podWatcher != null) {
+                            podWatcher.close();
+                        }
+                        if (logWatcher != null) {
+                            logWatcher.close();
+                        }
                     }
                 });
             }
-            waitAndLogPods(kubernetes, namespace, selector);
+            waitAndLogPods(kubernetes, namespace, selector, watchAddedPodsOnly, deleteAppOnExit, followLog);
         } else {
             log.warn("No selector in deployment so cannot watch pods!");
         }
     }
 
-    private void waitAndLogPods(final KubernetesClient kubernetes, final String namespace, LabelSelector selector) {
-        ClientNonNamespaceOperation<Pod, PodList, DoneablePod, ClientPodResource<Pod, DoneablePod>> pods = kubernetes.pods().inNamespace(namespace);
-        log.info("Watching pods with selector " + selector);
-        podWatcher = withSelector(pods, selector).watch(new Watcher<Pod>() {
+    private void waitAndLogPods(final KubernetesClient kubernetes, final String namespace, LabelSelector selector, final boolean watchAddedPodsOnly, final boolean deleteAppOnExit, final boolean followLog) {
+        FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> pods = withSelector(kubernetes.pods().inNamespace(namespace), selector);
+        log.info("Watching pods with selector " + selector + " waiting for a running pod...");
+        Pod latestPod = null;
+        boolean runningPod = false;
+        PodList list = pods.list();
+        if (list != null) {
+            List<Pod> items = list.getItems();
+            if (items != null) {
+                for (Pod pod : items) {
+                    PodStatusType status = getPodStatus(pod);
+                    switch (status) {
+                        case WAIT:
+                        case OK:
+                            if (latestPod == null || isNewerPod(pod, latestPod)) {
+                                latestPod = pod;
+                            }
+                            runningPod = true;
+                            break;
+
+                        case ERROR:
+                        default:
+                            continue;
+                    }
+                }
+            }
+        }
+        // we may have missed the ADDED event so lets simulate one
+        if (latestPod != null) {
+            onPod(Watcher.Action.ADDED, latestPod, kubernetes, namespace, watchAddedPodsOnly, deleteAppOnExit, followLog);
+        }
+        if (!watchAddedPodsOnly) {
+            // lets watch the current pods then watch for changes
+            if (!runningPod) {
+                log.warn("No pod is running yet. Are you sure you deployed your app via `fabric8:deploy`?");
+                log.warn("Or did you stop it via `fabric8:stop`? If so try running the `fabric8:start` goal");
+            }
+        }
+        podWatcher = pods.watch(new Watcher<Pod>() {
             @Override
             public void eventReceived(Action action, Pod pod) {
-                onPod(action, pod, kubernetes, namespace);
+                onPod(action, pod, kubernetes, namespace, watchAddedPodsOnly, deleteAppOnExit, followLog);
             }
 
             @Override
@@ -141,8 +164,30 @@ public class Run extends AbstractDeployMojo {
         }
     }
 
+    private boolean isNewerPod(HasMetadata newer, HasMetadata older) {
+        ObjectMeta metadata1 = newer.getMetadata();
+        ObjectMeta metadata2 = older.getMetadata();
+        if (metadata1 != null) {
+            if (metadata2 == null) {
+                return true;
+            }
+            Date t1 = parseTimestamp(metadata1.getCreationTimestamp());
+            Date t2 = parseTimestamp(metadata2.getCreationTimestamp());
+            if (t1 != null) {
+                return t2 == null || t1.compareTo(t2) > 0;
+            }
+        }
+        return false;
+    }
 
-    private void onPod(Watcher.Action action, Pod pod, KubernetesClient kubernetes, String namespace) {
+    private Date parseTimestamp(String text) {
+        if (text == null) {
+            return null;
+        }
+        return parseDate(text);
+    }
+
+    private void onPod(Watcher.Action action, Pod pod, KubernetesClient kubernetes, String namespace, boolean watchAddedPodsOnly, boolean deleteAppOnExit, boolean followLog) {
         String name = getName(pod);
         log.info("" + action + " pod " + name + " status: " + KubernetesHelper.getPodStatusText(pod));
         if (action.equals(Watcher.Action.DELETED)) {
@@ -152,33 +197,51 @@ public class Run extends AbstractDeployMojo {
             }
         } else {
             if (action.equals(Watcher.Action.ADDED)) {
-                // lets keep track of pods added since we did the deploy
-                // so that we don't start tailing the old pods when a rolling upgrade kicks in
                 addedPods.put(name, pod);
             } else if (action.equals(Watcher.Action.MODIFIED)) {
-                if (KubernetesHelper.isPodRunning(pod) && addedPods.containsKey(name)) {
-                    if (watchingPodName == null || !watchingPodName.equals(name)) {
-                        if (logWatcher != null) {
-                            log.info("Closing log watcher for " + watchingPodName + " as now watching " + name);
-                            logWatcher.close();
+                if (watchAddedPodsOnly) {
+                    // lets keep track of pods added since we did the deploy
+                    // so that we don't start tailing the old pods when a rolling upgrade kicks in
+                } else {
+                    addedPods.put(name, pod);
+                }
+            }
+            if (addedPods.containsKey(name) && KubernetesHelper.isPodRunning(pod) && addedPods.containsKey(name)) {
+                if (watchingPodName == null || !watchingPodName.equals(name)) {
+                    if (logWatcher != null) {
+                        log.info("Closing log watcher for " + watchingPodName + " as now watching " + name);
+                        logWatcher.close();
+                    }
+                    watchingPodName = name;
+                    ClientPodResource<Pod, DoneablePod> podResource = kubernetes.pods().inNamespace(namespace).withName(name);
+                    if (followLog || deleteAppOnExit) {
+                        logWatcher = podResource.watchLog();
+                        watchLog(logWatcher, name, "Failed to read log of pod " + name + ".", deleteAppOnExit);
+                    } else {
+                        String logText = podResource.getLog();
+                        if (logText != null) {
+                            String[] lines = logText.split("\n");
+                            Logger log = createPodLogger();
+                            log.info("Log of pod: " + name);
+                            log.info("");
+                            for (String line : lines) {
+                                log.info(line);
+                            }
                         }
-                        watchingPodName = name;
-                        logWatcher = kubernetes.pods().inNamespace(namespace).withName(name).watchLog();
-                        watchLog(logWatcher, name, "Failed to read log of pod " + name + ".");
+                        terminateLatch.countDown();
                     }
                 }
             }
         }
     }
 
-    private void watchLog(LogWatch logWatcher, String podName, final String failureMessage) {
+
+    private void watchLog(LogWatch logWatcher, String podName, final String failureMessage, boolean deleteAppOnExit) {
         final InputStream in = logWatcher.getOutput();
-        String prefix = "Pod> ";
-        if (useColor) {
-            prefix += Ansi.ansi().fg(COLOR_POD_LOG);
-        }
-        final Logger log = new AnsiLogger(getLog(), useColor, verbose, prefix);
+        final Logger log = createPodLogger();
         log.info("Tailing log of pod: " + podName);
+        log.info("Press Ctrl-C to " + (deleteAppOnExit ? "undeploy the app" : "stop tailing the log"));
+        log.info("");
 
         Thread thread = new Thread() {
             @Override
@@ -198,6 +261,14 @@ public class Run extends AbstractDeployMojo {
             }
         };
         thread.start();
+    }
+
+    private Logger createPodLogger() {
+        String prefix = "Pod> ";
+        if (useColor) {
+            prefix += Ansi.ansi().fg(COLOR_POD_LOG);
+        }
+        return new AnsiLogger(getLog(), useColor, verbose, prefix);
     }
 
     private FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> withSelector(ClientNonNamespaceOperation<Pod, PodList, DoneablePod, ClientPodResource<Pod, DoneablePod>> pods, LabelSelector selector) {
