@@ -16,17 +16,20 @@
 
 package io.fabric8.maven.plugin;
 
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 
 /**
- * This goal forks the install goal then applies the generated kubernetes resources to the current cluster.
+ * This goal forks the compile goal then applies the generated kubernetes resources to the current cluster.
  *
- * Note that the goals fabric8:resource and fabric8:build must be bound to the proper execution phases.
+ * Note that the fabric8:resource goal must be bound to the proper execution phases.
  *
  * @author roland
  * @since 09/06/16
  */
 
-@Mojo(name = "deploy", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.VALIDATE)
-@Execute(phase = LifecyclePhase.INSTALL)
-public class DeployMojo extends AbstractDeployMojo { }
+@Mojo(name = "resource-apply", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.VALIDATE)
+@Execute(phase = LifecyclePhase.COMPILE)
+public class ResourceAndApplyMojo extends AbstractDeployMojo { }

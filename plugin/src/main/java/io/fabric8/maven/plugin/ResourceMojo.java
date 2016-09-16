@@ -487,7 +487,9 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     // get a reference date
     private Date getBuildReferenceDate() throws MojoExecutionException {
-        if (goalFinder.runningWithGoal(project, session, "fabric8:build")) {
+        if (goalFinder.runningWithGoal(project, session, "fabric8:build") ||
+                goalFinder.runningWithGoal(project, session, "fabric8:deploy") ||
+                goalFinder.runningWithGoal(project, session, "fabric8:run")) {
             // we are running together with fabric8:build, but since fabric8:build is running later we
             // are creating the build date here which is reused by fabric8:build
             return new Date();
