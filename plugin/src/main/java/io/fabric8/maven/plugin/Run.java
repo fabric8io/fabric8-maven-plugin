@@ -65,17 +65,18 @@ import java.util.concurrent.CountDownLatch;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 
 /**
- * Mojo for doing everything by forking the lifecycle.
+ * This goal forks the install goal then applies the generated kubernetes resources to the current cluster,
+ * waits for the new pod to start and tails it to the console.
+ * Pressing <code>Ctrl+C</code> will then terminate the application.
  * <p>
- * The goals fabric8:resource and fabric8:build must be bound to the proper execution phases.
- *
- * @author roland
- * @since 09/06/16
+ * You can think of this goal as like a combination of `fabric8:deploy`, `fabric8:logs` then `fabric8:undeploy` once you hit
+ * <code>Ctrl+C</code>
+ * <p>
+ * Note that the goals fabric8:resource and fabric8:build must be bound to the proper execution phases.
  */
-
-@Mojo(name = "run-interactive", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.VALIDATE)
+@Mojo(name = "run", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.VALIDATE)
 @Execute(phase = LifecyclePhase.INSTALL)
-public class RunInteractiveMojo extends DeployMojo {
+public class Run extends ApplyMojo {
     public static final Ansi.Color COLOR_POD_LOG = Ansi.Color.BLUE;
 
     @Parameter(property = "fabric8.deleteOnExit", defaultValue = "true")

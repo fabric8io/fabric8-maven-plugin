@@ -2,22 +2,46 @@
 [[fabric8:run]]
 == *fabric8:run*
 
-This is the main goal for building your docker image, generating the kubernetes resources and deploying them into the cluster.
+This goal builds your application (generating the docker image and kubernetes manifest), deploys it on the current kubernetes cluster then tails the logs of the first pod that starts until you hit `Ctrl+C` then the application is undeployed.
+
+So this goal feels very much like the `run` goal in other maven plugins like spring-boot, tomcat, jetty, wildfly etc.
 
 [source,sh,subs="attributes"]
 ----
 mvn fabric8:run
 ----
 
-This goal is really just short hand for:
+So you can think of this goal as being similar to performing:
 
 [source,sh,subs="attributes"]
 ----
-mvn install fabric8:deploy
+mvn fabric8:deploy
+mvn fabric8:logs
+...
+^C
+mvn fabric8:undeploy
 ----
 
-Effectively this builds your project then invokes these goals:
 
-* <<fabric8:resource>>
-* <<fabric8:build>>
-* <<fabric8:deploy>>
+**Note** that you must have the <<fabric8:resource>> and <<fabric8:build>> goals bound to your executions in your pom.xml. e.g. like this:
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>fabric8-maven-plugin</artifactId>
+  <version>{version}</version>
+
+  <!-- Connect fabric8:resource, fabric8:build and fabric8:helm to lifecycle phases -->
+  <executions>
+    <execution>
+       <id>fabric8</id>
+       <goals>
+         <goal>resource</goal>
+         <goal>build</goal>
+         <goal>helm</goal>
+       </goals>
+    </execution>
+  </executions>
+</plugin>
+----

@@ -27,7 +27,7 @@ available goals are described below.
      </images>
   </configuration>
 
-  <!-- Connect fabric8:resource and fabric8:build to lifecycle phases -->
+  <!-- Connect fabric8:resource, fabric8:build and fabric8:helm to lifecycle phases -->
   <executions>
     <execution>
        <id>fabric8</id>
