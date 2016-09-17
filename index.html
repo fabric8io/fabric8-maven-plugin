@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 3.1.42,</span>
-<span id="revdate">2016-09-16</span>
+<span id="revdate">2016-09-17</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -550,40 +550,46 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#fabric8:cluster-stop">3.3. <strong>fabric8:cluster-stop</strong></a>
 <ul class="sectlevel3">
 <li><a href="#restarting">3.3.1. Restarting</a></li>
+<li><a href="#deleting">3.3.2. Deleting</a></li>
 </ul>
 </li>
 <li><a href="#fabric8:run">3.4. <strong>fabric8:run</strong></a></li>
 <li><a href="#fabric8:deploy">3.5. <strong>fabric8:deploy</strong></a></li>
 <li><a href="#fabric8:undeploy">3.6. <strong>fabric8:undeploy</strong></a></li>
-<li><a href="#fabric8:start">3.7. <strong>fabric8:start</strong></a></li>
+<li><a href="#fabric8:start">3.7. <strong>fabric8:start</strong></a>
+<ul class="sectlevel3">
+<li><a href="#scaling">3.7.1. Scaling</a></li>
+</ul>
+</li>
 <li><a href="#fabric8:stop">3.8. <strong>fabric8:stop</strong></a></li>
 <li><a href="#fabric8:log">3.9. <strong>fabric8:log</strong></a></li>
-<li><a href="#fabric8:watch">3.10. <strong>fabric8:watch</strong></a></li>
-<li><a href="#fabric8:resource">3.11. <strong>fabric8:resource</strong></a>
+<li><a href="#fabric8:debug">3.10. <strong>fabric8:debug</strong></a></li>
+<li><a href="#fabric8:watch">3.11. <strong>fabric8:watch</strong></a></li>
+<li><a href="#fabric8:resource">3.12. <strong>fabric8:resource</strong></a>
 <ul class="sectlevel3">
-<li><a href="#resource-labels-annotations">3.11.1. Labels and Annotations</a></li>
+<li><a href="#resource-labels-annotations">3.12.1. Labels and Annotations</a></li>
 </ul>
 </li>
-<li><a href="#fabric8:resource-apply">3.12. <strong>fabric8:resource-apply</strong></a></li>
-<li><a href="#fabric8:build">3.13. <strong>fabric8:build</strong></a>
+<li><a href="#fabric8:resource-apply">3.13. <strong>fabric8:resource-apply</strong></a></li>
+<li><a href="#fabric8:build">3.14. <strong>fabric8:build</strong></a>
 <ul class="sectlevel3">
-<li><a href="#build-kubernetes">3.13.1. Kubernetes Build</a></li>
-<li><a href="#build-openshift">3.13.2. OpenShift Build</a></li>
-<li><a href="#build-goal-configuration">3.13.3. Configuration</a></li>
-<li><a href="#image-configuration">3.13.4. Image Configuration</a></li>
-<li><a href="#build-configuration">3.13.5. Build Configuration</a></li>
-<li><a href="#build-assembly">3.13.6. Assembly</a></li>
-<li><a href="#misc-env">3.13.7. Environment and Labels</a></li>
-<li><a href="#misc-startup">3.13.8. Startup Arguments</a></li>
-<li><a href="#build-buildargs">3.13.9. Build Args</a></li>
+<li><a href="#build-kubernetes">3.14.1. Kubernetes Build</a></li>
+<li><a href="#build-openshift">3.14.2. OpenShift Build</a></li>
+<li><a href="#build-goal-configuration">3.14.3. Configuration</a></li>
+<li><a href="#image-configuration">3.14.4. Image Configuration</a></li>
+<li><a href="#build-configuration">3.14.5. Build Configuration</a></li>
+<li><a href="#build-assembly">3.14.6. Assembly</a></li>
+<li><a href="#misc-env">3.14.7. Environment and Labels</a></li>
+<li><a href="#misc-startup">3.14.8. Startup Arguments</a></li>
+<li><a href="#build-buildargs">3.14.9. Build Args</a></li>
 </ul>
 </li>
-<li><a href="#fabric8:push">3.14. <strong>fabric8:push</strong></a></li>
-<li><a href="#fabric8:install">3.15. <strong>fabric8:install</strong></a></li>
-<li><a href="#fabric8:helm">3.16. <strong>fabric8:helm</strong></a></li>
-<li><a href="#fabric8:helm-index">3.17. <strong>fabric8:helm-index</strong></a></li>
-<li><a href="#fabric8:app-catalog">3.18. <strong>fabric8:app-catalog</strong></a></li>
-<li><a href="#fabric8:distro">3.19. <strong>fabric8:distro</strong></a></li>
+<li><a href="#fabric8:push">3.15. <strong>fabric8:push</strong></a></li>
+<li><a href="#fabric8:install">3.16. <strong>fabric8:install</strong></a></li>
+<li><a href="#fabric8:helm">3.17. <strong>fabric8:helm</strong></a></li>
+<li><a href="#fabric8:helm-index">3.18. <strong>fabric8:helm-index</strong></a></li>
+<li><a href="#fabric8:app-catalog">3.19. <strong>fabric8:app-catalog</strong></a></li>
+<li><a href="#fabric8:distro">3.20. <strong>fabric8:distro</strong></a></li>
 </ul>
 </li>
 <li><a href="#generators">4. Generators</a>
@@ -1439,6 +1445,17 @@ available goals are described below.</p>
 <p>Once restarted all the images, resources and pods should come back</p>
 </div>
 </div>
+<div class="sect3">
+<h4 id="deleting">3.3.2. Deleting</h4>
+<div class="paragraph">
+<p>If you wish to destroy the cluster VM and all the data inside it then you can pass the <code>fabric8.cluster.delete</code> parameter with a value of <code>true</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-stop -Dfabric8.cluster.delete=true</code></pre>
+</div>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="fabric8:run">3.4. <strong>fabric8:run</strong></h3>
@@ -1576,6 +1593,31 @@ mvn fabric8:undeploy</code></pre>
 <div class="paragraph">
 <p>This goal iterates through all scaleable resources generated by the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> goal and scales them to a <em>replica count</em> of`1` so that by the time this goal completes there should be a single running pod of this app.</p>
 </div>
+<div class="sect3">
+<h4 id="scaling">3.7.1. Scaling</h4>
+<div class="paragraph">
+<p>You can also use the <code>fabric8:start</code> goal to scale the number of pods running your application via passing the <code>fabric8.replicas</code> parameter:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:start  -Dfabric8.replicas=2</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>After the above you should see 2 pods running for your application.</p>
+</div>
+<div class="paragraph">
+<p>From the command line you can use the <code>kubectl</code> binary to watch pods come and go via the following:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">kubectl get pod -w</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>-w</code> flag watches the resource and keeps updating the console as things change. Leaving off the <code>-w</code> just lists the current pods only then <code>kubect</code> terminates.</p>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="fabric8:stop">3.8. <strong>fabric8:stop</strong></h3>
@@ -1622,7 +1664,38 @@ mvn fabric8:undeploy</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:watch">3.10. <strong>fabric8:watch</strong></h3>
+<h3 id="fabric8:debug">3.10. <strong>fabric8:debug</strong></h3>
+<div class="paragraph">
+<p>This goal enables debugging in your Java app and then port forwards from localhost to the latest running pod of your app so that you can easily debug your app from your Java IDE.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:debug</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then follow the on screen instructions.</p>
+</div>
+<div class="paragraph">
+<p>The default debug port is <code>5005</code>. If you wish to change the local port to use for debugging then pass in the <code>fabric8.debug.port</code> parameter:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:debug -Dfabric8.debug.port=8000</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then in your IDE you start a Remote debug execution using this remote port using localhost and you should be able to set breakpoints and step through your code.</p>
+</div>
+<div class="paragraph">
+<p>This lets you debug your apps while they are running inside a Kubernetes cluster - for example if you wish to debug a REST endpoint while another pod is invoking it.</p>
+</div>
+<div class="paragraph">
+<p>Debug is enabled via the <code>JAVA_ENABLE_DEBUG</code> environment variable being set to <code>true</code>. This environment variable is used for all the standard Java docker images used by Spring Boot, flat classpath and executable JAR projects and Wildfly Swarm. If you use your own custom docker base image you may wish to also respect this environment variable too to enable debugging.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fabric8:watch">3.11. <strong>fabric8:watch</strong></h3>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -1864,7 +1937,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:resource">3.11. <strong>fabric8:resource</strong></h3>
+<h3 id="fabric8:resource">3.12. <strong>fabric8:resource</strong></h3>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -1878,7 +1951,7 @@ This is chapter is incomplete, but there is work in progress.
 </table>
 </div>
 <div class="sect3">
-<h4 id="resource-labels-annotations">3.11.1. Labels and Annotations</h4>
+<h4 id="resource-labels-annotations">3.12.1. Labels and Annotations</h4>
 <div class="paragraph">
 <p>Labels and annotations can be easily added to any resource object. This is best explained by an example.</p>
 </div>
@@ -1993,7 +2066,7 @@ This is chapter is incomplete, but there is work in progress.
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:resource-apply">3.12. <strong>fabric8:resource-apply</strong></h3>
+<h3 id="fabric8:resource-apply">3.13. <strong>fabric8:resource-apply</strong></h3>
 <div class="paragraph">
 <p>This goal will generate the kubernetes resources via the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> goal and apply them into the current kubernetes cluster.</p>
 </div>
@@ -2045,7 +2118,7 @@ This is chapter is incomplete, but there is work in progress.
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:build">3.13. <strong>fabric8:build</strong></h3>
+<h3 id="fabric8:build">3.14. <strong>fabric8:build</strong></h3>
 <div class="paragraph">
 <p>This goal is for building Docker images. Images can be build in two ways which depend on the <code>mode</code> (property: <code>fabric8.mode</code>). This mode can have be either <code>kubernetes</code> for a standard Docker build (the default) or <code>openshift</code> for an OpenShift build.</p>
 </div>
@@ -2053,7 +2126,7 @@ This is chapter is incomplete, but there is work in progress.
 <p>By default the mode is set to <code>auto</code>. In this case the plugin tries to detect which kind of build should be performed by contaction the API server. If this fails or if no cluster access is conigured e.g. with <code>oc login</code> then the mode is set to <code>kubernetes</code>.</p>
 </div>
 <div class="sect3">
-<h4 id="build-kubernetes">3.13.1. Kubernetes Build</h4>
+<h4 id="build-kubernetes">3.14.1. Kubernetes Build</h4>
 <div class="paragraph">
 <p>If the mode is set to <code>kubernetes</code> then a normal Docker build is performed. The connection configuration to access the Docker daemon is described in <a href="#access-configuration">Access Configuration</a>.</p>
 </div>
@@ -2062,7 +2135,7 @@ This is chapter is incomplete, but there is work in progress.
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-openshift">3.13.2. OpenShift Build</h4>
+<h4 id="build-openshift">3.14.2. OpenShift Build</h4>
 <div class="paragraph">
 <p>For the mode <code>openshift</code> OpenShift specific <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html">Builds</a> can be performed. These are so called <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html">Binary Source</a> builds ("binary builds" in short), where the data specified with the <a href="#build-configuration">build configuration</a>  is send directly to OpenShift as a binary archive.</p>
 </div>
@@ -2118,7 +2191,7 @@ This is chapter is incomplete, but there is work in progress.
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-goal-configuration">3.13.3. Configuration</h4>
+<h4 id="build-goal-configuration">3.14.3. Configuration</h4>
 <div class="paragraph">
 <p>The following sections describe the usual configuration, which is similar to the build configuration used in the <a href="https://dmp.fabric8.io">docker-maven-plugin</a>.</p>
 </div>
@@ -2364,7 +2437,7 @@ the URL is:</p>
 </table>
 </div>
 <div class="sect3">
-<h4 id="image-configuration">3.13.4. Image Configuration</h4>
+<h4 id="image-configuration">3.14.4. Image Configuration</h4>
 <div class="paragraph">
 <p>The configuration how images should be created a defined in a dedicated <code>&lt;images&gt;</code> sections. These are specified for each image within the <code>&lt;images&gt;</code> element of the configuration with one <code>&lt;image&gt;</code> element per image to use.</p>
 </div>
@@ -2487,7 +2560,7 @@ linking images together or for specifying it with the global <strong>image</stro
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-configuration">3.13.5. Build Configuration</h4>
+<h4 id="build-configuration">3.14.5. Build Configuration</h4>
 <div id="build-overview" class="paragraph">
 <p>There are two different modes how Images can be built:</p>
 </div>
@@ -2701,7 +2774,7 @@ remote API.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-assembly">3.13.6. Assembly</h4>
+<h4 id="build-assembly">3.14.6. Assembly</h4>
 <div class="paragraph">
 <p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
 </div>
@@ -2955,7 +3028,7 @@ possible to change the name of the final build artifact with the following:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="misc-env">3.13.7. Environment and Labels</h4>
+<h4 id="misc-env">3.14.7. Environment and Labels</h4>
 <div class="paragraph">
 <p>When creating a container one or more environment variables can be set via configuration with the <code>env</code> parameter</p>
 </div>
@@ -2989,7 +3062,7 @@ possible to change the name of the final build artifact with the following:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="misc-startup">3.13.8. Startup Arguments</h4>
+<h4 id="misc-startup">3.14.8. Startup Arguments</h4>
 <div class="paragraph">
 <p>Using <code>entryPoint</code> and <code>cmd</code> it is possible to specify the <a href="https://docs.docker.com/reference/builder/#entrypoint">entry point</a>
 or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a container.</p>
@@ -3093,7 +3166,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-buildargs">3.13.9. Build Args</h4>
+<h4 id="build-buildargs">3.14.9. Build Args</h4>
 <div class="paragraph">
 <p>As described in section <a href="#build-configuration">Configuration</a> for external Dockerfiles <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg">Docker build arg</a> can be used. In addition to the
 configuration within the plugin configuration you can also use properties to specify them:</p>
@@ -3121,7 +3194,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:push">3.14. <strong>fabric8:push</strong></h3>
+<h3 id="fabric8:push">3.15. <strong>fabric8:push</strong></h3>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -3173,7 +3246,7 @@ more details.</p></td>
 </table>
 </div>
 <div class="sect2">
-<h3 id="fabric8:install">3.15. <strong>fabric8:install</strong></h3>
+<h3 id="fabric8:install">3.16. <strong>fabric8:install</strong></h3>
 <div class="paragraph">
 <p>Ensures that the fabric8 binaries are installed on the current machine such as <a href="https://github.com/fabric8io/gofabric8/">gofabric8</a> and for kubernetes: <a href="http://kubernetes.io/docs/user-guide/kubectl-overview/">kubectl</a> and <a href="https://github.com/kubernetes/minikube">minikube</a> or for OpenShift: <a href="https://docs.openshift.com/enterprise/latest/cli_reference/basic_cli_operations.html">oc</a> and <a href="https://github.com/jimmidyson/minishift">minishift</a></p>
 </div>
@@ -3190,7 +3263,7 @@ more details.</p></td>
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:helm">3.16. <strong>fabric8:helm</strong></h3>
+<h3 id="fabric8:helm">3.17. <strong>fabric8:helm</strong></h3>
 <div class="paragraph">
 <p>This goal is for creating <a href="https://github.com/kubernetes/helm/blob/master/docs/charts.md#the-chart-file-structure">Helm charts</a> for your Maven project so that you can install, update or delete your app in Kubernetes using <a href="https://github.com/kubernetes/helm">Helm</a>.</p>
 </div>
@@ -3310,13 +3383,13 @@ more details.</p></td>
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:helm-index">3.17. <strong>fabric8:helm-index</strong></h3>
+<h3 id="fabric8:helm-index">3.18. <strong>fabric8:helm-index</strong></h3>
 <div class="paragraph">
 <p>Generates a Manifest index file by querying a maven repository to find all the Kubernetes and OpenShift manifests available and their releases.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:app-catalog">3.18. <strong>fabric8:app-catalog</strong></h3>
+<h3 id="fabric8:app-catalog">3.19. <strong>fabric8:app-catalog</strong></h3>
 <div class="paragraph">
 <p>Generates an App Catalog for kubernetes and openshift</p>
 </div>
@@ -3328,7 +3401,7 @@ more details.</p></td>
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:distro">3.19. <strong>fabric8:distro</strong></h3>
+<h3 id="fabric8:distro">3.20. <strong>fabric8:distro</strong></h3>
 <div class="paragraph">
 <p>Generates a tarball of all the dependent kubernetes and openshift templates</p>
 </div>
@@ -4262,7 +4335,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.42<br>
-Last updated 2016-09-16 20:38:18 UTC
+Last updated 2016-09-17 10:12:38 UTC
 </div>
 </div>
 </body>
