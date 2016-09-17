@@ -176,35 +176,39 @@ public class DefaultServiceEnricher extends BaseEnricher {
         if (Objects.equals(name, defaultServiceName)) {
             ServiceSpec matchedSpec = defaultService.getSpec();
             if (matchedSpec != null) {
-                ServiceFluent.SpecNested<ServiceBuilder> loadedSpec = loadedService.editSpec();
-                if (loadedSpec == null) {
+                if (loadedService.getSpec() == null) {
                     loadedService.withNewSpecLike(matchedSpec).endSpec();
                 } else {
-                    List<ServicePort> ports = loadedSpec.getPorts();
-                    if (ports == null || ports.isEmpty()) {
-                        loadedSpec.withPorts(matchedSpec.getPorts()).endSpec();
+                    ServiceFluent.SpecNested<ServiceBuilder> loadedSpec = loadedService.editSpec();
+                    if (loadedSpec == null) {
+                        loadedService.withNewSpecLike(matchedSpec).endSpec();
                     } else {
-                        // lets default any missing values
-                        for (ServicePort port : ports) {
-                            if (Strings.isNullOrBlank(port.getProtocol())) {
-                                port.setProtocol("TCP");
-                            }
-                            if (Strings.isNullOrBlank(port.getName())) {
-                                port.setName(getDefaultPortName(port));
-                            }
-                        }
-                        // lets add first missing port
-                        List<ServicePort> matchedPorts = matchedSpec.getPorts();
-                        if (matchedPorts != null && ports.isEmpty()) {
-                            for (ServicePort matchedPort : matchedPorts) {
-                                if (!hasPort(ports, matchedPort)) {
-                                    ports.add(matchedPort);
-                                    // lets only add 1 port
-                                    break;
+                        List<ServicePort> ports = loadedSpec.getPorts();
+                        if (ports == null || ports.isEmpty()) {
+                            loadedSpec.withPorts(matchedSpec.getPorts()).endSpec();
+                        } else {
+                            // lets default any missing values
+                            for (ServicePort port : ports) {
+                                if (Strings.isNullOrBlank(port.getProtocol())) {
+                                    port.setProtocol("TCP");
+                                }
+                                if (Strings.isNullOrBlank(port.getName())) {
+                                    port.setName(getDefaultPortName(port));
                                 }
                             }
+                            // lets add first missing port
+                            List<ServicePort> matchedPorts = matchedSpec.getPorts();
+                            if (matchedPorts != null && ports.isEmpty()) {
+                                for (ServicePort matchedPort : matchedPorts) {
+                                    if (!hasPort(ports, matchedPort)) {
+                                        ports.add(matchedPort);
+                                        // lets only add 1 port
+                                        break;
+                                    }
+                                }
+                            }
+                            loadedSpec.withPorts(ports).endSpec();
                         }
-                        loadedSpec.withPorts(ports).endSpec();
                     }
                 }
             }
