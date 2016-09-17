@@ -17,7 +17,6 @@ package io.fabric8.maven.plugin;
 
 import io.fabric8.maven.core.util.ProcessUtil;
 import io.fabric8.utils.IOHelpers;
-import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -32,9 +31,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Base class for install/tool related mojos
@@ -53,7 +50,6 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
 
     @Component
     private Prompter prompter;
-    private List<File> pathDirectories;
 
     protected File installBinaries() throws MojoExecutionException {
         File file = ProcessUtil.findExecutable(log, GOFABRIC8);
@@ -109,11 +105,11 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
             }
         } else {
             getLog().info("Found gofabric8 at: " + file);
-            runCommand(file.getAbsolutePath() + " version" + batchModeArgument, "gofabric8 version" + batchModeArgument);
+            runCommand(file.getAbsolutePath() + " version" + batchModeArgument, "gofabric8 version" + batchModeArgument, "gofabric8");
         }
 
         // now lets install any dependencies like kubectl, minikube, minishift etc
-        runCommand(file.getAbsolutePath() + " install" + batchModeArgument, "gofabric8 install" + batchModeArgument);
+        runCommand(file.getAbsolutePath() + " install" + batchModeArgument, "gofabric8 install" + batchModeArgument, "gofabric8");
         return file;
     }
 
@@ -182,7 +178,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         // TODO: Very checksum and potentially signature
 
         // lets check we can execute the binary before we try to replace it if it already exists
-        runCommand(file.getAbsolutePath() + " version" + batchModeArgument, "gofabric8 version" + batchModeArgument);
+        runCommand(file.getAbsolutePath() + " version" + batchModeArgument, "gofabric8 version" + batchModeArgument, "gofabric8");
 
         file.renameTo(destFile);
         log.info("Downloaded gofabric8 version " + version + " platform: " + platform + " arch:" + arch + " on: " + System.getProperty("os.name") + " " + arch + " to: " + destFile);
@@ -199,10 +195,10 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         return platform;
     }
 
-    protected void runCommand(String commandLine, String message) throws MojoExecutionException {
+    protected void runCommand(String commandLine, String message, String executableName) throws MojoExecutionException {
         int result = -1;
         try {
-            result = ProcessUtil.runCommand(log, commandLine, message);
+            result = ProcessUtil.runCommand(createExternalProcessLogger(executableName + "> "), commandLine, message);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to execute " + message + ". " + e, e);
         }

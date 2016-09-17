@@ -1,0 +1,25 @@
+
+[[fabric8:debug]]
+== *fabric8:debug*
+
+This goal enables debugging in your Java app and then port forwards from localhost to the latest running pod of your app so that you can easily debug your app from your Java IDE.
+
+[source, sh]
+----
+mvn fabric8:debug
+----
+
+Then follow the on screen instructions.
+
+The default debug port is `5005`. If you wish to change the local port to use for debugging then pass in the `fabric8.debug.port` parameter:
+
+[source, sh]
+----
+mvn fabric8:debug -Dfabric8.debug.port=8000
+----
+
+Then in your IDE you start a Remote debug execution using this remote port using localhost and you should be able to set breakpoints and step through your code.
+
+This lets you debug your apps while they are running inside a Kubernetes cluster - for example if you wish to debug a REST endpoint while another pod is invoking it.
+
+Debug is enabled via the `JAVA_ENABLE_DEBUG` environment variable being set to `true`. This environment variable is used for all the standard Java docker images used by Spring Boot, flat classpath and executable JAR projects and Wildfly Swarm. If you use your own custom docker base image you may wish to also respect this environment variable too to enable debugging.

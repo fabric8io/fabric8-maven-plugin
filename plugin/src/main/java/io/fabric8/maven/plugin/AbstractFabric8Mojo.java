@@ -24,9 +24,11 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.fusesource.jansi.Ansi;
 
 public abstract class AbstractFabric8Mojo extends AbstractMojo {
 
+    public static final Ansi.Color COLOR_POD_LOG = Ansi.Color.BLUE;
     @Parameter(defaultValue = "${project}", readonly = true)
     protected MavenProject project;
 
@@ -59,4 +61,10 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
 
     public abstract void executeInternal() throws MojoExecutionException, MojoFailureException;
 
+    protected Logger createExternalProcessLogger(String prefix) {
+        if (useColor) {
+            prefix += Ansi.ansi().fg(COLOR_POD_LOG);
+        }
+        return new AnsiLogger(getLog(), useColor, verbose, prefix);
+    }
 }

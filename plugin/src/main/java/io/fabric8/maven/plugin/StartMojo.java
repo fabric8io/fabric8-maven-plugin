@@ -20,6 +20,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
 import java.util.Set;
@@ -30,9 +31,13 @@ import java.util.Set;
  */
 @Mojo(name = "start", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.INSTALL)
 public class StartMojo extends AbstractDeployMojo {
+
+    @Parameter(property = "fabric8.replicas", defaultValue = "1")
+    private int replicas;
+
     @Override
     protected void applyEntities(Controller controller, KubernetesClient kubernetes, String namespace, String fileName, Set<HasMetadata> entities) throws Exception {
-        resizeApp(kubernetes, namespace, entities, 1);
+        resizeApp(kubernetes, namespace, entities, replicas);
     }
 }
 
