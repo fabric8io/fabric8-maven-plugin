@@ -17,9 +17,11 @@ package io.fabric8.maven.plugin;
 
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.DoneablePod;
+import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -53,10 +55,13 @@ import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.ClientNonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.ClientPodResource;
+import io.fabric8.kubernetes.client.dsl.ClientResource;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.kubernetes.client.dsl.Scaleable;
 import io.fabric8.kubernetes.internal.HasMetadataComparator;
 import io.fabric8.maven.core.access.ClusterAccess;
+import io.fabric8.maven.core.util.ProcessUtil;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.api.model.Route;
@@ -90,7 +95,9 @@ import java.util.TreeSet;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.createIntOrString;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
+import static io.fabric8.kubernetes.api.KubernetesHelper.getLabels;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateAnnotations;
 import static io.fabric8.kubernetes.api.KubernetesHelper.parseDate;
 
 /**
@@ -202,6 +209,12 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
      */
     @Parameter(property = "fabric8.namespace")
     private String namespace;
+
+    /**
+     * How many seconds to wait for a URL to be generated for a service
+     */
+    @Parameter(property = "fabric8.serviceUrl.waitSeconds", defaultValue = "5")
+    private long serviceUrlWaitTimeSeconds;
 
     private ClusterAccess clusterAccess;
 
@@ -430,6 +443,59 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
                 controller.apply(entity, fileName);
             }
         }
+
+        File file = null;
+        try {
+            file = getKubeCtlExecutable(controller);
+        } catch (MojoExecutionException e) {
+            log.warn(e.getMessage());
+        }
+        if (file != null) {
+            Logger logger = createExternalProcessLogger("hint> ");
+            logger.info("Use the command `" + file.getName() + " get pods -w` to watch your pods start up");
+        }
+
+        Logger serviceLogger = createExternalProcessLogger("services> ");
+        long serviceUrlWaitTimeSeconds = this.serviceUrlWaitTimeSeconds;
+        for (HasMetadata entity : entities) {
+            if (entity instanceof Service) {
+                Service service = (Service) entity;
+                String name = getName(service);
+                ClientResource<Service, DoneableService> serviceResource = kubernetes.services().inNamespace(namespace).withName(name);
+                String url = null;
+                // lets wait a little while until there is a service URL in case the exposecontroller is running slow
+                for (int i = 0; i < serviceUrlWaitTimeSeconds; i++) {
+                    if (i > 0) {
+                        Thread.sleep(1000);
+                    }
+                    Service s = serviceResource.get();
+                    if (s != null) {
+                        url = getExternalServiceURL(s);
+                        if (Strings.isNotBlank(url)) {
+                            break;
+                        }
+                    }
+                    if (!isExposeService(service)) {
+                        break;
+                    }
+                }
+
+                // lets not wait for other services
+                serviceUrlWaitTimeSeconds = 1;
+                if (Strings.isNotBlank(url) && url.startsWith("http")) {
+                    serviceLogger.info("" + name + ": " + url);
+                }
+            }
+        }
+    }
+
+    protected String getExternalServiceURL(Service service) {
+        return getOrCreateAnnotations(service).get(Annotations.Service.EXPOSE_URL);
+    }
+
+    protected boolean isExposeService(Service service) {
+        String expose = getLabels(service).get("expose");
+        return expose != null && expose.toLowerCase().equals("true");
     }
 
     public boolean isRollingUpgrades() {
@@ -804,4 +870,22 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
         return answer;
     }
 
+    protected File getKubeCtlExecutable(Controller controller) throws MojoExecutionException {
+        OpenShiftClient openShiftClient = controller.getOpenShiftClientOrNull();
+        String command = openShiftClient != null ? "oc" : "kubectl";
+
+        String missingCommandMessage;
+        File file = ProcessUtil.findExecutable(log, command);
+        if (file == null && command.equals("oc")) {
+            file = ProcessUtil.findExecutable(log, command);
+            missingCommandMessage = "commands oc or kubectl";
+        } else {
+            missingCommandMessage = "command " + command;
+        }
+        if (file == null) {
+            throw new MojoExecutionException("Could not find " + missingCommandMessage +
+                    ". Please try running `mvn fabric8:install` to install the necessary binaries and ensure they get added to your $PATH");
+        }
+        return file;
+    }
 }

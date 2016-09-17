@@ -198,23 +198,10 @@ public class DebugMojo extends AbstractDeployMojo {
         return false;
     }
 
+
     private void portForward(Controller controller, String podName) throws MojoExecutionException {
-        OpenShiftClient openShiftClient = controller.getOpenShiftClientOrNull();
-        String command = openShiftClient != null ? "oc" : "kubectl";
-
-        String missingCommandMessage;
-        File file = ProcessUtil.findExecutable(log, command);
-        if (file == null && command.equals("oc")) {
-            file = ProcessUtil.findExecutable(log, command);
-            missingCommandMessage = "commands oc or kubectl";
-        } else {
-            missingCommandMessage = "command " + command;
-        }
-        if (file == null) {
-            throw new MojoExecutionException("Could not find " + missingCommandMessage +
-                    ". Please try running `mvn fabric8:install` to install the necessary binaries and ensure they get added to your $PATH");
-        }
-
+        File file = getKubeCtlExecutable(controller);
+        String command = file.getName();
         log.info("Port forwarding to port " + remoteDebugPort + " on pod " + podName + " using command: " + command);
 
         String arguments = " port-forward " + podName + " " + localDebugPort + ":" + remoteDebugPort;
