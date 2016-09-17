@@ -35,6 +35,10 @@ import static org.eclipse.jgit.transport.TransportProtocol.URIishField.PATH;
 @Mojo(name = "cluster-stop", requiresProject = false)
 public class ClusterStopMojo extends AbstractInstallMojo {
 
+    @Parameter(property = "fabric8.cluster.delete", defaultValue = "false")
+    private boolean deleteCluster;
+
+
     @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         File gofabric8 = ProcessUtil.findExecutable(log, GOFABRIC8);
@@ -45,11 +49,10 @@ public class ClusterStopMojo extends AbstractInstallMojo {
             throw new MojoFailureException("File " + gofabric8.getAbsolutePath() + " is not an executable file. Did you create the cluster via `mvn fabric8:cluster-start`?");
         }
         String arguments = batchModeArgument;
-        // TODO have an option to stop and delete?
-        String cli = " stop" + arguments;
+        String cli = " " + (deleteCluster ? "delete" : "stop") + arguments;
         String message = "gofabric8" + cli;
         log.info("running: " + message);
-        runCommand(gofabric8.getAbsolutePath() + cli, message);
+        runCommand(gofabric8.getAbsolutePath() + cli, message, "gofabric8");
     }
 
 }

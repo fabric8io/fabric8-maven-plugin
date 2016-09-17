@@ -85,7 +85,7 @@ public class ClusterStartMojo extends AbstractInstallMojo {
         }
         String message = "gofabric8 start" + arguments;
         log.info("running: " + message);
-        runCommand(gofabric8.getAbsolutePath() + " start" + arguments, message);
+        runCommand(gofabric8.getAbsolutePath() + " start" + arguments, message, "gofabric8");
     }
 
 }

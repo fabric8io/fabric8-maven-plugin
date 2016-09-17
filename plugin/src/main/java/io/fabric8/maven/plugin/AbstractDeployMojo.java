@@ -57,8 +57,6 @@ import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.kubernetes.client.dsl.Scaleable;
 import io.fabric8.kubernetes.internal.HasMetadataComparator;
 import io.fabric8.maven.core.access.ClusterAccess;
-import io.fabric8.maven.docker.util.AnsiLogger;
-import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.api.model.Route;
@@ -73,7 +71,6 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.fusesource.jansi.Ansi;
 
 import java.io.File;
 import java.net.URL;
@@ -101,7 +98,6 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.parseDate;
  */
 public class AbstractDeployMojo extends AbstractFabric8Mojo {
 
-    public static final Ansi.Color COLOR_POD_LOG = Ansi.Color.BLUE;
     /**
      * The domain added to the service ID when creating OpenShift routes
      */
@@ -808,10 +804,4 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
         return answer;
     }
 
-    protected Logger createExternalProcessLogger(String prefix) {
-        if (useColor) {
-            prefix += Ansi.ansi().fg(COLOR_POD_LOG);
-        }
-        return new AnsiLogger(getLog(), useColor, verbose, prefix);
-    }
 }
