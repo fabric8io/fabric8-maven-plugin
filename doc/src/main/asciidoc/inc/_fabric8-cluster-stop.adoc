@@ -22,4 +22,12 @@ mvn fabric8:cluster-start
 
 Once restarted all the images, resources and pods should come back
 
+=== Deleting
+
+If you wish to destroy the cluster VM and all the data inside it then you can pass the `fabric8.cluster.delete` parameter with a value of `true`:
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:cluster-stop -Dfabric8.cluster.delete=true
+----
 
