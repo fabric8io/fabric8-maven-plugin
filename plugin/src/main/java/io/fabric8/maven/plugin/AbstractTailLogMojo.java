@@ -19,42 +19,25 @@ import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.PodStatusType;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodStatus;
-import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.extensions.LabelSelector;
-import io.fabric8.kubernetes.api.model.extensions.LabelSelectorBuilder;
-import io.fabric8.kubernetes.api.model.extensions.LabelSelectorRequirement;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.ClientNonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.ClientPodResource;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
-import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.openshift.api.model.DeploymentConfig;
-import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.utils.Strings;
-import org.fusesource.jansi.Ansi;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -66,12 +49,10 @@ import java.util.concurrent.CountDownLatch;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getPodStatus;
 import static io.fabric8.kubernetes.api.KubernetesHelper.isPodRunning;
-import static io.fabric8.kubernetes.api.KubernetesHelper.parseDate;
 
 /**
  */
 public class AbstractTailLogMojo extends AbstractDeployMojo {
-    public static final Ansi.Color COLOR_POD_LOG = Ansi.Color.BLUE;
     private Watch podWatcher;
     private LogWatch logWatcher;
     private Map<String, Pod> addedPods = new ConcurrentHashMap<>();
@@ -194,26 +175,7 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
         }
 
         if (!addedPods.isEmpty()) {
-            List<Pod> sortedPods = new ArrayList<>(addedPods.values());
-            Collections.sort(sortedPods, new Comparator<Pod>() {
-                @Override
-                public int compare(Pod p1, Pod p2) {
-                    Date t1 = getCreationTimestamp(p1);
-                    Date t2 = getCreationTimestamp(p2);
-                    if (t1 != null) {
-                        if (t2 == null) {
-                            return 1;
-                        } else {
-                            return t1.compareTo(t2);
-                        }
-                    } else if (t2 == null) {
-                        return 0;
-                    }
-                    return -1;
-                }
-            });
-
-            Pod watchPod = sortedPods.get(sortedPods.size() - 1);
+            Pod watchPod = getNewestPod(addedPods.values());
             if (isPodRunning(watchPod)) {
                 watchLogOfPodName(kubernetes, namespace, deleteAppOnExit, followLog, getName(watchPod));
             }
@@ -290,11 +252,7 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
     }
 
     private Logger createPodLogger() {
-        String prefix = "Pod> ";
-        if (useColor) {
-            prefix += Ansi.ansi().fg(COLOR_POD_LOG);
-        }
-        return new AnsiLogger(getLog(), useColor, verbose, prefix);
+        return createExternalProcessLogger("Pod> ");
     }
 
     private String getPodCondition(Pod pod) {
@@ -324,87 +282,6 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
         return "";
     }
 
-    private FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> withSelector(ClientNonNamespaceOperation<Pod, PodList, DoneablePod, ClientPodResource<Pod, DoneablePod>> pods, LabelSelector selector) {
-        FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> answer = pods;
-        Map<String, String> matchLabels = selector.getMatchLabels();
-        if (matchLabels != null && !matchLabels.isEmpty()) {
-            answer = answer.withLabels(matchLabels);
-        }
-        List<LabelSelectorRequirement> matchExpressions = selector.getMatchExpressions();
-        if (matchExpressions != null) {
-            for (LabelSelectorRequirement expression : matchExpressions) {
-                String key = expression.getKey();
-                List<String> values = expression.getValues();
-                if (Strings.isNullOrBlank(key)) {
-                    log.warn("Ignoring empty key in selector expression " + expression);
-                    continue;
-                }
-                if (values == null && values.isEmpty()) {
-                    log.warn("Ignoring empty values in selector expression " + expression);
-                    continue;
-                }
-                String[] valuesArray = values.toArray(new String[values.size()]);
-                String operator = expression.getOperator();
-                switch (operator) {
-                    case "In":
-                        answer = answer.withLabelIn(key, valuesArray);
-                        break;
-                    case "NotIn":
-                        answer = answer.withLabelNotIn(key, valuesArray);
-                        break;
-                    default:
-                        log.warn("Ignoring unknown operator " + operator + " in selector expression " + expression);
-                }
-            }
-        }
-        return answer;
-    }
-
-    private LabelSelector getPodLabelSelector(HasMetadata entity) {
-        LabelSelector selector = null;
-        if (entity instanceof Deployment) {
-            Deployment resource = (Deployment) entity;
-            DeploymentSpec spec = resource.getSpec();
-            if (spec != null) {
-                selector = spec.getSelector();
-            }
-        } else if (entity instanceof ReplicaSet) {
-            ReplicaSet resource = (ReplicaSet) entity;
-            ReplicaSetSpec spec = resource.getSpec();
-            if (spec != null) {
-                selector = spec.getSelector();
-            }
-        } else if (entity instanceof DeploymentConfig) {
-            DeploymentConfig resource = (DeploymentConfig) entity;
-            DeploymentConfigSpec spec = resource.getSpec();
-            if (spec != null) {
-                selector = toLabelSelector(spec.getSelector());
-            }
-        } else if (entity instanceof ReplicationController) {
-            ReplicationController resource = (ReplicationController) entity;
-            ReplicationControllerSpec spec = resource.getSpec();
-            if (spec != null) {
-                selector = toLabelSelector(spec.getSelector());
-            }
-        }
-        return selector;
-    }
-
-    private LabelSelector toLabelSelector(Map<String, String> matchLabels) {
-        if (matchLabels != null && !matchLabels.isEmpty()) {
-            return new LabelSelectorBuilder().withMatchLabels(matchLabels).build();
-        }
-        return null;
-    }
-
-    private Date getCreationTimestamp(HasMetadata hasMetadata) {
-        ObjectMeta metadata = hasMetadata.getMetadata();
-        if (metadata != null) {
-            return parseTimestamp(metadata.getCreationTimestamp());
-        }
-        return null;
-    }
-
     private boolean isNewerPod(HasMetadata newer, HasMetadata older) {
         Date t1 = getCreationTimestamp(newer);
         Date t2 = getCreationTimestamp(older);
@@ -412,13 +289,6 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
             return t2 == null || t1.compareTo(t2) > 0;
         }
         return false;
-    }
-
-    private Date parseTimestamp(String text) {
-        if (text == null) {
-            return null;
-        }
-        return parseDate(text);
     }
 
 }

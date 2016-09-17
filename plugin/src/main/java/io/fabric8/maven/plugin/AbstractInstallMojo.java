@@ -53,7 +53,6 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
 
     @Component
     private Prompter prompter;
-    private List<File> pathDirectories;
 
     protected File installBinaries() throws MojoExecutionException {
         File file = ProcessUtil.findExecutable(log, GOFABRIC8);

@@ -19,15 +19,20 @@ package io.fabric8.maven.plugin;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPath;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPathBuilder;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressRuleValue;
@@ -37,13 +42,25 @@ import io.fabric8.kubernetes.api.model.extensions.IngressBuilder;
 import io.fabric8.kubernetes.api.model.extensions.IngressList;
 import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import io.fabric8.kubernetes.api.model.extensions.IngressSpec;
+import io.fabric8.kubernetes.api.model.extensions.LabelSelector;
+import io.fabric8.kubernetes.api.model.extensions.LabelSelectorBuilder;
+import io.fabric8.kubernetes.api.model.extensions.LabelSelectorRequirement;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.Watch;
+import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.kubernetes.client.dsl.ClientNonNamespaceOperation;
+import io.fabric8.kubernetes.client.dsl.ClientPodResource;
+import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.kubernetes.client.dsl.Scaleable;
 import io.fabric8.kubernetes.internal.HasMetadataComparator;
 import io.fabric8.maven.core.access.ClusterAccess;
+import io.fabric8.maven.docker.util.AnsiLogger;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.DeploymentConfig;
+import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteList;
 import io.fabric8.openshift.api.model.RouteSpec;
@@ -56,6 +73,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.fusesource.jansi.Ansi;
 
 import java.io.File;
 import java.net.URL;
@@ -63,8 +81,11 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
@@ -73,12 +94,14 @@ import java.util.TreeSet;
 import static io.fabric8.kubernetes.api.KubernetesHelper.createIntOrString;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+import static io.fabric8.kubernetes.api.KubernetesHelper.parseDate;
 
 /**
  * Base class for goals which deploy the generated artifacts into the Kubernetes cluster
  */
 public class AbstractDeployMojo extends AbstractFabric8Mojo {
 
+    public static final Ansi.Color COLOR_POD_LOG = Ansi.Color.BLUE;
     /**
      * The domain added to the service ID when creating OpenShift routes
      */
@@ -661,6 +684,8 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
                     continue;
                 }
                 // TODO uncomment when kubernetes-client supports Scaleable<T> for DC!
+                // https://github.com/fabric8io/kubernetes-client/issues/512
+                //
                 // scalable = openshiftClient.deploymentConfigs().inNamespace(namespace).withName(name);
             }
             if (scalable != null) {
@@ -668,5 +693,125 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
                 scalable.scale(replicas, true);
             }
         }
+    }
+
+    protected LabelSelector getPodLabelSelector(HasMetadata entity) {
+        LabelSelector selector = null;
+        if (entity instanceof Deployment) {
+            Deployment resource = (Deployment) entity;
+            DeploymentSpec spec = resource.getSpec();
+            if (spec != null) {
+                selector = spec.getSelector();
+            }
+        } else if (entity instanceof ReplicaSet) {
+            ReplicaSet resource = (ReplicaSet) entity;
+            ReplicaSetSpec spec = resource.getSpec();
+            if (spec != null) {
+                selector = spec.getSelector();
+            }
+        } else if (entity instanceof DeploymentConfig) {
+            DeploymentConfig resource = (DeploymentConfig) entity;
+            DeploymentConfigSpec spec = resource.getSpec();
+            if (spec != null) {
+                selector = toLabelSelector(spec.getSelector());
+            }
+        } else if (entity instanceof ReplicationController) {
+            ReplicationController resource = (ReplicationController) entity;
+            ReplicationControllerSpec spec = resource.getSpec();
+            if (spec != null) {
+                selector = toLabelSelector(spec.getSelector());
+            }
+        }
+        return selector;
+    }
+
+    private LabelSelector toLabelSelector(Map<String, String> matchLabels) {
+        if (matchLabels != null && !matchLabels.isEmpty()) {
+            return new LabelSelectorBuilder().withMatchLabels(matchLabels).build();
+        }
+        return null;
+    }
+
+    protected Pod getNewestPod(Collection<Pod> pods) {
+        if (pods == null || pods.isEmpty()) {
+            return null;
+        }
+        List<Pod> sortedPods = new ArrayList<>(pods);
+        Collections.sort(sortedPods, new Comparator<Pod>() {
+            @Override
+            public int compare(Pod p1, Pod p2) {
+                Date t1 = getCreationTimestamp(p1);
+                Date t2 = getCreationTimestamp(p2);
+                if (t1 != null) {
+                    if (t2 == null) {
+                        return 1;
+                    } else {
+                        return t1.compareTo(t2);
+                    }
+                } else if (t2 == null) {
+                    return 0;
+                }
+                return -1;
+            }
+        });
+        return sortedPods.get(sortedPods.size() - 1);
+    }
+
+    protected Date getCreationTimestamp(HasMetadata hasMetadata) {
+        ObjectMeta metadata = hasMetadata.getMetadata();
+        if (metadata != null) {
+            return parseTimestamp(metadata.getCreationTimestamp());
+        }
+        return null;
+    }
+
+    private Date parseTimestamp(String text) {
+        if (text == null) {
+            return null;
+        }
+        return parseDate(text);
+    }
+
+    protected FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> withSelector(ClientNonNamespaceOperation<Pod, PodList, DoneablePod, ClientPodResource<Pod, DoneablePod>> pods, LabelSelector selector) {
+        FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> answer = pods;
+        Map<String, String> matchLabels = selector.getMatchLabels();
+        if (matchLabels != null && !matchLabels.isEmpty()) {
+            answer = answer.withLabels(matchLabels);
+        }
+        List<LabelSelectorRequirement> matchExpressions = selector.getMatchExpressions();
+        if (matchExpressions != null) {
+            for (LabelSelectorRequirement expression : matchExpressions) {
+                String key = expression.getKey();
+                List<String> values = expression.getValues();
+                if (Strings.isNullOrBlank(key)) {
+                    log.warn("Ignoring empty key in selector expression " + expression);
+                    continue;
+                }
+                if (values == null && values.isEmpty()) {
+                    log.warn("Ignoring empty values in selector expression " + expression);
+                    continue;
+                }
+                String[] valuesArray = values.toArray(new String[values.size()]);
+                String operator = expression.getOperator();
+                switch (operator) {
+                    case "In":
+                        answer = answer.withLabelIn(key, valuesArray);
+                        break;
+                    case "NotIn":
+                        answer = answer.withLabelNotIn(key, valuesArray);
+                        break;
+                    default:
+                        log.warn("Ignoring unknown operator " + operator + " in selector expression " + expression);
+                }
+            }
+        }
+        return answer;
+    }
+
+    protected Logger createExternalProcessLogger(String prefix) {
+        if (useColor) {
+            prefix += Ansi.ansi().fg(COLOR_POD_LOG);
+        }
+        return new AnsiLogger(getLog(), useColor, verbose, prefix);
     }
 }

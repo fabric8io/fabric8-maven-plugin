@@ -15,12 +15,16 @@
  */
 package io.fabric8.maven.core.util;
 
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Closeables;
 import io.fabric8.utils.Function;
-import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Strings;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,21 +34,13 @@ import java.util.List;
 public class ProcessUtil {
 
     public static int runCommand(final Logger log, String commands, String message) throws IOException {
-        return runCommand(log, commands, new Function<String, Void>() {
-            @Override
-            public Void apply(String outputLine) {
-                log.info(outputLine);
-                return null;
-            }
-        },  new Function<String, Void>() {
-            @Override
-            public Void apply(String outputLine) {
-                log.error(outputLine);
-                return null;
-            }
-        }, message);
+        Function<String, Void> outputHandler = createOutputHandler(log);
+        return runCommand(log, commands, outputHandler, createErrorHandler(log), message);
     }
 
+    public static int runCommandAsync(final Logger log, String commands, String message) throws IOException {
+        return runCommand(log, commands, createOutputHandler(log), createErrorHandler(log), message);
+    }
 
     public static int runCommand(Logger log, String commands, Function<String, Void> outputHandler, Function<String, Void> errorHandler, String message) throws IOException {
         log.debug("Executing commands: " + commands);
@@ -60,6 +56,37 @@ public class ProcessUtil {
         return process.exitValue();
     }
 
+    public static int processCommandAsync(Process process, Logger log, String threadName, String message) throws InterruptedException {
+        return processCommandAsync(process, log, threadName, createOutputHandler(log), createErrorHandler(log), message);
+    }
+
+    public static int processCommandAsync(final Process process, final Logger log, final String threadName, final Function<String, Void> outputHandler, final Function<String, Void> errorHandler, final String message) throws InterruptedException {
+        startThread(new Thread(threadName + " read output") {
+            @Override
+            public void run() {
+                try {
+                    processOutput(log, process.getInputStream(), outputHandler, message);
+                } catch (IOException e) {
+                    log.error("Failed to read " + threadName + " output ." + e, e);
+                }
+            }
+        });
+        startThread(new Thread(threadName + " read error") {
+            @Override
+            public void run() {
+                try {
+                    processOutput(log, process.getErrorStream(), errorHandler, message);
+                } catch (IOException e) {
+                    log.error("Failed to read " + threadName + " error ." + e, e);
+                }
+            }
+        });
+        return process.waitFor();
+    }
+
+    private static void startThread(Thread thread) {
+        thread.start();
+    }
 
     protected static void processErrors(Logger log, InputStream inputStream, String message) throws Exception {
         readProcessOutput(log, inputStream, "stderr for ", message);
@@ -94,7 +121,6 @@ public class ProcessUtil {
     }
 
     public static File findExecutable(Logger log, String name) {
-        File executable = null;
         List<File> pathDirectories = getPathDirectories(log);
         for (File directory : pathDirectories) {
             File file = new File(directory, name);
@@ -145,5 +171,26 @@ public class ProcessUtil {
         }
         return pathDirectories;
     }
+
+    protected static Function<String, Void> createOutputHandler(final Logger log) {
+        return new Function<String, Void>() {
+            @Override
+            public Void apply(String outputLine) {
+                log.info(outputLine);
+                return null;
+            }
+        };
+    }
+
+    protected static Function<String, Void> createErrorHandler(final Logger log) {
+        return new Function<String, Void>() {
+            @Override
+            public Void apply(String outputLine) {
+                log.error(outputLine);
+                return null;
+            }
+        };
+    }
+
 
 }

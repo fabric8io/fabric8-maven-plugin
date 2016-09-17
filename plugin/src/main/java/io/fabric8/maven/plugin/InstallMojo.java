@@ -15,26 +15,9 @@
  */
 package io.fabric8.maven.plugin;
 
-import io.fabric8.maven.core.util.Gofabric8Util;
-import io.fabric8.maven.core.util.ProcessUtil;
-import io.fabric8.utils.IOHelpers;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.codehaus.plexus.components.interactivity.Prompter;
-import org.codehaus.plexus.components.interactivity.PrompterException;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Date;
-import java.util.List;
 
 /**
  * Installs the necessary tools for working with clusters such as <code>gofabric8</code>
