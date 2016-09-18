@@ -57,7 +57,9 @@ public interface Enricher extends Named {
      * Add default resources when they are missing. Each enricher should be responsible
      * for a certain kind of resource and should detect whether a default resource
      * should be added. This should be done defensive, so that when an object is
-     * already set it must not be overwritten.
+     * already set it must not be overwritten. This method is only called on resources which are
+     * associated with the artefact to build. This is determined that the resource is named like the artifact
+     * to build.
      *
      * @param builder the build to examine and add to
      */
