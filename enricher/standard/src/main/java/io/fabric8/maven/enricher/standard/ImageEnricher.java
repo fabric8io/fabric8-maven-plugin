@@ -142,38 +142,55 @@ public class ImageEnricher extends BaseEnricher {
     // Add missing information to the given containers as found
     // configured
     private void mergeImageConfigurationWithContainerSpec(List<Container> containers) {
-        int idx = 0;
         List<ImageConfiguration> images = getImages();
         if (images.isEmpty()) {
             log.warn("No resolved images!");
         }
+
+        int idx = 0;
         for (ImageConfiguration imageConfiguration : images) {
-            Container container;
-            if (idx < containers.size()) {
-                container = containers.get(idx);
-            } else {
-                // Pad with new containers if missing
-                container = new Container();
-                containers.add(container);
-            }
-            // Set various parameters if not set.
-            if (isNullOrBlank(container.getImagePullPolicy())) {
-                String policy = getConfig(Config.pullPolicy);
-                if (policy == null) {
-                    policy = getProject().getVersion().endsWith("-SNAPSHOT") ? "Always" : "IfNotPresent";
-                }
-                container.setImagePullPolicy(policy);
-            }
-            if (isNullOrBlank(container.getImage())) {
-                log.verbose("Setting image %s",imageConfiguration.getName());
-                container.setImage(imageConfiguration.getName());
-            }
-            if (isNullOrBlank(container.getName())) {
-                String containerName = extractContainerName(getProject(), imageConfiguration);
-                log.verbose("Setting container name %s",containerName);
-                container.setName(containerName);
-            }
+            Container container = getContainer(idx, containers);
+            mergeImagePullPolicy(container);
+            mergeImage(imageConfiguration, container);
+            mergeContainerName(imageConfiguration, container);
             idx++;
+        }
+    }
+
+    private Container getContainer(int idx, List<Container> containers) {
+        Container container;
+        if (idx < containers.size()) {
+            container = containers.get(idx);
+        } else {
+            // Pad with new containers if missing
+            container = new Container();
+            containers.add(container);
+        }
+        return container;
+    }
+
+    private void mergeContainerName(ImageConfiguration imageConfiguration, Container container) {
+        if (isNullOrBlank(container.getName())) {
+            String containerName = extractContainerName(getProject(), imageConfiguration);
+            log.verbose("Setting container name %s",containerName);
+            container.setName(containerName);
+        }
+    }
+
+    private void mergeImage(ImageConfiguration imageConfiguration, Container container) {
+        if (isNullOrBlank(container.getImage())) {
+            log.verbose("Setting image %s",imageConfiguration.getName());
+            container.setImage(imageConfiguration.getName());
+        }
+    }
+
+    private void mergeImagePullPolicy(Container container) {
+        if (isNullOrBlank(container.getImagePullPolicy())) {
+            String policy = getConfig(Config.pullPolicy);
+            if (policy == null) {
+                policy = getProject().getVersion().endsWith("-SNAPSHOT") ? "Always" : "IfNotPresent";
+            }
+            container.setImagePullPolicy(policy);
         }
     }
 
