@@ -11,7 +11,7 @@ mvn fabric8:log
 
 You can then terminate the output by hitting `Ctrl+C`
 
-If you wish to geet the log of the app and then terminate immediately then try:
+If you wish to get the log of the app and then terminate immediately then try:
 
 [source, sh]
 ----
