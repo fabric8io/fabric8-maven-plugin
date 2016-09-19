@@ -177,7 +177,7 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
     private void onPod(Watcher.Action action, Pod pod, KubernetesClient kubernetes, String namespace, String ctrlCMessage, boolean followLog) {
         String name = getName(pod);
         if (!action.equals(Watcher.Action.MODIFIED) || watchingPodName == null || !watchingPodName.equals(name)) {
-            log.info("" + action + " pod " + name + " status: " + KubernetesHelper.getPodStatusText(pod) + " " + getPodCondition(pod));
+            log.info("" + action + " pod " + name + " status: " + getPodStatusDescription(pod));
         }
         if (action.equals(Watcher.Action.DELETED)) {
             addedPods.remove(name);
@@ -270,33 +270,6 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
 
     private Logger createPodLogger() {
         return createExternalProcessLogger("Pod> ");
-    }
-
-    private String getPodCondition(Pod pod) {
-        PodStatus podStatus = pod.getStatus();
-        if (podStatus == null) {
-            return "";
-        }
-        List<PodCondition> conditions = podStatus.getConditions();
-        if (conditions == null || conditions.isEmpty()) {
-            return "";
-        }
-
-
-        for (PodCondition condition : conditions) {
-            String type = condition.getType();
-            if (Strings.isNotBlank(type)) {
-                if ("ready".equalsIgnoreCase(type)) {
-                    String statusText = condition.getStatus();
-                    if (Strings.isNotBlank(statusText)) {
-                        if (Boolean.parseBoolean(statusText)) {
-                            return type;
-                        }
-                    }
-                }
-            }
-        }
-        return "";
     }
 
     private boolean isNewerPod(HasMetadata newer, HasMetadata older) {

@@ -27,7 +27,9 @@ import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.Service;
@@ -887,5 +889,36 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
                     ". Please try running `mvn fabric8:install` to install the necessary binaries and ensure they get added to your $PATH");
         }
         return file;
+    }
+
+    protected String getPodCondition(Pod pod) {
+        PodStatus podStatus = pod.getStatus();
+        if (podStatus == null) {
+            return "";
+        }
+        List<PodCondition> conditions = podStatus.getConditions();
+        if (conditions == null || conditions.isEmpty()) {
+            return "";
+        }
+
+
+        for (PodCondition condition : conditions) {
+            String type = condition.getType();
+            if (Strings.isNotBlank(type)) {
+                if ("ready".equalsIgnoreCase(type)) {
+                    String statusText = condition.getStatus();
+                    if (Strings.isNotBlank(statusText)) {
+                        if (Boolean.parseBoolean(statusText)) {
+                            return type;
+                        }
+                    }
+                }
+            }
+        }
+        return "";
+    }
+
+    protected String getPodStatusDescription(Pod pod) {
+        return KubernetesHelper.getPodStatusText(pod) + " " + getPodCondition(pod);
     }
 }

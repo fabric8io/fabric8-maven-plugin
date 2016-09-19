@@ -37,6 +37,7 @@ import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.maven.core.util.ProcessUtil;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -56,9 +57,11 @@ import java.util.concurrent.CountDownLatch;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+import static io.fabric8.kubernetes.api.KubernetesHelper.isPodReady;
 import static io.fabric8.kubernetes.api.KubernetesHelper.isPodRunning;
 import static io.fabric8.maven.core.util.ProcessUtil.processCommandAsync;
 import static io.fabric8.maven.plugin.AbstractInstallMojo.GOFABRIC8;
+import static org.bouncycastle.asn1.x500.style.RFC4519Style.name;
 import static org.json.XMLTokener.entity;
 
 /**
@@ -79,6 +82,7 @@ public class DebugMojo extends AbstractDeployMojo {
     private Watch podWatcher;
     private CountDownLatch terminateLatch = new CountDownLatch(1);
     private Pod foundPod;
+    private Logger podWaitLog;
 
     @Override
     protected void applyEntities(Controller controller, KubernetesClient kubernetes, String namespace, String fileName, Set<HasMetadata> entities) throws Exception {
@@ -140,6 +144,7 @@ public class DebugMojo extends AbstractDeployMojo {
         //  wait for the newest pod to be ready with the given env var
         FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> pods = withSelector(kubernetes.pods().inNamespace(namespace), selector);
         log.info("Waiting for debug pod with selector " + selector + " and $" + envVarName + " = " + envVarValue);
+        podWaitLog = createExternalProcessLogger("pod wait> ");
         PodList list = pods.list();
         if (list != null) {
             List<Pod> items = list.getItems();
@@ -151,7 +156,9 @@ public class DebugMojo extends AbstractDeployMojo {
         podWatcher = pods.watch(new Watcher<Pod>() {
             @Override
             public void eventReceived(Watcher.Action action, Pod pod) {
-                if (action.equals(Action.ADDED) || action.equals(Action.MODIFIED) && isPodRunning(pod) &&
+                podWaitLog.info("" + action + " pod " + getName(pod) + " status: " + getPodStatusDescription(pod));
+
+                if (isAddOrModified(action) && isPodRunning(pod) && isPodReady(pod) &&
                         podHasEnvVarValue(pod, envVarName, envVarValue)) {
                     foundPod = pod;
                     terminateLatch.countDown();
@@ -177,6 +184,10 @@ public class DebugMojo extends AbstractDeployMojo {
             }
         }
         throw new MojoExecutionException("Could not find a running pod with $" + envVarName + " = " + envVarValue);
+    }
+
+    private boolean isAddOrModified(Watcher.Action action) {
+        return action.equals(Watcher.Action.ADDED) || action.equals(Watcher.Action.MODIFIED);
     }
 
     private boolean podHasEnvVarValue(Pod pod, String envVarName, String envVarValue) {
