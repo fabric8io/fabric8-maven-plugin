@@ -1460,7 +1460,7 @@ available goals are described below.</p>
 <div class="sect2">
 <h3 id="fabric8:run">3.4. <strong>fabric8:run</strong></h3>
 <div class="paragraph">
-<p>This goal builds your application (generating the docker image and kubernetes manifest), deploys it on the current kubernetes cluster then tails the logs of the first pod that starts until you hit <code>Ctrl+C</code> then the application is undeployed.</p>
+<p>This goal builds your application (generating the docker image and kubernetes manifest), deploys it on the current kubernetes cluster then tails the logs of the first pod that starts until you hit <code>Ctrl+C</code> then the application is stopped.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1479,7 +1479,31 @@ available goals are described below.</p>
 mvn fabric8:logs
 ...
 ^C
-mvn fabric8:undeploy</code></pre>
+mvn fabric8:stop</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you wish to <a href="#fabric8:undeploy"><strong>fabric8:undeploy</strong></a> on the <code>Ctrl+C</code> keypress you can pass in the <code>fabric8.onExit</code> goal:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:run -D fabric8.onExit=undeploy</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you prefer Ctrl-C to just terminate the log tailing but leave your app running you can use:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:run -D fabric8.onExit=</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Though its maybe just simpler to do:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:deploy fabric8:log</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4324,7 +4348,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.42<br>
-Last updated 2016-09-19 08:53:22 UTC
+Last updated 2016-09-19 17:36:19 UTC
 </div>
 </div>
 </body>
