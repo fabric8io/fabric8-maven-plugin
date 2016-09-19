@@ -9,18 +9,10 @@ This is the main goal for building your docker image, generating the kubernetes 
 mvn fabric8:deploy
 ----
 
-This goal is really just short hand for:
-
-[source,sh,subs="attributes"]
-----
-mvn install fabric8:apply
-----
-
 Effectively this builds your project then invokes these goals:
 
-* <<fabric8:resource>>
 * <<fabric8:build>>
-* <<fabric8:apply>>
+* <<fabric8:resource-apply>>
 
 **Note** that you must have the <<fabric8:resource>> and <<fabric8:build>> goals bound to your executions in your pom.xml. e.g. like this:
 

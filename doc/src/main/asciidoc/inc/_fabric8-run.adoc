@@ -4,14 +4,14 @@
 
 This goal builds your application (generating the docker image and kubernetes manifest), deploys it on the current kubernetes cluster then tails the logs of the first pod that starts until you hit `Ctrl+C` then the application is undeployed.
 
-So this goal feels very much like the `run` goal in other maven plugins like spring-boot, tomcat, jetty, wildfly etc.
-
 [source,sh,subs="attributes"]
 ----
 mvn fabric8:run
 ----
 
-So you can think of this goal as being similar to performing:
+So this goal feels very much like the `run` goal in other maven plugins like spring-boot, tomcat, jetty, wildfly etc.
+
+You can think of this goal as being similar to performing:
 
 [source,sh,subs="attributes"]
 ----
@@ -21,7 +21,6 @@ mvn fabric8:logs
 ^C
 mvn fabric8:undeploy
 ----
-
 
 **Note** that you must have the <<fabric8:resource>> and <<fabric8:build>> goals bound to your executions in your pom.xml. e.g. like this:
 
