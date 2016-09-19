@@ -42,15 +42,18 @@ import java.util.Set;
 @Execute(phase = LifecyclePhase.INSTALL)
 public class RunMojo extends AbstractTailLogMojo {
 
-    @Parameter(property = "fabric8.deleteOnExit", defaultValue = "true")
-    private boolean deleteOnExit;
+    /**
+     * Whether to undeploy or stop on Ctrl-C
+     */
+    @Parameter(property = "fabric8.onExit", defaultValue = "stop")
+    private String onExitOperation;
 
     @Override
     protected void applyEntities(Controller controller, final KubernetesClient kubernetes, final String namespace, String fileName, final Set<HasMetadata> entities) throws Exception {
         Date ignorePodsOlderThan = new Date();
         super.applyEntities(controller, kubernetes, namespace, fileName, entities);
 
-        tailAppPodsLogs(kubernetes, namespace, entities, true, this.deleteOnExit, true, ignorePodsOlderThan);
+        tailAppPodsLogs(kubernetes, namespace, entities, true, this.onExitOperation, true, ignorePodsOlderThan);
     }
 
 

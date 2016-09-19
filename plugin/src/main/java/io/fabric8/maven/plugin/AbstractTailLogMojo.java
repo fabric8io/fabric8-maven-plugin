@@ -53,6 +53,9 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.isPodRunning;
 /**
  */
 public class AbstractTailLogMojo extends AbstractDeployMojo {
+    public static final String OPERATION_UNDEPLOY = "undeploy";
+    public static final String OPERATION_STOP = "stop";
+
     private Watch podWatcher;
     private LogWatch logWatcher;
     private Map<String, Pod> addedPods = new ConcurrentHashMap<>();
@@ -60,7 +63,7 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
     private String watchingPodName;
     private CountDownLatch logWatchTerminateLatch;
 
-    protected void tailAppPodsLogs(final KubernetesClient kubernetes, final String namespace, final Set<HasMetadata> entities, boolean watchAddedPodsOnly, boolean deleteAppOnExit, boolean followLog, Date ignorePodsOlderThan) {
+    protected void tailAppPodsLogs(final KubernetesClient kubernetes, final String namespace, final Set<HasMetadata> entities, boolean watchAddedPodsOnly, String onExitOperation, boolean followLog, Date ignorePodsOlderThan) {
         LabelSelector selector = null;
         for (HasMetadata entity : entities) {
             selector = getPodLabelSelector(entity);
@@ -69,13 +72,27 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
             }
         }
         if (selector != null) {
-            if (deleteAppOnExit) {
+            String ctrlCMessage = "stop tailing the log";
+            if (Strings.isNotBlank(onExitOperation)) {
+                final String onExitOperationLower = onExitOperation.toLowerCase().trim();
+                if (onExitOperationLower.equals(OPERATION_UNDEPLOY)) {
+                    ctrlCMessage = "undeploy the app";
+                } else if (onExitOperationLower.equals(OPERATION_STOP)) {
+                    ctrlCMessage = "scale down the app and stop tailing the log";
+                } else {
+                    log.warn("Unknown on-exit command: `" + onExitOperationLower + "`");
+                }
+
                 Runtime.getRuntime().addShutdownHook(new Thread("mvn fabric8:run-interactive shutdown hook") {
                     @Override
                     public void run() {
-                        log.info("Undeploying the app:");
-                        deleteEntities(kubernetes, namespace, entities);
-
+                        if (onExitOperationLower.equals("delete")) {
+                            log.info("Undeploying the app:");
+                            deleteEntities(kubernetes, namespace, entities);
+                        } else if (onExitOperationLower.equals("stop")) {
+                            log.info("Stopping the app:");
+                            resizeApp(kubernetes, namespace, entities, 0);
+                        }
                         if (podWatcher != null) {
                             podWatcher.close();
                         }
@@ -83,13 +100,13 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
                     }
                 });
             }
-            waitAndLogPods(kubernetes, namespace, selector, watchAddedPodsOnly, deleteAppOnExit, followLog, ignorePodsOlderThan);
+            waitAndLogPods(kubernetes, namespace, selector, watchAddedPodsOnly, ctrlCMessage, followLog, ignorePodsOlderThan);
         } else {
             log.warn("No selector in deployment so cannot watch pods!");
         }
     }
 
-    private void waitAndLogPods(final KubernetesClient kubernetes, final String namespace, LabelSelector selector, final boolean watchAddedPodsOnly, final boolean deleteAppOnExit, final boolean followLog, Date ignorePodsOlderThan) {
+    private void waitAndLogPods(final KubernetesClient kubernetes, final String namespace, LabelSelector selector, final boolean watchAddedPodsOnly, final String ctrlCMessage, final boolean followLog, Date ignorePodsOlderThan) {
         FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> pods = withSelector(kubernetes.pods().inNamespace(namespace), selector);
         log.info("Watching pods with selector " + selector + " waiting for a running pod...");
         Pod latestPod = null;
@@ -125,7 +142,7 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
         }
         // we may have missed the ADDED event so lets simulate one
         if (latestPod != null) {
-            onPod(Watcher.Action.ADDED, latestPod, kubernetes, namespace, deleteAppOnExit, followLog);
+            onPod(Watcher.Action.ADDED, latestPod, kubernetes, namespace, ctrlCMessage, followLog);
         }
         if (!watchAddedPodsOnly) {
             // lets watch the current pods then watch for changes
@@ -137,7 +154,7 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
         podWatcher = pods.watch(new Watcher<Pod>() {
             @Override
             public void eventReceived(Action action, Pod pod) {
-                onPod(action, pod, kubernetes, namespace, deleteAppOnExit, followLog);
+                onPod(action, pod, kubernetes, namespace, ctrlCMessage, followLog);
             }
 
             @Override
@@ -157,10 +174,10 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
         }
     }
 
-    private void onPod(Watcher.Action action, Pod pod, KubernetesClient kubernetes, String namespace, boolean deleteAppOnExit, boolean followLog) {
+    private void onPod(Watcher.Action action, Pod pod, KubernetesClient kubernetes, String namespace, String ctrlCMessage, boolean followLog) {
         String name = getName(pod);
         if (!action.equals(Watcher.Action.MODIFIED) || watchingPodName == null || !watchingPodName.equals(name)) {
-            log.info("" + action + " pod " + name + " status: " + KubernetesHelper.getPodStatusText(pod) + " " + getPodCondition(pod));
+            log.info("" + action + " pod " + name + " status: " + getPodStatusDescription(pod));
         }
         if (action.equals(Watcher.Action.DELETED)) {
             addedPods.remove(name);
@@ -177,12 +194,12 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
         if (!addedPods.isEmpty()) {
             Pod watchPod = getNewestPod(addedPods.values());
             if (isPodRunning(watchPod)) {
-                watchLogOfPodName(kubernetes, namespace, deleteAppOnExit, followLog, getName(watchPod));
+                watchLogOfPodName(kubernetes, namespace, ctrlCMessage, followLog, getName(watchPod));
             }
         }
     }
 
-    private void watchLogOfPodName(KubernetesClient kubernetes, String namespace, boolean deleteAppOnExit, boolean followLog, String name) {
+    private void watchLogOfPodName(KubernetesClient kubernetes, String namespace, String ctrlCMessage, boolean followLog, String name) {
         if (watchingPodName == null || !watchingPodName.equals(name)) {
             if (logWatcher != null) {
                 log.info("Closing log watcher for " + watchingPodName + " as now watching " + name);
@@ -190,11 +207,11 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
 
             }
             ClientPodResource<Pod, DoneablePod> podResource = kubernetes.pods().inNamespace(namespace).withName(name);
-            if (followLog || deleteAppOnExit) {
+            if (followLog) {
                 watchingPodName = name;
                 logWatchTerminateLatch = new CountDownLatch(1);
                 logWatcher = podResource.watchLog();
-                watchLog(logWatcher, name, "Failed to read log of pod " + name + ".", deleteAppOnExit);
+                watchLog(logWatcher, name, "Failed to read log of pod " + name + ".", ctrlCMessage);
             } else {
                 String logText = podResource.getLog();
                 if (logText != null) {
@@ -221,11 +238,11 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
         }
     }
 
-    private void watchLog(final LogWatch logWatcher, String podName, final String failureMessage, boolean deleteAppOnExit) {
+    private void watchLog(final LogWatch logWatcher, String podName, final String failureMessage, String ctrlCMessage) {
         final InputStream in = logWatcher.getOutput();
         final Logger log = createPodLogger();
         log.info("Tailing log of pod: " + podName);
-        log.info("Press Ctrl-C to " + (deleteAppOnExit ? "undeploy the app" : "stop tailing the log"));
+        log.info("Press Ctrl-C to " + ctrlCMessage);
         log.info("");
 
         Thread thread = new Thread() {
@@ -253,33 +270,6 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
 
     private Logger createPodLogger() {
         return createExternalProcessLogger("Pod> ");
-    }
-
-    private String getPodCondition(Pod pod) {
-        PodStatus podStatus = pod.getStatus();
-        if (podStatus == null) {
-            return "";
-        }
-        List<PodCondition> conditions = podStatus.getConditions();
-        if (conditions == null || conditions.isEmpty()) {
-            return "";
-        }
-
-
-        for (PodCondition condition : conditions) {
-            String type = condition.getType();
-            if (Strings.isNotBlank(type)) {
-                if ("ready".equalsIgnoreCase(type)) {
-                    String statusText = condition.getStatus();
-                    if (Strings.isNotBlank(statusText)) {
-                        if (Boolean.parseBoolean(statusText)) {
-                            return type;
-                        }
-                    }
-                }
-            }
-        }
-        return "";
     }
 
     private boolean isNewerPod(HasMetadata newer, HasMetadata older) {

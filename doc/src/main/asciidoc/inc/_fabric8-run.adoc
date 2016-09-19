@@ -2,7 +2,7 @@
 [[fabric8:run]]
 == *fabric8:run*
 
-This goal builds your application (generating the docker image and kubernetes manifest), deploys it on the current kubernetes cluster then tails the logs of the first pod that starts until you hit `Ctrl+C` then the application is undeployed.
+This goal builds your application (generating the docker image and kubernetes manifest), deploys it on the current kubernetes cluster then tails the logs of the first pod that starts until you hit `Ctrl+C` then the application is stopped.
 
 [source,sh,subs="attributes"]
 ----
@@ -19,8 +19,31 @@ mvn fabric8:deploy
 mvn fabric8:logs
 ...
 ^C
-mvn fabric8:undeploy
+mvn fabric8:stop
 ----
+
+If you wish to <<fabric8:undeploy>> on the `Ctrl+C` keypress you can pass in the `fabric8.onExit` goal:
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:run -D fabric8.onExit=undeploy
+----
+
+If you prefer Ctrl-C to just terminate the log tailing but leave your app running you can use:
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:run -D fabric8.onExit=
+----
+
+Though its maybe just simpler to do:
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:deploy fabric8:log
+----
+
+
 
 **Note** that you must have the <<fabric8:resource>> and <<fabric8:build>> goals bound to your executions in your pom.xml. e.g. like this:
 
