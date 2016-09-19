@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 3.1.42,</span>
-<span id="revdate">2016-09-18</span>
+<span id="revdate">2016-09-19</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -1462,16 +1462,16 @@ available goals are described below.</p>
 <div class="paragraph">
 <p>This goal builds your application (generating the docker image and kubernetes manifest), deploys it on the current kubernetes cluster then tails the logs of the first pod that starts until you hit <code>Ctrl+C</code> then the application is undeployed.</p>
 </div>
-<div class="paragraph">
-<p>So this goal feels very much like the <code>run</code> goal in other maven plugins like spring-boot, tomcat, jetty, wildfly etc.</p>
-</div>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:run</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>So you can think of this goal as being similar to performing:</p>
+<p>So this goal feels very much like the <code>run</code> goal in other maven plugins like spring-boot, tomcat, jetty, wildfly etc.</p>
+</div>
+<div class="paragraph">
+<p>You can think of this goal as being similar to performing:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1518,26 +1518,15 @@ mvn fabric8:undeploy</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>This goal is really just short hand for:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn install fabric8:apply</code></pre>
-</div>
-</div>
-<div class="paragraph">
 <p>Effectively this builds your project then invokes these goals:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="#fabric8:resource"><strong>fabric8:resource</strong></a></p>
-</li>
-<li>
 <p><a href="#fabric8:build"><strong>fabric8:build</strong></a></p>
 </li>
 <li>
-<p><a href="#fabric8:apply">[fabric8:apply]</a></p>
+<p><a href="#fabric8:resource-apply"><strong>fabric8:resource-apply</strong></a></p>
 </li>
 </ul>
 </div>
@@ -1647,7 +1636,7 @@ mvn fabric8:undeploy</code></pre>
 <p>You can then terminate the output by hitting <code>Ctrl+C</code></p>
 </div>
 <div class="paragraph">
-<p>If you wish to geet the log of the app and then terminate immediately then try:</p>
+<p>If you wish to get the log of the app and then terminate immediately then try:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -4335,7 +4324,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.42<br>
-Last updated 2016-09-18 17:57:44 UTC
+Last updated 2016-09-19 08:53:22 UTC
 </div>
 </div>
 </body>
