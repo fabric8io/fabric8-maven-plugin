@@ -40,7 +40,7 @@ public class LogMojo extends AbstractTailLogMojo {
 
     @Override
     protected void applyEntities(Controller controller, final KubernetesClient kubernetes, final String namespace, String fileName, final Set<HasMetadata> entities) throws Exception {
-        tailAppPodsLogs(kubernetes, namespace, entities, false, false, followLog, null);
+        tailAppPodsLogs(kubernetes, namespace, entities, false, null, followLog, null);
     }
 
 
