@@ -53,7 +53,8 @@ public class ServiceHandler {
             ServiceBuilder serviceBuilder = new ServiceBuilder()
                 .withNewMetadata()
                   .withName(service.getName())
-                  .withAnnotations(getPrometheusAnnotations(service))
+                  .withAnnotations(getAnnotations(service))
+                  .withAnnotations(getLabels(service))
                 .endMetadata();
 
             ServiceFluent.SpecNested<ServiceBuilder> serviceSpecBuilder =
@@ -99,7 +100,7 @@ public class ServiceHandler {
         return ret;
     }
 
-    private Map<String, String> getPrometheusAnnotations(ServiceConfig service) {
+    private Map<String, String> getAnnotations(ServiceConfig service) {
         Map<String, String> serviceAnnotations = new HashMap<>();
         // TODO: Use a prometheus enricher
         // lets add the prometheus annotations if required
@@ -109,6 +110,14 @@ public class ServiceHandler {
             MapUtil.putIfAbsent(serviceAnnotations, Annotations.Management.PROMETHEUS_SCRAPE, "true");
         }
         return serviceAnnotations;
+    }
+
+    private Map<String, String> getLabels(ServiceConfig service) {
+        Map<String, String> labels = new HashMap<>();
+        if (service.isExpose()) {
+            MapUtil.putIfAbsent(labels, "expose", "true");
+        }
+        return labels;
     }
 
     private String findPrometheusPort(List<ServiceConfig.Port> ports) {
