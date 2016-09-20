@@ -39,6 +39,10 @@ public class ServiceConfig {
     @Parameter
     private boolean headless = false;
 
+    // If the expose label is added to the service
+    @Parameter
+    private boolean expose = false;
+
     // Service type
     @Parameter
     private String type;
@@ -53,6 +57,10 @@ public class ServiceConfig {
 
     public boolean isHeadless() {
         return headless;
+    }
+
+    public boolean isExpose() {
+        return expose;
     }
 
     public String getType() {
@@ -76,6 +84,11 @@ public class ServiceConfig {
 
         public Builder headless(boolean headless) {
             config.headless = headless;
+            return this;
+        }
+
+        public Builder expose(boolean expose) {
+            config.expose = expose;
             return this;
         }
 
