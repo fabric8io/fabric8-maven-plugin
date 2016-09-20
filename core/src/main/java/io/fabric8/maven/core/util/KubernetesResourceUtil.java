@@ -169,6 +169,7 @@ public class KubernetesResourceUtil {
             "pr", "ProjectRequest",
             "rb", "RoleBinding",
             "rolebinding", "RoleBinding",
+            "route", "Route",
             "secret", "Secret",
             "service", "Service",
             "svc", "Service",
