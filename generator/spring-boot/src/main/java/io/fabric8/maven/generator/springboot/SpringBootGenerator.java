@@ -93,7 +93,7 @@ public class SpringBootGenerator extends BaseGenerator {
         return
             new AssemblyConfiguration.Builder()
                 .basedir("/app")
-                .descriptorRef("artifact-with-includes")
+                .descriptorRef("artifact")
                 .build();
     }
 }
