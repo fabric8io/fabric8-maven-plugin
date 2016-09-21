@@ -26,14 +26,14 @@ If you wish to <<fabric8:undeploy>> on the `Ctrl+C` keypress you can pass in the
 
 [source,sh,subs="attributes"]
 ----
-mvn fabric8:run -D fabric8.onExit=undeploy
+mvn fabric8:run -Dfabric8.onExit=undeploy
 ----
 
 If you prefer Ctrl-C to just terminate the log tailing but leave your app running you can use:
 
 [source,sh,subs="attributes"]
 ----
-mvn fabric8:run -D fabric8.onExit=
+mvn fabric8:run -Dfabric8.onExit=
 ----
 
 Though its maybe just simpler to do:
