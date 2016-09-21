@@ -352,9 +352,7 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
                 }
             }
 
-            if (masterUrl == null || Strings.isNullOrBlank(masterUrl.toString())) {
-                throw new MojoFailureException("Cannot find Kubernetes master URL. Have you started a cluster via `mvn fabric8:cluster-start` or connected to a remote cluster via `kubectl`?");
-            }
+            validateKubernetesMasterUrl(masterUrl);
             log.info("Using %s at %s in namespace %s with manifest %s ", clusterKind, masterUrl, clusterAccess.getNamespace(), manifest);
 
             Controller controller = createController();
@@ -412,18 +410,7 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
             applyEntities(controller, kubernetes, namespace, fileName, entities);
 
         } catch (KubernetesClientException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof UnknownHostException) {
-                log.error("Could not connect to kubernetes cluster!");
-                log.error("Have you started a local cluster via `mvn fabric8:cluster-start` or connected to a remote cluster via `kubectl`?");
-                log.info("For more help see: http://fabric8.io/guide/getStarted/");
-                log.error("Connection error: " + cause);
-
-                String message = "Could not connect to kubernetes cluster. Have you started a cluster via `mvn fabric8:cluster-start` or connected to a remote cluster via `kubectl`? Error: " + cause;
-                throw new MojoExecutionException(message, e);
-            } else {
-                throw new MojoExecutionException(e.getMessage(), e);
-            }
+            handleKubernetesClientException(e);
         } catch (Exception e) {
             throw new MojoExecutionException(e.getMessage(), e);
         }
