@@ -20,14 +20,24 @@ package io.fabric8.maven.plugin;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * Used to automatically rebuild Docker images and restart containers in case of updates.
@@ -55,6 +65,13 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
 
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
+        if (generator == null) {
+            // TODO discover the generators - not sure how yet ;)....
+            List<String> includes = Arrays.asList("spring-boot");
+            Set<String> excludes = new HashSet(Arrays.asList());
+            Map<String, TreeMap> config = new HashMap<>();
+            generator = new ProcessorConfig(includes, excludes, config);
+        }
         return GeneratorManager.generate(configs, generator, project, log, mode, buildStrategy, false);
     }
 
