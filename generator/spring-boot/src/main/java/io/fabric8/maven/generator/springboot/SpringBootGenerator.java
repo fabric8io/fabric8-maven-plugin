@@ -36,13 +36,8 @@ import org.apache.maven.project.MavenProject;
  */
 public class SpringBootGenerator extends BaseGenerator {
 
-    private static final String IMAGE_JAVA_VERSION = "1.1.10";
-    private static final String IMAGE_S2I_JAVA_VERSION = "1.3.3";
-
     public SpringBootGenerator(MavenGeneratorContext context) {
-        super(context, "spring-boot", new FromSelector.Default(context,
-                                                               "fabric8/java-alpine-openjdk8-jdk:" + IMAGE_JAVA_VERSION, "fabric8/s2i-java:" + IMAGE_S2I_JAVA_VERSION,
-                                                               "jboss-fuse-6/fis-java-openshift", "jboss-fuse-6/fis-java-openshift"));
+        super(context, "spring-boot", new FromSelector.Java(context));
     }
 
     private enum Config implements Configs.Key {
