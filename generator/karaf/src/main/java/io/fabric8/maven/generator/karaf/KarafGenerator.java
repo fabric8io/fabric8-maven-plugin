@@ -23,7 +23,7 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.generator.api.BaseGenerator;
+import io.fabric8.maven.generator.api.support.BaseGenerator;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.utils.Strings;
