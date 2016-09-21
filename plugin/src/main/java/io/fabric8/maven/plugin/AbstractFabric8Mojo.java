@@ -77,8 +77,12 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
 
 
     protected Logger createExternalProcessLogger(String prefix) {
+        return createLogger(prefix, COLOR_POD_LOG);
+    }
+
+    protected Logger createLogger(String prefix, Ansi.Color color) {
         if (useColor) {
-            prefix += Ansi.ansi().fg(COLOR_POD_LOG);
+            prefix += Ansi.ansi().fg(color);
         }
         return new AnsiLogger(getLog(), useColor, verbose, prefix);
     }
