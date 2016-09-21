@@ -86,10 +86,10 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
                 Runtime.getRuntime().addShutdownHook(new Thread("mvn fabric8:run-interactive shutdown hook") {
                     @Override
                     public void run() {
-                        if (onExitOperationLower.equals("delete")) {
+                        if (onExitOperationLower.equals(OPERATION_UNDEPLOY)) {
                             log.info("Undeploying the app:");
                             deleteEntities(kubernetes, namespace, entities);
-                        } else if (onExitOperationLower.equals("stop")) {
+                        } else if (onExitOperationLower.equals(OPERATION_STOP)) {
                             log.info("Stopping the app:");
                             resizeApp(kubernetes, namespace, entities, 0);
                         }
