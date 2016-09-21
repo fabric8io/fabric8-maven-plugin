@@ -17,6 +17,8 @@ package io.fabric8.maven.plugin;
 
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerPort;
+import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -266,8 +268,20 @@ public class DebugMojo extends AbstractDeployMojo {
                         env = new ArrayList<>();
                     }
                     remoteDebugPort = getEnvVar(env, ENV_VAR_JAVA_DEBUG_PORT, ENV_VAR_JAVA_DEBUG_PORT_DEFAULT);
+                    boolean enabled = false;
                     if (setEnvVar(env, ENV_VAR_JAVA_DEBUG, "true")) {
                         container.setEnv(env);
+                        enabled = true;
+                    }
+                    List<ContainerPort> ports = container.getPorts();
+                    if (ports == null) {
+                        ports = new ArrayList<>();
+                    }
+                    if (addPort(ports, remoteDebugPort, "debug")) {
+                        container.setPorts(ports);
+                        enabled = true;
+                    }
+                    if (enabled) {
                         log.info("Enabling debug on " + getKind(entity) + " " + getName(entity));
                         return true;
                     }
@@ -275,6 +289,28 @@ public class DebugMojo extends AbstractDeployMojo {
             }
         }
         return false;
+    }
+
+    private boolean addPort(List<ContainerPort> ports, String portNumberText, String portName) {
+        if (Strings.isNullOrBlank(portNumberText)) {
+            return false;
+        }
+        int portValue;
+        try {
+            portValue = Integer.parseInt(portNumberText);
+        } catch (NumberFormatException e) {
+            log.warn("Could not parse remote debugging port " + portNumberText + " as an integer: " + e, e);
+            return false;
+        }
+        for (ContainerPort port : ports) {
+            String name = port.getName();
+            Integer containerPort = port.getContainerPort();
+            if (containerPort != null && containerPort.intValue() == portValue) {
+                return false;
+            }
+        }
+        ports.add(new ContainerPortBuilder().withName(portName).withContainerPort(portValue).build());
+        return true;
     }
 
     private boolean setEnvVar(List<EnvVar> envVarList, String name, String value) {
