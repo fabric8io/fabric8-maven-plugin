@@ -258,10 +258,10 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
                         if (logWatchTerminateLatch.getCount() <= 0L) {
                             return;
                         }
-                        log.info(line);
+                        log.info("%s", line);
                     }
                 } catch (IOException e) {
-                    log.error(failureMessage + " " + e, e);
+                    log.error("%s : %s",failureMessage, e);
                 }
             }
         };

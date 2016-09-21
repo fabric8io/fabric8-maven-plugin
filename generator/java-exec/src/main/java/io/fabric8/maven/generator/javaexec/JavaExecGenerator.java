@@ -39,11 +39,8 @@ public class JavaExecGenerator extends BaseGenerator {
 
     public static final String JAVA_MAIN_CLASS = "JAVA_MAIN_CLASS";
 
-
     public JavaExecGenerator(MavenGeneratorContext context) {
-        super(context, "java-exec", new FromSelector.Default(context,
-                                                             "fabric8/java-alpine-openjdk8-jdk", "fabric8/s2i-java",
-                                                             "jboss-fuse-6/fis-java-openshift", "jboss-fuse-6/fis-java-openshift"));
+        super(context, "java-exec", new FromSelector.Java(context));
     }
 
     private enum Config implements Configs.Key {

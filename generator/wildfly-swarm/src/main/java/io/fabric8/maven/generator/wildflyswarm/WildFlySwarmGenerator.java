@@ -31,16 +31,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by ceposta 
+ * Created by ceposta
  * <a href="http://christianposta.com/blog>http://christianposta.com/blog</a>.
  */
 public class WildFlySwarmGenerator extends BaseGenerator {
 
-
     public WildFlySwarmGenerator(MavenGeneratorContext context) {
-        super(context, "wildfly-swarm", new FromSelector.Default(context,
-                "fabric8/java-alpine-openjdk8-jdk", "fabric8/s2i-java",
-                "jboss-fuse-6/fis-java-openshift", "jboss-fuse-6/fis-java-openshift"));
+        super(context, "wildfly-swarm", new FromSelector.Java(context));
     }
 
     private enum Config implements Configs.Key {

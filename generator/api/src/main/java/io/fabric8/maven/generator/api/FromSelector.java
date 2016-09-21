@@ -56,13 +56,25 @@ public abstract class FromSelector {
         MavenProject project = context.getProject();
         Plugin plugin = project.getPlugin("io.fabric8:fabric8-maven-plugin");
         if (plugin == null) {
-            // Can happen if not configured in a build section
+            // Can happen if not configured in a build section but only in a dependency management section
             return false;
         }
         String version = plugin.getVersion();
         return REDHAT_VERSION_PATTERN.matcher(version).matches();
     }
 
+    /**
+     * Default selector for plain Java apps started with a run script
+     */
+    public static class Java extends Default {
+        public Java(MavenGeneratorContext context) {
+            super(context,
+                  "fabric8/java-alpine-openjdk8-jdk:1.1.11",
+                  "fabric8/s2i-java:1.3.3",
+                  "jboss-fuse-6/fis-java-openshift",
+                  "jboss-fuse-6/fis-java-openshift");
+        }
+    }
     public static class Default extends FromSelector {
 
         private final String vanillaDocker;
