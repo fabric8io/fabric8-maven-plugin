@@ -15,14 +15,11 @@
  */
 package io.fabric8.maven.plugin;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.PodStatusType;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.extensions.LabelSelector;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -33,6 +30,7 @@ import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Strings;
+import org.fusesource.jansi.Ansi;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -61,7 +59,10 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
     private Map<String, Pod> addedPods = new ConcurrentHashMap<>();
     private CountDownLatch terminateLatch = new CountDownLatch(1);
     private String watchingPodName;
+    private String newestPodName;
     private CountDownLatch logWatchTerminateLatch;
+    private Logger newPodLog;
+    private Logger oldPodLog;
 
     protected void tailAppPodsLogs(final KubernetesClient kubernetes, final String namespace, final Set<HasMetadata> entities, boolean watchAddedPodsOnly, String onExitOperation, boolean followLog, Date ignorePodsOlderThan) {
         LabelSelector selector = null;
@@ -71,6 +72,8 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
                 break;
             }
         }
+        newPodLog = createLogger("New Pod> ", Ansi.Color.CYAN);
+        oldPodLog = createLogger("Old Pod> ", Ansi.Color.DEFAULT);
         if (selector != null) {
             String ctrlCMessage = "stop tailing the log";
             if (Strings.isNotBlank(onExitOperation)) {
@@ -176,9 +179,6 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
 
     private void onPod(Watcher.Action action, Pod pod, KubernetesClient kubernetes, String namespace, String ctrlCMessage, boolean followLog) {
         String name = getName(pod);
-        if (!action.equals(Watcher.Action.MODIFIED) || watchingPodName == null || !watchingPodName.equals(name)) {
-            log.info("" + action + " pod " + name + " status: " + getPodStatusDescription(pod));
-        }
         if (action.equals(Watcher.Action.DELETED)) {
             addedPods.remove(name);
             if (Objects.equals(watchingPodName, name)) {
@@ -191,11 +191,25 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
             }
         }
 
-        if (!addedPods.isEmpty()) {
-            Pod watchPod = getNewestPod(addedPods.values());
-            if (isPodRunning(watchPod)) {
-                watchLogOfPodName(kubernetes, namespace, ctrlCMessage, followLog, getName(watchPod));
-            }
+        Pod watchPod = getNewestPod(addedPods.values());
+        newestPodName = getName(watchPod);
+
+        Logger statusLog = Objects.equals(name, newestPodName) ? newPodLog : oldPodLog;
+        String message = "";
+        switch (action) {
+            case DELETED:
+                message = ": Pod Deleted";
+                break;
+            case ERROR:
+                message = ": Error";
+                break;
+        }
+        if (!action.equals(Watcher.Action.MODIFIED) || watchingPodName == null || !watchingPodName.equals(name)) {
+            statusLog.info(name + " status: " + getPodStatusDescription(pod) + message);
+        }
+
+        if (watchPod != null && isPodRunning(watchPod)) {
+            watchLogOfPodName(kubernetes, namespace, ctrlCMessage, followLog, getName(watchPod));
         }
     }
 
@@ -241,9 +255,9 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
     private void watchLog(final LogWatch logWatcher, String podName, final String failureMessage, String ctrlCMessage) {
         final InputStream in = logWatcher.getOutput();
         final Logger log = createPodLogger();
-        log.info("Tailing log of pod: " + podName);
-        log.info("Press Ctrl-C to " + ctrlCMessage);
-        log.info("");
+        newPodLog.info("Tailing log of pod: " + podName);
+        newPodLog.info("Press Ctrl-C to " + ctrlCMessage);
+        newPodLog.info("");
 
         Thread thread = new Thread() {
             @Override

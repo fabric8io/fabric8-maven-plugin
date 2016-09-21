@@ -714,7 +714,7 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
 
         for (HasMetadata entity : list) {
             log.info("Deleting resource " + getKind(entity) + " " + namespace + "/" + getName(entity));
-            kubernetes.resource(entity).inNamespace(namespace).delete();
+            kubernetes.resource(entity).inNamespace(namespace).cascading(true).delete();
         }
     }
 
