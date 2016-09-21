@@ -29,7 +29,6 @@ import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
-import org.apache.xbean.propertyeditor.IntegerEditor;
 
 /**
  * @author roland
