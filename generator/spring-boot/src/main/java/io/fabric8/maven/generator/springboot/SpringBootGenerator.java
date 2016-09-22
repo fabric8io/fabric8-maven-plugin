@@ -16,16 +16,12 @@
 
 package io.fabric8.maven.generator.springboot;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.docker.config.AssemblyConfiguration;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.maven.generator.api.support.JavaRunGenerator;
-import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -39,9 +35,9 @@ public class SpringBootGenerator extends JavaRunGenerator {
     }
 
     @Override
-    public boolean isApplicable() {
-        MavenProject project = getProject();
-        return MavenUtil.hasPlugin(project, "org.springframework.boot:spring-boot-maven-plugin");
+    public boolean isApplicable(List<ImageConfiguration> configs) {
+        return shouldAddDefaultImage(configs) &&
+               MavenUtil.hasPlugin(getProject(), "org.springframework.boot:spring-boot-maven-plugin");
     }
 
 }

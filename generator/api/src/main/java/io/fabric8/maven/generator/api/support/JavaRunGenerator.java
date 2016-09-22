@@ -16,17 +16,16 @@ package io.fabric8.maven.generator.api.support;
  * limitations under the License.
  */
 
+import java.io.IOException;
 import java.util.*;
 
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.utils.Strings;
-import org.apache.maven.project.MavenProject;
 
 /**
  * @author roland
@@ -36,7 +35,7 @@ import org.apache.maven.project.MavenProject;
 abstract public class JavaRunGenerator extends BaseGenerator {
 
     public JavaRunGenerator(MavenGeneratorContext context, String name) {
-        super(context, name, new FromSelector.Java(context));
+        super(context, name, new Java(context));
     }
 
     private enum Config implements Configs.Key {
@@ -51,25 +50,21 @@ abstract public class JavaRunGenerator extends BaseGenerator {
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {
-        if (isApplicable() && shouldAddDefaultImage(configs)) {
-            ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
-            BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
-                .assembly(createAssembly())
-                .from(getFrom())
-                .ports(extractPorts());
+        ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
+        BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
+            .assembly(createAssembly())
+            .from(getFrom())
+            .ports(extractPorts());
             Map<String, String> envMap = getEnv();
-            envMap.put("JAVA_APP_DIR", getConfig(Config.baseDir));
-            buildBuilder.env(envMap);
-            addLatestTagIfSnapshot(buildBuilder);
-            imageBuilder
-                .name(getImageName())
-                .alias(getAlias())
+        envMap.put("JAVA_APP_DIR", getConfig(Config.baseDir));
+        buildBuilder.env(envMap);
+        addLatestTagIfSnapshot(buildBuilder);
+        imageBuilder
+            .name(getImageName())
+            .alias(getAlias())
                 .buildConfig(buildBuilder.build());
-            configs.add(imageBuilder.build());
-            return configs;
-        } else {
-            return configs;
-        }
+        configs.add(imageBuilder.build());
+        return configs;
     }
 
     /**
@@ -105,6 +100,41 @@ abstract public class JavaRunGenerator extends BaseGenerator {
     private void addPortIfValid(List<String> list, String port) {
         if (Strings.isNotBlank(port) && Integer.parseInt(port) != 0) {
             list.add(port);
+        }
+    }
+
+    /**
+     * Default selector for plain Java apps started with a run script
+     */
+    static class Java extends FromSelector.Default {
+
+        private static final Properties defaultImageProps;
+
+        public static final String JAVA_DEFAULT_IMAGES_PROPERTIES = "/META-INF/fabric8/java-default-images.properties";
+
+        static {
+            defaultImageProps = new Properties();
+            try {
+                defaultImageProps.load(Java.class.getResourceAsStream(JAVA_DEFAULT_IMAGES_PROPERTIES));
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Cannot load default images properties " + JAVA_DEFAULT_IMAGES_PROPERTIES + ": " + e,e);
+            }
+        }
+
+        public Java(MavenGeneratorContext context) {
+            super(context,
+                  getImageProp("generator.java.docker.upstream"),
+                  getImageProp("generator.java.s2i.upstream"),
+                  getImageProp("generator.java.docker.redhat"),
+                  getImageProp("generator.java.s2i.redhat"));
+        }
+
+        private static String getImageProp(String key) {
+            String val = defaultImageProps.getProperty(key);
+            if (val == null) {
+                throw new IllegalArgumentException("Cannot retrieve default value " + key + " from " + JAVA_DEFAULT_IMAGES_PROPERTIES);
+            }
+            return val;
         }
     }
 }

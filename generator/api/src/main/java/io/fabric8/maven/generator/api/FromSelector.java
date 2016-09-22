@@ -63,18 +63,6 @@ public abstract class FromSelector {
         return REDHAT_VERSION_PATTERN.matcher(version).matches();
     }
 
-    /**
-     * Default selector for plain Java apps started with a run script
-     */
-    public static class Java extends Default {
-        public Java(MavenGeneratorContext context) {
-            super(context,
-                  "fabric8/java-alpine-openjdk8-jdk:1.1.11",
-                  "fabric8/s2i-java:1.3.3",
-                  "jboss-fuse-6/fis-java-openshift",
-                  "jboss-fuse-6/fis-java-openshift");
-        }
-    }
     public static class Default extends FromSelector {
 
         private final String vanillaDocker;

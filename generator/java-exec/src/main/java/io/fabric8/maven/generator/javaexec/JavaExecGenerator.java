@@ -18,18 +18,13 @@ package io.fabric8.maven.generator.javaexec;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.docker.config.AssemblyConfiguration;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.generator.api.support.BaseGenerator;
-import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.maven.generator.api.support.JavaRunGenerator;
 import io.fabric8.utils.Strings;
@@ -94,7 +89,7 @@ public class JavaExecGenerator extends JavaRunGenerator {
     }
 
     @Override
-    public boolean isApplicable() {
-        return Strings.isNotBlank(getMainClass());
+    public boolean isApplicable(List<ImageConfiguration> configs) {
+        return shouldAddDefaultImage(configs) && Strings.isNotBlank(getMainClass());
     }
 }
