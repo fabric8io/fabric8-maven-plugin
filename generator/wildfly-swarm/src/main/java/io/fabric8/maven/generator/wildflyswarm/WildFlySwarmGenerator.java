@@ -18,83 +18,38 @@ package io.fabric8.maven.generator.wildflyswarm;
 
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.docker.config.AssemblyConfiguration;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.generator.api.BaseGenerator;
-import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
-import io.fabric8.utils.Strings;
+import io.fabric8.maven.generator.api.support.JavaRunGenerator;
 import org.apache.maven.project.MavenProject;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by ceposta
  * <a href="http://christianposta.com/blog>http://christianposta.com/blog</a>.
  */
-public class WildFlySwarmGenerator extends BaseGenerator {
+public class WildFlySwarmGenerator extends JavaRunGenerator {
 
     public WildFlySwarmGenerator(MavenGeneratorContext context) {
-        super(context, "wildfly-swarm", new FromSelector.Java(context));
+        super(context, "wildfly-swarm");
     }
 
     private enum Config implements Configs.Key {
-        webPort        {{ d = "8080"; }},
-        jolokiaPort    {{ d = "8778"; }},
-        prometheusPort {{ d = "9779"; }};
+        assemblyRef    {{ d = "wildfly-swarm"; }};
 
         public String def() { return d; } protected String d;
     }
 
     @Override
-    public boolean isApplicable() {
-        MavenProject project = getProject();
-        return MavenUtil.hasPlugin(project, "org.wildfly.swarm:wildfly-swarm-plugin");
+    protected String getAssemblyRef() {
+        return getConfig(Config.assemblyRef);
     }
 
     @Override
-    public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {
-        if (isApplicable() && shouldAddDefaultImage(configs)) {
-            ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
-            BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
-                    .assembly(createAssembly())
-                    .from(getFrom())
-                    .ports(extractPorts());
-            addLatestTagIfSnapshot(buildBuilder);
-            imageBuilder
-                    .name(getImageName())
-                    .alias(getAlias())
-                    .buildConfig(buildBuilder.build());
-            configs.add(imageBuilder.build());
-            return configs;
-        }else {
-            return configs;
-        }
+    public boolean isApplicable(List<ImageConfiguration> configs) {
+        return shouldAddDefaultImage(configs) &&
+               MavenUtil.hasPlugin(getProject(), "org.wildfly.swarm:wildfly-swarm-plugin");
     }
 
-    private List<String> extractPorts() {
-        // TODO would rock to look at the base image and find the exposed ports!
-        List<String> answer = new ArrayList<>();
-        addPortIfValid(answer, getConfig(Config.webPort));
-        addPortIfValid(answer, getConfig(Config.jolokiaPort));
-        addPortIfValid(answer, getConfig(Config.prometheusPort));
-        return answer;
-    }
-
-    private void addPortIfValid(List<String> list, String port) {
-        if (Strings.isNotBlank(port)) {
-            list.add(port);
-        }
-    }
-
-
-    private AssemblyConfiguration createAssembly() {
-        return
-                new AssemblyConfiguration.Builder()
-                        .basedir("/app")
-                        .descriptorRef("wildfly-swarm")
-                        .build();
-    }
 }

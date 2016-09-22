@@ -23,7 +23,7 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.generator.api.BaseGenerator;
+import io.fabric8.maven.generator.api.support.BaseGenerator;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.utils.Strings;
@@ -51,10 +51,9 @@ public class KarafGenerator extends BaseGenerator {
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {
-        if (isApplicable() && shouldAddDefaultImage(configs)) {
-            ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
-            BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
-                .assembly(createAssembly())
+        ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
+        BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
+            .assembly(createAssembly())
                 .from(getFrom())
                 .ports(extractPorts())
                 .cmd(getConfig(Config.cmd));
@@ -64,20 +63,16 @@ public class KarafGenerator extends BaseGenerator {
                 .alias(getAlias())
                 .buildConfig(buildBuilder.build());
             configs.add(imageBuilder.build());
-            return configs;
-        } else {
-            return configs;
-        }
+        return configs;
     }
 
     @Override
-    public boolean isApplicable() {
-        MavenProject project = getProject();
-        return MavenUtil.hasPlugin(project, "org.apache.karaf.tooling:karaf-maven-plugin");
+    public boolean isApplicable(List<ImageConfiguration> configs) {
+        return shouldAddDefaultImage(configs) &&
+               MavenUtil.hasPlugin(getProject(), "org.apache.karaf.tooling:karaf-maven-plugin");
     }
 
-    private List<String> extractPorts() {
-        // TODO would rock to look at the base image and find the exposed ports!
+    protected List<String> extractPorts() {
         List<String> answer = new ArrayList<>();
         addPortIfValid(answer, getConfig(Config.webPort));
         addPortIfValid(answer, getConfig(Config.jolokiaPort));

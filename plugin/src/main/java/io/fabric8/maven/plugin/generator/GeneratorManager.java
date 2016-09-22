@@ -69,7 +69,7 @@ public class GeneratorManager {
             }
         }
         for (Generator generator : usableGenerators) {
-            if (generator.isApplicable()) {
+            if (generator.isApplicable(ret)) {
                 log.info("Running generator %s", generator.getName());
                 ret = generator.customize(ret);
             }

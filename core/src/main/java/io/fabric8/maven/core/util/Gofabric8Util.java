@@ -31,10 +31,10 @@ import io.fabric8.maven.docker.util.Logger;
  * @since 14/09/16
  */
 public class Gofabric8Util {
-    public static List<DockerConnectionDetector.DockerEnvProvider> extractEnvProvider(Logger log) {
+    public static List<DockerConnectionDetector.DockerHostProvider> extractDockerHostProvider(Logger log) {
         if (findGofabric8(log) != null) {
-            return Collections.<DockerConnectionDetector.DockerEnvProvider>singletonList(
-                new Gofabric8EnvProvider(log));
+            return Collections.<DockerConnectionDetector.DockerHostProvider>singletonList(
+                new Gofabric8DockerHostProvider(log));
         } else {
             return null;
         }
@@ -42,30 +42,36 @@ public class Gofabric8Util {
     }
 
     public static File findGofabric8(Logger log) {
-        return ProcessUtil.findExecutable(log,"gofabric8");
+        return ProcessUtil.findExecutable(log, "gofabric8");
     }
 
-    private static class Gofabric8EnvProvider implements DockerConnectionDetector.DockerEnvProvider {
+    private static class Gofabric8DockerHostProvider implements DockerConnectionDetector.DockerHostProvider {
 
         private final Gofabric8EnvCommand command;
         private final Logger log;
         private Map<String, String> envMap;
 
-        public Gofabric8EnvProvider(Logger log) {
+        public Gofabric8DockerHostProvider(Logger log) {
             this.command = new Gofabric8EnvCommand(log);
             this.log = log;
         }
 
         @Override
-        public synchronized String getEnvVar(String key) throws IOException {
+        public synchronized String getDockerHost() throws IOException {
             if (envMap == null) {
                 envMap = command.getEnvironment();
             }
-            String value = envMap.get(key);
-            if (value != null) {
-                log.info("Environment variable from gofabric8 : %s=%s",key,value);
+            String dockerHost = envMap.get("DOCKER_HOST");
+            if (dockerHost != null) {
+                log.info("DOCKER_HOST from gofabric8 : %s",dockerHost);
             }
-            return value;
+            return dockerHost;
+        }
+
+        @Override
+        public int getPriority() {
+            // Lowest priority, meant as a fallback
+            return -1;
         }
     }
 

@@ -18,64 +18,41 @@ package io.fabric8.maven.generator.javaexec;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.docker.config.AssemblyConfiguration;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.generator.api.BaseGenerator;
-import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
+import io.fabric8.maven.generator.api.support.JavaRunGenerator;
 import io.fabric8.utils.Strings;
 
 /**
  */
-public class JavaExecGenerator extends BaseGenerator {
+public class JavaExecGenerator extends JavaRunGenerator {
 
     public static final String JAVA_MAIN_CLASS = "JAVA_MAIN_CLASS";
 
     public JavaExecGenerator(MavenGeneratorContext context) {
-        super(context, "java-exec", new FromSelector.Java(context));
+        super(context, "java-exec");
     }
 
     private enum Config implements Configs.Key {
         // The name of the main class. If not speficied it is tried
         // to find a main class within target/classes
-        mainClass,
-        webPort,
-        jolokiaPort    {{ d = "8778"; }},
-        prometheusPort {{ d = "9779"; }};
+        mainClass;
 
         public String def() { return d; } protected String d;
     }
 
-    @Override
-    public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {
-        if (isApplicable() && shouldAddDefaultImage(configs)) {
-            Map<String, String> envVars = new HashMap<>();
-            envVars.put(JAVA_MAIN_CLASS, getMainClass());
 
-            ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
-            BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
-                .assembly(createAssembly())
-                .from(getFrom())
-                .ports(extractPorts())
-                .env(envVars);
-            addLatestTagIfSnapshot(buildBuilder);
-            imageBuilder
-                .name(getImageName())
-                .alias(getAlias())
-                .buildConfig(buildBuilder.build());
-            configs.add(imageBuilder.build());
-            return configs;
-        } else {
-            return configs;
-        }
+    @Override
+    protected Map<String, String> getEnv() {
+        Map<String, String> envVars = new HashMap<>();
+        envVars.put(JAVA_MAIN_CLASS, getMainClass());
+        return envVars;
     }
 
     // Only extract one time
@@ -105,37 +82,14 @@ public class JavaExecGenerator extends BaseGenerator {
                 return mainClass = null;
             }
         } catch (IOException e) {
-            throw new IllegalStateException("Cannot examine main classes: " + e,e);
+            throw new IllegalStateException("Can not examine main classes: " + e,e);
         } finally {
             alreadySearchedForMainClass = true;
         }
     }
 
     @Override
-    public boolean isApplicable() {
-        return Strings.isNotBlank(getMainClass());
-    }
-
-    private List<String> extractPorts() {
-        // TODO would rock to look at the base image and find the exposed ports!
-        List<String> answer = new ArrayList<>();
-        addPortIfValid(answer, getConfig(Config.webPort));
-        addPortIfValid(answer, getConfig(Config.jolokiaPort));
-        addPortIfValid(answer, getConfig(Config.prometheusPort));
-        return answer;
-    }
-
-    private void addPortIfValid(List<String> list, String port) {
-        if (Strings.isNotBlank(port)) {
-            list.add(port);
-        }
-    }
-
-    private AssemblyConfiguration createAssembly() {
-        return
-            new AssemblyConfiguration.Builder()
-                .basedir("/app")
-                .descriptorRef("java-app")
-                .build();
+    public boolean isApplicable(List<ImageConfiguration> configs) {
+        return shouldAddDefaultImage(configs) && Strings.isNotBlank(getMainClass());
     }
 }

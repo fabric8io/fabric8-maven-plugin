@@ -29,8 +29,9 @@ public interface Generator extends Named {
 
     /**
      * @return true if the generator is applicable
+     * @param configs all configuration already available
      */
-    boolean isApplicable();
+    boolean isApplicable(List<ImageConfiguration> configs);
 
     /**
      * Provide additional image configurations

@@ -14,7 +14,7 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.generator.api;
+package io.fabric8.maven.generator.api.support;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,6 +23,7 @@ import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.generator.api.*;
 import org.apache.maven.project.MavenProject;
 
 /**
