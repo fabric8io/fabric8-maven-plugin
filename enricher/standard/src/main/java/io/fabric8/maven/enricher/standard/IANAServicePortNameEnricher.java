@@ -49,7 +49,7 @@ public class IANAServicePortNameEnricher extends BaseEnricher {
                         Set<String> sn = serviceNames(builder.getContainerPort(), protocol.toLowerCase());
                         if (sn != null && !sn.isEmpty()) {
                             String serviceName = sn.iterator().next();
-                            log.info("Adding port name %s", serviceName);
+                            log.verbose("Adding port name %s for port %d", serviceName, builder.getContainerPort());
                             builder.withName(serviceName);
                         }
                     } catch (IOException e) {

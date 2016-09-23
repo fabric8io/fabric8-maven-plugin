@@ -48,7 +48,7 @@ public class ProfileUtil {
      * </ul>
      * @param profile the profile's name
      * @param resourceDir a directory to check for profiles.
-     * @return the profile found
+     * @return the profile found or null if none of this name is given
      * @throws IOException
      */
     public static Profile findProfile(String profile, File resourceDir) throws IOException {
@@ -70,20 +70,15 @@ public class ProfileUtil {
     /**
      * Find an enricher or generator config, possibly via a profile
      *
-     * @param given a given config which should be used directly
      * @param extractor how to extract the config from a profile when found
      * @param profile the profile name (can be null, then no profile is used)
      * @param resourceDir resource directory where to lookup the profile (in addition to a classpath lookup)
      * @return the configuration found or <code>null</code> if none could be found
      * @throws MojoExecutionException
      */
-    public static ProcessorConfig extractProcesssorConfiguration(ProcessorConfig given,
-                                                                 ProcessorConfigurationExtractor extractor,
+    public static ProcessorConfig extractProcesssorConfiguration(ProcessorConfigurationExtractor extractor,
                                                                  String profile,
                                                                  File resourceDir) throws IOException {
-        if (given != null) {
-            return given;
-        }
         Profile profileFound = findProfile(profile, resourceDir);
         if (profileFound != null) {
             return extractor.extract(profileFound);
