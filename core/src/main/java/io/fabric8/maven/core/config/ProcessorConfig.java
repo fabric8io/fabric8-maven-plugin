@@ -86,12 +86,12 @@ public class ProcessorConfig {
      * @return true if the processor with this name should be used, false otherwise.
      */
     public boolean use(String name) {
-        if (includes != null && includes.size() > 0 && includes.contains(name)) {
+        if (includes != null && includes.contains(name)) {
             return true;
         } else if (excludes != null && excludes.contains(name)) {
             return false;
         } else {
-            return includes != null && includes.size() > 0 ? false : true;
+            return includes != null ? false : true;
         }
     }
 

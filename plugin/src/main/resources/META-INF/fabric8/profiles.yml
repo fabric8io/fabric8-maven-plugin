@@ -3,7 +3,7 @@
 # No enrichment at all
 - name: raw
   enricher:
-    includes:
+    includes: []
 # Use only the Spring Boot generator
 - name: fmp-spring-boot
   generator:

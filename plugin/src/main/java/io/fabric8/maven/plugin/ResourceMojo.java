@@ -346,12 +346,12 @@ public class ResourceMojo extends AbstractResourceMojo {
         });
         for (File profileDir : profileDirs) {
             Profile profile = ProfileUtil.findProfile(profileDir.getName(), resourceDir);
-            ProcessorConfig enricherConfig = profile.getEnricherConfig();
             if (profile == null) {
                 throw new MojoExecutionException(String.format("Invalid profile '%s' given as directory in %s. " +
                                                                "Please either define a profile of this name or move this directory away",
                                                                profileDir.getName(), resourceDir));
             }
+            ProcessorConfig enricherConfig = profile.getEnricherConfig();
             File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(profileDir);
             if (resourceFiles.length > 0) {
                 KubernetesListBuilder profileBuilder = readResourceFragments(resourceFiles);
