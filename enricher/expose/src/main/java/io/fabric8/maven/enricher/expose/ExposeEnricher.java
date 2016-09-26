@@ -75,7 +75,7 @@ public class ExposeEnricher extends BaseEnricher {
                 labels.put(EXPOSE_LABEL, "true");
                 log.info("Adding Service label `" + EXPOSE_LABEL + ":true` on service " +
                         KubernetesHelper.getName(service) +
-                        " so that it is exposed by the exposecontroller microservice. To disable use the `internal-microservice` profile");
+                        " so that it is exposed by the exposecontroller microservice. To disable use the maven argument: `-Dfabric8.profile=internal-microservice`");
             }
         }
     }
