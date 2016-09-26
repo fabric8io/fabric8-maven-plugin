@@ -195,17 +195,8 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
         newestPodName = getName(watchPod);
 
         Logger statusLog = Objects.equals(name, newestPodName) ? newPodLog : oldPodLog;
-        String message = "";
-        switch (action) {
-            case DELETED:
-                message = ": Pod Deleted";
-                break;
-            case ERROR:
-                message = ": Error";
-                break;
-        }
         if (!action.equals(Watcher.Action.MODIFIED) || watchingPodName == null || !watchingPodName.equals(name)) {
-            statusLog.info(name + " status: " + getPodStatusDescription(pod) + message);
+            statusLog.info(name + " status: " + getPodStatusDescription(pod) + getPodStatusMessagePostfix(action));
         }
 
         if (watchPod != null && isPodRunning(watchPod)) {
