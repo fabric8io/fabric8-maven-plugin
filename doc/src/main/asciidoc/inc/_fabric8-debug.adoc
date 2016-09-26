@@ -23,3 +23,41 @@ Then in your IDE you start a Remote debug execution using this remote port using
 This lets you debug your apps while they are running inside a Kubernetes cluster - for example if you wish to debug a REST endpoint while another pod is invoking it.
 
 Debug is enabled via the `JAVA_ENABLE_DEBUG` environment variable being set to `true`. This environment variable is used for all the standard Java docker images used by Spring Boot, flat classpath and executable JAR projects and Wildfly Swarm. If you use your own custom docker base image you may wish to also respect this environment variable too to enable debugging.
+
+### Speeding up debugging
+
+By default the `fabric8:debug` goal has to edit your Deployment to enable debugging then wait for a pod to start. It might be in development you frequently want to debug things and want to speed things up a bit.
+
+If so you can enable debug mode for each build via the `fabric8.debug.enabled` property.
+
+e.g. you can pass this property on the command line:
+
+[source, sh]
+----
+mvn fabric8:deploy -Dfabric8.debug.enabled=true
+----
+
+Or you can add something like this to your `~/.m2/settings.xml` file so that you enable debug mode for all maven builds on your laptop by using a profile :
+
+[source, xml]
+----
+<?xml version="1.0"?>
+<settings>
+  <profiles>
+    <profile>
+      <id>enable-debug</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <fabric8.debug.enabled>true</fabric8.debug.enabled>
+      </properties>
+    </profile>
+----
+
+Then whenever you type the `fabric8:debug` goal there is no need for the maven goal to edit the `Deployment` and wait for a pod to restart; we can immediately start debugging when you type:
+
+[source, sh]
+----
+mvn fabric8:debug
+----
