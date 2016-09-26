@@ -22,6 +22,7 @@ import java.util.*;
 
 import io.fabric8.maven.docker.access.DockerConnectionDetector;
 import io.fabric8.maven.docker.access.util.EnvCommand;
+import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
 
 /**
@@ -62,9 +63,11 @@ public class Gofabric8Util {
                 envMap = command.getEnvironment();
             }
             String dockerHost = envMap.get("DOCKER_HOST");
-            if (dockerHost != null) {
-                log.info("DOCKER_HOST from gofabric8 : %s",dockerHost);
+            if (dockerHost == null) {
+                return null;
             }
+            dockerHost = EnvUtil.convertDockerHostToUrl(dockerHost);
+            log.info("DOCKER_HOST from gofabric8 : %s", dockerHost);
             return dockerHost;
         }
 
