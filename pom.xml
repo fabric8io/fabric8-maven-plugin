@@ -41,6 +41,7 @@
     <module>plugin</module>
     <module>enricher/api</module>
     <module>enricher/standard</module>
+    <module>enricher/expose</module>
     <module>enricher/fabric8</module>
     <module>generator/api</module>
     <module>generator/java-exec</module>
