@@ -54,7 +54,7 @@ public class ServiceHandler {
                 .withNewMetadata()
                   .withName(service.getName())
                   .withAnnotations(getAnnotations(service))
-                  .withAnnotations(getLabels(service))
+                  .withLabels(getLabels(service))
                 .endMetadata();
 
             ServiceFluent.SpecNested<ServiceBuilder> serviceSpecBuilder =
