@@ -515,8 +515,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/fabric8-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 3.1.0.redhat-000028,</span>
-<span id="revdate">2016-09-24</span>
+<span id="revnumber">version 3.1.51,</span>
+<span id="revdate">2016-09-26</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -748,7 +748,7 @@ table.CodeRay td.code>pre{padding:0}
 
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-sample-zero-config<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>3.1.0.redhat-000028<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.1.51<span class="tag">&lt;/version&gt;</span>
   <span class="tag">&lt;packaging&gt;</span>jar<span class="tag">&lt;/packaging&gt;</span>
 
   <span class="tag">&lt;parent&gt;</span>
@@ -773,7 +773,7 @@ table.CodeRay td.code>pre{padding:0}
       <span class="tag">&lt;plugin&gt;</span>
         <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
         <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span> <i class="conum" data-value="4"></i><b>(4)</b>
-        <span class="tag">&lt;version&gt;</span>3.1.0.redhat-000028<span class="tag">&lt;/version&gt;</span>
+        <span class="tag">&lt;version&gt;</span>3.1.51<span class="tag">&lt;/version&gt;</span>
       <span class="tag">&lt;/plugin&gt;</span>
     <span class="tag">&lt;/plugins&gt;</span>
   <span class="tag">&lt;/build&gt;</span>
@@ -1064,6 +1064,9 @@ For building images there is also an alternative mode using external Dockerfiles
 </div>
 <hr>
 <div class="paragraph">
+<p>Enrichment of resource fragments can be fine tune by using profile sub-directories. For more details see <a href="#profiles">Profiles</a>.</p>
+</div>
+<div class="paragraph">
 <p>Now that we have seen some examples for the various ways how this plugin can be used, the following sections will describe the plugin goals and extension points in detail.</p>
 </div>
 </div>
@@ -1083,7 +1086,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>3.1.0.redhat-000028<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.1.51<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1245,7 +1248,7 @@ available goals are described below.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn io.fabric8:fabric8-maven-plugin:3.1.0.redhat-000028:setup</code></pre>
+<pre class="CodeRay highlight"><code data-lang="sh">mvn io.fabric8:fabric8-maven-plugin:3.1.51:setup</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1268,7 +1271,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>3.1.0.redhat-000028<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.1.51<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1514,7 +1517,7 @@ mvn fabric8:stop</code></pre>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>3.1.0.redhat-000028<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.1.51<span class="tag">&lt;/version&gt;</span>
 
   <span class="comment">&lt;!-- Connect fabric8:resource, fabric8:build and fabric8:helm to lifecycle phases --&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
@@ -1562,7 +1565,7 @@ mvn fabric8:stop</code></pre>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>3.1.0.redhat-000028<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.1.51<span class="tag">&lt;/version&gt;</span>
 
   <span class="comment">&lt;!-- Connect fabric8:resource, fabric8:build and fabric8:helm to lifecycle phases --&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
@@ -1896,7 +1899,7 @@ This is chapter is incomplete, but there is work in progress.
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>3.1.0.redhat-000028<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.1.51<span class="tag">&lt;/version&gt;</span>
 
   <span class="comment">&lt;!-- Connect fabric8:resource to the lifecycle phases --&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
@@ -3304,7 +3307,30 @@ more details.</p></td>
 <p>The general scheme is a prefix <code>fabric8.generator.</code> followed by the unique generator name and then the generator specific key.</p>
 </div>
 <div class="paragraph">
-<p>fabric8-maven-plugin comes with a set of default generators which are described in the next secion <a href="#generators-fabric8">Fabric8 Generators</a>. These are enabled by default. In addition, custom generators can be easily added by simply declaring a compile scoped dependency in the <code>pom.xml</code>. This and how a generator can be implemented is described in <a href="#generators-api">Generator API</a>.</p>
+<p><code>fabric8-maven-plugin</code> comes with a set of default generators which are described in the next secion <a href="#generators-fabric8">Fabric8 Generators</a>. These are enabled by default. In addition, custom generators can be easily added. There are two ways to include generators:</p>
+</div>
+<div class="paragraph">
+<div class="title">Plugin dependency</div>
+<p>You can declare the generator holding jars as dependency to this plugin as shown in this example</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+  ....
+  <span class="tag">&lt;depedencies&gt;</span>
+    <span class="tag">&lt;dependency&gt;</span>
+      <span class="tag">&lt;groupId&gt;</span>io.acme<span class="tag">&lt;/groupId&gt;</span>
+      <span class="tag">&lt;artifactId&gt;</span>mygenerator<span class="tag">&lt;/artifactId&gt;</span>
+      <span class="tag">&lt;version&gt;</span>1.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;dependency&gt;</span>
+  <span class="tag">&lt;/dependencies&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<div class="title">Compile time depdendency</div>
+<p>Alternatively and if you application code comes with a custom generator you can set the global configuration option <code>useProjectClasspath</code> (property: <code>fabric8.useProjectClasspath</code>) to true. In this case also the project artifact and its dependencies are looked for genertors. See <a href="#generators-api">Generator API</a> for details how to write your own generators.</p>
 </div>
 <div class="sect2">
 <h3 id="generators-default">4.1. Default Generators</h3>
@@ -3503,7 +3529,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <p>Enriching is the complementary concept to <a href="#generators">Generators</a>. Whereas Generators are used to create and customize Docker images, Enrichers are use to create and customize Kubernetes and OpenShift resource objects.</p>
 </div>
 <div class="paragraph">
-<p>There are a lot similarities to Generatos:</p>
+<p>There are a lot of similarities to Generators:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -3511,7 +3537,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <p>Each Enricher has a unique name.</p>
 </li>
 <li>
-<p>Enrichers are looked up automatically from dependencies provied and there is a set of default enrichers delivered with this plugin.</p>
+<p>Enrichers are looked up automatically from the plugin dependencies and there is a set of default enrichers delivered with this plugin.</p>
 </li>
 <li>
 <p>Enrichers are configured the same ways as generators</p>
@@ -3744,6 +3770,26 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </div>
 <div class="paragraph">
 <p>If a configuration for enrichers and generators are provided as part of the plugin&#8217;s <code>&lt;configuration&gt;</code> then this takes precedence over any profile specified.</p>
+</div>
+<div class="paragraph">
+<div class="title">Profiles for resource fragments</div>
+<p>Profiles are also very useful when used together with resource fragments in <code>src/main/fabric8</code>. By default the resource objects defined here are enriched with the configured profile (if any). A different profile can be selected easily by using a sub directory within <code>src/main/fabric8</code>. The name of each sub directory is interpreted as a profile name and all resource definition files found in this sub directory are enhanced with the enhancers defined in this profile.</p>
+</div>
+<div class="paragraph">
+<p>For example, consider the following directory layout:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code>src/main/fabric8:
+  app-rc.yml
+  app-svc.yml
+  raw/ --&gt;
+    couchbase-rc.yml
+    couchbase-svc.yml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Here, the resource descriptors <code>app-rc.yml</code> and <code>app-svc.yml</code> are enhanced with the enrichers defined in the main configuration. The files two files <code>couchbase-rc.yml</code> and <code>couchbase-svc.yml</code> in the sub directory <code>raw/</code> instead are enriched with the profile <strong>raw</strong>. This is a predefined profile which includes no enricher at all, so the couchbase resource objects are not enriched and taken over literally. This is an easy way how you can fine tune enrichment for different object set.</p>
 </div>
 </div>
 </div>
@@ -4128,8 +4174,8 @@ mvn fabric8:migrate
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 3.1.0.redhat-000028<br>
-Last updated 2016-09-24 01:41:40 UTC
+Version 3.1.51<br>
+Last updated 2016-09-26 07:47:33 UTC
 </div>
 </div>
 </body>
