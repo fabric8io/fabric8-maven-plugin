@@ -563,7 +563,11 @@ table.CodeRay td.code>pre{padding:0}
 </li>
 <li><a href="#fabric8:stop">3.8. <strong>fabric8:stop</strong></a></li>
 <li><a href="#fabric8:log">3.9. <strong>fabric8:log</strong></a></li>
-<li><a href="#fabric8:debug">3.10. <strong>fabric8:debug</strong></a></li>
+<li><a href="#fabric8:debug">3.10. <strong>fabric8:debug</strong></a>
+<ul class="sectlevel3">
+<li><a href="#speeding-up-debugging">3.10.1. Speeding up debugging</a></li>
+</ul>
+</li>
 <li><a href="#fabric8:import">3.11. <strong>fabric8:import</strong></a></li>
 <li><a href="#fabric8:resource">3.12. <strong>fabric8:resource</strong></a>
 <ul class="sectlevel3">
@@ -1708,6 +1712,50 @@ mvn fabric8:stop</code></pre>
 </div>
 <div class="paragraph">
 <p>Debug is enabled via the <code>JAVA_ENABLE_DEBUG</code> environment variable being set to <code>true</code>. This environment variable is used for all the standard Java docker images used by Spring Boot, flat classpath and executable JAR projects and Wildfly Swarm. If you use your own custom docker base image you may wish to also respect this environment variable too to enable debugging.</p>
+</div>
+<div class="sect3">
+<h4 id="speeding-up-debugging">3.10.1. Speeding up debugging</h4>
+<div class="paragraph">
+<p>By default the <code>fabric8:debug</code> goal has to edit your Deployment to enable debugging then wait for a pod to start. It might be in development you frequently want to debug things and want to speed things up a bit.</p>
+</div>
+<div class="paragraph">
+<p>If so you can enable debug mode for each build via the <code>fabric8.debug.enabled</code> property.</p>
+</div>
+<div class="paragraph">
+<p>e.g. you can pass this property on the command line:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:deploy -Dfabric8.debug.enabled=true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Or you can add something like this to your <code>~/.m2/settings.xml</code> file so that you enable debug mode for all maven builds on your laptop by using a profile :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="preprocessor">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
+<span class="tag">&lt;settings&gt;</span>
+  <span class="tag">&lt;profiles&gt;</span>
+    <span class="tag">&lt;profile&gt;</span>
+      <span class="tag">&lt;id&gt;</span>enable-debug<span class="tag">&lt;/id&gt;</span>
+      <span class="tag">&lt;activation&gt;</span>
+        <span class="tag">&lt;activeByDefault&gt;</span>true<span class="tag">&lt;/activeByDefault&gt;</span>
+      <span class="tag">&lt;/activation&gt;</span>
+      <span class="tag">&lt;properties&gt;</span>
+        <span class="tag">&lt;fabric8.debug.enabled&gt;</span>true<span class="tag">&lt;/fabric8.debug.enabled&gt;</span>
+      <span class="tag">&lt;/properties&gt;</span>
+    <span class="tag">&lt;/profile&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then whenever you type the <code>fabric8:debug</code> goal there is no need for the maven goal to edit the <code>Deployment</code> and wait for a pod to restart; we can immediately start debugging when you type:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:debug</code></pre>
+</div>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -4175,7 +4223,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.51<br>
-Last updated 2016-09-26 15:54:05 UTC
+Last updated 2016-09-26 16:25:28 UTC
 </div>
 </div>
 </body>
