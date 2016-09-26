@@ -23,11 +23,17 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.fabric8.kubernetes.api.model.ContainerPort;
+import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Files;
+import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
 
@@ -306,5 +312,61 @@ public class KubernetesResourceUtil {
             }
         }
         return false;
+    }
+
+    public static boolean addPort(List<ContainerPort> ports, String portNumberText, String portName, Logger log) {
+        if (Strings.isNullOrBlank(portNumberText)) {
+            return false;
+        }
+        int portValue;
+        try {
+            portValue = Integer.parseInt(portNumberText);
+        } catch (NumberFormatException e) {
+            log.warn("Could not parse remote debugging port " + portNumberText + " as an integer: " + e, e);
+            return false;
+        }
+        for (ContainerPort port : ports) {
+            String name = port.getName();
+            Integer containerPort = port.getContainerPort();
+            if (containerPort != null && containerPort.intValue() == portValue) {
+                return false;
+            }
+        }
+        ports.add(new ContainerPortBuilder().withName(portName).withContainerPort(portValue).build());
+        return true;
+    }
+
+    public static boolean setEnvVar(List<EnvVar> envVarList, String name, String value) {
+        for (EnvVar envVar : envVarList) {
+            String envVarName = envVar.getName();
+            if (io.fabric8.utils.Objects.equal(name, envVarName)) {
+                String oldValue = envVar.getValue();
+                if (io.fabric8.utils.Objects.equal(value, oldValue)) {
+                    return false;
+                } else {
+                    envVar.setValue(value);
+                    return true;
+                }
+            }
+        }
+        EnvVar env = new EnvVarBuilder().withName(name).withValue(value).build();
+        envVarList.add(env);
+        return true;
+    }
+
+    public static String getEnvVar(List<EnvVar> envVarList, String name, String defaultValue) {
+        String answer = defaultValue;
+        if (envVarList != null) {
+            for (EnvVar envVar : envVarList) {
+                String envVarName = envVar.getName();
+                if (io.fabric8.utils.Objects.equal(name, envVarName)) {
+                    String value = envVar.getValue();
+                    if (Strings.isNotBlank(value)) {
+                        return value;
+                    }
+                }
+            }
+        }
+        return answer;
     }
 }
