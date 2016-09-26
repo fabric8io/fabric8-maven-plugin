@@ -26,6 +26,7 @@ import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.utils.Strings;
 
 import static io.fabric8.maven.core.util.KubernetesResourceUtil.extractContainerName;
 import static io.fabric8.utils.Strings.isNullOrBlank;
@@ -150,7 +151,7 @@ public class ImageEnricher extends BaseEnricher {
         int idx = 0;
         for (ImageConfiguration imageConfiguration : images) {
             Container container = getContainer(idx, containers);
-            mergeImagePullPolicy(container);
+            mergeImagePullPolicy(imageConfiguration, container);
             mergeImage(imageConfiguration, container);
             mergeContainerName(imageConfiguration, container);
             idx++;
@@ -184,11 +185,15 @@ public class ImageEnricher extends BaseEnricher {
         }
     }
 
-    private void mergeImagePullPolicy(Container container) {
+    private void mergeImagePullPolicy(ImageConfiguration imageConfiguration, Container container) {
         if (isNullOrBlank(container.getImagePullPolicy())) {
             String policy = getConfig(Config.pullPolicy);
             if (policy == null) {
-                policy = getProject().getVersion().endsWith("-SNAPSHOT") ? "Always" : "IfNotPresent";
+                policy = "IfNotPresent";
+                String imageName = imageConfiguration.getName();
+                if (Strings.isNotBlank(imageName) && imageName.endsWith(":latest")) {
+                    policy = "Always";
+                }
             }
             container.setImagePullPolicy(policy);
         }
