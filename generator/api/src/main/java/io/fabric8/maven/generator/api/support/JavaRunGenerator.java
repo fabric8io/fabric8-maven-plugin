@@ -55,7 +55,7 @@ abstract public class JavaRunGenerator extends BaseGenerator {
             .assembly(createAssembly())
             .from(getFrom())
             .ports(extractPorts());
-            Map<String, String> envMap = getEnv();
+        Map<String, String> envMap = getEnv();
         envMap.put("JAVA_APP_DIR", getConfig(Config.baseDir));
         buildBuilder.env(envMap);
         addLatestTagIfSnapshot(buildBuilder);
@@ -70,7 +70,7 @@ abstract public class JavaRunGenerator extends BaseGenerator {
     /**
      * Hook for adding extra environment vars
      *
-     * @param buildBuilder
+     * @return map with environment variables to use
      */
     protected Map<String, String> getEnv() {
         return new HashMap<>();

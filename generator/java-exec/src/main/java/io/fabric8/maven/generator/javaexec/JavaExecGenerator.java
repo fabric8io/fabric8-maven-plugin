@@ -50,9 +50,9 @@ public class JavaExecGenerator extends JavaRunGenerator {
 
     @Override
     protected Map<String, String> getEnv() {
-        Map<String, String> envVars = new HashMap<>();
-        envVars.put(JAVA_MAIN_CLASS, getMainClass());
-        return envVars;
+        Map<String, String> ret = super.getEnv();
+        ret.put(JAVA_MAIN_CLASS, getMainClass());
+        return ret;
     }
 
     // Only extract one time
