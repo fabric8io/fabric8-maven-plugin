@@ -23,7 +23,23 @@ import io.fabric8.openshift.api.model.DeploymentConfigFluent;
 
 /**
  * Takes a DeploymentConfig generated from a vanilla Deployment as part of the aggregation
- * and enriches it with the timeout
+ * and enriches it with the timeout.
+ *
+ * See discussions about the timeout : https://github.com/openshift/origin/issues/10531
+ *
+ * -- Discussion --------------------------------------------------------------------------------------------
+ * roland: in fact, this is the wrong place for adapting an OpenShit object (or 'converting an OpenShift object
+ * to an OpenShift object'), as the converters only purpose should be to *convert* Kubernetes to OpenShift objects.
+ * This here looks like it should go into an enricher. I know, that the enriching phase happens before the
+ * conversion phase, so deployment configs which were created on behalf of a conversion from
+ * Deployment -> DeploymentConfig wont be enriched anymore.
+ *
+ * There are two solutions to get rid of this converter:
+ *
+ * * Add an enricher for regular DeploymentConfigs provided by an user to add this timeout. Drawback: Timeout would
+ *   be needed to configured twice
+ * * Add a second enrich phase after conversion to OpenShift objects.
+ * ------------------------------------------------------------------------------------------------------------
  */
 public class DeploymentConfigOpenShiftConverter implements KubernetesToOpenShiftConverter {
     private final Long openshiftDeployTimeoutSeconds;
@@ -46,7 +62,7 @@ public class DeploymentConfigOpenShiftConverter implements KubernetesToOpenShift
                     specBuilder = builder.withNewSpec();
                 }
                 specBuilder.withNewStrategy().withType("Rolling").
-                        withNewRollingParams().withTimeoutSeconds(openshiftDeployTimeoutSeconds).endRollingParams().endStrategy();
+                    withNewRollingParams().withTimeoutSeconds(openshiftDeployTimeoutSeconds).endRollingParams().endStrategy();
                 specBuilder.endSpec();
                 return builder.build();
             }

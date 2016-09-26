@@ -55,7 +55,6 @@ Generators can be configured with a `<generator>` section. The following sub-ele
 | Configuration for all generators. Each generator support a specific set of configuration values as described in the documentation. The subelements of this section are generator names to configure. E.g. for generator `spring-boot`, the sub-element is called `<spring-boot>`. This element then holds the specific generator configuration like `<name>` for specifying the final image name. See above for an example.
 |===
 
-
 Beside the specifying generator configuration in the plugin's configuration it can be set with properties, too:
 
 .Example generator property config
@@ -66,7 +65,30 @@ mvn -Dfabric8.generator.spring-boot.alias="myapp"
 
 The general scheme is a prefix `fabric8.generator.` followed by the unique generator name and then the generator specific key.
 
-fabric8-maven-plugin comes with a set of default generators which are described in the next secion <<generators-fabric8, Fabric8 Generators>>. These are enabled by default. In addition, custom generators can be easily added by simply declaring a compile scoped dependency in the `pom.xml`. This and how a generator can be implemented is described in <<generators-api, Generator API>>.
+`fabric8-maven-plugin` comes with a set of default generators which are described in the next secion <<generators-fabric8, Fabric8 Generators>>. These are enabled by default. In addition, custom generators can be easily added. There are two ways to include generators:
+
+.Plugin dependency
+
+You can declare the generator holding jars as dependency to this plugin as shown in this example
+
+[source, xml]
+----
+<plugin>
+  <artifactId>fabric8-maven-plugin</artifactId>
+  ....
+  <depedencies>
+    <dependency>
+      <groupId>io.acme</groupId>
+      <artifactId>mygenerator</artifactId>
+      <version>1.0</version>
+    <dependency>
+  </dependencies>
+</plugin>
+----
+
+.Compile time depdendency
+
+Alternatively and if you application code comes with a custom generator you can set the global configuration option `useProjectClasspath` (property: `fabric8.useProjectClasspath`) to true. In this case also the project artifact and its dependencies are looked for genertors. See <<generators-api, Generator API>> for details how to write your own generators.
 
 [[generators-default]]
 == Default Generators

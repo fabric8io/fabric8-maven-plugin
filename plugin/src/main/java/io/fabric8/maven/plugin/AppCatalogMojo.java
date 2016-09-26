@@ -248,7 +248,6 @@ public class AppCatalogMojo extends AbstractResourceMojo {
             KubernetesList list = (KubernetesList) resource;
             List<HasMetadata> items = list.getItems();
             if (items != null) {
-                defaultAnnotationsFromResources(annotations, items);
                 for (HasMetadata item : items) {
                     ObjectMeta metadata = item.getMetadata();
                     Map<String, String> itemLabels = metadata.getLabels();

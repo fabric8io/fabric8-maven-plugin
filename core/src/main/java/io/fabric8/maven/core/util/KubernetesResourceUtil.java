@@ -73,21 +73,15 @@ public class KubernetesResourceUtil {
     public static KubernetesListBuilder readResourceFragmentsFrom(String apiVersion,
                                                                   String apiExtensionsVersion,
                                                                   String defaultName,
-                                                                  boolean appResourcesOnly,
                                                                   File[] resourceFiles) throws IOException {
-        KubernetesListBuilder k8sBuilder = new KubernetesListBuilder();
+        KubernetesListBuilder builder = new KubernetesListBuilder();
         if (resourceFiles != null) {
-            List<HasMetadata> items = new ArrayList<>();
             for (File file : resourceFiles) {
-                HasMetadata resource = getKubernetesResource(apiVersion, apiExtensionsVersion, file, defaultName);
-                if ( (appResourcesOnly && resource.getMetadata().getName().equals(defaultName)) ||
-                     (!appResourcesOnly && !resource.getMetadata().getName().equals(defaultName))) {
-                    items.add(resource);
-                }
+                HasMetadata resource = getResource(apiVersion, apiExtensionsVersion, file, defaultName);
+                builder.addToItems(resource);
             }
-            k8sBuilder.withItems(items);
         }
-        return k8sBuilder;
+        return builder;
     }
 
     /**
@@ -106,8 +100,8 @@ public class KubernetesResourceUtil {
      * @param file file to read, whose name must match {@link #FILENAME_PATTERN}.  @return map holding the fragment
      * @param appName resource name specifying resources belonging to this application
      */
-    public static HasMetadata getKubernetesResource(String defaultApiVersion, String apiExtensionsVersion,
-                                                    File file, String appName) throws IOException {
+    public static HasMetadata getResource(String defaultApiVersion, String apiExtensionsVersion,
+                                          File file, String appName) throws IOException {
         Map<String,Object> fragment = readAndEnrichFragment(defaultApiVersion, apiExtensionsVersion, file, appName);
         ObjectMapper mapper = new ObjectMapper();
         return mapper.convertValue(fragment, HasMetadata.class);
@@ -158,8 +152,6 @@ public class KubernetesResourceUtil {
             "cm", "ConfigMap",
             "configmap", "ConfigMap",
             "deployment", "Deployment",
-            "dc", "DeploymentConfig",
-            "deploymentconfig", "DeploymentConfig",
             "ns", "Namespace",
             "namespace", "Namespace",
             "oauthclient", "OAuthClient",
@@ -169,14 +161,18 @@ public class KubernetesResourceUtil {
             "pr", "ProjectRequest",
             "rb", "RoleBinding",
             "rolebinding", "RoleBinding",
-            "route", "Route",
             "secret", "Secret",
             "service", "Service",
             "svc", "Service",
             "sa", "ServiceAccount",
             "rc", "ReplicationController",
             "rs", "ReplicaSet",
-            "template", "Template"
+
+            // OpenShift Resources:
+            "route", "Route",
+            "dc", "DeploymentConfig",
+            "deploymentconfig", "DeploymentConfig",
+            "template", "Template",
         };
 
     static {

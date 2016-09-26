@@ -121,24 +121,4 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
             throw new MojoExecutionException("Failed to write resource to " + resourceFileBase + ". " + e, e);
         }
     }
-
-    protected static void defaultAnnotationsFromResources(Map<String, String> annotations, List<HasMetadata> objects) {
-        String[] annotationsToDefault = {Annotations.Builds.ICON_URL,
-                Annotations.Builds.BUILD_ID, Annotations.Builds.BUILD_URL,
-                Annotations.Builds.DOCS_URL,
-                Annotations.Builds.GIT_BRANCH, Annotations.Builds.GIT_COMMIT, Annotations.Builds.GIT_URL};
-
-        for (String annotation : annotationsToDefault) {
-            if (!annotations.containsKey(annotation)) {
-                for (HasMetadata item : objects) {
-                    Map<String, String> itemAnnotations = getOrCreateAnnotations(item);
-                    String value = itemAnnotations.get(annotation);
-                    if (Strings.isNotBlank(value)) {
-                        annotations.put(annotation, value);
-                        break;
-                    }
-                }
-            }
-        }
-    }
 }

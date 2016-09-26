@@ -23,6 +23,7 @@ import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
+import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.enricher.api.Kind;
 
 /**
@@ -33,18 +34,30 @@ import io.fabric8.maven.enricher.api.Kind;
  */
 public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
-    private final EnricherManager enricher;
+    private final EnricherManager enricherManager;
 
+    private static ThreadLocal<ProcessorConfig> configHolder = new ThreadLocal<>();
 
-    private MetadataVisitor(EnricherManager enricher) {
-        this.enricher = enricher;
+    private MetadataVisitor(EnricherManager enricherManager) {
+        this.enricherManager = enricherManager;
     }
 
-    @Override
+    public static void setProcessorConfig(ProcessorConfig config) {
+        configHolder.set(config);
+    }
+
+    public static void clearProcessorConfig() {
+        configHolder.set(null);
+    }
+
     public void visit(T item) {
+        ProcessorConfig config = configHolder.get();
+        if (config == null) {
+            throw new IllegalArgumentException("No ProcessorConfig set");
+        }
         ObjectMeta metadata = getOrCreateMetadata(item);
-        overlayMap(metadata.getLabels(), enricher.extractLabels(getKind()));
-        overlayMap(metadata.getAnnotations(), enricher.extractAnnotations(getKind()));
+        overlayMap(metadata.getLabels(), enricherManager.extractLabels(config, getKind()));
+        overlayMap(metadata.getAnnotations(), enricherManager.extractAnnotations(config, getKind()));
     }
 
     private void overlayMap(Map<String, String> targetMap, Map<String, String> enrichMap) {

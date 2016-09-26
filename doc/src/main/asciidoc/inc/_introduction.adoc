@@ -285,4 +285,6 @@ NOTE: For building images there is also an alternative mode using external Docke
 
 '''
 
+Enrichment of resource fragments can be fine tune by using profile sub-directories. For more details see <<profiles, Profiles>>.
+
 Now that we have seen some examples for the various ways how this plugin can be used, the following sections will describe the plugin goals and extension points in detail.

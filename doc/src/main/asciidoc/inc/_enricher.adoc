@@ -4,10 +4,10 @@
 
 Enriching is the complementary concept to <<generators, Generators>>. Whereas Generators are used to create and customize Docker images, Enrichers are use to create and customize Kubernetes and OpenShift resource objects.
 
-There are a lot similarities to Generatos:
+There are a lot of similarities to Generators:
 
 * Each Enricher has a unique name.
-* Enrichers are looked up automatically from dependencies provied and there is a set of default enrichers delivered with this plugin.
+* Enrichers are looked up automatically from the plugin dependencies and there is a set of default enrichers delivered with this plugin.
 * Enrichers are configured the same ways as generators
 
 The <<generator-example,Generator example>> is a good bluebprint, simply replace `<generator>` with `<enricher>`. The configuration is structural identical:

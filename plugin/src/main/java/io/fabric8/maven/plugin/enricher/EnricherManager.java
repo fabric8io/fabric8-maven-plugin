@@ -43,58 +43,89 @@ public class EnricherManager {
     private List<Enricher> enrichers;
 
     // context used by enrichers
-    private final ProcessorConfig enricherConfig;
+    private final ProcessorConfig defaultEnricherConfig;
 
     private Logger log;
 
     // List of visitors used to enrich with labels
-    private final List<? extends MetadataVisitor<?>> metaDataVisitors;
-    private final List<? extends SelectorVisitor<?>> selectorVisitors;
+    private final MetadataVisitor[] metaDataVisitors;
+    private final SelectorVisitor[] selectorVisitorCreators;
 
     public EnricherManager(EnricherContext enricherContext) {
         PluginServiceFactory<EnricherContext> pluginFactory = new PluginServiceFactory<>(enricherContext);
-
 
         if (enricherContext.isUseProjectClasspath()) {
             pluginFactory.addAdditionalClassLoader(ClassUtil.createProjectClassLoader(enricherContext.getProject(), enricherContext.getLog()));
         }
 
         this.log = enricherContext.getLog();
-        this.enricherConfig = enricherContext.getConfig();
+        this.defaultEnricherConfig = enricherContext.getConfig();
 
         this.enrichers = pluginFactory.createServiceObjects("META-INF/fabric8-enricher-default",
-                                                       "META-INF/fabric8/enricher-default",
-                                                       "META-INF/fabric8-enricher",
-                                                       "META-INF/fabric8/enricher");
-        Collections.reverse(enrichers);
+                                                            "META-INF/fabric8/enricher-default",
+                                                            "META-INF/fabric8-enricher",
+                                                            "META-INF/fabric8/enricher");
 
         ResourceConfig resources = enricherContext.getResourceConfig();
         if (resources != null) {
-            addMetaDataEnricher(enrichers, enricherContext, MetadataEnricher.Type.LABEL, resources.getLabels());
-            addMetaDataEnricher(enrichers, enricherContext, MetadataEnricher.Type.ANNOTATION, resources.getAnnotations());
+            unshiftMetaDataEnricher(enrichers, enricherContext, MetadataEnricher.Type.ANNOTATION, resources.getAnnotations());
+            unshiftMetaDataEnricher(enrichers, enricherContext, MetadataEnricher.Type.LABEL, resources.getLabels());
         }
 
-        enrichers = filterEnrichers(enrichers);
-        logEnrichers(enrichers);
+        logEnrichers(filterEnrichers(defaultEnricherConfig,enrichers));
 
-
-        metaDataVisitors = Arrays.asList(
+        metaDataVisitors = new MetadataVisitor[] {
             new MetadataVisitor.Deployment(this),
             new MetadataVisitor.ReplicaSet(this),
             new MetadataVisitor.ReplicationController(this),
             new MetadataVisitor.Service(this),
-            new MetadataVisitor.PodSpec(this));
+            new MetadataVisitor.PodSpec(this)
+        };
 
-        selectorVisitors = Arrays.asList(
+        selectorVisitorCreators = new SelectorVisitor[] {
             new SelectorVisitor.Deployment(this),
             new SelectorVisitor.ReplicaSet(this),
             new SelectorVisitor.ReplicationController(this),
-            new SelectorVisitor.Service(this));
+            new SelectorVisitor.Service(this)
+        };
     }
 
-    private void addMetaDataEnricher(List<Enricher> enrichers, EnricherContext ctx, MetadataEnricher.Type type, MetaDataConfig metaData) {
+    public void createDefaultResources(final KubernetesListBuilder builder) {
+        createDefaultResources(defaultEnricherConfig, builder);
+    }
+
+    public void createDefaultResources(ProcessorConfig enricherConfig, final KubernetesListBuilder builder) {
+        // Add default resources
+        loop(enricherConfig, new Function<Enricher, Void>() {
+            @Override
+            public Void apply(Enricher enricher) {
+                enricher.addMissingResources(builder);
+                return null;
+            }
+        });
+    }
+
+    public void enrich(KubernetesListBuilder builder) {
+        enrich(defaultEnricherConfig, builder);
+    }
+
+    public void enrich(ProcessorConfig config, KubernetesListBuilder builder) {
+        // Enrich labels
+        enrichLabels(config, builder);
+
+        // Add missing selectors
+        addMissingSelectors(config, builder);
+
+        // Final customization step
+        adapt(config, builder);
+    }
+
+
+    // ==================================================================================================
+
+    private void unshiftMetaDataEnricher(List<Enricher> enrichers, EnricherContext ctx, MetadataEnricher.Type type, MetaDataConfig metaData) {
         if (metaData != null) {
-            enrichers.add(new MetadataEnricher(ctx, type, metaData));
+            enrichers.add(0,new MetadataEnricher(ctx, type, metaData));
         }
     }
 
@@ -105,40 +136,29 @@ public class EnricherManager {
         }
     }
 
-    public void createDefaultResources(KubernetesListBuilder builder) {
-        // Add default resources
-        addDefaultResources(builder);
-    }
-
-    public void enrich(KubernetesListBuilder builder) {
-        // Enrich labels
-        enrichLabels(builder);
-
-        // Add missing selectors
-        addMissingSelectors(builder);
-
-        // Final customization step
-        adapt(builder);
-    }
-
-
     /**
      * Enrich the given list with labels.
      *
      * @param builder the build to enrich with labels
      */
-    private void enrichLabels(KubernetesListBuilder builder) {
-        visit(builder, metaDataVisitors);
+    private void enrichLabels(ProcessorConfig config, KubernetesListBuilder builder) {
+        visit(config, builder, metaDataVisitors);
     }
 
     /**
      * Add selector when missing to services and replication controller / replica sets
      *
+     * @param config processor config to use
      * @param builder builder to add selectors to.
      */
-    private void addMissingSelectors(KubernetesListBuilder builder) {
-        for (SelectorVisitor visitor : selectorVisitors) {
-            builder.accept(visitor);
+    private void addMissingSelectors(ProcessorConfig config, KubernetesListBuilder builder) {
+        SelectorVisitor.setProcessorConfig(config);
+        try {
+            for (SelectorVisitor visitor : selectorVisitorCreators) {
+                builder.accept(visitor);
+            }
+        } finally {
+            SelectorVisitor.clearProcessorConfig();
         }
     }
 
@@ -147,26 +167,11 @@ public class EnricherManager {
      *
      * @param builder builder to customize
      */
-    private void adapt(final KubernetesListBuilder builder) {
-        loop(new Function<Enricher, Void>() {
+    private void adapt(final ProcessorConfig enricherConfig, final KubernetesListBuilder builder) {
+        loop(enricherConfig, new Function<Enricher, Void>() {
             @Override
             public Void apply(Enricher enricher) {
                 enricher.adapt(builder);
-                return null;
-            }
-        });
-    }
-
-    /**
-     * Allow enricher to add default resource objects
-     *
-     * @param builder builder to examine for missing resources and used for adding default resources to it
-     */
-    private void addDefaultResources(final KubernetesListBuilder builder) {
-        loop(new Function<Enricher, Void>() {
-            @Override
-            public Void apply(Enricher enricher) {
-                enricher.addMissingResources(builder);
                 return null;
             }
         });
@@ -180,38 +185,38 @@ public class EnricherManager {
      * @param kind resource type for which labels should be extracted
      * @return extracted labels
      */
-    Map<String, String> extractLabels(Kind kind) {
-        return extract(LABEL_EXTRACTOR, kind);
+    Map<String, String> extractLabels(ProcessorConfig config, Kind kind) {
+        return extract(config, LABEL_EXTRACTOR, kind);
     }
 
-    Map<String, String> extractAnnotations(Kind kind) {
-        return extract(ANNOTATION_EXTRACTOR, kind);
+    Map<String, String> extractAnnotations(ProcessorConfig config, Kind kind) {
+        return extract(config, ANNOTATION_EXTRACTOR, kind);
     }
 
-    Map<String, String> extractSelector(Kind kind) {
-        return extract(SELECTOR_EXTRACTOR, kind);
+    Map<String, String> extractSelector(ProcessorConfig config, Kind kind) {
+        return extract(config, SELECTOR_EXTRACTOR, kind);
     }
 
 
-    private List<Enricher> filterEnrichers(List<Enricher> enrichers) {
+    private List<Enricher> filterEnrichers(ProcessorConfig config, List<Enricher> enrichers) {
         List<Enricher> ret = new ArrayList<>();
-        for (Enricher enricher : enricherConfig.order(enrichers, "enricher")) {
-            if (enricherConfig.use(enricher.getName())) {
+        for (Enricher enricher : defaultEnricherConfig.order(enrichers, "enricher")) {
+            if (config.use(enricher.getName())) {
                 ret.add(enricher);
             }
         }
         return ret;
     }
 
-    private void loop(Function<Enricher, Void> function) {
-        for (Enricher enricher : enrichers) {
+    private void loop(ProcessorConfig config, Function<Enricher, Void> function) {
+        for (Enricher enricher : filterEnrichers(config,enrichers)) {
             function.apply(enricher);
         }
     }
 
-    private Map<String, String> extract(Extractor extractor, Kind kind) {
+    private Map<String, String> extract(ProcessorConfig config, Extractor extractor, Kind kind) {
         Map <String, String> ret = new HashMap<>();
-        for (Enricher enricher : enrichers) {
+        for (Enricher enricher : filterEnrichers(config, enrichers)) {
             putAllIfNotNull(ret, extractor.extract(enricher, kind));
         }
         return ret;
@@ -245,9 +250,14 @@ public class EnricherManager {
         }
     }
 
-    private void visit(KubernetesListBuilder builder, List<? extends MetadataVisitor<?>> visitors) {
-        for (MetadataVisitor visitor : visitors) {
-            builder.accept(visitor);
+    private void visit(ProcessorConfig config, KubernetesListBuilder builder, MetadataVisitor[] visitors) {
+        MetadataVisitor.setProcessorConfig(config);
+        try {
+            for (MetadataVisitor visitor : visitors) {
+                builder.accept(visitor);
+            }
+        } finally {
+            MetadataVisitor.clearProcessorConfig();
         }
     }
 }

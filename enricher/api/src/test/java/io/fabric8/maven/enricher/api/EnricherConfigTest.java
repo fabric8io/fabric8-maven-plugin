@@ -16,9 +16,7 @@
 
 package io.fabric8.maven.enricher.api;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.Configs;
@@ -40,8 +38,10 @@ public class EnricherConfigTest {
 
     @Test
     public void simple() throws Exception {
-        Map<String,String> configMap = new HashMap<>();
-        configMap.put("default.service.type", "LoadBalancer");
+        Map<String,TreeMap> configMap = new HashMap<>();
+        TreeMap map = new TreeMap();
+        map.put("type","LoadBalancer");
+        configMap.put("default.service", map);
         EnricherConfig config = new EnricherConfig(new Properties(), "default.service", new ProcessorConfig(null, null, configMap));
         assertEquals("LoadBalancer",config.get(Config.type));
     }

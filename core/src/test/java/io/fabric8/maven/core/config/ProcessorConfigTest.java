@@ -70,6 +70,15 @@ public class ProcessorConfigTest {
     }
 
     @Test
+    public void empty() {
+        ProcessorConfig pConfig = new ProcessorConfig(Collections.<String>emptyList(), null, config);
+
+        assertFalse(pConfig.use("i2"));
+        assertFalse(pConfig.use("e1"));
+        assertFalse(pConfig.use("n1"));
+
+    }
+    @Test
     public void config() {
         ProcessorConfig pConfig = new ProcessorConfig(null, null, config);
 

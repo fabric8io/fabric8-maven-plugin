@@ -52,7 +52,7 @@ public class PortNameEnricher extends BaseEnricher {
                 if (builder.getContainerPort() != null && (builder.getName() == null || builder.getName().isEmpty())) {
                     String serviceName = DEFAULT_PORT_MAPPING.get(builder.getContainerPort());
                     if (serviceName != null && !serviceName.isEmpty()) {
-                        log.info("Adding port name " + serviceName);
+                        log.verbose("Adding port name %s for port %d", serviceName, builder.getContainerPort());
                         builder.withName(serviceName);
                     }
                 }
