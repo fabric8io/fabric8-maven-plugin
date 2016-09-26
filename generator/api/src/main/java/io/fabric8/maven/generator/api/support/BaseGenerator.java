@@ -16,16 +16,18 @@
 
 package io.fabric8.maven.generator.api.support;
 
-import java.util.Collections;
-import java.util.List;
-
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.generator.api.*;
-import io.fabric8.utils.Strings;
+import io.fabric8.maven.generator.api.FromSelector;
+import io.fabric8.maven.generator.api.Generator;
+import io.fabric8.maven.generator.api.GeneratorConfig;
+import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import org.apache.maven.project.MavenProject;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author roland
@@ -122,8 +124,7 @@ abstract public class BaseGenerator implements Generator {
     }
 
     protected boolean shouldAddDefaultImage(List<ImageConfiguration> configs) {
-        String merge =  getConfigWithSystemFallbackAndDefault(Config.alias, "fabric8.generator.alias", "");
-        return !containsBuildConfiguration(configs) || Strings.isNotBlank(merge);
+        return !containsBuildConfiguration(configs);
     }
 
     private String getConfigWithSystemFallbackAndDefault(Config name, String key, String defaultVal) {

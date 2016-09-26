@@ -39,6 +39,7 @@ abstract public class JavaRunGenerator extends BaseGenerator {
     }
 
     private enum Config implements Configs.Key {
+        enabled        {{ d = "false"; }},
         webPort        {{ d = "8080"; }},
         jolokiaPort    {{ d = "8778"; }},
         prometheusPort {{ d = "9779"; }},
@@ -95,6 +96,11 @@ abstract public class JavaRunGenerator extends BaseGenerator {
         addPortIfValid(answer, getConfig(Config.jolokiaPort));
         addPortIfValid(answer, getConfig(Config.prometheusPort));
         return answer;
+    }
+
+    @Override
+    protected boolean shouldAddDefaultImage(List<ImageConfiguration> configs) {
+        return super.shouldAddDefaultImage(configs) || Configs.asBoolean(getConfig(Config.enabled));
     }
 
     private void addPortIfValid(List<String> list, String port) {
