@@ -16,18 +16,22 @@
 
 package io.fabric8.maven.enricher.standard;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.maven.core.util.Configs;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.ServiceFluent;
+import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.fabric8.maven.core.config.ServiceConfig;
 import io.fabric8.maven.core.config.ServiceProtocol;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ServiceHandler;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -35,6 +39,12 @@ import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.utils.Strings;
 import org.apache.maven.shared.utils.StringUtils;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * An enricher for creating default services when not present.
@@ -122,17 +132,38 @@ public class DefaultServiceEnricher extends BaseEnricher {
             if (buildConfig != null) {
                 List<String> ports = buildConfig.getPorts();
                 if (ports != null) {
+                    Set<Integer> portNumbers = new HashSet<>();
+                    Set<String> portNames = new HashSet<>();
+
                     for (String port : ports) {
                         /// Todo: Check IANA names (also in case port is not numeric)
                         // TODO: Check Image labels for port specification
                         int portI = Integer.parseInt(port);
+                        portNumbers.add(portI);
+                    }
+
+                    for (Integer portNumber : portNumbers) {
+                        int portI = portNumber.intValue();
+                        int servicePort = portI;
+
+                        // lets default to a nicer port number if its not already used
+                        if (!portNumbers.contains(80)) {
+                            if (portI == 8080 || portI == 9090) {
+                                servicePort = 80;
+                            }
+                        }
+                        String name = getDefaultPortName(servicePort);
+                        if (!portNames.add(name)) {
+                            name = null;
+                        }
                         ret.add(
-                            new ServiceConfig.Port.Builder()
-                                .protocol(ServiceProtocol.TCP) // TODO: default for the moment
-                                .port(portI)
-                                .targetPort(portI)
-                                .build()
-                               );
+                                new ServiceConfig.Port.Builder()
+                                        .protocol(ServiceProtocol.TCP) // TODO: default for the moment
+                                        .port(servicePort)
+                                        .targetPort(portI)
+                                        .name(name)
+                                        .build()
+                        );
                     }
                 }
             }
@@ -193,7 +224,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
                                     port.setProtocol("TCP");
                                 }
                                 if (Strings.isNullOrBlank(port.getName())) {
-                                    port.setName(getDefaultPortName(port));
+                                    port.setName(getDefaultPortName(port.getPort()));
                                 }
                             }
                             // lets add first missing port
@@ -215,8 +246,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
         }
     }
 
-    public static String getDefaultPortName(ServicePort servicePort) {
-        Integer port = servicePort.getPort();
+    public static String getDefaultPortName(Integer port) {
         if (port != null) {
             switch (port) {
                 case 80:
