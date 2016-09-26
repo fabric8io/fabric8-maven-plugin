@@ -24,6 +24,7 @@ import io.fabric8.maven.generator.api.support.JavaRunGenerator;
 import org.apache.maven.project.MavenProject;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by ceposta
@@ -44,6 +45,18 @@ public class WildFlySwarmGenerator extends JavaRunGenerator {
     @Override
     protected String getAssemblyRef() {
         return getConfig(Config.assemblyRef);
+    }
+
+    @Override
+    protected Map<String, String> getEnv() {
+        Map<String, String> ret = super.getEnv();
+        // Switch off agent_bond until logging issue with wilfdlfy-swarm is resolved
+        // See:
+        // - https://github.com/fabric8io/fabric8-maven-plugin/issues/320
+        // - https://github.com/rhuss/jolokia/pull/260
+        // - https://issues.jboss.org/browse/SWARM-204
+        ret.put("AB_OFF", "true");
+        return ret;
     }
 
     @Override
