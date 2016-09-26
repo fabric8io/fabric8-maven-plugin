@@ -9,3 +9,10 @@
   generator:
     includes:
       - spring-boot
+# does not expose services by default
+- name: internal-microservice
+  generator:
+    excludes: []
+  enricher:
+    excludes:
+      - expose
