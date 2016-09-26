@@ -23,11 +23,20 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.maven.core.access.ClusterAccess;
-import io.fabric8.maven.core.config.*;
+import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
+import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.config.Profile;
+import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.config.ServiceConfig;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
-import io.fabric8.maven.core.util.*;
+import io.fabric8.maven.core.util.GoalFinder;
+import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.core.util.ProfileUtil;
+import io.fabric8.maven.core.util.ResourceClassifier;
 import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -344,22 +353,24 @@ public class ResourceMojo extends AbstractResourceMojo {
                 return pathname.isDirectory();
             }
         });
-        for (File profileDir : profileDirs) {
-            Profile profile = ProfileUtil.findProfile(profileDir.getName(), resourceDir);
-            if (profile == null) {
-                throw new MojoExecutionException(String.format("Invalid profile '%s' given as directory in %s. " +
-                                                               "Please either define a profile of this name or move this directory away",
-                                                               profileDir.getName(), resourceDir));
-            }
-            ProcessorConfig enricherConfig = profile.getEnricherConfig();
-            File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(profileDir);
-            if (resourceFiles.length > 0) {
-                KubernetesListBuilder profileBuilder = readResourceFragments(resourceFiles);
-                enricherManager.createDefaultResources(enricherConfig, profileBuilder);
-                enricherManager.enrich(enricherConfig, profileBuilder);
-                KubernetesList profileItems = profileBuilder.build();
-                for (HasMetadata item : profileItems.getItems()) {
-                    builder.addToItems(item);
+        if (profileDirs != null) {
+            for (File profileDir : profileDirs) {
+                Profile profile = ProfileUtil.findProfile(profileDir.getName(), resourceDir);
+                if (profile == null) {
+                    throw new MojoExecutionException(String.format("Invalid profile '%s' given as directory in %s. " +
+                                    "Please either define a profile of this name or move this directory away",
+                            profileDir.getName(), resourceDir));
+                }
+                ProcessorConfig enricherConfig = profile.getEnricherConfig();
+                File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(profileDir);
+                if (resourceFiles.length > 0) {
+                    KubernetesListBuilder profileBuilder = readResourceFragments(resourceFiles);
+                    enricherManager.createDefaultResources(enricherConfig, profileBuilder);
+                    enricherManager.enrich(enricherConfig, profileBuilder);
+                    KubernetesList profileItems = profileBuilder.build();
+                    for (HasMetadata item : profileItems.getItems()) {
+                        builder.addToItems(item);
+                    }
                 }
             }
         }
