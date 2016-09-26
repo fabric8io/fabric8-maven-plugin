@@ -69,6 +69,8 @@ import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteList;
 import io.fabric8.openshift.api.model.RouteSpec;
+import io.fabric8.openshift.api.model.RouteTargetReference;
+import io.fabric8.openshift.api.model.RouteTargetReferenceBuilder;
 import io.fabric8.openshift.api.model.Template;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.utils.Files;
@@ -228,9 +230,8 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
             String routeId = id;
             KubernetesHelper.setName(route, namespace, routeId);
             RouteSpec routeSpec = new RouteSpec();
-            ObjectReference objectRef = new ObjectReference();
-            objectRef.setName(id);
-            objectRef.setNamespace(namespace);
+            RouteTargetReference objectRef = new RouteTargetReferenceBuilder().withName(id).build();
+            //objectRef.setNamespace(namespace);
             routeSpec.setTo(objectRef);
             if (!Strings.isNullOrBlank(routeDomainPostfix)) {
                 String host = Strings.stripSuffix(Strings.stripSuffix(id, "-service"), ".");

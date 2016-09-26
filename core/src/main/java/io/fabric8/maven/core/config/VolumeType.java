@@ -54,7 +54,7 @@ public enum VolumeType {
             String secretName = config.getSecretName();
             return new VolumeBuilder()
                     .withName(config.getName())
-                    .withNewSecret(secretName)
+                    .withNewSecret().withSecretName(secretName).endSecret()
                     .build();
         }
     }, NFS_PATH("nfsPath") {
