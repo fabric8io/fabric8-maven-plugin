@@ -16,14 +16,19 @@ package io.fabric8.maven.plugin.enricher;
  * limitations under the License.
  */
 
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import java.util.*;
+
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
+import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.enricher.api.EnricherContext;
+import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author roland
@@ -36,10 +41,55 @@ public class EnricherManagerTest {
     private EnricherContext context;
 
     @Test
-    public void simple() {
+    public void createDefaultResources() {
+        new Expectations() {{
+           context.getConfig(); result = ProcessorConfig.EMPTY;
+        }};
         EnricherManager manager = new EnricherManager(context);
+
         KubernetesListBuilder builder = new KubernetesListBuilder();
         manager.createDefaultResources(builder);
-        // assertTrue(builder.build().getItems().size() > 0);
+        assertTrue(builder.build().getItems().size() > 0);
+    }
+
+    @Test
+    public void enrichEmpty() {
+        new Expectations() {{
+           context.getConfig(); result = ProcessorConfig.EMPTY;
+        }};
+        EnricherManager manager = new EnricherManager(context);
+
+        KubernetesListBuilder builder = new KubernetesListBuilder();
+        manager.enrich(builder);
+        assertEquals(0,builder.build().getItems().size(),1);
+    }
+
+    @Test
+    public void enrichSimple() {
+        new Expectations() {{
+           context.getConfig(); result = new ProcessorConfig(Arrays.asList("fmp-project"),null,new HashMap());
+        }};
+        EnricherManager manager = new EnricherManager(context);
+
+        KubernetesListBuilder builder = new KubernetesListBuilder();
+        builder.addNewReplicaSetItem()
+               .withNewSpec()
+                 .withNewTemplate()
+                   .withNewSpec()
+                     .addNewContainer()
+                       .withName("test")
+                       .withImage("busybox")
+                     .endContainer()
+                   .endSpec()
+                 .endTemplate()
+               .endSpec()
+               .endReplicaSetItem();
+        manager.enrich(builder);
+        KubernetesList list = builder.build();
+        assertEquals(1, list.getItems().size());
+        ReplicaSet pod = (ReplicaSet) list.getItems().get(0);
+        Map labels = pod.getMetadata().getLabels();
+        assertNotNull(labels);
+        assertEquals("fabric8", labels.get("provider"));
     }
 }
