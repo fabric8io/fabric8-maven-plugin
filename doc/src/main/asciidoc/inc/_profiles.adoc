@@ -48,3 +48,21 @@ mvn -Dfabric8.profile=my-spring-boot-apps fabric8:build fabric8:deploy
 ----
 
 If a configuration for enrichers and generators are provided as part of the plugin's `<configuration>` then this takes precedence over any profile specified.
+
+.Profiles for resource fragments
+
+Profiles are also very useful when used together with resource fragments in `src/main/fabric8`. By default the resource objects defined here are enriched with the configured profile (if any). A different profile can be selected easily by using a sub directory within `src/main/fabric8`. The name of each sub directory is interpreted as a profile name and all resource definition files found in this sub directory are enhanced with the enhancers defined in this profile.
+
+For example, consider the following directory layout:
+
+[source]
+----
+src/main/fabric8:
+  app-rc.yml
+  app-svc.yml
+  raw/ -->
+    couchbase-rc.yml
+    couchbase-svc.yml
+----
+
+Here, the resource descriptors `app-rc.yml` and `app-svc.yml` are enhanced with the enrichers defined in the main configuration. The files two files `couchbase-rc.yml` and `couchbase-svc.yml` in the sub directory `raw/` instead are enriched with the profile **raw**. This is a predefined profile which includes no enricher at all, so the couchbase resource objects are not enriched and taken over literally. This is an easy way how you can fine tune enrichment for different object set.
