@@ -60,6 +60,7 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.kubernetes.api.KubernetesHelper.isPodReady;
 import static io.fabric8.kubernetes.api.KubernetesHelper.isPodRunning;
 import static io.fabric8.maven.core.util.ProcessUtil.processCommandAsync;
+import static org.bouncycastle.asn1.x500.style.RFC4519Style.name;
 
 /**
  * Ensures that the current app has debug enabled, then opens the debug port so that you can debug the latest pod
@@ -79,6 +80,7 @@ public class DebugMojo extends AbstractDeployMojo {
 
     @Override
     protected void applyEntities(Controller controller, KubernetesClient kubernetes, String namespace, String fileName, Set<HasMetadata> entities) throws Exception {
+        LabelSelector firstSelector = null;
         for (HasMetadata entity : entities) {
             String name = getName(entity);
             LabelSelector selector = null;
@@ -124,12 +126,15 @@ public class DebugMojo extends AbstractDeployMojo {
                     selector = getPodLabelSelector(entity);
                 }
             }
-
             if (selector != null) {
-                String podName = waitForRunningPodWithEnvVar(kubernetes, namespace, selector, DebugConstants.ENV_VAR_JAVA_DEBUG, "true");
-                portForward(controller, podName);
-                break;
+                firstSelector = selector;
+            } else {
+                controller.apply(entity, fileName);
             }
+        }
+        if (firstSelector != null) {
+            String podName = waitForRunningPodWithEnvVar(kubernetes, namespace, firstSelector, DebugConstants.ENV_VAR_JAVA_DEBUG, "true");
+            portForward(controller, podName);
         }
     }
 
@@ -149,7 +154,7 @@ public class DebugMojo extends AbstractDeployMojo {
         podWatcher = pods.watch(new Watcher<Pod>() {
             @Override
             public void eventReceived(Watcher.Action action, Pod pod) {
-                podWaitLog.info("" + action + " pod " + getName(pod) + " status: " + getPodStatusDescription(pod));
+                podWaitLog.info(getName(pod) + " status: " + getPodStatusDescription(pod) + getPodStatusMessagePostfix(action));
 
                 if (isAddOrModified(action) && isPodRunning(pod) && isPodReady(pod) &&
                         podHasEnvVarValue(pod, envVarName, envVarValue)) {

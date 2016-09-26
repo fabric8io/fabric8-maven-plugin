@@ -909,4 +909,17 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
     protected String getPodStatusDescription(Pod pod) {
         return KubernetesHelper.getPodStatusText(pod) + " " + getPodCondition(pod);
     }
+
+    protected String getPodStatusMessagePostfix(Watcher.Action action) {
+        String message = "";
+        switch (action) {
+            case DELETED:
+                message = ": Pod Deleted";
+                break;
+            case ERROR:
+                message = ": Error";
+                break;
+        }
+        return message;
+    }
 }
