@@ -64,6 +64,9 @@ public class DefaultServiceEnricher extends BaseEnricher {
         // Whether allow headless services.
         headless {{ d = "false"; }},
 
+        // Whether allow headless services.
+        expose {{ d = "false"; }},
+
         // Type of the service (LoadBalancer, NodePort, ...)
         type {{ d = "LoadBalancer"; }};
 
@@ -111,11 +114,14 @@ public class DefaultServiceEnricher extends BaseEnricher {
 
         if (ports.size() > 0) {
             ret.ports(ports);
+
         } else {
             if (Configs.asBoolean(getConfig(Config.headless))) {
                 ret.headless(true);
             }
         }
+
+        ret.expose(Configs.asBoolean(getConfig(Config.expose)));
 
         // Add a default type if configured
         ret.type(getConfig(Config.type));
