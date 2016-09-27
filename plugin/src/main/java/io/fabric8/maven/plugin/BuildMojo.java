@@ -17,9 +17,6 @@
 package io.fabric8.maven.plugin;
 
 
-import java.io.*;
-import java.util.*;
-
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.builds.Builds;
@@ -77,6 +74,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -84,7 +82,6 @@ import java.util.concurrent.CountDownLatch;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.maven.plugin.AbstractDeployMojo.DEFAULT_OPENSHIFT_MANIFEST;
 import static io.fabric8.maven.plugin.AbstractDeployMojo.loadResources;
-import static org.bouncycastle.asn1.x500.style.RFC4519Style.name;
 
 /**
  * Builds the docker images configured for this project via a Docker or S2I binary build.
