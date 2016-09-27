@@ -20,6 +20,7 @@ package io.fabric8.maven.plugin;
 import java.io.*;
 import java.util.List;
 import java.util.Objects;
+import java.util.Properties;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.KubernetesList;
@@ -367,20 +368,32 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             return new BuildStrategyBuilder().withType("Docker").build();
         } else if (buildStrategy == OpenShiftBuildStrategy.s2i) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
-            String fromImage = buildConfig.getFrom();
+            Properties fromExt = buildConfig.getFromExt();
+
+            String fromName = getField(fromExt, "name", buildConfig.getFrom());
+            String fromNamespace = getField(fromExt, "namespace", null);
+            String fromKind = getField(fromExt, "kind", "ImageStreamTag");
 
             return new BuildStrategyBuilder()
                 .withType("Source")
                 .withNewSourceStrategy()
                   .withNewFrom()
-                     .withKind("DockerImage")
-                     .withName(fromImage)
+                     .withKind(fromKind)
+                     .withName(fromName)
+                     .withNamespace(fromNamespace)
                   .endFrom()
                 .endSourceStrategy()
                 .build();
         } else {
             throw new IllegalArgumentException("Unsupported BuildStrategy " + buildStrategy);
         }
+    }
+
+    private String getField(Properties map, String field, String defaultValue) {
+        if (map == null) {
+            return defaultValue;
+        }
+        return map.getProperty(field, defaultValue);
     }
 
 }
