@@ -374,6 +374,13 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             String fromNamespace = getField(fromExt, "namespace", null);
             String fromKind = getField(fromExt, "kind", "ImageStreamTag");
 
+            if( "ImageStreamTag".equals(fromKind) && fromNamespace==null ) {
+                fromNamespace = "openshift";
+            }
+            if( fromNamespace.isEmpty() ) {
+                fromNamespace=null;
+            }
+
             return new BuildStrategyBuilder()
                 .withType("Source")
                 .withNewSourceStrategy()
