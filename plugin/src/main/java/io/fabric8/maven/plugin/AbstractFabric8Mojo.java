@@ -20,6 +20,7 @@ import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.ServiceNames;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -33,9 +34,6 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.fusesource.jansi.Ansi;
-
-import java.net.URL;
-import java.net.UnknownHostException;
 
 public abstract class AbstractFabric8Mojo extends AbstractMojo {
 
@@ -75,7 +73,6 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
         return value;
     }
 
-
     protected Logger createExternalProcessLogger(String prefix) {
         return createLogger(prefix, COLOR_POD_LOG);
     }
@@ -85,27 +82,6 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
             prefix += Ansi.ansi().fg(color);
         }
         return new AnsiLogger(getLog(), useColor, verbose, prefix);
-    }
-
-    protected void validateKubernetesMasterUrl(URL masterUrl) throws MojoFailureException {
-        if (masterUrl == null || Strings.isNullOrBlank(masterUrl.toString())) {
-            throw new MojoFailureException("Cannot find Kubernetes master URL. Have you started a cluster via `mvn fabric8:cluster-start` or connected to a remote cluster via `kubectl`?");
-        }
-    }
-
-    protected void handleKubernetesClientException(KubernetesClientException e) throws MojoExecutionException {
-        Throwable cause = e.getCause();
-        if (cause instanceof UnknownHostException) {
-            log.error("Could not connect to kubernetes cluster!");
-            log.error("Have you started a local cluster via `mvn fabric8:cluster-start` or connected to a remote cluster via `kubectl`?");
-            log.info("For more help see: http://fabric8.io/guide/getStarted/");
-            log.error("Connection error: " + cause);
-
-            String message = "Could not connect to kubernetes cluster. Have you started a cluster via `mvn fabric8:cluster-start` or connected to a remote cluster via `kubectl`? Error: " + cause;
-            throw new MojoExecutionException(message, e);
-        } else {
-            throw new MojoExecutionException(e.getMessage(), e);
-        }
     }
 
     protected OpenShiftClient getOpenShiftClientOrJenkinsShift(KubernetesClient kubernetes, String namespace) throws MojoExecutionException {

@@ -47,7 +47,7 @@ import java.util.*;
 /**
  * Generates a Helm chart for the kubernetes resources
  */
-@Mojo(name = "helm", defaultPhase = LifecyclePhase.PACKAGE)
+@Mojo(name = "helm", defaultPhase = LifecyclePhase.INSTALL)
 public class HelmMojo extends AbstractFabric8Mojo {
 
     @Parameter
