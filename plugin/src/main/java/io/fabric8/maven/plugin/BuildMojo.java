@@ -18,9 +18,7 @@ package io.fabric8.maven.plugin;
 
 
 import java.io.*;
-import java.util.List;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.KubernetesList;
@@ -368,17 +366,17 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             return new BuildStrategyBuilder().withType("Docker").build();
         } else if (buildStrategy == OpenShiftBuildStrategy.s2i) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
-            Properties fromExt = buildConfig.getFromExt();
+            Map<String, String> fromExt = buildConfig.getFromExt();
 
-            String fromName = getField(fromExt, "name", buildConfig.getFrom());
-            String fromNamespace = getField(fromExt, "namespace", null);
-            String fromKind = getField(fromExt, "kind", "ImageStreamTag");
+            String fromName = getMapValueWithDefault(fromExt, "name", buildConfig.getFrom());
+            String fromNamespace = getMapValueWithDefault(fromExt, "namespace", null);
+            String fromKind = getMapValueWithDefault(fromExt, "kind", "ImageStreamTag");
 
-            if( "ImageStreamTag".equals(fromKind) && fromNamespace==null ) {
+            if ("ImageStreamTag".equals(fromKind) && fromNamespace == null) {
                 fromNamespace = "openshift";
             }
-            if( fromNamespace.isEmpty() ) {
-                fromNamespace=null;
+            if (fromNamespace.isEmpty()) {
+                fromNamespace = null;
             }
 
             return new BuildStrategyBuilder()
@@ -396,11 +394,12 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         }
     }
 
-    private String getField(Properties map, String field, String defaultValue) {
+    private String getMapValueWithDefault(Map<String, String> map, String field, String defaultValue) {
         if (map == null) {
             return defaultValue;
         }
-        return map.getProperty(field, defaultValue);
+        String value = map.get(field);
+        return value != null ? value : defaultValue;
     }
 
 }
