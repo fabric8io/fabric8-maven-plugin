@@ -58,7 +58,7 @@ public class Gofabric8Util {
         }
 
         @Override
-        public synchronized String getDockerHost() throws IOException {
+        public synchronized DockerConnectionDetector.ConnectionParameter getConnectionParameter(String certPath) throws IOException {
             if (envMap == null) {
                 envMap = command.getEnvironment();
             }
@@ -66,9 +66,8 @@ public class Gofabric8Util {
             if (dockerHost == null) {
                 return null;
             }
-            dockerHost = EnvUtil.convertDockerHostToUrl(dockerHost);
             log.info("DOCKER_HOST from gofabric8 : %s", dockerHost);
-            return dockerHost;
+            return new DockerConnectionDetector.ConnectionParameter(dockerHost, certPath != null ? certPath : envMap.get("DOCKER_CERT_PATH"));
         }
 
         @Override
