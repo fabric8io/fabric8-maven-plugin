@@ -53,6 +53,7 @@ import io.fabric8.maven.plugin.converter.ReplicSetOpenShiftConverter;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.DeploymentConfig;
+import io.fabric8.openshift.api.model.ImageStreamBuilder;
 import io.fabric8.openshift.api.model.Template;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -86,6 +87,8 @@ public class ResourceMojo extends AbstractResourceMojo {
     // THe key how we got the the docker maven plugin
     private static final String DOCKER_MAVEN_PLUGIN_KEY = "io.fabric8:docker-maven-plugin";
     public static final long DEFAULT_OPENSHIFT_DEPLOY_TIMEOUT_SECONDS = 3L * 60 * 60;
+    private static final String DOCKER_IMAGE_USER = "docker.image.user";
+
 
     @Component(role = MavenFileFilter.class, hint = "default")
     private MavenFileFilter mavenFileFilter;
@@ -236,6 +239,18 @@ public class ResourceMojo extends AbstractResourceMojo {
     private void lateInit() {
         platformMode = clusterAccess.resolvePlatformMode(mode, log);
 
+        if (isOpenShiftMode()) {
+            Properties properties = project.getProperties();
+            if (!properties.contains(DOCKER_IMAGE_USER)) {
+                String namespace = clusterAccess.getNamespace();
+                log.info("Using docker image name of namespace: " + namespace);
+                properties.setProperty(DOCKER_IMAGE_USER, namespace);
+            }
+            if (!properties.contains(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE)) {
+                properties.setProperty(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, platformMode.toString());
+            }
+        }
+
         openShiftConverters = new HashMap<>();
         openShiftConverters.put("ReplicaSet", new ReplicSetOpenShiftConverter());
         openShiftConverters.put("Deployment", new DeploymentOpenShiftConverter(platformMode, getOpenshiftDeployTimeoutSeconds()));
@@ -244,6 +259,10 @@ public class ResourceMojo extends AbstractResourceMojo {
         openShiftConverters.put("Namespace", new NamespaceOpenShiftConverter());
 
         handlerHub = new HandlerHub(project);
+    }
+
+    private boolean isOpenShiftMode() {
+        return platformMode.equals(PlatformMode.openshift);
     }
 
     private KubernetesList convertToKubernetesResources(KubernetesList resources, KubernetesList openShiftResources) throws MojoExecutionException {
@@ -451,6 +470,26 @@ public class ResourceMojo extends AbstractResourceMojo {
                 if (converted != null) {
                     objects.add(converted);
                 }
+            }
+        }
+        if (isOpenShiftMode()) {
+            for (ImageConfiguration image : this.resolvedImages) {
+                String name = image.getName();
+                int idx = name.lastIndexOf(':');
+                if (idx < 0) {
+                    log.warn("No ':' in image name: " + name);
+                    continue;
+                }
+                String label = name.substring(idx + 1);
+                String imageStreamName = name.substring(0, idx);
+                idx = imageStreamName.lastIndexOf('/');
+                if (idx > 0) {
+                    imageStreamName = imageStreamName.substring(idx + 1);
+                }
+                objects.add(new ImageStreamBuilder().
+                        withNewMetadata().withName(imageStreamName).endMetadata().
+                        withNewSpec().addNewTag().withName(label).withNewFrom().withKind("ImageStreamImage").endFrom().endTag().endSpec().
+                        build());
             }
         }
         moveTemplatesToTopLevel(builder, objects);

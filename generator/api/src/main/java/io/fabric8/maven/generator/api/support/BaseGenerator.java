@@ -16,6 +16,7 @@
 
 package io.fabric8.maven.generator.api.support;
 
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -112,7 +113,21 @@ abstract public class BaseGenerator implements Generator {
      * @return Docker image name which is never null
      */
     protected String getImageName() {
-        return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", "%g/%a:%t");
+        return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", getDefaultImageUserExpression() + "%a:" + getDefaultImageLabelExpression());
+    }
+
+    private String getDefaultImageUserExpression() {
+        if (PlatformMode.isOpenShiftMode(getProject().getProperties())) {
+            return "";
+        }
+        return "%g/";
+    }
+
+    private String getDefaultImageLabelExpression() {
+        if (PlatformMode.isOpenShiftMode(getProject().getProperties())) {
+            return "%l";
+        }
+        return "%t";
     }
 
     /**
