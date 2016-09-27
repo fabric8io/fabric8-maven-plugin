@@ -22,6 +22,7 @@ import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.ResourceClassifier;
 import io.fabric8.maven.core.util.ResourceFileType;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.Template;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -42,7 +43,7 @@ import static io.fabric8.maven.core.util.ResourceFileType.yaml;
  */
 public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
     /**
-     * The generated kubernetes JSON file
+     * The generated kubernetes and openshift manifests
      */
     @Parameter(property = "fabric8.targetDir", defaultValue = "${project.build.outputDirectory}/META-INF/fabric8")
     protected File targetDir;
@@ -58,7 +59,7 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
     /**
      * Returns the Template if the list contains a single Template only otherwise returns null
      */
-    protected Template getSingletonTemplate(KubernetesList resources) {
+    protected static Template getSingletonTemplate(KubernetesList resources) {
         // if the list contains a single Template lets unwrap it
         if (resources != null) {
             List<HasMetadata> items = resources.getItems();
@@ -76,6 +77,23 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
         // write kubernetes.yml / openshift.yml
         File resourceFileBase = new File(this.targetDir, classifier.getValue());
 
+        File file = writeResourcesIndividualAndComposite(resources, resourceFileBase, this.resourceFileType, log);
+
+        // Attach it to the Maven reactor so that it will also get deployed
+        projectHelper.attachArtifact(project, this.resourceFileType.getArtifactType(), classifier.getValue(), file);
+
+        // TODO: Remove the following block when devops and other apps used by gofabric8 are migrated
+        // to fmp-v3. See also https://github.com/fabric8io/fabric8-maven-plugin/issues/167
+        if (this.resourceFileType.equals(yaml)) {
+            // lets generate JSON too to aid migration from version 2.x to 3.x for packaging templates
+            file = writeResource(resourceFileBase, resources, json);
+
+            // Attach it to the Maven reactor so that it will also get deployed
+            projectHelper.attachArtifact(project, json.getArtifactType(), classifier.getValue(), file);
+        }
+    }
+
+    public static File writeResourcesIndividualAndComposite(KubernetesList resources, File resourceFileBase, ResourceFileType resourceFileType, Logger log) throws MojoExecutionException {
         Object entity = resources;
         // if the list contains a single Template lets unwrap it
         Template template = getSingletonTemplate(resources);
@@ -84,24 +102,12 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
         }
         File file = writeResource(resourceFileBase, entity, resourceFileType);
 
-        // Attach it to the Maven reactor so that it will also get deployed
-        projectHelper.attachArtifact(project, resourceFileType.getArtifactType(), classifier.getValue(), file);
-
-        // TODO: Remove the following block when devops and other apps used by gofabric8 are migrated
-        // to fmp-v3. See also https://github.com/fabric8io/fabric8-maven-plugin/issues/167
-        if (resourceFileType.equals(yaml)) {
-            // lets generate JSON too to aid migration from version 2.x to 3.x for packaging templates
-            file = writeResource(resourceFileBase, resources, json);
-
-            // Attach it to the Maven reactor so that it will also get deployed
-            projectHelper.attachArtifact(project, json.getArtifactType(), classifier.getValue(), file);
-        }
-
         // write separate files, one for each resource item
-        writeIndividualResources(resources, resourceFileBase);
+        writeIndividualResources(resources, resourceFileBase, resourceFileType, log);
+        return file;
     }
 
-    private void writeIndividualResources(KubernetesList resources, File targetDir) throws MojoExecutionException {
+    private static void writeIndividualResources(KubernetesList resources, File targetDir, ResourceFileType resourceFileType, Logger log) throws MojoExecutionException {
         for (HasMetadata item : resources.getItems()) {
             String name = KubernetesHelper.getName(item);
             if (Strings.isNullOrBlank(name)) {

@@ -20,13 +20,27 @@ package io.fabric8.maven.plugin;
 import java.io.*;
 import java.util.*;
 
+import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.builds.Builds;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectReference;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.Watch;
+import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.maven.core.access.ClusterAccess;
-import io.fabric8.maven.core.config.*;
+import io.fabric8.maven.core.config.BuildRecreateMode;
+import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
+import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.Gofabric8Util;
+import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.ProfileUtil;
+import io.fabric8.maven.core.util.ResourceClassifier;
+import io.fabric8.maven.core.util.ResourceFileType;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.DockerConnectionDetector;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -37,13 +51,40 @@ import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
+import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.BuildConfig;
+import io.fabric8.openshift.api.model.BuildStatus;
 import io.fabric8.openshift.api.model.BuildStrategy;
 import io.fabric8.openshift.api.model.BuildStrategyBuilder;
+import io.fabric8.openshift.api.model.ImageStream;
+import io.fabric8.openshift.api.model.ImageStreamSpec;
+import io.fabric8.openshift.api.model.ImageStreamStatus;
+import io.fabric8.openshift.api.model.NamedTagEventList;
+import io.fabric8.openshift.api.model.TagEvent;
+import io.fabric8.openshift.api.model.TagReference;
+import io.fabric8.openshift.api.model.TagReferenceBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
+import io.fabric8.utils.Files;
+import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+
+import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+import static io.fabric8.maven.plugin.AbstractDeployMojo.DEFAULT_OPENSHIFT_MANIFEST;
+import static io.fabric8.maven.plugin.AbstractDeployMojo.loadResources;
+import static org.bouncycastle.asn1.x500.style.RFC4519Style.name;
 
 /**
  * Builds the docker images configured for this project via a Docker or S2I binary build.
@@ -140,11 +181,25 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter(property = "fabric8.namespace")
     private String namespace;
 
+    /**
+     * The generated openshift YAML file
+     */
+    @Parameter(property = "fabric8.openshiftManifest", defaultValue = DEFAULT_OPENSHIFT_MANIFEST)
+    private File openshiftManifest;
+
+    /**
+     * The generated kubernetes and openshift manifests
+     */
+    @Parameter(property = "fabric8.targetDir", defaultValue = "${project.build.outputDirectory}/META-INF/fabric8")
+    protected File targetDir;
+
+
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
 
     // Mode which is resolved, also when 'auto' is set
     private PlatformMode platformMode;
+    private String lastBuildStatus;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -241,7 +296,191 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         applyResourceObjects(client, builder);
 
         // Start the actual build
-        startBuild(dockerTar, client, buildName);
+        Build build = startBuild(dockerTar, client, buildName);
+
+        waitForOpenShiftBuildToComplete(client, buildName, build);
+
+        updateImageStreamTags(client, imageConfig, buildName, build);
+    }
+
+
+    private void waitForOpenShiftBuildToComplete(OpenShiftClient client, String buildConfigName, Build build) {
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        String buildName = getName(build);
+        Watcher<Build> buildWatcher = new Watcher<Build>() {
+            @Override
+            public void eventReceived(Action action, Build resource) {
+                if (isBuildCompleted(action, resource)) {
+                    latch.countDown();
+                }
+            }
+
+            @Override
+            public void onClose(KubernetesClientException cause) {
+            }
+        };
+        log.info("Waiting for build " + buildName + " to complete...");
+        try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {
+            while (latch.getCount() > 0L) {
+                try {
+                    latch.await();
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+            }
+            log.info("Build " + buildName + " completed!");
+        }
+    }
+
+
+    /**
+     * Lets update the ImageStream to include the correct tags
+     */
+    private void updateImageStreamTags(OpenShiftClient client, ImageConfiguration imageConfig, String buildConfigName, Build build) throws MojoExecutionException {
+
+        try {
+            File manifest = openshiftManifest;
+            if (!Files.isFile(manifest)) {
+                throw new MojoFailureException("No such generated manifest file: " + manifest);
+            }
+
+            String namespace = clusterAccess.getNamespace();
+            Controller controller = new Controller(client);
+
+            boolean updated = false;
+            Set<HasMetadata> entities = loadResources(client, controller, namespace, manifest, project, log);
+            for (HasMetadata entity : entities) {
+                if (entity instanceof ImageStream) {
+                    ImageStream is = (ImageStream) entity;
+                    String imageStreamName = KubernetesHelper.getName(is);
+                    if (Objects.equals(buildConfigName, imageStreamName)) {
+                        if (updateImageStreamTag(client, imageConfig, is, buildConfigName)) {
+                            updated = true;
+                        }
+                    }
+                }
+            }
+            if (updated) {
+                // lets store the entities again!
+                KubernetesList entity = new KubernetesListBuilder().withItems(new ArrayList<>(entities)).build();
+                File resourceFileBase = new File(this.targetDir, ResourceClassifier.OPENSHIFT.getValue());
+                AbstractResourceMojo.writeResourcesIndividualAndComposite(entity, resourceFileBase, ResourceFileType.yaml, log);
+            }
+        } catch (KubernetesClientException e) {
+            KubernetesResourceUtil.handleKubernetesClientException(e, this.log);
+        } catch (MojoExecutionException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new MojoExecutionException(e.getMessage(), e);
+        }
+
+    }
+
+    private boolean updateImageStreamTag(OpenShiftClient client, ImageConfiguration imageConfig, ImageStream is, String buildConfigName) throws MojoExecutionException {
+        String namespace = client.getNamespace();
+        String imageName = imageConfig.getName();
+        String label = getImageLabel(imageName);
+        ImageStream currentImageStream = client.imageStreams().withName(buildConfigName).get();
+        if (currentImageStream == null) {
+            throw new MojoExecutionException("Could not find a current ImageStream with name " + buildConfigName + " in namespace " + namespace);
+        }
+        String tagSha = findTagSha(currentImageStream);
+        String name = buildConfigName + "@" + tagSha;
+        String kind = "ImageStreamImage";
+
+        ImageStreamSpec spec = is.getSpec();
+        if (spec != null) {
+            spec = new ImageStreamSpec();
+            is.setSpec(spec);
+        }
+        List<TagReference> tags = spec.getTags();
+        if (tags == null) {
+            tags = new ArrayList<>();
+            spec.setTags(tags);
+        }
+        TagReference tag = null;
+        if (tags.isEmpty()) {
+            tag = new TagReferenceBuilder().build();
+            tags.add(tag);
+        } else {
+            tag = tags.get(tags.size() - 1);
+        }
+        ObjectReference from = tag.getFrom();
+        if (from == null) {
+            from = new ObjectReference();
+            tag.setFrom(from);
+        }
+
+        boolean answer = false;
+        if (!Objects.equals(label, tag.getName())) {
+            tag.setName(label);
+            answer = true;
+        }
+        if (!Objects.equals(kind, from.getKind())) {
+            from.setKind(kind);
+            answer = true;
+        }
+        if (!Objects.equals(namespace, from.getNamespace())) {
+            from.setNamespace(namespace);
+            answer = true;
+        }
+        if (!Objects.equals(name, from.getName())) {
+            from.setName(name);
+            answer = true;
+        }
+        if (answer) {
+            log.info("Updated ImageStream " + buildConfigName + " to namespace: " + namespace + " name: " + name);
+        }
+        return answer;
+    }
+
+    private static String getImageLabel(String imageName) throws MojoExecutionException {
+        int idx = imageName.lastIndexOf(':');
+        if (idx < 0) {
+            throw new MojoExecutionException("No ':' in the image name:  " + imageName);
+        } else {
+            return imageName.substring(idx + 1);
+        }
+    }
+
+
+    private String findTagSha(ImageStream imageStream) throws MojoExecutionException {
+        ImageStreamStatus status = imageStream.getStatus();
+        if (status != null) {
+            List<NamedTagEventList> tags = status.getTags();
+            if (tags != null && !tags.isEmpty()) {
+                // latest tag is the first
+                for (NamedTagEventList list : tags) {
+                    List<TagEvent> items = list.getItems();
+                    if (items != null) {
+                        // latest item is the first
+                        for (TagEvent item : items) {
+                            String image = item.getImage();
+                            if (Strings.isNotBlank(image)) {
+                                return image;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        throw new MojoExecutionException("Could not find a tag in the ImageStream " + KubernetesHelper.getName(imageStream));
+    }
+
+    private boolean isBuildCompleted(Watcher.Action action, Build build) {
+        BuildStatus buildStatus = build.getStatus();
+        if (buildStatus != null) {
+            String status = buildStatus.getPhase();
+            if (Strings.isNotBlank(status)) {
+                if (!Objects.equals(status, lastBuildStatus)) {
+                    lastBuildStatus = status;
+                    log.info("Build " + getName(build) + " status: " + status);
+                }
+                return Builds.isFinished(status);
+            }
+        }
+        return false;
     }
 
     private String getBuildName(ImageName imageName) {
@@ -263,11 +502,11 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
 
-    private void startBuild(File dockerTar, OpenShiftClient client, String buildName) {
+    private Build startBuild(File dockerTar, OpenShiftClient client, String buildName) {
         log.info("Starting Build %s",buildName);
-        client.buildConfigs().withName(buildName)
-              .instantiateBinary()
-              .fromFile(dockerTar);
+        return client.buildConfigs().withName(buildName)
+                .instantiateBinary()
+                .fromFile(dockerTar);
     }
 
     private void applyResourceObjects(OpenShiftClient client, KubernetesListBuilder builder) throws IOException {

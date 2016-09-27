@@ -125,8 +125,12 @@ public class KubernetesResourceUtil {
     }
 
     public static File writeResource(Object resource, File target, ResourceFileType resourceFileType) throws IOException {
-        String serialized = serializeAsString(resource, resourceFileType);
         File outputFile = resourceFileType.addExtension(target);
+        return writeResourceFile(resource, outputFile, resourceFileType);
+    }
+
+    public static File writeResourceFile(Object resource, File outputFile, ResourceFileType resourceFileType) throws IOException {
+        String serialized = serializeAsString(resource, resourceFileType);
         Files.writeToFile(outputFile, serialized, Charset.defaultCharset());
         return outputFile;
     }
@@ -161,6 +165,7 @@ public class KubernetesResourceUtil {
             "cm", "ConfigMap",
             "configmap", "ConfigMap",
             "deployment", "Deployment",
+            "is", "ImageStream",
             "ns", "Namespace",
             "namespace", "Namespace",
             "oauthclient", "OAuthClient",
