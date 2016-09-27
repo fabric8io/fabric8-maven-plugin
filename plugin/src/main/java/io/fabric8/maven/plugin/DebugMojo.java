@@ -66,7 +66,7 @@ import static org.bouncycastle.asn1.x500.style.RFC4519Style.name;
  * Ensures that the current app has debug enabled, then opens the debug port so that you can debug the latest pod
  * from your IDE
  */
-@Mojo(name = "debug", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.INSTALL)
+@Mojo(name = "debug", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.PACKAGE)
 public class DebugMojo extends AbstractDeployMojo {
 
     @Parameter(property = "fabric8.debug.port", defaultValue = "5005")

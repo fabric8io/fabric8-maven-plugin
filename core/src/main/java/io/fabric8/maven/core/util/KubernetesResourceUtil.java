@@ -29,19 +29,22 @@ import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Strings;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -368,5 +371,26 @@ public class KubernetesResourceUtil {
             }
         }
         return answer;
+    }
+
+    public static void validateKubernetesMasterUrl(URL masterUrl) throws MojoExecutionException {
+        if (masterUrl == null || Strings.isNullOrBlank(masterUrl.toString())) {
+            throw new MojoExecutionException("Cannot find Kubernetes master URL. Have you started a cluster via `mvn fabric8:cluster-start` or connected to a remote cluster via `kubectl`?");
+        }
+    }
+
+    public static void handleKubernetesClientException(KubernetesClientException e, Logger logger) throws MojoExecutionException {
+        Throwable cause = e.getCause();
+        if (cause instanceof UnknownHostException) {
+            logger.error("Could not connect to kubernetes cluster!");
+            logger.error("Have you started a local cluster via `mvn fabric8:cluster-start` or connected to a remote cluster via `kubectl`?");
+            logger.info("For more help see: http://fabric8.io/guide/getStarted/");
+            logger.error("Connection error: " + cause);
+
+            String message = "Could not connect to kubernetes cluster. Have you started a cluster via `mvn fabric8:cluster-start` or connected to a remote cluster via `kubectl`? Error: " + cause;
+            throw new MojoExecutionException(message, e);
+        } else {
+            throw new MojoExecutionException(e.getMessage(), e);
+        }
     }
 }

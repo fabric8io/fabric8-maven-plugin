@@ -30,6 +30,7 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.maven.core.access.ClusterAccess;
+import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.BuildConfigList;
@@ -151,7 +152,7 @@ public class ImportMojo extends AbstractFabric8Mojo {
             }
 
             KubernetesClient kubernetes = clusterAccess.createKubernetesClient();
-            validateKubernetesMasterUrl(kubernetes.getMasterUrl());
+            KubernetesResourceUtil.validateKubernetesMasterUrl(kubernetes.getMasterUrl());
 
             String namespace = clusterAccess.getNamespace();
             OpenShiftClient openShiftClient = getOpenShiftClientOrJenkinsShift(kubernetes, namespace);
@@ -202,7 +203,7 @@ public class ImportMojo extends AbstractFabric8Mojo {
                 logBuildConfigLink(kubernetes, namespace, buildConfig, log);
             }
         } catch (KubernetesClientException e) {
-            handleKubernetesClientException(e);
+            KubernetesResourceUtil.handleKubernetesClientException(e, this.log);
         } catch (Exception e) {
             throw new MojoExecutionException(e.getMessage(), e);
         }

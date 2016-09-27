@@ -25,7 +25,6 @@ import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.PodList;
@@ -62,6 +61,7 @@ import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.kubernetes.client.dsl.Scaleable;
 import io.fabric8.kubernetes.internal.HasMetadataComparator;
 import io.fabric8.maven.core.access.ClusterAccess;
+import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.ProcessUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.DeploymentConfig;
@@ -83,7 +83,6 @@ import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -109,6 +108,9 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.parseDate;
  */
 public class AbstractDeployMojo extends AbstractFabric8Mojo {
 
+    public static final String DEFAULT_KUBERNETES_MANIFEST = "${basedir}/target/classes/META-INF/fabric8/kubernetes.yml";
+    public static final String DEFAULT_OPENSHIFT_MANIFEST = "${basedir}/target/classes/META-INF/fabric8/openshift.yml";
+
     /**
      * The domain added to the service ID when creating OpenShift routes
      */
@@ -130,13 +132,13 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
     /**
      * The generated kubernetes YAML file
      */
-    @Parameter(property = "fabric8.kubernetesManifest", defaultValue = "${basedir}/target/classes/META-INF/fabric8/kubernetes.yml")
+    @Parameter(property = "fabric8.kubernetesManifest", defaultValue = DEFAULT_KUBERNETES_MANIFEST)
     private File kubernetesManifest;
 
     /**
      * The generated openshift YAML file
      */
-    @Parameter(property = "fabric8.openshiftManifest", defaultValue = "${basedir}/target/classes/META-INF/fabric8/openshift.yml")
+    @Parameter(property = "fabric8.openshiftManifest", defaultValue = DEFAULT_OPENSHIFT_MANIFEST)
     private File openshiftManifest;
 
     /**
@@ -209,7 +211,7 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
     private File jsonLogDir;
 
     /**
-     * Namespace under which to operate
+     * Namespace on which to operate
      */
     @Parameter(property = "fabric8.namespace")
     private String namespace;
@@ -337,10 +339,8 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
             KubernetesClient kubernetes = clusterAccess.createKubernetesClient();
             URL masterUrl = kubernetes.getMasterUrl();
             File manifest;
-            String clusterKind = "Kubernetes";
             if (KubernetesHelper.isOpenShift(kubernetes)) {
                 manifest = openshiftManifest;
-                clusterKind = "OpenShift";
             } else {
                 manifest = kubernetesManifest;
             }
@@ -353,7 +353,11 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
                 }
             }
 
-            validateKubernetesMasterUrl(masterUrl);
+            String clusterKind = "Kubernetes";
+            if (KubernetesHelper.isOpenShift(kubernetes)) {
+                clusterKind = "OpenShift";
+            }
+            KubernetesResourceUtil.validateKubernetesMasterUrl(masterUrl);
             log.info("Using %s at %s in namespace %s with manifest %s ", clusterKind, masterUrl, clusterAccess.getNamespace(), manifest);
 
             Controller controller = createController();
@@ -375,31 +379,12 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
                 disableOpenShiftFeatures(controller);
             }
 
-
-            String fileName = manifest.getName();
-            Object dto = KubernetesHelper.loadYaml(manifest, KubernetesResource.class);
-            if (dto == null) {
-                throw new MojoFailureException("Cannot load kubernetes YAML: " + manifest);
-            }
-
             // lets check we have created the namespace
             String namespace = clusterAccess.getNamespace();
             controller.applyNamespace(namespace);
             controller.setNamespace(namespace);
 
-            if (dto instanceof Template) {
-                Template template = (Template) dto;
-                dto = applyTemplates(template, kubernetes, controller, fileName);
-            }
-
-            Set<KubernetesResource> resources = new LinkedHashSet<>();
-
-            Set<HasMetadata> entities = new TreeSet<>(new HasMetadataComparator());
-            for (KubernetesResource resource : resources) {
-                entities.addAll(KubernetesHelper.toItemList(resource));
-            }
-
-            entities.addAll(KubernetesHelper.toItemList(dto));
+            Set<HasMetadata> entities = loadResources(kubernetes, controller, namespace, manifest, getProject(), log);
 
             if (createExternalUrls) {
                 if (controller.getOpenShiftClientOrNull() != null) {
@@ -408,13 +393,38 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
                     createIngress(controller, kubernetes, entities);
                 }
             }
-            applyEntities(controller, kubernetes, namespace, fileName, entities);
+            applyEntities(controller, kubernetes, namespace, manifest.getName(), entities);
 
         } catch (KubernetesClientException e) {
-            handleKubernetesClientException(e);
+            KubernetesResourceUtil.handleKubernetesClientException(e, this.log);
+        } catch (MojoExecutionException e) {
+            throw e;
         } catch (Exception e) {
             throw new MojoExecutionException(e.getMessage(), e);
         }
+    }
+
+    protected static Set<HasMetadata> loadResources(KubernetesClient kubernetes, Controller controller, String namespace, File manifest, MavenProject project, Logger log) throws Exception {
+        String fileName = manifest.getName();
+        Object dto = KubernetesHelper.loadYaml(manifest, KubernetesResource.class);
+        if (dto == null) {
+            throw new MojoFailureException("Cannot load kubernetes YAML: " + manifest);
+        }
+
+        if (dto instanceof Template) {
+            Template template = (Template) dto;
+            dto = applyTemplates(template, kubernetes, controller, namespace, fileName, project, log);
+        }
+
+        Set<KubernetesResource> resources = new LinkedHashSet<>();
+
+        Set<HasMetadata> entities = new TreeSet<>(new HasMetadataComparator());
+        for (KubernetesResource resource : resources) {
+            entities.addAll(KubernetesHelper.toItemList(resource));
+        }
+
+        entities.addAll(KubernetesHelper.toItemList(dto));
+        return entities;
     }
 
     protected void applyEntities(Controller controller, KubernetesClient kubernetes, String namespace, String fileName, Set<HasMetadata> entities) throws Exception {
@@ -510,9 +520,9 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
         controller.setProcessTemplatesLocally(true);
     }
 
-    protected Object applyTemplates(Template template, KubernetesClient kubernetes, Controller controller, String fileName) throws Exception {
-        KubernetesHelper.setNamespace(template, clusterAccess.getNamespace());
-        overrideTemplateParameters(template);
+    protected static Object applyTemplates(Template template, KubernetesClient kubernetes, Controller controller, String namespace, String fileName, MavenProject project, Logger log) throws Exception {
+        KubernetesHelper.setNamespace(template, namespace);
+        overrideTemplateParameters(template, project, log);
         return controller.applyTemplate(template, fileName);
     }
 
@@ -520,9 +530,8 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
      * Before applying the given template lets allow template parameters to be overridden via the maven
      * properties - or optionally - via the command line if in interactive mode.
      */
-    protected void overrideTemplateParameters(Template template) {
+    protected static void overrideTemplateParameters(Template template, MavenProject project, Logger log) {
         List<io.fabric8.openshift.api.model.Parameter> parameters = template.getParameters();
-        MavenProject project = getProject();
         if (parameters != null && project != null) {
             Properties properties = getProjectAndFabric8Properties(project);
             boolean missingProperty = false;
@@ -531,20 +540,20 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
                 String name = "fabric8.apply." + parameterName;
                 String propertyValue = properties.getProperty(name);
                 if (propertyValue != null) {
-                    getLog().info("Overriding template parameter " + name + " with value: " + propertyValue);
+                    log.info("Overriding template parameter " + name + " with value: " + propertyValue);
                     parameter.setValue(propertyValue);
                 } else {
                     missingProperty = true;
-                    getLog().info("No property defined for template parameter: " + name);
+                    log.info("No property defined for template parameter: " + name);
                 }
             }
             if (missingProperty) {
-                getLog().debug("Current properties " + new TreeSet<>(properties.keySet()));
+                log.debug("Current properties " + new TreeSet<>(properties.keySet()));
             }
         }
     }
 
-    protected Properties getProjectAndFabric8Properties(MavenProject project) {
+    protected static Properties getProjectAndFabric8Properties(MavenProject project) {
         Properties properties = project.getProperties();
         properties.putAll(project.getProperties());
         // let system properties override so we can read from the command line
