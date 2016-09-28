@@ -59,7 +59,6 @@ import io.fabric8.openshift.api.model.ImageStreamStatus;
 import io.fabric8.openshift.api.model.NamedTagEventList;
 import io.fabric8.openshift.api.model.TagEvent;
 import io.fabric8.openshift.api.model.TagReference;
-import io.fabric8.openshift.api.model.TagReferenceBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Strings;
@@ -297,7 +296,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
         waitForOpenShiftBuildToComplete(client, buildName, build);
 
-        updateImageStreamTags(client, imageConfig, buildName, build);
+        updateTagsInImageStreams(client, imageConfig, buildName, build);
     }
 
 
@@ -334,7 +333,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     /**
      * Lets update the ImageStream to include the correct tags
      */
-    private void updateImageStreamTags(OpenShiftClient client, ImageConfiguration imageConfig, String buildConfigName, Build build) throws MojoExecutionException {
+    private void updateTagsInImageStreams(OpenShiftClient client, ImageConfiguration imageConfig, String buildConfigName, Build build) throws MojoExecutionException {
 
         try {
             File manifest = openshiftManifest;
@@ -352,7 +351,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                     ImageStream is = (ImageStream) entity;
                     String imageStreamName = KubernetesHelper.getName(is);
                     if (Objects.equals(buildConfigName, imageStreamName)) {
-                        if (updateImageStreamTag(client, imageConfig, is, buildConfigName)) {
+                        if (updateTagsInImageStream(client, imageConfig, is, buildConfigName)) {
                             updated = true;
                         }
                     }
@@ -374,7 +373,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     }
 
-    private boolean updateImageStreamTag(OpenShiftClient client, ImageConfiguration imageConfig, ImageStream is, String buildConfigName) throws MojoExecutionException {
+    private boolean updateTagsInImageStream(OpenShiftClient client, ImageConfiguration imageConfig, ImageStream is, String buildConfigName) throws MojoExecutionException {
         String namespace = client.getNamespace();
         String imageName = imageConfig.getName();
         String label = getImageLabel(imageName);
@@ -398,7 +397,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         }
         TagReference tag = null;
         if (tags.isEmpty()) {
-            tag = new TagReferenceBuilder().build();
+            tag = new TagReference();
             tags.add(tag);
         } else {
             tag = tags.get(tags.size() - 1);
@@ -433,11 +432,11 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
     private static String getImageLabel(String imageName) throws MojoExecutionException {
-        int idx = imageName.lastIndexOf(':');
-        if (idx < 0) {
-            throw new MojoExecutionException("No ':' in the image name:  " + imageName);
+        String label = new ImageName(imageName).getTag();
+        if (Strings.isNullOrBlank(label)) {
+            throw new MojoExecutionException("No ':' in the image name so cannot extract the tag: " + imageName);
         } else {
-            return imageName.substring(idx + 1);
+            return label;
         }
     }
 
@@ -472,7 +471,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             if (Strings.isNotBlank(status)) {
                 if (!Objects.equals(status, lastBuildStatus)) {
                     lastBuildStatus = status;
-                    log.info("Build " + getName(build) + " status: " + status);
+                    log.verbose("Build %s status: %s", getName(build), status);
                 }
                 return Builds.isFinished(status);
             }

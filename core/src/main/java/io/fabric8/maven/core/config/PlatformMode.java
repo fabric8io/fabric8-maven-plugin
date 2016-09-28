@@ -48,7 +48,7 @@ public enum PlatformMode {
     //
     // public static final PlatformMode defaultPlatformMode = PlatformMode.auto;
     public static final PlatformMode DEFAULT = PlatformMode.kubernetes;
-    public static final String FABRIC8_EFFECTIVE_PLATFORM_MODE = "fabric8.effective.platform.mode";
+    public static final String FABRIC8_EFFECTIVE_PLATFORM_MODE = "fabric8.internal.effective.platform.mode";
 
     private boolean autoFlag;
     private String label;

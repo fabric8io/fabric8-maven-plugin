@@ -42,6 +42,7 @@ import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.EnricherContext;
@@ -55,6 +56,7 @@ import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.ImageStreamBuilder;
 import io.fabric8.openshift.api.model.Template;
+import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -75,6 +77,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+
+import static org.bouncycastle.asn1.x500.style.RFC4519Style.name;
 
 
 /**
@@ -474,18 +478,13 @@ public class ResourceMojo extends AbstractResourceMojo {
         }
         if (isOpenShiftMode()) {
             for (ImageConfiguration image : this.resolvedImages) {
-                String name = image.getName();
-                int idx = name.lastIndexOf(':');
-                if (idx < 0) {
-                    log.warn("No ':' in image name: " + name);
+                ImageName imageName = new ImageName(image.getName());
+                String label = imageName.getTag();
+                if (Strings.isNullOrBlank(label)) {
+                    log.warn("No ':' in image name so cannot extract the tag: " + imageName);
                     continue;
                 }
-                String label = name.substring(idx + 1);
-                String imageStreamName = name.substring(0, idx);
-                idx = imageStreamName.lastIndexOf('/');
-                if (idx > 0) {
-                    imageStreamName = imageStreamName.substring(idx + 1);
-                }
+                String imageStreamName = imageName.getSimpleName();
                 objects.add(new ImageStreamBuilder().
                         withNewMetadata().withName(imageStreamName).endMetadata().
                         withNewSpec().addNewTag().withName(label).withNewFrom().withKind("ImageStreamImage").endFrom().endTag().endSpec().
