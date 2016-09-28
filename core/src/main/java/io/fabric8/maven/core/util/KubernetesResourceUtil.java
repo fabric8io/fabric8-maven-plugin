@@ -30,18 +30,24 @@ import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.openshift.api.model.Build;
+import io.fabric8.openshift.api.model.BuildStatus;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
@@ -52,6 +58,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -413,5 +420,57 @@ public class KubernetesResourceUtil {
             }
         }
         return null;
+    }
+
+    public static String getBuildStatusPhase(Build build) {
+        String status = null;
+        BuildStatus buildStatus = build.getStatus();
+        if (buildStatus != null) {
+            status = buildStatus.getPhase();
+        }
+        return status;
+    }
+
+    public static String getBuildStatusReason(Build build) {
+        BuildStatus buildStatus = build.getStatus();
+        if (buildStatus != null) {
+            String reason = buildStatus.getReason();
+            String phase = buildStatus.getPhase();
+            if (Strings.isNotBlank(phase)) {
+                if (Strings.isNotBlank(reason)) {
+                    return phase + ": " + reason;
+                } else {
+                    return phase;
+                }
+            } else {
+                return Strings.defaultIfEmpty(reason, "");
+            }
+        }
+        return "";
+    }
+
+    public static void watchLogInThread(LogWatch logWatcher, final String failureMessage, final CountDownLatch terminateLatch, final Logger log) {
+        final InputStream in = logWatcher.getOutput();
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+                    while (true) {
+                        String line = reader.readLine();
+                        if (line == null) {
+                            log.info("Log closed");
+                            return;
+                        }
+                        if (terminateLatch.getCount() <= 0L) {
+                            return;
+                        }
+                        log.info("%s", line);
+                    }
+                } catch (IOException e) {
+                    log.error("%s : %s",failureMessage, e);
+                }
+            }
+        };
+        thread.start();
     }
 }

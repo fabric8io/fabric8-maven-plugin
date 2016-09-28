@@ -27,6 +27,7 @@ import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.BuildRecreateMode;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
@@ -43,14 +44,15 @@ import io.fabric8.maven.docker.access.DockerConnectionDetector;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.BuildConfig;
-import io.fabric8.openshift.api.model.BuildStatus;
 import io.fabric8.openshift.api.model.BuildStrategy;
 import io.fabric8.openshift.api.model.BuildStrategyBuilder;
 import io.fabric8.openshift.api.model.ImageStream;
@@ -69,6 +71,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.fusesource.jansi.Ansi;
 
 import java.io.File;
 import java.io.IOException;
@@ -78,10 +81,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+import static io.fabric8.maven.core.util.KubernetesResourceUtil.watchLogInThread;
 import static io.fabric8.maven.plugin.AbstractDeployMojo.DEFAULT_OPENSHIFT_MANIFEST;
 import static io.fabric8.maven.plugin.AbstractDeployMojo.loadResources;
+import static io.fabric8.maven.plugin.AbstractFabric8Mojo.COLOR_POD_LOG;
 
 /**
  * Builds the docker images configured for this project via a Docker or S2I binary build.
@@ -301,13 +307,14 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
 
-    private void waitForOpenShiftBuildToComplete(OpenShiftClient client, String buildConfigName, Build build) {
+    private void waitForOpenShiftBuildToComplete(OpenShiftClient client, String buildConfigName, Build build) throws MojoExecutionException {
         final CountDownLatch latch = new CountDownLatch(1);
-
+        final AtomicReference<Build> buildHolder = new AtomicReference<>();
         String buildName = getName(build);
         Watcher<Build> buildWatcher = new Watcher<Build>() {
             @Override
             public void eventReceived(Action action, Build resource) {
+                buildHolder.set(resource);
                 if (isBuildCompleted(action, resource)) {
                     latch.countDown();
                 }
@@ -318,18 +325,37 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             }
         };
         log.info("Waiting for build " + buildName + " to complete...");
-        try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {
-            while (latch.getCount() > 0L) {
-                try {
-                    latch.await();
-                } catch (InterruptedException e) {
-                    // ignore
+        try (LogWatch logWatch = client.pods().withName(buildName + "-build").watchLog()) {
+            watchLogInThread(logWatch, "Failed to tail build log", latch, createExternalProcessLogger(buildName + "> "));
+
+            try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {
+                while (latch.getCount() > 0L) {
+                    try {
+                        latch.await();
+                    } catch (InterruptedException e) {
+                        // ignore
+                    }
                 }
+                build = buildHolder.get();
+                String status = KubernetesResourceUtil.getBuildStatusPhase(build);
+                if (Builds.isFailed(status) || Builds.isCancelled(status)) {
+                    throw new MojoExecutionException("OpenShift Build " + buildName + " " + KubernetesResourceUtil.getBuildStatusReason(build));
+                }
+                log.info("Build " + buildName + " " + status);
             }
-            log.info("Build " + buildName + " completed!");
         }
     }
 
+    protected Logger createExternalProcessLogger(String prefix) {
+        return createLogger(prefix, COLOR_POD_LOG);
+    }
+
+    protected Logger createLogger(String prefix, Ansi.Color color) {
+        if (useColor) {
+            prefix += Ansi.ansi().fg(color);
+        }
+        return new AnsiLogger(getLog(), useColor, verbose, prefix);
+    }
 
     /**
      * Lets update the ImageStream to include the correct tags
@@ -471,19 +497,17 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
     private boolean isBuildCompleted(Watcher.Action action, Build build) {
-        BuildStatus buildStatus = build.getStatus();
-        if (buildStatus != null) {
-            String status = buildStatus.getPhase();
-            if (Strings.isNotBlank(status)) {
-                if (!Objects.equals(status, lastBuildStatus)) {
-                    lastBuildStatus = status;
-                    log.verbose("Build %s status: %s", getName(build), status);
-                }
-                return Builds.isFinished(status);
+        String status = KubernetesResourceUtil.getBuildStatusPhase(build);
+        if (Strings.isNotBlank(status)) {
+            if (!Objects.equals(status, lastBuildStatus)) {
+                lastBuildStatus = status;
+                log.verbose("Build %s status: %s", getName(build), status);
             }
+            return Builds.isFinished(status);
         }
         return false;
     }
+
 
     private String getBuildName(ImageName imageName) {
         return imageName.getSimpleName();
