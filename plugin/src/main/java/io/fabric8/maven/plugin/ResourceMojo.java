@@ -476,21 +476,6 @@ public class ResourceMojo extends AbstractResourceMojo {
                 }
             }
         }
-        if (isOpenShiftMode()) {
-            for (ImageConfiguration image : this.resolvedImages) {
-                ImageName imageName = new ImageName(image.getName());
-                String label = imageName.getTag();
-                if (Strings.isNullOrBlank(label)) {
-                    log.warn("No ':' in image name so cannot extract the tag: " + imageName);
-                    continue;
-                }
-                String imageStreamName = imageName.getSimpleName();
-                objects.add(new ImageStreamBuilder().
-                        withNewMetadata().withName(imageStreamName).endMetadata().
-                        withNewSpec().addNewTag().withName(label).withNewFrom().withKind("ImageStreamImage").endFrom().endTag().endSpec().
-                        build());
-            }
-        }
         moveTemplatesToTopLevel(builder, objects);
         return builder.build();
     }

@@ -54,6 +54,7 @@ import io.fabric8.openshift.api.model.BuildStatus;
 import io.fabric8.openshift.api.model.BuildStrategy;
 import io.fabric8.openshift.api.model.BuildStrategyBuilder;
 import io.fabric8.openshift.api.model.ImageStream;
+import io.fabric8.openshift.api.model.ImageStreamBuilder;
 import io.fabric8.openshift.api.model.ImageStreamSpec;
 import io.fabric8.openshift.api.model.ImageStreamStatus;
 import io.fabric8.openshift.api.model.NamedTagEventList;
@@ -296,7 +297,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
         waitForOpenShiftBuildToComplete(client, buildName, build);
 
-        updateTagsInImageStreams(client, imageConfig, buildName, build);
+        generateImageStreamTags(client, imageConfig, buildName, build);
     }
 
 
@@ -333,8 +334,12 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     /**
      * Lets update the ImageStream to include the correct tags
      */
-    private void updateTagsInImageStreams(OpenShiftClient client, ImageConfiguration imageConfig, String buildConfigName, Build build) throws MojoExecutionException {
-
+    private void generateImageStreamTags(OpenShiftClient client, ImageConfiguration imageConfig, String buildConfigName, Build build) throws MojoExecutionException {
+        ImageName imageName = new ImageName(imageConfig.getName());
+        String label = imageName.getTag();
+        if (Strings.isNullOrBlank(label)) {
+            throw new MojoExecutionException("No ':' in image name so cannot extract the tag: " + imageName);
+        }
         try {
             File manifest = openshiftManifest;
             if (!Files.isFile(manifest)) {
@@ -344,21 +349,22 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             String namespace = clusterAccess.getNamespace();
             Controller controller = new Controller(client);
 
-            boolean updated = false;
             Set<HasMetadata> entities = loadResources(client, controller, namespace, manifest, project, log);
-            for (HasMetadata entity : entities) {
-                if (entity instanceof ImageStream) {
-                    ImageStream is = (ImageStream) entity;
-                    String imageStreamName = KubernetesHelper.getName(is);
-                    if (Objects.equals(buildConfigName, imageStreamName)) {
-                        if (updateTagsInImageStream(client, imageConfig, is, buildConfigName)) {
-                            updated = true;
-                        }
-                    }
-                }
+            boolean updated = false;
+            ImageStream is = KubernetesResourceUtil.findResourceByName(entities, ImageStream.class, buildConfigName);
+            if (is == null) {
+                is = new ImageStreamBuilder().
+                                        withNewMetadata().withName(buildConfigName).endMetadata().
+                                        withNewSpec().addNewTag().withName(label).withNewFrom().withKind("ImageStreamImage").endFrom().endTag().endSpec().
+                                        build();
+                entities.add(is);
+                updated = true;
+            }
+            if (generateImageStreamTag(client, imageConfig, is, buildConfigName)) {
+                updated = true;
             }
             if (updated) {
-                // lets store the entities again!
+                // lets append the new ImageStream entities
                 KubernetesList entity = new KubernetesListBuilder().withItems(new ArrayList<>(entities)).build();
                 File resourceFileBase = new File(this.targetDir, ResourceClassifier.OPENSHIFT.getValue());
                 AbstractResourceMojo.writeResourcesIndividualAndComposite(entity, resourceFileBase, ResourceFileType.yaml, log);
@@ -373,7 +379,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     }
 
-    private boolean updateTagsInImageStream(OpenShiftClient client, ImageConfiguration imageConfig, ImageStream is, String buildConfigName) throws MojoExecutionException {
+    private boolean generateImageStreamTag(OpenShiftClient client, ImageConfiguration imageConfig, ImageStream is, String buildConfigName) throws MojoExecutionException {
         String namespace = client.getNamespace();
         String imageName = imageConfig.getName();
         String label = getImageLabel(imageName);

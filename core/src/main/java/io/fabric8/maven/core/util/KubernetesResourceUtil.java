@@ -55,6 +55,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+
 /**
  * Utility class for handling Kubernetes resource descriptors
  *
@@ -397,5 +399,19 @@ public class KubernetesResourceUtil {
         } else {
             throw new MojoExecutionException(e.getMessage(), e);
         }
+    }
+
+    /**
+     * Returns the resource of the given kind and name from the collection or null
+     */
+    public static <T> T findResourceByName(Iterable<HasMetadata> entities, Class<T> clazz, String name) {
+        if (entities != null) {
+            for (HasMetadata entity : entities) {
+                if (clazz.isInstance(entity) && Objects.equals(name, getName(entity))) {
+                    return clazz.cast(entity);
+                }
+            }
+        }
+        return null;
     }
 }
