@@ -611,12 +611,12 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
             String fromName = getMapValueWithDefault(fromExt, "name", buildConfig.getFrom());
             String fromNamespace = getMapValueWithDefault(fromExt, "namespace", null);
-            String fromKind = getMapValueWithDefault(fromExt, "kind", "ImageStreamTag");
+            String fromKind = getMapValueWithDefault(fromExt, "kind", "DockerImage");
 
             if ("ImageStreamTag".equals(fromKind) && fromNamespace == null) {
                 fromNamespace = "openshift";
             }
-            if (fromNamespace.isEmpty()) {
+            if (fromNamespace != null && fromNamespace.isEmpty()) {
                 fromNamespace = null;
             }
 
