@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.plugin;
 
+import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.extensions.Templates;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -22,6 +23,7 @@ import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
@@ -54,7 +56,9 @@ import io.fabric8.maven.plugin.converter.ReplicSetOpenShiftConverter;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.DeploymentConfig;
+import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.ImageStreamBuilder;
+import io.fabric8.openshift.api.model.TagReference;
 import io.fabric8.openshift.api.model.Template;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -71,14 +75,20 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 
+import static io.fabric8.maven.plugin.AbstractDeployMojo.DEFAULT_OPENSHIFT_MANIFEST;
+import static io.fabric8.maven.plugin.AbstractDeployMojo.loadResources;
+import static org.apache.cxf.version.Version.getName;
 import static org.bouncycastle.asn1.x500.style.RFC4519Style.name;
+import static org.bouncycastle.crypto.tls.ConnectionEnd.client;
 
 
 /**
@@ -161,6 +171,12 @@ public class ResourceMojo extends AbstractResourceMojo {
      */
     @Parameter(property = "fabric8.profile")
     private String profile;
+
+    /**
+     * The generated openshift YAML file
+     */
+    @Parameter(property = "fabric8.openshiftManifest", defaultValue = DEFAULT_OPENSHIFT_MANIFEST)
+    private File openshiftManifest;
 
     /**
      * Enricher specific configuration configuration given through
@@ -454,7 +470,7 @@ public class ResourceMojo extends AbstractResourceMojo {
     }
 
     // Converts the kubernetes resources into OpenShift resources
-    private KubernetesList convertToOpenShiftResources(KubernetesList resources) {
+    private KubernetesList convertToOpenShiftResources(KubernetesList resources) throws MojoExecutionException {
         KubernetesListBuilder builder = new KubernetesListBuilder();
         builder.withMetadata(resources.getMetadata());
         List<HasMetadata> items = resources.getItems();
@@ -473,6 +489,28 @@ public class ResourceMojo extends AbstractResourceMojo {
                 HasMetadata converted = convertKubernetesItemToOpenShift(item);
                 if (converted != null) {
                     objects.add(converted);
+                }
+            }
+        }
+        if (openshiftManifest != null && openshiftManifest.isFile() && openshiftManifest.exists()) {
+            // lets add any ImageStream / ImageStreamTag objects which are already on disk
+            // from a previous `BuildMojo` execution
+            String namespace = clusterAccess.getNamespace();
+            KubernetesClient client = clusterAccess.createKubernetesClient();
+            Controller controller = new Controller(client);
+            Set<HasMetadata> oldEntities;
+            try {
+                oldEntities = loadResources(client, controller, namespace, openshiftManifest, project, log);
+            } catch (Exception e) {
+                throw new MojoExecutionException("Failed to load openshift manifest " + openshiftManifest + ". " + e, e);
+            }
+            for (HasMetadata entity : oldEntities) {
+                // TODO we should support separate image stream tag entities too?
+                //if (entity instanceof ImageStream || entity instanceof ImageStreamTag) {
+                if (entity instanceof ImageStream) {
+                    if (KubernetesResourceUtil.findResourceByName(objects, entity.getClass(), KubernetesHelper.getName(entity)) == null) {
+                        objects.add(entity);
+                    }
                 }
             }
         }
