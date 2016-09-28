@@ -15,6 +15,9 @@
  */
 
 package io.fabric8.maven.core.config;
+
+import java.util.Properties;
+
 /**
  * Mode how to create resouce descriptors
  *
@@ -45,6 +48,7 @@ public enum PlatformMode {
     //
     // public static final PlatformMode defaultPlatformMode = PlatformMode.auto;
     public static final PlatformMode DEFAULT = PlatformMode.kubernetes;
+    public static final String FABRIC8_EFFECTIVE_PLATFORM_MODE = "fabric8.internal.effective.platform.mode";
 
     private boolean autoFlag;
     private String label;
@@ -60,5 +64,12 @@ public enum PlatformMode {
 
     public String getLabel() {
         return label;
+    }
+
+    /**
+     * Returns true if the given maven properties indicate running in OpenShift platform mode
+     */
+    public static boolean isOpenShiftMode(Properties properties) {
+        return properties.getProperty(FABRIC8_EFFECTIVE_PLATFORM_MODE, "").equals(openshift.toString());
     }
 }

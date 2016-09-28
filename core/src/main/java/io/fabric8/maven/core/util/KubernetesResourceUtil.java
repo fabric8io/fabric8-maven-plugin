@@ -55,6 +55,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+
 /**
  * Utility class for handling Kubernetes resource descriptors
  *
@@ -125,8 +127,12 @@ public class KubernetesResourceUtil {
     }
 
     public static File writeResource(Object resource, File target, ResourceFileType resourceFileType) throws IOException {
-        String serialized = serializeAsString(resource, resourceFileType);
         File outputFile = resourceFileType.addExtension(target);
+        return writeResourceFile(resource, outputFile, resourceFileType);
+    }
+
+    public static File writeResourceFile(Object resource, File outputFile, ResourceFileType resourceFileType) throws IOException {
+        String serialized = serializeAsString(resource, resourceFileType);
         Files.writeToFile(outputFile, serialized, Charset.defaultCharset());
         return outputFile;
     }
@@ -161,6 +167,7 @@ public class KubernetesResourceUtil {
             "cm", "ConfigMap",
             "configmap", "ConfigMap",
             "deployment", "Deployment",
+            "is", "ImageStream",
             "ns", "Namespace",
             "namespace", "Namespace",
             "oauthclient", "OAuthClient",
@@ -392,5 +399,19 @@ public class KubernetesResourceUtil {
         } else {
             throw new MojoExecutionException(e.getMessage(), e);
         }
+    }
+
+    /**
+     * Returns the resource of the given kind and name from the collection or null
+     */
+    public static <T> T findResourceByName(Iterable<HasMetadata> entities, Class<T> clazz, String name) {
+        if (entities != null) {
+            for (HasMetadata entity : entities) {
+                if (clazz.isInstance(entity) && Objects.equals(name, getName(entity))) {
+                    return clazz.cast(entity);
+                }
+            }
+        }
+        return null;
     }
 }
