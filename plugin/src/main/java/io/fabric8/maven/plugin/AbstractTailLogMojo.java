@@ -30,15 +30,12 @@ import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.ClientPodResource;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
+import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.fusesource.jansi.Ansi;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -276,33 +273,11 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
     }
 
     private void watchLog(final LogWatch logWatcher, String podName, final String failureMessage, String ctrlCMessage, String containerName) {
-        final InputStream in = logWatcher.getOutput();
-        final Logger log = createPodLogger();
         newPodLog.info("Tailing log of pod: " + podName + containerNameMessage(containerName));
         newPodLog.info("Press Ctrl-C to " + ctrlCMessage);
         newPodLog.info("");
 
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
-                    while (true) {
-                        String line = reader.readLine();
-                        if (line == null) {
-                            log.info("Log closed");
-                            return;
-                        }
-                        if (logWatchTerminateLatch.getCount() <= 0L) {
-                            return;
-                        }
-                        log.info("%s", line);
-                    }
-                } catch (IOException e) {
-                    log.error("%s : %s",failureMessage, e);
-                }
-            }
-        };
-        thread.start();
+        KubernetesResourceUtil.watchLogInThread(logWatcher, failureMessage, this.logWatchTerminateLatch, createPodLogger());
     }
 
     private String containerNameMessage(String containerName) {
