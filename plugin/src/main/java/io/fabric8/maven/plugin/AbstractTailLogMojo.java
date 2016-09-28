@@ -58,7 +58,7 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
     public static final String OPERATION_STOP = "stop";
     public static final String FABRIC8_LOG_CONTAINER = "fabric8.log.container";
 
-    @Parameter(property = FABRIC8_LOG_CONTAINER, defaultValue = "5005")
+    @Parameter(property = FABRIC8_LOG_CONTAINER)
     private String logContainerName;
 
     private Watch podWatcher;
@@ -220,26 +220,29 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
             }
             ClientPodResource<Pod, DoneablePod> podResource = kubernetes.pods().inNamespace(namespace).withName(name);
             List<Container> containers = KubernetesHelper.getContainers(pod);
+            String containerName = null;
             if (followLog) {
                 watchingPodName = name;
                 logWatchTerminateLatch = new CountDownLatch(1);
                 if (containers.size() < 2) {
                     logWatcher = podResource.watchLog();
                 } else {
-                    logWatcher = podResource.inContainer(getLogContainerName(containers)).watchLog();
+                    containerName = getLogContainerName(containers);
+                    logWatcher = podResource.inContainer(containerName).watchLog();
                 }
-                watchLog(logWatcher, name, "Failed to read log of pod " + name + ".", ctrlCMessage);
+                watchLog(logWatcher, name, "Failed to read log of pod " + name + ".", ctrlCMessage, containerName);
             } else {
                 String logText;
                 if (containers.size() < 2) {
                     logText = podResource.getLog();
                 } else {
-                    logText = podResource.inContainer(getLogContainerName(containers)).getLog();
+                    containerName = getLogContainerName(containers);
+                    logText = podResource.inContainer(containerName).getLog();
                 }
                 if (logText != null) {
                     String[] lines = logText.split("\n");
                     Logger log = createPodLogger();
-                    log.info("Log of pod: " + name);
+                    log.info("Log of pod: " + name + containerNameMessage(containerName));
                     log.info("");
                     for (String line : lines) {
                         log.info(line);
@@ -272,10 +275,10 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
         }
     }
 
-    private void watchLog(final LogWatch logWatcher, String podName, final String failureMessage, String ctrlCMessage) {
+    private void watchLog(final LogWatch logWatcher, String podName, final String failureMessage, String ctrlCMessage, String containerName) {
         final InputStream in = logWatcher.getOutput();
         final Logger log = createPodLogger();
-        newPodLog.info("Tailing log of pod: " + podName);
+        newPodLog.info("Tailing log of pod: " + podName + containerNameMessage(containerName));
         newPodLog.info("Press Ctrl-C to " + ctrlCMessage);
         newPodLog.info("");
 
@@ -300,6 +303,13 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
             }
         };
         thread.start();
+    }
+
+    private String containerNameMessage(String containerName) {
+        if (Strings.isNotBlank(containerName)) {
+            return " container: " + containerName;
+        }
+        return "";
     }
 
     private Logger createPodLogger() {
