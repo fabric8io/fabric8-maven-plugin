@@ -15,7 +15,9 @@
  */
 package io.fabric8.maven.plugin;
 
+import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.PodStatusType;
+import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -30,6 +32,7 @@ import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Strings;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.fusesource.jansi.Ansi;
 
 import java.io.BufferedReader;
@@ -53,6 +56,10 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.isPodRunning;
 public class AbstractTailLogMojo extends AbstractDeployMojo {
     public static final String OPERATION_UNDEPLOY = "undeploy";
     public static final String OPERATION_STOP = "stop";
+    public static final String FABRIC8_LOG_CONTAINER = "fabric8.log.container";
+
+    @Parameter(property = FABRIC8_LOG_CONTAINER, defaultValue = "5005")
+    private String logContainerName;
 
     private Watch podWatcher;
     private LogWatch logWatcher;
@@ -200,11 +207,11 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
         }
 
         if (watchPod != null && isPodRunning(watchPod)) {
-            watchLogOfPodName(kubernetes, namespace, ctrlCMessage, followLog, getName(watchPod));
+            watchLogOfPodName(kubernetes, namespace, ctrlCMessage, followLog, watchPod, getName(watchPod));
         }
     }
 
-    private void watchLogOfPodName(KubernetesClient kubernetes, String namespace, String ctrlCMessage, boolean followLog, String name) {
+    private void watchLogOfPodName(KubernetesClient kubernetes, String namespace, String ctrlCMessage, boolean followLog, Pod pod, String name) {
         if (watchingPodName == null || !watchingPodName.equals(name)) {
             if (logWatcher != null) {
                 log.info("Closing log watcher for " + watchingPodName + " as now watching " + name);
@@ -212,13 +219,23 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
 
             }
             ClientPodResource<Pod, DoneablePod> podResource = kubernetes.pods().inNamespace(namespace).withName(name);
+            List<Container> containers = KubernetesHelper.getContainers(pod);
             if (followLog) {
                 watchingPodName = name;
                 logWatchTerminateLatch = new CountDownLatch(1);
-                logWatcher = podResource.watchLog();
+                if (containers.size() < 2) {
+                    logWatcher = podResource.watchLog();
+                } else {
+                    logWatcher = podResource.inContainer(getLogContainerName(containers)).watchLog();
+                }
                 watchLog(logWatcher, name, "Failed to read log of pod " + name + ".", ctrlCMessage);
             } else {
-                String logText = podResource.getLog();
+                String logText;
+                if (containers.size() < 2) {
+                    logText = podResource.getLog();
+                } else {
+                    logText = podResource.inContainer(getLogContainerName(containers)).getLog();
+                }
                 if (logText != null) {
                     String[] lines = logText.split("\n");
                     Logger log = createPodLogger();
@@ -231,6 +248,18 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
                 terminateLatch.countDown();
             }
         }
+    }
+
+    private String getLogContainerName(List<Container> containers) {
+        if (Strings.isNotBlank(logContainerName)) {
+            for (Container container : containers) {
+                if (Objects.equals(logContainerName, container.getName())) {
+                    return logContainerName;
+                }
+            }
+            log.error("log container name " + logContainerName + " does not exist in pod!! Did you set the correct value for property " + FABRIC8_LOG_CONTAINER);
+        }
+        return containers.get(0).getName();
     }
 
     private void closeLogWatcher() {
