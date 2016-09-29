@@ -590,24 +590,32 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         String imageStreamName = getImageStreamName(imageName);
 
         BuildConfig buildConfig = client.buildConfigs().withName(buildName).get();
+        BuildStrategy buildStrategy = createBuildStrategy(imageConfig);
+
         if (buildConfig != null) {
             // lets verify the BC
             BuildConfigSpec spec = buildConfig.getSpec();
-            if (spec != null) {
-                BuildSource source = spec.getSource();
-                if (source != null) {
-                    String sourceType = source.getType();
-                    if (!Objects.equals("Binary", sourceType)) {
-                        log.warn("BuildConfig " + buildName + " is not of type: Binary but is: " + sourceType + "!");
-                    }
+            if (spec == null) {
+                spec = new BuildConfigSpec();
+                buildConfig.setSpec(spec);
+            }
+            BuildSource source = spec.getSource();
+            if (source != null) {
+                String sourceType = source.getType();
+                if (!Objects.equals("Binary", sourceType)) {
+                    log.warn("BuildConfig " + buildName + " is not of type: Binary but is: " + sourceType + "!");
                 }
             }
+
             if (!getBuildRecreateMode().isBuildConfig()) {
-                String type = buildConfig.getSpec().getStrategy().getType();
-                if (!buildStrategy.isSame(type)) {
+                // lets check if the strategy has changed - e.g. the S2I builder image
+                if (!Objects.equals(buildStrategy, spec.getStrategy())) {
+                    log.warn("Build strategy has changed so updating the BuildConfig!");
+                    spec.setStrategy(buildStrategy);
+
                     client.buildConfigs().withName(buildName).edit()
                           .editSpec()
-                          .withStrategy(createBuildStrategy(imageConfig))
+                          .withStrategy(buildStrategy)
                           .endSpec()
                           .done();
                     log.info("Editing BuildConfig %s for %s build", buildName, getStrategyLabel());
@@ -627,7 +635,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                        .withName(buildName)
                      .endMetadata()
                      .withNewSpec()
-                       .withStrategy(createBuildStrategy(imageConfig))
+                       .withStrategy(buildStrategy)
                        .withNewSource()
                          .withType("Binary")
                        .endSource()
