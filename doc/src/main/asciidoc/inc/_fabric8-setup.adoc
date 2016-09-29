@@ -2,7 +2,10 @@
 [[fabric8:setup]]
 == *fabric8:setup*
 
-This goal is for setting up maven projects to use f8-m-p. It can be used to set up afresh this plugin in the `pom.xml` or to update an existing configuration.
+This goal is for setting up a maven project to use f8-m-p. It can be used to add the f8-m-p plugin within an existing `pom.xml` file under the `<plugins>` section
+but also to update an existing configuration.
+
+Remark : The plugin will also bound some goals as `resource, build` to Maven execution phases
 
 To use this goal type:
 
@@ -11,18 +14,10 @@ To use this goal type:
 mvn io.fabric8:fabric8-maven-plugin:{version}:setup
 ----
 
-Now your `pom.xml` is modified to use f8-m-p. The plugin will be bound some goals to Maven execution phases, so you can test it by running:
-
-[source, sh]
-----
-mvn clean install
-----
-
-After this, a Docker image from your application is created (if some of the default generators could detect your setup) and the Kubernetes and OpenShift descriptors are created in `target/classes/META-INF/fabric8`.
+Now your `pom.xml` is modified.
 
 .Manual Setup
-Alternatively, if you prefer to do it all by hand, then add the following to your `pom.xml` file:
-
+Alternatively, if you prefer to do it all by hand, then add the following plugin definition to your `pom.xml` file:
 
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
@@ -58,6 +53,8 @@ Alternatively, if you prefer to do it all by hand, then add the following to you
   </executions>
 </plugin>
 ----
+
+NOTE: This plugin definition includes the configuration to generate the Docker image.
 
 The setup can be influenced with the following configuration options:
 
