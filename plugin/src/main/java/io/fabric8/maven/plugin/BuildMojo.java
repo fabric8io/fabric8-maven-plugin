@@ -53,6 +53,8 @@ import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.BuildConfig;
+import io.fabric8.openshift.api.model.BuildConfigSpec;
+import io.fabric8.openshift.api.model.BuildSource;
 import io.fabric8.openshift.api.model.BuildStrategy;
 import io.fabric8.openshift.api.model.BuildStrategyBuilder;
 import io.fabric8.openshift.api.model.ImageStream;
@@ -151,6 +153,13 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      */
     @Parameter(property = "fabric8.build.strategy" )
     private OpenShiftBuildStrategy buildStrategy = OpenShiftBuildStrategy.s2i;
+
+    /**
+     * The S2I binary builder BuildConfig name suffix appended to the image name to avoid
+     * clashing with the underlying BuildConfig for the Jenkins pipeline
+     */
+    @Parameter(property = "fabric8.s2i.buildNameSuffix", defaultValue = "-s2i")
+    private String s2iBuildNameSuffix;
 
     /**
      * Should we use the project's compmile-time classpath to scan for additional enrichers/generators?
@@ -301,14 +310,15 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         // Start the actual build
         Build build = startBuild(dockerTar, client, buildName);
 
-        waitForOpenShiftBuildToComplete(client, buildName, build);
+        waitForOpenShiftBuildToComplete(client, build);
 
-        generateImageStreamTags(client, imageConfig, buildName, build);
+        generateImageStreamTags(client, imageConfig, getImageStreamName(imageName), build);
     }
 
 
-    private void waitForOpenShiftBuildToComplete(OpenShiftClient client, String buildConfigName, Build build) throws MojoExecutionException {
+    private void waitForOpenShiftBuildToComplete(OpenShiftClient client, Build build) throws MojoExecutionException {
         final CountDownLatch latch = new CountDownLatch(1);
+        final CountDownLatch logTerminateLatch = new CountDownLatch(1);
         final AtomicReference<Build> buildHolder = new AtomicReference<>();
         String buildName = getName(build);
         Watcher<Build> buildWatcher = new Watcher<Build>() {
@@ -326,7 +336,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         };
         log.info("Waiting for build " + buildName + " to complete...");
         try (LogWatch logWatch = client.pods().withName(buildName + "-build").watchLog()) {
-            watchLogInThread(logWatch, "Failed to tail build log", latch, createExternalProcessLogger(buildName + "> "));
+            watchLogInThread(logWatch, "Failed to tail build log", logTerminateLatch, createExternalProcessLogger("Build> "));
 
             try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {
                 while (latch.getCount() > 0L) {
@@ -360,7 +370,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     /**
      * Lets update the ImageStream to include the correct tags
      */
-    private void generateImageStreamTags(OpenShiftClient client, ImageConfiguration imageConfig, String buildConfigName, Build build) throws MojoExecutionException {
+    private void generateImageStreamTags(OpenShiftClient client, ImageConfiguration imageConfig, String imageStreamName, Build build) throws MojoExecutionException {
         ImageName imageName = new ImageName(imageConfig.getName());
         String label = imageName.getTag();
         if (Strings.isNullOrBlank(label)) {
@@ -377,16 +387,16 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
             Set<HasMetadata> entities = loadResources(client, controller, namespace, manifest, project, log);
             boolean updated = false;
-            ImageStream is = KubernetesResourceUtil.findResourceByName(entities, ImageStream.class, buildConfigName);
+            ImageStream is = KubernetesResourceUtil.findResourceByName(entities, ImageStream.class, imageStreamName);
             if (is == null) {
                 is = new ImageStreamBuilder().
-                                        withNewMetadata().withName(buildConfigName).endMetadata().
+                                        withNewMetadata().withName(imageStreamName).endMetadata().
                                         withNewSpec().addNewTag().withName(label).withNewFrom().withKind("ImageStreamImage").endFrom().endTag().endSpec().
                                         build();
                 entities.add(is);
                 updated = true;
             }
-            if (generateImageStreamTag(client, imageConfig, is, buildConfigName)) {
+            if (generateImageStreamTag(client, imageConfig, is, imageStreamName)) {
                 updated = true;
             }
             if (updated) {
@@ -405,16 +415,16 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     }
 
-    private boolean generateImageStreamTag(OpenShiftClient client, ImageConfiguration imageConfig, ImageStream is, String buildConfigName) throws MojoExecutionException {
+    private boolean generateImageStreamTag(OpenShiftClient client, ImageConfiguration imageConfig, ImageStream is, String imageStreamName) throws MojoExecutionException {
         String namespace = client.getNamespace();
         String imageName = imageConfig.getName();
         String label = getImageLabel(imageName);
-        ImageStream currentImageStream = client.imageStreams().withName(buildConfigName).get();
+        ImageStream currentImageStream = client.imageStreams().withName(imageStreamName).get();
         if (currentImageStream == null) {
-            throw new MojoExecutionException("Could not find a current ImageStream with name " + buildConfigName + " in namespace " + namespace);
+            throw new MojoExecutionException("Could not find a current ImageStream with name " + imageStreamName + " in namespace " + namespace);
         }
         String tagSha = findTagSha(currentImageStream);
-        String name = buildConfigName + "@" + tagSha;
+        String name = imageStreamName + "@" + tagSha;
         String kind = "ImageStreamImage";
 
         ImageStreamSpec spec = is.getSpec();
@@ -458,7 +468,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             answer = true;
         }
         if (answer) {
-            log.info("Updated ImageStream " + buildConfigName + " to namespace: " + namespace + " name: " + name);
+            log.info("Updated ImageStream " + imageStreamName + " to namespace: " + namespace + " name: " + name);
         }
         return answer;
     }
@@ -509,8 +519,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
 
-    private String getBuildName(ImageName imageName) {
-        return imageName.getSimpleName();
+    private String getS2IBuildName(ImageName imageName) {
+        return imageName.getSimpleName() + s2iBuildNameSuffix;
     }
 
     private String getImageStreamName(ImageName name) {
@@ -576,12 +586,22 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     private String checkOrCreateBuildConfig(OpenShiftClient client, KubernetesListBuilder builder, ImageConfiguration imageConfig) {
         ImageName imageName = new ImageName(imageConfig.getName());
-        String buildName = getBuildName(imageName);
+        String buildName = getS2IBuildName(imageName);
         String imageStreamName = getImageStreamName(imageName);
 
         BuildConfig buildConfig = client.buildConfigs().withName(buildName).get();
-
         if (buildConfig != null) {
+            // lets verify the BC
+            BuildConfigSpec spec = buildConfig.getSpec();
+            if (spec != null) {
+                BuildSource source = spec.getSource();
+                if (source != null) {
+                    String sourceType = source.getType();
+                    if (!Objects.equals("Binary", sourceType)) {
+                        log.warn("BuildConfig " + buildName + " is not of type: Binary but is: " + sourceType + "!");
+                    }
+                }
+            }
             if (!getBuildRecreateMode().isBuildConfig()) {
                 String type = buildConfig.getSpec().getStrategy().getType();
                 if (!buildStrategy.isSame(type)) {
