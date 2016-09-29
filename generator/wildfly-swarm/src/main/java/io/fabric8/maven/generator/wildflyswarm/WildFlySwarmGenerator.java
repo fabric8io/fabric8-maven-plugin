@@ -56,6 +56,7 @@ public class WildFlySwarmGenerator extends JavaRunGenerator {
         // - https://github.com/rhuss/jolokia/pull/260
         // - https://issues.jboss.org/browse/SWARM-204
         ret.put("AB_OFF", "true");
+        ret.put("AB_JOLOKIA_OFF", "true");
         return ret;
     }
 
