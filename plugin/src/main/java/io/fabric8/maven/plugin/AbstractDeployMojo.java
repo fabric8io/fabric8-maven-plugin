@@ -744,10 +744,7 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
                     log.warn("Ignoring DeploymentConfig " + name + " as not connected to an OpenShift cluster");
                     continue;
                 }
-                // TODO uncomment when kubernetes-client supports Scaleable<T> for DC!
-                // https://github.com/fabric8io/kubernetes-client/issues/512
-                //
-                // scalable = openshiftClient.deploymentConfigs().inNamespace(namespace).withName(name);
+                scalable = openshiftClient.deploymentConfigs().inNamespace(namespace).withName(name);
             }
             if (scalable != null) {
                 log.info("Scaling " + getKind(entity) + " " + namespace + "/" + name + " to replicas: " + replicas);
