@@ -309,6 +309,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     private void waitForOpenShiftBuildToComplete(OpenShiftClient client, String buildConfigName, Build build) throws MojoExecutionException {
         final CountDownLatch latch = new CountDownLatch(1);
+        final CountDownLatch logTerminateLatch = new CountDownLatch(1);
         final AtomicReference<Build> buildHolder = new AtomicReference<>();
         String buildName = getName(build);
         Watcher<Build> buildWatcher = new Watcher<Build>() {
@@ -326,7 +327,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         };
         log.info("Waiting for build " + buildName + " to complete...");
         try (LogWatch logWatch = client.pods().withName(buildName + "-build").watchLog()) {
-            watchLogInThread(logWatch, "Failed to tail build log", latch, createExternalProcessLogger(buildName + "> "));
+            watchLogInThread(logWatch, "Failed to tail build log", logTerminateLatch, createExternalProcessLogger(buildName + "> "));
 
             try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {
                 while (latch.getCount() > 0L) {
