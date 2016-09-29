@@ -793,46 +793,6 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
         return null;
     }
 
-    protected Pod getNewestPod(Collection<Pod> pods) {
-        if (pods == null || pods.isEmpty()) {
-            return null;
-        }
-        List<Pod> sortedPods = new ArrayList<>(pods);
-        Collections.sort(sortedPods, new Comparator<Pod>() {
-            @Override
-            public int compare(Pod p1, Pod p2) {
-                Date t1 = getCreationTimestamp(p1);
-                Date t2 = getCreationTimestamp(p2);
-                if (t1 != null) {
-                    if (t2 == null) {
-                        return 1;
-                    } else {
-                        return t1.compareTo(t2);
-                    }
-                } else if (t2 == null) {
-                    return 0;
-                }
-                return -1;
-            }
-        });
-        return sortedPods.get(sortedPods.size() - 1);
-    }
-
-    protected Date getCreationTimestamp(HasMetadata hasMetadata) {
-        ObjectMeta metadata = hasMetadata.getMetadata();
-        if (metadata != null) {
-            return parseTimestamp(metadata.getCreationTimestamp());
-        }
-        return null;
-    }
-
-    private Date parseTimestamp(String text) {
-        if (text == null) {
-            return null;
-        }
-        return parseDate(text);
-    }
-
     protected FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> withSelector(ClientNonNamespaceOperation<Pod, PodList, DoneablePod, ClientPodResource<Pod, DoneablePod>> pods, LabelSelector selector) {
         FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> answer = pods;
         Map<String, String> matchLabels = selector.getMatchLabels();
