@@ -336,7 +336,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         };
         log.info("Waiting for build " + buildName + " to complete...");
         try (LogWatch logWatch = client.pods().withName(buildName + "-build").watchLog()) {
-            watchLogInThread(logWatch, "Failed to tail build log", logTerminateLatch, createExternalProcessLogger(buildName + "> "));
+            watchLogInThread(logWatch, "Failed to tail build log", logTerminateLatch, createExternalProcessLogger("Build> "));
 
             try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {
                 while (latch.getCount() > 0L) {
