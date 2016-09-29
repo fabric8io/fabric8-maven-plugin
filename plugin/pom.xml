@@ -97,6 +97,11 @@
       <artifactId>fabric8-maven-generator-wildfly-swarm</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>fabric8-maven-generator-webapp</artifactId>
+    </dependency>
+
     <!-- == Fabric8 ===================================== -->
 
     <dependency>
