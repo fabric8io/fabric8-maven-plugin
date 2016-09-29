@@ -16,6 +16,8 @@
 
 package io.fabric8.maven.core.config;
 
+import com.google.common.base.Objects;
+
 import java.util.Properties;
 
 /**
@@ -70,6 +72,6 @@ public enum PlatformMode {
      * Returns true if the given maven properties indicate running in OpenShift platform mode
      */
     public static boolean isOpenShiftMode(Properties properties) {
-        return properties.getProperty(FABRIC8_EFFECTIVE_PLATFORM_MODE, "").equals(openshift.toString());
+        return Objects.equal(openshift.toString(), properties.getProperty(FABRIC8_EFFECTIVE_PLATFORM_MODE, ""));
     }
 }

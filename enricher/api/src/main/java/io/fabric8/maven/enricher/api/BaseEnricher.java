@@ -17,6 +17,7 @@
 package io.fabric8.maven.enricher.api;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -25,6 +26,7 @@ import org.apache.maven.project.MavenProject;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * @author roland
@@ -66,8 +68,12 @@ public abstract class BaseEnricher implements Enricher {
 
     @Override
     public Map<String, String> getSelector(Kind kind) { return null; }
+
     protected MavenProject getProject() {
-        return buildContext.getProject();
+        if (buildContext != null) {
+            return buildContext.getProject();
+        }
+        return null;
     }
 
     protected Logger getLog() {
@@ -89,5 +95,19 @@ public abstract class BaseEnricher implements Enricher {
 
     protected EnricherContext getContext() {
         return buildContext;
+    }
+
+    /**
+     * Returns true if we are in OpenShift S2I binary building mode
+     */
+    protected boolean isOpenShiftMode() {
+        MavenProject project = getProject();
+        if (project != null) {
+            Properties properties = project.getProperties();
+            if (properties != null) {
+                return PlatformMode.isOpenShiftMode(properties);
+            }
+        }
+        return false;
     }
 }
