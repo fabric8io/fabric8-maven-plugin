@@ -127,9 +127,9 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
                     switch (status) {
                         case WAIT:
                         case OK:
-                            if (latestPod == null || isNewerPod(pod, latestPod)) {
+                            if (latestPod == null || KubernetesResourceUtil.isNewerResource(pod, latestPod)) {
                                 if (ignorePodsOlderThan != null) {
-                                    Date podCreateTime = getCreationTimestamp(pod);
+                                    Date podCreateTime = KubernetesResourceUtil.getCreationTimestamp(pod);
                                     if (podCreateTime != null && podCreateTime.compareTo(ignorePodsOlderThan) > 0) {
                                         latestPod = pod;
                                     }
@@ -195,7 +195,7 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
             }
         }
 
-        Pod watchPod = getNewestPod(addedPods.values());
+        Pod watchPod = KubernetesResourceUtil.getNewestPod(addedPods.values());
         newestPodName = getName(watchPod);
 
         Logger statusLog = Objects.equals(name, newestPodName) ? newPodLog : oldPodLog;
@@ -289,15 +289,6 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
 
     private Logger createPodLogger() {
         return createExternalProcessLogger("Pod> ");
-    }
-
-    private boolean isNewerPod(HasMetadata newer, HasMetadata older) {
-        Date t1 = getCreationTimestamp(newer);
-        Date t2 = getCreationTimestamp(older);
-        if (t1 != null) {
-            return t2 == null || t1.compareTo(t2) > 0;
-        }
-        return false;
     }
 
 }

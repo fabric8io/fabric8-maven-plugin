@@ -744,10 +744,7 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
                     log.warn("Ignoring DeploymentConfig " + name + " as not connected to an OpenShift cluster");
                     continue;
                 }
-                // TODO uncomment when kubernetes-client supports Scaleable<T> for DC!
-                // https://github.com/fabric8io/kubernetes-client/issues/512
-                //
-                // scalable = openshiftClient.deploymentConfigs().inNamespace(namespace).withName(name);
+                scalable = openshiftClient.deploymentConfigs().inNamespace(namespace).withName(name);
             }
             if (scalable != null) {
                 log.info("Scaling " + getKind(entity) + " " + namespace + "/" + name + " to replicas: " + replicas);
@@ -791,46 +788,6 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
             return new LabelSelectorBuilder().withMatchLabels(matchLabels).build();
         }
         return null;
-    }
-
-    protected Pod getNewestPod(Collection<Pod> pods) {
-        if (pods == null || pods.isEmpty()) {
-            return null;
-        }
-        List<Pod> sortedPods = new ArrayList<>(pods);
-        Collections.sort(sortedPods, new Comparator<Pod>() {
-            @Override
-            public int compare(Pod p1, Pod p2) {
-                Date t1 = getCreationTimestamp(p1);
-                Date t2 = getCreationTimestamp(p2);
-                if (t1 != null) {
-                    if (t2 == null) {
-                        return 1;
-                    } else {
-                        return t1.compareTo(t2);
-                    }
-                } else if (t2 == null) {
-                    return 0;
-                }
-                return -1;
-            }
-        });
-        return sortedPods.get(sortedPods.size() - 1);
-    }
-
-    protected Date getCreationTimestamp(HasMetadata hasMetadata) {
-        ObjectMeta metadata = hasMetadata.getMetadata();
-        if (metadata != null) {
-            return parseTimestamp(metadata.getCreationTimestamp());
-        }
-        return null;
-    }
-
-    private Date parseTimestamp(String text) {
-        if (text == null) {
-            return null;
-        }
-        return parseDate(text);
     }
 
     protected FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> withSelector(ClientNonNamespaceOperation<Pod, PodList, DoneablePod, ClientPodResource<Pod, DoneablePod>> pods, LabelSelector selector) {

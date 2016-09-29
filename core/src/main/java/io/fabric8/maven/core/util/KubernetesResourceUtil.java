@@ -23,12 +23,18 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodSpec;
+import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -51,7 +57,12 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -63,6 +74,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+import static io.fabric8.kubernetes.api.KubernetesHelper.parseDate;
 
 /**
  * Utility class for handling Kubernetes resource descriptors
@@ -472,5 +484,92 @@ public class KubernetesResourceUtil {
             }
         };
         thread.start();
+    }
+
+    public static Pod getNewestPod(Collection<Pod> pods) {
+        if (pods == null || pods.isEmpty()) {
+            return null;
+        }
+        List<Pod> sortedPods = new ArrayList<>(pods);
+        Collections.sort(sortedPods, new Comparator<Pod>() {
+            @Override
+            public int compare(Pod p1, Pod p2) {
+                Date t1 = getCreationTimestamp(p1);
+                Date t2 = getCreationTimestamp(p2);
+                if (t1 != null) {
+                    if (t2 == null) {
+                        return 1;
+                    } else {
+                        return t1.compareTo(t2);
+                    }
+                } else if (t2 == null) {
+                    return 0;
+                }
+                return -1;
+            }
+        });
+        return sortedPods.get(sortedPods.size() - 1);
+    }
+
+    public static Date getCreationTimestamp(HasMetadata hasMetadata) {
+        ObjectMeta metadata = hasMetadata.getMetadata();
+        if (metadata != null) {
+            return parseTimestamp(metadata.getCreationTimestamp());
+        }
+        return null;
+    }
+
+    private static Date parseTimestamp(String text) {
+        if (text == null) {
+            return null;
+        }
+        return parseDate(text);
+    }
+
+    public static boolean podHasContainerImage(Pod pod, String imageName) {
+        if (pod != null) {
+            PodSpec spec = pod.getSpec();
+            if (spec != null) {
+                List<Container> containers = spec.getContainers();
+                if (containers != null) {
+                    for (Container container : containers) {
+                        if (io.fabric8.utils.Objects.equal(imageName, container.getImage())) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public static String getDockerContainerID(Pod pod) {
+        PodStatus status = pod.getStatus();
+        if (status != null) {
+            List<ContainerStatus> containerStatuses = status.getContainerStatuses();
+            if (containerStatuses != null) {
+                for (ContainerStatus containerStatus : containerStatuses) {
+                    String containerID = containerStatus.getContainerID();
+                    if (Strings.isNotBlank(containerID)) {
+                        String prefix = "://";
+                        int idx = containerID.indexOf(prefix);
+                        if (idx > 0) {
+                            return containerID.substring(idx + prefix.length());
+                        }
+                        return containerID;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public static boolean isNewerResource(HasMetadata newer, HasMetadata older) {
+        Date t1 = getCreationTimestamp(newer);
+        Date t2 = getCreationTimestamp(older);
+        if (t1 != null) {
+            return t2 == null || t1.compareTo(t2) > 0;
+        }
+        return false;
     }
 }

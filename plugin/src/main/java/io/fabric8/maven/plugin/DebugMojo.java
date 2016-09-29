@@ -60,7 +60,6 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.kubernetes.api.KubernetesHelper.isPodReady;
 import static io.fabric8.kubernetes.api.KubernetesHelper.isPodRunning;
 import static io.fabric8.maven.core.util.ProcessUtil.processCommandAsync;
-import static org.bouncycastle.asn1.x500.style.RFC4519Style.name;
 
 /**
  * Ensures that the current app has debug enabled, then opens the debug port so that you can debug the latest pod
@@ -146,7 +145,7 @@ public class DebugMojo extends AbstractDeployMojo {
         PodList list = pods.list();
         if (list != null) {
             List<Pod> items = list.getItems();
-            Pod latestPod = getNewestPod(list.getItems());
+            Pod latestPod = KubernetesResourceUtil.getNewestPod(list.getItems());
             if (latestPod != null && podHasEnvVarValue(latestPod, envVarName, envVarValue)) {
                 return getName(latestPod);
             }
