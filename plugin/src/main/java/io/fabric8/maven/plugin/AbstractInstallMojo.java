@@ -157,6 +157,9 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
             arch = Architectures.ARM;
         }
         String releaseUrl = "https://github.com/fabric8io/gofabric8/releases/download/v" + version + "/gofabric8-" + platform + "-" + arch;
+        if (platform.equals("windows")) {
+            releaseUrl += ".exe";
+        }
         URL downloadUrl;
         try {
             downloadUrl = new URL(releaseUrl);
