@@ -29,9 +29,7 @@ def updateDownstreamDependencies(stagedProject) {
     projects = [
             'fabric8io/fabric8-maven-dependencies',
             'fabric8io/fabric8-devops',
-            'fabric8io/fabric8-forge',
-            // this is for the docs!
-            'fabric8io/fabric8-maven-plugin'
+            'fabric8io/fabric8-forge'
     ]
     version = stagedProject[1]
   }
@@ -40,7 +38,9 @@ def updateDownstreamDependencies(stagedProject) {
     parentPomLocation = 'parent/pom.xml'
     propertyName = 'fabric8.maven.plugin.version'
     projects = [
-            'fabric8io/funktion'
+            'fabric8io/funktion',
+            // this is for the docs!
+            'fabric8io/fabric8-maven-plugin'
     ]
     version = stagedProject[1]
   }
