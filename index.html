@@ -1249,7 +1249,11 @@ available goals are described below.</p>
 <div class="sect2">
 <h3 id="fabric8:setup">3.1. <strong>fabric8:setup</strong></h3>
 <div class="paragraph">
-<p>This goal is for setting up maven projects to use f8-m-p. It can be used to set up afresh this plugin in the <code>pom.xml</code> or to update an existing configuration.</p>
+<p>This goal is for setting up a maven project to use f8-m-p. It can be used to add the f8-m-p plugin within an existing <code>pom.xml</code> file under the <code>&lt;plugins&gt;</code> section
+but also to update an existing configuration.</p>
+</div>
+<div class="paragraph">
+<p>Remark : The plugin will also bound some goals as <code>resource, build</code> to Maven execution phases</p>
 </div>
 <div class="paragraph">
 <p>To use this goal type:</p>
@@ -1260,19 +1264,11 @@ available goals are described below.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Now your <code>pom.xml</code> is modified to use f8-m-p. The plugin will be bound some goals to Maven execution phases, so you can test it by running:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn clean install</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>After this, a Docker image from your application is created (if some of the default generators could detect your setup) and the Kubernetes and OpenShift descriptors are created in <code>target/classes/META-INF/fabric8</code>.</p>
+<p>Now your <code>pom.xml</code> is modified.</p>
 </div>
 <div class="paragraph">
 <div class="title">Manual Setup</div>
-<p>Alternatively, if you prefer to do it all by hand, then add the following to your <code>pom.xml</code> file:</p>
+<p>Alternatively, if you prefer to do it all by hand, then add the following plugin definition to your <code>pom.xml</code> file:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1308,6 +1304,18 @@ available goals are described below.</p>
   <span class="tag">&lt;/executions&gt;</span>
 <span class="tag">&lt;/plugin&gt;</span></code></pre>
 </div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This plugin definition includes the configuration to generate the Docker image.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>The setup can be influenced with the following configuration options:</p>
@@ -4241,7 +4249,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.57<br>
-Last updated 2016-09-30 04:51:00 UTC
+Last updated 2016-09-30 07:34:30 UTC
 </div>
 </div>
 </body>
