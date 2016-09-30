@@ -1,0 +1,6 @@
+
+[[goals-overview-shortcut]]
+# Shortcut Goals
+
+include::_fabric8-run.adoc[]
+include::_fabric8-resource-apply.adoc[]

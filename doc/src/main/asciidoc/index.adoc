@@ -21,30 +21,7 @@ include::inc/_introduction.adoc[]
 
 include::inc/_installation.adoc[]
 
-include::inc/_goals.adoc[]
-
-include::inc/_fabric8-setup.adoc[]
-include::inc/_fabric8-cluster-start.adoc[]
-include::inc/_fabric8-cluster-stop.adoc[]
-include::inc/_fabric8-run.adoc[]
-include::inc/_fabric8-deploy.adoc[]
-include::inc/_fabric8-undeploy.adoc[]
-include::inc/_fabric8-start.adoc[]
-include::inc/_fabric8-stop.adoc[]
-include::inc/_fabric8-log.adoc[]
-include::inc/_fabric8-debug.adoc[]
-include::inc/_fabric8-import.adoc[]
-
-include::inc/_fabric8-resource.adoc[]
-include::inc/_fabric8-resource-apply.adoc[]
-include::inc/_fabric8-build.adoc[]
-include::inc/_fabric8-push.adoc[]
-
-include::inc/_fabric8-install.adoc[]
-include::inc/_fabric8-helm.adoc[]
-include::inc/_fabric8-helm-index.adoc[]
-include::inc/_fabric8-app-catalog.adoc[]
-include::inc/_fabric8-distro.adoc[]
+include::inc/goals/_goals.adoc[]
 
 include::inc/_generator.adoc[]
 include::inc/_enricher.adoc[]
