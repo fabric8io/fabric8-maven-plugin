@@ -536,109 +536,128 @@ table.CodeRay td.code>pre{padding:0}
 </ul>
 </li>
 <li><a href="#installation">2. Installation</a></li>
-<li><a href="#goals">3. Goals</a>
+<li><a href="#goals">3. Goals Overview</a></li>
+<li><a href="#goals-overview-build">4. Build Goals</a>
 <ul class="sectlevel2">
-<li><a href="#fabric8:setup">3.1. <strong>fabric8:setup</strong></a></li>
-<li><a href="#fabric8:cluster-start">3.2. <strong>fabric8:cluster-start</strong></a>
+<li><a href="#fabric8:resource">4.1. <strong>fabric8:resource</strong></a>
 <ul class="sectlevel3">
-<li><a href="#using-openshift">3.2.1. Using OpenShift</a></li>
-<li><a href="#configure-apps">3.2.2. Configure apps</a></li>
-<li><a href="#configure-cluster-resources">3.2.3. Configure cluster resources</a></li>
-<li><a href="#stop">3.2.4. Stop</a></li>
+<li><a href="#resource-labels-annotations">4.1.1. Labels and Annotations</a></li>
 </ul>
 </li>
-<li><a href="#fabric8:cluster-stop">3.3. <strong>fabric8:cluster-stop</strong></a>
+<li><a href="#fabric8:build">4.2. <strong>fabric8:build</strong></a>
 <ul class="sectlevel3">
-<li><a href="#restarting">3.3.1. Restarting</a></li>
-<li><a href="#deleting">3.3.2. Deleting</a></li>
+<li><a href="#build-kubernetes">4.2.1. Kubernetes Build</a></li>
+<li><a href="#build-openshift">4.2.2. OpenShift Build</a></li>
+<li><a href="#build-goal-configuration">4.2.3. Configuration</a></li>
+<li><a href="#image-configuration">4.2.4. Image Configuration</a></li>
+<li><a href="#build-configuration">4.2.5. Build Configuration</a></li>
+<li><a href="#build-assembly">4.2.6. Assembly</a></li>
+<li><a href="#misc-env">4.2.7. Environment and Labels</a></li>
+<li><a href="#misc-startup">4.2.8. Startup Arguments</a></li>
+<li><a href="#build-buildargs">4.2.9. Build Args</a></li>
 </ul>
 </li>
-<li><a href="#fabric8:run">3.4. <strong>fabric8:run</strong></a></li>
-<li><a href="#fabric8:deploy">3.5. <strong>fabric8:deploy</strong></a></li>
-<li><a href="#fabric8:undeploy">3.6. <strong>fabric8:undeploy</strong></a></li>
-<li><a href="#fabric8:start">3.7. <strong>fabric8:start</strong></a>
-<ul class="sectlevel3">
-<li><a href="#scaling">3.7.1. Scaling</a></li>
+<li><a href="#fabric8:push">4.3. <strong>fabric8:push</strong></a></li>
+<li><a href="#fabric8:helm">4.4. <strong>fabric8:helm</strong></a></li>
+<li><a href="#fabric8:distro">4.5. <strong>fabric8:distro</strong></a></li>
+<li><a href="#fabric8:app-catalog">4.6. <strong>fabric8:app-catalog</strong></a></li>
 </ul>
 </li>
-<li><a href="#fabric8:stop">3.8. <strong>fabric8:stop</strong></a>
-<ul class="sectlevel3">
-<li><a href="#removing-all-resources">3.8.1. Removing all resources</a></li>
-</ul>
-</li>
-<li><a href="#fabric8:log">3.9. <strong>fabric8:log</strong></a></li>
-<li><a href="#fabric8:debug">3.10. <strong>fabric8:debug</strong></a>
-<ul class="sectlevel3">
-<li><a href="#speeding-up-debugging">3.10.1. Speeding up debugging</a></li>
-</ul>
-</li>
-<li><a href="#fabric8:import">3.11. <strong>fabric8:import</strong></a></li>
-<li><a href="#fabric8:resource">3.12. <strong>fabric8:resource</strong></a>
-<ul class="sectlevel3">
-<li><a href="#resource-labels-annotations">3.12.1. Labels and Annotations</a></li>
-</ul>
-</li>
-<li><a href="#fabric8:resource-apply">3.13. <strong>fabric8:resource-apply</strong></a></li>
-<li><a href="#fabric8:build">3.14. <strong>fabric8:build</strong></a>
-<ul class="sectlevel3">
-<li><a href="#build-kubernetes">3.14.1. Kubernetes Build</a></li>
-<li><a href="#build-openshift">3.14.2. OpenShift Build</a></li>
-<li><a href="#build-goal-configuration">3.14.3. Configuration</a></li>
-<li><a href="#image-configuration">3.14.4. Image Configuration</a></li>
-<li><a href="#build-configuration">3.14.5. Build Configuration</a></li>
-<li><a href="#build-assembly">3.14.6. Assembly</a></li>
-<li><a href="#misc-env">3.14.7. Environment and Labels</a></li>
-<li><a href="#misc-startup">3.14.8. Startup Arguments</a></li>
-<li><a href="#build-buildargs">3.14.9. Build Args</a></li>
-</ul>
-</li>
-<li><a href="#fabric8:push">3.15. <strong>fabric8:push</strong></a></li>
-<li><a href="#fabric8:install">3.16. <strong>fabric8:install</strong></a></li>
-<li><a href="#fabric8:helm">3.17. <strong>fabric8:helm</strong></a></li>
-<li><a href="#fabric8:helm-index">3.18. <strong>fabric8:helm-index</strong></a></li>
-<li><a href="#fabric8:app-catalog">3.19. <strong>fabric8:app-catalog</strong></a></li>
-<li><a href="#fabric8:distro">3.20. <strong>fabric8:distro</strong></a></li>
-</ul>
-</li>
-<li><a href="#generators">4. Generators</a>
+<li><a href="#goals-overview-develop">5. Development Goals</a>
 <ul class="sectlevel2">
-<li><a href="#generators-default">4.1. Default Generators</a>
+<li><a href="#fabric8:deploy">5.1. <strong>fabric8:deploy</strong></a></li>
+<li><a href="#fabric8:undeploy">5.2. <strong>fabric8:undeploy</strong></a></li>
+<li><a href="#fabric8:start">5.3. <strong>fabric8:start</strong></a>
 <ul class="sectlevel3">
-<li><a href="#generator-spring-boot">4.1.1. Spring Boot</a></li>
-<li><a href="#java-applications">4.1.2. Java Applications</a></li>
-<li><a href="#karaf">4.1.3. Karaf</a></li>
+<li><a href="#scaling">5.3.1. Scaling</a></li>
 </ul>
 </li>
-<li><a href="#generators-api">4.2. Generator API</a></li>
-</ul>
-</li>
-<li><a href="#enrichers">5. Enrichers</a>
-<ul class="sectlevel2">
-<li><a href="#enrichers-default">5.1. Default Enrichers</a>
+<li><a href="#fabric8:stop">5.4. <strong>fabric8:stop</strong></a>
 <ul class="sectlevel3">
-<li><a href="#enrichers-standard">5.1.1. Standard Enrichers</a></li>
-<li><a href="#enrichers-fabric8">5.1.2. Fabric8 Enrichers</a></li>
+<li><a href="#removing-all-resources">5.4.1. Removing all resources</a></li>
 </ul>
 </li>
-<li><a href="#enricher-api">5.2. Enricher API</a></li>
+<li><a href="#fabric8:log">5.5. <strong>fabric8:log</strong></a></li>
+<li><a href="#fabric8:debug">5.6. <strong>fabric8:debug</strong></a>
+<ul class="sectlevel3">
+<li><a href="#speeding-up-debugging">5.6.1. Speeding up debugging</a></li>
 </ul>
 </li>
-<li><a href="#profiles">6. Profiles</a></li>
-<li><a href="#access-configuration">7. Access configuration</a>
+<li><a href="#fabric8:watch">5.7. <strong>fabric8:watch</strong></a></li>
+</ul>
+</li>
+<li><a href="#goals-overview-shortcut">6. Shortcut Goals</a>
 <ul class="sectlevel2">
-<li><a href="#docker-access">7.1. Docker Access</a></li>
-<li><a href="#openshift-and-kubernetes-access">7.2. OpenShift and Kubernetes Access</a></li>
+<li><a href="#fabric8:run">6.1. <strong>fabric8:run</strong></a></li>
+<li><a href="#fabric8:resource-apply">6.2. <strong>fabric8:resource-apply</strong></a></li>
 </ul>
 </li>
-<li><a href="#registry">8. Registry handling</a></li>
-<li><a href="#authentication">9. Authentication</a>
+<li><a href="#goals-overview-setup">7. Setup Goals</a>
 <ul class="sectlevel2">
-<li><a href="#pull-vs-push-authentication">9.1. Pull vs. Push Authentication</a></li>
-<li><a href="#openshift-authentication">9.2. OpenShift Authentication</a></li>
-<li><a href="#password-encryption">9.3. Password encryption</a></li>
+<li><a href="#fabric8:setup">7.1. <strong>fabric8:setup</strong></a></li>
+<li><a href="#fabric8:install">7.2. <strong>fabric8:install</strong></a></li>
+<li><a href="#fabric8:cluster-start">7.3. <strong>fabric8:cluster-start</strong></a>
+<ul class="sectlevel3">
+<li><a href="#using-openshift">7.3.1. Using OpenShift</a></li>
+<li><a href="#configure-apps">7.3.2. Configure apps</a></li>
+<li><a href="#configure-cluster-resources">7.3.3. Configure cluster resources</a></li>
+<li><a href="#stop">7.3.4. Stop</a></li>
 </ul>
 </li>
-<li><a href="#migration">10. Migration from version 2</a></li>
+<li><a href="#fabric8:cluster-stop">7.4. <strong>fabric8:cluster-stop</strong></a>
+<ul class="sectlevel3">
+<li><a href="#restarting">7.4.1. Restarting</a></li>
+<li><a href="#deleting">7.4.2. Deleting</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#goals-overview-internal">8. Internal Goals</a>
+<ul class="sectlevel2">
+<li><a href="#fabric8:import">8.1. <strong>fabric8:import</strong></a></li>
+<li><a href="#fabric8:helm-index">8.2. <strong>fabric8:helm-index</strong></a></li>
+<li><a href="#fabric8:manifest-index">8.3. <strong>fabric8:manifest-index</strong></a></li>
+</ul>
+</li>
+<li><a href="#generators">9. Generators</a>
+<ul class="sectlevel2">
+<li><a href="#generators-default">9.1. Default Generators</a>
+<ul class="sectlevel3">
+<li><a href="#generator-spring-boot">9.1.1. Spring Boot</a></li>
+<li><a href="#java-applications">9.1.2. Java Applications</a></li>
+<li><a href="#karaf">9.1.3. Karaf</a></li>
+</ul>
+</li>
+<li><a href="#generators-api">9.2. Generator API</a></li>
+</ul>
+</li>
+<li><a href="#enrichers">10. Enrichers</a>
+<ul class="sectlevel2">
+<li><a href="#enrichers-default">10.1. Default Enrichers</a>
+<ul class="sectlevel3">
+<li><a href="#enrichers-standard">10.1.1. Standard Enrichers</a></li>
+<li><a href="#enrichers-fabric8">10.1.2. Fabric8 Enrichers</a></li>
+</ul>
+</li>
+<li><a href="#enricher-api">10.2. Enricher API</a></li>
+</ul>
+</li>
+<li><a href="#profiles">11. Profiles</a></li>
+<li><a href="#access-configuration">12. Access configuration</a>
+<ul class="sectlevel2">
+<li><a href="#docker-access">12.1. Docker Access</a></li>
+<li><a href="#openshift-and-kubernetes-access">12.2. OpenShift and Kubernetes Access</a></li>
+</ul>
+</li>
+<li><a href="#registry">13. Registry handling</a></li>
+<li><a href="#authentication">14. Authentication</a>
+<ul class="sectlevel2">
+<li><a href="#pull-vs-push-authentication">14.1. Pull vs. Push Authentication</a></li>
+<li><a href="#openshift-authentication">14.2. OpenShift Authentication</a></li>
+<li><a href="#password-encryption">14.3. Password encryption</a></li>
+</ul>
+</li>
+<li><a href="#migration">15. Migration from version 2</a></li>
 </ul>
 </div>
 </div>
@@ -669,7 +688,7 @@ table.CodeRay td.code>pre{padding:0}
 <p>Depending on the operational mode, for building the actual image either a Docker daemon is contacted directly or an <a href="https://docs.openshift.com/enterprise/3.0/architecture/core_concepts/builds_and_image_streams.html#docker-build">OpenShift Docker Build</a> is performed.</p>
 </div>
 <div class="paragraph">
-<p>A special <a href="#fabric8:watch">[fabric8:watch]</a> goal allows for reacting on code changes and automatic recreation of images or copying new artifacts into running container.</p>
+<p>A special <a href="#fabric8:watch"><strong>fabric8:watch</strong></a> goal allows for reacting on code changes and automatic recreation of images or copying new artifacts into running container.</p>
 </div>
 <div class="paragraph">
 <p>These image related features are inherited from the <a href="https://github.com/fabric8io/docker-maven-plugin">fabric8io/docker-maven-plugin</a> which is transparently included in this plugin.</p>
@@ -1127,13 +1146,32 @@ available goals are described below.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="goals">3. Goals</h2>
+<h2 id="goals">3. Goals Overview</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This plugin supports the following goals, which are explained in the next sections:</p>
+<p>This plugin supports a rich set for providing a smooth Java developer experience. These goals can categorized in multiple groups:</p>
 </div>
-<table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 2. Plugin Goals</caption>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#goals-build">Build</a> goals are all about creating and managing Kubernetes and OpenShift build artifacts like Docker images or S2I builds.</p>
+</li>
+<li>
+<p><a href="#goals-develop">Development</a> goals target help not only in deploying resource descriptors to the development cluster but also to manage the lifecycle of the development cluster as well.</p>
+</li>
+<li>
+<p><a href="#goals-setup">Setup</a> goals are good for setting up your Kubernetes and OpenShift development environment as well for adding this plugin to your <code>pom.xml</code>.</p>
+</li>
+<li>
+<p><a href="#goals-shortcut">Shortcut</a> goals combine several other goals for convenience.</p>
+</li>
+<li>
+<p><a href="#goals-internal">Internal</a> goals are used by fabric8 project to maintain meta data of the supported applications but might be useful for other uses cases, too.</p>
+</li>
+</ul>
+</div>
+<table id="goals-build" class="tableblock frame-all grid-all spread">
+<caption class="title">Table 2. Build Goals</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -1162,12 +1200,136 @@ available goals are described below.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Create a <a href="https://github.com/kubernetes/helm/blob/master/docs/charts.md#the-chart-file-structure">Helm Chart</a></p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:app-catalog"><strong>fabric8:app-catalog</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Generate an app catalog</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:distro"><strong>fabric8:distro</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Generate an archive of Kubernetes and OpenShift templates</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 3. Development Goals</caption>
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Goal</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:deploy"><strong>fabric8:deploy</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Deploy resources decriptors to a cluster</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:watch">[fabric8:watch]</a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:undeploy"><strong>fabric8:undeploy</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Undeploy and remove resources decriptors from a cluster</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:start"><strong>fabric8:start</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Start the application which has been deployed previously</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:stop"><strong>fabric8:stop</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Stop the application which has been deployed previously</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:watch"><strong>fabric8:watch</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Watch for doing rebuilds and redeployments</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:log"><strong>fabric8:log</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Show the logs of the running application</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:debug"><strong>fabric8:debug</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable remote debugging</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 4. Shortcut Goals</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Goal</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:run"><strong>fabric8:run</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Run a complete development workflow cycle which means <code>fabric8:resource</code> ➜ <code>fabric8:build</code> ➜ <code>fabric8:deploy</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:resource-apply"><strong>fabric8:resource-apply</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Run <code>fabric8:resource</code> ➜ <code>fabric8:deploy</code></p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 5. Setup Goals</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Goal</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:setup"><strong>fabric8:setup</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add this plugin to a given <code>pom.xml</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:install"><strong>fabric8:install</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Install a development cluster (via gofabric8) along with client side tools (kubectl, oc)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:cluster-start"><strong>fabric8:cluster-start</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Start a development cluster</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:cluster-stop"><strong>fabric8:cluster-stop</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Stop a development cluster</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 6. Internal Goals</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Goal</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:import"><strong>fabric8:import</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Import the current project into the fabric8 console</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:helm-index"><strong>fabric8:helm-index</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Scan a Maven repository and create a Helm index</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:manifest-index"><strong>fabric8:manifest-index</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Scan a Maven index and create a Manifest index</p></td>
 </tr>
 </tbody>
 </table>
@@ -1175,7 +1337,7 @@ available goals are described below.</p>
 <p>Depending on whether the OpenShift or Kubernetes operational mode is used, the workflow and the performed actions differs :</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 3. Workflows</caption>
+<caption class="title">Table 7. Workflows</caption>
 <colgroup>
 <col style="width: 11.1111%;">
 <col style="width: 44.4444%;">
@@ -1246,569 +1408,13 @@ available goals are described below.</p>
 </tr>
 </tbody>
 </table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="goals-overview-build">4. Build Goals</h2>
+<div class="sectionbody">
 <div class="sect2">
-<h3 id="fabric8:setup">3.1. <strong>fabric8:setup</strong></h3>
-<div class="paragraph">
-<p>This goal is for setting up a maven project to use f8-m-p. It can be used to add the f8-m-p plugin within an existing <code>pom.xml</code> file under the <code>&lt;plugins&gt;</code> section
-but also to update an existing configuration.</p>
-</div>
-<div class="paragraph">
-<p>Remark : The plugin will also bound some goals as <code>resource, build</code> to Maven execution phases</p>
-</div>
-<div class="paragraph">
-<p>To use this goal type:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn io.fabric8:fabric8-maven-plugin:3.1.57:setup</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Now your <code>pom.xml</code> is modified.</p>
-</div>
-<div class="paragraph">
-<div class="title">Manual Setup</div>
-<p>Alternatively, if you prefer to do it all by hand, then add the following plugin definition to your <code>pom.xml</code> file:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
-  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
-  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>3.1.57<span class="tag">&lt;/version&gt;</span>
-
-  <span class="tag">&lt;configuration&gt;</span>
-     ....
-     <span class="tag">&lt;images&gt;</span>
-        <span class="comment">&lt;!-- A single's image configuration --&gt;</span>
-        <span class="tag">&lt;image&gt;</span>
-          ...
-          <span class="tag">&lt;build&gt;</span>
-           ....
-          <span class="tag">&lt;/build&gt;</span>
-        <span class="tag">&lt;/image&gt;</span>
-        ....
-     <span class="tag">&lt;/images&gt;</span>
-  <span class="tag">&lt;/configuration&gt;</span>
-
-  <span class="comment">&lt;!-- Connect fabric8:resource and fabric8:build to lifecycle phases --&gt;</span>
-  <span class="tag">&lt;executions&gt;</span>
-    <span class="tag">&lt;execution&gt;</span>
-       <span class="tag">&lt;id&gt;</span>fabric8<span class="tag">&lt;/id&gt;</span>
-       <span class="tag">&lt;goals&gt;</span>
-         <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
-         <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
-         <span class="tag">&lt;goal&gt;</span>helm<span class="tag">&lt;/goal&gt;</span>
-       <span class="tag">&lt;/goals&gt;</span>
-    <span class="tag">&lt;/execution&gt;</span>
-  <span class="tag">&lt;/executions&gt;</span>
-<span class="tag">&lt;/plugin&gt;</span></code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-This plugin definition includes the configuration to generate the Docker image.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>The setup can be influenced with the following configuration options:</p>
-</div>
-<table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 4. Setup configuration</caption>
-<colgroup>
-<col style="width: 14.2857%;">
-<col style="width: 71.4285%;">
-<col style="width: 14.2858%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Element</th>
-<th class="tableblock halign-left valign-top">Description</th>
-<th class="tableblock halign-left valign-top">Property</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>updateVersion</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> then an already existing plugin configuration will be updated. Otherwise an existing configuration is left untouched. Default is <code>true</code>.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>updateVersion</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>useVersionProperty</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Whether we should use a version property for the plugin which is defined in a dedicates <code>&lt;properties&gt;</code> section with the name <code>fabric8.maven.plugin.version</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>useVersionProperty</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>generateBackupPoms</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Controls whether a backup pom should be created when the <code>pom.xml</code> is modified. Ddefault is <code>true</code>.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>generateBackupPoms</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>backupPomFileName</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Name of the backup file to create. Default is <code>${basedir}/pom.xml-backup</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>backupPomFileName</code></p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="sect2">
-<h3 id="fabric8:cluster-start">3.2. <strong>fabric8:cluster-start</strong></h3>
-<div class="paragraph">
-<p>This goal will start a local kubernetes cluster for local development.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-start</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This will internally invoke the <a href="#fabric8:install"><strong>fabric8:install</strong></a> goal to ensure that all the required binaries are installed (like <a href="https://github.com/fabric8io/gofabric8/">gofabric8</a>
- and for kubernetes: <a href="http://kubernetes.io/docs/user-guide/kubectl-overview/">kubectl</a> and <a href="https://github.com/kubernetes/minikube">minikube</a> or for OpenShift: <a href="https://docs.openshift.com/enterprise/latest/cli_reference/basic_cli_operations.html">oc</a> and <a href="https://github.com/jimmidyson/minishift">minishift</a>)</p>
-</div>
-<div class="paragraph">
-<p>By default the binaries are installed in <code>~/.fabric8/bin</code></p>
-</div>
-<div class="sect3">
-<h4 id="using-openshift">3.2.1. Using OpenShift</h4>
-<div class="paragraph">
-<p>By default <code>fabric8:cluster-start</code> will use <code>minikube</code> to create a local single node kubernetes cluster. To specify OpenShift use:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-start -Dfabric8.cluster.kind=openshift</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This will then use <code>minishift</code> instead to create a single node local OpenShift cluster.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="configure-apps">3.2.2. Configure apps</h4>
-<div class="paragraph">
-<p>By default the cluster contains only the <a href="http://fabric8.io/guide/console.html">fabric8 developer console</a> as often developers laptops don&#8217;t have lots of RAM.</p>
-</div>
-<div class="paragraph">
-<p>If you want to deploy the full fabric8 platform (with Nexus, Jenkins, Gogs, JBoss Forge etc) then use the following command:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-start -Dfabric8.cluster.app=platform</code></pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="configure-cluster-resources">3.2.3. Configure cluster resources</h4>
-<div class="paragraph">
-<p>You can specify the number of CPUs or memory via additional parameters:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-start -Dfabric8.cluster.cpus=2 -Dfabric8.cluster.memory=4096</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The above configures <code>2</code> CPUs and <code>4Gb</code> of memory</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="stop">3.2.4. Stop</h4>
-<div class="paragraph">
-<p>You can stop the cluster at any time via <a href="#fabric8:cluster-stop"><strong>fabric8:cluster-stop</strong></a></p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-stop</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Once stopped you can restart again with all the images, resources and pods intact later on by running <code>fabric8:cluster-start</code> again</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-start</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="fabric8:cluster-stop">3.3. <strong>fabric8:cluster-stop</strong></h3>
-<div class="paragraph">
-<p>This goal will stop a local kubernetes cluster.</p>
-</div>
-<div class="paragraph">
-<p>This goal  stops the VM running the local cluster so it will free up resources on your machine (memory + CPU) though the VM is not destroyed; it can restarted.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-stop</code></pre>
-</div>
-</div>
-<div class="sect3">
-<h4 id="restarting">3.3.1. Restarting</h4>
-<div class="paragraph">
-<p>You can restart the cluster at any time via <a href="#fabric8:cluster-start"><strong>fabric8:cluster-start</strong></a></p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-start</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Once restarted all the images, resources and pods should come back</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="deleting">3.3.2. Deleting</h4>
-<div class="paragraph">
-<p>If you wish to destroy the cluster VM and all the data inside it then you can pass the <code>fabric8.cluster.delete</code> parameter with a value of <code>true</code>:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-stop -Dfabric8.cluster.delete=true</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="fabric8:run">3.4. <strong>fabric8:run</strong></h3>
-<div class="paragraph">
-<p>This goal builds your application (generating the docker image and kubernetes manifest), deploys it on the current kubernetes cluster then tails the logs of the first pod that starts until you hit <code>Ctrl+C</code> then the application is stopped.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:run</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>So this goal feels very much like the <code>run</code> goal in other maven plugins like spring-boot, tomcat, jetty, wildfly etc.</p>
-</div>
-<div class="paragraph">
-<p>You can think of this goal as being similar to performing:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:deploy
-mvn fabric8:logs
-...
-^C
-mvn fabric8:stop</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>If you wish to <a href="#fabric8:undeploy"><strong>fabric8:undeploy</strong></a> on the <code>Ctrl+C</code> keypress you can pass in the <code>fabric8.onExit</code> goal:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:run -Dfabric8.onExit=undeploy</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>If you prefer Ctrl-C to just terminate the log tailing but leave your app running you can use:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:run -Dfabric8.onExit=</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Though its maybe just simpler to do:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:deploy fabric8:log</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p><strong>Note</strong> that you must have the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> and <a href="#fabric8:build"><strong>fabric8:build</strong></a> goals bound to your executions in your pom.xml. e.g. like this:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
-  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
-  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>3.1.57<span class="tag">&lt;/version&gt;</span>
-
-  <span class="comment">&lt;!-- Connect fabric8:resource, fabric8:build and fabric8:helm to lifecycle phases --&gt;</span>
-  <span class="tag">&lt;executions&gt;</span>
-    <span class="tag">&lt;execution&gt;</span>
-       <span class="tag">&lt;id&gt;</span>fabric8<span class="tag">&lt;/id&gt;</span>
-       <span class="tag">&lt;goals&gt;</span>
-         <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
-         <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
-         <span class="tag">&lt;goal&gt;</span>helm<span class="tag">&lt;/goal&gt;</span>
-       <span class="tag">&lt;/goals&gt;</span>
-    <span class="tag">&lt;/execution&gt;</span>
-  <span class="tag">&lt;/executions&gt;</span>
-<span class="tag">&lt;/plugin&gt;</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="fabric8:deploy">3.5. <strong>fabric8:deploy</strong></h3>
-<div class="paragraph">
-<p>This is the main goal for building your docker image, generating the kubernetes resources and deploying them into the cluster.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:deploy</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Effectively this builds your project then invokes these goals:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><a href="#fabric8:build"><strong>fabric8:build</strong></a></p>
-</li>
-<li>
-<p><a href="#fabric8:resource-apply"><strong>fabric8:resource-apply</strong></a></p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>Note</strong> that you must have the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> and <a href="#fabric8:build"><strong>fabric8:build</strong></a> goals bound to your executions in your pom.xml. e.g. like this:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
-  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
-  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>3.1.57<span class="tag">&lt;/version&gt;</span>
-
-  <span class="comment">&lt;!-- Connect fabric8:resource, fabric8:build and fabric8:helm to lifecycle phases --&gt;</span>
-  <span class="tag">&lt;executions&gt;</span>
-    <span class="tag">&lt;execution&gt;</span>
-       <span class="tag">&lt;id&gt;</span>fabric8<span class="tag">&lt;/id&gt;</span>
-       <span class="tag">&lt;goals&gt;</span>
-         <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
-         <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
-         <span class="tag">&lt;goal&gt;</span>helm<span class="tag">&lt;/goal&gt;</span>
-       <span class="tag">&lt;/goals&gt;</span>
-    <span class="tag">&lt;/execution&gt;</span>
-  <span class="tag">&lt;/executions&gt;</span>
-<span class="tag">&lt;/plugin&gt;</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="fabric8:undeploy">3.6. <strong>fabric8:undeploy</strong></h3>
-<div class="paragraph">
-<p>This goal is for deleting the kubernetes resources that you deployed via the  <a href="#fabric8:run"><strong>fabric8:run</strong></a> or <a href="#fabric8:deploy"><strong>fabric8:deploy</strong></a> goals</p>
-</div>
-<div class="paragraph">
-<p>It iterates through all the resources generated by the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> goal and deletes them from your current kubernetes cluster.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:undeploy</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="fabric8:start">3.7. <strong>fabric8:start</strong></h3>
-<div class="paragraph">
-<p>This goal starts the app that you deployed via the <a href="#fabric8:deploy"><strong>fabric8:deploy</strong></a> goal and then subsequently stopped via <a href="#fabric8:stop"><strong>fabric8:stop</strong></a>.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:start</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This goal iterates through all scaleable resources generated by the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> goal and scales them to a <em>replica count</em> of`1` so that by the time this goal completes there should be a single running pod of this app.</p>
-</div>
-<div class="sect3">
-<h4 id="scaling">3.7.1. Scaling</h4>
-<div class="paragraph">
-<p>You can also use the <code>fabric8:start</code> goal to scale the number of pods running your application via passing the <code>fabric8.replicas</code> parameter:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:start  -Dfabric8.replicas=2</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>After the above you should see 2 pods running for your application.</p>
-</div>
-<div class="paragraph">
-<p>From the command line you can use the <code>kubectl</code> binary to watch pods come and go via the following:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">kubectl get pod -w</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The <code>-w</code> flag watches the resource and keeps updating the console as things change. Leaving off the <code>-w</code> just lists the current pods only then <code>kubect</code> terminates.</p>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="fabric8:stop">3.8. <strong>fabric8:stop</strong></h3>
-<div class="paragraph">
-<p>This goal stops the app that you deployed via the <a href="#fabric8:deploy"><strong>fabric8:deploy</strong></a> goal.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:stop</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This goal iterates through all scaleable resources generated by the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> goal and scales them to a <em>replica count</em> of <code>0</code> so that by the time this goal completes there are no running pods for this app.</p>
-</div>
-<div class="sect3">
-<h4 id="removing-all-resources">3.8.1. Removing all resources</h4>
-<div class="paragraph">
-<p>Note that if you wish to completely remove all resources for your application then use <a href="#fabric8:undeploy"><strong>fabric8:undeploy</strong></a> goal</p>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="fabric8:log">3.9. <strong>fabric8:log</strong></h3>
-<div class="paragraph">
-<p>This goal tails the log of the app that you deployed via the <a href="#fabric8:deploy"><strong>fabric8:deploy</strong></a> goal</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:log</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>You can then terminate the output by hitting <code>Ctrl+C</code></p>
-</div>
-<div class="paragraph">
-<p>If you wish to get the log of the app and then terminate immediately then try:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:log -Dfabric8.log.follow=false</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This lets you pipe the output into grep or some other tool</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:log -Dfabric8.log.follow=false | grep Exception</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>If your pod has multiple containers you can configure the container name to log via the <code>fabric8.log.container</code> property, otherwise it defaults to the first container:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:log -Dfabric8.log.container=foo</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="fabric8:debug">3.10. <strong>fabric8:debug</strong></h3>
-<div class="paragraph">
-<p>This goal enables debugging in your Java app and then port forwards from localhost to the latest running pod of your app so that you can easily debug your app from your Java IDE.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:debug</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Then follow the on screen instructions.</p>
-</div>
-<div class="paragraph">
-<p>The default debug port is <code>5005</code>. If you wish to change the local port to use for debugging then pass in the <code>fabric8.debug.port</code> parameter:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:debug -Dfabric8.debug.port=8000</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Then in your IDE you start a Remote debug execution using this remote port using localhost and you should be able to set breakpoints and step through your code.</p>
-</div>
-<div class="paragraph">
-<p>This lets you debug your apps while they are running inside a Kubernetes cluster - for example if you wish to debug a REST endpoint while another pod is invoking it.</p>
-</div>
-<div class="paragraph">
-<p>Debug is enabled via the <code>JAVA_ENABLE_DEBUG</code> environment variable being set to <code>true</code>. This environment variable is used for all the standard Java docker images used by Spring Boot, flat classpath and executable JAR projects and Wildfly Swarm. If you use your own custom docker base image you may wish to also respect this environment variable too to enable debugging.</p>
-</div>
-<div class="sect3">
-<h4 id="speeding-up-debugging">3.10.1. Speeding up debugging</h4>
-<div class="paragraph">
-<p>By default the <code>fabric8:debug</code> goal has to edit your Deployment to enable debugging then wait for a pod to start. It might be in development you frequently want to debug things and want to speed things up a bit.</p>
-</div>
-<div class="paragraph">
-<p>If so you can enable debug mode for each build via the <code>fabric8.debug.enabled</code> property.</p>
-</div>
-<div class="paragraph">
-<p>e.g. you can pass this property on the command line:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:deploy -Dfabric8.debug.enabled=true</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Or you can add something like this to your <code>~/.m2/settings.xml</code> file so that you enable debug mode for all maven builds on your laptop by using a profile :</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="preprocessor">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
-<span class="tag">&lt;settings&gt;</span>
-  <span class="tag">&lt;profiles&gt;</span>
-    <span class="tag">&lt;profile&gt;</span>
-      <span class="tag">&lt;id&gt;</span>enable-debug<span class="tag">&lt;/id&gt;</span>
-      <span class="tag">&lt;activation&gt;</span>
-        <span class="tag">&lt;activeByDefault&gt;</span>true<span class="tag">&lt;/activeByDefault&gt;</span>
-      <span class="tag">&lt;/activation&gt;</span>
-      <span class="tag">&lt;properties&gt;</span>
-        <span class="tag">&lt;fabric8.debug.enabled&gt;</span>true<span class="tag">&lt;/fabric8.debug.enabled&gt;</span>
-      <span class="tag">&lt;/properties&gt;</span>
-    <span class="tag">&lt;/profile&gt;</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Then whenever you type the <code>fabric8:debug</code> goal there is no need for the maven goal to edit the <code>Deployment</code> and wait for a pod to restart; we can immediately start debugging when you type:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:debug</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="fabric8:import">3.11. <strong>fabric8:import</strong></h3>
-<div class="paragraph">
-<p>This goal imports the current project into the [fabric8 console] so that you can browse the source code via the web interface and associate a [Continuous Delivery] pipeline with the project to start automatic Continuous Deployment.</p>
-</div>
-<div class="paragraph">
-<p>If you have a project on the file system then type:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:import</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This goal assumes you have already enabled the <code>fabric8 maven plugin</code>. If you have not done so already then invoke the <a href="#fabric8:setup"><strong>fabric8:setup</strong></a> goal first.</p>
-</div>
-<div class="paragraph">
-<p>If no git repository exists yet for the current project then a new git repository will be created and the current code pushed into it so that it can then be built with Jenkins.</p>
-</div>
-<div class="paragraph">
-<p>If the current project is a git clone from a remote repository then this goal will also try to setup a <code>Secret</code> in kubernetes to keep track of the user name and password/access code or in the case of SSH protocol with git the SSH key pairs.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="fabric8:resource">3.12. <strong>fabric8:resource</strong></h3>
+<h3 id="fabric8:resource">4.1. <strong>fabric8:resource</strong></h3>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -1822,7 +1428,7 @@ This is chapter is incomplete, but there is work in progress.
 </table>
 </div>
 <div class="sect3">
-<h4 id="resource-labels-annotations">3.12.1. Labels and Annotations</h4>
+<h4 id="resource-labels-annotations">4.1.1. Labels and Annotations</h4>
 <div class="paragraph">
 <p>Labels and annotations can be easily added to any resource object. This is best explained by an example.</p>
 </div>
@@ -1900,7 +1506,7 @@ This is chapter is incomplete, but there is work in progress.
 <p>The following subelements are possible for <code>&lt;labels&gt;</code> and <code>&lt;annotations&gt;</code> :</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 5. Label and annotation configuration</caption>
+<caption class="title">Table 8. Label and annotation configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -1937,59 +1543,7 @@ This is chapter is incomplete, but there is work in progress.
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:resource-apply">3.13. <strong>fabric8:resource-apply</strong></h3>
-<div class="paragraph">
-<p>This goal will generate the kubernetes resources via the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> goal and apply them into the current kubernetes cluster.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:resource-apply</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Its usually simpler to just use the <a href="#fabric8:deploy"><strong>fabric8:deploy</strong></a> goal which performs a build, creates the docker image and runs <code>fabric8:resource-apply</code>:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:deploy</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>However if you have built your code and docker image but find some issue with the generated manifests; you can update the configuration of the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> goal in your <code>pom.xml</code> or modify the YAML files in <code>src/main/fabric8</code> and then run:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:resource-apply</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Which will skip running unit tests and generating the docker build via <a href="#fabric8:build"><strong>fabric8:build</strong></a> but will only regenerate the manifests and apply them. This can help speed up the round trip time when fixing up resource generation issues.</p>
-</div>
-<div class="paragraph">
-<p><strong>Note</strong> to use this goal you must have the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> goal bound to your executions in your pom.xml. e.g. like this:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
-  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
-  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>3.1.57<span class="tag">&lt;/version&gt;</span>
-
-  <span class="comment">&lt;!-- Connect fabric8:resource to the lifecycle phases --&gt;</span>
-  <span class="tag">&lt;executions&gt;</span>
-    <span class="tag">&lt;execution&gt;</span>
-       <span class="tag">&lt;id&gt;</span>fabric8<span class="tag">&lt;/id&gt;</span>
-       <span class="tag">&lt;goals&gt;</span>
-         <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
-       <span class="tag">&lt;/goals&gt;</span>
-    <span class="tag">&lt;/execution&gt;</span>
-  <span class="tag">&lt;/executions&gt;</span>
-<span class="tag">&lt;/plugin&gt;</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="fabric8:build">3.14. <strong>fabric8:build</strong></h3>
+<h3 id="fabric8:build">4.2. <strong>fabric8:build</strong></h3>
 <div class="paragraph">
 <p>This goal is for building Docker images. Images can be build in two ways which depend on the <code>mode</code> (property: <code>fabric8.mode</code>). This mode can have be either <code>kubernetes</code> for a standard Docker build (the default) or <code>openshift</code> for an OpenShift build.</p>
 </div>
@@ -1997,7 +1551,7 @@ This is chapter is incomplete, but there is work in progress.
 <p>By default the mode is set to <code>auto</code>. In this case the plugin tries to detect which kind of build should be performed by contaction the API server. If this fails or if no cluster access is conigured e.g. with <code>oc login</code> then the mode is set to <code>kubernetes</code>.</p>
 </div>
 <div class="sect3">
-<h4 id="build-kubernetes">3.14.1. Kubernetes Build</h4>
+<h4 id="build-kubernetes">4.2.1. Kubernetes Build</h4>
 <div class="paragraph">
 <p>If the mode is set to <code>kubernetes</code> then a normal Docker build is performed. The connection configuration to access the Docker daemon is described in <a href="#access-configuration">Access Configuration</a>.</p>
 </div>
@@ -2006,7 +1560,7 @@ This is chapter is incomplete, but there is work in progress.
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-openshift">3.14.2. OpenShift Build</h4>
+<h4 id="build-openshift">4.2.2. OpenShift Build</h4>
 <div class="paragraph">
 <p>For the mode <code>openshift</code> OpenShift specific <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html">Builds</a> can be performed. These are so called <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html">Binary Source</a> builds ("binary builds" in short), where the data specified with the <a href="#build-configuration">build configuration</a>  is send directly to OpenShift as a binary archive.</p>
 </div>
@@ -2014,7 +1568,7 @@ This is chapter is incomplete, but there is work in progress.
 <p>There are two kind of binary builds supporte by this plugin, which can be selected with the configuration option <code>buildStrategy</code> (property <code>fabric8.build.strategy</code>)</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 6. Build Strategies</caption>
+<caption class="title">Table 9. Build Strategies</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -2062,7 +1616,7 @@ This is chapter is incomplete, but there is work in progress.
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-goal-configuration">3.14.3. Configuration</h4>
+<h4 id="build-goal-configuration">4.2.3. Configuration</h4>
 <div class="paragraph">
 <p>The following sections describe the usual configuration, which is similar to the build configuration used in the <a href="https://dmp.fabric8.io">docker-maven-plugin</a>.</p>
 </div>
@@ -2073,7 +1627,7 @@ This is chapter is incomplete, but there is work in progress.
 <p>Global configuration parameters specify overall behavior common for all images to build. Some of the configuration options are shared with other goals.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 7. Global configuration</caption>
+<caption class="title">Table 10. Global configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2308,7 +1862,7 @@ the URL is:</p>
 </table>
 </div>
 <div class="sect3">
-<h4 id="image-configuration">3.14.4. Image Configuration</h4>
+<h4 id="image-configuration">4.2.4. Image Configuration</h4>
 <div class="paragraph">
 <p>The configuration how images should be created a defined in a dedicated <code>&lt;images&gt;</code> sections. These are specified for each image within the <code>&lt;images&gt;</code> element of the configuration with one <code>&lt;image&gt;</code> element per image to use.</p>
 </div>
@@ -2316,7 +1870,7 @@ the URL is:</p>
 <p>The <code>&lt;image&gt;</code> element can contain the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 8. Image Configuration</caption>
+<caption class="title">Table 11. Image Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2354,7 +1908,7 @@ linking images together or for specifying it with the global <strong>image</stro
 <p>When specifying the name you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 9. Placeholders</caption>
+<caption class="title">Table 12. Placeholders</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2431,7 +1985,7 @@ linking images together or for specifying it with the global <strong>image</stro
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-configuration">3.14.5. Build Configuration</h4>
+<h4 id="build-configuration">4.2.5. Build Configuration</h4>
 <div id="build-overview" class="paragraph">
 <p>There are two different modes how Images can be built:</p>
 </div>
@@ -2507,7 +2061,7 @@ of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
 <code>&lt;dockerFile&gt;</code> the following configuration options are available:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 10. Build configuration</caption>
+<caption class="title">Table 13. Build configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2645,12 +2199,12 @@ remote API.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-assembly">3.14.6. Assembly</h4>
+<h4 id="build-assembly">4.2.6. Assembly</h4>
 <div class="paragraph">
 <p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 11. Assembly Configuration</caption>
+<caption class="title">Table 14. Assembly Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2787,7 +2341,7 @@ predefined assembly descriptor. The following symbolic names can be
 used for <code>descriptorRef</code>:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 12. Predefined Assembly Descriptors</caption>
+<caption class="title">Table 15. Predefined Assembly Descriptors</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -2899,7 +2453,7 @@ possible to change the name of the final build artifact with the following:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="misc-env">3.14.7. Environment and Labels</h4>
+<h4 id="misc-env">4.2.7. Environment and Labels</h4>
 <div class="paragraph">
 <p>When creating a container one or more environment variables can be set via configuration with the <code>env</code> parameter</p>
 </div>
@@ -2933,7 +2487,7 @@ possible to change the name of the final build artifact with the following:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="misc-startup">3.14.8. Startup Arguments</h4>
+<h4 id="misc-startup">4.2.8. Startup Arguments</h4>
 <div class="paragraph">
 <p>Using <code>entryPoint</code> and <code>cmd</code> it is possible to specify the <a href="https://docs.docker.com/reference/builder/#entrypoint">entry point</a>
 or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a container.</p>
@@ -2953,7 +2507,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <p>A entry point or command can be specified in two alternative formats:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 13. Entrypoint and Command Configuration</caption>
+<caption class="title">Table 16. Entrypoint and Command Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3037,7 +2591,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-buildargs">3.14.9. Build Args</h4>
+<h4 id="build-buildargs">4.2.9. Build Args</h4>
 <div class="paragraph">
 <p>As described in section <a href="#build-configuration">Configuration</a> for external Dockerfiles <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg">Docker build arg</a> can be used. In addition to the
 configuration within the plugin configuration you can also use properties to specify them:</p>
@@ -3065,7 +2619,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:push">3.15. <strong>fabric8:push</strong></h3>
+<h3 id="fabric8:push">4.3. <strong>fabric8:push</strong></h3>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -3083,7 +2637,7 @@ Section needs review and rearrangments
 the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code> with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 14. Push options</caption>
+<caption class="title">Table 17. Push options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -3117,24 +2671,7 @@ more details.</p></td>
 </table>
 </div>
 <div class="sect2">
-<h3 id="fabric8:install">3.16. <strong>fabric8:install</strong></h3>
-<div class="paragraph">
-<p>Ensures that the fabric8 binaries are installed on the current machine such as <a href="https://github.com/fabric8io/gofabric8/">gofabric8</a> and for kubernetes: <a href="http://kubernetes.io/docs/user-guide/kubectl-overview/">kubectl</a> and <a href="https://github.com/kubernetes/minikube">minikube</a> or for OpenShift: <a href="https://docs.openshift.com/enterprise/latest/cli_reference/basic_cli_operations.html">oc</a> and <a href="https://github.com/jimmidyson/minishift">minishift</a></p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:install</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>An alternative is to just run the <a href="#fabric8:cluster-start"><strong>fabric8:cluster-start</strong></a> goal to install the binaries and start a local cluster</p>
-</div>
-<div class="paragraph">
-<p>By default the binaries are installed in <code>~/.fabric8/bin</code></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="fabric8:helm">3.17. <strong>fabric8:helm</strong></h3>
+<h3 id="fabric8:helm">4.4. <strong>fabric8:helm</strong></h3>
 <div class="paragraph">
 <p>This goal is for creating <a href="https://github.com/kubernetes/helm/blob/master/docs/charts.md#the-chart-file-structure">Helm charts</a> for your Maven project so that you can install, update or delete your app in Kubernetes using <a href="https://github.com/kubernetes/helm">Helm</a>.</p>
 </div>
@@ -3170,7 +2707,7 @@ more details.</p></td>
 <p>This configuration section know the following subelements in order to configure your Helm chart.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 15. Helm configuration</caption>
+<caption class="title">Table 18. Helm configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -3254,13 +2791,13 @@ more details.</p></td>
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:helm-index">3.18. <strong>fabric8:helm-index</strong></h3>
+<h3 id="fabric8:distro">4.5. <strong>fabric8:distro</strong></h3>
 <div class="paragraph">
-<p>Generates a Manifest index file by querying a maven repository to find all the Kubernetes and OpenShift manifests available and their releases.</p>
+<p>Generates a tarball of all the dependent kubernetes and openshift templates</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:app-catalog">3.19. <strong>fabric8:app-catalog</strong></h3>
+<h3 id="fabric8:app-catalog">4.6. <strong>fabric8:app-catalog</strong></h3>
 <div class="paragraph">
 <p>Generates an App Catalog for kubernetes and openshift</p>
 </div>
@@ -3271,16 +2808,912 @@ more details.</p></td>
 <p>For Kubernetes this means checking if there is a kubernetes <code>template.yaml</code> and if so wrapping that in a <code>ConfigMap</code> otherwise it uses the regular <code>kubernetes.yaml</code> file.</p>
 </div>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="goals-overview-develop">5. Development Goals</h2>
+<div class="sectionbody">
 <div class="sect2">
-<h3 id="fabric8:distro">3.20. <strong>fabric8:distro</strong></h3>
+<h3 id="fabric8:deploy">5.1. <strong>fabric8:deploy</strong></h3>
 <div class="paragraph">
-<p>Generates a tarball of all the dependent kubernetes and openshift templates</p>
+<p>This is the main goal for building your docker image, generating the kubernetes resources and deploying them into the cluster.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:deploy</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Effectively this builds your project then invokes these goals:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#fabric8:build"><strong>fabric8:build</strong></a></p>
+</li>
+<li>
+<p><a href="#fabric8:resource-apply"><strong>fabric8:resource-apply</strong></a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Note</strong> that you must have the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> and <a href="#fabric8:build"><strong>fabric8:build</strong></a> goals bound to your executions in your pom.xml. e.g. like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.1.57<span class="tag">&lt;/version&gt;</span>
+
+  <span class="comment">&lt;!-- Connect fabric8:resource, fabric8:build and fabric8:helm to lifecycle phases --&gt;</span>
+  <span class="tag">&lt;executions&gt;</span>
+    <span class="tag">&lt;execution&gt;</span>
+       <span class="tag">&lt;id&gt;</span>fabric8<span class="tag">&lt;/id&gt;</span>
+       <span class="tag">&lt;goals&gt;</span>
+         <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
+         <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
+         <span class="tag">&lt;goal&gt;</span>helm<span class="tag">&lt;/goal&gt;</span>
+       <span class="tag">&lt;/goals&gt;</span>
+    <span class="tag">&lt;/execution&gt;</span>
+  <span class="tag">&lt;/executions&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fabric8:undeploy">5.2. <strong>fabric8:undeploy</strong></h3>
+<div class="paragraph">
+<p>This goal is for deleting the kubernetes resources that you deployed via the  <a href="#fabric8:run"><strong>fabric8:run</strong></a> or <a href="#fabric8:deploy"><strong>fabric8:deploy</strong></a> goals</p>
+</div>
+<div class="paragraph">
+<p>It iterates through all the resources generated by the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> goal and deletes them from your current kubernetes cluster.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:undeploy</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fabric8:start">5.3. <strong>fabric8:start</strong></h3>
+<div class="paragraph">
+<p>This goal starts the app that you deployed via the <a href="#fabric8:deploy"><strong>fabric8:deploy</strong></a> goal and then subsequently stopped via <a href="#fabric8:stop"><strong>fabric8:stop</strong></a>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:start</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This goal iterates through all scaleable resources generated by the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> goal and scales them to a <em>replica count</em> of`1` so that by the time this goal completes there should be a single running pod of this app.</p>
+</div>
+<div class="sect3">
+<h4 id="scaling">5.3.1. Scaling</h4>
+<div class="paragraph">
+<p>You can also use the <code>fabric8:start</code> goal to scale the number of pods running your application via passing the <code>fabric8.replicas</code> parameter:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:start  -Dfabric8.replicas=2</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>After the above you should see 2 pods running for your application.</p>
+</div>
+<div class="paragraph">
+<p>From the command line you can use the <code>kubectl</code> binary to watch pods come and go via the following:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">kubectl get pod -w</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>-w</code> flag watches the resource and keeps updating the console as things change. Leaving off the <code>-w</code> just lists the current pods only then <code>kubect</code> terminates.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fabric8:stop">5.4. <strong>fabric8:stop</strong></h3>
+<div class="paragraph">
+<p>This goal stops the app that you deployed via the <a href="#fabric8:deploy"><strong>fabric8:deploy</strong></a> goal.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:stop</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This goal iterates through all scaleable resources generated by the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> goal and scales them to a <em>replica count</em> of <code>0</code> so that by the time this goal completes there are no running pods for this app.</p>
+</div>
+<div class="sect3">
+<h4 id="removing-all-resources">5.4.1. Removing all resources</h4>
+<div class="paragraph">
+<p>Note that if you wish to completely remove all resources for your application then use <a href="#fabric8:undeploy"><strong>fabric8:undeploy</strong></a> goal</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fabric8:log">5.5. <strong>fabric8:log</strong></h3>
+<div class="paragraph">
+<p>This goal tails the log of the app that you deployed via the <a href="#fabric8:deploy"><strong>fabric8:deploy</strong></a> goal</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:log</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can then terminate the output by hitting <code>Ctrl+C</code></p>
+</div>
+<div class="paragraph">
+<p>If you wish to get the log of the app and then terminate immediately then try:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:log -Dfabric8.log.follow=false</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This lets you pipe the output into grep or some other tool</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:log -Dfabric8.log.follow=false | grep Exception</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If your pod has multiple containers you can configure the container name to log via the <code>fabric8.log.container</code> property, otherwise it defaults to the first container:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:log -Dfabric8.log.container=foo</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fabric8:debug">5.6. <strong>fabric8:debug</strong></h3>
+<div class="paragraph">
+<p>This goal enables debugging in your Java app and then port forwards from localhost to the latest running pod of your app so that you can easily debug your app from your Java IDE.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:debug</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then follow the on screen instructions.</p>
+</div>
+<div class="paragraph">
+<p>The default debug port is <code>5005</code>. If you wish to change the local port to use for debugging then pass in the <code>fabric8.debug.port</code> parameter:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:debug -Dfabric8.debug.port=8000</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then in your IDE you start a Remote debug execution using this remote port using localhost and you should be able to set breakpoints and step through your code.</p>
+</div>
+<div class="paragraph">
+<p>This lets you debug your apps while they are running inside a Kubernetes cluster - for example if you wish to debug a REST endpoint while another pod is invoking it.</p>
+</div>
+<div class="paragraph">
+<p>Debug is enabled via the <code>JAVA_ENABLE_DEBUG</code> environment variable being set to <code>true</code>. This environment variable is used for all the standard Java docker images used by Spring Boot, flat classpath and executable JAR projects and Wildfly Swarm. If you use your own custom docker base image you may wish to also respect this environment variable too to enable debugging.</p>
+</div>
+<div class="sect3">
+<h4 id="speeding-up-debugging">5.6.1. Speeding up debugging</h4>
+<div class="paragraph">
+<p>By default the <code>fabric8:debug</code> goal has to edit your Deployment to enable debugging then wait for a pod to start. It might be in development you frequently want to debug things and want to speed things up a bit.</p>
+</div>
+<div class="paragraph">
+<p>If so you can enable debug mode for each build via the <code>fabric8.debug.enabled</code> property.</p>
+</div>
+<div class="paragraph">
+<p>e.g. you can pass this property on the command line:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:deploy -Dfabric8.debug.enabled=true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Or you can add something like this to your <code>~/.m2/settings.xml</code> file so that you enable debug mode for all maven builds on your laptop by using a profile :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="preprocessor">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
+<span class="tag">&lt;settings&gt;</span>
+  <span class="tag">&lt;profiles&gt;</span>
+    <span class="tag">&lt;profile&gt;</span>
+      <span class="tag">&lt;id&gt;</span>enable-debug<span class="tag">&lt;/id&gt;</span>
+      <span class="tag">&lt;activation&gt;</span>
+        <span class="tag">&lt;activeByDefault&gt;</span>true<span class="tag">&lt;/activeByDefault&gt;</span>
+      <span class="tag">&lt;/activation&gt;</span>
+      <span class="tag">&lt;properties&gt;</span>
+        <span class="tag">&lt;fabric8.debug.enabled&gt;</span>true<span class="tag">&lt;/fabric8.debug.enabled&gt;</span>
+      <span class="tag">&lt;/properties&gt;</span>
+    <span class="tag">&lt;/profile&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then whenever you type the <code>fabric8:debug</code> goal there is no need for the maven goal to edit the <code>Deployment</code> and wait for a pod to restart; we can immediately start debugging when you type:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:debug</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fabric8:watch">5.7. <strong>fabric8:watch</strong></h3>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Section needs review and rearrangments
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>When developing and testing applications you will often have to rebuild Docker images and restart containers. Typing <code>fabric8:build</code> and <code>fabric8:start</code> all the time is cumbersome. With <code>fabric8:watch</code> you can enable automatic rebuilding of images and restarting of containers in case of updates.</p>
+</div>
+<div class="paragraph">
+<p><code>fabric8:watch</code> is the top-level goal which perform these tasks. There are two watch modes, which can be specified in multiple ways:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>build</code> : Automatically rebuild one or more Docker images when one of the files selected by an assembly changes. This works for all files included directly in <code>assembly.xml</code> but also for arbitrary dependencies.</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">$ mvn package fabric8:build fabric8:watch -Ddocker.watchMode=build</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This mode works only when there is a <code>&lt;build&gt;</code> section in an image configuration. Otherwise no automatically build will be triggered for an image with only a <code>&lt;run&gt;</code> section. Note that you need the <code>package</code> phase to be executed before otherwise any artifact created by this build can not be included into the assembly. As described in the section about <code>fabric8:start</code> this is a Maven limitation.
+* <code>run</code> : Automatically restart container when their associated images changes. This is useful if you pull a new version of an image externally or especially in combination with the <code>build</code> mode to restart containers when their image has been automatically rebuilt. This mode works reliably only when used together with <code>fabric8:start</code>.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">$ mvn fabric8:start fabric8:watch -Ddocker.watchMode=run</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>both</code> : Enables both <code>build</code> and <code>run</code>. This is the default.</p>
+</li>
+<li>
+<p><code>none</code> : Image is completely ignored for watching.</p>
+</li>
+<li>
+<p><code>copy</code> : Copy changed files into the running container. This is the fast way to update a container, however the target container must support hot deply, too so that it makes sense. Most application servers like Tomcat supports this.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The mode can also be <code>both</code> or <code>none</code> to select both or none of these variants, respectively. The default is <code>both</code>.</p>
+</div>
+<div class="paragraph">
+<p><code>fabric8:watch</code> will run forever until it is interrupted with <code>CTRL-C</code> after which it will stop all containers. Depending on the configuration parameters <code>keepContainer</code> and <code>removeVolumes</code> the stopped containers with their volumes will be removed, too.</p>
+</div>
+<div class="paragraph">
+<p>When an image is removed while watching it, error messages will be printed out periodically.  So don&#8217;t do that ;-)</p>
+</div>
+<div class="paragraph">
+<p>Dynamically assigned ports stay stable in that they won&#8217;t change after a container has been stopped and a new container is created and started. The new container will try to allocate the same ports as the previous container.</p>
+</div>
+<div class="paragraph">
+<p>If containers are linked together network or volume wise, and you update a container which other containers dependent on, the dependant containers are not restarted for now. E.g. when you have a "service" container accessing a "db" container and the "db" container is updated, then you "service" container will fail until it is restarted, too.</p>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="paragraph">
+<p>A future version of this plugin will take care of restarting
+these containers, too (in the right order), but for now you would have
+to do this manually.</p>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>This maven goal can be configured with the following top-level parameters:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 19. Watch configuration</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 71.4285%;">
+<col style="width: 14.2858%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchMode</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Watch mode specifies what should be watched</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>build</code> : Watch changes in the assembly and rebuild the image in
+case</p>
+</li>
+<li>
+<p><code>run</code> : Watch a container&#8217;s image whether it changes and restart
+the container in case</p>
+</li>
+<li>
+<p><code>copy</code> : Changed files are copied into the container. The container can be either running or might be already exited (when used as a <em>data container</em> linked into a <em>platform container</em>). Requires Docker &gt;= 1.8.</p>
+</li>
+<li>
+<p><code>both</code> : <code>build</code> and <code>run</code> combined</p>
+</li>
+<li>
+<p><code>none</code> : Neither watching for builds nor images. This is useful if
+you use prefactored images which won&#8217;t be changed and hence don&#8217;t
+need any watching. <code>none</code> is best used on an per image level, see
+below how this can be specified.</p>
+</li>
+</ul>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.watchMode</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchInterval</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Interval in milliseconds how  often to check for changes, which must be larger than 100ms. The default is 5 seconds.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.watchInterval</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchPostGoal</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A maven goal which should be called if a rebuild or a restart has been performed. This goal must have the format <code>&lt;pluginGroupId&gt;:&lt;pluginArtifactId&gt;:&lt;goal&gt;</code> and the plugin must be configured in the <code>pom.xml</code>. For example a post-goal <code>io.fabric8:fabric8:delete-pods</code> will trigger the deletion of PODs in Kubernetes which in turn triggers are new start of a POD within the Kubernetes cluster. The value specified here is the the default post goal which can be overridden by <code>&lt;postGoal&gt;</code> in a <code>&lt;watch&gt;</code> configuration.</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchPostExec</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A command which is executed within the container after files are copied into this container when <code>watchMode</code> is <code>copy</code>. Note that this container must be running.</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keepRunning</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> all container will be kept running after <code>fabric8:watch</code> has been stopped. By default this is set to <code>false</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.keepRunning</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keepContainer</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">As for <code>fabric8:stop</code>, if this is set to <code>true</code> (and <code>keepRunning</code> is disabled) then all container will be removed after they have been stopped. The default is <code>true</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.keepContainer</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>removeVolumes</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">if set to <code>true</code> will remove any volumes associated to the container as well. This option will be ignored if either <code>keepContainer</code> or <code>keepRunning</code> are <code>true</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.removeVolumes</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Image specific watch configuration goes into an extra image-level <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). The following parameters are recognized:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 20. Watch configuration for a single image</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>mode</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Each image can be configured for having individual watch mode. These take precedence of the global watch mode. The mode specified in this configuration takes precedence over the globally specified mode.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>interval</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Watch interval can be specified in milliseconds on image level. If given this will override the global watch interval.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>postGoal</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Post Maven plugin goal after a rebuild or restart. The value here must have the format <code>&lt;pluginGroupId&gt;:&lt;pluginArtifactId&gt;:&lt;goal&gt;</code> (e.g. <code>io.fabric8:fabric8:delete-pods</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>postExec</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Command to execute after files are copied into a
+running container when <code>mode</code> is <code>copy</code>.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Here is an example how the watch mode can be tuned:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
+   <span class="comment">&lt;!-- Check every 10 seconds by default --&gt;</span>
+   <span class="tag">&lt;watchInterval&gt;</span>10000<span class="tag">&lt;/watchInterval&gt;</span>
+   <span class="comment">&lt;!-- Watch for doing rebuilds and restarts --&gt;</span>
+   <span class="tag">&lt;watchMode&gt;</span>both<span class="tag">&lt;/watch&gt;</span>
+   <span class="tag">&lt;images&gt;</span>
+      <span class="tag">&lt;image&gt;</span>
+         <span class="comment">&lt;!-- Service checks every 5 seconds --&gt;</span>
+         <span class="tag">&lt;alias&gt;</span>service<span class="tag">&lt;/alias&gt;</span>
+         ....
+         <span class="tag">&lt;watch&gt;</span>
+            <span class="tag">&lt;interval&gt;</span>5000<span class="tag">&lt;/interval&gt;</span>
+         <span class="tag">&lt;/watch&gt;</span>
+      <span class="tag">&lt;/image&gt;</span>
+      <span class="tag">&lt;image&gt;</span>
+         <span class="comment">&lt;!-- Database needs no watching --&gt;</span>
+         <span class="tag">&lt;alias&gt;</span>db<span class="tag">&lt;alias&gt;</span>
+         ....
+         <span class="tag">&lt;watch&gt;</span>
+            <span class="tag">&lt;mode&gt;</span>none<span class="tag">&lt;/mode&gt;</span>
+         <span class="tag">&lt;/watch&gt;</span>
+      <span class="tag">&lt;/image&gt;</span>
+      ....
+   <span class="tag">&lt;/images&gt;</span>
+<span class="tag">&lt;/configuration&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Given this configuration</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn package fabric8:build fabric8:start fabric8:watch</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can build the service image, start up all containers and go into a watch loop. Again, you need the <code>package</code> phase in order that the assembly can find the artifact build by this project. This is a Maven limitation. The <code>db</code> image will never be watch since it assumed to not change while watching.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="generators">4. Generators</h2>
+<h2 id="goals-overview-shortcut">6. Shortcut Goals</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="fabric8:run">6.1. <strong>fabric8:run</strong></h3>
+<div class="paragraph">
+<p>This goal builds your application (generating the docker image and kubernetes manifest), deploys it on the current kubernetes cluster then tails the logs of the first pod that starts until you hit <code>Ctrl+C</code> then the application is stopped.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:run</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>So this goal feels very much like the <code>run</code> goal in other maven plugins like spring-boot, tomcat, jetty, wildfly etc.</p>
+</div>
+<div class="paragraph">
+<p>You can think of this goal as being similar to performing:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:deploy
+mvn fabric8:logs
+...
+^C
+mvn fabric8:stop</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you wish to <a href="#fabric8:undeploy"><strong>fabric8:undeploy</strong></a> on the <code>Ctrl+C</code> keypress you can pass in the <code>fabric8.onExit</code> goal:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:run -Dfabric8.onExit=undeploy</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you prefer Ctrl-C to just terminate the log tailing but leave your app running you can use:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:run -Dfabric8.onExit=</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Though its maybe just simpler to do:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:deploy fabric8:log</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Note</strong> that you must have the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> and <a href="#fabric8:build"><strong>fabric8:build</strong></a> goals bound to your executions in your pom.xml. e.g. like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.1.57<span class="tag">&lt;/version&gt;</span>
+
+  <span class="comment">&lt;!-- Connect fabric8:resource, fabric8:build and fabric8:helm to lifecycle phases --&gt;</span>
+  <span class="tag">&lt;executions&gt;</span>
+    <span class="tag">&lt;execution&gt;</span>
+       <span class="tag">&lt;id&gt;</span>fabric8<span class="tag">&lt;/id&gt;</span>
+       <span class="tag">&lt;goals&gt;</span>
+         <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
+         <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
+         <span class="tag">&lt;goal&gt;</span>helm<span class="tag">&lt;/goal&gt;</span>
+       <span class="tag">&lt;/goals&gt;</span>
+    <span class="tag">&lt;/execution&gt;</span>
+  <span class="tag">&lt;/executions&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fabric8:resource-apply">6.2. <strong>fabric8:resource-apply</strong></h3>
+<div class="paragraph">
+<p>This goal will generate the kubernetes resources via the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> goal and apply them into the current kubernetes cluster.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:resource-apply</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Its usually simpler to just use the <a href="#fabric8:deploy"><strong>fabric8:deploy</strong></a> goal which performs a build, creates the docker image and runs <code>fabric8:resource-apply</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:deploy</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>However if you have built your code and docker image but find some issue with the generated manifests; you can update the configuration of the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> goal in your <code>pom.xml</code> or modify the YAML files in <code>src/main/fabric8</code> and then run:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:resource-apply</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Which will skip running unit tests and generating the docker build via <a href="#fabric8:build"><strong>fabric8:build</strong></a> but will only regenerate the manifests and apply them. This can help speed up the round trip time when fixing up resource generation issues.</p>
+</div>
+<div class="paragraph">
+<p><strong>Note</strong> to use this goal you must have the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> goal bound to your executions in your pom.xml. e.g. like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.1.57<span class="tag">&lt;/version&gt;</span>
+
+  <span class="comment">&lt;!-- Connect fabric8:resource to the lifecycle phases --&gt;</span>
+  <span class="tag">&lt;executions&gt;</span>
+    <span class="tag">&lt;execution&gt;</span>
+       <span class="tag">&lt;id&gt;</span>fabric8<span class="tag">&lt;/id&gt;</span>
+       <span class="tag">&lt;goals&gt;</span>
+         <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
+       <span class="tag">&lt;/goals&gt;</span>
+    <span class="tag">&lt;/execution&gt;</span>
+  <span class="tag">&lt;/executions&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="goals-overview-setup">7. Setup Goals</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="fabric8:setup">7.1. <strong>fabric8:setup</strong></h3>
+<div class="paragraph">
+<p>This goal is for setting up a maven project to use f8-m-p. It can be used to add the f8-m-p plugin within an existing <code>pom.xml</code> file under the <code>&lt;plugins&gt;</code> section
+but also to update an existing configuration.</p>
+</div>
+<div class="paragraph">
+<p>Remark : The plugin will also bound some goals as <code>resource, build</code> to Maven execution phases</p>
+</div>
+<div class="paragraph">
+<p>To use this goal type:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn io.fabric8:fabric8-maven-plugin:3.1.57:setup</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now your <code>pom.xml</code> is modified.</p>
+</div>
+<div class="paragraph">
+<div class="title">Manual Setup</div>
+<p>Alternatively, if you prefer to do it all by hand, then add the following plugin definition to your <code>pom.xml</code> file:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.1.57<span class="tag">&lt;/version&gt;</span>
+
+  <span class="tag">&lt;configuration&gt;</span>
+     ....
+     <span class="tag">&lt;images&gt;</span>
+        <span class="comment">&lt;!-- A single's image configuration --&gt;</span>
+        <span class="tag">&lt;image&gt;</span>
+          ...
+          <span class="tag">&lt;build&gt;</span>
+           ....
+          <span class="tag">&lt;/build&gt;</span>
+        <span class="tag">&lt;/image&gt;</span>
+        ....
+     <span class="tag">&lt;/images&gt;</span>
+  <span class="tag">&lt;/configuration&gt;</span>
+
+  <span class="comment">&lt;!-- Connect fabric8:resource and fabric8:build to lifecycle phases --&gt;</span>
+  <span class="tag">&lt;executions&gt;</span>
+    <span class="tag">&lt;execution&gt;</span>
+       <span class="tag">&lt;id&gt;</span>fabric8<span class="tag">&lt;/id&gt;</span>
+       <span class="tag">&lt;goals&gt;</span>
+         <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
+         <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
+         <span class="tag">&lt;goal&gt;</span>helm<span class="tag">&lt;/goal&gt;</span>
+       <span class="tag">&lt;/goals&gt;</span>
+    <span class="tag">&lt;/execution&gt;</span>
+  <span class="tag">&lt;/executions&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This plugin definition includes the configuration to generate the Docker image.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The setup can be influenced with the following configuration options:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 21. Setup configuration</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 71.4285%;">
+<col style="width: 14.2858%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>updateVersion</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> then an already existing plugin configuration will be updated. Otherwise an existing configuration is left untouched. Default is <code>true</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>updateVersion</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>useVersionProperty</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Whether we should use a version property for the plugin which is defined in a dedicates <code>&lt;properties&gt;</code> section with the name <code>fabric8.maven.plugin.version</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>useVersionProperty</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>generateBackupPoms</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Controls whether a backup pom should be created when the <code>pom.xml</code> is modified. Ddefault is <code>true</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>generateBackupPoms</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>backupPomFileName</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of the backup file to create. Default is <code>${basedir}/pom.xml-backup</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>backupPomFileName</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="fabric8:install">7.2. <strong>fabric8:install</strong></h3>
+<div class="paragraph">
+<p>Ensures that the fabric8 binaries are installed on the current machine such as <a href="https://github.com/fabric8io/gofabric8/">gofabric8</a> and for kubernetes: <a href="http://kubernetes.io/docs/user-guide/kubectl-overview/">kubectl</a> and <a href="https://github.com/kubernetes/minikube">minikube</a> or for OpenShift: <a href="https://docs.openshift.com/enterprise/latest/cli_reference/basic_cli_operations.html">oc</a> and <a href="https://github.com/jimmidyson/minishift">minishift</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:install</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>An alternative is to just run the <a href="#fabric8:cluster-start"><strong>fabric8:cluster-start</strong></a> goal to install the binaries and start a local cluster</p>
+</div>
+<div class="paragraph">
+<p>By default the binaries are installed in <code>~/.fabric8/bin</code></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fabric8:cluster-start">7.3. <strong>fabric8:cluster-start</strong></h3>
+<div class="paragraph">
+<p>This goal will start a local kubernetes cluster for local development.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-start</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This will internally invoke the <a href="#fabric8:install"><strong>fabric8:install</strong></a> goal to ensure that all the required binaries are installed (like <a href="https://github.com/fabric8io/gofabric8/">gofabric8</a>
+ and for kubernetes: <a href="http://kubernetes.io/docs/user-guide/kubectl-overview/">kubectl</a> and <a href="https://github.com/kubernetes/minikube">minikube</a> or for OpenShift: <a href="https://docs.openshift.com/enterprise/latest/cli_reference/basic_cli_operations.html">oc</a> and <a href="https://github.com/jimmidyson/minishift">minishift</a>)</p>
+</div>
+<div class="paragraph">
+<p>By default the binaries are installed in <code>~/.fabric8/bin</code></p>
+</div>
+<div class="sect3">
+<h4 id="using-openshift">7.3.1. Using OpenShift</h4>
+<div class="paragraph">
+<p>By default <code>fabric8:cluster-start</code> will use <code>minikube</code> to create a local single node kubernetes cluster. To specify OpenShift use:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-start -Dfabric8.cluster.kind=openshift</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This will then use <code>minishift</code> instead to create a single node local OpenShift cluster.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="configure-apps">7.3.2. Configure apps</h4>
+<div class="paragraph">
+<p>By default the cluster contains only the <a href="http://fabric8.io/guide/console.html">fabric8 developer console</a> as often developers laptops don&#8217;t have lots of RAM.</p>
+</div>
+<div class="paragraph">
+<p>If you want to deploy the full fabric8 platform (with Nexus, Jenkins, Gogs, JBoss Forge etc) then use the following command:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-start -Dfabric8.cluster.app=platform</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="configure-cluster-resources">7.3.3. Configure cluster resources</h4>
+<div class="paragraph">
+<p>You can specify the number of CPUs or memory via additional parameters:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-start -Dfabric8.cluster.cpus=2 -Dfabric8.cluster.memory=4096</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The above configures <code>2</code> CPUs and <code>4Gb</code> of memory</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="stop">7.3.4. Stop</h4>
+<div class="paragraph">
+<p>You can stop the cluster at any time via <a href="#fabric8:cluster-stop"><strong>fabric8:cluster-stop</strong></a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-stop</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Once stopped you can restart again with all the images, resources and pods intact later on by running <code>fabric8:cluster-start</code> again</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-start</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fabric8:cluster-stop">7.4. <strong>fabric8:cluster-stop</strong></h3>
+<div class="paragraph">
+<p>This goal will stop a local kubernetes cluster.</p>
+</div>
+<div class="paragraph">
+<p>This goal  stops the VM running the local cluster so it will free up resources on your machine (memory + CPU) though the VM is not destroyed; it can restarted.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-stop</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="restarting">7.4.1. Restarting</h4>
+<div class="paragraph">
+<p>You can restart the cluster at any time via <a href="#fabric8:cluster-start"><strong>fabric8:cluster-start</strong></a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-start</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Once restarted all the images, resources and pods should come back</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="deleting">7.4.2. Deleting</h4>
+<div class="paragraph">
+<p>If you wish to destroy the cluster VM and all the data inside it then you can pass the <code>fabric8.cluster.delete</code> parameter with a value of <code>true</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-stop -Dfabric8.cluster.delete=true</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="goals-overview-internal">8. Internal Goals</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="fabric8:import">8.1. <strong>fabric8:import</strong></h3>
+<div class="paragraph">
+<p>This goal imports the current project into the [fabric8 console] so that you can browse the source code via the web interface and associate a [Continuous Delivery] pipeline with the project to start automatic Continuous Deployment.</p>
+</div>
+<div class="paragraph">
+<p>If you have a project on the file system then type:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:import</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This goal assumes you have already enabled the <code>fabric8 maven plugin</code>. If you have not done so already then invoke the <a href="#fabric8:setup"><strong>fabric8:setup</strong></a> goal first.</p>
+</div>
+<div class="paragraph">
+<p>If no git repository exists yet for the current project then a new git repository will be created and the current code pushed into it so that it can then be built with Jenkins.</p>
+</div>
+<div class="paragraph">
+<p>If the current project is a git clone from a remote repository then this goal will also try to setup a <code>Secret</code> in kubernetes to keep track of the user name and password/access code or in the case of SSH protocol with git the SSH key pairs.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fabric8:helm-index">8.2. <strong>fabric8:helm-index</strong></h3>
+<div class="paragraph">
+<p>Generates a Manifest index file by querying a maven repository to find all the Kubernetes and OpenShift manifests available and their releases.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fabric8:manifest-index">8.3. <strong>fabric8:manifest-index</strong></h3>
+
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="generators">9. Generators</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The usual way to define Docker images is with the plugin configuration as explained in <a href="#fabric8:build"><strong>fabric8:build</strong></a>. This can either be done completly within the pom.xml or by refering to an external Dockerfile. Since fabric8-maven-plugin includes our <a href="https://github.com/fabric8io/docker-maven-plugin">docker-maven-plugin</a> the way how images are built is identical.</p>
@@ -3342,7 +3775,7 @@ more details.</p></td>
 <p>Generators can be configured with a <code>&lt;generator&gt;</code> section. The following sub-elements are supported.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 16. Generator configuration</caption>
+<caption class="title">Table 22. Generator configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -3407,7 +3840,7 @@ more details.</p></td>
 <p>Alternatively and if you application code comes with a custom generator you can set the global configuration option <code>useProjectClasspath</code> (property: <code>fabric8.useProjectClasspath</code>) to true. In this case also the project artifact and its dependencies are looked for genertors. See <a href="#generators-api">Generator API</a> for details how to write your own generators.</p>
 </div>
 <div class="sect2">
-<h3 id="generators-default">4.1. Default Generators</h3>
+<h3 id="generators-default">9.1. Default Generators</h3>
 <div class="paragraph">
 <p>All default generators examine the build information for certain aspect and generate a Docker build information on the fly. They can be configured to a certrain degree, where the configuration is generator specific.</p>
 </div>
@@ -3415,7 +3848,7 @@ more details.</p></td>
 <p>There are some configuration options which are shared by all generators:</p>
 </div>
 <table id="generator-options-common" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 17. Common generator options</caption>
+<caption class="title">Table 23. Common generator options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -3455,12 +3888,12 @@ more details.</p></td>
 <p>When used as properties they can be directly referenced with the property names above.</p>
 </div>
 <div class="sect3">
-<h4 id="generator-spring-boot">4.1.1. Spring Boot</h4>
+<h4 id="generator-spring-boot">9.1.1. Spring Boot</h4>
 <div class="paragraph">
 <p>The name of this generator is <code>spring-boot</code> and gets activated when it finds a <code>spring-boot-maven-plugin</code> among the configured plugins. This plugin can be also a included as a dependency. It will use the following base image by default, but as explained <a href="#generator-options-common">above</a> and can be changeda <code>from</code> configuration.</p>
 </div>
 <table id="spring-boot-from" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 18. Spring-Boot Base Images</caption>
+<caption class="title">Table 24. Spring-Boot Base Images</caption>
 <colgroup>
 <col style="width: 11.1111%;">
 <col style="width: 44.4444%;">
@@ -3493,7 +3926,7 @@ more details.</p></td>
 <p>The following additional configuration options can be set:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 19. Spring-Boot configuration options</caption>
+<caption class="title">Table 25. Spring-Boot configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -3526,7 +3959,7 @@ more details.</p></td>
 </table>
 </div>
 <div class="sect3">
-<h4 id="java-applications">4.1.2. Java Applications</h4>
+<h4 id="java-applications">9.1.2. Java Applications</h4>
 <div class="paragraph">
 <p>This generator is named <code>java-exec</code> and is responsible to start up arbitrary Java application. It kicks in if eithe the main class is explicitely configured in this generator&#8217;s configuration or when it finds a singel class with a <code>public static void main(String[] args)</code> method. If it finds more than one class, the generator is a no op.</p>
 </div>
@@ -3537,7 +3970,7 @@ more details.</p></td>
 <p>Beside the common configuration parameters described in the table <a href="#generator-options-common">Commong Generator Options</a> it knows the following additional configuration options:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 20. Java Application configuration options</caption>
+<caption class="title">Table 26. Java Application configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -3575,12 +4008,12 @@ more details.</p></td>
 </table>
 </div>
 <div class="sect3">
-<h4 id="karaf">4.1.3. Karaf</h4>
+<h4 id="karaf">9.1.3. Karaf</h4>
 
 </div>
 </div>
 <div class="sect2">
-<h3 id="generators-api">4.2. Generator API</h3>
+<h3 id="generators-api">9.2. Generator API</h3>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -3597,7 +4030,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </div>
 </div>
 <div class="sect1">
-<h2 id="enrichers">5. Enrichers</h2>
+<h2 id="enrichers">10. Enrichers</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Enriching is the complementary concept to <a href="#generators">Generators</a>. Whereas Generators are used to create and customize Docker images, Enrichers are use to create and customize Kubernetes and OpenShift resource objects.</p>
@@ -3622,7 +4055,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <p>The <a href="#generator-example">Generator example</a> is a good bluebprint, simply replace <code>&lt;generator&gt;</code> with <code>&lt;enricher&gt;</code>. The configuration is structural identical:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 21. Enricher configuration</caption>
+<caption class="title">Table 27. Enricher configuration</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -3652,7 +4085,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <p>This plugin comes with a set of default enrichers. In addition custom enrichers can be easily added by providing implementation of the <a href="#enricher-api">Enricher API</a> and adding these as a dependency to the build.</p>
 </div>
 <div class="sect2">
-<h3 id="enrichers-default">5.1. Default Enrichers</h3>
+<h3 id="enrichers-default">10.1. Default Enrichers</h3>
 <div class="paragraph">
 <p>fabric8-maven-plugin comes with a set of enrichers which are enabled by default. There are two categories of default enrichers:</p>
 </div>
@@ -3667,7 +4100,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </ul>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 22. Default Enrichers Overview</caption>
+<caption class="title">Table 28. Default Enrichers Overview</caption>
 <colgroup>
 <col style="width: 22.2222%;">
 <col style="width: 77.7778%;">
@@ -3726,7 +4159,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </tbody>
 </table>
 <div class="sect3">
-<h4 id="enrichers-standard">5.1.1. Standard Enrichers</h4>
+<h4 id="enrichers-standard">10.1.1. Standard Enrichers</h4>
 <div class="paragraph">
 <p>Default enrichers are used for adding missing resources or adding metadata to given resource objects. The following default enhancers are availables out of the box</p>
 </div>
@@ -3760,7 +4193,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </div>
 </div>
 <div class="sect3">
-<h4 id="enrichers-fabric8">5.1.2. Fabric8 Enrichers</h4>
+<h4 id="enrichers-fabric8">10.1.2. Fabric8 Enrichers</h4>
 <div class="paragraph">
 <p>Fabric8 enrichers are used for providing the connection to other components of the fabric8 Microservices platform. They are useful to add icons to to application or links to documentation sites.</p>
 </div>
@@ -3783,7 +4216,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </div>
 </div>
 <div class="sect2">
-<h3 id="enricher-api">5.2. Enricher API</h3>
+<h3 id="enricher-api">10.2. Enricher API</h3>
 <div class="paragraph">
 <p><em>howto write your own enricher and install them</em></p>
 </div>
@@ -3791,7 +4224,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </div>
 </div>
 <div class="sect1">
-<h2 id="profiles">6. Profiles</h2>
+<h2 id="profiles">11. Profiles</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Profiles can be used to combine a set of enrichers and generators and gives this combination a referenceable name. Profiles can be defined externally either directly as a build resource in <code>src/main/fabric8/profiles.yml</code> or provided as part of a plugin&#8217;s dependency where it is supposed to be included as <code>META-INF/fabric8/profiles.yml</code>. Multiple profiles can be added in these <code>profiles.yml</code> descriptors.</p>
@@ -3868,10 +4301,10 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </div>
 </div>
 <div class="sect1">
-<h2 id="access-configuration">7. Access configuration</h2>
+<h2 id="access-configuration">12. Access configuration</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="docker-access">7.1. Docker Access</h3>
+<h3 id="docker-access">12.1. Docker Access</h3>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -3895,7 +4328,7 @@ be specified by the certPath or machine configuration, or by the
 </div>
 </div>
 <div class="sect2">
-<h3 id="openshift-and-kubernetes-access">7.2. OpenShift and Kubernetes Access</h3>
+<h3 id="openshift-and-kubernetes-access">12.2. OpenShift and Kubernetes Access</h3>
 <div class="paragraph">
 <p>If no <code>DOCKER_HOST</code> is set and no unix socket could be accessed under <code>/var/run/docker.sock</code> then f-m-p checks whethe <a href="https://github.com/fabric8io/gofabric8">gofabric8</a> is in the path and uses <code>gofabric8 docker-env</code> to get the connection parameter to the Docker host exposed by</p>
 </div>
@@ -3903,7 +4336,7 @@ be specified by the certPath or machine configuration, or by the
 </div>
 </div>
 <div class="sect1">
-<h2 id="registry">8. Registry handling</h2>
+<h2 id="registry">13. Registry handling</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Docker uses registries to store images. The registry is typically
@@ -4025,7 +4458,7 @@ because Docker can only push registry-named images.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="authentication">9. Authentication</h2>
+<h2 id="authentication">14. Authentication</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>When pulling (via the <code>autoPull</code> mode of <code>fabric8:start</code>) or pushing image, it
@@ -4113,7 +4546,7 @@ a username appended id is chosen.</p>
 file credentials are stored when connecting to a registry with the command <code>docker login</code> from the command line.</p>
 </div>
 <div class="sect2">
-<h3 id="pull-vs-push-authentication">9.1. Pull vs. Push Authentication</h3>
+<h3 id="pull-vs-push-authentication">14.1. Pull vs. Push Authentication</h3>
 <div class="paragraph">
 <p>The credentials lookup described above is valid for both push and
 pull operations. In order to narrow things down, credentials can be be
@@ -4151,7 +4584,7 @@ as described in the previous section is used as fallback.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="openshift-authentication">9.2. OpenShift Authentication</h3>
+<h3 id="openshift-authentication">14.2. OpenShift Authentication</h3>
 <div class="paragraph">
 <p>When working with the default registry in OpenShift, the credentials
 to authtenticate are the OpenShift username and access token. So, a
@@ -4197,7 +4630,7 @@ configuration.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="password-encryption">9.3. Password encryption</h3>
+<h3 id="password-encryption">14.3. Password encryption</h3>
 <div class="paragraph">
 <p>Regardless which mode you choose you can encrypt password as described
 in the
@@ -4225,7 +4658,7 @@ password.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="migration">10. Migration from version 2</h2>
+<h2 id="migration">15. Migration from version 2</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>This version 3 of f8-m-p is using a completely new configuration syntax compated to version 2.</p>
@@ -4249,7 +4682,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.57<br>
-Last updated 2016-09-30 07:34:30 UTC
+Last updated 2016-09-30 08:02:56 UTC
 </div>
 </div>
 </body>
