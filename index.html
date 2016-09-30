@@ -595,21 +595,21 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#goals-overview-setup">7. Setup Goals</a>
 <ul class="sectlevel2">
 <li><a href="#fabric8:setup">7.1. <strong>fabric8:setup</strong></a></li>
-<li><a href="#fabric8:install">7.2. <strong>fabric8:install</strong></a></li>
-<li><a href="#fabric8:cluster-start">7.3. <strong>fabric8:cluster-start</strong></a>
+<li><a href="#fabric8:cluster-start">7.2. <strong>fabric8:cluster-start</strong></a>
 <ul class="sectlevel3">
-<li><a href="#using-openshift">7.3.1. Using OpenShift</a></li>
-<li><a href="#configure-apps">7.3.2. Configure apps</a></li>
-<li><a href="#configure-cluster-resources">7.3.3. Configure cluster resources</a></li>
-<li><a href="#stop">7.3.4. Stop</a></li>
+<li><a href="#using-openshift">7.2.1. Using OpenShift</a></li>
+<li><a href="#configure-apps">7.2.2. Configure apps</a></li>
+<li><a href="#configure-cluster-resources">7.2.3. Configure cluster resources</a></li>
+<li><a href="#stop">7.2.4. Stop</a></li>
 </ul>
 </li>
-<li><a href="#fabric8:cluster-stop">7.4. <strong>fabric8:cluster-stop</strong></a>
+<li><a href="#fabric8:cluster-stop">7.3. <strong>fabric8:cluster-stop</strong></a>
 <ul class="sectlevel3">
-<li><a href="#restarting">7.4.1. Restarting</a></li>
-<li><a href="#deleting">7.4.2. Deleting</a></li>
+<li><a href="#restarting">7.3.1. Restarting</a></li>
+<li><a href="#deleting">7.3.2. Deleting</a></li>
 </ul>
 </li>
+<li><a href="#fabric8:install">7.4. <strong>fabric8:install</strong></a></li>
 </ul>
 </li>
 <li><a href="#goals-overview-internal">8. Internal Goals</a>
@@ -1255,8 +1255,8 @@ available goals are described below.</p>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 4. Shortcut Goals</caption>
 <colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
+<col style="width: 25%;">
+<col style="width: 75%;">
 </colgroup>
 <thead>
 <tr>
@@ -1278,8 +1278,8 @@ available goals are described below.</p>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 5. Setup Goals</caption>
 <colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
+<col style="width: 25%;">
+<col style="width: 75%;">
 </colgroup>
 <thead>
 <tr>
@@ -1293,10 +1293,6 @@ available goals are described below.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add this plugin to a given <code>pom.xml</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:install"><strong>fabric8:install</strong></a></strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Install a development cluster (via gofabric8) along with client side tools (kubectl, oc)</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:cluster-start"><strong>fabric8:cluster-start</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Start a development cluster</p></td>
 </tr>
@@ -1304,13 +1300,17 @@ available goals are described below.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:cluster-stop"><strong>fabric8:cluster-stop</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Stop a development cluster</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:install"><strong>fabric8:install</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Install a development cluster (via gofabric8) along with client side tools (kubectl, oc)</p></td>
+</tr>
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 6. Internal Goals</caption>
 <colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
+<col style="width: 25%;">
+<col style="width: 75%;">
 </colgroup>
 <thead>
 <tr>
@@ -3538,24 +3538,7 @@ This plugin definition includes the configuration to generate the Docker image.
 </table>
 </div>
 <div class="sect2">
-<h3 id="fabric8:install">7.2. <strong>fabric8:install</strong></h3>
-<div class="paragraph">
-<p>Ensures that the fabric8 binaries are installed on the current machine such as <a href="https://github.com/fabric8io/gofabric8/">gofabric8</a> and for kubernetes: <a href="http://kubernetes.io/docs/user-guide/kubectl-overview/">kubectl</a> and <a href="https://github.com/kubernetes/minikube">minikube</a> or for OpenShift: <a href="https://docs.openshift.com/enterprise/latest/cli_reference/basic_cli_operations.html">oc</a> and <a href="https://github.com/jimmidyson/minishift">minishift</a></p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:install</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>An alternative is to just run the <a href="#fabric8:cluster-start"><strong>fabric8:cluster-start</strong></a> goal to install the binaries and start a local cluster</p>
-</div>
-<div class="paragraph">
-<p>By default the binaries are installed in <code>~/.fabric8/bin</code></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="fabric8:cluster-start">7.3. <strong>fabric8:cluster-start</strong></h3>
+<h3 id="fabric8:cluster-start">7.2. <strong>fabric8:cluster-start</strong></h3>
 <div class="paragraph">
 <p>This goal will start a local kubernetes cluster for local development.</p>
 </div>
@@ -3572,7 +3555,7 @@ This plugin definition includes the configuration to generate the Docker image.
 <p>By default the binaries are installed in <code>~/.fabric8/bin</code></p>
 </div>
 <div class="sect3">
-<h4 id="using-openshift">7.3.1. Using OpenShift</h4>
+<h4 id="using-openshift">7.2.1. Using OpenShift</h4>
 <div class="paragraph">
 <p>By default <code>fabric8:cluster-start</code> will use <code>minikube</code> to create a local single node kubernetes cluster. To specify OpenShift use:</p>
 </div>
@@ -3586,7 +3569,7 @@ This plugin definition includes the configuration to generate the Docker image.
 </div>
 </div>
 <div class="sect3">
-<h4 id="configure-apps">7.3.2. Configure apps</h4>
+<h4 id="configure-apps">7.2.2. Configure apps</h4>
 <div class="paragraph">
 <p>By default the cluster contains only the <a href="http://fabric8.io/guide/console.html">fabric8 developer console</a> as often developers laptops don&#8217;t have lots of RAM.</p>
 </div>
@@ -3600,7 +3583,7 @@ This plugin definition includes the configuration to generate the Docker image.
 </div>
 </div>
 <div class="sect3">
-<h4 id="configure-cluster-resources">7.3.3. Configure cluster resources</h4>
+<h4 id="configure-cluster-resources">7.2.3. Configure cluster resources</h4>
 <div class="paragraph">
 <p>You can specify the number of CPUs or memory via additional parameters:</p>
 </div>
@@ -3614,7 +3597,7 @@ This plugin definition includes the configuration to generate the Docker image.
 </div>
 </div>
 <div class="sect3">
-<h4 id="stop">7.3.4. Stop</h4>
+<h4 id="stop">7.2.4. Stop</h4>
 <div class="paragraph">
 <p>You can stop the cluster at any time via <a href="#fabric8:cluster-stop"><strong>fabric8:cluster-stop</strong></a></p>
 </div>
@@ -3634,7 +3617,7 @@ This plugin definition includes the configuration to generate the Docker image.
 </div>
 </div>
 <div class="sect2">
-<h3 id="fabric8:cluster-stop">7.4. <strong>fabric8:cluster-stop</strong></h3>
+<h3 id="fabric8:cluster-stop">7.3. <strong>fabric8:cluster-stop</strong></h3>
 <div class="paragraph">
 <p>This goal will stop a local kubernetes cluster.</p>
 </div>
@@ -3647,7 +3630,7 @@ This plugin definition includes the configuration to generate the Docker image.
 </div>
 </div>
 <div class="sect3">
-<h4 id="restarting">7.4.1. Restarting</h4>
+<h4 id="restarting">7.3.1. Restarting</h4>
 <div class="paragraph">
 <p>You can restart the cluster at any time via <a href="#fabric8:cluster-start"><strong>fabric8:cluster-start</strong></a></p>
 </div>
@@ -3661,7 +3644,7 @@ This plugin definition includes the configuration to generate the Docker image.
 </div>
 </div>
 <div class="sect3">
-<h4 id="deleting">7.4.2. Deleting</h4>
+<h4 id="deleting">7.3.2. Deleting</h4>
 <div class="paragraph">
 <p>If you wish to destroy the cluster VM and all the data inside it then you can pass the <code>fabric8.cluster.delete</code> parameter with a value of <code>true</code>:</p>
 </div>
@@ -3670,6 +3653,23 @@ This plugin definition includes the configuration to generate the Docker image.
 <pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-stop -Dfabric8.cluster.delete=true</code></pre>
 </div>
 </div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fabric8:install">7.4. <strong>fabric8:install</strong></h3>
+<div class="paragraph">
+<p>Ensures that the fabric8 binaries are installed on the current machine such as <a href="https://github.com/fabric8io/gofabric8/">gofabric8</a> and for kubernetes: <a href="http://kubernetes.io/docs/user-guide/kubectl-overview/">kubectl</a> and <a href="https://github.com/kubernetes/minikube">minikube</a> or for OpenShift: <a href="https://docs.openshift.com/enterprise/latest/cli_reference/basic_cli_operations.html">oc</a> and <a href="https://github.com/jimmidyson/minishift">minishift</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:install</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>An alternative is to just run the <a href="#fabric8:cluster-start"><strong>fabric8:cluster-start</strong></a> goal to install the binaries and start a local cluster</p>
+</div>
+<div class="paragraph">
+<p>By default the binaries are installed in <code>~/.fabric8/bin</code></p>
 </div>
 </div>
 </div>
@@ -4682,7 +4682,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.58<br>
-Last updated 2016-09-30 09:19:39 UTC
+Last updated 2016-09-30 11:49:34 UTC
 </div>
 </div>
 </body>
