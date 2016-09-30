@@ -187,7 +187,10 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         // lets check we can execute the binary before we try to replace it if it already exists
         runCommand(file.getAbsolutePath() + " version" + batchModeArgument, "gofabric8 version" + batchModeArgument, "gofabric8");
 
-        file.renameTo(destFile);
+        boolean result = file.renameTo(destFile);
+        if (!result) {
+            throw new MojoExecutionException("Failed to rename temporary file " + file + " to " + destFile);
+        }
         log.info("Downloaded gofabric8 version " + version + " platform: " + platform + " arch:" + arch + " on: " + System.getProperty("os.name") + " " + arch + " to: " + destFile);
     }
 
