@@ -21,7 +21,6 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
 import io.fabric8.utils.Strings;
@@ -36,19 +35,16 @@ import java.util.Map;
  */
 public class WebAppGenerator extends BaseGenerator {
 
-    private static final String VANNILA_DOCKER_FROM = "fabric8/tomcat-8";
-    //TODO need to update this
+    private static final String DOCKER_TOMCAT_FROM = "fabric8/tomcat-8";
+    private static final String DOCKER_JETTY_FROM = "fabric8/jetty-9";
+    private static final String DOCKER_WILDFLY_FROM = "jboss/wildfly";
+
+    //TODO need to update the s2i images
     private static final String VANNILA_S2I_FROM = "fabric8/tomcat-8";
-    //TODO need to update this
-    private static final String REDHAT_DOCKER_FROM = "jboss/wildfly";
     private static final String REDHAT_DOCKER_S2I = "jboss-eap-6/eap64-openshift";
 
     public WebAppGenerator(MavenGeneratorContext context) {
-        super(context, "webapp",new FromSelector.Default(context,
-                VANNILA_DOCKER_FROM,
-                VANNILA_S2I_FROM,
-                REDHAT_DOCKER_FROM,
-                REDHAT_DOCKER_S2I));
+        super(context, "webapp");
     }
 
     private enum Config implements Configs.Key {
@@ -64,10 +60,8 @@ public class WebAppGenerator extends BaseGenerator {
 
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
-        boolean isApplicable =  shouldAddDefaultImage(configs) &&
+        return shouldAddDefaultImage(configs) &&
                 MavenUtil.hasPlugin(getProject(), "org.apache.maven.plugins:maven-war-plugin");
-        log.debug("Is the generator attached ...",isApplicable);
-        return isApplicable;
     }
 
     protected Map<String, String> getEnv() {
@@ -84,7 +78,7 @@ public class WebAppGenerator extends BaseGenerator {
                 .assembly(createAssembly())
                 .from(getFrom())
                 .ports(extractPorts())
-                .cmd(getConfig(Config.cmd))
+                .cmd(getDockerRunCommand())
                 .env(getEnv());
         addLatestTagIfSnapshot(buildBuilder);
         imageBuilder
@@ -111,10 +105,86 @@ public class WebAppGenerator extends BaseGenerator {
 
     private AssemblyConfiguration createAssembly() {
         return new AssemblyConfiguration.Builder()
-                .basedir(getConfig(Config.deploymentDir))
+                .basedir(getDefaultBaseDir())
                 .user(getConfig(Config.user))
                 .descriptorRef("webapp")
                 .build();
     }
 
+
+    @Override
+    protected String getFrom() {
+        String from = super.getFrom();
+
+        if (from == null) {
+
+            if (isJetty()) {
+                return DOCKER_JETTY_FROM;
+            } else if (isTomcat()) {
+                return DOCKER_TOMCAT_FROM;
+            } else if (isWildFly()) {
+                return DOCKER_WILDFLY_FROM;
+            } else {
+                return DOCKER_TOMCAT_FROM;
+            }
+
+        }
+        return from;
+    }
+
+    private String getDockerRunCommand(){
+
+        String cmd = getConfig(Config.cmd);
+        //since we use jboss/wildfly image the fabric8 deploy-and-run.sh will not work
+        //we also make sure the user has not added custom cmd command to maven config
+        if("/opt/tomcat/bin/deploy-and-run.sh".equals(cmd)) {
+            if (isWildFly()) {
+                cmd = "/opt/jboss/wildfly/bin/standalone.sh";
+            } else if (isJetty()) {
+                cmd = "/opt/jetty/bin/deploy-and-run.sh";
+            }
+        }
+
+        return cmd;
+    }
+
+    private String getDefaultBaseDir() {
+
+        String defaultBaseDir = getConfig(Config.deploymentDir);
+
+        if(isWildFly()
+                && "/deployments".equals(defaultBaseDir)){
+            defaultBaseDir = "/opt/jboss/wildfly/standalone/deployments";
+        }
+        return defaultBaseDir;
+    }
+
+    private boolean isJetty(){
+
+        return hasJettyPlugin() ||
+                AppSeverDetector.hasJettyFiles(getProject());
+    }
+
+    private boolean isTomcat(){
+
+        return AppSeverDetector.hasTomcatFiles(getProject());
+    }
+
+    private boolean isWildFly(){
+
+        return hasJBossOrWildFlyPlugin()||
+                AppSeverDetector.hasWildFlyFiles(getProject());
+    }
+
+    private boolean hasJBossOrWildFlyPlugin(){
+       return
+               MavenUtil.hasPlugin(getProject(), "org.jboss.as.plugins:jboss-as-maven-plugin")
+               || MavenUtil.hasPlugin(getProject(), "org.wildfly.plugins:wildfly-maven-plugin");
+    }
+
+    private boolean hasJettyPlugin(){
+        return
+                MavenUtil.hasPlugin(getProject(), "org.mortbay.jetty:jetty-maven-plugin")
+                        || MavenUtil.hasPlugin(getProject(), "org.eclipse.jetty:jetty-maven-plugin");
+    }
 }
