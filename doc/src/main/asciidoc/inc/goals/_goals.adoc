@@ -1,0 +1,155 @@
+
+[[goals]]
+= Goals Overview
+
+This plugin supports a rich set for providing a smooth Java developer experience. These goals can categorized in multiple groups:
+
+* <<goals-build, Build>> goals are all about creating and managing Kubernetes and OpenShift build artifacts like Docker images or S2I builds.
+
+* <<goals-develop, Development>> goals target help not only in deploying resource descriptors to the development cluster but also to manage the lifecycle of the development cluster as well.
+
+* <<goals-setup, Setup>> goals are good for setting up your Kubernetes and OpenShift development environment as well for adding this plugin to your `pom.xml`.
+
+* <<goals-shortcut, Shortcut>> goals combine several other goals for convenience.
+
+* <<goals-internal, Internal>> goals are used by fabric8 project to maintain meta data of the supported applications but might be useful for other uses cases, too.
+
+[[goals-build]]
+.Build Goals
+[cols="1,3"]
+|===
+| Goal | Description
+
+| *<<fabric8:build>>*
+| Build images
+
+| *<<fabric8:push>>*
+| Push images to a registry
+
+| *<<fabric8:resource>>*
+| Create Kubernetes or OpenShift resource descriptors
+
+| *<<fabric8:helm>>*
+| Create a https://github.com/kubernetes/helm/blob/master/docs/charts.md#the-chart-file-structure[Helm Chart]
+
+| *<<fabric8:app-catalog>>*
+| Generate an app catalog
+
+
+| *<<fabric8:distro>>*
+| Generate an archive of Kubernetes and OpenShift templates
+
+|===
+
+.Development Goals
+[cols="1,3"]
+|===
+| Goal | Description
+
+| *<<fabric8:deploy>>*
+| Deploy resources decriptors to a cluster
+
+| *<<fabric8:undeploy>>*
+| Undeploy and remove resources decriptors from a cluster
+
+| *<<fabric8:start>>*
+| Start the application which has been deployed previously
+
+| *<<fabric8:stop>>*
+| Stop the application which has been deployed previously
+
+| *<<fabric8:watch>>*
+| Watch for doing rebuilds and redeployments
+
+| *<<fabric8:log>>*
+| Show the logs of the running application
+
+| *<<fabric8:debug>>*
+| Enable remote debugging
+
+
+|===
+
+.Shortcut Goals
+|===
+| Goal | Description
+
+| *<<fabric8:run>>*
+| Run a complete development workflow cycle which means `fabric8:resource` ➜ `fabric8:build` ➜ `fabric8:deploy`
+
+| *<<fabric8:resource-apply>>*
+| Run `fabric8:resource` ➜ `fabric8:deploy`
+
+|===
+
+.Setup Goals
+|===
+| Goal | Description
+
+| *<<fabric8:setup>>*
+| Add this plugin to a given `pom.xml`
+
+| *<<fabric8:install>>*
+| Install a development cluster (via gofabric8) along with client side tools (kubectl, oc)
+
+| *<<fabric8:cluster-start>>*
+| Start a development cluster
+
+| *<<fabric8:cluster-stop>>*
+| Stop a development cluster
+
+
+|===
+
+.Internal Goals
+|===
+| Goal | Description
+
+| *<<fabric8:import>>*
+| Import the current project into the fabric8 console
+
+| *<<fabric8:helm-index>>*
+| Scan a Maven repository and create a Helm index
+
+| *<<fabric8:manifest-index>>*
+| Scan a Maven index and create a Manifest index
+
+|===
+
+Depending on whether the OpenShift or Kubernetes operational mode is used, the workflow and the performed actions differs :
+
+.Workflows
+[cols="1,4,4"]
+|===
+| Use Case | Kubernetes | OpenShift
+
+| Build
+a| `fabric8:build` `fabric8:push`
+
+* Creates a image against an exposed Docker daemon (with a `docker.tar`)
+* Pushes the image to a registry which is then referenced from the configuration
+
+a| `fabric8:build`
+
+* Creates or uses a `BuildConfig`
+* Creates or uses an `ImageStream` which can be referenced by the deployment descriptors in a `DeploymenConfig`
+* Starts an OpenShift build with a `docker.tar` as input
+
+
+| Deploy
+a| `fabric8:deploy`
+
+* Applies a Kubernetes resource descriptor to cluster
+
+a| `fabric8:deploy`
+
+* Applies an OpenShift resource descriptor to a cluster
+
+|===
+
+
+include::build/_goals.adoc[]
+include::develop/_goals.adoc[]
+include::shortcut/_goals.adoc[]
+include::setup/_goals.adoc[]
+include::internal/_goals.adoc[]
