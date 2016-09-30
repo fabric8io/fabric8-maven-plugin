@@ -3,6 +3,6 @@
 # Setup Goals
 
 include::_fabric8-setup.adoc[]
-include::_fabric8-install.adoc[]
 include::_fabric8-cluster-start.adoc[]
 include::_fabric8-cluster-stop.adoc[]
+include::_fabric8-install.adoc[]
