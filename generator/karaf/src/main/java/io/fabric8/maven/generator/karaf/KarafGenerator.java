@@ -36,9 +36,9 @@ public class KarafGenerator extends BaseGenerator {
     public KarafGenerator(MavenGeneratorContext context) {
         super(context, "karaf", new FromSelector.Default(context,
                 "fabric8/s2i-karaf:" + IMAGE_S2I_UPSTREAM_VERSION,
-                "s2i-karaf:" + IMAGE_S2I_UPSTREAM_VERSION,
+                "fabric8/s2i-karaf:" + IMAGE_S2I_UPSTREAM_VERSION,
                 "jboss-fuse-6/fis-karaf-openshift:" + IMAGE_S2I_PRODUCT_VERSION,
-                "fis-karaf-openshift:" + IMAGE_S2I_PRODUCT_VERSION));
+                "jboss-fuse-6/fis-karaf-openshift:" + IMAGE_S2I_PRODUCT_VERSION));
     }
 
     private enum Config implements Configs.Key {
