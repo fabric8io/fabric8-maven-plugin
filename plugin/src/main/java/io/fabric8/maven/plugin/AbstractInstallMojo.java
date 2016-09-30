@@ -56,6 +56,10 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         // X-TODO: Maybe allow for an update of gofabric8 itself ?
         if (file == null) {
             File binDir = getFabric8Dir();
+            binDir.mkdirs();
+            if (!binDir.isDirectory() || !binDir.exists()) {
+                throw new MojoExecutionException("Failed to create directory: " + binDir + ". Do you have permission on this folder?");
+            }
             file = new File(binDir, "gofabric8");
             if (!file.exists() || !file.isFile() || !file.canExecute()) {
                 downloadGoFabric8(file);
