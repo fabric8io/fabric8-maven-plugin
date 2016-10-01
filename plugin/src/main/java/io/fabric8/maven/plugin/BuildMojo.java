@@ -54,6 +54,8 @@ import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.BuildConfigSpec;
+import io.fabric8.openshift.api.model.BuildOutput;
+import io.fabric8.openshift.api.model.BuildOutputBuilder;
 import io.fabric8.openshift.api.model.BuildSource;
 import io.fabric8.openshift.api.model.BuildStrategy;
 import io.fabric8.openshift.api.model.BuildStrategyBuilder;
@@ -588,9 +590,15 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         ImageName imageName = new ImageName(imageConfig.getName());
         String buildName = getS2IBuildName(imageName);
         String imageStreamName = getImageStreamName(imageName);
+        String outputImageStreamTag = imageStreamName + ":" + imageName.getTag();
 
         BuildConfig buildConfig = client.buildConfigs().withName(buildName).get();
         BuildStrategy buildStrategy = createBuildStrategy(imageConfig);
+        BuildOutput buildOutput = new BuildOutputBuilder().withNewTo()
+                .withKind("ImageStreamTag")
+                .withName(outputImageStreamTag)
+                .endTo().build();
+
 
         if (buildConfig != null) {
             // lets verify the BC
@@ -608,14 +616,14 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             }
 
             if (!getBuildRecreateMode().isBuildConfig()) {
-                // lets check if the strategy has changed - e.g. the S2I builder image
-                if (!Objects.equals(buildStrategy, spec.getStrategy())) {
-                    log.warn("Build strategy has changed so updating the BuildConfig!");
-                    spec.setStrategy(buildStrategy);
-
+                // lets check if the strategy or output has changed and if so lets update the BC
+                // e.g. the S2I builder image or the output tag and
+                if (!Objects.equals(buildStrategy, spec.getStrategy()) || !Objects.equals(buildOutput, spec.getOutput())) {
+                    log.warn("Updating the S2I BuildConfig " + buildName + " with the latest output and strategy");
                     client.buildConfigs().withName(buildName).edit()
                           .editSpec()
                           .withStrategy(buildStrategy)
+                          .withOutput(buildOutput)
                           .endSpec()
                           .done();
                     log.info("Editing BuildConfig %s for %s build", buildName, getStrategyLabel());
@@ -636,15 +644,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                      .endMetadata()
                      .withNewSpec()
                        .withStrategy(buildStrategy)
-                       .withNewSource()
-                         .withType("Binary")
-                       .endSource()
-                       .withNewOutput()
-                         .withNewTo()
-                           .withKind("ImageStreamTag")
-                           .withName(imageStreamName + ":" + imageName.getTag())
-                         .endTo()
-                       .endOutput()
+                       .withOutput(buildOutput)
                      .endSpec()
                    .endBuildConfigItem();
         return buildName;
