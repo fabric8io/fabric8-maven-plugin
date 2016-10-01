@@ -44,7 +44,6 @@ import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.EnricherContext;
@@ -57,10 +56,8 @@ import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.ImageStream;
-import io.fabric8.openshift.api.model.ImageStreamBuilder;
-import io.fabric8.openshift.api.model.TagReference;
+import io.fabric8.openshift.api.model.ImageStreamTag;
 import io.fabric8.openshift.api.model.Template;
-import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -75,7 +72,6 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -86,9 +82,6 @@ import java.util.Set;
 
 import static io.fabric8.maven.plugin.AbstractDeployMojo.DEFAULT_OPENSHIFT_MANIFEST;
 import static io.fabric8.maven.plugin.AbstractDeployMojo.loadResources;
-import static org.apache.cxf.version.Version.getName;
-import static org.bouncycastle.asn1.x500.style.RFC4519Style.name;
-import static org.bouncycastle.crypto.tls.ConnectionEnd.client;
 
 
 /**
@@ -505,9 +498,7 @@ public class ResourceMojo extends AbstractResourceMojo {
                 throw new MojoExecutionException("Failed to load openshift manifest " + openshiftManifest + ". " + e, e);
             }
             for (HasMetadata entity : oldEntities) {
-                // TODO we should support separate image stream tag entities too?
-                //if (entity instanceof ImageStream || entity instanceof ImageStreamTag) {
-                if (entity instanceof ImageStream) {
+                if (entity instanceof ImageStream || entity instanceof ImageStreamTag) {
                     if (KubernetesResourceUtil.findResourceByName(objects, entity.getClass(), KubernetesHelper.getName(entity)) == null) {
                         objects.add(entity);
                     }

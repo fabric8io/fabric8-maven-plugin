@@ -187,6 +187,7 @@ public class KubernetesResourceUtil {
             "configmap", "ConfigMap",
             "deployment", "Deployment",
             "is", "ImageStream",
+            "istag", "ImageStreamTag",
             "ns", "Namespace",
             "namespace", "Namespace",
             "oauthclient", "OAuthClient",
