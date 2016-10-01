@@ -17,6 +17,7 @@ package io.fabric8.maven.plugin;
 
 import io.fabric8.maven.core.util.ProcessUtil;
 import io.fabric8.utils.IOHelpers;
+import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -40,6 +41,13 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     private static final String gofabric8VersionURL = "https://raw.githubusercontent.com/fabric8io/gofabric8/master/version/VERSION";
     public static final String batchModeArgument = " --batch";
     public static final String GOFABRIC8 = "gofabric8";
+
+    /**
+     * Defines the kind of cluster such as `minishift`
+     */
+    @Parameter(property = "fabric8.cluster.kind")
+    protected String clusterKind;
+
 
     @Parameter(property = "fabric8.dir", defaultValue = "${user.home}/.fabric8/bin")
     private File fabric8Dir;
@@ -111,9 +119,6 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
             getLog().info("Found gofabric8 at: " + file);
             runCommand(file.getAbsolutePath() + " version" + batchModeArgument, "gofabric8 version" + batchModeArgument, "gofabric8");
         }
-
-        // now lets install any dependencies like kubectl, minikube, minishift etc
-        runCommand(file.getAbsolutePath() + " install" + batchModeArgument, "gofabric8 install" + batchModeArgument, "gofabric8");
         return file;
     }
 
@@ -206,6 +211,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     }
 
     protected void runCommand(String commandLine, String message, String executableName) throws MojoExecutionException {
+        log.info("Running command " + executableName + " " + commandLine);
         int result = -1;
         try {
             result = ProcessUtil.runCommand(createExternalProcessLogger(executableName + "> "), commandLine, message);
@@ -223,6 +229,14 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         }
         fabric8Dir.mkdirs();
         return fabric8Dir;
+    }
+
+    protected boolean isMinishift() {
+        if (Strings.isNotBlank(clusterKind)) {
+            String text = clusterKind.toLowerCase().trim();
+            return text.equals("minishift") || text.equals("openshift");
+        }
+        return false;
     }
 
 

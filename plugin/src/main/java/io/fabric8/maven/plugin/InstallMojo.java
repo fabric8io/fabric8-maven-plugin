@@ -19,6 +19,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 
+import java.io.File;
+
 /**
  * Installs the necessary tools for working with clusters such as <code>gofabric8</code>
  */
@@ -27,6 +29,13 @@ public class InstallMojo extends AbstractInstallMojo {
 
     @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
-        installBinaries();
+        File file = installBinaries();
+
+        // now lets install any dependencies like kubectl, minikube, minishift etc
+        String commandLine = AbstractInstallMojo.batchModeArgument;
+        if (isMinishift()) {
+            commandLine += " --minishift";
+        }
+        runCommand(file.getAbsolutePath() + " install" + commandLine, "gofabric8 install" + commandLine, "gofabric8");
     }
 }

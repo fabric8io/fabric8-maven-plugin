@@ -32,12 +32,6 @@ import java.io.File;
 public class ClusterStartMojo extends AbstractInstallMojo {
 
     /**
-     * Defines the kind of cluster such as `minishift`
-     */
-    @Parameter(property = "fabric8.cluster.kind")
-    private String clusterKind;
-
-    /**
      * Which app to startup such as <code>console</code> or <code>platform</code>
      */
     @Parameter(property = "fabric8.cluster.app", defaultValue = "console")
@@ -62,8 +56,7 @@ public class ClusterStartMojo extends AbstractInstallMojo {
 
         String arguments = batchModeArgument;
         if (Strings.isNotBlank(clusterKind)) {
-            String text = clusterKind.toLowerCase().trim();
-            if (text.equals("minishift") || text.equals("openshift")) {
+            if (isMinishift()) {
                 arguments += " --minishift";
             } else {
                 // lets assume its valid and let gofabric8 fail
