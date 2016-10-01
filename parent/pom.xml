@@ -60,7 +60,7 @@
     <assertj.core.version>2.4.1</assertj.core.version>
     <fabric8.maven.plugin.version>3.1.59</fabric8.maven.plugin.version>
     <version.maven>3.3.1</version.maven>
-    <version.fabric8>2.2.167</version.fabric8>
+    <version.fabric8>2.2.168</version.fabric8>
     <version.docker-maven-plugin>0.16.5</version.docker-maven-plugin>
   </properties>
 
