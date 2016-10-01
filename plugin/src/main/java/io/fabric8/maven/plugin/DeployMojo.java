@@ -28,5 +28,5 @@ import org.apache.maven.plugins.annotations.*;
  */
 
 @Mojo(name = "deploy", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.VALIDATE)
-@Execute(phase = LifecyclePhase.PACKAGE)
+@Execute(phase = LifecyclePhase.INSTALL)
 public class DeployMojo extends AbstractDeployMojo { }
