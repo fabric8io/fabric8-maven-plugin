@@ -30,7 +30,7 @@ import io.fabric8.utils.Strings;
 
 public class KarafGenerator extends BaseGenerator {
 
-    private static final String IMAGE_S2I_UPSTREAM_VERSION = "1.3.3";
+    private static final String IMAGE_S2I_UPSTREAM_VERSION = "1.3";
     private static final String IMAGE_S2I_PRODUCT_VERSION = "2.0";
 
     public KarafGenerator(MavenGeneratorContext context) {
