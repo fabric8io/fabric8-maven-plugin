@@ -16,11 +16,13 @@
 package io.fabric8.maven.plugin;
 
 import io.fabric8.maven.core.util.ProcessUtil;
+import io.fabric8.maven.core.util.VersionUtil;
 import io.fabric8.utils.IOHelpers;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.codehaus.plexus.archiver.util.ResourceUtils;
 import org.codehaus.plexus.components.interactivity.Prompter;
 import org.codehaus.plexus.components.interactivity.PrompterException;
 
@@ -38,7 +40,6 @@ import java.util.Date;
  * Base class for install/tool related mojos
  */
 public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
-    private static final String gofabric8VersionURL = "https://raw.githubusercontent.com/fabric8io/gofabric8/master/version/VERSION";
     public static final String batchModeArgument = " --batch";
     public static final String GOFABRIC8 = "gofabric8";
 
@@ -151,13 +152,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         }
         log.debug("Downloading gofabric8 to temporary file: " + file.getAbsolutePath());
 
-        String version;
-        try {
-            version = IOHelpers.readFully(new URL(gofabric8VersionURL));
-            log.info("Downloading version " + version + " of gofabric8 to " + destFile + " ...");
-        } catch (IOException e) {
-            throw new MojoExecutionException("Failed to load gofabric8 version from: " + gofabric8VersionURL + ". " + e, e);
-        }
+        String version = VersionUtil.getVersion("gofabric8");
 
         String platform = getPlatform();
         String osArch = System.getProperty("os.arch");
