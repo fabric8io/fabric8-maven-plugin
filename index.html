@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.4">
-<meta name="author" content="Roland Huß">
+<meta name="author" content="Roland Huß, James Strachan">
 <title>fabric8io/fabric8-maven-plugin</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -514,7 +514,7 @@ table.CodeRay td.code>pre{padding:0}
 <div id="header">
 <h1>fabric8io/fabric8-maven-plugin</h1>
 <div class="details">
-<span id="author" class="author">Roland Huß</span><br>
+<span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.1.63,</span>
 <span id="revdate">2016-10-03</span>
 </div>
@@ -1154,19 +1154,19 @@ available goals are described below.</p>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="#goals-build">Build</a> goals are all about creating and managing Kubernetes and OpenShift build artifacts like Docker images or S2I builds.</p>
+<p><a href="#goals-build">Build goals</a> are all about creating and managing Kubernetes and OpenShift build artifacts like Docker images or S2I builds.</p>
 </li>
 <li>
-<p><a href="#goals-develop">Development</a> goals target help not only in deploying resource descriptors to the development cluster but also to manage the lifecycle of the development cluster as well.</p>
+<p><a href="#goals-develop">Development goals</a> target help not only in deploying resource descriptors to the development cluster but also to manage the lifecycle of the development cluster as well.</p>
 </li>
 <li>
-<p><a href="#goals-setup">Setup</a> goals are good for setting up your Kubernetes and OpenShift development environment as well for adding this plugin to your <code>pom.xml</code>.</p>
+<p><a href="#goals-setup">Setup goals</a> are good for setting up your Kubernetes and OpenShift development environment as well for adding this plugin to your <code>pom.xml</code>.</p>
 </li>
 <li>
-<p><a href="#goals-shortcut">Shortcut</a> goals combine several other goals for convenience.</p>
+<p><a href="#goals-shortcut">Shortcut goals</a> combine several other goals for convenience.</p>
 </li>
 <li>
-<p><a href="#goals-internal">Internal</a> goals are used by fabric8 project to maintain meta data of the supported applications but might be useful for other uses cases, too.</p>
+<p><a href="#goals-internal">Internal goals</a> are used by fabric8 project to maintain meta data of the supported applications but might be useful for other uses cases, too.</p>
 </li>
 </ul>
 </div>
@@ -1209,7 +1209,7 @@ available goals are described below.</p>
 </tr>
 </tbody>
 </table>
-<table class="tableblock frame-all grid-all spread">
+<table id="goals-develop" class="tableblock frame-all grid-all spread">
 <caption class="title">Table 3. Development Goals</caption>
 <colgroup>
 <col style="width: 25%;">
@@ -1252,7 +1252,7 @@ available goals are described below.</p>
 </tr>
 </tbody>
 </table>
-<table class="tableblock frame-all grid-all spread">
+<table id="goals-shortcut" class="tableblock frame-all grid-all spread">
 <caption class="title">Table 4. Shortcut Goals</caption>
 <colgroup>
 <col style="width: 25%;">
@@ -1275,7 +1275,7 @@ available goals are described below.</p>
 </tr>
 </tbody>
 </table>
-<table class="tableblock frame-all grid-all spread">
+<table id="goals-setup" class="tableblock frame-all grid-all spread">
 <caption class="title">Table 5. Setup Goals</caption>
 <colgroup>
 <col style="width: 25%;">
@@ -1306,7 +1306,7 @@ available goals are described below.</p>
 </tr>
 </tbody>
 </table>
-<table class="tableblock frame-all grid-all spread">
+<table id="goals-internal" class="tableblock frame-all grid-all spread">
 <caption class="title">Table 6. Internal Goals</caption>
 <colgroup>
 <col style="width: 25%;">
@@ -4682,7 +4682,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.63<br>
-Last updated 2016-10-03 13:34:56 UTC
+Last updated 2016-10-03 18:52:38 UTC
 </div>
 </div>
 </body>
