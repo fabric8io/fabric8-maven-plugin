@@ -1,5 +1,5 @@
 = fabric8io/fabric8-maven-plugin
-Roland Huß;
+Roland Huß, James Strachan;
 :revnumber: {version}
 :revdate: {localdate}
 :toc: macro

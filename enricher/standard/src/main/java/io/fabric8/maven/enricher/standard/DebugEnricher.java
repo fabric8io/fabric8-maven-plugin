@@ -14,7 +14,7 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.enricher.debug;
+package io.fabric8.maven.enricher.standard;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Container;
@@ -54,7 +54,7 @@ public class DebugEnricher extends BaseEnricher {
     public static final String ENABLE_DEBUG_MAVEN_PROPERTY = "fabric8.debug.enabled";
 
     public DebugEnricher(EnricherContext buildContext) {
-        super(buildContext, "debug");
+        super(buildContext, "fmp-debug");
     }
 
     @Override

@@ -14,7 +14,7 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.enricher.expose;
+package io.fabric8.maven.enricher.fabric8;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HasMetadata;

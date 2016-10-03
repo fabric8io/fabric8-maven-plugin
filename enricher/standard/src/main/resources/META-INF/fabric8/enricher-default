@@ -38,3 +38,6 @@ io.fabric8.maven.enricher.standard.DependencyEnricher
 # Add docker environment variables to the kubernetes manifest if using S2I binary builds
 # which strip out docker environment variables
 io.fabric8.maven.enricher.standard.OpenShiftS2IEnricher
+
+# Add an enricher for enabling debug information
+io.fabric8.maven.enricher.standard.DebugEnricher,1001
