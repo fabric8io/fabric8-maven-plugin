@@ -66,9 +66,12 @@ public class ClusterStartMojo extends AbstractInstallMojo {
         if (Strings.isNotBlank(clusterApp)) {
             String appArg = this.clusterApp;
             if (clusterApp.equals("fabric8") || clusterApp.equals("platform")) {
-                appArg = "cd-pipeline";
+                // ignore console command
+                // TODO add --app= CLI argument when gofabric8 start supports it
+                // see https://github.com/fabric8io/gofabric8/issues/224
+            } else {
+                arguments += " --" + appArg;
             }
-            arguments += " --" + appArg;
         }
         if (Strings.isNotBlank(clusterCPUs)) {
             arguments += " --cpus " + clusterCPUs;
