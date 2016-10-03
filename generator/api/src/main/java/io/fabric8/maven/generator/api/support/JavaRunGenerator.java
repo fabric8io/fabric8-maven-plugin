@@ -16,9 +16,6 @@ package io.fabric8.maven.generator.api.support;
  * limitations under the License.
  */
 
-import java.io.IOException;
-import java.util.*;
-
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -26,6 +23,13 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.utils.Strings;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * @author roland
@@ -38,13 +42,14 @@ abstract public class JavaRunGenerator extends BaseGenerator {
         super(context, name, new Java(context));
     }
 
-    private enum Config implements Configs.Key {
+    public enum Config implements Configs.Key {
         enabled        {{ d = "false"; }},
         webPort        {{ d = "8080"; }},
         jolokiaPort    {{ d = "8778"; }},
         prometheusPort {{ d = "9779"; }},
         baseDir        {{ d = "/deployments"; }},
-        assemblyRef    {{ d = "artifact-with-includes"; }};
+        assemblyRef    {{ d = null; }},
+        fatJar         {{ d = null; }};
 
         public String def() { return d; } protected String d;
     }
@@ -86,7 +91,19 @@ abstract public class JavaRunGenerator extends BaseGenerator {
     }
 
     protected String getAssemblyRef() {
-        return getConfig(Config.assemblyRef);
+        return getConfig(Config.assemblyRef, getDefaultAssemblyRef());
+    }
+
+    protected String getDefaultAssemblyRef() {
+        if (isFatJarWithNoDependencies()) {
+            return "artifact-with-includes";
+        }
+        return "artifact-with-dependencies";
+    }
+
+    protected boolean isFatJarWithNoDependencies() {
+        // TODO should we try detect some maven shade / uberjar stuff?
+        return Configs.asBoolean(getConfig(Config.fatJar, "false"));
     }
 
     protected List<String> extractPorts() {
