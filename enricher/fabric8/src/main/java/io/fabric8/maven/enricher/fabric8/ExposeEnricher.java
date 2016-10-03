@@ -14,7 +14,7 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.enricher.expose;
+package io.fabric8.maven.enricher.fabric8;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -41,7 +41,7 @@ import static io.fabric8.maven.core.config.BuildRecreateMode.is;
 public class ExposeEnricher extends BaseEnricher {
 
     public ExposeEnricher(EnricherContext buildContext) {
-        super(buildContext, "expose");
+        super(buildContext, "fabric8-expose");
     }
 
     private Set<Integer> webPorts = new HashSet<>(Arrays.asList(80, 443, 8080, 9090));
