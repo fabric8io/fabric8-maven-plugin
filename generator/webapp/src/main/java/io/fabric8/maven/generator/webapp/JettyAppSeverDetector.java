@@ -16,6 +16,11 @@ public class JettyAppSeverDetector extends AbstractAppServerDetector {
     }
 
     @Override
+    public AppServerDetectorFactory.Kind getKind() {
+        return AppServerDetectorFactory.Kind.JETTY;
+    }
+
+    @Override
     public boolean isApplicable() {
         String[] jettyMagicFiles = new String[]{"**/WEB-INF/jetty-web.xml",
                 "**/META-INF/jetty-logging.properties"

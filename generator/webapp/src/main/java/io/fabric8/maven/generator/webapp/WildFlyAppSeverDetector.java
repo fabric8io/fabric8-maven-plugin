@@ -23,6 +23,10 @@ public class WildFlyAppSeverDetector extends AbstractAppServerDetector{
                         || MavenUtil.hasPlugin(project, "org.wildfly.plugins:wildfly-maven-plugin");
     }
 
+    @Override
+    public AppServerDetectorFactory.Kind getKind() {
+        return AppServerDetectorFactory.Kind.WILDFLY;
+    }
 
     @Override
     public boolean isApplicable() {
