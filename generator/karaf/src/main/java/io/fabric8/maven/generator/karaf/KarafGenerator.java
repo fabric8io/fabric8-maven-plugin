@@ -15,8 +15,10 @@
  */
 package io.fabric8.maven.generator.karaf;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
@@ -30,8 +32,28 @@ import io.fabric8.utils.Strings;
 
 public class KarafGenerator extends BaseGenerator {
 
-    private static final String IMAGE_S2I_UPSTREAM_VERSION = "1.3";
-    private static final String IMAGE_S2I_PRODUCT_VERSION = "2.0";
+    private static final String SETTINGS_RESOURCE_FILE = "/META-INF/fabric8/karaf-default-images.properties";
+    private static final Properties BUILD_SETTINGS;
+
+    static {
+        BUILD_SETTINGS = new Properties();
+        try {
+            BUILD_SETTINGS.load(KarafGenerator.class.getResourceAsStream(SETTINGS_RESOURCE_FILE));
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot load default images properties " + SETTINGS_RESOURCE_FILE + ": " + e,e);
+        }
+    }
+
+    private static String getBuildSetting(String key) {
+        String val = BUILD_SETTINGS.getProperty(key);
+        if (val == null) {
+            throw new IllegalArgumentException("Cannot retrieve default value " + key + " from " + SETTINGS_RESOURCE_FILE);
+        }
+        return val;
+    }
+
+    private static final String IMAGE_S2I_UPSTREAM_VERSION = getBuildSetting("generator.karaf.s2i.upstream.version");
+    private static final String IMAGE_S2I_PRODUCT_VERSION = getBuildSetting("generator.karaf.s2i.redhat.version");
 
     public KarafGenerator(MavenGeneratorContext context) {
         super(context, "karaf", new FromSelector.Default(context,
