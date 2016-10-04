@@ -40,30 +40,17 @@ public class WebAppGenerator extends BaseGenerator {
     private static final String VANNILA_S2I_FROM = "fabric8/tomcat-8";
     private static final String REDHAT_DOCKER_S2I = "jboss-eap-6/eap64-openshift";
 
-    private final AppServerDetector wildFlyAppServerDetector;
-    private final AppServerDetector jettyAppServerDetector;
-    private final AppServerDetector tomcatAppServerDetector;
+    private AppServerDetector appServerDetector;
 
     public WebAppGenerator(MavenGeneratorContext context) {
         super(context, "webapp");
-        wildFlyAppServerDetector = AppServerDetectorFactory.INSTANCE
-                .getAppServerDetector(AppServerDetectorFactory.Kind.WILDFLY,getProject());
-        jettyAppServerDetector  = AppServerDetectorFactory.INSTANCE
-                .getAppServerDetector(AppServerDetectorFactory.Kind.JETTY,getProject());
-        tomcatAppServerDetector = AppServerDetectorFactory.INSTANCE
-                .getAppServerDetector(AppServerDetectorFactory.Kind.TOMCAT,getProject());
+
+        appServerDetector = AppServerDetectorFactory
+                .getInstance(getProject())
+                .whichAppKindOfAppServer();
+
+
     }
-
-    private enum Config implements Configs.Key {
-        deploymentDir  {{ d = "/deployments"; }},
-        user           {{ d = "jboss:jboss:jboss"; }},
-        cmd            {{ d = "/opt/tomcat/bin/deploy-and-run.sh"; }},
-        webPort        {{ d = "8080"; }},
-        jolokiaPort    {{ d = "8778"; }};
-
-        public String def() { return d; } protected String d;
-    }
-
 
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
@@ -100,7 +87,7 @@ public class WebAppGenerator extends BaseGenerator {
     protected List<String> extractPorts() {
         List<String> answer = new ArrayList<>();
         addPortIfValid(answer, getConfig(Config.webPort));
-        if(!wildFlyAppServerDetector.isApplicable()) {
+        if (appServerDetector.getKind() != AppServerDetectorFactory.Kind.WILDFLY) {
             addPortIfValid(answer, getConfig(Config.jolokiaPort));
         }
         return answer;
@@ -120,38 +107,24 @@ public class WebAppGenerator extends BaseGenerator {
                 .build();
     }
 
-
     @Override
     protected String getFrom() {
         String from = super.getFrom();
 
         if (from == null) {
-
-            if (jettyAppServerDetector.isApplicable()) {
-                return jettyAppServerDetector.getFrom();
-            } else if (tomcatAppServerDetector.isApplicable()) {
-                return tomcatAppServerDetector.getFrom();
-            } else if (wildFlyAppServerDetector.isApplicable()) {
-                return wildFlyAppServerDetector.getFrom();
-            } else {
-                return tomcatAppServerDetector.getFrom();
-            }
+            return appServerDetector.getFrom();
 
         }
         return from;
     }
 
-    private String getDockerRunCommand(){
+    private String getDockerRunCommand() {
 
         String cmd = getConfig(Config.cmd);
         //since we use jboss/wildfly image the fabric8 deploy-and-run.sh will not work
         //we also make sure the user has not added custom cmd command to maven config
-        if("/opt/tomcat/bin/deploy-and-run.sh".equals(cmd)) {
-            if (wildFlyAppServerDetector.isApplicable()) {
-                cmd = wildFlyAppServerDetector.getCommand();
-            } else if (jettyAppServerDetector.isApplicable()) {
-                cmd = jettyAppServerDetector.getCommand();
-            }
+        if ("/opt/tomcat/bin/deploy-and-run.sh".equals(cmd)) {
+                cmd = appServerDetector.getCommand();
         }
 
         return cmd;
@@ -161,11 +134,22 @@ public class WebAppGenerator extends BaseGenerator {
 
         String defaultBaseDir = getConfig(Config.deploymentDir);
 
-        //TODO: check if the user has configured the dpeloyments directory
-        if(wildFlyAppServerDetector.isApplicable()
-                && "/deployments".equals(defaultBaseDir)){
-            defaultBaseDir = wildFlyAppServerDetector.getDeploymentDir();
+        //TODO: check if the user has configured the deployments directory
+        if ("/deployments".equals(defaultBaseDir)) {
+            defaultBaseDir = appServerDetector.getDeploymentDir();
         }
         return defaultBaseDir;
+    }
+
+    private enum Config implements Configs.Key {
+        deploymentDir {{d = "/deployments";}},
+        user {{ d = "jboss:jboss:jboss"; }},
+        cmd {{ d = "/opt/tomcat/bin/deploy-and-run.sh"; }},
+        webPort {{d = "8080";}},
+        jolokiaPort {{d = "8778";}};
+
+        protected String d;
+
+        public String def() { return d; }
     }
 }

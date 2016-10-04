@@ -14,6 +14,11 @@ public class TomcatAppSeverDetector extends AbstractAppServerDetector {
     }
 
     @Override
+    public AppServerDetectorFactory.Kind getKind() {
+        return AppServerDetectorFactory.Kind.TOMCAT;
+    }
+
+    @Override
     public boolean isApplicable() {
         String[] tomcatFilesFound = scanFiles("**/META-INF/context.xml");
         return tomcatFilesFound != null && tomcatFilesFound.length > 0;

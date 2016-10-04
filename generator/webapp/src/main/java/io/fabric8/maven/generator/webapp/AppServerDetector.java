@@ -32,5 +32,11 @@ public interface AppServerDetector {
      */
     String getFrom();
 
+    /**
+     *
+     * @return
+     */
+    AppServerDetectorFactory.Kind getKind();
+
 
 }

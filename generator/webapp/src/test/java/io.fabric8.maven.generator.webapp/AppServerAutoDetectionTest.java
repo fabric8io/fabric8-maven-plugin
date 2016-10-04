@@ -43,8 +43,8 @@ public class AppServerAutoDetectionTest {
 
         MavenProject mavenProject = new MavenProject(model);
         mavenProject.setBuild(build);
-        AppServerDetector appServerDetector = AppServerDetectorFactory.INSTANCE
-                .getAppServerDetector(AppServerDetectorFactory.Kind.WILDFLY, mavenProject);
+        AppServerDetector appServerDetector = AppServerDetectorFactory
+                .getInstance(mavenProject).whichAppKindOfAppServer();
         boolean actual = appServerDetector.isApplicable();
         assertTrue(actual);
     }
@@ -70,8 +70,8 @@ public class AppServerAutoDetectionTest {
 
         MavenProject mavenProject = new MavenProject(model);
         mavenProject.setBuild(build);
-        AppServerDetector appServerDetector = AppServerDetectorFactory.INSTANCE
-                .getAppServerDetector(AppServerDetectorFactory.Kind.TOMCAT, mavenProject);
+        AppServerDetector appServerDetector = AppServerDetectorFactory
+                .getInstance(mavenProject).whichAppKindOfAppServer();
         boolean actual = appServerDetector.isApplicable();
         assertTrue(actual);
     }
@@ -104,8 +104,8 @@ public class AppServerAutoDetectionTest {
 
         MavenProject mavenProject = new MavenProject(model);
         mavenProject.setBuild(build);
-        AppServerDetector appServerDetector = AppServerDetectorFactory.INSTANCE
-                .getAppServerDetector(AppServerDetectorFactory.Kind.JETTY, mavenProject);
+        AppServerDetector appServerDetector = AppServerDetectorFactory
+                .getInstance(mavenProject).whichAppKindOfAppServer();
         boolean actual = appServerDetector.isApplicable();
         assertTrue(actual);
     }
