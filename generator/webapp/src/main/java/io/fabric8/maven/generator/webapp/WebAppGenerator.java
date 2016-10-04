@@ -35,16 +35,23 @@ import java.util.Map;
  */
 public class WebAppGenerator extends BaseGenerator {
 
-    private static final String DOCKER_TOMCAT_FROM = "fabric8/tomcat-8";
-    private static final String DOCKER_JETTY_FROM = "fabric8/jetty-9";
-    private static final String DOCKER_WILDFLY_FROM = "jboss/wildfly";
 
     //TODO need to update the s2i images
     private static final String VANNILA_S2I_FROM = "fabric8/tomcat-8";
     private static final String REDHAT_DOCKER_S2I = "jboss-eap-6/eap64-openshift";
 
+    private final AppServerDetector wildFlyAppServerDetector;
+    private final AppServerDetector jettyAppServerDetector;
+    private final AppServerDetector tomcatAppServerDetector;
+
     public WebAppGenerator(MavenGeneratorContext context) {
         super(context, "webapp");
+        wildFlyAppServerDetector = AppServerDetectorFactory.INSTANCE
+                .getAppServerDetector(AppServerDetectorFactory.Kind.WILDFLY,getProject());
+        jettyAppServerDetector  = AppServerDetectorFactory.INSTANCE
+                .getAppServerDetector(AppServerDetectorFactory.Kind.JETTY,getProject());
+        tomcatAppServerDetector = AppServerDetectorFactory.INSTANCE
+                .getAppServerDetector(AppServerDetectorFactory.Kind.TOMCAT,getProject());
     }
 
     private enum Config implements Configs.Key {
@@ -93,7 +100,9 @@ public class WebAppGenerator extends BaseGenerator {
     protected List<String> extractPorts() {
         List<String> answer = new ArrayList<>();
         addPortIfValid(answer, getConfig(Config.webPort));
-        addPortIfValid(answer, getConfig(Config.jolokiaPort));
+        if(!wildFlyAppServerDetector.isApplicable()) {
+            addPortIfValid(answer, getConfig(Config.jolokiaPort));
+        }
         return answer;
     }
 
@@ -118,14 +127,14 @@ public class WebAppGenerator extends BaseGenerator {
 
         if (from == null) {
 
-            if (isJetty()) {
-                return DOCKER_JETTY_FROM;
-            } else if (isTomcat()) {
-                return DOCKER_TOMCAT_FROM;
-            } else if (isWildFly()) {
-                return DOCKER_WILDFLY_FROM;
+            if (jettyAppServerDetector.isApplicable()) {
+                return jettyAppServerDetector.getFrom();
+            } else if (tomcatAppServerDetector.isApplicable()) {
+                return tomcatAppServerDetector.getFrom();
+            } else if (wildFlyAppServerDetector.isApplicable()) {
+                return wildFlyAppServerDetector.getFrom();
             } else {
-                return DOCKER_TOMCAT_FROM;
+                return tomcatAppServerDetector.getFrom();
             }
 
         }
@@ -138,10 +147,10 @@ public class WebAppGenerator extends BaseGenerator {
         //since we use jboss/wildfly image the fabric8 deploy-and-run.sh will not work
         //we also make sure the user has not added custom cmd command to maven config
         if("/opt/tomcat/bin/deploy-and-run.sh".equals(cmd)) {
-            if (isWildFly()) {
-                cmd = "/opt/jboss/wildfly/bin/standalone.sh";
-            } else if (isJetty()) {
-                cmd = "/opt/jetty/bin/deploy-and-run.sh";
+            if (wildFlyAppServerDetector.isApplicable()) {
+                cmd = wildFlyAppServerDetector.getCommand();
+            } else if (jettyAppServerDetector.isApplicable()) {
+                cmd = jettyAppServerDetector.getCommand();
             }
         }
 
@@ -152,39 +161,11 @@ public class WebAppGenerator extends BaseGenerator {
 
         String defaultBaseDir = getConfig(Config.deploymentDir);
 
-        if(isWildFly()
+        //TODO: check if the user has configured the dpeloyments directory
+        if(wildFlyAppServerDetector.isApplicable()
                 && "/deployments".equals(defaultBaseDir)){
-            defaultBaseDir = "/opt/jboss/wildfly/standalone/deployments";
+            defaultBaseDir = wildFlyAppServerDetector.getDeploymentDir();
         }
         return defaultBaseDir;
-    }
-
-    private boolean isJetty(){
-
-        return hasJettyPlugin() ||
-                AppSeverDetector.hasJettyFiles(getProject());
-    }
-
-    private boolean isTomcat(){
-
-        return AppSeverDetector.hasTomcatFiles(getProject());
-    }
-
-    private boolean isWildFly(){
-
-        return hasJBossOrWildFlyPlugin()||
-                AppSeverDetector.hasWildFlyFiles(getProject());
-    }
-
-    private boolean hasJBossOrWildFlyPlugin(){
-       return
-               MavenUtil.hasPlugin(getProject(), "org.jboss.as.plugins:jboss-as-maven-plugin")
-               || MavenUtil.hasPlugin(getProject(), "org.wildfly.plugins:wildfly-maven-plugin");
-    }
-
-    private boolean hasJettyPlugin(){
-        return
-                MavenUtil.hasPlugin(getProject(), "org.mortbay.jetty:jetty-maven-plugin")
-                        || MavenUtil.hasPlugin(getProject(), "org.eclipse.jetty:jetty-maven-plugin");
     }
 }

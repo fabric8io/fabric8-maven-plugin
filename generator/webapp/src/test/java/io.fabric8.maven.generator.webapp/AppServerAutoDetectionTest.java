@@ -2,26 +2,27 @@ package io.fabric8.maven.generator.webapp;
 
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
-import org.apache.maven.model.Resource;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
 
 import java.io.File;
 
-import static junit.framework.TestCase.*;
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertTrue;
 
 /**
  * @author kameshs
  */
 public class AppServerAutoDetectionTest {
 
+
     @Test
     public void testIsWildFly() throws Exception {
         String tmpDir = System.getProperty("java.io.tmpdir");
         assertNotNull(tmpDir);
 
-        new File(tmpDir,"WEB-INF/").mkdirs();
-        new File(tmpDir,"classes/META-INF").mkdirs();
+        new File(tmpDir, "WEB-INF/").mkdirs();
+        new File(tmpDir, "classes/META-INF").mkdirs();
 
         File wildFlyDeploymentStruct = new File(tmpDir, "WEB-INF/jboss-deployment-structure.xml");
         wildFlyDeploymentStruct.createNewFile();
@@ -42,7 +43,9 @@ public class AppServerAutoDetectionTest {
 
         MavenProject mavenProject = new MavenProject(model);
         mavenProject.setBuild(build);
-        boolean actual = AppSeverDetector.hasWildFlyFiles(mavenProject);
+        AppServerDetector appServerDetector = AppServerDetectorFactory.INSTANCE
+                .getAppServerDetector(AppServerDetectorFactory.Kind.WILDFLY, mavenProject);
+        boolean actual = appServerDetector.isApplicable();
         assertTrue(actual);
     }
 
@@ -51,7 +54,7 @@ public class AppServerAutoDetectionTest {
         String tmpDir = System.getProperty("java.io.tmpdir");
         assertNotNull(tmpDir);
 
-        new File(tmpDir,"classes/META-INF/").mkdirs();
+        new File(tmpDir, "classes/META-INF/").mkdirs();
 
         File tomcatContextResource = new File(tmpDir, "classes/META-INF/context.xml");
         tomcatContextResource.createNewFile();
@@ -67,7 +70,9 @@ public class AppServerAutoDetectionTest {
 
         MavenProject mavenProject = new MavenProject(model);
         mavenProject.setBuild(build);
-        boolean actual = AppSeverDetector.hasTomcatFiles(mavenProject);
+        AppServerDetector appServerDetector = AppServerDetectorFactory.INSTANCE
+                .getAppServerDetector(AppServerDetectorFactory.Kind.TOMCAT, mavenProject);
+        boolean actual = appServerDetector.isApplicable();
         assertTrue(actual);
     }
 
@@ -77,8 +82,8 @@ public class AppServerAutoDetectionTest {
         String tmpDir = System.getProperty("java.io.tmpdir");
         assertNotNull(tmpDir);
 
-        new File(tmpDir,"classes/META-INF/").mkdirs();
-        new File(tmpDir,"WEB-INF/").mkdirs();
+        new File(tmpDir, "classes/META-INF/").mkdirs();
+        new File(tmpDir, "WEB-INF/").mkdirs();
 
         File jettyLoggingResource = new File(tmpDir, "classes/jetty-logging.properties");
         jettyLoggingResource.createNewFile();
@@ -99,7 +104,9 @@ public class AppServerAutoDetectionTest {
 
         MavenProject mavenProject = new MavenProject(model);
         mavenProject.setBuild(build);
-        boolean actual = AppSeverDetector.hasJettyFiles(mavenProject);
+        AppServerDetector appServerDetector = AppServerDetectorFactory.INSTANCE
+                .getAppServerDetector(AppServerDetectorFactory.Kind.JETTY, mavenProject);
+        boolean actual = appServerDetector.isApplicable();
         assertTrue(actual);
     }
 
