@@ -1,5 +1,6 @@
 package io.fabric8.maven.generator.webapp.handler;
 
+import io.fabric8.maven.generator.api.DefaultImageLookup;
 import io.fabric8.maven.generator.webapp.AppServerHandler;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.io.DirectoryScanner;
@@ -9,10 +10,12 @@ import org.apache.maven.shared.utils.io.DirectoryScanner;
  */
 public abstract class AbstractAppServerHandler implements AppServerHandler {
 
-    protected MavenProject project;
+    protected final DefaultImageLookup imageLookup;
+    protected final MavenProject project;
 
     protected AbstractAppServerHandler(MavenProject project){
         this.project = project;
+        this.imageLookup = new DefaultImageLookup(this.getClass());
     }
 
     /**

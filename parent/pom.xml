@@ -63,12 +63,39 @@
     <version.fabric8>2.2.168</version.fabric8>
     <version.docker-maven-plugin>0.16.5</version.docker-maven-plugin>
 
-    <generator.java.docker.upstream.version>1.2.0</generator.java.docker.upstream.version>
-    <generator.java.s2i.upstream.version>1.3.4</generator.java.s2i.upstream.version>
-    <generator.java.s2i.redhat.version>2.0</generator.java.s2i.redhat.version>
-    <generator.karaf.s2i.upstream.version>1.3</generator.karaf.s2i.upstream.version>
-    <generator.karaf.s2i.redhat.version>2.0</generator.karaf.s2i.redhat.version>
+    <!-- Version of default images, updatable by CD -->
+    <version.image.java.upstream.docker>1.2.1</version.image.java.upstream.docker>
+    <version.image.java.upstream.s2i>1.3.4</version.image.java.upstream.s2i>
 
+    <!-- Hybrid image for S2I & Docker for RedHat -->
+    <version.image.java.redhat>2.0</version.image.java.redhat>
+
+    <!-- Hybrid images for S2I & docker for Karaf -->
+    <version.image.karaf.upstream>1.3</version.image.karaf.upstream>
+    <version.image.karaf.redhat>2.0</version.image.karaf.redhat>
+
+    <!-- Servlet container images -->
+    <version.image.tomcat.upstream>1.1.5</version.image.tomcat.upstream>
+    <version.image.jetty.upstream>1.1.10</version.image.jetty.upstream>
+    <version.image.wildfly.upstream>10.1.0.Final</version.image.wildfly.upstream>
+
+    <!-- ============================================= -->
+    <!-- Default images used in the defult generators. Please note that the generators make some assumption about
+         these images (e.g. where the deployment directory is), so don't change them arbitrarily -->
+
+    <!-- java (java-exec, spring-boot, wildfly-swarm) -->
+    <image.java.s2i.upstream>fabric8/s2i-java:${version.image.java.upstream.s2i}</image.java.s2i.upstream>
+    <image.java.docker.upstream>fabric8/java-alpine-openjdk8-jdk:${version.image.java.upstream.docker}</image.java.docker.upstream>
+    <image.java.redhat>jboss-fuse-6/fis-java-openshift:${version.image.java.redhat}</image.java.redhat>
+
+    <!-- karaf -->
+    <image.karaf.upstream>fabric8/s2i-karaf:${version.image.karaf.upstream}</image.karaf.upstream>
+    <image.karaf.redhat>jboss-fuse-6/fis-karaf-openshift:${version.image.karaf.redhat}</image.karaf.redhat>
+
+    <!-- webapp -->
+    <image.tomcat.upstream>fabric8/tomcat-8:${version.image.tomcat.upstream}</image.tomcat.upstream>
+    <image.jetty.upstream>fabric8/jetty-9:${version.image.jetty.upstream}</image.jetty.upstream>
+    <image.wildfly.upstream>jboss/wildfly:${version.image.wildfly.upstream}</image.wildfly.upstream>
   </properties>
 
   <repositories>
