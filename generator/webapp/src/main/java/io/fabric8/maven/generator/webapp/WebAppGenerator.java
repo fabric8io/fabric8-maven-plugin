@@ -23,33 +23,61 @@ import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
+import io.fabric8.maven.generator.webapp.handler.CustomAppServerHandler;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
+ * A generator for WAR apps
+ *
  * @author kameshs
  */
 public class WebAppGenerator extends BaseGenerator {
 
+    private AppServerHandler appServerHandler;
 
-    private AppServerDetector appServerDetector;
+    private enum Config implements Configs.Key {
+        // Directory where to deploy to
+        deploymentDir,
+
+        // Unix user under which the war should be installed. If null, the default image user is used
+        user,
+
+        // Command to execute. If null, the base image default command is used
+        cmd,
+
+        // Ports to expose as a command separated list
+        ports;
+
+        protected String d;
+
+        public String def() { return d; }
+    }
 
     public WebAppGenerator(MavenGeneratorContext context) {
         super(context, "webapp");
 
-        appServerDetector = AppServerDetectorFactory
-                .getInstance(getProject())
-                .whichAppKindOfAppServer();
+        if (getFrom() != null) {
+            // If a base image is provided use this exclusively and dont do a custom lookup
+            appServerHandler = createCustomAppServerHandler(context);
+        } else {
+            appServerHandler = new AppServerDetector(context.getProject()).detect();
+        }
+    }
 
-
+    private AppServerHandler createCustomAppServerHandler(MavenGeneratorContext context) {
+        String from = getFrom();
+        String user = getConfig(Config.user);
+        String deploymentDir = getConfig(Config.deploymentDir,"/deployments");
+        String command = getConfig(Config.cmd);
+        List<String> ports = Arrays.asList(getConfig(Config.ports, "8080").split("\\s*,\\s*"));
+        return new CustomAppServerHandler(from, deploymentDir, command, user, ports);
     }
 
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
         return shouldAddDefaultImage(configs) &&
-                MavenUtil.hasPlugin(getProject(), "org.apache.maven.plugins:maven-war-plugin");
+               MavenUtil.hasPlugin(getProject(), "org.apache.maven.plugins:maven-war-plugin");
     }
 
     protected Map<String, String> getEnv() {
@@ -60,12 +88,14 @@ public class WebAppGenerator extends BaseGenerator {
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {
+        log.info("Using %s as base image for webapp",appServerHandler.getFrom());
+
         ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
 
         BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
                 .assembly(createAssembly())
                 .from(getFrom())
-                .ports(appServerDetector.exposedPorts())
+                .ports(appServerHandler.exposedPorts())
                 .cmd(getDockerRunCommand())
                 .env(getEnv());
         addLatestTagIfSnapshot(buildBuilder);
@@ -79,54 +109,34 @@ public class WebAppGenerator extends BaseGenerator {
     }
 
     private AssemblyConfiguration createAssembly() {
-        return new AssemblyConfiguration.Builder()
+        AssemblyConfiguration.Builder builder = new AssemblyConfiguration.Builder()
                 .basedir(getDeploymentDir())
-                .user(getConfig(Config.user))
-                .descriptorRef("webapp")
-                .build();
+                .descriptorRef("webapp");
+        String user = getUser();
+        if (user != null) {
+            builder.user(user);
+        }
+        return builder.build();
     }
 
     @Override
     protected String getFrom() {
-
         String from = super.getFrom();
-
-        if (from == null) {
-            return appServerDetector.getFrom();
-
-        }
-        return from;
+        return from != null ? from : appServerHandler.getFrom();
     }
 
     private String getDockerRunCommand() {
-
-        String cmd = getConfig(Config.cmd, null);
-
-        if (cmd == null) {
-            return appServerDetector.getCommand();
-        }
-
-        return cmd;
+        String cmd = getConfig(Config.cmd);
+        return cmd != null ? cmd : appServerHandler.getCommand();
     }
 
     private String getDeploymentDir() {
-
-        String defaultBaseDir = getConfig(Config.deploymentDir, null);
-
-        if (defaultBaseDir == null) {
-            return appServerDetector.getDeploymentDir();
-        } else {
-            return defaultBaseDir;
-        }
+        String deploymentDir = getConfig(Config.deploymentDir);
+        return deploymentDir != null ? deploymentDir : appServerHandler.getDeploymentDir();
     }
 
-    private enum Config implements Configs.Key {
-        deploymentDir {{d = "/deployments";}},
-        user {{ d = "jboss:jboss:jboss"; }},
-        cmd {{ d = "/opt/tomcat/bin/deploy-and-run.sh"; }};
-
-        protected String d;
-
-        public String def() { return d; }
+    private String getUser() {
+        String user = getConfig(Config.user);
+        return user != null ? user : appServerHandler.getUser();
     }
 }

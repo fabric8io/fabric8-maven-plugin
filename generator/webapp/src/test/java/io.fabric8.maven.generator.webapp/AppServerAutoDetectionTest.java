@@ -1,5 +1,6 @@
 package io.fabric8.maven.generator.webapp;
 
+import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
 import org.apache.maven.project.MavenProject;
@@ -43,9 +44,9 @@ public class AppServerAutoDetectionTest {
 
         MavenProject mavenProject = new MavenProject(model);
         mavenProject.setBuild(build);
-        AppServerDetector appServerDetector = AppServerDetectorFactory
-                .getInstance(mavenProject).whichAppKindOfAppServer();
-        boolean actual = appServerDetector.isApplicable();
+
+        AppServerHandler appServerHandler = new AppServerDetector(mavenProject).detect();
+        boolean actual = appServerHandler.isApplicable();
         assertTrue(actual);
     }
 
@@ -70,9 +71,8 @@ public class AppServerAutoDetectionTest {
 
         MavenProject mavenProject = new MavenProject(model);
         mavenProject.setBuild(build);
-        AppServerDetector appServerDetector = AppServerDetectorFactory
-                .getInstance(mavenProject).whichAppKindOfAppServer();
-        boolean actual = appServerDetector.isApplicable();
+        AppServerHandler appServerHandler = new AppServerDetector(mavenProject).detect();
+        boolean actual = appServerHandler.isApplicable();
         assertTrue(actual);
     }
 
@@ -104,9 +104,8 @@ public class AppServerAutoDetectionTest {
 
         MavenProject mavenProject = new MavenProject(model);
         mavenProject.setBuild(build);
-        AppServerDetector appServerDetector = AppServerDetectorFactory
-                .getInstance(mavenProject).whichAppKindOfAppServer();
-        boolean actual = appServerDetector.isApplicable();
+        AppServerHandler appServerHandler = new AppServerDetector(mavenProject).detect();
+        boolean actual = appServerHandler.isApplicable();
         assertTrue(actual);
     }
 

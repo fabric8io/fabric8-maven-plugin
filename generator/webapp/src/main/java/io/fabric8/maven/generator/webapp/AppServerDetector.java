@@ -1,51 +1,38 @@
 package io.fabric8.maven.generator.webapp;
 
+import io.fabric8.maven.generator.api.MavenGeneratorContext;
+import io.fabric8.maven.generator.webapp.handler.JettyAppSeverHandler;
+import io.fabric8.maven.generator.webapp.handler.TomcatAppSeverHandler;
+import io.fabric8.maven.generator.webapp.handler.WildFlyAppSeverHandler;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.utils.io.DirectoryScanner;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * @author kameshs
  */
-public interface AppServerDetector {
+class AppServerDetector {
 
-    /**
-     *
-     * @return
-     */
-    boolean isApplicable();
+    private final List<? extends AppServerHandler> serverHandlers;
+    private final AppServerHandler defaultHandler;
 
-    /**
-     *
-     * @return
-     */
-    String getDeploymentDir();
+    AppServerDetector(MavenProject project) {
+        // Add new handlers to this list for new appservers
+        serverHandlers =
+            Arrays.asList(
+                new JettyAppSeverHandler(project),
+                new WildFlyAppSeverHandler(project),
+                defaultHandler = new TomcatAppSeverHandler(project)
+                         );
+    }
 
-    /**
-     *
-     * @return
-     */
-    String getCommand();
-
-    /**
-     *
-     * @return
-     */
-    String getFrom();
-
-    /**
-     *
-     * @return
-     */
-    AppServerDetectorFactory.Kind getKind();
-
-
-    /**
-     * 
-     * @return
-     */
-    List<String> exposedPorts();
-
-
+    AppServerHandler detect() {
+        for (AppServerHandler handler : serverHandlers) {
+            if (handler.isApplicable()) {
+                return handler;
+            }
+        }
+        return defaultHandler;
+    }
 }
