@@ -13,8 +13,6 @@ public abstract class AbstractAppServerHandler implements AppServerHandler {
     protected final DefaultImageLookup imageLookup;
     protected final MavenProject project;
 
-    private final String[] NO_FILES = {};
-
     protected AbstractAppServerHandler(MavenProject project) {
         this.project = project;
         this.imageLookup = new DefaultImageLookup(this.getClass());
@@ -27,8 +25,7 @@ public abstract class AbstractAppServerHandler implements AppServerHandler {
      * @return list of files found
      */
     protected String[] scanFiles(String... patterns) {
-        String buildOutputDir =
-                project.getBuild().getOutputDirectory();
+        String buildOutputDir = project.getBuild().getOutputDirectory();
         if (buildOutputDir != null) {
             DirectoryScanner directoryScanner = new DirectoryScanner();
             directoryScanner.setBasedir(buildOutputDir);
@@ -36,7 +33,7 @@ public abstract class AbstractAppServerHandler implements AppServerHandler {
             directoryScanner.scan();
             return directoryScanner.getIncludedFiles();
         } else {
-            return NO_FILES;
+            return new String[0];
         }
 
     }
