@@ -25,7 +25,10 @@ import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
 import io.fabric8.maven.generator.webapp.handler.CustomAppServerHandler;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A generator for WAR apps
@@ -122,21 +125,45 @@ public class WebAppGenerator extends BaseGenerator {
     @Override
     protected String getFrom() {
         String from = super.getFrom();
-        return from != null ? from : appServerHandler.getFrom();
+        if (from != null) {
+            return from;
+        }
+        if (appServerHandler != null) {
+            return appServerHandler.getFrom();
+        }
+        return null;
     }
 
     private String getDockerRunCommand() {
         String cmd = getConfig(Config.cmd);
-        return cmd != null ? cmd : appServerHandler.getCommand();
+        if (cmd != null) {
+            return cmd;
+        }
+        if (appServerHandler != null) {
+            return appServerHandler.getCommand();
+        }
+        return null;
     }
 
     private String getDeploymentDir() {
         String deploymentDir = getConfig(Config.deploymentDir);
-        return deploymentDir != null ? deploymentDir : appServerHandler.getDeploymentDir();
+        if (deploymentDir != null) {
+            return deploymentDir;
+        }
+        if (appServerHandler != null) {
+            return appServerHandler.getDeploymentDir();
+        }
+        return null;
     }
 
     private String getUser() {
         String user = getConfig(Config.user);
-        return user != null ? user : appServerHandler.getUser();
+        if (user != null) {
+            return user;
+        }
+        if (appServerHandler != null) {
+            return appServerHandler.getUser();
+        }
+        return null;
     }
 }
