@@ -45,30 +45,42 @@ public class SpringBootGenerator extends JavaRunGenerator {
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
         return shouldAddDefaultImage(configs) &&
-                MavenUtil.hasPlugin(getProject(), SPRING_BOOT_MAVEN_PLUGIN_GA);
+                MavenUtil.hasPlugin(getProject(), SPRING_BOOT_MAVEN_PLUGIN_GA) &&
+                // if we don't use spring boot repackaging then lets use regular JavaExecGenerator
+                // and pass in a mainClass etc
+                isSpringBootRepackage();
     }
 
     @Override
     protected boolean isFatJarWithNoDependencies() {
         String fatJarConfig = getConfig(fatJar);
         if (Strings.isNullOrEmpty(fatJarConfig)) {
-            MavenProject project = getProject();
-            if (project != null) {
-                Plugin plugin = project.getPlugin(SPRING_BOOT_MAVEN_PLUGIN_GA);
-                if (plugin != null) {
-                    Map<String, PluginExecution> executionsAsMap = plugin.getExecutionsAsMap();
-                    if (executionsAsMap != null) {
-                        for (PluginExecution execution : executionsAsMap.values()) {
-                            List<String> goals = execution.getGoals();
-                            if (goals.contains("repackage")) {
-                                log.info("Using fat jar packaging as the spring boot plugin is using `repackage` goal execution");
-                                return true;
-                            }
+            boolean springBootRepackage = isSpringBootRepackage();
+            if (springBootRepackage) {
+                log.info("Using fat jar packaging as the spring boot plugin is using `repackage` goal execution");
+            }
+        }
+        return super.isFatJarWithNoDependencies();
+    }
+
+    protected boolean isSpringBootRepackage() {
+        boolean springBootRepackage = false;
+        MavenProject project = getProject();
+        if (project != null) {
+            Plugin plugin = project.getPlugin(SPRING_BOOT_MAVEN_PLUGIN_GA);
+            if (plugin != null) {
+                Map<String, PluginExecution> executionsAsMap = plugin.getExecutionsAsMap();
+                if (executionsAsMap != null) {
+                    for (PluginExecution execution : executionsAsMap.values()) {
+                        List<String> goals = execution.getGoals();
+                        if (goals.contains("repackage")) {
+                            springBootRepackage = true;
+                            break;
                         }
                     }
                 }
             }
         }
-        return super.isFatJarWithNoDependencies();
+        return springBootRepackage;
     }
 }
