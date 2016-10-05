@@ -17,6 +17,7 @@ package io.fabric8.maven.generator.api.support;
  */
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.*;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
@@ -52,12 +53,12 @@ public class JavaRunGeneratorTest {
     @Test
     public void fromSelector() throws IOException {
         Object[] data = {
-            "3.1.123", PlatformMode.kubernetes, null, "generator.java.docker.upstream",
-            "3.1.redhat-101", PlatformMode.kubernetes, null, "generator.java.docker.redhat",
-            "3.1.123", PlatformMode.openshift, OpenShiftBuildStrategy.docker, "generator.java.docker.upstream",
-            "3.1.redhat-101", PlatformMode.openshift, OpenShiftBuildStrategy.docker, "generator.java.docker.redhat",
-            "3.1.123", PlatformMode.openshift, OpenShiftBuildStrategy.s2i, "generator.java.s2i.upstream",
-            "3.1.redhat-101", PlatformMode.openshift, OpenShiftBuildStrategy.s2i, "generator.java.s2i.redhat",
+            "3.1.123", PlatformMode.kubernetes, null, "java.docker.upstream",
+            "3.1.redhat-101", PlatformMode.kubernetes, null, "java.docker.redhat",
+            "3.1.123", PlatformMode.openshift, OpenShiftBuildStrategy.docker, "java.docker.upstream",
+            "3.1.redhat-101", PlatformMode.openshift, OpenShiftBuildStrategy.docker, "java.docker.redhat",
+            "3.1.123", PlatformMode.openshift, OpenShiftBuildStrategy.s2i, "java.s2i.upstream",
+            "3.1.redhat-101", PlatformMode.openshift, OpenShiftBuildStrategy.s2i, "java.s2i.redhat",
         };
 
         Properties imageProps = getDefaultImageProps();
@@ -82,7 +83,10 @@ public class JavaRunGeneratorTest {
 
     private Properties getDefaultImageProps() throws IOException {
         Properties props = new Properties();
-        props.load(getClass().getResourceAsStream("/META-INF/fabric8/java-default-images.properties"));
+        Enumeration<URL> resources = getClass().getClassLoader().getResources("META-INF/fabric8/default-images.properties");
+        while (resources.hasMoreElements()) {
+            props.load(resources.nextElement().openStream());
+        }
         return props;
     }
 }
