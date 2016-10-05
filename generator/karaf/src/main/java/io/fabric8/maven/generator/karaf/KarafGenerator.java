@@ -32,35 +32,8 @@ import io.fabric8.utils.Strings;
 
 public class KarafGenerator extends BaseGenerator {
 
-    private static final String SETTINGS_RESOURCE_FILE = "/META-INF/fabric8/karaf-default-images.properties";
-    private static final Properties BUILD_SETTINGS;
-
-    static {
-        BUILD_SETTINGS = new Properties();
-        try {
-            BUILD_SETTINGS.load(KarafGenerator.class.getResourceAsStream(SETTINGS_RESOURCE_FILE));
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Cannot load default images properties " + SETTINGS_RESOURCE_FILE + ": " + e,e);
-        }
-    }
-
-    private static String getBuildSetting(String key) {
-        String val = BUILD_SETTINGS.getProperty(key);
-        if (val == null) {
-            throw new IllegalArgumentException("Cannot retrieve default value " + key + " from " + SETTINGS_RESOURCE_FILE);
-        }
-        return val;
-    }
-
-    private static final String IMAGE_S2I_UPSTREAM_VERSION = getBuildSetting("generator.karaf.s2i.upstream.version");
-    private static final String IMAGE_S2I_PRODUCT_VERSION = getBuildSetting("generator.karaf.s2i.redhat.version");
-
     public KarafGenerator(MavenGeneratorContext context) {
-        super(context, "karaf", new FromSelector.Default(context,
-                "fabric8/s2i-karaf:" + IMAGE_S2I_UPSTREAM_VERSION,
-                "fabric8/s2i-karaf:" + IMAGE_S2I_UPSTREAM_VERSION,
-                "jboss-fuse-6/fis-karaf-openshift:" + IMAGE_S2I_PRODUCT_VERSION,
-                "jboss-fuse-6/fis-karaf-openshift:" + IMAGE_S2I_PRODUCT_VERSION));
+        super(context, "karaf", new FromSelector.Default(context,"karaf"));
     }
 
     private enum Config implements Configs.Key {

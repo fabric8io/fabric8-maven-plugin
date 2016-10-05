@@ -35,7 +35,7 @@ public class WildFlyAppSeverHandler extends AbstractAppServerHandler {
 
     @Override
     public String getFrom() {
-        return imageLookup.getImageName("image.wildfly.upstream");
+        return imageLookup.getImageName("wildfly.upstream.docker");
     }
 
     @Override

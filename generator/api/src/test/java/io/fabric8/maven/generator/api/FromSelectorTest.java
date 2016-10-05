@@ -72,7 +72,7 @@ public class FromSelectorTest {
                plugin.getVersion(); result = version;
             }};
 
-            FromSelector selector = new FromSelector.Default(ctx, "docker", "s2i", "redhat-docker", "redhat-s2i");
+            FromSelector selector = new FromSelector.Default(ctx, "test");
 
             assertEquals(data[i + 3], selector.getFrom());
         }

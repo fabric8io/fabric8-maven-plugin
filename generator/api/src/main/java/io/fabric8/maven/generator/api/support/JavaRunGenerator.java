@@ -24,12 +24,10 @@ import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.utils.Strings;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * @author roland
@@ -39,7 +37,7 @@ import java.util.Properties;
 abstract public class JavaRunGenerator extends BaseGenerator {
 
     public JavaRunGenerator(MavenGeneratorContext context, String name) {
-        super(context, name, new Java(context));
+        super(context, name, new FromSelector.Default(context, "java"));
     }
 
     public enum Config implements Configs.Key {
@@ -126,38 +124,4 @@ abstract public class JavaRunGenerator extends BaseGenerator {
         }
     }
 
-    /**
-     * Default selector for plain Java apps started with a run script
-     */
-    static class Java extends FromSelector.Default {
-
-        private static final Properties defaultImageProps;
-
-        public static final String JAVA_DEFAULT_IMAGES_PROPERTIES = "/META-INF/fabric8/java-default-images.properties";
-
-        static {
-            defaultImageProps = new Properties();
-            try {
-                defaultImageProps.load(Java.class.getResourceAsStream(JAVA_DEFAULT_IMAGES_PROPERTIES));
-            } catch (IOException e) {
-                throw new IllegalArgumentException("Cannot load default images properties " + JAVA_DEFAULT_IMAGES_PROPERTIES + ": " + e,e);
-            }
-        }
-
-        public Java(MavenGeneratorContext context) {
-            super(context,
-                  getImageProp("generator.java.docker.upstream"),
-                  getImageProp("generator.java.s2i.upstream"),
-                  getImageProp("generator.java.docker.redhat"),
-                  getImageProp("generator.java.s2i.redhat"));
-        }
-
-        private static String getImageProp(String key) {
-            String val = defaultImageProps.getProperty(key);
-            if (val == null) {
-                throw new IllegalArgumentException("Cannot retrieve default value " + key + " from " + JAVA_DEFAULT_IMAGES_PROPERTIES);
-            }
-            return val;
-        }
-    }
 }

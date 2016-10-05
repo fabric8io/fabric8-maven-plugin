@@ -28,7 +28,7 @@ public class JettyAppSeverHandler extends AbstractAppServerHandler {
 
     @Override
     public String getFrom() {
-        return imageLookup.getImageName("image.tomcat.upstream");
+        return imageLookup.getImageName("jetty.upstream.docker");
     }
 
     @Override

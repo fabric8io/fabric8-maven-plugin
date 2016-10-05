@@ -53,19 +53,20 @@ public class JavaRunGeneratorTest {
     @Test
     public void fromSelector() throws IOException {
         Object[] data = {
-            "3.1.123", PlatformMode.kubernetes, null, "java.docker.upstream",
-            "3.1.redhat-101", PlatformMode.kubernetes, null, "java.docker.redhat",
-            "3.1.123", PlatformMode.openshift, OpenShiftBuildStrategy.docker, "java.docker.upstream",
-            "3.1.redhat-101", PlatformMode.openshift, OpenShiftBuildStrategy.docker, "java.docker.redhat",
-            "3.1.123", PlatformMode.openshift, OpenShiftBuildStrategy.s2i, "java.s2i.upstream",
-            "3.1.redhat-101", PlatformMode.openshift, OpenShiftBuildStrategy.s2i, "java.s2i.redhat",
+            "3.1.123", PlatformMode.kubernetes, null, "java.upstream.docker",
+            "3.1.redhat-101", PlatformMode.kubernetes, null, "java.redhat.docker",
+            "3.1.123", PlatformMode.openshift, OpenShiftBuildStrategy.docker, "java.upstream.docker",
+            "3.1.redhat-101", PlatformMode.openshift, OpenShiftBuildStrategy.docker, "java.redhat.docker",
+            "3.1.123", PlatformMode.openshift, OpenShiftBuildStrategy.s2i, "java.upstream.s2i",
+            "3.1.redhat-101", PlatformMode.openshift, OpenShiftBuildStrategy.s2i, "java.redhat.s2i",
         };
 
         Properties imageProps = getDefaultImageProps();
 
         for (int i = 0; i < data.length; i += 4) {
             prepareExpectation((String) data[i], (PlatformMode) data[i+1], (OpenShiftBuildStrategy) data[i+2]);
-            FromSelector selector = new JavaRunGenerator.Java(ctx);
+            final MavenGeneratorContext context = ctx;
+            FromSelector selector = new FromSelector.Default(context, "java");
             String from = selector.getFrom();
             assertEquals(imageProps.getProperty((String) data[i+3]), from);
         }

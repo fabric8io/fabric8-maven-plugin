@@ -24,7 +24,7 @@ public class TomcatAppSeverHandler extends AbstractAppServerHandler {
 
     @Override
     public String getFrom() {
-        return imageLookup.getImageName("image.tomcat.upstream");
+        return imageLookup.getImageName("tomcat.upstream.docker");
     }
 
     @Override
