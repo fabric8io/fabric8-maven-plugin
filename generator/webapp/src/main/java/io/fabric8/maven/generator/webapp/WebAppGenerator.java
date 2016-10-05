@@ -60,20 +60,20 @@ public class WebAppGenerator extends BaseGenerator {
     public WebAppGenerator(MavenGeneratorContext context) {
         super(context, "webapp");
 
-        if (getFrom() != null) {
+        String from = super.getFrom();
+        if (from != null) {
             // If a base image is provided use this exclusively and dont do a custom lookup
-            appServerHandler = createCustomAppServerHandler(context);
+            appServerHandler = createCustomAppServerHandler(context, from);
         } else {
             appServerHandler = new AppServerDetector(context.getProject()).detect();
         }
     }
 
-    private AppServerHandler createCustomAppServerHandler(MavenGeneratorContext context) {
-        String from = getFrom();
-        String user = getConfig(Config.user);
-        String deploymentDir = getConfig(Config.deploymentDir,"/deployments");
-        String command = getConfig(Config.cmd);
-        List<String> ports = Arrays.asList(getConfig(Config.ports, "8080").split("\\s*,\\s*"));
+    private AppServerHandler createCustomAppServerHandler(MavenGeneratorContext context, String from) {
+        String user = super.getConfig(Config.user);
+        String deploymentDir = super.getConfig(Config.deploymentDir,"/deployments");
+        String command = super.getConfig(Config.cmd);
+        List<String> ports = Arrays.asList(super.getConfig(Config.ports, "8080").split("\\s*,\\s*"));
         return new CustomAppServerHandler(from, deploymentDir, command, user, ports);
     }
 
@@ -125,45 +125,21 @@ public class WebAppGenerator extends BaseGenerator {
     @Override
     protected String getFrom() {
         String from = super.getFrom();
-        if (from != null) {
-            return from;
-        }
-        if (appServerHandler != null) {
-            return appServerHandler.getFrom();
-        }
-        return null;
+        return from != null ? from : appServerHandler.getFrom();
     }
 
     private String getDockerRunCommand() {
         String cmd = getConfig(Config.cmd);
-        if (cmd != null) {
-            return cmd;
-        }
-        if (appServerHandler != null) {
-            return appServerHandler.getCommand();
-        }
-        return null;
+        return cmd != null ? cmd : appServerHandler.getCommand();
     }
 
     private String getDeploymentDir() {
         String deploymentDir = getConfig(Config.deploymentDir);
-        if (deploymentDir != null) {
-            return deploymentDir;
-        }
-        if (appServerHandler != null) {
-            return appServerHandler.getDeploymentDir();
-        }
-        return null;
+        return deploymentDir != null ? deploymentDir : appServerHandler.getDeploymentDir();
     }
 
     private String getUser() {
         String user = getConfig(Config.user);
-        if (user != null) {
-            return user;
-        }
-        if (appServerHandler != null) {
-            return appServerHandler.getUser();
-        }
-        return null;
+        return user != null ? user : appServerHandler.getUser();
     }
 }
