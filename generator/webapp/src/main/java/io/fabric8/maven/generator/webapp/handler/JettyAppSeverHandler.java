@@ -28,7 +28,7 @@ public class JettyAppSeverHandler extends AbstractAppServerHandler {
 
     @Override
     public String getFrom() {
-        return "fabric8/jetty-9";
+        return imageLookup.getImageName("jetty.upstream.docker");
     }
 
     @Override

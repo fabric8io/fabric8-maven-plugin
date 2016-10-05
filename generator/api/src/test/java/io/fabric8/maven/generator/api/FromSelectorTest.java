@@ -51,16 +51,16 @@ public class FromSelectorTest {
     @Test
     public void simple() {
         final Object[] data = new Object[] {
-            openshift, s2i, "1.2.3.redhat-00009", "redhat-s2i",
-            openshift, docker, "1.2.3.redhat-00009", "redhat-docker",
-            openshift, s2i, "1.2.3", "s2i",
-            openshift, docker, "1.2.3", "docker",
-            null, s2i, "1.2.3.redhat-00009", "redhat-docker",
-            null, docker, "1.2.3.redhat-00009", "redhat-docker",
-            null, s2i, "1.2.3", "docker",
-            null, docker, "1.2.3", "docker",
-            openshift, null, "1.2.3.redhat-00009", "redhat-docker",
-            openshift, null, "1.2.3", "docker",
+            openshift, s2i, "1.2.3.redhat-00009", "redhat-s2i-prop",
+            openshift, docker, "1.2.3.redhat-00009", "redhat-docker-prop",
+            openshift, s2i, "1.2.3", "s2i-prop",
+            openshift, docker, "1.2.3", "docker-prop",
+            null, s2i, "1.2.3.redhat-00009", "redhat-docker-prop",
+            null, docker, "1.2.3.redhat-00009", "redhat-docker-prop",
+            null, s2i, "1.2.3", "docker-prop",
+            null, docker, "1.2.3", "docker-prop",
+            openshift, null, "1.2.3.redhat-00009", "redhat-docker-prop",
+            openshift, null, "1.2.3", "docker-prop",
         };
 
         for (int i = 0; i < data.length; i += 4) {
@@ -72,7 +72,7 @@ public class FromSelectorTest {
                plugin.getVersion(); result = version;
             }};
 
-            FromSelector selector = new FromSelector.Default(ctx, "docker", "s2i", "redhat-docker", "redhat-s2i");
+            FromSelector selector = new FromSelector.Default(ctx, "test");
 
             assertEquals(data[i + 3], selector.getFrom());
         }

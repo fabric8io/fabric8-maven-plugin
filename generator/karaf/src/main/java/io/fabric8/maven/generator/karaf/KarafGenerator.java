@@ -15,8 +15,10 @@
  */
 package io.fabric8.maven.generator.karaf;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
@@ -30,15 +32,8 @@ import io.fabric8.utils.Strings;
 
 public class KarafGenerator extends BaseGenerator {
 
-    private static final String IMAGE_S2I_UPSTREAM_VERSION = "1.3";
-    private static final String IMAGE_S2I_PRODUCT_VERSION = "2.0";
-
     public KarafGenerator(MavenGeneratorContext context) {
-        super(context, "karaf", new FromSelector.Default(context,
-                "fabric8/s2i-karaf:" + IMAGE_S2I_UPSTREAM_VERSION,
-                "fabric8/s2i-karaf:" + IMAGE_S2I_UPSTREAM_VERSION,
-                "jboss-fuse-6/fis-karaf-openshift:" + IMAGE_S2I_PRODUCT_VERSION,
-                "jboss-fuse-6/fis-karaf-openshift:" + IMAGE_S2I_PRODUCT_VERSION));
+        super(context, "karaf", new FromSelector.Default(context,"karaf"));
     }
 
     private enum Config implements Configs.Key {

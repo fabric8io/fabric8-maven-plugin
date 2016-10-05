@@ -65,28 +65,28 @@ public abstract class FromSelector {
 
     public static class Default extends FromSelector {
 
-        private final String vanillaDocker;
-        private final String vanillaS2i;
+        private final String upstreamDocker;
+        private final String upstreamS2i;
         private final String redhatDocker;
         private final String redhatS2i;
 
-        public Default(MavenGeneratorContext context, String vanillaDocker, String vanillaS2i,
-                       String redhatDocker, String redhatS2i) {
+        public Default(MavenGeneratorContext context, String prefix) {
             super(context);
-            this.vanillaDocker = vanillaDocker;
-            this.vanillaS2i = vanillaS2i;
-            this.redhatDocker = redhatDocker;
-            this.redhatS2i = redhatS2i;
+            DefaultImageLookup lookup = new DefaultImageLookup(Default.class);
+            this.upstreamDocker = lookup.getImageName(prefix + ".upstream.docker");
+            this.upstreamS2i = lookup.getImageName(prefix + ".upstream.s2i");
+            this.redhatDocker = lookup.getImageName(prefix + ".redhat.docker");
+            this.redhatS2i = lookup.getImageName(prefix + ".redhat.s2i");
         }
 
         @Override
         protected String getDockerBuildFrom() {
-            return isRedHat() ? redhatDocker : vanillaDocker;
+            return isRedHat() ? redhatDocker : upstreamDocker;
         }
 
         @Override
         protected String getS2iBuildFrom() {
-            return isRedHat() ? redhatS2i : vanillaS2i;
+            return isRedHat() ? redhatS2i : upstreamS2i;
         }
     }
 }
