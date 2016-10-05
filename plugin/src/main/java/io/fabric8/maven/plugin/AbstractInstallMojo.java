@@ -25,6 +25,8 @@ import org.codehaus.plexus.components.interactivity.Prompter;
 import org.codehaus.plexus.components.interactivity.PrompterException;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -194,7 +196,12 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
 
         boolean result = file.renameTo(destFile);
         if (!result) {
-            throw new MojoExecutionException("Failed to rename temporary file " + file + " to " + destFile);
+            // lets try copy it instead as this could be an odd linux issue with renaming files
+            try {
+                IOHelpers.copy(new FileInputStream(file), new FileOutputStream(destFile));
+            } catch (IOException e) {
+                throw new MojoExecutionException("Failed to copy temporary file " + file + " to " + destFile + ": " + e, e);
+            }
         }
         log.info("Downloaded gofabric8 version " + version + " platform: " + platform + " arch:" + arch + " on: " + System.getProperty("os.name") + " " + arch + " to: " + destFile);
     }
