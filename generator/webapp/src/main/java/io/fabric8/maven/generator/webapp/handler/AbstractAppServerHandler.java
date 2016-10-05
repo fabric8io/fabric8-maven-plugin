@@ -13,33 +13,39 @@ public abstract class AbstractAppServerHandler implements AppServerHandler {
     protected final DefaultImageLookup imageLookup;
     protected final MavenProject project;
 
-    protected AbstractAppServerHandler(MavenProject project){
+    protected AbstractAppServerHandler(MavenProject project) {
         this.project = project;
         this.imageLookup = new DefaultImageLookup(this.getClass());
     }
 
     /**
      * Scan the project's output directory for certain files.
+     *
      * @param patterns one or more patterns which fit to Maven's include syntax
      * @return list of files found
      */
     protected String[] scanFiles(String... patterns) {
-        String buildOutputDir =
-                project.getBuild().getOutputDirectory();
-        DirectoryScanner directoryScanner = new DirectoryScanner();
-        directoryScanner.setBasedir(buildOutputDir);
-        directoryScanner.setIncludes(patterns);
-        directoryScanner.scan();
-        return directoryScanner.getIncludedFiles();
+        String buildOutputDir = project.getBuild().getOutputDirectory();
+        if (buildOutputDir != null) {
+            DirectoryScanner directoryScanner = new DirectoryScanner();
+            directoryScanner.setBasedir(buildOutputDir);
+            directoryScanner.setIncludes(patterns);
+            directoryScanner.scan();
+            return directoryScanner.getIncludedFiles();
+        } else {
+            return new String[0];
+        }
+
     }
 
     /**
      * Check whether one of the given file patterns can be found
      * in the project output directory
+     *
      * @param patterns patterns to check
      * @return true if the one such file exists least
      */
-    protected boolean hasOneOf(String ... patterns) {
+    protected boolean hasOneOf(String... patterns) {
         return scanFiles(patterns).length > 0;
     }
 }
