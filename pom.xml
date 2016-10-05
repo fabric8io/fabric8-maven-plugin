@@ -47,6 +47,7 @@
     <module>generator/spring-boot</module>
     <module>generator/wildfly-swarm</module>
     <module>generator/karaf</module>
+    <module>generator/webapp</module>
   </modules>
 
   <scm>
