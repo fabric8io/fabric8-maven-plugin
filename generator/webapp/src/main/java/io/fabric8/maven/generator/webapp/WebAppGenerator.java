@@ -16,6 +16,8 @@
  */
 package io.fabric8.maven.generator.webapp;
 
+import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
@@ -85,6 +87,13 @@ public class WebAppGenerator extends BaseGenerator {
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {
+        if (getContext().getMode() == PlatformMode.openshift &&
+            getContext().getStrategy() == OpenShiftBuildStrategy.s2i) {
+            throw new IllegalArgumentException("S2I not yet supported for the webapp-generator. Use -Dfabric8.mode=kubernetes or " +
+                                               "-Dfabric8.buildStrategy=docker for OpenShift mode. Please refer to the reference manual at " +
+                                               "https://maven.fabric8.io for details about build modes.");
+        }
+
         // Late initialization to avoid unnecessary directory scanning
         AppServerHandler handler = getAppServerHandler(getContext());
 
