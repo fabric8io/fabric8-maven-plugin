@@ -3,16 +3,27 @@ package io.fabric8.maven.generator.webapp;
 import io.fabric8.maven.core.util.MavenUtil;
 import org.apache.maven.project.MavenProject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author kameshs
  */
 public class JettyAppSeverDetector extends AbstractAppServerDetector {
 
 
-    public static final String DOCKER_JETTY_FROM = "fabric8/jetty-9";
+    public static final String DOCKER_FROM = "fabric8/jetty-9";
 
     public JettyAppSeverDetector(MavenProject mavenProject) {
         super(mavenProject);
+    }
+
+    @Override
+    public List<String> exposedPorts() {
+        List<String> ports = new ArrayList<>();
+        ports.add("8080");
+        ports.add("8778");
+        return ports;
     }
 
     @Override
@@ -33,7 +44,7 @@ public class JettyAppSeverDetector extends AbstractAppServerDetector {
 
     @Override
     public String getDeploymentDir() {
-        return null;
+        return "/deployments";
     }
 
     @Override
@@ -43,7 +54,7 @@ public class JettyAppSeverDetector extends AbstractAppServerDetector {
 
     @Override
     public String getFrom() {
-        return DOCKER_JETTY_FROM;
+        return DOCKER_FROM;
     }
 
     protected boolean hasPlugins() {

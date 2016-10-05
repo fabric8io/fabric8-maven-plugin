@@ -36,10 +36,6 @@ import java.util.Map;
 public class WebAppGenerator extends BaseGenerator {
 
 
-    //TODO need to update the s2i images
-    private static final String VANNILA_S2I_FROM = "fabric8/tomcat-8";
-    private static final String REDHAT_DOCKER_S2I = "jboss-eap-6/eap64-openshift";
-
     private AppServerDetector appServerDetector;
 
     public WebAppGenerator(MavenGeneratorContext context) {
@@ -60,7 +56,7 @@ public class WebAppGenerator extends BaseGenerator {
 
     protected Map<String, String> getEnv() {
         Map<String, String> defaultEnv = new HashMap<>();
-        defaultEnv.put("DEPLOY_DIR", getConfig(Config.deploymentDir));
+        defaultEnv.put("DEPLOY_DIR", appServerDetector.getDeploymentDir());
         return defaultEnv;
     }
 
@@ -71,7 +67,7 @@ public class WebAppGenerator extends BaseGenerator {
         BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
                 .assembly(createAssembly())
                 .from(getFrom())
-                .ports(extractPorts())
+                .ports(appServerDetector.exposedPorts())
                 .cmd(getDockerRunCommand())
                 .env(getEnv());
         addLatestTagIfSnapshot(buildBuilder);
@@ -84,24 +80,9 @@ public class WebAppGenerator extends BaseGenerator {
         return configs;
     }
 
-    protected List<String> extractPorts() {
-        List<String> answer = new ArrayList<>();
-        addPortIfValid(answer, getConfig(Config.webPort));
-        if (appServerDetector.getKind() != AppServerDetectorFactory.Kind.WILDFLY) {
-            addPortIfValid(answer, getConfig(Config.jolokiaPort));
-        }
-        return answer;
-    }
-
-    private void addPortIfValid(List<String> list, String port) {
-        if (Strings.isNotBlank(port)) {
-            list.add(port);
-        }
-    }
-
     private AssemblyConfiguration createAssembly() {
         return new AssemblyConfiguration.Builder()
-                .basedir(getDefaultBaseDir())
+                .basedir(getDeploymentDir())
                 .user(getConfig(Config.user))
                 .descriptorRef("webapp")
                 .build();
@@ -109,6 +90,7 @@ public class WebAppGenerator extends BaseGenerator {
 
     @Override
     protected String getFrom() {
+
         String from = super.getFrom();
 
         if (from == null) {
@@ -120,33 +102,30 @@ public class WebAppGenerator extends BaseGenerator {
 
     private String getDockerRunCommand() {
 
-        String cmd = getConfig(Config.cmd);
-        //since we use jboss/wildfly image the fabric8 deploy-and-run.sh will not work
-        //we also make sure the user has not added custom cmd command to maven config
-        if ("/opt/tomcat/bin/deploy-and-run.sh".equals(cmd)) {
-                cmd = appServerDetector.getCommand();
+        String cmd = getConfig(Config.cmd, null);
+
+        if (cmd == null) {
+            return appServerDetector.getCommand();
         }
 
         return cmd;
     }
 
-    private String getDefaultBaseDir() {
+    private String getDeploymentDir() {
 
-        String defaultBaseDir = getConfig(Config.deploymentDir);
+        String defaultBaseDir = getConfig(Config.deploymentDir, null);
 
-        //TODO: check if the user has configured the deployments directory
-        if ("/deployments".equals(defaultBaseDir)) {
-            defaultBaseDir = appServerDetector.getDeploymentDir();
+        if (defaultBaseDir == null) {
+            return appServerDetector.getDeploymentDir();
+        } else {
+            return defaultBaseDir;
         }
-        return defaultBaseDir;
     }
 
     private enum Config implements Configs.Key {
         deploymentDir {{d = "/deployments";}},
         user {{ d = "jboss:jboss:jboss"; }},
-        cmd {{ d = "/opt/tomcat/bin/deploy-and-run.sh"; }},
-        webPort {{d = "8080";}},
-        jolokiaPort {{d = "8778";}};
+        cmd {{ d = "/opt/tomcat/bin/deploy-and-run.sh"; }};
 
         protected String d;
 

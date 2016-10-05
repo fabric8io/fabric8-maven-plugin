@@ -2,19 +2,28 @@ package io.fabric8.maven.generator.webapp;
 
 import io.fabric8.maven.core.util.MavenUtil;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.utils.io.DirectoryScanner;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author kameshs
  */
 public class WildFlyAppSeverDetector extends AbstractAppServerDetector{
 
-    private static final String DOCKER_WILDFLY_FROM = "jboss/wildfly";
+    private static final String DOCKER_FROM = "jboss/wildfly";
     public static final String WILDFLY_DEPLOYMENTS_DIR = "/opt/jboss/wildfly/standalone/deployments";
     public static final String WILDFLY_RUN_COMMAND = "/opt/jboss/wildfly/bin/standalone.sh";
 
     public WildFlyAppSeverDetector(MavenProject project) {
         super(project);
+    }
+
+    @Override
+    public List<String> exposedPorts() {
+        List<String> ports = new ArrayList<>();
+        ports.add("8080");
+        return ports;
     }
 
     protected boolean hasPlugins(){
@@ -57,6 +66,6 @@ public class WildFlyAppSeverDetector extends AbstractAppServerDetector{
 
     @Override
     public String getFrom() {
-        return DOCKER_WILDFLY_FROM;
+        return DOCKER_FROM;
     }
 }
