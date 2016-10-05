@@ -37,8 +37,6 @@ import java.util.Map;
  */
 public class WebAppGenerator extends BaseGenerator {
 
-    private AppServerHandler appServerHandler;
-
     private enum Config implements Configs.Key {
         // Directory where to deploy to
         deploymentDir,
@@ -59,22 +57,6 @@ public class WebAppGenerator extends BaseGenerator {
 
     public WebAppGenerator(MavenGeneratorContext context) {
         super(context, "webapp");
-
-        String from = super.getFrom();
-        if (from != null) {
-            // If a base image is provided use this exclusively and dont do a custom lookup
-            appServerHandler = createCustomAppServerHandler(context, from);
-        } else {
-            appServerHandler = new AppServerDetector(context.getProject()).detect();
-        }
-    }
-
-    private AppServerHandler createCustomAppServerHandler(MavenGeneratorContext context, String from) {
-        String user = super.getConfig(Config.user);
-        String deploymentDir = super.getConfig(Config.deploymentDir,"/deployments");
-        String command = super.getConfig(Config.cmd);
-        List<String> ports = Arrays.asList(super.getConfig(Config.ports, "8080").split("\\s*,\\s*"));
-        return new CustomAppServerHandler(from, deploymentDir, command, user, ports);
     }
 
     @Override
@@ -83,24 +65,39 @@ public class WebAppGenerator extends BaseGenerator {
                MavenUtil.hasPlugin(getProject(), "org.apache.maven.plugins:maven-war-plugin");
     }
 
-    protected Map<String, String> getEnv() {
-        Map<String, String> defaultEnv = new HashMap<>();
-        defaultEnv.put("DEPLOY_DIR", getDeploymentDir());
-        return defaultEnv;
+    private AppServerHandler getAppServerHandler(MavenGeneratorContext context) {
+        String from = super.getFrom();
+        if (from != null) {
+            // If a base image is provided use this exclusively and dont do a custom lookup
+            return createCustomAppServerHandler(from);
+        } else {
+            return new AppServerDetector(context.getProject()).detect();
+        }
+    }
+
+    private AppServerHandler createCustomAppServerHandler(String from) {
+        String user = getConfig(Config.user);
+        String deploymentDir = getConfig(Config.deploymentDir,"/deployments");
+        String command = getConfig(Config.cmd);
+        List<String> ports = Arrays.asList(getConfig(Config.ports, "8080").split("\\s*,\\s*"));
+        return new CustomAppServerHandler(from, deploymentDir, command, user, ports);
     }
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {
-        log.info("Using %s as base image for webapp",appServerHandler.getFrom());
+        // Late initialization to avoid unnecessary directory scanning
+        AppServerHandler handler = getAppServerHandler(getContext());
+
+        log.info("Using %s as base image for webapp",handler.getFrom());
 
         ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
 
         BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
-                .assembly(createAssembly())
-                .from(getFrom())
-                .ports(appServerHandler.exposedPorts())
-                .cmd(getDockerRunCommand())
-                .env(getEnv());
+                .assembly(createAssembly(handler))
+                .from(getFrom(handler))
+                .ports(handler.exposedPorts())
+                .cmd(getDockerRunCommand(handler))
+                .env(getEnv(handler));
         addLatestTagIfSnapshot(buildBuilder);
         imageBuilder
                 .name(getImageName())
@@ -111,35 +108,42 @@ public class WebAppGenerator extends BaseGenerator {
         return configs;
     }
 
-    private AssemblyConfiguration createAssembly() {
+    protected Map<String, String> getEnv(AppServerHandler handler) {
+        Map<String, String> defaultEnv = new HashMap<>();
+        defaultEnv.put("DEPLOY_DIR", getDeploymentDir(handler));
+        return defaultEnv;
+    }
+
+    private AssemblyConfiguration createAssembly(AppServerHandler handler) {
         AssemblyConfiguration.Builder builder = new AssemblyConfiguration.Builder()
-                .basedir(getDeploymentDir())
+                .basedir(getDeploymentDir(handler))
                 .descriptorRef("webapp");
-        String user = getUser();
+        String user = getUser(handler);
         if (user != null) {
             builder.user(user);
         }
         return builder.build();
     }
 
-    @Override
-    protected String getFrom() {
+    // To be called **only** from customize() as they require an already
+    // initialized appServerHandler:
+    protected String getFrom(AppServerHandler handler) {
         String from = super.getFrom();
-        return from != null ? from : appServerHandler.getFrom();
+        return from != null ? from : handler.getFrom();
     }
 
-    private String getDockerRunCommand() {
+    private String getDockerRunCommand(AppServerHandler handler) {
         String cmd = getConfig(Config.cmd);
-        return cmd != null ? cmd : appServerHandler.getCommand();
+        return cmd != null ? cmd : handler.getCommand();
     }
 
-    private String getDeploymentDir() {
+    private String getDeploymentDir(AppServerHandler handler) {
         String deploymentDir = getConfig(Config.deploymentDir);
-        return deploymentDir != null ? deploymentDir : appServerHandler.getDeploymentDir();
+        return deploymentDir != null ? deploymentDir : handler.getDeploymentDir();
     }
 
-    private String getUser() {
+    private String getUser(AppServerHandler handler) {
         String user = getConfig(Config.user);
-        return user != null ? user : appServerHandler.getUser();
+        return user != null ? user : handler.getUser();
     }
 }
