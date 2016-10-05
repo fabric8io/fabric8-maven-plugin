@@ -1,5 +1,7 @@
 package io.fabric8.maven.generator.webapp.handler;
 
+import java.io.File;
+
 import io.fabric8.maven.generator.api.DefaultImageLookup;
 import io.fabric8.maven.generator.webapp.AppServerHandler;
 import org.apache.maven.project.MavenProject;
@@ -26,7 +28,7 @@ public abstract class AbstractAppServerHandler implements AppServerHandler {
      */
     protected String[] scanFiles(String... patterns) {
         String buildOutputDir = project.getBuild().getOutputDirectory();
-        if (buildOutputDir != null) {
+        if (buildOutputDir != null && new File(buildOutputDir).exists()) {
             DirectoryScanner directoryScanner = new DirectoryScanner();
             directoryScanner.setBasedir(buildOutputDir);
             directoryScanner.setIncludes(patterns);
