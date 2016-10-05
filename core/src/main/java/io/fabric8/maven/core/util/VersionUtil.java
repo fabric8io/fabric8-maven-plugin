@@ -15,6 +15,9 @@
  */
 package io.fabric8.maven.core.util;
 
+import java.io.IOException;
+import java.util.Properties;
+
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
 
@@ -22,6 +25,33 @@ import io.fabric8.utils.Strings;
 /**
  */
 public class VersionUtil {
+
+    private static final String VERSION_PROPERTIES = "/META-INF/fabric8/version.properties";
+    private static final Properties versionProperties;
+
+    static {
+        versionProperties = new Properties();
+        try {
+            versionProperties.load(VersionUtil.class.getResourceAsStream(VERSION_PROPERTIES));
+        } catch (IOException e) {
+            throw new IllegalArgumentException(String.format("Cannot load version properties %s : %s", VERSION_PROPERTIES, e), e);
+        }
+    }
+
+    /**
+     * Load a version property from a properties file
+     * @param component component for which to get the version
+     * @return the version
+     * @throws IllegalArgumentException if no such version exists
+     */
+    public static String getVersion(String component) {
+        String ret = versionProperties.getProperty(component);
+        if (ret == null) {
+            throw new IllegalArgumentException(String.format("No version for component %s found in %s", component, VERSION_PROPERTIES));
+        }
+        return ret;
+    }
+
     /**
      * Compares two version strings such that "1.10.1" > "1.4" etc
      */
