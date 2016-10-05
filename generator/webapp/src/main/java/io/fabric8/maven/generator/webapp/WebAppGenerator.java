@@ -23,9 +23,7 @@ import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
-import io.fabric8.utils.Strings;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +54,7 @@ public class WebAppGenerator extends BaseGenerator {
 
     protected Map<String, String> getEnv() {
         Map<String, String> defaultEnv = new HashMap<>();
-        defaultEnv.put("DEPLOY_DIR", appServerDetector.getDeploymentDir());
+        defaultEnv.put("DEPLOY_DIR", getDeploymentDir());
         return defaultEnv;
     }
 
