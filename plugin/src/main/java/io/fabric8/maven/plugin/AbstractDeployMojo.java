@@ -220,7 +220,7 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
      * How many seconds to wait for a URL to be generated for a service
      */
     @Parameter(property = "fabric8.serviceUrl.waitSeconds", defaultValue = "5")
-    private long serviceUrlWaitTimeSeconds;
+    protected long serviceUrlWaitTimeSeconds;
 
     private ClusterAccess clusterAccess;
 

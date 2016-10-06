@@ -68,7 +68,7 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
     private Logger newPodLog;
     private Logger oldPodLog;
 
-    protected void tailAppPodsLogs(final KubernetesClient kubernetes, final String namespace, final Set<HasMetadata> entities, boolean watchAddedPodsOnly, String onExitOperation, boolean followLog, Date ignorePodsOlderThan) {
+    protected void tailAppPodsLogs(final KubernetesClient kubernetes, final String namespace, final Set<HasMetadata> entities, boolean watchAddedPodsOnly, String onExitOperation, boolean followLog, Date ignorePodsOlderThan, boolean waitInCurrentThread) {
         LabelSelector selector = null;
         for (HasMetadata entity : entities) {
             selector = getPodLabelSelector(entity);
@@ -107,13 +107,13 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
                     }
                 });
             }
-            waitAndLogPods(kubernetes, namespace, selector, watchAddedPodsOnly, ctrlCMessage, followLog, ignorePodsOlderThan);
+            waitAndLogPods(kubernetes, namespace, selector, watchAddedPodsOnly, ctrlCMessage, followLog, ignorePodsOlderThan, waitInCurrentThread);
         } else {
             log.warn("No selector in deployment so cannot watch pods!");
         }
     }
 
-    private void waitAndLogPods(final KubernetesClient kubernetes, final String namespace, LabelSelector selector, final boolean watchAddedPodsOnly, final String ctrlCMessage, final boolean followLog, Date ignorePodsOlderThan) {
+    private void waitAndLogPods(final KubernetesClient kubernetes, final String namespace, LabelSelector selector, final boolean watchAddedPodsOnly, final String ctrlCMessage, final boolean followLog, Date ignorePodsOlderThan, boolean waitInCurrentThread) {
         FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> pods = withSelector(kubernetes.pods().inNamespace(namespace), selector);
         log.info("Watching pods with selector " + selector + " waiting for a running pod...");
         Pod latestPod = null;
@@ -171,12 +171,13 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
             }
         });
 
-        // now lets wait forever?
-        while (terminateLatch.getCount() > 0) {
-            try {
-                terminateLatch.await();
-            } catch (InterruptedException e) {
-                // ignore
+        if (waitInCurrentThread) {
+            while (terminateLatch.getCount() > 0) {
+                try {
+                    terminateLatch.await();
+                } catch (InterruptedException e) {
+                    // ignore
+                }
             }
         }
     }

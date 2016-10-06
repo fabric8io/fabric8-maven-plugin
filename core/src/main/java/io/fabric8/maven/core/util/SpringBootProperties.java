@@ -21,4 +21,5 @@ package io.fabric8.maven.core.util;
 public class SpringBootProperties {
     public static final String MANAGEMENT_PORT = "management.port";
     public static final String SERVER_PORT = "server.port";
+    public static final String DEV_TOOLS_REMOTE_SECRET = "spring.devtools.remote.secret";
 }
