@@ -3308,6 +3308,17 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 </div>
 </div>
 <div class="paragraph">
+<p>You also need to add the spring boot devtools to your pom.xml dependencies:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;dependency&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>org.springframework.boot<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>spring-boot-devtools<span class="tag">&lt;/artifactId&gt;</span>
+<span class="tag">&lt;/dependency&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
 <p>then deploy your app:</p>
 </div>
 <div class="listingblock">
@@ -4731,7 +4742,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.64<br>
-Last updated 2016-10-06 18:44:11 UTC
+Last updated 2016-10-06 19:46:03 UTC
 </div>
 </div>
 </body>
