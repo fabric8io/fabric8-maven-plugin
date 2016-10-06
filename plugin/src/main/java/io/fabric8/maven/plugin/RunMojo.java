@@ -29,7 +29,7 @@ import java.util.Date;
 import java.util.Set;
 
 /**
- * This goal forks the install goal then applies the generated kubernetes resources to the current cluster,
+ * This goal forks the install goal then applies the generated kubernetes resources to the current cluster, builds the images,
  * waits for the new pod to start and tails it to the console.
  * Pressing <code>Ctrl+C</code> will then terminate the application.
  * <p>
