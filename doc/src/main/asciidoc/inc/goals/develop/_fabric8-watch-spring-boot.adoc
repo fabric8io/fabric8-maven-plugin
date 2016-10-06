@@ -11,6 +11,16 @@ Before using this goal you need to add the `spring.devtools.remote.secret` prope
 spring.devtools.remote.secret=mysecrettoken
 ----
 
+You also need to add the spring boot devtools to your pom.xml dependencies:
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
+    </dependency>
+----
+
 then deploy your app:
 
 [source, sh]
