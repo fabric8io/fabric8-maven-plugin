@@ -53,7 +53,7 @@ public class RunMojo extends AbstractTailLogMojo {
         Date ignorePodsOlderThan = new Date();
         super.applyEntities(controller, kubernetes, namespace, fileName, entities);
 
-        tailAppPodsLogs(kubernetes, namespace, entities, true, this.onExitOperation, true, ignorePodsOlderThan);
+        tailAppPodsLogs(kubernetes, namespace, entities, true, this.onExitOperation, true, ignorePodsOlderThan, false);
     }
 
 
