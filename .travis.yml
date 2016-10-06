@@ -1,5 +1,8 @@
 # We use Travis for updating the Sonarqube stats
 language: java
+branches:
+  only:
+    - master
 jdk:
   - oraclejdk8
 before_install:
