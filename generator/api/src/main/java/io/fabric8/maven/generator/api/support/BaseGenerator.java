@@ -29,6 +29,7 @@ import org.apache.maven.project.MavenProject;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * @author roland
@@ -41,6 +42,20 @@ abstract public class BaseGenerator implements Generator {
     private final GeneratorConfig config;
     protected final PrefixedLogger log;
     private final FromSelector fromSelector;
+
+    /**
+     * Returns the maven project property or the default value
+     */
+    protected String getProjectProperty(String propertyName, String defaultValue) {
+        MavenProject project = getProject();
+        if (project != null) {
+            Properties properties = project.getProperties();
+            if (properties != null) {
+                return properties.getProperty(propertyName, defaultValue);
+            }
+        }
+        return defaultValue;
+    }
 
     private enum Config implements Configs.Key {
         // Whether to merge in existing configuration or not
