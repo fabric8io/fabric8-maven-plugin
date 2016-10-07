@@ -43,7 +43,7 @@ public class GeneratorManager {
     public static List<ImageConfiguration> generate(List<ImageConfiguration> imageConfigs,
                                                     ProcessorConfig generatorConfig,
                                                     MavenProject project,
-                                                    MavenSession session, GoalFinder goalFinder, Logger log,
+                                                    MavenSession session, GoalFinder goalFinder, String goalName, Logger log,
                                                     PlatformMode mode,
                                                     OpenShiftBuildStrategy strategy,
                                                     boolean useProjectClasspath) throws MojoExecutionException {
@@ -51,7 +51,7 @@ public class GeneratorManager {
         List<ImageConfiguration> ret = imageConfigs;
 
         PluginServiceFactory<MavenGeneratorContext> pluginFactory = new PluginServiceFactory<>(
-            new MavenGeneratorContext(project, session, goalFinder, generatorConfig, log, mode, strategy));
+            new MavenGeneratorContext(project, session, goalFinder, generatorConfig, goalName, log, mode, strategy));
 
         if (useProjectClasspath) {
             pluginFactory.addAdditionalClassLoader(ClassUtil.createProjectClassLoader(project, log));

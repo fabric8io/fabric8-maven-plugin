@@ -100,7 +100,9 @@ import static io.fabric8.maven.plugin.AbstractDeployMojo.loadResources;
  * @author roland
  * @since 16/03/16
  */
-@Mojo(name = "build", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST, requiresDependencyResolution = ResolutionScope.COMPILE)
+@Mojo(name = "build", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST,
+        requiresDependencyResolution = ResolutionScope.RUNTIME_PLUS_SYSTEM,
+        requiresDependencyCollection = ResolutionScope.RUNTIME_PLUS_SYSTEM)
 public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     /**
@@ -278,7 +280,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         platformMode = clusterAccess.resolvePlatformMode(mode, log);
 
         try {
-            return GeneratorManager.generate(configs, extractGeneratorConfig(), project, session, goalFinder, log, platformMode, buildStrategy, useProjectClasspath);
+            return GeneratorManager.generate(configs, extractGeneratorConfig(), project, session, goalFinder, "fabric8:build", log, platformMode, buildStrategy, useProjectClasspath);
         } catch (MojoExecutionException e) {
             throw new IllegalArgumentException("Cannot extract generator config: " + e, e);
         }

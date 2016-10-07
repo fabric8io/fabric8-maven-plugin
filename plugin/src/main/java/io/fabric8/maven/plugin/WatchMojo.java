@@ -140,7 +140,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
             generator = new ProcessorConfig(includes, excludes, config);
         }
         try {
-            return GeneratorManager.generate(configs, generator, project, session, goalFinder, log, mode, buildStrategy, false);
+            return GeneratorManager.generate(configs, generator, project, session, goalFinder, "fabric8:watch", log, mode, buildStrategy, false);
         } catch (MojoExecutionException e) {
             throw new IllegalArgumentException("Cannot extract generator config: " + e, e);
         }

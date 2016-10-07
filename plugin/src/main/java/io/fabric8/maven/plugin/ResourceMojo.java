@@ -244,7 +244,12 @@ public class ResourceMojo extends AbstractResourceMojo {
         }
     }
 
-    private void lateInit() {
+    private void lateInit() throws MojoExecutionException {
+        if (goalFinder.runningWithGoal(project, session, "fabric8:watch") ||
+                goalFinder.runningWithGoal(project, session, "fabric8:watch")) {
+            Properties properties = project.getProperties();
+            properties.setProperty("fabric8.watch", "true");
+        }
         platformMode = clusterAccess.resolvePlatformMode(mode, log);
 
         if (isOpenShiftMode()) {
@@ -576,7 +581,7 @@ public class ResourceMojo extends AbstractResourceMojo {
                 @Override
                 public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
                     try {
-                        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, session, goalFinder, log, mode, buildStrategy, useProjectClasspath);
+                        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, session, goalFinder, "fabric8:resource", log, mode, buildStrategy, useProjectClasspath);
                     } catch (Exception e) {
                         throw new IllegalArgumentException("Cannot extract generator: " + e,e);
                     }
