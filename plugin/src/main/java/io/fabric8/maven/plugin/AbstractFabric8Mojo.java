@@ -33,11 +33,11 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.settings.Settings;
 import org.fusesource.jansi.Ansi;
 
 public abstract class AbstractFabric8Mojo extends AbstractMojo {
 
-    public static final Ansi.Color COLOR_POD_LOG = Ansi.Color.BLUE;
     @Parameter(defaultValue = "${project}", readonly = true)
     protected MavenProject project;
 
@@ -52,18 +52,20 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
     @Parameter(property = "fabric8.verbose", defaultValue = "false")
     protected boolean verbose;
 
+    // Settings holding authentication info
+    @Parameter(defaultValue = "${settings}", readonly = true)
+    protected Settings settings;
+
     protected Logger log;
 
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        log = new AnsiLogger(getLog(), useColor, verbose, "F8> ");
+        log = createLogger(" ");
         executeInternal();
     }
 
     public abstract void executeInternal() throws MojoExecutionException, MojoFailureException;
-
-
 
     protected String getProperty(String key) {
         String value = System.getProperty(key);
@@ -74,21 +76,18 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
     }
 
     protected Logger createExternalProcessLogger(String prefix) {
-        return createLogger(prefix, COLOR_POD_LOG);
+        return createLogger(prefix + "[[s]]");
     }
 
-    protected Logger createLogger(String prefix, Ansi.Color color) {
-        if (useColor) {
-            prefix += Ansi.ansi().fg(color);
-        }
-        return new AnsiLogger(getLog(), useColor, verbose, prefix);
+    protected Logger createLogger(String prefix) {
+        return new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), "F8:" + prefix);
     }
 
     protected OpenShiftClient getOpenShiftClientOrJenkinsShift(KubernetesClient kubernetes, String namespace) throws MojoExecutionException {
         OpenShiftClient openShiftClient = getOpenShiftClientOrNull(kubernetes);
         if (openShiftClient == null) {
             String jenkinshiftUrl = getJenkinShiftUrl(kubernetes, namespace);
-            log.debug("Using jenknshift URL: " + jenkinshiftUrl);
+            log.debug("Using jenkinshift URL: " + jenkinshiftUrl);
             if (jenkinshiftUrl == null) {
                 throw new MojoExecutionException("Could not find the service `" + ServiceNames.JENKINSHIFT + "` im namespace `" + namespace + "` on this kubernetes cluster " + kubernetes.getMasterUrl());
             }

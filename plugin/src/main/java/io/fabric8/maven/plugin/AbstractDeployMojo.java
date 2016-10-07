@@ -451,11 +451,10 @@ public class AbstractDeployMojo extends AbstractFabric8Mojo {
             log.warn(e.getMessage());
         }
         if (file != null) {
-            Logger logger = createExternalProcessLogger("hint> ");
-            logger.info("Use the command `" + file.getName() + " get pods -w` to watch your pods start up");
+            log.info("[[B]]HINT:[[B]] Use the command `%s get pods -w` to watch your pods start up",file.getName());
         }
 
-        Logger serviceLogger = createExternalProcessLogger("services> ");
+        Logger serviceLogger = createExternalProcessLogger("[[G]][SVC][[G]] ");
         long serviceUrlWaitTimeSeconds = this.serviceUrlWaitTimeSeconds;
         for (HasMetadata entity : entities) {
             if (entity instanceof Service) {
