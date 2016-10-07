@@ -36,13 +36,17 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
     }
 
     private Probe discoverSpringBootHealthCheck(int initialDelay) {
-        if (hasClass(this.getProject(), "org.springframework.boot.actuate.health.HealthIndicator")) {
-            Properties properties = SpringBootUtil.getSpringBootApplicationProperties(this.getProject());
-            Integer port = getInteger(properties, SpringBootProperties.MANAGEMENT_PORT, getInteger(properties, SpringBootProperties.SERVER_PORT, DEFAULT_MANAGEMENT_PORT));
+        try {
+            if (hasClass(this.getProject(), "org.springframework.boot.actuate.health.HealthIndicator")) {
+                Properties properties = SpringBootUtil.getSpringBootApplicationProperties(this.getProject());
+                Integer port = getInteger(properties, SpringBootProperties.MANAGEMENT_PORT, getInteger(properties, SpringBootProperties.SERVER_PORT, DEFAULT_MANAGEMENT_PORT));
 
-            // lets default to adding a spring boot actuator health check
-            return new ProbeBuilder().withNewHttpGet().
-                    withNewPort(port).withPath("/health").endHttpGet().withInitialDelaySeconds(initialDelay).build();
+                // lets default to adding a spring boot actuator health check
+                return new ProbeBuilder().withNewHttpGet().
+                        withNewPort(port).withPath("/health").endHttpGet().withInitialDelaySeconds(initialDelay).build();
+            }
+        } catch (Exception ex) {
+            log.error("Error while reading the spring-boot configuration", ex);
         }
         return null;
     }
