@@ -41,6 +41,8 @@ public class SpringBootUtilTest {
         assertEquals("jdbc:mysql://127.0.0.1:3306", props.getProperty("spring.datasource.url"));
         assertEquals("value0", props.getProperty("example.nested.items[0].value"));
         assertEquals("value1", props.getProperty("example.nested.items[1].value"));
+        assertEquals("sub0", props.getProperty("example.nested.items[2].elements[0].element[0].subelement"));
+        assertEquals("sub1", props.getProperty("example.nested.items[2].elements[0].element[1].subelement"));
 
     }
 

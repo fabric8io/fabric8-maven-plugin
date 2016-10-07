@@ -52,10 +52,10 @@ public class SpringBootUtil {
     protected static Properties getPropertiesResource(URL resource) {
         Properties answer = new Properties();
         if (resource != null) {
-            try {
-                answer.load(resource.openStream());
+            try(InputStream stream = resource.openStream()) {
+                answer.load(stream);
             } catch (IOException e) {
-                LOG.error("Failed to load properties from: " + resource + ". " + e, e);
+                throw new IllegalStateException("Error while reading resource from URL " + resource, e);
             }
         }
         return answer;
@@ -82,8 +82,8 @@ public class SpringBootUtil {
                 Properties properties = new Properties();
                 properties.putAll(getFlattenedMap(source));
                 return properties;
-            } catch (Exception e) {
-                LOG.error("Failed to load yaml properties from: " + resource + ". " + e, e);
+            } catch (IOException e) {
+                throw new IllegalStateException("Error while reading Yaml resource from URL " + resource, e);
             }
         }
         return new Properties();
