@@ -24,6 +24,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ClientResource;
 import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Closeables;
 import io.fabric8.utils.Strings;
@@ -100,7 +101,7 @@ public class WatchSpringBootMojo extends AbstractTailLogMojo {
     private void runRemoteSpringApplication(String url) throws MojoExecutionException {
         log.info("Running RemoteSpringApplication against endpoint: " + url);
 
-        Properties properties = MavenUtil.getSpringBootApplicationProperties(project);
+        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(project);
         String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET, System.getProperty(DEV_TOOLS_REMOTE_SECRET));
         if (Strings.isNullOrBlank(remoteSecret)) {
             log.warn("There is no `" + DEV_TOOLS_REMOTE_SECRET + "` property defined in your src/main/resources/application.properties. Please add one!");
