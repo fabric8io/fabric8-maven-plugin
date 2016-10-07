@@ -26,7 +26,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static io.fabric8.maven.docker.util.EnvUtil.isWindows;
 
 /**
  * A helper class for running external processes
@@ -123,6 +127,18 @@ public class ProcessUtil {
     public static File findExecutable(Logger log, String name) {
         List<File> pathDirectories = getPathDirectories(log);
         for (File directory : pathDirectories) {
+            if( isWindows() ) {
+                for (String extension : new String[]{".exe", ".bat", ".cmd"}) {
+                    File file = new File(directory, name+extension);
+                    if (file.exists() && file.isFile()) {
+                        if (!file.canExecute()) {
+                            log.warn("Found " + file + " on the PATH but it is not executable!");
+                        } else {
+                            return file;
+                        }
+                    }
+                }
+            }
             File file = new File(directory, name);
             if (file.exists() && file.isFile()) {
                 if (!file.canExecute()) {
@@ -157,6 +173,15 @@ public class ProcessUtil {
     private static List<File> getPathDirectories(Logger log) {
         List<File> pathDirectories = new ArrayList<>();
         String pathText = System.getenv("PATH");
+        if( isWindows() && pathText==null ) {
+            // On windows, the PATH env var is case insensitive, force to upper case.
+            for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
+                if( entry.getKey().equalsIgnoreCase("PATH") ) {
+                    pathText = entry.getValue();
+                    break;
+                }
+            }
+        }
         if (Strings.isNullOrBlank(pathText)) {
             log.warn("The $PATH environment variable is empty! Usually you have a PATH defined to find binaries. ");
             log.warn("Please report this to the fabric8 team: https://github.com/fabric8io/fabric8-maven-plugin/issues/new");
