@@ -34,6 +34,7 @@ import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.Gofabric8Util;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.ProfileUtil;
@@ -71,6 +72,7 @@ import io.fabric8.utils.Files;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -207,6 +209,10 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     protected File targetDir;
 
 
+    // Used for determining which mojos are called during a run
+    @Component
+    protected GoalFinder goalFinder;
+
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
 
@@ -271,7 +277,11 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
         platformMode = clusterAccess.resolvePlatformMode(mode, log);
 
-        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, log, platformMode, buildStrategy, useProjectClasspath);
+        try {
+            return GeneratorManager.generate(configs, extractGeneratorConfig(), project, session, goalFinder, log, platformMode, buildStrategy, useProjectClasspath);
+        } catch (MojoExecutionException e) {
+            throw new IllegalArgumentException("Cannot extract generator config: " + e, e);
+        }
     }
 
     @Override

@@ -23,6 +23,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.utils.Strings;
+import org.apache.maven.plugin.MojoExecutionException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,7 +54,7 @@ abstract public class JavaRunGenerator extends BaseGenerator {
     }
 
     @Override
-    public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {
+    public List<ImageConfiguration> customize(List<ImageConfiguration> configs) throws MojoExecutionException {
         ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
         BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
             .assembly(createAssembly())

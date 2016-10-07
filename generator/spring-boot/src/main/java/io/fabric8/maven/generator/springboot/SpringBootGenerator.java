@@ -17,17 +17,25 @@
 package io.fabric8.maven.generator.springboot;
 
 import com.google.common.base.Strings;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.maven.generator.api.support.JavaRunGenerator;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
 
+import static io.fabric8.maven.core.util.SpringBootProperties.DEV_TOOLS_REMOTE_SECRET;
 import static io.fabric8.maven.generator.api.support.JavaRunGenerator.Config.fatJar;
 
 /**
@@ -49,6 +57,40 @@ public class SpringBootGenerator extends JavaRunGenerator {
                 // if we don't use spring boot repackaging then lets use regular JavaExecGenerator
                 // and pass in a mainClass etc
                 isSpringBootRepackage();
+    }
+
+    @Override
+    public List<ImageConfiguration> customize(List<ImageConfiguration> configs) throws MojoExecutionException {
+        // if enabled lets generate a spring devtools token
+        String flag = getProjectProperty("fabric8.spring-devtools.generateToken", null);
+        boolean generateToken = !Strings.isNullOrEmpty(flag) && Configs.asBoolean(flag);
+        if (generateToken || getContext().runningWithGoal("fabric8:watch-spring-boot", "fabric8:watch")) {
+            generateSpringDevToolsToken();
+        }
+        return super.customize(configs);
+    }
+
+    private void generateSpringDevToolsToken() throws MojoExecutionException {
+        Properties properties = MavenUtil.getSpringBootApplicationProperties(getProject());
+        String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET);
+        if (Strings.isNullOrEmpty(remoteSecret)) {
+            String newToken = UUID.randomUUID().toString();
+            log.info("Generating the spring devtools token: " + newToken);
+
+            File file = new File(getProject().getBasedir(), "target/classes/application.properties");
+            file.getParentFile().mkdirs();
+
+            String text = "# lets configure the spring devtools remote secret\nspring.devtools.remote.secret=" + newToken + "\n";
+
+            if (file.exists()) {
+                text = "\n" + text;
+            }
+            try (FileWriter writer = new FileWriter(file, true)) {
+                writer.append(text);
+            } catch (IOException e) {
+                throw new MojoExecutionException("Failed to append to file: " + file + ". " + e, e);
+            }
+        }
     }
 
     @Override
