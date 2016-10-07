@@ -15,4 +15,10 @@ example:
         value: value0
       - name: item1
         value: value1
+      - name: item2
+        elements:
+        - element:
+          - subelement: sub0
+          - subelement: sub1
+
 
