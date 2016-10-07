@@ -146,7 +146,7 @@ public class WatchSpringBootMojo extends AbstractTailLogMojo {
                         process.destroy();
                     }
                 });
-                Logger logger = createLogger("spring> ", Ansi.Color.BLACK);
+                Logger logger = createLogger("[[G]][Spring][[G]] ");
                 processOutput(logger, process.getInputStream(), false);
                 processOutput(logger, process.getErrorStream(), true);
                 int status = process.waitFor();

@@ -76,8 +76,8 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
                 break;
             }
         }
-        newPodLog = createLogger("New Pod> ", Ansi.Color.CYAN);
-        oldPodLog = createLogger("Old Pod> ", Ansi.Color.DEFAULT);
+        newPodLog = createLogger("[[C]][NEW][[C]] ");
+        oldPodLog = createLogger("[[R]][OLD][[R]] ");
         if (selector != null) {
             String ctrlCMessage = "stop tailing the log";
             if (Strings.isNotBlank(onExitOperation)) {
@@ -115,7 +115,7 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
 
     private void waitAndLogPods(final KubernetesClient kubernetes, final String namespace, LabelSelector selector, final boolean watchAddedPodsOnly, final String ctrlCMessage, final boolean followLog, Date ignorePodsOlderThan, boolean waitInCurrentThread) {
         FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> pods = withSelector(kubernetes.pods().inNamespace(namespace), selector);
-        log.info("Watching pods with selector " + selector + " waiting for a running pod...");
+        log.info("Watching pods with selector %s waiting for a running pod...",selector);
         Pod latestPod = null;
         boolean runningPod = false;
         PodList list = pods.list();
@@ -201,7 +201,7 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
 
         Logger statusLog = Objects.equals(name, newestPodName) ? newPodLog : oldPodLog;
         if (!action.equals(Watcher.Action.MODIFIED) || watchingPodName == null || !watchingPodName.equals(name)) {
-            statusLog.info(name + " status: " + getPodStatusDescription(pod) + getPodStatusMessagePostfix(action));
+            statusLog.info("%s status: %s%s",name, getPodStatusDescription(pod), getPodStatusMessagePostfix(action));
         }
 
         if (watchPod != null && isPodRunning(watchPod)) {
@@ -212,7 +212,7 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
     private void watchLogOfPodName(KubernetesClient kubernetes, String namespace, String ctrlCMessage, boolean followLog, Pod pod, String name) {
         if (watchingPodName == null || !watchingPodName.equals(name)) {
             if (logWatcher != null) {
-                log.info("Closing log watcher for " + watchingPodName + " as now watching " + name);
+                log.info("Closing log watcher for %s as now watching %s",watchingPodName, name);
                 closeLogWatcher();
 
             }
@@ -239,11 +239,10 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
                 }
                 if (logText != null) {
                     String[] lines = logText.split("\n");
-                    Logger log = createPodLogger();
-                    log.info("Log of pod: " + name + containerNameMessage(containerName));
+                    log.info("Log of pod: %s%s", name, containerNameMessage(containerName));
                     log.info("");
                     for (String line : lines) {
-                        log.info(line);
+                        log.info("[[s]]%s",line);
                     }
                 }
                 terminateLatch.countDown();
@@ -278,7 +277,7 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
         newPodLog.info("Press Ctrl-C to " + ctrlCMessage);
         newPodLog.info("");
 
-        KubernetesResourceUtil.watchLogInThread(logWatcher, failureMessage, this.logWatchTerminateLatch, createPodLogger());
+        KubernetesResourceUtil.watchLogInThread(logWatcher, failureMessage, this.logWatchTerminateLatch, log);
     }
 
     private String containerNameMessage(String containerName) {
@@ -287,9 +286,4 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
         }
         return "";
     }
-
-    private Logger createPodLogger() {
-        return createExternalProcessLogger("Pod> ");
-    }
-
 }

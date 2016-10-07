@@ -141,7 +141,7 @@ public class DebugMojo extends AbstractDeployMojo {
         //  wait for the newest pod to be ready with the given env var
         FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> pods = withSelector(kubernetes.pods().inNamespace(namespace), selector);
         log.info("Waiting for debug pod with selector " + selector + " and $" + envVarName + " = " + envVarValue);
-        podWaitLog = createExternalProcessLogger("pod wait> ");
+        podWaitLog = createExternalProcessLogger("[[Y]][W][[Y]] ");
         PodList list = pods.list();
         if (list != null) {
             List<Pod> items = list.getItems();
@@ -244,7 +244,7 @@ public class DebugMojo extends AbstractDeployMojo {
             log.info("Now you can start a Remote debug execution in your IDE by using localhost and the debug port " + localDebugPort);
             log.info("");
 
-            processCommandAsync(process, createExternalProcessLogger(command + "> "), commands, message);
+            processCommandAsync(process, createExternalProcessLogger("[[B]]" + command + "[[B]] "), commands, message);
         } catch (Exception e) {
             throw new MojoExecutionException("Failed to execute process " + commands + " for " +
                     message + ": " + e, e);
