@@ -167,6 +167,18 @@
 
       <dependency>
         <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-enricher-karaf</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-enricher-spring-boot</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-generator-api</artifactId>
         <version>${project.version}</version>
       </dependency>
