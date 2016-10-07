@@ -18,7 +18,6 @@ package io.fabric8.maven.plugin;
 
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
@@ -100,7 +99,7 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
                 generator != null ?
                     generator :
                     ProfileUtil.extractProcesssorConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, resourceDir);
-            return GeneratorManager.generate(configs, generatorConcfig, project, session, goalFinder, log, mode, buildStrategy, false);
+            return GeneratorManager.generate(configs, generatorConcfig, project, session, goalFinder, "fabric8:push", log, mode, buildStrategy, false);
         } catch (Exception e) {
             throw new IllegalArgumentException("Cannot extract generator config: " + e,e);
         }

@@ -22,16 +22,20 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.maven.generator.api.support.JavaRunGenerator;
+import io.fabric8.utils.IOHelpers;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -66,6 +70,7 @@ public class SpringBootGenerator extends JavaRunGenerator {
         boolean generateToken = !Strings.isNullOrEmpty(flag) && Configs.asBoolean(flag);
         if (generateToken || getContext().runningWithGoal("fabric8:watch-spring-boot", "fabric8:watch")) {
             generateSpringDevToolsToken();
+            addDevToolsJar(configs);
         }
         return super.customize(configs);
     }
@@ -79,7 +84,6 @@ public class SpringBootGenerator extends JavaRunGenerator {
 
             File file = new File(getProject().getBasedir(), "target/classes/application.properties");
             file.getParentFile().mkdirs();
-
             String text = "# lets configure the spring devtools remote secret\nspring.devtools.remote.secret=" + newToken + "\n";
 
             if (file.exists()) {
@@ -92,6 +96,27 @@ public class SpringBootGenerator extends JavaRunGenerator {
             }
         }
     }
+
+    private void addDevToolsJar(List<ImageConfiguration> configs) throws MojoExecutionException {
+        if (Objects.equals("fabric8:resource", getContext().getGoalName()) && isFatJarWithNoDependencies()) {
+            MavenProject project = getProject();
+            File basedir = project.getBasedir();
+            File outputFile = new File(basedir, "target/classes/lib/spring-devtools.jar");
+            outputFile.getParentFile().mkdirs();
+
+            String resourceName = "fabric8-spring-devtools/spring-boot-devtools.jar";
+            URL resource = getClass().getClassLoader().getResource(resourceName);
+            if (resource == null) {
+                throw new MojoExecutionException("Could not find resource " + resourceName + " on the classpath!");
+            }
+            try {
+                IOHelpers.copy(resource.openStream(), new FileOutputStream(outputFile));
+            } catch (IOException e) {
+                throw new MojoExecutionException("Failed to copy " + resource + " to temp file " + outputFile + ". " + e, e);
+            }
+        }
+    }
+
 
     @Override
     protected boolean isFatJarWithNoDependencies() {
