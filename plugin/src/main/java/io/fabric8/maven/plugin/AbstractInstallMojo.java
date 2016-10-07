@@ -221,7 +221,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         log.info("Running command " + executableName + " " + commandLine);
         int result = -1;
         try {
-            result = ProcessUtil.runCommand(createExternalProcessLogger(executableName + "> "), commandLine, message);
+            result = ProcessUtil.runCommand(createExternalProcessLogger("[[B]]" + executableName + "[[B]] "), commandLine, message);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to execute " + message + ". " + e, e);
         }
