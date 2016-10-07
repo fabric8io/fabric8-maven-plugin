@@ -100,9 +100,7 @@ import static io.fabric8.maven.plugin.AbstractDeployMojo.loadResources;
  * @author roland
  * @since 16/03/16
  */
-@Mojo(name = "build", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST,
-        requiresDependencyResolution = ResolutionScope.RUNTIME_PLUS_SYSTEM,
-        requiresDependencyCollection = ResolutionScope.RUNTIME_PLUS_SYSTEM)
+@Mojo(name = "build", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     /**
