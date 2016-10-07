@@ -113,6 +113,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     private KubernetesClient kubernetes;
     private Controller controller;
 
+
     @Override
     protected synchronized void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
         clusterAccess = new ClusterAccess(namespace);
@@ -259,6 +260,6 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
 
     @Override
     protected String getLogPrefix() {
-        return "F8> ";
+        return "F8: ";
     }
 }

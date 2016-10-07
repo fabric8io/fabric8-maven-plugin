@@ -91,7 +91,6 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.maven.core.util.KubernetesResourceUtil.watchLogInThread;
 import static io.fabric8.maven.plugin.AbstractDeployMojo.DEFAULT_OPENSHIFT_MANIFEST;
 import static io.fabric8.maven.plugin.AbstractDeployMojo.loadResources;
-import static io.fabric8.maven.plugin.AbstractFabric8Mojo.COLOR_POD_LOG;
 
 /**
  * Builds the docker images configured for this project via a Docker or S2I binary build.
@@ -277,7 +276,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     @Override
     protected String getLogPrefix() {
-        return "F8> ";
+        return "F8: ";
     }
 
     // ==================================================================================================
@@ -338,7 +337,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         };
         log.info("Waiting for build " + buildName + " to complete...");
         try (LogWatch logWatch = client.pods().withName(buildName + "-build").watchLog()) {
-            watchLogInThread(logWatch, "Failed to tail build log", logTerminateLatch, createExternalProcessLogger("Build> "));
+            watchLogInThread(logWatch, "Failed to tail build log", logTerminateLatch, log);
 
             try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {
                 while (latch.getCount() > 0L) {
@@ -356,17 +355,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 log.info("Build " + buildName + " " + status);
             }
         }
-    }
-
-    protected Logger createExternalProcessLogger(String prefix) {
-        return createLogger(prefix, COLOR_POD_LOG);
-    }
-
-    protected Logger createLogger(String prefix, Ansi.Color color) {
-        if (useColor) {
-            prefix += Ansi.ansi().fg(color);
-        }
-        return new AnsiLogger(getLog(), useColor, verbose, prefix);
     }
 
     /**

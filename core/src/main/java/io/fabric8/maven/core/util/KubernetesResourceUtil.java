@@ -471,13 +471,12 @@ public class KubernetesResourceUtil {
                     while (true) {
                         String line = reader.readLine();
                         if (line == null) {
-                            log.info("Log closed");
                             return;
                         }
                         if (terminateLatch.getCount() <= 0L) {
                             return;
                         }
-                        log.info("%s", line);
+                        log.info("[[s]]%s", line);
                     }
                 } catch (IOException e) {
                     log.error("%s : %s",failureMessage, e);
