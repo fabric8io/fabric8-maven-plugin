@@ -49,6 +49,7 @@ import static io.fabric8.maven.generator.api.support.JavaRunGenerator.Config.fat
 public class SpringBootGenerator extends JavaRunGenerator {
 
     public static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
+    private Boolean springBootRepackage;
 
     public SpringBootGenerator(MavenGeneratorContext context) {
         super(context, "spring-boot");
@@ -65,10 +66,7 @@ public class SpringBootGenerator extends JavaRunGenerator {
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs) throws MojoExecutionException {
-        // if enabled lets generate a spring devtools token
-        String flag = getProjectProperty("fabric8.spring-devtools.generateToken", null);
-        boolean generateToken = !Strings.isNullOrEmpty(flag) && Configs.asBoolean(flag);
-        if (generateToken || getContext().runningWithGoal("fabric8:watch-spring-boot", "fabric8:watch")) {
+        if (getContext().isWatchMode()) {
             generateSpringDevToolsToken();
             addDevToolsJar(configs);
         }
@@ -80,7 +78,7 @@ public class SpringBootGenerator extends JavaRunGenerator {
         String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET);
         if (Strings.isNullOrEmpty(remoteSecret)) {
             String newToken = UUID.randomUUID().toString();
-            log.info("Generating the spring devtools token: " + newToken);
+            log.verbose("Generating the spring devtools token in property: " + DEV_TOOLS_REMOTE_SECRET);
 
             File file = new File(getProject().getBasedir(), "target/classes/application.properties");
             file.getParentFile().mkdirs();
@@ -124,7 +122,6 @@ public class SpringBootGenerator extends JavaRunGenerator {
         if (Strings.isNullOrEmpty(fatJarConfig)) {
             boolean springBootRepackage = isSpringBootRepackage();
             if (springBootRepackage) {
-                log.info("Using fat jar packaging as the spring boot plugin is using `repackage` goal execution");
                 return true;
             }
         }
@@ -132,18 +129,21 @@ public class SpringBootGenerator extends JavaRunGenerator {
     }
 
     protected boolean isSpringBootRepackage() {
-        boolean springBootRepackage = false;
-        MavenProject project = getProject();
-        if (project != null) {
-            Plugin plugin = project.getPlugin(SPRING_BOOT_MAVEN_PLUGIN_GA);
-            if (plugin != null) {
-                Map<String, PluginExecution> executionsAsMap = plugin.getExecutionsAsMap();
-                if (executionsAsMap != null) {
-                    for (PluginExecution execution : executionsAsMap.values()) {
-                        List<String> goals = execution.getGoals();
-                        if (goals.contains("repackage")) {
-                            springBootRepackage = true;
-                            break;
+        if (springBootRepackage == null) {
+            springBootRepackage = false;
+            MavenProject project = getProject();
+            if (project != null) {
+                Plugin plugin = project.getPlugin(SPRING_BOOT_MAVEN_PLUGIN_GA);
+                if (plugin != null) {
+                    Map<String, PluginExecution> executionsAsMap = plugin.getExecutionsAsMap();
+                    if (executionsAsMap != null) {
+                        for (PluginExecution execution : executionsAsMap.values()) {
+                            List<String> goals = execution.getGoals();
+                            if (goals.contains("repackage")) {
+                                springBootRepackage = true;
+                                log.info("Using fat jar packaging as the spring boot plugin is using `repackage` goal execution");
+                                break;
+                            }
                         }
                     }
                 }
