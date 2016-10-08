@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.maven.core.util.VersionUtil;
-import io.fabric8.utils.IOHelpers;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -34,7 +33,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -101,9 +102,11 @@ public class HelmIndexMojo extends AbstractArtifactSearchMojo {
 
         log.info("Creating Helm Chart Index file at: %s", outputFile);
         List<ArtifactDTO> artifacts = searchMaven("?q=l:%22helm%22");
+
+        ChartsRepository repository = new ChartsRepository();
         Map<String, ChartInfo> charts = new TreeMap<>();
         for (ArtifactDTO artifact : artifacts) {
-            addChartInfo(charts, artifact);
+            addChartInfo(repository, charts, artifact);
         }
 
         Set<Map.Entry<String, ChartInfo>> entries = charts.entrySet();
@@ -112,7 +115,7 @@ public class HelmIndexMojo extends AbstractArtifactSearchMojo {
         }
         try {
             ObjectMapper mapper = KubernetesHelper.createYamlObjectMapper();
-            mapper.writeValue(outputFile, charts);
+            mapper.writeValue(outputFile, repository);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to write results as YAML to: " + outputFile + ". " + e, e);
         }
@@ -179,7 +182,7 @@ public class HelmIndexMojo extends AbstractArtifactSearchMojo {
                         }
                         String description = getDescription(chartfile);
                         String version = chartfile.getVersion();
-                        String href = chartInfo.getUrl();
+                        String href = chartInfo.firstUrl();
                         writer.println("        <a href='" + href + "' title='" + description + "'>" + version + "</a>");
                     }
                     writer.println("      </td>");
@@ -246,7 +249,7 @@ public class HelmIndexMojo extends AbstractArtifactSearchMojo {
         }
     }
 
-    protected void addChartInfo(Map<String, ChartInfo> charts, ArtifactDTO artifact) {
+    protected void addChartInfo(ChartsRepository repository, Map<String, ChartInfo> charts, ArtifactDTO artifact) {
         // lets create the latest chart
         ChartInfo latest = new ChartInfo(mavenRepoUrl, artifact);
         String key = artifact.createKey();
@@ -256,6 +259,7 @@ public class HelmIndexMojo extends AbstractArtifactSearchMojo {
         if (chartfile != null) {
             latest.setChartfile(chartfile);
             charts.put(key, latest);
+            repository.addChart(latest);
         } else {
             getLog().warn("Could not find chartfile for " + latest);
         }
@@ -304,9 +308,46 @@ public class HelmIndexMojo extends AbstractArtifactSearchMojo {
 
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    protected class ChartsRepository {
+        private String apiVersion = "v1";
+        private Map<String, List<ChartInfo>> entries = new TreeMap<>();
+
+        public void addChart(ChartInfo chart) {
+            if (entries == null) {
+                entries = new TreeMap<>();
+            }
+            String name = chart.getName();
+            List<ChartInfo> list = entries.get(name);
+            if (list == null) {
+                list = new ArrayList<>();
+                entries.put(name, list);
+            }
+            list.add(chart);
+        }
+
+        public String getApiVersion() {
+            return apiVersion;
+        }
+
+        public void setApiVersion(String apiVersion) {
+            this.apiVersion = apiVersion;
+        }
+
+        public Map<String, List<ChartInfo>> getEntries() {
+            return entries;
+        }
+
+        public void setEntries(Map<String, List<ChartInfo>> entries) {
+            this.entries = entries;
+        }
+    }
+
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     protected class ChartInfo {
-        private String url;
+        private List<String> urls = new ArrayList<>();
         private String name;
+        @JsonIgnore
         private HelmMojo.Chart chartfile;
 
         @JsonIgnore
@@ -318,26 +359,65 @@ public class HelmIndexMojo extends AbstractArtifactSearchMojo {
             this.artifact = artifact;
             String artifactId = artifact.getA();
             String version = artifact.getV();
-            this.url = mavenRepoUrl + artifact.getG().replace('.', '/') +
-                    "/" + artifactId + "/" + version + "/" + artifactId + "-" + version + "-helm.tar.gz";
+            urls.add(mavenRepoUrl + artifact.getG().replace('.', '/') +
+                    "/" + artifactId + "/" + version + "/" + artifactId + "-" + version + "-helm.tar.gz");
             this.name = artifactId;
         }
 
         @Override
         public String toString() {
             return "ChartInfo{" +
-                    "url='" + url + '\'' +
+                    "urls='" + urls + '\'' +
                     ", name='" + name + '\'' +
                     ", chartfile=" + chartfile +
                     '}';
         }
 
-        public String getUrl() {
-            return url;
+        public String getHome() {
+            return getChartfile().getHome();
         }
 
-        public void setUrl(String url) {
-            this.url = url;
+        public List<String> getSources() {
+            return getChartfile().getSources();
+        }
+
+        public String getVersion() {
+            return getChartfile().getVersion();
+        }
+
+        public String getDescription() {
+            return getChartfile().getDescription();
+        }
+
+        public List<String> getKeywords() {
+            return getChartfile().getKeywords();
+        }
+
+        public List<HelmMojo.Chart.Maintainer> getMaintainers() {
+            return getChartfile().getMaintainers();
+        }
+
+        public String getEngine() {
+            return getChartfile().getEngine();
+        }
+
+        public String getIcon() {
+            return getChartfile().getIcon();
+        }
+
+        public String firstUrl() {
+            if (urls != null && !urls.isEmpty()) {
+                return urls.get(0);
+            }
+            return "";
+        }
+
+        public List<String> getUrls() {
+            return urls;
+        }
+
+        public void setUrls(List<String> urls) {
+            this.urls = urls;
         }
 
         public String getName() {
