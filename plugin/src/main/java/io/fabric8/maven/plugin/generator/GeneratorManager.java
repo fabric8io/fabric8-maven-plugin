@@ -23,11 +23,14 @@ import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.ClassUtil;
+import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.PluginServiceFactory;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.Generator;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -40,15 +43,15 @@ public class GeneratorManager {
     public static List<ImageConfiguration> generate(List<ImageConfiguration> imageConfigs,
                                                     ProcessorConfig generatorConfig,
                                                     MavenProject project,
-                                                    Logger log,
+                                                    MavenSession session, GoalFinder goalFinder, String goalName, Logger log,
                                                     PlatformMode mode,
                                                     OpenShiftBuildStrategy strategy,
-                                                    boolean useProjectClasspath) {
+                                                    boolean useProjectClasspath) throws MojoExecutionException {
 
         List<ImageConfiguration> ret = imageConfigs;
 
         PluginServiceFactory<MavenGeneratorContext> pluginFactory = new PluginServiceFactory<>(
-            new MavenGeneratorContext(project, generatorConfig, log, mode, strategy));
+            new MavenGeneratorContext(project, session, goalFinder, generatorConfig, goalName, log, mode, strategy));
 
         if (useProjectClasspath) {
             pluginFactory.addAdditionalClassLoader(ClassUtil.createProjectClassLoader(project, log));

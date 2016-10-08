@@ -18,12 +18,12 @@ package io.fabric8.maven.plugin;
 
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
@@ -77,6 +77,10 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     @Parameter(property = "fabric8.build.strategy" )
     private OpenShiftBuildStrategy buildStrategy = OpenShiftBuildStrategy.s2i;
 
+    // Used for determining which mojos are called during a run
+    @Component
+    protected GoalFinder goalFinder;
+
     @Override
     protected String getLogPrefix() {
         return "F8> ";
@@ -95,8 +99,8 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
                 generator != null ?
                     generator :
                     ProfileUtil.extractProcesssorConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, resourceDir);
-            return GeneratorManager.generate(configs, generatorConcfig, project, log, mode, buildStrategy, false);
-        } catch (IOException e) {
+            return GeneratorManager.generate(configs, generatorConcfig, project, session, goalFinder, "fabric8:push", log, mode, buildStrategy, false);
+        } catch (Exception e) {
             throw new IllegalArgumentException("Cannot extract generator config: " + e,e);
         }
     }

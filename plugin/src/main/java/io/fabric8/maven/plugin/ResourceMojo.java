@@ -34,7 +34,6 @@ import io.fabric8.maven.core.config.ServiceConfig;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
-import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.ProfileUtil;
@@ -102,10 +101,6 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     @Component
     private ImageConfigResolver imageConfigResolver;
-
-    // Used for determining which mojos are called during a run
-    @Component
-    private GoalFinder goalFinder;
 
     /**
      * Folder where to find project specific files
@@ -249,7 +244,12 @@ public class ResourceMojo extends AbstractResourceMojo {
         }
     }
 
-    private void lateInit() {
+    private void lateInit() throws MojoExecutionException {
+        if (goalFinder.runningWithGoal(project, session, "fabric8:watch") ||
+                goalFinder.runningWithGoal(project, session, "fabric8:watch")) {
+            Properties properties = project.getProperties();
+            properties.setProperty("fabric8.watch", "true");
+        }
         platformMode = clusterAccess.resolvePlatformMode(mode, log);
 
         if (isOpenShiftMode()) {
@@ -581,8 +581,8 @@ public class ResourceMojo extends AbstractResourceMojo {
                 @Override
                 public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
                     try {
-                        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, log, mode, buildStrategy, useProjectClasspath);
-                    } catch (IOException e) {
+                        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, session, goalFinder, "fabric8:resource", log, mode, buildStrategy, useProjectClasspath);
+                    } catch (Exception e) {
                         throw new IllegalArgumentException("Cannot extract generator: " + e,e);
                     }
                 }

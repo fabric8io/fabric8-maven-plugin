@@ -20,6 +20,7 @@ import java.util.List;
 
 import io.fabric8.maven.core.config.Named;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  * @author roland
@@ -39,7 +40,7 @@ public interface Generator extends Named {
      * @param existingConfigs the already detected and resolved configuration
      * @return list of image configurations
      */
-    List<ImageConfiguration> customize(List<ImageConfiguration> existingConfigs);
+    List<ImageConfiguration> customize(List<ImageConfiguration> existingConfigs) throws MojoExecutionException;
 }
 
 

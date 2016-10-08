@@ -27,7 +27,6 @@ import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
-import io.fabric8.kubernetes.api.model.extensions.LabelSelector;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -36,6 +35,7 @@ import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -48,7 +48,7 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.utils.Files;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -109,6 +109,10 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     @Parameter(property = "fabric8.namespace")
     private String namespace;
 
+    // Used for determining which mojos are called during a run
+    @Component
+    protected GoalFinder goalFinder;
+
     private ClusterAccess clusterAccess;
     private KubernetesClient kubernetes;
     private Controller controller;
@@ -135,7 +139,11 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
             Map<String, TreeMap> config = new HashMap<>();
             generator = new ProcessorConfig(includes, excludes, config);
         }
-        return GeneratorManager.generate(configs, generator, project, log, mode, buildStrategy, false);
+        try {
+            return GeneratorManager.generate(configs, generator, project, session, goalFinder, "fabric8:watch", log, mode, buildStrategy, false);
+        } catch (MojoExecutionException e) {
+            throw new IllegalArgumentException("Cannot extract generator config: " + e, e);
+        }
     }
 
     @Override

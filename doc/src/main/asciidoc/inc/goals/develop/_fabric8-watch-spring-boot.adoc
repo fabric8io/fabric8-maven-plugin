@@ -21,18 +21,11 @@ You also need to add the spring boot devtools to your pom.xml dependencies:
     </dependency>
 ----
 
-then deploy your app:
-
-[source, sh]
-----
-mvn fabric8:deploy
-----
-
 Now you can watch the container and restart it on local code changes via:
 
 [source, sh]
 ----
-mvn fabric8:watch-spring-boot
+mvn fabric8:deploy fabric8:watch-spring-boot
 ----
 
 Once the goal starts up the spring boot RemoteSpringApplication it will watch for local development changes.

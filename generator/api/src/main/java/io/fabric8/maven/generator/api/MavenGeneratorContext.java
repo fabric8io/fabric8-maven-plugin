@@ -19,7 +19,10 @@ package io.fabric8.maven.generator.api;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.docker.util.Logger;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -28,16 +31,21 @@ import org.apache.maven.project.MavenProject;
  */
 public class MavenGeneratorContext {
     private final MavenProject project;
+    private final MavenSession session;
+    private final GoalFinder goalFinder;
     private final ProcessorConfig config;
-
+    private final String goalName;
     private final Logger log;
     private final PlatformMode mode;
     private final OpenShiftBuildStrategy strategy;
 
-    public MavenGeneratorContext(MavenProject project, ProcessorConfig generatorConfig, Logger log,
+    public MavenGeneratorContext(MavenProject project, MavenSession session, GoalFinder goalFinder, ProcessorConfig generatorConfig, String goalName, Logger log,
                                  PlatformMode mode, OpenShiftBuildStrategy strategy) {
         this.project = project;
+        this.session = session;
+        this.goalFinder = goalFinder;
         this.config = generatorConfig;
+        this.goalName = goalName;
         this.log = log;
         this.mode = mode;
         this.strategy = strategy;
@@ -47,8 +55,20 @@ public class MavenGeneratorContext {
         return project;
     }
 
+    public MavenSession getSession() {
+        return session;
+    }
+
+    public GoalFinder getGoalFinder() {
+        return goalFinder;
+    }
+
     public ProcessorConfig getConfig() {
         return config;
+    }
+
+    public String getGoalName() {
+        return goalName;
     }
 
     public Logger getLog() {
@@ -61,5 +81,24 @@ public class MavenGeneratorContext {
 
     public OpenShiftBuildStrategy getStrategy() {
         return strategy;
+    }
+
+    /**
+     * Returns true if we are in watch mode
+     */
+    public boolean isWatchMode() throws MojoExecutionException {
+        return runningWithGoal("fabric8:watch-spring-boot", "fabric8:watch");
+    }
+
+    /**
+     * Returns true if maven is running with any of the given goals
+     */
+    public boolean runningWithGoal(String... goals) throws MojoExecutionException {
+        for (String goal : goals) {
+            if (goalFinder.runningWithGoal(project, session,  goal)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

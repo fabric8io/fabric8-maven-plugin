@@ -20,6 +20,7 @@ import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.ServiceNames;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
@@ -31,6 +32,7 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
@@ -55,6 +57,10 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
     // Settings holding authentication info
     @Parameter(defaultValue = "${settings}", readonly = true)
     protected Settings settings;
+
+    // Used for determining which mojos are called during a run
+    @Component
+    protected GoalFinder goalFinder;
 
     protected Logger log;
 
