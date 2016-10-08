@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.1.64,</span>
-<span id="revdate">2016-10-07</span>
+<span id="revdate">2016-10-08</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -3319,19 +3319,11 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 </div>
 </div>
 <div class="paragraph">
-<p>then deploy your app:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:deploy</code></pre>
-</div>
-</div>
-<div class="paragraph">
 <p>Now you can watch the container and restart it on local code changes via:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:watch-spring-boot</code></pre>
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:deploy fabric8:watch-spring-boot</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4742,7 +4734,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.64<br>
-Last updated 2016-10-07 15:31:37 UTC
+Last updated 2016-10-08 07:36:04 UTC
 </div>
 </div>
 </body>
