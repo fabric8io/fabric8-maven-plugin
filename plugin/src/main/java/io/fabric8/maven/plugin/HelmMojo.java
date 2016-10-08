@@ -42,7 +42,10 @@ import org.codehaus.plexus.archiver.tar.TarArchiver;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Generates a Helm chart for the kubernetes resources
@@ -216,11 +219,21 @@ public class HelmMojo extends AbstractFabric8Mojo {
     private void copyResourceFilesToTemplatesDir(File outputDir, File sourceDir) throws MojoExecutionException {
         File templatesDir = new File(outputDir, "templates");
         templatesDir.mkdirs();
-        try {
-            Files.copy(sourceDir, templatesDir);
-        } catch (IOException e) {
-            throw new MojoExecutionException("Failed to copy manifest files from " + sourceDir +
-                                             " to chart templates directory: " + templatesDir + ": " + e, e);
+        File[] files = sourceDir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                String name = file.getName();
+                if (name.endsWith(".yml")) {
+                    name = Strings.stripSuffix(name, ".yml") + ".yaml";
+                }
+                File targetFile = new File(templatesDir, name);
+                try {
+                    Files.copy(file, targetFile);
+                } catch (IOException e) {
+                    throw new MojoExecutionException("Failed to copy manifest files from " + file +
+                            " to " + targetFile + ": " + e, e);
+                }
+            }
         }
     }
 
