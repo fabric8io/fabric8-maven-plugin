@@ -36,7 +36,8 @@ public class StartMojo extends AbstractDeployMojo {
     private int replicas;
 
     @Override
-    protected void applyEntities(Controller controller, KubernetesClient kubernetes, String namespace, String fileName, Set<HasMetadata> entities) throws Exception {
+    protected void applyEntities(Controller controller, KubernetesClient kubernetes, String namespace,
+                                 String fileName, Set<HasMetadata> entities) throws Exception {
         resizeApp(kubernetes, namespace, entities, replicas);
     }
 }
