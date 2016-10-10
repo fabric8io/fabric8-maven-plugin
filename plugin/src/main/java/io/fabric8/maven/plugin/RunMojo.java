@@ -49,7 +49,8 @@ public class RunMojo extends AbstractTailLogMojo {
     private String onExitOperation;
 
     @Override
-    protected void applyEntities(Controller controller, final KubernetesClient kubernetes, final String namespace, String fileName, final Set<HasMetadata> entities) throws Exception {
+    protected void applyEntities(Controller controller, final KubernetesClient kubernetes, final String namespace,
+                                 String fileName, final Set<HasMetadata> entities) throws Exception {
         Date ignorePodsOlderThan = new Date();
         super.applyEntities(controller, kubernetes, namespace, fileName, entities);
 
