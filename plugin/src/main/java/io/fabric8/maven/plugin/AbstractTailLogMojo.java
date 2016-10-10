@@ -68,7 +68,9 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
     private Logger newPodLog;
     private Logger oldPodLog;
 
-    protected void tailAppPodsLogs(final KubernetesClient kubernetes, final String namespace, final Set<HasMetadata> entities, boolean watchAddedPodsOnly, String onExitOperation, boolean followLog, Date ignorePodsOlderThan, boolean waitInCurrentThread) {
+    protected void tailAppPodsLogs(final KubernetesClient kubernetes, final String namespace, final Set<HasMetadata> entities,
+                                   boolean watchAddedPodsOnly, String onExitOperation, boolean followLog,
+                                   Date ignorePodsOlderThan, boolean waitInCurrentThread) {
         LabelSelector selector = null;
         for (HasMetadata entity : entities) {
             selector = getPodLabelSelector(entity);
@@ -89,7 +91,7 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
                 } else {
                     log.warn("Unknown on-exit command: `" + onExitOperationLower + "`");
                 }
-
+                resizeApp(kubernetes, namespace, entities, 1);
                 Runtime.getRuntime().addShutdownHook(new Thread("mvn fabric8:run-interactive shutdown hook") {
                     @Override
                     public void run() {

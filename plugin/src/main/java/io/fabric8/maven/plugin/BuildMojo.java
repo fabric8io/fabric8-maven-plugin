@@ -45,9 +45,7 @@ import io.fabric8.maven.docker.access.DockerConnectionDetector;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.ImageName;
-import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
@@ -77,7 +75,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.fusesource.jansi.Ansi;
 
 import java.io.File;
 import java.io.IOException;
@@ -313,7 +310,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         KubernetesListBuilder builder = new KubernetesListBuilder();
 
         // Check for buildconfig / imagestream and create them if necessary
-        String buildName = checkOrCreateBuildConfig(client, builder, imageConfig);
+        String buildName = updateOrCreateBuildConfig(client, builder, imageConfig);
         checkOrCreateImageStream(client, builder, getImageStreamName(imageName));
 
         applyResourceObjects(client, builder);
@@ -584,68 +581,91 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         return BuildRecreateMode.fromParameter(buildRecreate);
     }
 
-    private String checkOrCreateBuildConfig(OpenShiftClient client, KubernetesListBuilder builder, ImageConfiguration imageConfig) {
+    private String updateOrCreateBuildConfig(OpenShiftClient client, KubernetesListBuilder builder, ImageConfiguration imageConfig) {
         ImageName imageName = new ImageName(imageConfig.getName());
         String buildName = getS2IBuildName(imageName);
         String imageStreamName = getImageStreamName(imageName);
         String outputImageStreamTag = imageStreamName + ":" + imageName.getTag();
 
-        BuildConfig buildConfig = client.buildConfigs().withName(buildName).get();
         BuildStrategy buildStrategy = createBuildStrategy(imageConfig);
         BuildOutput buildOutput = new BuildOutputBuilder().withNewTo()
                 .withKind("ImageStreamTag")
                 .withName(outputImageStreamTag)
                 .endTo().build();
 
-
+        // Fetch exsting build config
+        BuildConfig buildConfig = client.buildConfigs().withName(buildName).get();
         if (buildConfig != null) {
             // lets verify the BC
-            BuildConfigSpec spec = buildConfig.getSpec();
-            if (spec == null) {
-                spec = new BuildConfigSpec();
-                buildConfig.setSpec(spec);
-            }
-            BuildSource source = spec.getSource();
-            if (source != null) {
-                String sourceType = source.getType();
-                if (!Objects.equals("Binary", sourceType)) {
-                    log.warn("BuildConfig " + buildName + " is not of type: 'Binary' but is '" + sourceType + "' !");
-                }
-            }
+            BuildConfigSpec spec = getBuildConfigSpec(buildConfig);
+            validateSourceType(buildName, spec);
 
-            if (!getBuildRecreateMode().isBuildConfig()) {
-                // lets check if the strategy or output has changed and if so lets update the BC
-                // e.g. the S2I builder image or the output tag and
-                if (!Objects.equals(buildStrategy, spec.getStrategy()) || !Objects.equals(buildOutput, spec.getOutput())) {
-                    log.warn("Updating the S2I BuildConfig " + buildName + " with the latest output and strategy");
-                    client.buildConfigs().withName(buildName).edit()
-                          .editSpec()
-                          .withStrategy(buildStrategy)
-                          .withOutput(buildOutput)
-                          .endSpec()
-                          .done();
-                    log.info("Editing BuildConfig %s for %s build", buildName, getStrategyLabel());
-                } else {
-                    log.info("Using BuildConfig %s for %s build", buildName, getStrategyLabel());
-                }
-                return buildName;
-            } else {
+            if (getBuildRecreateMode().isBuildConfig()) {
+                // Delete and recreate afresh
                 client.buildConfigs().withName(buildName).delete();
+                return createBuildConfig(builder, buildName, buildStrategy, buildOutput);
+            } else {
+                // Update & return
+                return updateBuildConfig(client, buildName, buildStrategy, buildOutput, spec);
             }
+        } else {
+            // Create afresh
+            return createBuildConfig(builder, buildName, buildStrategy, buildOutput);
         }
+    }
 
-        // Create afresh
+    private String createBuildConfig(KubernetesListBuilder builder, String buildName, BuildStrategy buildStrategy, BuildOutput buildOutput) {
         log.info("Creating BuildConfig %s for %s build", buildName, getStrategyLabel());
         builder.addNewBuildConfigItem()
                      .withNewMetadata()
                        .withName(buildName)
                      .endMetadata()
                      .withNewSpec()
+                       .withNewSource()
+                          .withType("Binary")
+                       .endSource()
                        .withStrategy(buildStrategy)
                        .withOutput(buildOutput)
                      .endSpec()
                    .endBuildConfigItem();
         return buildName;
+    }
+
+    private String updateBuildConfig(OpenShiftClient client, String buildName, BuildStrategy buildStrategy, BuildOutput buildOutput, BuildConfigSpec spec) {
+        // lets check if the strategy or output has changed and if so lets update the BC
+        // e.g. the S2I builder image or the output tag and
+        if (!Objects.equals(buildStrategy, spec.getStrategy()) || !Objects.equals(buildOutput, spec.getOutput())) {
+            log.warn("Updating the S2I BuildConfig " + buildName + " with the latest output and strategy");
+            client.buildConfigs().withName(buildName).edit()
+                  .editSpec()
+                  .withStrategy(buildStrategy)
+                  .withOutput(buildOutput)
+                  .endSpec()
+                  .done();
+            log.info("Editing BuildConfig %s for %s build", buildName, getStrategyLabel());
+        } else {
+            log.info("Using BuildConfig %s for %s build", buildName, getStrategyLabel());
+        }
+        return buildName;
+    }
+
+    private BuildConfigSpec getBuildConfigSpec(BuildConfig buildConfig) {
+        BuildConfigSpec spec = buildConfig.getSpec();
+        if (spec == null) {
+            spec = new BuildConfigSpec();
+            buildConfig.setSpec(spec);
+        }
+        return spec;
+    }
+
+    private void validateSourceType(String buildName, BuildConfigSpec spec) {
+        BuildSource source = spec.getSource();
+        if (source != null) {
+            String sourceType = source.getType();
+            if (!Objects.equals("Binary", sourceType)) {
+                log.warn("BuildConfig " + buildName + " is not of type: 'Binary' but is '" + sourceType + "' !");
+            }
+        }
     }
 
     private String getStrategyLabel() {

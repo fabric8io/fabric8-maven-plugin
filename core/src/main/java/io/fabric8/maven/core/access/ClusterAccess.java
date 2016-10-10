@@ -87,7 +87,7 @@ public class ClusterAccess {
         } else {
             resolvedMode = mode;
         }
-        log.info("Running in [[*]]%s[[*]] mode", resolvedMode.getLabel());
+        log.info("Running in [[B]]%s[[B]] mode", resolvedMode.getLabel());
         return resolvedMode;
     }
 }
