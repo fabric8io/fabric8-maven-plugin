@@ -251,6 +251,7 @@ public class ResourceMojo extends AbstractResourceMojo {
             properties.setProperty("fabric8.watch", "true");
         }
         platformMode = clusterAccess.resolvePlatformMode(mode, log);
+        log.info("Running in [[B]]%s[[B]] mode", platformMode.getLabel());
 
         if (isOpenShiftMode()) {
             Properties properties = project.getProperties();

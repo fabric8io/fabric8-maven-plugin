@@ -216,7 +216,6 @@ public class AbstractTailLogMojo extends AbstractDeployMojo {
             if (logWatcher != null) {
                 log.info("Closing log watcher for %s as now watching %s",watchingPodName, name);
                 closeLogWatcher();
-
             }
             ClientPodResource<Pod, DoneablePod> podResource = kubernetes.pods().inNamespace(namespace).withName(name);
             List<Container> containers = KubernetesHelper.getContainers(pod);
