@@ -273,7 +273,11 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
         platformMode = clusterAccess.resolvePlatformMode(mode, log);
-
+        if (platformMode == PlatformMode.openshift) {
+            log.info("Using [[B]]OpenShift[[B]] build with strategy [[B]]%s[[B]]", buildStrategy.getLabel());
+        } else {
+            log.info("Building Docker image in [[B]]Kubernetes[[B]] mode");
+        }
         try {
             return GeneratorManager.generate(configs, extractGeneratorConfig(), project, session, goalFinder, "fabric8:build", log, platformMode, buildStrategy, useProjectClasspath);
         } catch (MojoExecutionException e) {
@@ -354,6 +358,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                         // ignore
                     }
                 }
+                logTerminateLatch.countDown();
                 build = buildHolder.get();
                 String status = KubernetesResourceUtil.getBuildStatusPhase(build);
                 if (Builds.isFailed(status) || Builds.isCancelled(status)) {

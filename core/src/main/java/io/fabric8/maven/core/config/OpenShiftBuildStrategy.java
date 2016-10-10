@@ -27,12 +27,18 @@ public enum OpenShiftBuildStrategy {
     /**
      * S2i build with a binary source
      */
-    s2i,
+    s2i("S2I"),
 
     /**
      * Docker build with a binary source
      */
-    docker;
+    docker("Docker");
+
+    private final String label;
+
+    private OpenShiftBuildStrategy(String label) {
+        this.label = label;
+    }
 
     /**
      * Check if the given type is same as the type stored in OpenShift
@@ -44,5 +50,9 @@ public enum OpenShiftBuildStrategy {
         return type != null &&
                (type.equalsIgnoreCase("source") && this == s2i) ||
                (type.equalsIgnoreCase("docker") && this == docker);
+    }
+
+    public String getLabel() {
+        return label;
     }
 }
