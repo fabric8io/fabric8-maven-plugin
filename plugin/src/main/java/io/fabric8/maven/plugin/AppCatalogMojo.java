@@ -34,15 +34,18 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateAnnotations;
@@ -145,6 +148,9 @@ public class AppCatalogMojo extends AbstractResourceMojo {
             }
         }
 
+        Set<String> kubernetesTemplateFileNames = new HashSet<>();
+        Set<String> openshiftTemplateFileNames = new HashSet<>();
+
         Map<URL, KubernetesResource> kubernetesMap = loadYamlResourcesOnClassPath("META-INF/fabric8/kubernetes.yml");
         for (Map.Entry<URL, KubernetesResource> entry : kubernetesMap.entrySet()) {
             URL url = entry.getKey();
@@ -183,6 +189,7 @@ public class AppCatalogMojo extends AbstractResourceMojo {
             Template template = builder.build();
             if (template != null) {
                 kubernetesTemplates.put(name, template);
+                openshiftTemplateFileNames.add(name + "-template.yml");
             }
         }
         for (Map.Entry<String, Template> entry : kubernetesTemplates.entrySet()) {
@@ -193,7 +200,7 @@ public class AppCatalogMojo extends AbstractResourceMojo {
                 templateYaml = KubernetesHelper.toYaml(template);
             } catch (IOException e) {
                 throw new MojoExecutionException("Failed to convert template " + name + " into YAML: " + e, e);
-                }
+            }
             String catalogName = "catalog-" + name;
 
             Map<String, String> labels = new LinkedHashMap<>(KubernetesHelper.getLabels(template));
@@ -202,6 +209,7 @@ public class AppCatalogMojo extends AbstractResourceMojo {
 
             Map<String, String> data = new HashMap<>();
             data.put(catalogName + ".yml", templateYaml);
+            kubernetesTemplateFileNames.add(catalogName + "-configmap.yml");
 
             ConfigMap configMap = new ConfigMapBuilder().
                     withNewMetadata().withName(catalogName).withLabels(labels).withAnnotations(annotations).endMetadata().
@@ -218,6 +226,23 @@ public class AppCatalogMojo extends AbstractResourceMojo {
             log.warn("No Kubernetes resources generated");
         } else {
             writeResources(new KubernetesListBuilder().withItems(kubernetesResources).build(), ResourceClassifier.KUBERNETES);
+        }
+
+        // lets remove the dependencies which are not app templates
+        removeGeneratedFilesNotMatchingSuffix("kubernetes", kubernetesTemplateFileNames);
+        removeGeneratedFilesNotMatchingSuffix("openshift", openshiftTemplateFileNames);
+    }
+
+    protected void removeGeneratedFilesNotMatchingSuffix(String kind, Set<String> validFileNames) {
+        log.info("Removing files not in set: " + validFileNames);
+        File kubernetesOutputDir = new File(targetDir, kind);
+        File[] files = kubernetesOutputDir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (!validFileNames.contains(file.getName())) {
+                    file.delete();
+                }
+            }
         }
     }
 
