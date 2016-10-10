@@ -479,7 +479,11 @@ public class KubernetesResourceUtil {
                         log.info("[[s]]%s", line);
                     }
                 } catch (IOException e) {
-                    log.error("%s : %s",failureMessage, e);
+                    // Check again the latch which could be already count down to zero in between
+                    // so that an IO exception occurs on read
+                    if (terminateLatch.getCount() > 0L) {
+                        log.error("%s : %s", failureMessage, e);
+                    }
                 }
             }
         };
