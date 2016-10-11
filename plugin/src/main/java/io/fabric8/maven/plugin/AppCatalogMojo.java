@@ -65,6 +65,11 @@ import static io.fabric8.utils.Lists.notNullList;
 @Mojo(name = "app-catalog", defaultPhase = LifecyclePhase.COMPILE,
         requiresDependencyResolution = ResolutionScope.COMPILE, requiresDependencyCollection = ResolutionScope.COMPILE)
 public class AppCatalogMojo extends AbstractResourceMojo {
+    /** defines the annotations copied from resources into the Template or ConfigMap in the app catalog */
+    private Set<String> copiedAnnotations = new HashSet<>(Arrays.asList(Annotations.Builds.BUILD_URL,
+            Annotations.Builds.BUILD_URL, Annotations.Builds.BUILD_ID, Annotations.Builds.DOCS_URL,
+            Annotations.Builds.GIT_URL, Annotations.Builds.GIT_COMMIT, Annotations.Builds.GIT_BRANCH,
+            Annotations.Builds.ICON_URL));
 
     public AppCatalogMojo() {
     }
@@ -303,8 +308,6 @@ public class AppCatalogMojo extends AbstractResourceMojo {
             }
         }
     }
-
-    private Set<String> copiedAnnotations = new HashSet<String>(Arrays.asList(Annotations.Builds.BUILD_URL, Annotations.Builds.GIT_URL, Annotations.Builds.ICON_URL));
 
     private void populateAnnotationsFromResources(KubernetesResource resource, Map<String, String> annotations) {
         if (resource instanceof KubernetesList) {
