@@ -33,7 +33,7 @@ public abstract class FromSelector {
 
     private final MavenGeneratorContext context;
 
-    private final Pattern REDHAT_VERSION_PATTERN = Pattern.compile("^.*\\.redhat-.*$");
+    private final Pattern REDHAT_VERSION_PATTERN = Pattern.compile("^.*\\.(redhat|fuse)-.*$");
 
     public FromSelector(MavenGeneratorContext context) {
         this.context = context;
