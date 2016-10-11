@@ -52,7 +52,7 @@ import static io.fabric8.maven.core.util.SpringBootProperties.DEV_TOOLS_REMOTE_S
  * Runs the remote spring boot application
  */
 @Mojo(name = "watch-spring-boot", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.VALIDATE)
-@Execute(phase = LifecyclePhase.INSTALL)
+@Execute(goal = "deploy")
 public class WatchSpringBootMojo extends AbstractTailLogMojo {
 
     @Override

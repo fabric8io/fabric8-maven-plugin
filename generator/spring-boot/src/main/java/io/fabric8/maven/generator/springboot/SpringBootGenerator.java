@@ -99,7 +99,7 @@ public class SpringBootGenerator extends JavaRunGenerator {
         if (Objects.equals("fabric8:resource", getContext().getGoalName()) && isFatJarWithNoDependencies()) {
             MavenProject project = getProject();
             File basedir = project.getBasedir();
-            File outputFile = new File(basedir, "target/classes/lib/spring-devtools.jar");
+            File outputFile = new File(basedir, "target/classes/BOOT-INF/lib/spring-devtools.jar");
             outputFile.getParentFile().mkdirs();
 
             String resourceName = "fabric8-spring-devtools/spring-boot-devtools.jar";
