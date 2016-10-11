@@ -15,14 +15,27 @@
  */
 package io.fabric8.maven.plugin;
 
+import com.google.common.base.Strings;
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.extensions.Templates;
+import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaimVolumeSource;
+import io.fabric8.kubernetes.api.model.PodSpec;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.Volume;
+import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
@@ -54,6 +67,7 @@ import io.fabric8.maven.plugin.converter.ReplicSetOpenShiftConverter;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.DeploymentConfig;
+import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.ImageStreamTag;
 import io.fabric8.openshift.api.model.Template;
@@ -78,6 +92,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 
 import static io.fabric8.maven.plugin.AbstractDeployMojo.DEFAULT_OPENSHIFT_MANIFEST;
 import static io.fabric8.maven.plugin.AbstractDeployMojo.loadResources;
@@ -165,6 +180,12 @@ public class ResourceMojo extends AbstractResourceMojo {
      */
     @Parameter(property = "fabric8.openshiftManifest", defaultValue = DEFAULT_OPENSHIFT_MANIFEST)
     private File openshiftManifest;
+
+    /**
+     * Should we add PersistentVolumeClaim chmod init containers so that PVs are usable on kubernetes
+     */
+    @Parameter(property = "fabric8.kubernetesInitContainerPVChmod", defaultValue = "true")
+    private boolean kubernetesInitContainerChMod;
 
     /**
      * Enricher specific configuration configuration given through
@@ -281,7 +302,121 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     private KubernetesList convertToKubernetesResources(KubernetesList resources, KubernetesList openShiftResources) throws MojoExecutionException {
         KubernetesList kubernetesResources = removeOpenShiftObjects(resources);
-        return processOpenshiftTemplateIfProvided(openShiftResources, kubernetesResources);
+        KubernetesList kubernetesList = processOpenshiftTemplateIfProvided(openShiftResources, kubernetesResources);
+        if (kubernetesInitContainerChMod) {
+            return addPersistentVolumeInitContainerChmod(kubernetesList);
+        }
+        return kubernetesList;
+    }
+
+    private KubernetesList addPersistentVolumeInitContainerChmod(KubernetesList kubernetesList) {
+        List<HasMetadata> items = kubernetesList.getItems();
+        for (HasMetadata entity : items) {
+            if (entity instanceof Deployment) {
+                Deployment resource = (Deployment) entity;
+                DeploymentSpec spec = resource.getSpec();
+                if (spec != null) {
+                    addPersistentVolumeInitContainerChmod(entity, spec.getTemplate());
+                }
+            } else if (entity instanceof ReplicaSet) {
+                ReplicaSet resource = (ReplicaSet) entity;
+                ReplicaSetSpec spec = resource.getSpec();
+                if (spec != null) {
+                    addPersistentVolumeInitContainerChmod(entity, spec.getTemplate());
+                }
+            } else if (entity instanceof ReplicationController) {
+                ReplicationController resource = (ReplicationController) entity;
+                ReplicationControllerSpec spec = resource.getSpec();
+                if (spec != null) {
+                    addPersistentVolumeInitContainerChmod(entity, spec.getTemplate());
+                }
+            } else if (entity instanceof DeploymentConfig) {
+                DeploymentConfig resource = (DeploymentConfig) entity;
+                DeploymentConfigSpec spec = resource.getSpec();
+                if (spec != null) {
+                    addPersistentVolumeInitContainerChmod(entity, spec.getTemplate());
+                }
+            }
+        }
+        return kubernetesList;
+    }
+
+    private void addPersistentVolumeInitContainerChmod(HasMetadata entity, PodTemplateSpec template) {
+        if (template != null) {
+            PodSpec podSpec = template.getSpec();
+            if (podSpec != null) {
+                Map<String, String> nameToMount = new TreeMap<>();
+                List<Volume> volumes = podSpec.getVolumes();
+                if (volumes != null) {
+                    for (Volume volume : volumes) {
+                        PersistentVolumeClaimVolumeSource persistentVolumeClaim = volume.getPersistentVolumeClaim();
+                        if (persistentVolumeClaim != null) {
+                            String name = volume.getName();
+                            nameToMount.put(name, "");
+                        }
+                    }
+                }
+
+                if (!nameToMount.isEmpty()) {
+                    List<Container> containers = podSpec.getContainers();
+                    if (containers != null) {
+                        for (Container container : containers) {
+                            List<VolumeMount> volumeMounts = container.getVolumeMounts();
+                            if (volumeMounts != null) {
+                                for (VolumeMount volumeMount : volumeMounts) {
+                                    String name = volumeMount.getName();
+                                    String mountPath = volumeMount.getMountPath();
+                                    String current = nameToMount.get(name);
+                                    if (current != null && current.length() == 0) {
+                                        nameToMount.put(name, mountPath);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    StringBuffer mountPaths = new StringBuffer();
+                    StringBuffer mounts = new StringBuffer();
+                    int idx = 0;
+                    for (Map.Entry<String, String> entry : nameToMount.entrySet()) {
+                        String name = entry.getKey();
+                        String mountPath = entry.getValue();
+                        mountPaths.append(", \"" + mountPath + "\"");
+
+                        String separator = ++idx >= nameToMount.size() ? "" : ",";
+                        mounts.append("                    {\n" +
+                                "                        \"name\": \"" + name + "\",\n" +
+                                "                        \"mountPath\": \"" + mountPath + "\"\n" +
+                                "                    }" + separator + "\n");
+                    }
+
+                    String pvAnnotation = "[\n" +
+                            "            {\n" +
+                            "                \"name\": \"init\",\n" +
+                            "                \"image\": \"busybox\",\n" +
+                            "                \"command\": [\"chmod\", \"777\"" + mountPaths + "],\n" +
+                            "                \"volumeMounts\": [\n" + mounts +
+                            "                ]\n" +
+                            "            }\n" +
+                            "        ]";
+
+                    String initContainerAnnotation = "pod.alpha.kubernetes.io/init-containers";
+                    log.verbose("Adding annotation: " + initContainerAnnotation + " = " + pvAnnotation);
+
+                    ObjectMeta metadata = template.getMetadata();
+                    if (metadata == null) {
+                        metadata = new ObjectMeta();
+                        template.setMetadata(metadata);
+                    }
+                    Map<String, String> annotations = metadata.getAnnotations();
+                    if (annotations == null) {
+                        annotations = new HashMap<>();
+                        metadata.setAnnotations(annotations);
+                    }
+                    annotations.put(initContainerAnnotation, pvAnnotation);
+                }
+            }
+        }
     }
 
     private KubernetesList processOpenshiftTemplateIfProvided(KubernetesList openShiftResources, KubernetesList kubernetesResources) throws MojoExecutionException {
