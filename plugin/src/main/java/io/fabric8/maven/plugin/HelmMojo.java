@@ -25,6 +25,7 @@ import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.maven.core.config.HelmConfig;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.utils.Files;
+import io.fabric8.utils.IOHelpers;
 import io.fabric8.utils.Strings;
 import org.apache.maven.model.Developer;
 import org.apache.maven.model.Scm;
@@ -228,13 +229,51 @@ public class HelmMojo extends AbstractFabric8Mojo {
                 }
                 File targetFile = new File(templatesDir, name);
                 try {
-                    Files.copy(file, targetFile);
+                    // lets escape any {{ or }} characters to avoid creating invalid templates
+                    String text = IOHelpers.readFully(file);
+                    text = escapeYamlTemplate(text);
+                    IOHelpers.writeFully(targetFile, text);
                 } catch (IOException e) {
                     throw new MojoExecutionException("Failed to copy manifest files from " + file +
                             " to " + targetFile + ": " + e, e);
                 }
             }
         }
+    }
+
+    public static String escapeYamlTemplate(String template) {
+        StringBuffer answer = new StringBuffer();
+        int count = 0;
+        char last = 0;
+        for (int i = 0, size = template.length(); i < size; i++) {
+            char ch = template.charAt(i);
+            if (ch == '{' || ch == '}') {
+                if (count == 0) {
+                    last = ch;
+                    count = 1;
+                } else {
+                    if (ch == last) {
+                        answer.append( ch == '{' ? "{{\"{{\"}}" : "{{\"}}\"}}");
+                    } else {
+                        answer.append(last);
+                        answer.append(ch);
+                    }
+                    count = 0;
+                    last = 0;
+                }
+            } else {
+                if (count > 0) {
+                    answer.append(last);
+                }
+                answer.append(ch);
+                count = 0;
+                last = 0;
+            }
+        }
+        if (count > 0) {
+            answer.append(last);
+        }
+        return answer.toString();
     }
 
     private boolean containsYamlFiles(File sourceDir) {
