@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.plugin;
 
+import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -39,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -63,6 +65,11 @@ import static io.fabric8.utils.Lists.notNullList;
 @Mojo(name = "app-catalog", defaultPhase = LifecyclePhase.COMPILE,
         requiresDependencyResolution = ResolutionScope.COMPILE, requiresDependencyCollection = ResolutionScope.COMPILE)
 public class AppCatalogMojo extends AbstractResourceMojo {
+    /** defines the annotations copied from resources into the Template or ConfigMap in the app catalog */
+    private Set<String> copiedAnnotations = new HashSet<>(Arrays.asList(Annotations.Builds.BUILD_URL,
+            Annotations.Builds.BUILD_URL, Annotations.Builds.BUILD_ID, Annotations.Builds.DOCS_URL,
+            Annotations.Builds.GIT_URL, Annotations.Builds.GIT_COMMIT, Annotations.Builds.GIT_BRANCH,
+            Annotations.Builds.ICON_URL));
 
     public AppCatalogMojo() {
     }
@@ -110,7 +117,8 @@ public class AppCatalogMojo extends AbstractResourceMojo {
                         log.warn("Cannot generate a template name from URL: " + url);
                         continue;
                     }
-                    populateLabelsFromResources(resource, name, labels, annotations);
+                    populateLabelsFromResources(resource, labels);
+                    populateAnnotationsFromResources(resource, annotations);
                     builder.withNewMetadata().withName(name).withLabels(labels).withAnnotations(annotations).endMetadata();
                 }
                 if (resource instanceof KubernetesList) {
@@ -170,7 +178,8 @@ public class AppCatalogMojo extends AbstractResourceMojo {
                 log.info("Ignoring duplicate template " + name + " from url: " + url);
                 continue;
             }
-            populateLabelsFromResources(resource, name, labels, annotations);
+            populateLabelsFromResources(resource, labels);
+            populateAnnotationsFromResources(resource, annotations);
             TemplateBuilder builder = new TemplateBuilder();
             builder.withNewMetadata().withName(name).withLabels(labels).withAnnotations(annotations).endMetadata();
 
@@ -205,6 +214,8 @@ public class AppCatalogMojo extends AbstractResourceMojo {
 
             Map<String, String> labels = new LinkedHashMap<>(KubernetesHelper.getLabels(template));
             Map<String, String> annotations = getOrCreateAnnotations(template);
+            populateLabelsFromResources(template, labels);
+            populateAnnotationsFromResources(template, annotations);
             labels.put("kind", "catalog");
 
             Map<String, String> data = new HashMap<>();
@@ -268,26 +279,60 @@ public class AppCatalogMojo extends AbstractResourceMojo {
         return null;
     }
 
-    private void populateLabelsFromResources(KubernetesResource resource, String name, Map<String, String> labels, Map<String, String> annotations) {
+    private void populateLabelsFromResources(KubernetesResource resource, Map<String, String> labels) {
         if (resource instanceof KubernetesList) {
             KubernetesList list = (KubernetesList) resource;
             List<HasMetadata> items = list.getItems();
             if (items != null) {
                 for (HasMetadata item : items) {
-                    ObjectMeta metadata = item.getMetadata();
-                    Map<String, String> itemLabels = metadata.getLabels();
-                    boolean updated = false;
-                    if (itemLabels != null && itemLabels.size() > 0) {
-                        for (Map.Entry<String, String> entry : itemLabels.entrySet()) {
-                            String key = entry.getKey();
-                            if (!labels.containsKey(key)) {
-                                labels.put(key, entry.getValue());
-                                updated = true;
-                            }
-                        }
-                        if (updated) {
-                            break;
-                        }
+                    populateLabelsFromEntity(item, labels);
+                }
+            }
+        } else if (resource instanceof HasMetadata) {
+            HasMetadata entity = (HasMetadata) resource;
+            populateLabelsFromEntity(entity, labels);
+        }
+    }
+
+    private void populateLabelsFromEntity(HasMetadata item, Map<String, String> labels) {
+        ObjectMeta metadata = item.getMetadata();
+        if (metadata != null) {
+            Map<String, String> itemLabels = metadata.getLabels();
+            if (itemLabels != null && itemLabels.size() > 0) {
+                for (Map.Entry<String, String> entry : itemLabels.entrySet()) {
+                    String key = entry.getKey();
+                    if (!labels.containsKey(key)) {
+                        labels.put(key, entry.getValue());
+                    }
+                }
+            }
+        }
+    }
+
+    private void populateAnnotationsFromResources(KubernetesResource resource, Map<String, String> annotations) {
+        if (resource instanceof KubernetesList) {
+            KubernetesList list = (KubernetesList) resource;
+            List<HasMetadata> items = list.getItems();
+            if (items != null) {
+                for (HasMetadata item : items) {
+                    populateAnnotationsForEntity(item, annotations);
+                }
+            }
+        } else if (resource instanceof HasMetadata) {
+            HasMetadata entity = (HasMetadata) resource;
+            populateAnnotationsForEntity(entity, annotations);
+        }
+    }
+
+    private void populateAnnotationsForEntity(HasMetadata item, Map<String, String> labels) {
+        ObjectMeta metadata = item.getMetadata();
+        if (metadata != null) {
+            Map<String, String> itemAnnotations = metadata.getAnnotations();
+            if (itemAnnotations != null && itemAnnotations.size() > 0) {
+                for (Map.Entry<String, String> entry : itemAnnotations.entrySet()) {
+                    String key = entry.getKey();
+                    if (!labels.containsKey(key) && copiedAnnotations.contains(key)) {
+                        labels.put(key, entry.getValue());
                     }
                 }
             }
