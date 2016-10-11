@@ -3297,33 +3297,27 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <div class="sect2">
 <h3 id="fabric8:watch-spring-boot">5.8. <strong>fabric8:watch-spring-boot</strong></h3>
 <div class="paragraph">
-<p>This goal tails the log of the latest running pod for your application and watches the local development build of your Spring Boot based application and then triggers a reload of the application when there are changes.</p>
+<p>This goal performs the following actions:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>deploys your application with Spring Boot DevTools enabled</p>
+</li>
+<li>
+<p>tails the log of the latest running pod for your application</p>
+</li>
+<li>
+<p>watches the local development build of your Spring Boot based application and then triggers a reload of the application when there are changes</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
-<p>Before using this goal you need to add the <code>spring.devtools.remote.secret</code> property into your <code>application.properties</code> file like the following example. You can use any value you like.</p>
+<p>You can try it on any spring boot application via:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">spring.devtools.remote.secret=mysecrettoken</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>You also need to add the spring boot devtools to your pom.xml dependencies:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;dependency&gt;</span>
-  <span class="tag">&lt;groupId&gt;</span>org.springframework.boot<span class="tag">&lt;/groupId&gt;</span>
-  <span class="tag">&lt;artifactId&gt;</span>spring-boot-devtools<span class="tag">&lt;/artifactId&gt;</span>
-<span class="tag">&lt;/dependency&gt;</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Now you can watch the container and restart it on local code changes via:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:deploy fabric8:watch-spring-boot</code></pre>
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:watch-spring-boot</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3338,7 +3332,10 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 </div>
 </div>
 <div class="paragraph">
-<p>You should see your app reload on the fly in the shell running the <a href="#fabric8:watch-spring-boot"><strong>fabric8:watch-spring-boot</strong></a> goal</p>
+<p>You should see your app reload on the fly in the shell running the <a href="#fabric8:watch-spring-boot"><strong>fabric8:watch-spring-boot</strong></a> goal!</p>
+</div>
+<div class="paragraph">
+<p>There is also support for LiveReload as well.</p>
 </div>
 </div>
 </div>
@@ -4734,7 +4731,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.71<br>
-Last updated 2016-10-11 17:43:25 UTC
+Last updated 2016-10-11 18:38:29 UTC
 </div>
 </div>
 </body>
