@@ -2,30 +2,17 @@
 [[fabric8:watch-spring-boot]]
 == *fabric8:watch-spring-boot*
 
-This goal tails the log of the latest running pod for your application and watches the local development build of your Spring Boot based application and then triggers a reload of the application when there are changes.
+This goal performs the following actions:
 
-Before using this goal you need to add the `spring.devtools.remote.secret` property into your `application.properties` file like the following example. You can use any value you like.
+* deploys your application with Spring Boot DevTools enabled
+* tails the log of the latest running pod for your application
+* watches the local development build of your Spring Boot based application and then triggers a reload of the application when there are changes
 
-[source, sh]
-----
-spring.devtools.remote.secret=mysecrettoken
-----
-
-You also need to add the spring boot devtools to your pom.xml dependencies:
-
-[source,xml,indent=0,subs="verbatim,quotes,attributes"]
-----
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-devtools</artifactId>
-    </dependency>
-----
-
-Now you can watch the container and restart it on local code changes via:
+You can try it on any spring boot application via:
 
 [source, sh]
 ----
-mvn fabric8:deploy fabric8:watch-spring-boot
+mvn fabric8:watch-spring-boot
 ----
 
 Once the goal starts up the spring boot RemoteSpringApplication it will watch for local development changes.
@@ -37,5 +24,7 @@ e.g. if you edit the java code of your app and then build it via something like 
 mvn package
 ----
 
-You should see your app reload on the fly in the shell running the <<fabric8:watch-spring-boot>> goal
+You should see your app reload on the fly in the shell running the <<fabric8:watch-spring-boot>> goal!
+
+There is also support for LiveReload as well.
 
