@@ -68,7 +68,7 @@
 
     <!-- Version of default images, updatable by CD -->
     <version.image.java.upstream.docker>1.2.1</version.image.java.upstream.docker>
-    <version.image.java.upstream.s2i>1.3.4</version.image.java.upstream.s2i>
+    <version.image.java.upstream.s2i>1.3</version.image.java.upstream.s2i>
 
     <!-- Hybrid image for S2I & Docker for RedHat -->
     <version.image.java.redhat>2.0</version.image.java.redhat>
