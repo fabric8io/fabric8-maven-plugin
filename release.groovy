@@ -29,7 +29,8 @@ def updateDownstreamDependencies(stagedProject) {
     projects = [
             'fabric8io/fabric8-maven-dependencies',
             'fabric8io/fabric8-devops',
-            'fabric8io/fabric8-forge'
+            'fabric8io/fabric8-platform',
+            'fabric8io/fabric8-ipaas'
     ]
     version = stagedProject[1]
   }
