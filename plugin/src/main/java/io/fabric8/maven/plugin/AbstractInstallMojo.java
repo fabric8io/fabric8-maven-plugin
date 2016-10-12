@@ -199,6 +199,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
             // lets try copy it instead as this could be an odd linux issue with renaming files
             try {
                 IOHelpers.copy(new FileInputStream(file), new FileOutputStream(destFile));
+                destFile.setExecutable(true);
             } catch (IOException e) {
                 throw new MojoExecutionException("Failed to copy temporary file " + file + " to " + destFile + ": " + e, e);
             }
