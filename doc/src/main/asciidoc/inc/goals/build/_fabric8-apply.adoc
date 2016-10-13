@@ -1,0 +1,10 @@
+
+[[fabric8:apply]]
+== *fabric8:apply*
+
+This goals applies the resources created with <<fabric8:resource>> to a connected Kubernetes or OpenShift cluster. It's  similar to <<fabric8:deploy>> but does not the full deployment cycle of creating the resource, creating the application image and the sending the resource descriptors to the clusters. This goal can be easily bound to `<executions>` within the plugin's configuration and binds by default to the `install` lifecycle phase.
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:apply
+----

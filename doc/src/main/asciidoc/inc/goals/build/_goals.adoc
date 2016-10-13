@@ -5,6 +5,8 @@
 include::_fabric8-resource.adoc[]
 include::_fabric8-build.adoc[]
 include::_fabric8-push.adoc[]
+include::_fabric8-apply.adoc[]
+include::_fabric8-resource-apply.adoc[]
 include::_fabric8-helm.adoc[]
 include::_fabric8-distro.adoc[]
 include::_fabric8-app-catalog.adoc[]
