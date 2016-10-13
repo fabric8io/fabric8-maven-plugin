@@ -1,6 +1,6 @@
 
 [[goals-overview-setup]]
-# Setup Goals
+# Infrastructure Goals
 
 include::_fabric8-setup.adoc[]
 include::_fabric8-cluster-start.adoc[]
