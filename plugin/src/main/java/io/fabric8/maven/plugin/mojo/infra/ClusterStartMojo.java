@@ -54,7 +54,7 @@ public class ClusterStartMojo extends AbstractInstallMojo {
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         File gofabric8 = installBinaries();
 
-        String arguments = batchModeArgument;
+        String arguments = "";
         if (Strings.isNotBlank(clusterKind)) {
             if (isMinishift()) {
                 arguments += " --minishift";
@@ -63,15 +63,12 @@ public class ClusterStartMojo extends AbstractInstallMojo {
                 arguments += " --" + clusterKind;
             }
         }
-        if (Strings.isNotBlank(clusterApp)) {
-            String appArg = this.clusterApp;
-            if (clusterApp.equals("fabric8") || clusterApp.equals("platform")) {
-                // ignore console command
-                // TODO add --app= CLI argument when gofabric8 start supports it
-                // see https://github.com/fabric8io/gofabric8/issues/224
-            } else {
-                arguments += " --" + appArg;
-            }
+        if (!clusterApp.equals("fabric8") && !clusterApp.equals("platform")) {
+            arguments += " --" + clusterApp;
+        } else {
+            // ignore console command
+            // TODO add --app= CLI argument when gofabric8 start supports it
+            // see https://github.com/fabric8io/gofabric8/issues/224
         }
         if (Strings.isNotBlank(clusterCPUs)) {
             arguments += " --cpus " + clusterCPUs;
@@ -79,9 +76,7 @@ public class ClusterStartMojo extends AbstractInstallMojo {
         if (Strings.isNotBlank(clusterMemory)) {
             arguments += " --memory " + clusterMemory;
         }
-        String message = "gofabric8 start" + arguments;
-        log.info("running: " + message);
-        runCommand(gofabric8.getAbsolutePath() + " start" + arguments, message, "gofabric8");
+        runGofabric8(gofabric8.getAbsolutePath() + " start" + arguments);
     }
 
 }
