@@ -8,9 +8,7 @@ This plugin supports a rich set for providing a smooth Java developer experience
 
 * <<goals-develop, Development goals>> target help not only in deploying resource descriptors to the development cluster but also to manage the lifecycle of the development cluster as well.
 
-* <<goals-setup, Setup goals>> are good for setting up your Kubernetes and OpenShift development environment as well for adding this plugin to your `pom.xml`.
-
-* <<goals-shortcut, Shortcut goals>> combine several other goals for convenience.
+* <<goals-infra, Infrastructure goals>> are good for setting up your Kubernetes and OpenShift development environment as well for adding this plugin to your `pom.xml`.
 
 * <<goals-internal, Internal goals>> are used by fabric8 project to maintain meta data of the supported applications but might be useful for other uses cases, too.
 
@@ -28,6 +26,12 @@ This plugin supports a rich set for providing a smooth Java developer experience
 
 | *<<fabric8:resource>>*
 | Create Kubernetes or OpenShift resource descriptors
+
+| *<<fabric8:apply>>*
+| Apply resources to a running cluster
+
+| *<<fabric8:resource-apply>>*
+| Run `fabric8:resource` ➜ `fabric8:apply`
 
 | *<<fabric8:helm>>*
 | Create a https://github.com/kubernetes/helm/blob/master/docs/charts.md#the-chart-file-structure[Helm Chart]
@@ -47,11 +51,14 @@ This plugin supports a rich set for providing a smooth Java developer experience
 |===
 | Goal | Description
 
+| *<<fabric8:run>>*
+| Run a complete development workflow cycle `fabric8:resource` ➜ `fabric8:build` ➜ `fabric8:apply` in the foreground.
+
 | *<<fabric8:deploy>>*
-| Deploy resources decriptors to a cluster
+| Deploy resources decriptors to a cluster after creating them and building the app. Same as <<fabric8:run>> except that it runs in the backgorund.
 
 | *<<fabric8:undeploy>>*
-| Undeploy and remove resources decriptors from a cluster
+| Undeploy and remove resources decriptors from a cluster.
 
 | *<<fabric8:start>>*
 | Start the application which has been deployed previously
@@ -72,22 +79,8 @@ This plugin supports a rich set for providing a smooth Java developer experience
 | Enable remote debugging
 |===
 
-[[goals-shortcut]]
-.Shortcut Goals
-[cols="1,3"]
-|===
-| Goal | Description
-
-| *<<fabric8:run>>*
-| Run a complete development workflow cycle which means `fabric8:resource` ➜ `fabric8:build` ➜ `fabric8:deploy`
-
-| *<<fabric8:resource-apply>>*
-| Run `fabric8:resource` ➜ `fabric8:deploy`
-
-|===
-
-[[goals-setup]]
-.Setup Goals
+[[goals-infra]]
+.Infrastructure Goals
 [cols="1,3"]
 |===
 | Goal | Description
@@ -156,6 +149,5 @@ a| `fabric8:deploy`
 
 include::build/_goals.adoc[]
 include::develop/_goals.adoc[]
-include::shortcut/_goals.adoc[]
-include::setup/_goals.adoc[]
+include::infra/_goals.adoc[]
 include::internal/_goals.adoc[]
