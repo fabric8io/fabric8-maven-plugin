@@ -1,5 +1,6 @@
 package io.fabric8.maven.enricher.api;
 
+import java.util.Collections;
 import java.util.List;
 
 import io.fabric8.kubernetes.api.model.Container;
@@ -24,8 +25,8 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
         for (HasMetadata item : items) {
             if (item instanceof Deployment) {
                 Deployment deployment = (Deployment) item;
-                Container container = getContainer(deployment);
-                if (container != null) {
+                List<Container> containers = getCandidateContainers(deployment);
+                for (Container container : containers) {
                     if (container.getReadinessProbe() == null) {
                         Probe probe = getReadinessProbe();
                         if (probe != null) {
@@ -47,7 +48,7 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
         builder.withItems(items);
     }
 
-    private Container getContainer(Deployment deployment) {
+    private List<Container> getCandidateContainers(Deployment deployment) {
         if (deployment.getSpec() != null &&
                 deployment.getSpec().getTemplate() != null &&
                 deployment.getSpec().getTemplate().getSpec() != null &&
@@ -55,10 +56,12 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
                 deployment.getSpec().getTemplate().getSpec().getContainers().size() > 0) {
 
             List<Container> containers = deployment.getSpec().getTemplate().getSpec().getContainers();
-            return containers.get(containers.size() - 1); // last one
+            if (containers != null && containers.size() > 0) {
+                return Collections.singletonList(containers.get(containers.size() - 1)); // enhance last container only
+            }
         }
 
-        return null;
+        return Collections.emptyList();
     }
 
     private String describe(Probe probe) {
@@ -75,7 +78,7 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
             desc.append(probe.getInitialDelaySeconds());
             desc.append(" seconds");
         }
-        if(probe.getPeriodSeconds()!=null) {
+        if (probe.getPeriodSeconds() != null) {
             desc.append(", with period ");
             desc.append(probe.getPeriodSeconds());
             desc.append(" seconds");

@@ -1,4 +1,4 @@
-package io.fabric8.maven.enricher.springboot;
+package io.fabric8.maven.enricher.fabric8;
 
 import java.util.Properties;
 
