@@ -13,23 +13,21 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.plugin;
 
-import org.junit.Test;
+package io.fabric8.maven.plugin.mojo.develop;
 
-import static io.fabric8.maven.plugin.mojo.build.HelmMojo.escapeYamlTemplate;
-import static org.junit.Assert.assertEquals;
+import io.fabric8.maven.plugin.mojo.build.ApplyMojo;
+import org.apache.maven.plugins.annotations.*;
 
 /**
+ * This goal forks the install goal then applies the generated kubernetes resources to the current cluster.
+ *
+ * Note that the goals fabric8:resource and fabric8:build must be bound to the proper execution phases.
+ *
+ * @author roland
+ * @since 09/06/16
  */
-public class HelmEscapeTest {
 
-    @Test
-    public void testHelmTemplateEscape() throws Exception {
-        assertEquals("abcd", escapeYamlTemplate("abcd"));
-        assertEquals("abc{de}f}", escapeYamlTemplate("abc{de}f}"));
-        assertEquals("abc{{\"{{\"}}de}f", escapeYamlTemplate("abc{{de}f"));
-        assertEquals("abc{{\"{{\"}}de}f{{\"}}\"}}", escapeYamlTemplate("abc{{de}f}}"));
-    }
-
-}
+@Mojo(name = "deploy", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.VALIDATE)
+@Execute(phase = LifecyclePhase.INSTALL)
+public class DeployMojo extends ApplyMojo { }
