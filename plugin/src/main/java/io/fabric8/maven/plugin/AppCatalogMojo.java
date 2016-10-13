@@ -245,7 +245,7 @@ public class AppCatalogMojo extends AbstractResourceMojo {
     }
 
     protected void removeGeneratedFilesNotMatchingSuffix(String kind, Set<String> validFileNames) {
-        log.info("Removing files not in set: " + validFileNames);
+        log.debug("Removing files not in set: " + validFileNames);
         File kubernetesOutputDir = new File(targetDir, kind);
         File[] files = kubernetesOutputDir.listFiles();
         if (files != null) {
