@@ -1,4 +1,4 @@
-package io.fabric8.maven.enricher.karaf;
+package io.fabric8.maven.enricher.fabric8;
 
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
