@@ -20,8 +20,11 @@ import java.util.List;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -39,13 +42,19 @@ public class EnricherContext {
     private ProcessorConfig config;
 
     private boolean useProjectClasspath;
+    private final MavenSession session;
+    private final GoalFinder goalFinder;
 
     public EnricherContext(MavenProject project,
+                           MavenSession session,
+                           GoalFinder goalFinder,
                            ProcessorConfig enricherConfig,
                            List<ImageConfiguration> images,
                            ResourceConfig kubernetesConfig,
                            Logger log,
                            boolean useProjectClasspath) {
+        this.session = session;
+        this.goalFinder = goalFinder;
         this.log = log;
         this.project = project;
         this.config = enricherConfig;
@@ -76,5 +85,17 @@ public class EnricherContext {
 
     public boolean isUseProjectClasspath() {
         return useProjectClasspath;
+    }
+
+    /**
+     * Returns true if maven is running with any of the given goals
+     */
+    public boolean runningWithGoal(String... goals) throws MojoExecutionException {
+        for (String goal : goals) {
+            if (goalFinder.runningWithGoal(project, session,  goal)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

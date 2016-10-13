@@ -500,7 +500,7 @@ public class ResourceMojo extends AbstractResourceMojo {
         throws IOException, MojoExecutionException {
 
         // Manager for calling enrichers.
-        EnricherContext ctx = new EnricherContext(project, extractEnricherConfig(), resolvedImages, resources, log,
+        EnricherContext ctx = new EnricherContext(project, session, goalFinder, extractEnricherConfig(), resolvedImages, resources, log,
                                                   useProjectClasspath);
         EnricherManager enricherManager = new EnricherManager(ctx);
 

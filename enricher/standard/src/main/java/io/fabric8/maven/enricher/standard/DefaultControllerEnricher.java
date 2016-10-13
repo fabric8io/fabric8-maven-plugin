@@ -17,9 +17,6 @@
 package io.fabric8.maven.enricher.standard;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.ContainerPort;
-import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
@@ -38,16 +35,6 @@ import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-
-import static io.fabric8.utils.Strings.isNullOrBlank;
 
 /**
  * Enrich with controller if not already present.
@@ -125,7 +112,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
                         builder.accept(new TypedVisitor<PodSpecBuilder>() {
                             @Override
                             public void visit(PodSpecBuilder builder) {
-                                mergePodSpec(builder, podSpec, defaultName);
+                                KubernetesResourceUtil.mergePodSpec(builder, podSpec, defaultName);
                             }
                         });
 
@@ -150,7 +137,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
                                         specBuilder.editTemplate().withNewSpecLike(podSpec).endSpec().endTemplate().endSpec();
                                     } else {
                                         PodSpecBuilder podSpecBuilder = new PodSpecBuilder(builderSpec);
-                                        mergePodSpec(podSpecBuilder, podSpec, defaultName);
+                                        KubernetesResourceUtil.mergePodSpec(podSpecBuilder, podSpec, defaultName);
                                     }
                                 }
                             }
@@ -163,175 +150,26 @@ public class DefaultControllerEnricher extends BaseEnricher {
 
     private void mergeDeploymentSpec(DeploymentBuilder builder, DeploymentSpec spec) {
         DeploymentFluent.SpecNested<DeploymentBuilder> specBuilder = builder.editSpec();
-        mergeSimpleFields(specBuilder, spec);
+        KubernetesResourceUtil.mergeSimpleFields(specBuilder, spec);
         specBuilder.endSpec();
     }
 
-    /**
-     * Uses reflection to copy over default values from the defaultValues object to the targetValues
-     * object similar to the following:
-     *
-     * <code>
-\    * if( values.get${FIELD}() == null ) {
-     *   values.(with|set){FIELD}(defaultValues.get${FIELD});
-     * }
-     * </code>
-     *
-     * Only fields that which use primitives, boxed primitives, or String object are copied.
-     *
-     * @param targetValues
-     * @param defaultValues
-     */
-    private static void mergeSimpleFields(Object targetValues, Object defaultValues) {
-        Class<?> tc = targetValues.getClass();
-        Class<?> sc = defaultValues.getClass();
-        for (Method targetGetMethod : tc.getMethods()) {
-            if( !targetGetMethod.getName().startsWith("get") )
-                continue;
-
-            Class<?> fieldType = targetGetMethod.getReturnType();
-            if( !SIMPLE_FIELD_TYPES.contains(fieldType) )
-                continue;
-
-
-            String fieldName = targetGetMethod.getName().substring(3);
-            Method withMethod = null;
-            try {
-                withMethod = tc.getMethod("with" + fieldName, fieldType);
-            } catch (NoSuchMethodException e) {
-                try {
-                    withMethod = tc.getMethod("set" + fieldName, fieldType);
-                } catch (NoSuchMethodException e2) {
-                    continue;
-                }
-            }
-
-            Method sourceGetMethod = null;
-            try {
-                sourceGetMethod = sc.getMethod("get" + fieldName);
-            } catch (NoSuchMethodException e) {
-                continue;
-            }
-
-            try {
-                if( targetGetMethod.invoke(targetValues) == null ) {
-                    withMethod.invoke(targetValues, sourceGetMethod.invoke(defaultValues));
-                }
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            } catch (InvocationTargetException e) {
-                throw new RuntimeException(e.getCause());
-            }
-        }
-    }
-
-
-    private static final HashSet<Class<?>> SIMPLE_FIELD_TYPES = new HashSet<>();
 
     static {
-        SIMPLE_FIELD_TYPES.add(String.class);
-        SIMPLE_FIELD_TYPES.add(Double.class);
-        SIMPLE_FIELD_TYPES.add(Float.class);
-        SIMPLE_FIELD_TYPES.add(Long.class);
-        SIMPLE_FIELD_TYPES.add(Integer.class);
-        SIMPLE_FIELD_TYPES.add(Short.class);
-        SIMPLE_FIELD_TYPES.add(Character.class);
-        SIMPLE_FIELD_TYPES.add(Byte.class);
-        SIMPLE_FIELD_TYPES.add(double.class);
-        SIMPLE_FIELD_TYPES.add(float.class);
-        SIMPLE_FIELD_TYPES.add(long.class);
-        SIMPLE_FIELD_TYPES.add(int.class);
-        SIMPLE_FIELD_TYPES.add(short.class);
-        SIMPLE_FIELD_TYPES.add(char.class);
-        SIMPLE_FIELD_TYPES.add(byte.class);
-    }
-
-
-    private void mergePodSpec(PodSpecBuilder builder, PodSpec defaultPodSpec, String defaultName) {
-        List<Container> containers = builder.getContainers();
-        List<Container> defaultContainers = defaultPodSpec.getContainers();
-        int size = defaultContainers.size();
-        if (size > 0) {
-            if (containers == null || containers.isEmpty()) {
-                builder.addToContainers(defaultContainers.toArray(new Container[size]));
-            } else {
-                int idx = 0;
-                for (Container defaultContainer : defaultContainers) {
-                    Container container;
-                    if (idx < containers.size()) {
-                        container = containers.get(idx);
-                    } else {
-                        container = new Container();
-                        containers.add(container);
-                    }
-                    mergeSimpleFields(container, defaultContainer);
-                    List<EnvVar> defaultEnv = defaultContainer.getEnv();
-                    if (defaultEnv != null) {
-                        for (EnvVar envVar : defaultEnv) {
-                            ensureHasEnv(container, envVar);
-                        }
-                    }
-                    List<ContainerPort> defaultPorts = defaultContainer.getPorts();
-                    if (defaultPorts != null) {
-                        for (ContainerPort port : defaultPorts) {
-                            ensureHasPort(container, port);
-                        }
-                    }
-                    if (container.getReadinessProbe()==null) {
-                        container.setReadinessProbe(defaultContainer.getReadinessProbe());
-                    }
-                    if (container.getLivenessProbe()==null) {
-                        container.setLivenessProbe(defaultContainer.getLivenessProbe());
-                    }
-                    if (container.getSecurityContext()==null) {
-                        container.setSecurityContext(defaultContainer.getSecurityContext());
-                    }
-                    idx++;
-                }
-                builder.withContainers(containers);
-            }
-        } else if (!containers.isEmpty()) {
-            // lets default the container name if there's none specified in the custom yaml file
-            Container container = containers.get(0);
-            if (isNullOrBlank(container.getName())) {
-                container.setName(defaultName);
-            }
-            builder.withContainers(containers);
-        }
-    }
-
-    private void ensureHasEnv(Container container, EnvVar envVar) {
-        List<EnvVar> envVars = container.getEnv();
-        if (envVars == null) {
-            envVars = new ArrayList<>();
-            container.setEnv(envVars);
-        }
-        for (EnvVar var : envVars) {
-            if (Objects.equals(var.getName(), envVar.getName())) {
-                return;
-            }
-        }
-        envVars.add(envVar);
-    }
-
-    private void ensureHasPort(Container container, ContainerPort port) {
-        List<ContainerPort> ports = container.getPorts();
-        if (ports == null) {
-            ports = new ArrayList<>();
-            container.setPorts(ports);
-        }
-        for (ContainerPort cp : ports) {
-            String n1 = cp.getName();
-            String n2 = port.getName();
-            if (n1 != null && n2 != null && n1.equals(n2)) {
-                return;
-            }
-            Integer p1 = cp.getContainerPort();
-            Integer p2 = port.getContainerPort();
-            if (p1 != null && p2 != null && p1.intValue() == p2.intValue()) {
-                return;
-            }
-        }
-        ports.add(port);
+        KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(String.class);
+        KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(Double.class);
+        KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(Float.class);
+        KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(Long.class);
+        KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(Integer.class);
+        KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(Short.class);
+        KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(Character.class);
+        KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(Byte.class);
+        KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(double.class);
+        KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(float.class);
+        KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(long.class);
+        KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(int.class);
+        KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(short.class);
+        KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(char.class);
+        KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(byte.class);
     }
 }

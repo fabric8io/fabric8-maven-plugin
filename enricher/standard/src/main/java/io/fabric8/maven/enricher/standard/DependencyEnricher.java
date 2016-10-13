@@ -18,6 +18,7 @@ package io.fabric8.maven.enricher.standard;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
@@ -29,9 +30,16 @@ import org.apache.maven.artifact.Artifact;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
+import static io.fabric8.maven.core.util.Constants.RESOURCE_LOCATION_ANNOTATION;
 
 /**
  * Enricher for embedding dependency descriptors to single package.
@@ -40,47 +48,94 @@ import java.util.Set;
  * @since 14/07/16
  */
 public class DependencyEnricher extends BaseEnricher {
+    private static String DEPENDENCY_KUBERNETES_YAML = "META-INF/fabric8/kubernetes.yml";
 
-  // Available configuration keys
-  private enum Config implements Configs.Key {
+    private Set<URL> dependencyArtifacts = new HashSet<>();
 
-    includeTransitive {{ d = "true"; }};
+    // Available configuration keys
+    private enum Config implements Configs.Key {
 
-    public String def() { return d; } protected String d;
-  }
+        includeTransitive {{
+            d = "true";
+        }},
+        includePlugin {{
+            d = "true";
+        }};
 
-  private static String DEPENDENCY_KUBERNETES_YAML = "/META-INF/fabric8/kubernetes.yml";
-  private Set<File> dependencyArtifacts = new HashSet<>();
+        protected String d;
 
-  public DependencyEnricher(EnricherContext buildContext) {
-    super(buildContext, "fmp-dependency");
-
-    Set<Artifact> artifacts = isIncludeTransitive() ?
-        buildContext.getProject().getArtifacts() : buildContext.getProject().getDependencyArtifacts();
-
-    for (Artifact artifact : artifacts) {
-      if (Artifact.SCOPE_COMPILE.equals(artifact.getScope()) && "jar".equals(artifact.getType())) {
-        dependencyArtifacts.add(artifact.getFile());
-      }
+        public String def() {
+            return d;
+        }
     }
-  }
 
-  @Override
-  public void adapt(KubernetesListBuilder builder) {
-    for (File artifact : dependencyArtifacts) {
-      try {
-        URL url = new URL("jar:" + artifact.toURI().toURL() + "!" + DEPENDENCY_KUBERNETES_YAML);
-        InputStream is = url.openStream();
-        KubernetesList resources = new ObjectMapper(new YAMLFactory()).readValue(is, KubernetesList.class);
-        builder.addToItems(resources.getItems().toArray(new HasMetadata[0]));
-      } catch (IOException e) {
-        getLog().debug("Skipping " + artifact.toString() + ": " + e);
-      }
+    public DependencyEnricher(EnricherContext buildContext) {
+        super(buildContext, "fmp-dependency");
+
+        Set<Artifact> artifacts = isIncludeTransitive() ?
+                buildContext.getProject().getArtifacts() : buildContext.getProject().getDependencyArtifacts();
+
+        for (Artifact artifact : artifacts) {
+            if (Artifact.SCOPE_COMPILE.equals(artifact.getScope()) && "jar".equals(artifact.getType())) {
+                File file = artifact.getFile();
+                try {
+                    URL url = new URL("jar:" + file.toURI().toURL() + "!/" + DEPENDENCY_KUBERNETES_YAML);
+                    dependencyArtifacts.add(url);
+                } catch (MalformedURLException e) {
+                    getLog().debug("Failed to create URL for " + file + ": " + e, e);
+                }
+            }
+        }
+        // lets look on the current plugin classpath too
+        if (isIncludePlugin()) {
+            Enumeration<URL> resources = null;
+            try {
+                resources = getClass().getClassLoader().getResources(DEPENDENCY_KUBERNETES_YAML);
+            } catch (IOException e) {
+                getLog().error("Could not find " + DEPENDENCY_KUBERNETES_YAML + " on the classpath: " + e, e);
+            }
+            if (resources != null) {
+                while (resources.hasMoreElements()) {
+                    URL url = resources.nextElement();
+                    dependencyArtifacts.add(url);
+                }
+            }
+        }
+
     }
-  }
 
-  protected boolean isIncludeTransitive() {
-    return Configs.asBoolean(getConfig(Config.includeTransitive));
-  }
+    @Override
+    public void adapt(KubernetesListBuilder builder) {
+        for (URL url : dependencyArtifacts) {
+            try {
+                InputStream is = url.openStream();
+                if (is != null) {
+                    log.debug("Processing Kubernetes YAML in at: " + url);
+
+                    KubernetesList resources = new ObjectMapper(new YAMLFactory()).readValue(is, KubernetesList.class);
+                    List<HasMetadata> items = resources.getItems();
+                    for (HasMetadata item : items) {
+                        Map<String, String> annotations = KubernetesHelper.getOrCreateAnnotations(item);
+                        if (!annotations.containsKey(RESOURCE_LOCATION_ANNOTATION)) {
+                            annotations.put(RESOURCE_LOCATION_ANNOTATION, url.toString());
+                        }
+                        log.debug("  found " + getKind(item) + "  " + KubernetesHelper.getName(item));
+                    }
+                    builder.addToItems(items.toArray(new HasMetadata[0]));
+                }
+            } catch (IOException e) {
+                getLog().debug("Skipping " + url + ": " + e, e);
+            }
+        }
+    }
+
+    protected boolean isIncludePlugin() {
+        return Configs.asBoolean(getConfig(Config.includePlugin));
+    }
+
+    protected boolean isIncludeTransitive() {
+        return Configs.asBoolean(getConfig(Config.includeTransitive));
+    }
+
 
 }
