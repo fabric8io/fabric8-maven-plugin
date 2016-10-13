@@ -34,6 +34,7 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodSpec;
+import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
@@ -54,6 +55,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
@@ -75,6 +78,7 @@ import java.util.regex.Pattern;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.kubernetes.api.KubernetesHelper.parseDate;
+import static io.fabric8.utils.Strings.isNullOrBlank;
 
 /**
  * Utility class for handling Kubernetes resource descriptors
@@ -86,6 +90,7 @@ public class KubernetesResourceUtil {
 
     public static final String API_VERSION = "v1";
     public static final String API_EXTENSIONS_VERSION = "extensions/v1beta1";
+    public static final HashSet<Class<?>> SIMPLE_FIELD_TYPES = new HashSet<>();
 
 
     /**
@@ -575,5 +580,151 @@ public class KubernetesResourceUtil {
             return t2 == null || t1.compareTo(t2) > 0;
         }
         return false;
+    }
+
+    /**
+     * Uses reflection to copy over default values from the defaultValues object to the targetValues
+     * object similar to the following:
+     *
+     * <code>
+\    * if( values.get${FIELD}() == null ) {
+     *   values.(with|set){FIELD}(defaultValues.get${FIELD});
+     * }
+     * </code>
+     *
+     * Only fields that which use primitives, boxed primitives, or String object are copied.
+     *
+     * @param targetValues
+     * @param defaultValues
+     */
+    public static void mergeSimpleFields(Object targetValues, Object defaultValues) {
+        Class<?> tc = targetValues.getClass();
+        Class<?> sc = defaultValues.getClass();
+        for (Method targetGetMethod : tc.getMethods()) {
+            if( !targetGetMethod.getName().startsWith("get") )
+                continue;
+
+            Class<?> fieldType = targetGetMethod.getReturnType();
+            if( !SIMPLE_FIELD_TYPES.contains(fieldType) )
+                continue;
+
+
+            String fieldName = targetGetMethod.getName().substring(3);
+            Method withMethod = null;
+            try {
+                withMethod = tc.getMethod("with" + fieldName, fieldType);
+            } catch (NoSuchMethodException e) {
+                try {
+                    withMethod = tc.getMethod("set" + fieldName, fieldType);
+                } catch (NoSuchMethodException e2) {
+                    continue;
+                }
+            }
+
+            Method sourceGetMethod = null;
+            try {
+                sourceGetMethod = sc.getMethod("get" + fieldName);
+            } catch (NoSuchMethodException e) {
+                continue;
+            }
+
+            try {
+                if( targetGetMethod.invoke(targetValues) == null ) {
+                    withMethod.invoke(targetValues, sourceGetMethod.invoke(defaultValues));
+                }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            } catch (InvocationTargetException e) {
+                throw new RuntimeException(e.getCause());
+            }
+        }
+    }
+
+    public static void mergePodSpec(PodSpecBuilder builder, PodSpec defaultPodSpec, String defaultName) {
+        List<Container> containers = builder.getContainers();
+        List<Container> defaultContainers = defaultPodSpec.getContainers();
+        int size = defaultContainers.size();
+        if (size > 0) {
+            if (containers == null || containers.isEmpty()) {
+                builder.addToContainers(defaultContainers.toArray(new Container[size]));
+            } else {
+                int idx = 0;
+                for (Container defaultContainer : defaultContainers) {
+                    Container container;
+                    if (idx < containers.size()) {
+                        container = containers.get(idx);
+                    } else {
+                        container = new Container();
+                        containers.add(container);
+                    }
+                    mergeSimpleFields(container, defaultContainer);
+                    List<EnvVar> defaultEnv = defaultContainer.getEnv();
+                    if (defaultEnv != null) {
+                        for (EnvVar envVar : defaultEnv) {
+                            ensureHasEnv(container, envVar);
+                        }
+                    }
+                    List<ContainerPort> defaultPorts = defaultContainer.getPorts();
+                    if (defaultPorts != null) {
+                        for (ContainerPort port : defaultPorts) {
+                            ensureHasPort(container, port);
+                        }
+                    }
+                    if (container.getReadinessProbe()==null) {
+                        container.setReadinessProbe(defaultContainer.getReadinessProbe());
+                    }
+                    if (container.getLivenessProbe()==null) {
+                        container.setLivenessProbe(defaultContainer.getLivenessProbe());
+                    }
+                    if (container.getSecurityContext()==null) {
+                        container.setSecurityContext(defaultContainer.getSecurityContext());
+                    }
+                    idx++;
+                }
+                builder.withContainers(containers);
+            }
+        } else if (!containers.isEmpty()) {
+            // lets default the container name if there's none specified in the custom yaml file
+            Container container = containers.get(0);
+            if (isNullOrBlank(container.getName())) {
+                container.setName(defaultName);
+            }
+            builder.withContainers(containers);
+        }
+    }
+
+    private static void ensureHasEnv(Container container, EnvVar envVar) {
+        List<EnvVar> envVars = container.getEnv();
+        if (envVars == null) {
+            envVars = new ArrayList<>();
+            container.setEnv(envVars);
+        }
+        for (EnvVar var : envVars) {
+            if (Objects.equals(var.getName(), envVar.getName())) {
+                return;
+            }
+        }
+        envVars.add(envVar);
+    }
+
+    private static void ensureHasPort(Container container, ContainerPort port) {
+        List<ContainerPort> ports = container.getPorts();
+        if (ports == null) {
+            ports = new ArrayList<>();
+            container.setPorts(ports);
+        }
+        for (ContainerPort cp : ports) {
+            String n1 = cp.getName();
+            String n2 = port.getName();
+            if (n1 != null && n2 != null && n1.equals(n2)) {
+                return;
+            }
+            Integer p1 = cp.getContainerPort();
+            Integer p2 = port.getContainerPort();
+            if (p1 != null && p2 != null && p1.intValue() == p2.intValue()) {
+                return;
+            }
+        }
+        ports.add(port);
     }
 }

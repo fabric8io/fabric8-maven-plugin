@@ -558,7 +558,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     // Build up an enricher manager to enrich also our implicit created build ojects
     private void enrich(KubernetesListBuilder builder) throws IOException {
         ProcessorConfig resolvedEnricherConfig = enricher != null ? enricher : ProfileUtil.extractProcesssorConfiguration(ProfileUtil.ENRICHER_CONFIG, profile, resourceDir);
-        EnricherContext enricherContext = new EnricherContext(project, resolvedEnricherConfig, getResolvedImages(), resources, log, useProjectClasspath);
+        EnricherContext enricherContext = new EnricherContext(project, session, goalFinder, resolvedEnricherConfig, getResolvedImages(), resources, log, useProjectClasspath);
         EnricherManager enricherManager = new EnricherManager(enricherContext);
         enricherManager.enrich(builder);
     }
