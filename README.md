@@ -5,6 +5,12 @@
 [![Technical Debt](https://img.shields.io/sonar/https/nemo.sonarqube.org/io.fabric8:fabric8-maven-plugin-build/tech_debt.svg?style=flat-square)](https://sonarqube.com/overview?id=io.fabric8%3Afabric8-maven-plugin-build)
 [![Dependency Status](https://dependencyci.com/github/fabric8io/fabric8-maven-plugin/badge)](https://dependencyci.com/github/fabric8io/fabric8-maven-plugin)
 
+<p align="center">
+  <a href="http://fabric8.io/">
+  	<img src="https://raw.githubusercontent.com/fabric8io/fabric8/master/docs/images/cover/cover_small.png" alt="fabric8 logo"/>
+  </a>
+</p>
+
 This Maven plugin is a one-stop-shop for building and deploying Java applications for Docker, Kubernetes and OpenShift.
 
 What to get started fast? Check out the [busy Java developers guide to developing microservices on Kubernetes and Docker](https://blog.fabric8.io/a-busy-java-developers-guide-to-developing-microservices-on-kubernetes-and-docker-98b7b9816fdf).
