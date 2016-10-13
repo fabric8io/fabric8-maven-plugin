@@ -5,10 +5,17 @@
 [![Technical Debt](https://img.shields.io/sonar/https/nemo.sonarqube.org/io.fabric8:fabric8-maven-plugin-build/tech_debt.svg?style=flat-square)](https://sonarqube.com/overview?id=io.fabric8%3Afabric8-maven-plugin-build)
 [![Dependency Status](https://dependencyci.com/github/fabric8io/fabric8-maven-plugin/badge)](https://dependencyci.com/github/fabric8io/fabric8-maven-plugin)
 
-This Maven plugin is a one-stop-shop for building and deploying Java
-applications for Docker, Kubernetes and OpenShift.
+<p align="center">
+  <a href="http://fabric8.io/">
+  	<img src="https://raw.githubusercontent.com/fabric8io/fabric8/master/docs/images/cover/cover_small.png" alt="fabric8 logo"/>
+  </a>
+</p>
 
-The full documentation can be found in the [User Manual](https://fabric8io.github.com/fabric8-maven-plugin) [[PDF](https://fabric8io.github.io/fabric8-maven-plugin/fabric8-maven-plugin.pdf)]. It supports the following goals:
+This Maven plugin is a one-stop-shop for building and deploying Java applications for Docker, Kubernetes and OpenShift.
+
+What to get started fast? Check out the [busy Java developers guide to developing microservices on Kubernetes and Docker](https://blog.fabric8.io/a-busy-java-developers-guide-to-developing-microservices-on-kubernetes-and-docker-98b7b9816fdf).
+
+The full documentation can be found in the [User Manual](http://maven.fabric8.io) [[PDF](https://fabric8io.github.io/fabric8-maven-plugin/fabric8-maven-plugin.pdf)]. It supports the following goals:
 
 | Goal                                          | Description                           |
 | --------------------------------------------- | ------------------------------------- |
@@ -34,13 +41,13 @@ The full documentation can be found in the [User Manual](https://fabric8io.githu
 
 ### Documentation and Support
 
-* [User Manual](https://fabric8io.github.com/fabric8-maven-plugin) [[PDF](https://fabric8io.github.io/fabric8-maven-plugin/fabric8-maven-plugin.pdf)]
+* [User Manual](http://maven.fabric8.io) [[PDF](https://fabric8io.github.io/fabric8-maven-plugin/fabric8-maven-plugin.pdf)]
 * Examples are in the [samples](samples/) directory
 * Many [fabric8 Quickstarts](https://github.com/fabric8-quickstarts) use this plugin and are good showcases, too.
-* You'll find us on IRC freenode in channel [#fabric8](https://webchat.freenode.net/?channels=fabric8) and we are happy to answer any questions.
+* You'll find us in the [fabric8 community](http://fabric8.io/community/) and on IRC freenode in channel [#fabric8](https://webchat.freenode.net/?channels=fabric8) and we are happy to answer any questions.
 * Contributions are highly appreciated and encouraged. Please send us Pull Requests.
 
 ### fabric8-maven-plugin 3 vs. 2
 
 > This is a complete rewrite of the former fabric8-maven plugin. It does not share the same configuration syntax,
-> but migration should be straight forward. If no, please contact us at freenode, #fabric8 or open an issue in this project.
+> but migration should be straight forward - please use the [fabric8:migrate goal from 2.x of the plugin](http://fabric8.io/guide/mavenFabric8Migrate.html). 
