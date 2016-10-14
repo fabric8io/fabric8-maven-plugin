@@ -64,7 +64,6 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
 
     protected Logger log;
 
-
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         log = createLogger(" ");

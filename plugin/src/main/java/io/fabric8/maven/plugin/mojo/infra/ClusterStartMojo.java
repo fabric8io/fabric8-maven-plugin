@@ -23,7 +23,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Creates a new local kubernetes or openshift cluster for development.
@@ -54,7 +53,7 @@ public class ClusterStartMojo extends AbstractInstallMojo {
 
     @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
-        File gofabric8 = installBinaries();
+        File gofabric8 = installGofabric8IfNotAvailable();
 
         ArrayList<String> arguments = new ArrayList<>();
         arguments.add("start");
