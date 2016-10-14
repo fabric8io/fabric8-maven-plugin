@@ -20,13 +20,9 @@ import java.io.*;
 import java.net.URL;
 
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.utils.IOHelpers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.apache.commons.io.FileUtils;
-import org.apache.http.HttpException;
-import org.apache.http.HttpStatus;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
@@ -37,6 +33,13 @@ import org.apache.maven.plugin.MojoExecutionException;
  */
 public class IoUtil {
 
+    /**
+     * Download with showing the progress a given URL and store it in a file
+     * @param log logger used to track progress
+     * @param downloadUrl url to download
+     * @param target target file where to store the downloaded data
+     * @throws MojoExecutionException
+     */
     public static void download(Logger log, URL downloadUrl, File target) throws MojoExecutionException {
         log.progressStart();
         try {
@@ -84,7 +87,7 @@ public class IoUtil {
                 ret.append(i < index ? "=" : (i == index ? ">" : " "));
             }
         } else {
-            int bucketLength = 100 * 1024; // 100k
+            int bucketLength = 200 * 1024; // 100k
             int index = (int) (readBytes / bucketLength + 0.5) % PROGRESS_LENGTH;
             for (int i = 0; i < PROGRESS_LENGTH; i++) {
                 ret.append(i == index ? "*" : " ");
