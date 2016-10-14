@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.plugin.mojo.infra;
 
+import io.fabric8.maven.core.util.IoUtil;
 import io.fabric8.maven.core.util.ProcessUtil;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
 import io.fabric8.utils.IOHelpers;
@@ -173,20 +174,12 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     // First download in a temporary place
     private File downloadToTempFile() throws MojoExecutionException {
         // TODO: Very checksum and potentially signature
-        File tempFile = createGofabric8DownloadFile();
+        File destFile = createGofabric8DownloadFile();
         URL downloadUrl = getGofabric8DownloadUrl();
-        download(tempFile, downloadUrl);
-        return tempFile;
+        IoUtil.download(log, downloadUrl, destFile);
+        return destFile;
     }
 
-    private void download(File tempFile, URL downloadUrl) throws MojoExecutionException {
-        try (OutputStream out = new FileOutputStream(tempFile)) {
-            InputStream in = downloadUrl.openStream();
-            IOHelpers.copy(in, out);
-        } catch (IOException e) {
-            throw new MojoExecutionException("Failed to download URL " + downloadUrl + " to  " + tempFile + ": " + e, e);
-        }
-    }
 
     // Where to put the initial download of gofabric8
     private File createGofabric8DownloadFile() throws MojoExecutionException {
