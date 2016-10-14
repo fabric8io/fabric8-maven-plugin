@@ -51,6 +51,12 @@ public class SpringBootGenerator extends JavaRunGenerator {
     public static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
     private Boolean springBootRepackage;
 
+    public enum Config implements Configs.Key {
+        color;
+
+        public String def() { return d; } protected String d;
+    }
+
     public SpringBootGenerator(MavenGeneratorContext context) {
         super(context, "spring-boot");
     }
@@ -115,6 +121,14 @@ public class SpringBootGenerator extends JavaRunGenerator {
         }
     }
 
+    @Override
+    protected Map<String, String> getEnv() {
+        Map<String, String> ret = super.getEnv();
+        if (getConfig(Config.color) != null) {
+            ret.put("JAVA_OPTIONS","-Dspring.output.ansi.enabled=" + getConfig(Config.color));
+        }
+        return ret;
+    }
 
     @Override
     protected boolean isFatJarWithNoDependencies() {
