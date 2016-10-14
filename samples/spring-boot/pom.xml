@@ -76,6 +76,13 @@
             </labels>
           </resources>
 
+          <generator>
+             <config>
+               <spring-boot>
+                 <color>always</color>
+               </spring-boot>
+             </config>
+          </generator>
           <enricher>
             <excludes>
               <exclude>build</exclude>
