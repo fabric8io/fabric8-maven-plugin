@@ -31,8 +31,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -48,8 +46,9 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
 
     // Download parameters
     private static final String GOFABRIC8_VERSION_URL = "https://raw.githubusercontent.com/fabric8io/gofabric8/master/version/VERSION";
-    private String GOFABRIC_DOWNLOAD_URL_FORMAT = "https://github.com/fabric8io/gofabric8/releases/download/v%s/gofabric8-%s-%s"; // version, platform, arch
+    private static String GOFABRIC_DOWNLOAD_URL_FORMAT = "https://github.com/fabric8io/gofabric8/releases/download/v%s/gofabric8-%s-%s"; // version, platform, arch
 
+    // Variations of gofabric8
     private enum Platform { linux, darwin, windows }
     private enum Architecture { amd64, arm }
 
@@ -69,7 +68,13 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     @Component
     private Prompter prompter;
 
-    protected File installBinaries() throws MojoExecutionException {
+    /**
+     * Check for gofabric8 and install it to ~/.fabric8/bin if not available on the path
+     *
+     * @return the path to gofabric8
+     * @throws MojoExecutionException
+     */
+    protected File installGofabric8IfNotAvailable() throws MojoExecutionException {
         File gofabric8 = ProcessUtil.findExecutable(log, GOFABRIC8);
         if (gofabric8 == null) {
             validateFabric8Dir();
@@ -80,71 +85,73 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
                 downloadGoFabric8(gofabric8);
             }
 
-            // --- ✂ --- ✂ --- ✂ --- ✂ --- ✂ --- ✂ --- ✂ --- ✂ --- ✂ --- ✂ --- ✂ --- ✂ --- ✂ --- ✂ --- ✂
-
             // lets check if the binary directory is on the path
             if (!ProcessUtil.folderIsOnPath(log, fabric8BinDir)) {
-                String absolutePath = fabric8BinDir.getAbsolutePath();
-                String commandIndent = "  ";
-                log.warn("Note that the fabric8 folder " + absolutePath + " is not on the PATH!");
-                if (getPlatform().equals(Platform.windows.name())) {
-                    log.warn("Please add the following to PATH environment variable:");
-                    log.warn(commandIndent + "set PATH=%PATH%;" + absolutePath);
-                } else {
-                    String bashrcLine = "export PATH=$PATH:" + absolutePath;
-
-                    log.warn("Please add the following to your ~/.bashrc:");
-                    log.warn(commandIndent + bashrcLine);
-
-                    File homeDir = getUserHome();
-                    File rcFile = null;
-                    String[] rcFiles = {".bashrc", ".zshrc", ".profile", ".bash_profile"};
-                    for (String fileName : rcFiles) {
-                        File testFile = new File(homeDir, fileName);
-                        if (fileExists(testFile)) {
-                            rcFile = testFile;
-                            break;
-                        }
-                    }
-                    if (rcFile == null) {
-                        rcFile = new File(".bashrc");
-                    }
-                    if (prompter != null && rcFile.getParentFile().isDirectory()) {
-                        String answer = null;
-                        try {
-                            answer = prompter.prompt("Would you like to add this line to your ~/" + rcFile.getName() + " now? (Y/n)");
-                        } catch (PrompterException e) {
-                            log.warn("Failed to ask user prompt: " + e, e);
-                        }
-                        if (answer != null && answer.startsWith("Y")) {
-                            addToBashRC(rcFile, bashrcLine);
-                            log.info("Updated " + rcFile + ". Please type the following command to update your current shell:");
-                            log.info(commandIndent + "source ~/" + rcFile.getName());
-                        }
-                    }
-                }
+                updateStartupScriptInstructions();
             }
         } else {
-            getLog().info("Found gofabric8 at: " + gofabric8);
+            log.info("Found %s", gofabric8);
             runGofabric8(gofabric8, "version");
         }
         return gofabric8;
     }
 
-    protected static boolean fileExists(File testFile) {
-        return testFile.exists() && testFile.isFile();
-    }
+    // How to update your startup script if not in path
+    private void updateStartupScriptInstructions() throws MojoExecutionException {
+        String absolutePath = fabric8BinDir.getAbsolutePath();
+        String indent = "  ";
+        log.warn("The fabric8 bin folder %s is not on the PATH.", fabric8BinDir.getAbsolutePath());
+        log.warn("To easily start fabric8 CLI tools like [[B]]gofabric8[[B]] directly, please adapt your environment:");
+        if (getPlatform().equals(Platform.windows.name())) {
+            log.info("Please add the following to PATH environment variable:");
+            log.info("%s[[C]]set PATH=%%PATH%%;%s[[C]]",indent, absolutePath);
+        } else {
+            String setPathCmd = "export PATH=$PATH:" + absolutePath;
+            log.info("Please add the following to your ~/.bashrc:");
+            log.info("%s[[C]]%s[[C]]", indent, setPathCmd);
 
-    protected void addToBashRC(File bashrcFile, String text) throws MojoExecutionException {
-        try (FileWriter writer = new FileWriter(bashrcFile, true)) {
-            writer.append("\n# added by fabric8-maven-plugin at " + new Date() + "\n" + text + "\n");
-        } catch (IOException e) {
-            throw new MojoExecutionException("Failed to append to " + bashrcFile + ". " + e, e);
+            File rcFile = getStartupScript();
+            if (rcFile != null) {
+                updateStartupScript(rcFile, setPathCmd);
+            }
         }
     }
 
-    protected File getUserHome() {
-        return new File(System.getProperty("user.home", "."));
+    // Ask user whether to update startup script and do it if requested.
+    private void updateStartupScript(File rcFile, String setPathCmd) throws MojoExecutionException {
+        try {
+            String answer = prompter.prompt("Would you like to add the path setting to your ~/" + rcFile.getName() + " now? (Y/n)");
+            if (answer != null && answer.startsWith("Y")) {
+                addToStartupScript(rcFile, setPathCmd);
+                log.info("Updated %s. Please type the following command to update your current shell:", rcFile);
+                log.info("     [[C]]source ~/%s[[C]]", rcFile.getName());
+            }
+        } catch (PrompterException e) {
+            log.warn("Failed to ask user prompt: " + e, e);
+        }
+    }
+
+    // Try several shell startup scripts, return the first
+    private File getStartupScript() {
+        File homeDir = new File(System.getProperty("user.home", "."));
+        for (String fileName : new String[]{".bashrc", ".zshrc", ".profile", ".bash_profile"}) {
+            File testFile = new File(homeDir, fileName);
+            if (testFile.exists() && testFile.isFile()) {
+                return testFile;
+            }
+        }
+        return null;
+    }
+
+    // Update startup script
+    private void addToStartupScript(File rcFile, String text) throws MojoExecutionException {
+        try (FileWriter writer = new FileWriter(rcFile, true)) {
+            writer.append("\n");
+            writer.append("# Added by fabric8-maven-plugin at " + new Date() + "\n");
+            writer.append(text + "\n");
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to append to " + rcFile + ": " + e, e);
+        }
     }
 
     // Check for a valide ~/.fabric8/bin

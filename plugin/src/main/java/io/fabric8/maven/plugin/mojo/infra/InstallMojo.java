@@ -29,7 +29,7 @@ public class InstallMojo extends AbstractInstallMojo {
 
     @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
-        File file = installBinaries();
+        File file = installGofabric8IfNotAvailable();
 
         if (isMinishift()) {
             runGofabric8(file, "install",  "--minishift");
