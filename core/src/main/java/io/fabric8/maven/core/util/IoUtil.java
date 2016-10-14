@@ -87,7 +87,7 @@ public class IoUtil {
                 ret.append(i < index ? "=" : (i == index ? ">" : " "));
             }
         } else {
-            int bucketLength = 200 * 1024; // 100k
+            int bucketLength = 200 * 1024; // 200k
             int index = (int) (readBytes / bucketLength + 0.5) % PROGRESS_LENGTH;
             for (int i = 0; i < PROGRESS_LENGTH; i++) {
                 ret.append(i == index ? "*" : " ");
