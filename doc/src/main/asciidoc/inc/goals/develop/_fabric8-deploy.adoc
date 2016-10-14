@@ -2,19 +2,14 @@
 [[fabric8:deploy]]
 == *fabric8:deploy*
 
-This is the main goal for building your docker image, generating the kubernetes resources and deploying them into the cluster.
+This is the main goal for building your docker image, generating the kubernetes resources and deploying them into the cluster (insofar your pom.xml is set up correct; keep reading :)).
 
 [source,sh,subs="attributes"]
 ----
 mvn fabric8:deploy
 ----
 
-Effectively this builds your project then invokes these goals:
-
-* <<fabric8:build>>
-* <<fabric8:resource-apply>>
-
-**Note** that you must have the <<fabric8:resource>> and <<fabric8:build>> goals bound to your executions in your pom.xml. e.g. like this:
+This goal is designed to run <<fabric8:build>> and <<fabric8:resource>> before the deploy **iff* you have the goals bound in your pom.xml:
 
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
@@ -36,4 +31,10 @@ Effectively this builds your project then invokes these goals:
   </executions>
 </plugin>
 ----
+
+
+Effectively this builds your project then invokes these goals:
+
+* <<fabric8:build>>
+* <<fabric8:resource-apply>>
 
