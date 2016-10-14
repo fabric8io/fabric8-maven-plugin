@@ -76,19 +76,21 @@ public class IoUtil {
 
     }
 
-    private static int PROGRESS_LENGTH=50;
+    // ========================================================================================
 
-    private static String getProgressBar(int readBytes, long length) {
+    private static int PROGRESS_LENGTH = 50;
+
+    private static String getProgressBar(int bytesRead, long length) {
         StringBuffer ret = new StringBuffer("[");
         if (length > - 1) {
-            int bucketLength = (int) (length / PROGRESS_LENGTH + 0.5);
-            int index = (int) (readBytes / bucketLength + 0.5);
+            int bucketSize = (int) (length / PROGRESS_LENGTH + 0.5);
+            int index = (int) (bytesRead / bucketSize + 0.5);
             for (int i = 0; i < PROGRESS_LENGTH; i++) {
                 ret.append(i < index ? "=" : (i == index ? ">" : " "));
             }
         } else {
-            int bucketLength = 200 * 1024; // 200k
-            int index = (int) (readBytes / bucketLength + 0.5) % PROGRESS_LENGTH;
+            int bucketSize = 200 * 1024; // 200k
+            int index = (int) (bytesRead / bucketSize + 0.5) % PROGRESS_LENGTH;
             for (int i = 0; i < PROGRESS_LENGTH; i++) {
                 ret.append(i == index ? "*" : " ");
             }

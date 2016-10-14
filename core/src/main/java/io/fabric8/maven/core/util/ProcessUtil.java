@@ -41,7 +41,7 @@ public class ProcessUtil {
         String[] commandWithArgs = prepareCommandArray(command.getAbsolutePath(), args);
         Process process = Runtime.getRuntime().exec(commandWithArgs);
         if (withShutdownHook) {
-            addShutdownHook(process, log, command);
+            addShutdownHook(log, process, command);
         }
         startLoggingThreads(process, log, command.getName() + " " + Strings.join(args, " "));
         try {
@@ -51,7 +51,44 @@ public class ProcessUtil {
         }
     }
 
-    private static void addShutdownHook(final Process process, final Logger log, final File command) {
+    public static File findExecutable(Logger log, String name) {
+        List<File> pathDirectories = getPathDirectories();
+        for (File directory : pathDirectories) {
+            if (isWindows()) {
+                for (String extension : isWindows() ? new String[]{ ".exe", ".bat", ".cmd", "" } : new String[] { "" }) {
+                    File file = new File(directory, name + extension);
+                    if (file.exists() && file.isFile()) {
+                        if (!file.canExecute()) {
+                            log.warn("Found " + file + " on the PATH but it is not executable. Ignoring ...");
+                        } else {
+                            return file;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public static boolean folderIsOnPath(Logger logger, File dir) {
+        List<File> paths = getPathDirectories();
+        if (paths.size() == 0) {
+            logger.warn("The $PATH environment variable is empty! Usually you have a PATH defined to find binaries.");
+            logger.warn("Please report this to the fabric8 team: https://github.com/fabric8io/fabric8-maven-plugin/issues/new");
+            return false;
+        }
+
+        for (File path : paths) {
+            if (canonicalPath(path).equals(canonicalPath(dir))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // ==========================================================================================================
+
+    private static void addShutdownHook(final Logger log, final Process process, final File command) {
         Runtime.getRuntime().addShutdownHook(new Thread(command.getName()) {
             @Override
             public void run() {
@@ -75,44 +112,6 @@ public class ProcessUtil {
             }
         });
     }
-    public static File findExecutable(Logger log, String name) {
-        List<File> pathDirectories = getPathDirectories(log);
-        for (File directory : pathDirectories) {
-            if( isWindows() ) {
-                for (String extension : new String[]{".exe", ".bat", ".cmd"}) {
-                    File file = new File(directory, name+extension);
-                    if (file.exists() && file.isFile()) {
-                        if (!file.canExecute()) {
-                            log.warn("Found " + file + " on the PATH but it is not executable!");
-                        } else {
-                            return file;
-                        }
-                    }
-                }
-            }
-            File file = new File(directory, name);
-            if (file.exists() && file.isFile()) {
-                if (!file.canExecute()) {
-                    log.warn("Found " + file + " on the PATH but it is not executable!");
-                } else {
-                    return file;
-                }
-            }
-        }
-        return null;
-    }
-
-    public static boolean folderIsOnPath(Logger logger, File dir) {
-        List<File> paths = getPathDirectories(logger);
-        for (File path : paths) {
-            if (canonicalPath(path).equals(canonicalPath(dir))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // ==========================================================================================================
 
     private static String[] prepareCommandArray(String command, List<String> args) {
         List<String> nArgs = args != null ? args : new ArrayList<String>();
@@ -142,7 +141,7 @@ public class ProcessUtil {
         }
     }
 
-    private static List<File> getPathDirectories(Logger log) {
+    private static List<File> getPathDirectories() {
         List<File> pathDirectories = new ArrayList<>();
         String pathText = System.getenv("PATH");
         if( isWindows() && pathText==null ) {
@@ -155,8 +154,6 @@ public class ProcessUtil {
             }
         }
         if (Strings.isNullOrBlank(pathText)) {
-            log.warn("The $PATH environment variable is empty! Usually you have a PATH defined to find binaries. ");
-            log.warn("Please report this to the fabric8 team: https://github.com/fabric8io/fabric8-maven-plugin/issues/new");
         } else {
             String[] pathTexts = pathText.split(File.pathSeparator);
             for (String text : pathTexts) {
