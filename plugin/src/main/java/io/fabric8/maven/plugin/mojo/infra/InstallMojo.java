@@ -30,7 +30,11 @@ public class InstallMojo extends AbstractInstallMojo {
     @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         File file = installBinaries();
-        // now lets install any dependencies like kubectl, minikube, minishift etc
-        runGofabric8(file.getAbsolutePath() + " install " + (isMinishift() ? "--minishift" : ""));
+
+        if (isMinishift()) {
+            runGofabric8(file, "install",  "--minishift");
+        } else {
+            runGofabric8(file, "install");
+        }
     }
 }

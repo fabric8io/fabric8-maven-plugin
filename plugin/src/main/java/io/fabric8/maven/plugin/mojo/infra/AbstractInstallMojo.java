@@ -35,7 +35,7 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.util.Date;
+import java.util.*;
 
 /**
  * Base class for install/tool related mojos
@@ -125,7 +125,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
             }
         } else {
             getLog().info("Found gofabric8 at: " + gofabric8);
-            runGofabric8(gofabric8.getAbsolutePath() + " version");
+            runGofabric8(gofabric8, "version");
         }
         return gofabric8;
     }
@@ -164,10 +164,10 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         File tempFile = downloadToTempFile();
 
         // Move into it's destination place in ~/.fabric8/bin
-        moveGofabric8InPlace(tempFile, destFile);
+        moveFile(tempFile, destFile);
 
         // Make some noise
-        runGofabric8(destFile + " version");
+        runGofabric8(destFile, "version");
     }
 
     // First download in a temporary place
@@ -175,10 +175,14 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         // TODO: Very checksum and potentially signature
         File tempFile = createGofabric8DownloadFile();
         URL downloadUrl = getGofabric8DownloadUrl();
+        download(tempFile, downloadUrl);
+        return tempFile;
+    }
+
+    private void download(File tempFile, URL downloadUrl) throws MojoExecutionException {
         try (OutputStream out = new FileOutputStream(tempFile)) {
             InputStream in = downloadUrl.openStream();
             IOHelpers.copy(in, out);
-            return tempFile;
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to download URL " + downloadUrl + " to  " + tempFile + ": " + e, e);
         }
@@ -222,7 +226,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     }
 
     // Move gofabric8 to its final place
-    private void moveGofabric8InPlace(File tempFile, File destFile) throws MojoExecutionException {
+    private void moveFile(File tempFile, File destFile) throws MojoExecutionException {
         if (!tempFile.renameTo(destFile)) {
             // lets try copy it instead as this could be an odd linux issue with renaming files
             try {
@@ -267,19 +271,21 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         }
     }
 
-    protected void runGofabric8(String command) throws MojoExecutionException {
+    protected void runGofabric8(File command, String ... args) throws MojoExecutionException {
         // Be sure to run in batch mode
-        command += " --batch";
-        log.info("Running %s", command);
+        List argList = new ArrayList(Arrays.asList(args));
+        argList.add("--batch");
+        String argLine = Strings.join(argList, " ");
+        log.info("Running %s %s", command, argLine);
 
-        String message = "gofabric8" + command.substring(command.indexOf(" "));
+        String message = command.getName() + argLine;
         try {
-            int result = ProcessUtil.runCommand(createExternalProcessLogger("[[B]]gofabric8[[B]] "), command, message);
+            int result = ProcessUtil.runCommand(createExternalProcessLogger("[[B]]gofabric8[[B]] "), command, argList);
             if (result != 0) {
                 throw new MojoExecutionException("Failed to execute " + message + " result was: " + result);
             }
         } catch (IOException e) {
-            throw new MojoExecutionException("Failed to execute " + message + ". " + e, e);
+            throw new MojoExecutionException(String.format("Failed to execute %s : %s", command, e.getMessage()), e);
         }
     }
 
