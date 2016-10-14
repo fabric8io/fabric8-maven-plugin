@@ -22,6 +22,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Creates a new local kubernetes or openshift cluster for development.
@@ -54,29 +56,32 @@ public class ClusterStartMojo extends AbstractInstallMojo {
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         File gofabric8 = installBinaries();
 
-        String arguments = "";
+        ArrayList<String> arguments = new ArrayList<>();
+        arguments.add("start");
         if (Strings.isNotBlank(clusterKind)) {
             if (isMinishift()) {
-                arguments += " --minishift";
+                arguments.add("--minishift");
             } else {
                 // lets assume its valid and let gofabric8 fail
-                arguments += " --" + clusterKind;
+                arguments.add("--" + clusterKind);
             }
         }
         if (!clusterApp.equals("fabric8") && !clusterApp.equals("platform")) {
-            arguments += " --" + clusterApp;
+            arguments.add("--" + clusterApp);
         } else {
             // ignore console command
             // TODO add --app= CLI argument when gofabric8 start supports it
             // see https://github.com/fabric8io/gofabric8/issues/224
         }
         if (Strings.isNotBlank(clusterCPUs)) {
-            arguments += " --cpus " + clusterCPUs;
+            arguments.add("--cpus");
+            arguments.add(clusterCPUs);
         }
         if (Strings.isNotBlank(clusterMemory)) {
-            arguments += " --memory " + clusterMemory;
+            arguments.add("--memory");
+            arguments.add(clusterMemory);
         }
-        runGofabric8(gofabric8.getAbsolutePath() + " start" + arguments);
+        runGofabric8(gofabric8, arguments.toArray(new String[arguments.size()]));
     }
 
 }

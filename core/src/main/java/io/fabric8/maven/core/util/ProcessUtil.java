@@ -16,7 +16,6 @@
 package io.fabric8.maven.core.util;
 
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.utils.Closeables;
 import io.fabric8.utils.Function;
 import io.fabric8.utils.Strings;
 
@@ -25,10 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static io.fabric8.maven.docker.util.EnvUtil.isWindows;
 
@@ -37,93 +33,48 @@ import static io.fabric8.maven.docker.util.EnvUtil.isWindows;
  */
 public class ProcessUtil {
 
-    public static int runCommand(final Logger log, String commands, String message) throws IOException {
-        Function<String, Void> outputHandler = createOutputHandler(log);
-        return runCommand(log, commands, outputHandler, createErrorHandler(log), message);
+    public static int runCommand(final Logger log, File command, List<String> args) throws IOException {
+        return runCommand(log, command, args, false);
     }
 
-    public static int runCommandAsync(final Logger log, String commands, String message) throws IOException {
-        return runCommand(log, commands, createOutputHandler(log), createErrorHandler(log), message);
-    }
-
-    public static int runCommand(Logger log, String commands, Function<String, Void> outputHandler, Function<String, Void> errorHandler, String message) throws IOException {
-        log.debug("Executing commands: " + commands);
-        Process process;
-        try {
-            process = Runtime.getRuntime().exec(commands);
-            processOutput(log, process.getInputStream(), outputHandler, message);
-            processOutput(log, process.getErrorStream(), errorHandler, message);
-        } catch (Exception e) {
-            throw new IOException("Failed to execute process " + "stdin" + " for " +
-                    message + ": " + e, e);
+    public static int runCommand(final Logger log, File command, List<String> args, boolean withShutdownHook) throws IOException {
+        String[] commandWithArgs = prepareCommandArray(command.getAbsolutePath(), args);
+        Process process = Runtime.getRuntime().exec(commandWithArgs);
+        if (withShutdownHook) {
+            addShutdownHook(process, log, command);
         }
-        return process.exitValue();
-    }
-
-    public static int processCommandAsync(Process process, Logger log, String threadName, String message) throws InterruptedException {
-        return processCommandAsync(process, log, threadName, createOutputHandler(log), createErrorHandler(log), message);
-    }
-
-    public static int processCommandAsync(final Process process, final Logger log, final String threadName, final Function<String, Void> outputHandler, final Function<String, Void> errorHandler, final String message) throws InterruptedException {
-        startThread(new Thread(threadName + " read output") {
-            @Override
-            public void run() {
-                try {
-                    processOutput(log, process.getInputStream(), outputHandler, message);
-                } catch (IOException e) {
-                    log.error("Failed to read " + threadName + " output ." + e, e);
-                }
-            }
-        });
-        startThread(new Thread(threadName + " read error") {
-            @Override
-            public void run() {
-                try {
-                    processOutput(log, process.getErrorStream(), errorHandler, message);
-                } catch (IOException e) {
-                    log.error("Failed to read " + threadName + " error ." + e, e);
-                }
-            }
-        });
-        return process.waitFor();
-    }
-
-    private static void startThread(Thread thread) {
-        thread.start();
-    }
-
-    protected static void processErrors(Logger log, InputStream inputStream, String message) throws Exception {
-        readProcessOutput(log, inputStream, "stderr for ", message);
-    }
-
-    protected static void readProcessOutput(final Logger log, InputStream inputStream, final String prefix, final String message) throws Exception {
-        Function<String, Void> function = new Function<String, Void>() {
-            @Override
-            public Void apply(String line) {
-                log.debug("Error " + prefix + message + ": " + line);
-                return null;
-            }
-        };
-        processOutput(log, inputStream, function, prefix + message);
-    }
-
-    protected static void processOutput(Logger log, InputStream inputStream, Function<String, Void> function, String errrorMessage) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        startLoggingThreads(process, log, command.getName() + " " + Strings.join(args, " "));
         try {
-            while (true) {
-                String line = reader.readLine();
-                if (line == null) break;
-                function.apply(line);
-            }
-
-        } catch (Exception e) {
-            log.error("Failed to process " + errrorMessage + ": " + e, e);
-            throw e;
-        } finally {
-            Closeables.closeQuietly(reader);
+            return process.waitFor();
+        } catch (InterruptedException e) {
+            return process.exitValue();
         }
     }
 
+    private static void addShutdownHook(final Process process, final Logger log, final File command) {
+        Runtime.getRuntime().addShutdownHook(new Thread(command.getName()) {
+            @Override
+            public void run() {
+                if (process != null) {
+                    log.info("Terminating process %s", command);
+                    try {
+                        process.destroy();
+                    } catch (Exception e) {
+                        log.error("Failed to terminate process %s", command);
+                    }
+                    /* Only available in Java 8: So disabled for now until we switch to Java 8
+                    try {
+                        if (process != null && process.isAlive()) {
+                            process.destroyForcibly();
+                        }
+                    } catch (Exception e) {
+                        log.error("Failed to forcibly terminate process %s", command);
+                    }
+                    */
+                }
+            }
+        });
+    }
     public static File findExecutable(Logger log, String name) {
         List<File> pathDirectories = getPathDirectories(log);
         for (File directory : pathDirectories) {
@@ -159,6 +110,27 @@ public class ProcessUtil {
             }
         }
         return false;
+    }
+
+    // ==========================================================================================================
+
+    private static String[] prepareCommandArray(String command, List<String> args) {
+        List<String> nArgs = args != null ? args : new ArrayList<String>();
+        String[] commandWithArgs = new String[nArgs.size() + 1];
+        commandWithArgs[0] = command;
+        for (int i = 0; i < nArgs.size(); i++) {
+            commandWithArgs[i+1] = nArgs.get(i);
+        }
+        return commandWithArgs;
+    }
+
+    private static void processOutput(InputStream inputStream, Function<String, Void> function) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                function.apply(line);
+            }
+        }
     }
 
     private static String canonicalPath(File file) {
@@ -197,7 +169,42 @@ public class ProcessUtil {
         return pathDirectories;
     }
 
-    protected static Function<String, Void> createOutputHandler(final Logger log) {
+    private static void startLoggingThreads(final Process process, final Logger log, final String commandDesc) {
+        startOutputLoggingThread(process, log, commandDesc);
+        startErrorLoggingThread(process, log, commandDesc);
+    }
+
+    private static void startErrorLoggingThread(final Process process, final Logger log, final String commandDesc) {
+        Thread logThread = new Thread("[ERR] " + commandDesc) {
+            @Override
+            public void run() {
+                try {
+                    processOutput(process.getErrorStream(), createErrorHandler(log));
+                } catch (IOException e) {
+                    log.error(String.format("Failed to read error stream from %s : %s", commandDesc, e.getMessage()), e);
+                }
+            }
+        };
+        logThread.setDaemon(true);
+        logThread.start();
+    }
+
+    private static void startOutputLoggingThread(final Process process, final Logger log, final String commandDesc) {
+        Thread logThread = new Thread("[OUT] " + commandDesc) {
+            @Override
+            public void run() {
+                try {
+                    processOutput(process.getInputStream(), createOutputHandler(log));
+                } catch (IOException e) {
+                    log.error(String.format("Failed to read output stream from %s : %s", commandDesc, e.getMessage()), e);
+                }
+            }
+        };
+        logThread.setDaemon(true);
+        logThread.start();
+    }
+
+    private static Function<String, Void> createOutputHandler(final Logger log) {
         return new Function<String, Void>() {
             @Override
             public Void apply(String outputLine) {
@@ -207,7 +214,7 @@ public class ProcessUtil {
         };
     }
 
-    protected static Function<String, Void> createErrorHandler(final Logger log) {
+    private static Function<String, Void> createErrorHandler(final Logger log) {
         return new Function<String, Void>() {
             @Override
             public Void apply(String outputLine) {
@@ -216,6 +223,4 @@ public class ProcessUtil {
             }
         };
     }
-
-
 }
