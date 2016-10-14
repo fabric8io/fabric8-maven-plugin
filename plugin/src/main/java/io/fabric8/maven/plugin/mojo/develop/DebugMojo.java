@@ -38,12 +38,14 @@ import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.maven.core.util.DebugConstants;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.ProcessUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.plugin.mojo.build.ApplyMojo;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.utils.Objects;
+import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -60,7 +62,6 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.kubernetes.api.KubernetesHelper.isPodReady;
 import static io.fabric8.kubernetes.api.KubernetesHelper.isPodRunning;
-import static io.fabric8.maven.core.util.ProcessUtil.processCommandAsync;
 
 /**
  * Ensures that the current app has debug enabled, then opens the debug port so that you can debug the latest pod
@@ -209,46 +210,24 @@ public class DebugMojo extends ApplyMojo {
 
 
     private void portForward(Controller controller, String podName) throws MojoExecutionException {
-        File file = getKubeCtlExecutable(controller);
-        String command = file.getName();
-        log.info("Port forwarding to port " + remoteDebugPort + " on pod " + podName + " using command: " + command);
+        File command = getKubeCtlExecutable(controller);
+        log.info("Port forwarding to port " + remoteDebugPort + " on pod " + podName + " using command " + command);
 
-        String arguments = " port-forward " + podName + " " + localDebugPort + ":" + remoteDebugPort;
-        String commands = command + arguments;
-        log.info("Executing command: " + commands);
-        final String message = "port forward";
-        final Process process;
+        List<String> args = new ArrayList<>();
+        args.add("port-forward");
+        args.add(podName);
+        args.add(localDebugPort + ":" + remoteDebugPort);
+
+        String commandLine = command + " " + Strings.join(args, " ");
+        log.verbose("Executing command " + commandLine);
         try {
-            process = Runtime.getRuntime().exec(file.getAbsolutePath() + arguments);
-            Runtime.getRuntime().addShutdownHook(new Thread("mvn fabric8:run-interactive shutdown hook") {
-                @Override
-                public void run() {
-                    if (process != null) {
-                        log.info("Terminating port forward process:");
-                        try {
-                            process.destroy();
-                        } catch (Exception e) {
-                            log.error("Failed to terminate process " + message);
-                        }
-                        try {
-                            if (process != null && process.isAlive()) {
-                                process.destroyForcibly();
-                            }
-                        } catch (Exception e) {
-                            log.error("Failed to forcibly terminate process " + message);
-                        }
-                    }
-                }
-            });
-
             log.info("");
             log.info("Now you can start a Remote debug execution in your IDE by using localhost and the debug port " + localDebugPort);
             log.info("");
 
-            processCommandAsync(process, createExternalProcessLogger("[[B]]" + command + "[[B]] "), commands, message);
+            ProcessUtil.runCommand(createExternalProcessLogger("[[B]]" + command.getName() + "[[B]] "), command, args, true);
         } catch (Exception e) {
-            throw new MojoExecutionException("Failed to execute process " + commands + " for " +
-                    message + ": " + e, e);
+            throw new MojoExecutionException("Failed to start port forwarding with " + commandLine + ": " + e, e);
         }
     }
 
