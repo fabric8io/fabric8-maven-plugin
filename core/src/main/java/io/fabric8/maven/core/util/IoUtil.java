@@ -56,7 +56,7 @@ public class IoUtil {
                 InputStream in = response.body().byteStream();
                 byte[] buffer = new byte[8192];
 
-                int readBytes = 0;
+                long readBytes = 0;
                 while (true) {
                     int len = in.read(buffer);
                     readBytes += len;
@@ -80,7 +80,7 @@ public class IoUtil {
 
     private static int PROGRESS_LENGTH = 50;
 
-    private static String getProgressBar(int bytesRead, long length) {
+    private static String getProgressBar(long bytesRead, long length) {
         StringBuffer ret = new StringBuffer("[");
         if (length > - 1) {
             int bucketSize = (int) (length / PROGRESS_LENGTH + 0.5);
@@ -88,14 +88,18 @@ public class IoUtil {
             for (int i = 0; i < PROGRESS_LENGTH; i++) {
                 ret.append(i < index ? "=" : (i == index ? ">" : " "));
             }
+            ret.append(String.format("] %.2f MB/%.2f MB",
+                                 ((float) bytesRead / (1024 * 1024)),
+                                 ((float) length / (1024 * 1024))));
         } else {
             int bucketSize = 200 * 1024; // 200k
             int index = (int) (bytesRead / bucketSize + 0.5) % PROGRESS_LENGTH;
             for (int i = 0; i < PROGRESS_LENGTH; i++) {
                 ret.append(i == index ? "*" : " ");
             }
+            ret.append("]");
         }
-        ret.append("]");
+
         return ret.toString();
     }
 }
