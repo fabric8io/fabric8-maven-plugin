@@ -79,6 +79,12 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
 
     @Parameter
     ProcessorConfig generator;
+
+    /**
+     * To skip over the execution of the goal
+     */
+    @Parameter(property = "fabric8.skip", defaultValue = "false")
+    protected boolean skip;
     /**
      * The generated kubernetes YAML file
      */
@@ -117,6 +123,13 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     private KubernetesClient kubernetes;
     private Controller controller;
 
+    @Override
+    public void execute() throws MojoExecutionException, MojoFailureException {
+        if( skip ) {
+            return;
+        }
+        super.execute();
+    }
 
     @Override
     protected synchronized void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
