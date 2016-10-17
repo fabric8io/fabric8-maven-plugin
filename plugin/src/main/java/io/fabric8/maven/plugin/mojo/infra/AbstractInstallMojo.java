@@ -79,7 +79,11 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         if (gofabric8 == null) {
             validateFabric8Dir();
 
-            gofabric8 = new File(fabric8BinDir, GOFABRIC8);
+            String fileName = GOFABRIC8;
+            if (Platform.windows.equals(getPlatform())) {
+                fileName += ".exe";
+            }
+            gofabric8 = new File(fabric8BinDir, fileName);
             if (!gofabric8.exists() || !gofabric8.isFile() || !gofabric8.canExecute()) {
                 // X-TODO: Maybe allow for an update of gofabric8 itself ?
                 downloadGoFabric8(gofabric8);
