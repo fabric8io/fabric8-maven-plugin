@@ -2941,7 +2941,7 @@ mvn fabric8:stop</code></pre>
 <div class="sect2">
 <h3 id="fabric8:deploy">5.2. <strong>fabric8:deploy</strong></h3>
 <div class="paragraph">
-<p>This is the main goal for building your docker image, generating the kubernetes resources and deploying them into the cluster.</p>
+<p>This is the main goal for building your docker image, generating the kubernetes resources and deploying them into the cluster (insofar your pom.xml is set up correct; keep reading :)).</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2949,20 +2949,7 @@ mvn fabric8:stop</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Effectively this builds your project then invokes these goals:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><a href="#fabric8:build"><strong>fabric8:build</strong></a></p>
-</li>
-<li>
-<p><a href="#fabric8:resource-apply"><strong>fabric8:resource-apply</strong></a></p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p><strong>Note</strong> that you must have the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> and <a href="#fabric8:build"><strong>fabric8:build</strong></a> goals bound to your executions in your pom.xml. e.g. like this:</p>
+<p>This goal is designed to run <a href="#fabric8:build"><strong>fabric8:build</strong></a> and <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> before the deploy <strong>*iff</strong> you have the goals bound in your pom.xml:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2984,6 +2971,19 @@ mvn fabric8:stop</code></pre>
   <span class="tag">&lt;/executions&gt;</span>
 <span class="tag">&lt;/plugin&gt;</span></code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>Effectively this builds your project then invokes these goals:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#fabric8:build"><strong>fabric8:build</strong></a></p>
+</li>
+<li>
+<p><a href="#fabric8:resource-apply"><strong>fabric8:resource-apply</strong></a></p>
+</li>
+</ul>
 </div>
 </div>
 <div class="sect2">
@@ -4720,7 +4720,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.73<br>
-Last updated 2016-10-17 05:27:24 UTC
+Last updated 2016-10-17 05:28:09 UTC
 </div>
 </div>
 </body>
