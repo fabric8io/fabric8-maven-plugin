@@ -54,15 +54,13 @@ public class ProcessUtil {
     public static File findExecutable(Logger log, String name) {
         List<File> pathDirectories = getPathDirectories();
         for (File directory : pathDirectories) {
-            if (isWindows()) {
-                for (String extension : isWindows() ? new String[]{ ".exe", ".bat", ".cmd", "" } : new String[] { "" }) {
-                    File file = new File(directory, name + extension);
-                    if (file.exists() && file.isFile()) {
-                        if (!file.canExecute()) {
-                            log.warn("Found " + file + " on the PATH but it is not executable. Ignoring ...");
-                        } else {
-                            return file;
-                        }
+            for (String extension : isWindows() ? new String[]{ ".exe", ".bat", ".cmd", "" } : new String[] { "" }) {
+                File file = new File(directory, name + extension);
+                if (file.exists() && file.isFile()) {
+                    if (!file.canExecute()) {
+                        log.warn("Found " + file + " on the PATH but it is not executable. Ignoring ...");
+                    } else {
+                        return file;
                     }
                 }
             }
