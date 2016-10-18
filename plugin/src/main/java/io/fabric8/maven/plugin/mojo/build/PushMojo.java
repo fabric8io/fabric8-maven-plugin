@@ -27,6 +27,8 @@ import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 
 /**
@@ -44,6 +46,10 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
      */
     @Parameter
     private ProcessorConfig generator;
+
+    // To skip over the execution of the goal
+    @Parameter(property = "fabric8.skip", defaultValue = "false")
+    protected boolean skip;
 
     /**
      * Profile to use. A profile contains the enrichers and generators to
@@ -84,6 +90,14 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     @Override
     protected String getLogPrefix() {
         return "F8> ";
+    }
+
+    @Override
+    public void execute() throws MojoExecutionException, MojoFailureException {
+        if( skip ) {
+            return;
+        }
+        super.execute();
     }
 
     /**

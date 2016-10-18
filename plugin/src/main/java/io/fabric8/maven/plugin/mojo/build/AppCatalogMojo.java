@@ -74,11 +74,6 @@ public class AppCatalogMojo extends AbstractResourceMojo {
     public AppCatalogMojo() {
     }
 
-    @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
-        super.execute();
-    }
-
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         List<HasMetadata> openshiftResources = new ArrayList<>();
         List<HasMetadata> kubernetesResources = new ArrayList<>();

@@ -50,6 +50,10 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
     @Parameter(property = "fabric8.useColor", defaultValue = "true")
     protected boolean useColor;
 
+    // To skip over the execution of the goal
+    @Parameter(property = "fabric8.skip", defaultValue = "false")
+    protected boolean skip;
+
     // For verbose output
     @Parameter(property = "fabric8.verbose", defaultValue = "false")
     protected boolean verbose;
@@ -66,6 +70,9 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if( skip ) {
+            return;
+        }
         log = createLogger(" ");
         executeInternal();
     }

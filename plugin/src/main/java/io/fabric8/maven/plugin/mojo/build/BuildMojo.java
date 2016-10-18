@@ -119,6 +119,10 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter
     private ResourceConfig resources;
 
+    // To skip over the execution of the goal
+    @Parameter(property = "fabric8.skip", defaultValue = "false")
+    protected boolean skip;
+
     /**
      * Profile to use. A profile contains the enrichers and generators to
      * use as well as their configuration. Profiles are looked up
@@ -219,8 +223,10 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if( skip ) {
+            return;
+        }
         clusterAccess = new ClusterAccess(namespace);
-
         // Platform mode is already used in executeInternal()
         super.execute();
     }

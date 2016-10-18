@@ -134,12 +134,6 @@ public class ResourceMojo extends AbstractResourceMojo {
     @Parameter(property = "fabric8.workDir", defaultValue = "${project.build.directory}/fabric8")
     private File workDir;
 
-    /**
-     * Whether to skip the execution of this plugin. Best used as property "fabric8.skip"
-     */
-    @Parameter(property = "fabric8.skip", defaultValue = "false")
-    private boolean skip;
-
     // Resource  specific configuration for this plugin
     @Parameter
     private ResourceConfig resources;
@@ -234,13 +228,8 @@ public class ResourceMojo extends AbstractResourceMojo {
     public ResourceMojo() {
     }
 
-    @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
-        clusterAccess = new ClusterAccess(namespace);
-        super.execute();
-    }
-
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
+        clusterAccess = new ClusterAccess(namespace);
         try {
             lateInit();
 
