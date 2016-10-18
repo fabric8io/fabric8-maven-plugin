@@ -102,7 +102,7 @@ class ContainerHandler {
         Probe probe = discoverSpringBootHealthCheck(10);
         if( probe!=null)
             return probe;
-        probe = discoverKarafProbe("/readiness-check", 10);
+        probe = discoverKarafProbe("/readiness-check", 180);
         return probe;
     }
 
