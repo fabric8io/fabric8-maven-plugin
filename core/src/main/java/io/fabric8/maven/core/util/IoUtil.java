@@ -18,6 +18,7 @@ package io.fabric8.maven.core.util;
 
 import java.io.*;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 import io.fabric8.maven.docker.util.Logger;
 import okhttp3.OkHttpClient;
@@ -43,7 +44,9 @@ public class IoUtil {
     public static void download(Logger log, URL downloadUrl, File target) throws MojoExecutionException {
         log.progressStart();
         try {
-            OkHttpClient client = new OkHttpClient();
+            OkHttpClient client =
+                new OkHttpClient.Builder()
+                    .readTimeout(30, TimeUnit.MINUTES).build();
             Request request = new Request.Builder()
                 .url(downloadUrl)
                 .build();

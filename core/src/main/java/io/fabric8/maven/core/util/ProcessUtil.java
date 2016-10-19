@@ -176,7 +176,7 @@ public class ProcessUtil {
                 try {
                     processOutput(process.getErrorStream(), createErrorHandler(log));
                 } catch (IOException e) {
-                    log.error(String.format("Failed to read error stream from %s : %s", commandDesc, e.getMessage()), e);
+                    log.error("Failed to read error stream from %s : %s", commandDesc, e.getMessage());
                 }
             }
         };
@@ -191,7 +191,7 @@ public class ProcessUtil {
                 try {
                     processOutput(process.getInputStream(), createOutputHandler(log));
                 } catch (IOException e) {
-                    log.error(String.format("Failed to read output stream from %s : %s", commandDesc, e.getMessage()), e);
+                    log.error("Failed to read output stream from %s : %s", commandDesc, e.getMessage());
                 }
             }
         };
@@ -203,7 +203,7 @@ public class ProcessUtil {
         return new Function<String, Void>() {
             @Override
             public Void apply(String outputLine) {
-                log.info(outputLine);
+                log.info("%s", outputLine);
                 return null;
             }
         };
@@ -213,7 +213,7 @@ public class ProcessUtil {
         return new Function<String, Void>() {
             @Override
             public Void apply(String outputLine) {
-                log.error(outputLine);
+                log.error("%s", outputLine);
                 return null;
             }
         };
