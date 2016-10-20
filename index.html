@@ -595,10 +595,13 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#fabric8:setup">6.1. <strong>fabric8:setup</strong></a></li>
 <li><a href="#fabric8:cluster-start">6.2. <strong>fabric8:cluster-start</strong></a>
 <ul class="sectlevel3">
-<li><a href="#using-openshift">6.2.1. Using OpenShift</a></li>
-<li><a href="#configure-apps">6.2.2. Configure apps</a></li>
-<li><a href="#configure-cluster-resources">6.2.3. Configure cluster resources</a></li>
-<li><a href="#stop">6.2.4. Stop</a></li>
+<li><a href="#prerequisites">6.2.1. Prerequisites</a></li>
+<li><a href="#starting-the-cluster">6.2.2. Starting the cluster</a></li>
+<li><a href="#using-openshift">6.2.3. Using OpenShift</a></li>
+<li><a href="#vm-drivers">6.2.4. VM drivers</a></li>
+<li><a href="#configure-apps">6.2.5. Configure apps</a></li>
+<li><a href="#configure-cluster-resources">6.2.6. Configure cluster resources</a></li>
+<li><a href="#stop">6.2.7. Stop</a></li>
 </ul>
 </li>
 <li><a href="#fabric8:cluster-stop">6.3. <strong>fabric8:cluster-stop</strong></a>
@@ -3580,6 +3583,27 @@ This plugin definition includes the configuration to generate the Docker image.
 <div class="paragraph">
 <p>This goal will start a local kubernetes cluster for local development.</p>
 </div>
+<div class="sect3">
+<h4 id="prerequisites">6.2.1. Prerequisites</h4>
+<div class="paragraph">
+<p>Depending on your platform you need to install the following drivers:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Windows users will need to run this command as Adminstrator and will need to <a href="https://msdn.microsoft.com/en-us/virtualization/hyperv_on_windows/quick_start/walkthrough_install">enable Hyper-V on Windows 10</a> or <a href="https://blogs.technet.microsoft.com/schadinio/2010/07/09/installing-hyper-v-manager-on-windows-7/">Windows 7</a>.</p>
+</li>
+<li>
+<p>OS X users  will need to <a href="https://github.com/kubernetes/minikube/blob/master/DRIVERS.md#xhyve-driver">install the xhyve driver</a></p>
+</li>
+<li>
+<p>Linux will need to <a href="https://github.com/kubernetes/minikube/blob/master/DRIVERS.md#kvm-driver">install the kvm driver</a></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="starting-the-cluster">6.2.2. Starting the cluster</h4>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-start</code></pre>
@@ -3592,8 +3616,9 @@ This plugin definition includes the configuration to generate the Docker image.
 <div class="paragraph">
 <p>By default the binaries are installed in <code>~/.fabric8/bin</code></p>
 </div>
+</div>
 <div class="sect3">
-<h4 id="using-openshift">6.2.1. Using OpenShift</h4>
+<h4 id="using-openshift">6.2.3. Using OpenShift</h4>
 <div class="paragraph">
 <p>By default <code>fabric8:cluster-start</code> will use <code>minikube</code> to create a local single node kubernetes cluster. To specify OpenShift use:</p>
 </div>
@@ -3607,7 +3632,24 @@ This plugin definition includes the configuration to generate the Docker image.
 </div>
 </div>
 <div class="sect3">
-<h4 id="configure-apps">6.2.2. Configure apps</h4>
+<h4 id="vm-drivers">6.2.4. VM drivers</h4>
+<div class="paragraph">
+<p>By default the VM drivers used will be <code>hyperv</code> on Windows, <code>xhyve</code> on OS X and <code>kvm</code> on Linux.</p>
+</div>
+<div class="paragraph">
+<p>If you wish to switch to a different VM driver you can specify the <code>fabric8.vm.driver</code> property. For example if you have installed <a href="https://www.virtualbox.org/wiki/Downloads">VirtualBox</a> and wish to use that then type:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-start -Pfmp-snapshot -Dfabric8.vm.driver=virtualbox</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Note that we highly recommend using the default VM drivers (<code>hyperv</code> on Windows, <code>xhyve</code> on OS X and <code>kvm</code> on Linux) as they tend to work better and use less resources on your laptop than the alternatives.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="configure-apps">6.2.5. Configure apps</h4>
 <div class="paragraph">
 <p>By default the cluster contains only the <a href="http://fabric8.io/guide/console.html">fabric8 developer console</a> as often developers laptops don&#8217;t have lots of RAM.</p>
 </div>
@@ -3621,7 +3663,7 @@ This plugin definition includes the configuration to generate the Docker image.
 </div>
 </div>
 <div class="sect3">
-<h4 id="configure-cluster-resources">6.2.3. Configure cluster resources</h4>
+<h4 id="configure-cluster-resources">6.2.6. Configure cluster resources</h4>
 <div class="paragraph">
 <p>You can specify the number of CPUs or memory via additional parameters:</p>
 </div>
@@ -3635,7 +3677,7 @@ This plugin definition includes the configuration to generate the Docker image.
 </div>
 </div>
 <div class="sect3">
-<h4 id="stop">6.2.4. Stop</h4>
+<h4 id="stop">6.2.7. Stop</h4>
 <div class="paragraph">
 <p>You can stop the cluster at any time via <a href="#fabric8:cluster-stop"><strong>fabric8:cluster-stop</strong></a></p>
 </div>
@@ -4720,7 +4762,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.75<br>
-Last updated 2016-10-20 15:54:04 UTC
+Last updated 2016-10-20 18:05:55 UTC
 </div>
 </div>
 </body>
