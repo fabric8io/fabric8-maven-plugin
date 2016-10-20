@@ -18,17 +18,17 @@ package io.fabric8.maven.core.util;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Function;
 import io.fabric8.utils.Strings;
-import jdk.nashorn.internal.runtime.regexp.joni.Config;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import static io.fabric8.maven.docker.util.EnvUtil.isWindows;
-import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
 
 /**
  * A helper class for running external processes
