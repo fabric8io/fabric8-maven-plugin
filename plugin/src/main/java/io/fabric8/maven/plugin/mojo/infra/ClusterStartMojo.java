@@ -50,6 +50,13 @@ public class ClusterStartMojo extends AbstractInstallMojo {
     @Parameter(property = "fabric8.cluster.memory")
     private String clusterMemory;
 
+    /**
+     * Which VM Driver do you wish to use such as
+     * <code>hyperv</code>, <code>xhyve</code>, <code>kvm</code>, <code>virtualbox</code>, <code>vmwarefusion</code>
+     */
+    @Parameter(property = "fabric8.vm.driver")
+    private String vmDriver;
+
 
     @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
@@ -71,6 +78,10 @@ public class ClusterStartMojo extends AbstractInstallMojo {
             // ignore console command
             // TODO add --app= CLI argument when gofabric8 start supports it
             // see https://github.com/fabric8io/gofabric8/issues/224
+        }
+        if (Strings.isNotBlank(vmDriver)) {
+            arguments.add("--vm-driver");
+            arguments.add(vmDriver);
         }
         if (Strings.isNotBlank(clusterCPUs)) {
             arguments.add("--cpus");
