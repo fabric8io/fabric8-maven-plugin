@@ -19,4 +19,5 @@ package io.fabric8.maven.core.util;
  */
 public class Constants {
     public static final String RESOURCE_LOCATION_ANNOTATION = "maven.fabric8.io/source-url";
+    public static final String APP_CATALOG_ANNOTATION = "maven.fabric8.io/app-catalog";
 }

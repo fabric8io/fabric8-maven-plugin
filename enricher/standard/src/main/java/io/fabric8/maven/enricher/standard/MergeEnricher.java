@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
-import static io.fabric8.maven.core.util.Constants.RESOURCE_LOCATION_ANNOTATION;
 import static io.fabric8.utils.Lists.notNullList;
 
 /**
@@ -118,7 +117,7 @@ public class MergeEnricher extends BaseEnricher {
                         }
                     }
                 }
-                log.info("Merging 2 resources for " + getKind(item1) + " " + KubernetesHelper.getName(item1) + " from " + location(item1) + " and " + location(item2) + " and removing " + location(answer));
+                log.info("Merging 2 resources for " + getKind(item1) + " " + KubernetesHelper.getName(item1) + " from " + KubernetesResourceUtil.location(item1) + " and " + KubernetesResourceUtil.location(item2) + " and removing " + KubernetesResourceUtil.location(answer));
                 return answer;
             }
             /*
@@ -131,7 +130,7 @@ public class MergeEnricher extends BaseEnricher {
         // we expect lots of duplicates when making an app catalog as we have the composites and individual manifests
         try {
             if (!getContext().runningWithGoal("fabric8:app-catalog")) {
-                log.warn("Duplicate resources for " + getKind(item1) + " " + KubernetesHelper.getName(item1) + " from " + location(item1) + " and " + location(item2));
+                log.warn("Duplicate resources for " + getKind(item1) + " " + KubernetesHelper.getName(item1) + " from " + KubernetesResourceUtil.location(item1) + " and " + KubernetesResourceUtil.location(item2));
             }
         } catch (MojoExecutionException e) {
             log.warn("Failed to check if generated an app-catalog: " + e, e);
@@ -141,10 +140,6 @@ public class MergeEnricher extends BaseEnricher {
 
     protected boolean isMergeEnabled() {
         return Configs.asBoolean(getConfig(Config.enabled));
-    }
-
-    private String location(HasMetadata item) {
-        return KubernetesHelper.getOrCreateAnnotations(item).get(RESOURCE_LOCATION_ANNOTATION);
     }
 
     // lets use presence of an image name as a clue that we are just enriching things a little
