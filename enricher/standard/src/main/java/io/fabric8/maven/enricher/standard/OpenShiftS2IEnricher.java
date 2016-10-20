@@ -48,6 +48,10 @@ public class OpenShiftS2IEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
+        if (!hasImageConfiguration()) {
+            log.verbose("No image configurations found, skipping ...");
+            return;
+        }
         builder.accept(new TypedVisitor<PodSpecBuilder>() {
 
             @Override
@@ -59,7 +63,8 @@ public class OpenShiftS2IEnricher extends BaseEnricher {
 
     private void updatePodSpec(PodSpecBuilder builder) {
         if (isOpenShiftMode()) {
-            log.debug("Now moving any docker environment variables from the image build configuration as in S2I binary mode!");
+            log.debug("Now moving any docker environment variables from the image " +
+                      "build configuration as in S2I binary mode!");
             List<Container> containers = builder.getContainers();
             if (containers != null) {
                 boolean updated = false;
@@ -104,7 +109,6 @@ public class OpenShiftS2IEnricher extends BaseEnricher {
             if (Objects.equals(imageName, imageConfiguration.getName())) {
                 return imageConfiguration;
             }
-
         }
         log.warn("Could not find ImageConfiguration for image name: " + imageName);
         return null;

@@ -223,7 +223,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        if( skip ) {
+        if (skip) {
             return;
         }
         clusterAccess = new ClusterAccess(namespace);
@@ -241,6 +241,9 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         if (project != null && skipBuildPom && Objects.equals("pom", project.getPackaging())) {
             getLog().debug("Disabling docker build for pom packaging");
             return;
+        }
+        if (getResolvedImages().size() == 0) {
+            log.warn("No image build configuration found or detected");
         }
         super.executeInternal(hub);
     }
