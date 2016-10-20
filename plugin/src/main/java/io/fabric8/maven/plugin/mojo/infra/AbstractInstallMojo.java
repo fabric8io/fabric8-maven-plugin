@@ -282,7 +282,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         String argLine = Strings.join(argList, " ");
         log.info("Running %s %s", command, argLine);
 
-        String message = command.getName() + argLine;
+        String message = command.getName() + " " + argLine;
         try {
             int result = ProcessUtil.runCommand(createExternalProcessLogger("[[B]]gofabric8[[B]] "), command, argList);
             if (result != 0) {

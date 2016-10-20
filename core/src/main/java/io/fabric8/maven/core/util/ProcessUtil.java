@@ -18,6 +18,7 @@ package io.fabric8.maven.core.util;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Function;
 import io.fabric8.utils.Strings;
+import jdk.nashorn.internal.runtime.regexp.joni.Config;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,6 +28,7 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 import static io.fabric8.maven.docker.util.EnvUtil.isWindows;
+import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
 
 /**
  * A helper class for running external processes
@@ -43,11 +45,23 @@ public class ProcessUtil {
         if (withShutdownHook) {
             addShutdownHook(log, process, command);
         }
-        startLoggingThreads(process, log, command.getName() + " " + Strings.join(args, " "));
+        List<Thread> threads = startLoggingThreads(process, log, command.getName() + " " + Strings.join(args, " "));
         try {
-            return process.waitFor();
+            int answer = process.waitFor();
+            joinThreads(threads, log);
+            return answer;
         } catch (InterruptedException e) {
             return process.exitValue();
+        }
+    }
+
+    private static void joinThreads(List<Thread> threads, Logger log) {
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                log.warn("Caught "+ e, e);
+            }
         }
     }
 
@@ -164,12 +178,14 @@ public class ProcessUtil {
         return pathDirectories;
     }
 
-    private static void startLoggingThreads(final Process process, final Logger log, final String commandDesc) {
-        startOutputLoggingThread(process, log, commandDesc);
-        startErrorLoggingThread(process, log, commandDesc);
+    private static List<Thread> startLoggingThreads(final Process process, final Logger log, final String commandDesc) {
+        List<Thread> threads = new ArrayList<>();
+        threads.add(startOutputLoggingThread(process, log, commandDesc));
+        threads.add(startErrorLoggingThread(process, log, commandDesc));
+        return threads;
     }
 
-    private static void startErrorLoggingThread(final Process process, final Logger log, final String commandDesc) {
+    private static Thread startErrorLoggingThread(final Process process, final Logger log, final String commandDesc) {
         Thread logThread = new Thread("[ERR] " + commandDesc) {
             @Override
             public void run() {
@@ -182,9 +198,10 @@ public class ProcessUtil {
         };
         logThread.setDaemon(true);
         logThread.start();
+        return logThread;
     }
 
-    private static void startOutputLoggingThread(final Process process, final Logger log, final String commandDesc) {
+    private static Thread startOutputLoggingThread(final Process process, final Logger log, final String commandDesc) {
         Thread logThread = new Thread("[OUT] " + commandDesc) {
             @Override
             public void run() {
@@ -197,6 +214,7 @@ public class ProcessUtil {
         };
         logThread.setDaemon(true);
         logThread.start();
+        return logThread;
     }
 
     private static Function<String, Void> createOutputHandler(final Logger log) {
