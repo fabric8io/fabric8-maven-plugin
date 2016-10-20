@@ -48,17 +48,17 @@ public class PrefixedLogger implements Logger {
 
     @Override
     public void warn(String message, Object... objects) {
-        log.warn(message, objects);
+        log.warn(p(message), objects);
     }
 
     @Override
     public void error(String message, Object... objects) {
-        log.error(message, objects);
+        log.error(p(message), objects);
     }
 
     @Override
     public String errorMessage(String message) {
-        return log.errorMessage(message);
+        return log.errorMessage(p(message));
     }
 
     @Override
