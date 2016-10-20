@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
@@ -43,6 +44,7 @@ import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.BuildStatus;
+import io.fabric8.openshift.api.model.Template;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -78,6 +80,8 @@ import java.util.regex.Pattern;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.kubernetes.api.KubernetesHelper.parseDate;
+import static io.fabric8.maven.core.util.Constants.APP_CATALOG_ANNOTATION;
+import static io.fabric8.maven.core.util.Constants.RESOURCE_LOCATION_ANNOTATION;
 import static io.fabric8.utils.Strings.isNullOrBlank;
 
 /**
@@ -726,5 +730,24 @@ public class KubernetesResourceUtil {
             }
         }
         ports.add(port);
+    }
+
+    public static String location(HasMetadata item) {
+        return KubernetesHelper.getOrCreateAnnotations(item).get(RESOURCE_LOCATION_ANNOTATION);
+    }
+
+    public static void setLocation(HasMetadata item, String location) {
+        if (Strings.isNotBlank(location)) {
+            Map<String, String> annotations = KubernetesHelper.getOrCreateAnnotations(item);
+            if (!annotations.containsKey(RESOURCE_LOCATION_ANNOTATION)) {
+                annotations.put(RESOURCE_LOCATION_ANNOTATION, location);
+                item.getMetadata().setAnnotations(annotations);
+            }
+        }
+    }
+
+    public static boolean isAppCatalogResource(HasMetadata templateOrConfigMap) {
+        String catalogAnnotation = KubernetesHelper.getOrCreateAnnotations(templateOrConfigMap).get(APP_CATALOG_ANNOTATION);
+        return io.fabric8.utils.Objects.equal("true", catalogAnnotation);
     }
 }

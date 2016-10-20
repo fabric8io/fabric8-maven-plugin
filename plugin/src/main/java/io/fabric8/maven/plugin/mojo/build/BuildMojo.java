@@ -36,7 +36,9 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.Gofabric8Util;
+import io.fabric8.maven.core.util.KindAndName;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.core.util.ResourceClassifier;
 import io.fabric8.maven.core.util.ResourceFileType;
@@ -79,6 +81,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -220,6 +223,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     // Mode which is resolved, also when 'auto' is set
     private PlatformMode platformMode;
     private String lastBuildStatus;
+
+    private OpenShiftDependencyResources openshiftDependencyResources;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -567,7 +572,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     // Build up an enricher manager to enrich also our implicit created build ojects
     private void enrich(KubernetesListBuilder builder) throws IOException {
         ProcessorConfig resolvedEnricherConfig = enricher != null ? enricher : ProfileUtil.extractProcesssorConfiguration(ProfileUtil.ENRICHER_CONFIG, profile, resourceDir);
-        EnricherContext enricherContext = new EnricherContext(project, session, goalFinder, resolvedEnricherConfig, getResolvedImages(), resources, log, useProjectClasspath);
+        openshiftDependencyResources = new OpenShiftDependencyResources(log);
+        EnricherContext enricherContext = new EnricherContext(project, session, goalFinder, resolvedEnricherConfig, getResolvedImages(), resources, log, useProjectClasspath, openshiftDependencyResources);
         EnricherManager enricherManager = new EnricherManager(enricherContext);
         enricherManager.enrich(builder);
     }

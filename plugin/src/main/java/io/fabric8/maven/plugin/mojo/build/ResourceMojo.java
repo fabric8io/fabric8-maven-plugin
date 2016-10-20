@@ -18,6 +18,7 @@ package io.fabric8.maven.plugin.mojo.build;
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.extensions.Templates;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
@@ -46,8 +47,10 @@ import io.fabric8.maven.core.config.ServiceConfig;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
+import io.fabric8.maven.core.util.KindAndName;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.core.util.ResourceClassifier;
 import io.fabric8.maven.docker.AbstractDockerMojo;
@@ -93,6 +96,9 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
+import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateAnnotations;
+import static io.fabric8.maven.core.util.Constants.APP_CATALOG_ANNOTATION;
+import static io.fabric8.maven.core.util.KubernetesResourceUtil.isAppCatalogResource;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.loadResources;
 
@@ -224,6 +230,8 @@ public class ResourceMojo extends AbstractResourceMojo {
     private ClusterAccess clusterAccess;
 
     private PlatformMode platformMode;
+
+    private OpenShiftDependencyResources openshiftDependencyResources;
 
     public ResourceMojo() {
     }
@@ -488,8 +496,9 @@ public class ResourceMojo extends AbstractResourceMojo {
         throws IOException, MojoExecutionException {
 
         // Manager for calling enrichers.
+        openshiftDependencyResources = new OpenShiftDependencyResources(log);
         EnricherContext ctx = new EnricherContext(project, session, goalFinder, extractEnricherConfig(), resolvedImages, resources, log,
-                                                  useProjectClasspath);
+                                                  useProjectClasspath, openshiftDependencyResources);
         EnricherManager enricherManager = new EnricherManager(ctx);
 
         // Generate all resources from the main resource diretory, configuration and enrich them accordingly
@@ -609,6 +618,9 @@ public class ResourceMojo extends AbstractResourceMojo {
                 }
             }
         }
+
+        openshiftDependencyResources.addMissingResources(objects);
+
         if (openshiftManifest != null && openshiftManifest.isFile() && openshiftManifest.exists()) {
             // lets add any ImageStream / ImageStreamTag objects which are already on disk
             // from a previous `BuildMojo` execution
@@ -636,6 +648,7 @@ public class ResourceMojo extends AbstractResourceMojo {
     private void moveTemplatesToTopLevel(KubernetesListBuilder builder, List<HasMetadata> objects) {
         Template template = extractAndRemoveTemplates(objects);
         if (template != null) {
+            openshiftDependencyResources.addMissingParameters(template);
             builder.addToItems(template);
         } else {
             for (HasMetadata object : objects) {
@@ -647,7 +660,7 @@ public class ResourceMojo extends AbstractResourceMojo {
     private Template extractAndRemoveTemplates(List<HasMetadata> items) {
         Template extractedTemplate = null;
         for (HasMetadata item : new ArrayList<>(items)) {
-            if (item instanceof Template) {
+            if (item instanceof Template && !isAppCatalogResource(item)) {
                 Template template = (Template) item;
                 if (extractedTemplate == null) {
                     extractedTemplate = template;
@@ -681,6 +694,17 @@ public class ResourceMojo extends AbstractResourceMojo {
      * @return the converted kubernetes resource or null if it should be ignored
      */
     private HasMetadata convertKubernetesItemToOpenShift(HasMetadata item) {
+        if (item instanceof ConfigMap) {
+            if (Objects.equals("true", getOrCreateAnnotations(item).get(APP_CATALOG_ANNOTATION))) {
+                // kubernetes App Catalog so we use a Template instead on OpenShift
+                return null;
+            }
+        }
+        // lets check if there's an OpenShift resource of this name already from a dependency...
+        HasMetadata dependencyResource = openshiftDependencyResources.convertKubernetesItemToOpenShift(item);
+        if (dependencyResource != null) {
+            return dependencyResource;
+        }
         KubernetesToOpenShiftConverter converter = openShiftConverters.get(item.getKind());
         return converter != null ? converter.convert(item) : item;
     }
