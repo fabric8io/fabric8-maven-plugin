@@ -64,6 +64,10 @@ public class ImageEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
+        if (!hasImageConfiguration()) {
+            log.verbose("No images resolved. Skipping ...");
+            return;
+        }
 
         // Ensure that all contoller have template specs
         ensureTemplateSpecs(builder);
@@ -144,10 +148,6 @@ public class ImageEnricher extends BaseEnricher {
     // configured
     private void mergeImageConfigurationWithContainerSpec(List<Container> containers) {
         List<ImageConfiguration> images = getImages();
-        if (images.isEmpty()) {
-            log.warn("No resolved images!");
-        }
-
         int idx = 0;
         for (ImageConfiguration imageConfiguration : images) {
             Container container = getContainer(idx, containers);
