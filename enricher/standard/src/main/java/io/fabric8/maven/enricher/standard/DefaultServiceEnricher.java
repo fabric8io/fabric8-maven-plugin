@@ -64,7 +64,8 @@ public class DefaultServiceEnricher extends BaseEnricher {
         // Whether allow headless services.
         headless {{ d = "false"; }},
 
-        // Whether allow headless services.
+        // Whether expose the service as ingress. Needs an 'exposeController'
+        // running
         expose {{ d = "false"; }},
 
         // Type of the service (LoadBalancer, NodePort, ...)
@@ -164,7 +165,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
                         }
                         ret.add(
                                 new ServiceConfig.Port.Builder()
-                                        .protocol(ServiceProtocol.TCP) // TODO: default for the moment
+                                        .protocol(ServiceProtocol.tcp) // TODO: default for the moment
                                         .port(servicePort)
                                         .targetPort(portI)
                                         .name(name)

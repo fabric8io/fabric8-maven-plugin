@@ -10,6 +10,7 @@ import java.io.File;
 
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author kameshs
@@ -45,7 +46,7 @@ public class AppServerAutoDetectionTest {
         MavenProject mavenProject = new MavenProject(model);
         mavenProject.setBuild(build);
 
-        AppServerHandler appServerHandler = new AppServerDetector(mavenProject).detect();
+        AppServerHandler appServerHandler = new AppServerDetector(mavenProject).detect(null);
         boolean actual = appServerHandler.isApplicable();
         assertTrue(actual);
     }
@@ -70,10 +71,19 @@ public class AppServerAutoDetectionTest {
         model.setBuild(build);
 
         MavenProject mavenProject = new MavenProject(model);
+        AppServerHandler appServerHandler = new AppServerDetector(mavenProject).detect(null);
         mavenProject.setBuild(build);
-        AppServerHandler appServerHandler = new AppServerDetector(mavenProject).detect();
         boolean actual = appServerHandler.isApplicable();
         assertTrue(actual);
+    }
+
+    @Test
+    public void testWithSpecifiedServer() throws Exception {
+
+        Model model = new Model();
+        MavenProject mavenProject = new MavenProject(model);
+        AppServerHandler appServerHandler = new AppServerDetector(mavenProject).detect("tomcat");
+        assertEquals("tomcat", appServerHandler.getName());
     }
 
 
@@ -104,7 +114,7 @@ public class AppServerAutoDetectionTest {
 
         MavenProject mavenProject = new MavenProject(model);
         mavenProject.setBuild(build);
-        AppServerHandler appServerHandler = new AppServerDetector(mavenProject).detect();
+        AppServerHandler appServerHandler = new AppServerDetector(mavenProject).detect(null);
         boolean actual = appServerHandler.isApplicable();
         assertTrue(actual);
     }
