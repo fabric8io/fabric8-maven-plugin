@@ -42,7 +42,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.jar.JarEntry;
@@ -177,30 +176,6 @@ public class MavenUtil {
             }
         }
         return false;
-    }
-
-    /**
-     * Returns the spring boot `application.properties` or an empty properties object if not found
-     */
-    public static Properties getSpringBootApplicationProperties(MavenProject project) {
-        return getPropertiesFile(project, "application.properties");
-    }
-
-    /**
-     * Returns the given properties file on the project classpath if found or an empty properties object if not
-     */
-    public static Properties getPropertiesFile(MavenProject project, String propertiesFileName) {
-        URLClassLoader compileClassLoader = getCompileClassLoader(project);
-        URL resource = compileClassLoader.findResource(propertiesFileName);
-        Properties answer = new Properties();
-        if (resource != null) {
-            try {
-                answer.load(resource.openStream());
-            } catch (IOException e) {
-                LOG.error("Failed to load properties from: " + resource + ". " + e, e);
-            }
-        }
-        return answer;
     }
 
     /**

@@ -19,6 +19,7 @@ package io.fabric8.maven.generator.springboot;
 import com.google.common.base.Strings;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.maven.generator.api.support.JavaRunGenerator;
@@ -80,7 +81,7 @@ public class SpringBootGenerator extends JavaRunGenerator {
     }
 
     private void generateSpringDevToolsToken() throws MojoExecutionException {
-        Properties properties = MavenUtil.getSpringBootApplicationProperties(getProject());
+        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getProject());
         String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET);
         if (Strings.isNullOrEmpty(remoteSecret)) {
             String newToken = UUID.randomUUID().toString();
