@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.1.76,</span>
-<span id="revdate">2016-10-20</span>
+<span id="revdate">2016-10-21</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -3586,7 +3586,10 @@ This plugin definition includes the configuration to generate the Docker image.
 <div class="sect3">
 <h4 id="prerequisites">6.2.1. Prerequisites</h4>
 <div class="paragraph">
-<p>Depending on your platform you need to install the following drivers:</p>
+<p>Please use a recent distribution of <a href="http://maven.apache.org/download.cgi">Apache Maven</a> at least 3.3.x or later. We use <code>3.3.9</code> here and it works well!</p>
+</div>
+<div class="paragraph">
+<p>Depending on your platform you also need to install the following drivers:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -3594,7 +3597,7 @@ This plugin definition includes the configuration to generate the Docker image.
 <p>Windows users will need to run this command as Adminstrator and will need to <a href="https://msdn.microsoft.com/en-us/virtualization/hyperv_on_windows/quick_start/walkthrough_install">enable Hyper-V on Windows 10</a> or <a href="https://blogs.technet.microsoft.com/schadinio/2010/07/09/installing-hyper-v-manager-on-windows-7/">Windows 7</a>.</p>
 </li>
 <li>
-<p>OS X users  will need to <a href="https://github.com/kubernetes/minikube/blob/master/DRIVERS.md#xhyve-driver">install the xhyve driver</a></p>
+<p>OS X users  will need to <a href="https://github.com/kubernetes/minikube/blob/master/DRIVERS.md#xhyve-driver">install the xhyve driver</a> which we try to automatically install via <code>brew</code> but you may want to install it just in case ;)</p>
 </li>
 <li>
 <p>Linux will need to <a href="https://github.com/kubernetes/minikube/blob/master/DRIVERS.md#kvm-driver">install the kvm driver</a></p>
@@ -4762,7 +4765,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.76<br>
-Last updated 2016-10-20 18:49:27 UTC
+Last updated 2016-10-21 17:07:54 UTC
 </div>
 </div>
 </body>
