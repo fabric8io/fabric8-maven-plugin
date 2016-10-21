@@ -15,7 +15,7 @@ public class JettyAppSeverHandler extends AbstractAppServerHandler {
 
 
     public JettyAppSeverHandler(MavenProject mavenProject) {
-        super(mavenProject);
+        super("jetty", mavenProject);
     }
 
     @Override

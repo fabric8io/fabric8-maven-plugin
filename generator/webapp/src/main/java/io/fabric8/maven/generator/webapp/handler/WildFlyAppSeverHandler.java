@@ -14,7 +14,7 @@ import java.util.List;
 public class WildFlyAppSeverHandler extends AbstractAppServerHandler {
 
     public WildFlyAppSeverHandler(MavenProject project) {
-        super(project);
+        super("wildfly", project);
     }
 
     @Override

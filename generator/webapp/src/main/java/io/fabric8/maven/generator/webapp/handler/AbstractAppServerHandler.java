@@ -14,10 +14,17 @@ public abstract class AbstractAppServerHandler implements AppServerHandler {
 
     protected final DefaultImageLookup imageLookup;
     protected final MavenProject project;
+    private final String name;
 
-    protected AbstractAppServerHandler(MavenProject project) {
+    protected AbstractAppServerHandler(String name, MavenProject project) {
         this.project = project;
+        this.name = name;
         this.imageLookup = new DefaultImageLookup(this.getClass());
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 
     /**
