@@ -31,6 +31,8 @@ public class ProcessorConfig {
 
     public static final ProcessorConfig EMPTY = new ProcessorConfig();
 
+    public static final ProcessorConfig FULL = new ProcessorConfig(null, new TreeSet<String>(), null);
+
     /**
      * Modules to includes, should holde <code>&lt;include&gt;</code> elements
      */
