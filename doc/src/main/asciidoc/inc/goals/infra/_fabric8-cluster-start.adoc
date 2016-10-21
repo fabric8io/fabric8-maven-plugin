@@ -6,10 +6,12 @@ This goal will start a local kubernetes cluster for local development.
 
 ### Prerequisites
 
-Depending on your platform you need to install the following drivers:
+Please use a recent distribution of http://maven.apache.org/download.cgi[Apache Maven] at least 3.3.x or later. We use `3.3.9` here and it works well!
+
+Depending on your platform you also need to install the following drivers:
 
 * Windows users will need to run this command as Adminstrator and will need to https://msdn.microsoft.com/en-us/virtualization/hyperv_on_windows/quick_start/walkthrough_install[enable Hyper-V on Windows 10] or https://blogs.technet.microsoft.com/schadinio/2010/07/09/installing-hyper-v-manager-on-windows-7/[Windows 7].
-* OS X users  will need to https://github.com/kubernetes/minikube/blob/master/DRIVERS.md#xhyve-driver[install the xhyve driver]
+* OS X users  will need to https://github.com/kubernetes/minikube/blob/master/DRIVERS.md#xhyve-driver[install the xhyve driver] which we try to automatically install via `brew` but you may want to install it just in case ;)
 * Linux will need to https://github.com/kubernetes/minikube/blob/master/DRIVERS.md#kvm-driver[install the kvm driver]
 
 
