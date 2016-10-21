@@ -15,4 +15,4 @@
     excludes: []
   enricher:
     excludes:
-      - expose
+      - f8-expose
