@@ -21,7 +21,6 @@ import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.Probe;
-import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.kubernetes.api.model.SecurityContext;
 import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
@@ -29,31 +28,22 @@ import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.VolumeConfig;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
-import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.core.util.SpringBootProperties;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.utils.Strings;
-import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
-
-import static io.fabric8.maven.core.util.MavenUtil.hasClass;
-import static io.fabric8.utils.PropertiesHelper.getInteger;
 
 /**
  * @author roland
  * @since 08/04/16
  */
 class ContainerHandler {
-    private static final Integer DEFAULT_MANAGEMENT_PORT = 8080;
 
     private final EnvVarHandler envVarHandler;
     private final ProbeHandler probeHandler;
@@ -67,20 +57,12 @@ class ContainerHandler {
 
     List<Container> getContainers(ResourceConfig config, List<ImageConfiguration> images)  {
         List<Container> ret = new ArrayList<>();
-        int idx = 1;
+
         for (ImageConfiguration imageConfig : images) {
             if (imageConfig.getBuildConfiguration() != null) {
                 Probe livenessProbe = probeHandler.getProbe(config.getLiveness());
                 Probe readinessProbe = probeHandler.getProbe(config.getReadiness());
-                // lets only discover probes for the last contributed image (spring boot etc)
-                if (idx++ == images.size()) {
-                    if (livenessProbe == null) {
-                        livenessProbe = discoverLivenessProbe();
-                    }
-                    if (readinessProbe == null) {
-                        readinessProbe = discoverReadinessProbe();
-                    }
-                }
+
                 Container container = new ContainerBuilder()
                     .withName(KubernetesResourceUtil.extractContainerName(project, imageConfig))
                     .withImage(imageConfig.getName())
@@ -96,61 +78,6 @@ class ContainerHandler {
             }
         }
         return ret;
-    }
-
-    private Probe discoverReadinessProbe() {
-        Probe probe = discoverSpringBootHealthCheck(10);
-        if( probe!=null)
-            return probe;
-        probe = discoverKarafProbe("/readiness-check", 10);
-        return probe;
-    }
-
-    private Probe discoverLivenessProbe() {
-        Probe probe = discoverSpringBootHealthCheck(180);
-        if( probe!=null)
-            return probe;
-        probe = discoverKarafProbe("/health-check", 180);
-        return probe;
-    }
-
-    private Probe discoverSpringBootHealthCheck(int initialDelay) {
-        if (hasClass(project, "org.springframework.boot.actuate.health.HealthIndicator")) {
-            Properties properties = MavenUtil.getSpringBootApplicationProperties(project);
-            Integer port = getInteger(properties, SpringBootProperties.MANAGEMENT_PORT, getInteger(properties, SpringBootProperties.SERVER_PORT, DEFAULT_MANAGEMENT_PORT));
-
-            // lets default to adding a spring boot actuator health check
-            return new ProbeBuilder().withNewHttpGet().
-                    withNewPort(port).withPath("/health").endHttpGet().withInitialDelaySeconds(initialDelay).build();
-        }
-        return null;
-    }
-
-    //
-    // Karaf has a readiness/health URL exposed if the fabric8-karaf-check feature is installed.
-    //
-    private Probe discoverKarafProbe(String path, int initialDelay) {
-
-        for (Plugin plugin : project.getBuildPlugins()) {
-            if( "karaf-maven-plugin".equals(plugin.getArtifactId()) ) {
-                Xpp3Dom configuration = (Xpp3Dom) plugin.getConfiguration();
-                if( configuration == null )
-                    return null;
-                Xpp3Dom startupFeatures = configuration.getChild("startupFeatures");
-                if( startupFeatures == null)
-                    return null;
-
-                for (Xpp3Dom feature : startupFeatures.getChildren("feature")) {
-                    if( "fabric8-karaf-checks".equals(feature.getValue())  ) {
-                        // Use the default 8181 port
-                        // TODO: handle the case where the user changes the default port
-                        return new ProbeBuilder().withNewHttpGet().
-                                withNewPort(8181).withPath(path).endHttpGet().withInitialDelaySeconds(initialDelay).build();
-                    }
-                }
-            }
-        }
-        return null;
     }
 
 

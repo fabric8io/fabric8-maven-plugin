@@ -115,7 +115,6 @@ public class ResourceMojo extends AbstractResourceMojo {
     public static final long DEFAULT_OPENSHIFT_DEPLOY_TIMEOUT_SECONDS = 3L * 60 * 60;
     private static final String DOCKER_IMAGE_USER = "docker.image.user";
 
-
     @Component(role = MavenFileFilter.class, hint = "default")
     private MavenFileFilter mavenFileFilter;
 
