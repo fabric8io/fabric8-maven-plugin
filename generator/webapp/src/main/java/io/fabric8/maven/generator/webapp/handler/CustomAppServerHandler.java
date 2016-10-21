@@ -40,9 +40,16 @@ public class CustomAppServerHandler implements AppServerHandler {
         this.ports = ports;
     }
 
+
+
     @Override
     public boolean isApplicable() {
         return true;
+    }
+
+    @Override
+    public String getName() {
+        return "custom";
     }
 
     @Override

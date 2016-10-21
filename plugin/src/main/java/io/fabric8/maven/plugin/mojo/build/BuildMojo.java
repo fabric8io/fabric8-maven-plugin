@@ -655,7 +655,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         // lets check if the strategy or output has changed and if so lets update the BC
         // e.g. the S2I builder image or the output tag and
         if (!Objects.equals(buildStrategy, spec.getStrategy()) || !Objects.equals(buildOutput, spec.getOutput())) {
-            log.warn("Updating the S2I BuildConfig " + buildName + " with the latest output and strategy");
+            log.warn("Updating BuildConfig %s with given output and strategy", buildName);
             client.buildConfigs().withName(buildName).edit()
                   .editSpec()
                   .withStrategy(buildStrategy)

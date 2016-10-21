@@ -15,7 +15,7 @@ import java.util.List;
 public class TomcatAppSeverHandler extends AbstractAppServerHandler {
 
     public TomcatAppSeverHandler(MavenProject project) {
-        super(project);
+        super("tomcat", project);
     }
 
     @Override

@@ -12,12 +12,19 @@ public interface AppServerHandler {
     /**
      * Return true it the handler thinks it should kick in. Typically
      * check for certain app server specific files and or plugins.
-     * @return
+     * @return true is this handler should run, false otherwise
      */
     boolean isApplicable();
 
     /**
-     * Get the base image to use for this specifi app server
+     * Name of the server that this appserver handler stands for
+     *
+     * @return server name
+     */
+    String getName();
+
+    /**
+     * Get the base image to use for this specific app server
      * @return base image name in Docker format.
      */
     String getFrom();
