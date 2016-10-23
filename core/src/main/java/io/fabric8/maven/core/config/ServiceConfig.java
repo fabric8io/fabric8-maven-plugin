@@ -109,7 +109,7 @@ public class ServiceConfig {
 
         // Protocol to use. Can be either "tcp" or "udp"
         @Parameter
-        ServiceProtocol protocol;
+        String protocol;
 
         // Container port to expose
         @Parameter
@@ -128,7 +128,7 @@ public class ServiceConfig {
         String name;
 
         public ServiceProtocol getProtocol() {
-            return protocol;
+            return protocol != null ? ServiceProtocol.valueOf(protocol.toUpperCase()) : null;
         }
 
         public int getPort() {
@@ -158,6 +158,11 @@ public class ServiceConfig {
             }
 
             public Builder protocol(ServiceProtocol protocol) {
+                config.protocol = protocol != null ? protocol.name() : null;
+                return this;
+            }
+
+            public Builder protocol(String protocol) {
                 config.protocol = protocol;
                 return this;
             }
