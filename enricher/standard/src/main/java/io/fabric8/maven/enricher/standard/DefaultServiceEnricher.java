@@ -165,11 +165,11 @@ public class DefaultServiceEnricher extends BaseEnricher {
                         }
                         ret.add(
                                 new ServiceConfig.Port.Builder()
-                                        .protocol(ServiceProtocol.tcp) // TODO: default for the moment
-                                        .port(servicePort)
-                                        .targetPort(portI)
-                                        .name(name)
-                                        .build()
+                                    .protocol(ServiceProtocol.TCP) // TODO: default for the moment
+                                    .port(servicePort)
+                                    .targetPort(portI)
+                                    .name(name)
+                                    .build()
                         );
                     }
                 }

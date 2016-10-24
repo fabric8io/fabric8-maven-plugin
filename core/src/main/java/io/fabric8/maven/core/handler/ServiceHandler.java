@@ -69,7 +69,7 @@ public class ServiceHandler {
             for (ServiceConfig.Port port : service.getPorts()) {
                 ServicePort servicePort = new ServicePortBuilder()
                     .withName(port.getName())
-                    .withProtocol(port.getProtocol() != null ? port.getProtocol().name() : "tcp")
+                    .withProtocol(port.getProtocol() != null ? port.getProtocol().name() : "TCP")
                     .withTargetPort(new IntOrString(port.getTargetPort()))
                     .withPort(port.getPort())
                     .withNodePort(port.getNodePort())
