@@ -41,7 +41,7 @@ import static io.fabric8.maven.core.config.BuildRecreateMode.is;
 public class ExposeEnricher extends BaseEnricher {
 
     public ExposeEnricher(EnricherContext buildContext) {
-        super(buildContext, "fabric8-expose");
+        super(buildContext, "f8-expose");
     }
 
     private Set<Integer> webPorts = new HashSet<>(Arrays.asList(80, 443, 8080, 9090));

@@ -32,7 +32,7 @@ public class GeneratorConfig {
     private final Properties properties;
 
     public GeneratorConfig(Properties properties, String name, ProcessorConfig config) {
-        this.config = config != null ? config : ProcessorConfig.EMPTY;
+        this.config = config != null ? config : ProcessorConfig.INCLUDE_ALL;
         this.name = name;
         this.properties = properties;
     }

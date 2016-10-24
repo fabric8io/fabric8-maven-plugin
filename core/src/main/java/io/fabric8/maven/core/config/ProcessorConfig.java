@@ -29,7 +29,19 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 public class ProcessorConfig {
 
-    public static final ProcessorConfig EMPTY = new ProcessorConfig();
+    public static final ProcessorConfig EXCLUDE_ALL = new ProcessorConfig() {
+        @Override
+        public boolean use(String name) {
+            return false;
+        }
+    };
+
+    public static final ProcessorConfig INCLUDE_ALL = new ProcessorConfig() {
+        @Override
+        public boolean use(String name) {
+            return true;
+        }
+    };
 
     /**
      * Modules to includes, should holde <code>&lt;include&gt;</code> elements

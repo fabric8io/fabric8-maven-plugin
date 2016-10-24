@@ -20,7 +20,6 @@ import java.util.Properties;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.Configs;
-import org.apache.maven.shared.utils.StringUtils;
 
 /**
  * @author roland
@@ -35,7 +34,7 @@ public class EnricherConfig {
     private final Properties projectProperties;
 
     public EnricherConfig(Properties projectProperties, String name, ProcessorConfig config) {
-        this.config = config != null ? config : ProcessorConfig.EMPTY;
+        this.config = config != null ? config : ProcessorConfig.INCLUDE_ALL;
         this.name = name;
         this.projectProperties = projectProperties;
     }

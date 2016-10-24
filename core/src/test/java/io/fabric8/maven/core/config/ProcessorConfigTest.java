@@ -122,7 +122,7 @@ public class ProcessorConfigTest {
     public void orderWithEmptyInclude() {
         List<TestNamed> data = Arrays.asList(new TestNamed("t1"), new TestNamed("t2"));
 
-        ProcessorConfig pConfig = ProcessorConfig.EMPTY;
+        ProcessorConfig pConfig = ProcessorConfig.INCLUDE_ALL;
         List<TestNamed> result = pConfig.order(data, "bla");
         assertEquals(data,result);
     }
