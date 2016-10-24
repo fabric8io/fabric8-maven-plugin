@@ -73,7 +73,8 @@ public class ProfileUtil {
      * @param extractor how to extract the config from a profile when found
      * @param profile the profile name (can be null, then no profile is used)
      * @param resourceDir resource directory where to lookup the profile (in addition to a classpath lookup)
-     * @return the configuration found or <code>null</code> if none could be found
+     * @return the configuration found or {@link ProcessorConfig#INCLUDE_ALL} to include all enricher / generators
+     * if no profile was found
      * @throws MojoExecutionException
      */
     public static ProcessorConfig extractProcesssorConfiguration(ProcessorConfigurationExtractor extractor,
@@ -83,7 +84,7 @@ public class ProfileUtil {
         if (profileFound != null) {
             return extractor.extract(profileFound);
         }
-        return ProcessorConfig.EMPTY;
+        return ProcessorConfig.INCLUDE_ALL;
     }
 
     /**
@@ -173,11 +174,8 @@ public class ProfileUtil {
     public final static ProcessorConfigurationExtractor GENERATOR_CONFIG = new ProcessorConfigurationExtractor() {
         @Override
         public ProcessorConfig extract(Profile profile) {
-            ProcessorConfig config = profile.getGeneratorConfig();
-            if (config == null) {
-                config = ProcessorConfig.FULL;
-            }
-            return config;
+            ProcessorConfig processorConfig = profile.getGeneratorConfig();
+            return processorConfig != null ? processorConfig : ProcessorConfig.INCLUDE_ALL;
         }
     };
 
@@ -187,11 +185,8 @@ public class ProfileUtil {
     public final static ProcessorConfigurationExtractor ENRICHER_CONFIG = new ProcessorConfigurationExtractor() {
         @Override
         public ProcessorConfig extract(Profile profile) {
-            ProcessorConfig config = profile.getEnricherConfig();
-            if (config == null) {
-                config = ProcessorConfig.FULL;
-            }
-            return config;
+            ProcessorConfig processorConfig = profile.getEnricherConfig();
+            return processorConfig != null ? processorConfig : ProcessorConfig.INCLUDE_ALL;
         }
     };
 

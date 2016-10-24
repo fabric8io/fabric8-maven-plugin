@@ -43,7 +43,7 @@ public class EnricherManagerTest {
     @Test
     public void createDefaultResources() {
         new Expectations() {{
-           context.getConfig(); result = ProcessorConfig.EMPTY;
+           context.getConfig(); result = ProcessorConfig.INCLUDE_ALL;
         }};
         EnricherManager manager = new EnricherManager(context);
 
@@ -55,7 +55,7 @@ public class EnricherManagerTest {
     @Test
     public void enrichEmpty() {
         new Expectations() {{
-           context.getConfig(); result = ProcessorConfig.EMPTY;
+           context.getConfig(); result = ProcessorConfig.INCLUDE_ALL;
         }};
         EnricherManager manager = new EnricherManager(context);
 
