@@ -173,7 +173,11 @@ public class ProfileUtil {
     public final static ProcessorConfigurationExtractor GENERATOR_CONFIG = new ProcessorConfigurationExtractor() {
         @Override
         public ProcessorConfig extract(Profile profile) {
-            return profile.getGeneratorConfig();
+            ProcessorConfig config = profile.getGeneratorConfig();
+            if (config == null) {
+                config = ProcessorConfig.FULL;
+            }
+            return config;
         }
     };
 
@@ -183,7 +187,11 @@ public class ProfileUtil {
     public final static ProcessorConfigurationExtractor ENRICHER_CONFIG = new ProcessorConfigurationExtractor() {
         @Override
         public ProcessorConfig extract(Profile profile) {
-            return profile.getEnricherConfig();
+            ProcessorConfig config = profile.getEnricherConfig();
+            if (config == null) {
+                config = ProcessorConfig.FULL;
+            }
+            return config;
         }
     };
 
