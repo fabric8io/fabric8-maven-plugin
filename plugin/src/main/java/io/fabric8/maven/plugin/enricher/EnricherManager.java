@@ -79,7 +79,8 @@ public class EnricherManager {
             new MetadataVisitor.ReplicaSet(this),
             new MetadataVisitor.ReplicationController(this),
             new MetadataVisitor.Service(this),
-            new MetadataVisitor.PodSpec(this)
+            new MetadataVisitor.PodSpec(this),
+            new MetadataVisitor.DaemonSet(this)
         };
 
         selectorVisitorCreators = new SelectorVisitor[] {
