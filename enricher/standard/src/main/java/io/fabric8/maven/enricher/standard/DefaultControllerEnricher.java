@@ -23,15 +23,9 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentFluent;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.extensions.*;
+import io.fabric8.maven.core.handler.*;
 import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.maven.core.handler.DeploymentHandler;
-import io.fabric8.maven.core.handler.HandlerHub;
-import io.fabric8.maven.core.handler.ReplicaSetHandler;
-import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
@@ -64,6 +58,8 @@ public class DefaultControllerEnricher extends BaseEnricher {
     private final DeploymentHandler deployHandler;
     private final ReplicationControllerHandler rcHandler;
     private final ReplicaSetHandler rsHandler;
+    private final PetSetHandler petSetHandler;
+    private final DaemonSetHandler daemonSetHandler;
 
     // Available configuration keys
     private enum Config implements Configs.Key {
@@ -81,6 +77,8 @@ public class DefaultControllerEnricher extends BaseEnricher {
         rcHandler = handlers.getReplicationControllerHandler();
         rsHandler = handlers.getReplicaSetHandler();
         deployHandler = handlers.getDeploymentHandler();
+        petSetHandler = handlers.getPetSetHandler();
+        daemonSetHandler = handlers.getDaemonSetHandler();
     }
 
     @Override
@@ -104,6 +102,12 @@ public class DefaultControllerEnricher extends BaseEnricher {
                 if (type.equalsIgnoreCase("deployment")) {
                     log.info("Adding a default Deployment");
                     builder.addToDeploymentItems(defaultDeployment);
+                } else if (type.equalsIgnoreCase("petSet")) {
+                    log.info("Adding a default PetSet");
+                    builder.addToPetSetItems(petSetHandler.getPetSet(config, images));
+                } else if (type.equalsIgnoreCase("daemonSet")) {
+                    log.info("Adding a default DaemonSet");
+                    builder.addToDaemonSetItems(daemonSetHandler.getDaemonSet(config, images));
                 } else if (type.equalsIgnoreCase("replicaSet")) {
                     log.info("Adding a default ReplicaSet");
                     builder.addToReplicaSetItems(rsHandler.getReplicaSet(config, images));

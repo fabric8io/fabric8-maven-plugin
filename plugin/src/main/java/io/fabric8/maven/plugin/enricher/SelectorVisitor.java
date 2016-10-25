@@ -85,7 +85,7 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
                 KubernetesResourceUtil.removeVersionSelector(enricherManager.extractSelector(getConfig(), Kind.REPLICATION_CONTROLLER));
             LabelSelector selector = item.getSelector();
             if (selector == null) {
-                item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
+                item.withNewExtensionsSelector().addToMatchLabels(selectorMatchLabels).endExtensionsSelector();
             } else {
                 selector.getMatchLabels().putAll(selectorMatchLabels);
             }
