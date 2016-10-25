@@ -24,6 +24,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaimVolumeSource;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
@@ -98,6 +99,7 @@ import java.util.TreeMap;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateAnnotations;
 import static io.fabric8.maven.core.util.Constants.APP_CATALOG_ANNOTATION;
+import static io.fabric8.maven.core.util.Constants.VOLUME_STORAGE_CLASS_ANNOTATION;
 import static io.fabric8.maven.core.util.KubernetesResourceUtil.isAppCatalogResource;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.loadResources;
@@ -330,6 +332,14 @@ public class ResourceMojo extends AbstractResourceMojo {
                 DeploymentConfigSpec spec = resource.getSpec();
                 if (spec != null) {
                     addPersistentVolumeInitContainerChmod(entity, spec.getTemplate());
+                }
+            } else if (entity instanceof PersistentVolumeClaim) {
+                PersistentVolumeClaim persistentVolumeClaim = (PersistentVolumeClaim) entity;
+
+                // lets ensure we have a default storage class so that PVs will get dynamically created OOTB
+                Map<String, String> annotations = getOrCreateAnnotations(persistentVolumeClaim);
+                if (!annotations.containsKey(VOLUME_STORAGE_CLASS_ANNOTATION)) {
+                    annotations.put(VOLUME_STORAGE_CLASS_ANNOTATION, "standard");
                 }
             }
         }
