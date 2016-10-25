@@ -21,6 +21,7 @@ import java.util.Map;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.extensions.DaemonSetBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
 import io.fabric8.maven.core.config.ProcessorConfig;
@@ -162,6 +163,23 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(DeploymentBuilder item) {
+            ObjectMeta ret = item.getMetadata();
+            return ret == null ? item.withNewMetadata().endMetadata().getMetadata() : ret;
+        }
+    }
+
+    public static class DaemonSet extends MetadataVisitor<DaemonSetBuilder> {
+        public DaemonSet(EnricherManager enricher) {
+            super(enricher);
+        }
+
+        @Override
+        protected Kind getKind() {
+            return Kind.DAEMON_SET;
+        }
+
+        @Override
+        protected ObjectMeta getOrCreateMetadata(DaemonSetBuilder item) {
             ObjectMeta ret = item.getMetadata();
             return ret == null ? item.withNewMetadata().endMetadata().getMetadata() : ret;
         }

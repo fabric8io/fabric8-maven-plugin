@@ -27,6 +27,7 @@ public enum Kind {
     REPLICATION_CONTROLLER,
     DEPLOYMENT,
     DEPLOYMENT_CONFIG,
+    DAEMON_SET,
     POD_SPEC;
 
     /**
@@ -45,5 +46,9 @@ public enum Kind {
      */
     public boolean isService() {
         return this == Kind.SERVICE;
+    }
+
+    public boolean isDaemonSet() {
+        return this == Kind.DAEMON_SET;
     }
 }

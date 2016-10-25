@@ -82,7 +82,7 @@ public class IconEnricher extends BaseEnricher {
 
     @Override
     public Map<String, String> getAnnotations(Kind kind) {
-        if (kind.isDeployOrReplicaKind() || kind.isService()) {
+        if (kind.isDeployOrReplicaKind() || kind.isService() || kind.isDaemonSet()) {
             String iconUrl = getIconUrl();
             return iconUrl != null ? Collections.singletonMap(Annotations.Builds.ICON_URL,iconUrl) : null;
         } else {
