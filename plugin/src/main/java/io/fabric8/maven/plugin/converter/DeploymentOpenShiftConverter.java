@@ -85,8 +85,8 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                     //specBuilder.withStrategy(strategy);
                 }
                 if (openshiftDeployTimeoutSeconds != null && openshiftDeployTimeoutSeconds > 0) {
-                    specBuilder.withNewModelStrategy().withType("Rolling").
-                        withNewRollingParams().withTimeoutSeconds(openshiftDeployTimeoutSeconds).endRollingParams().endModelStrategy();
+                    specBuilder.withNewStrategy().withType("Rolling").
+                        withNewRollingParams().withTimeoutSeconds(openshiftDeployTimeoutSeconds).endRollingParams().endStrategy();
                 }
 
                 // lets add a default trigger so that its triggered when we change its config

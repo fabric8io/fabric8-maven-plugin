@@ -24,6 +24,7 @@ import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSetBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.extensions.PetSetBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
 import io.fabric8.maven.core.config.MetaDataConfig;
 import io.fabric8.maven.core.config.ProcessorConfig;
@@ -85,7 +86,7 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
     private void updateAnnotations(ObjectMeta metadata) {
         overlayMap(metadata.getAnnotations(),annotationFromConfig);
-        overlayMap(metadata.getAnnotations(),enricherManager.extractAnnotations(getProcessorConfig(), getKind()));
+        overlayMap(metadata.getAnnotations(), enricherManager.extractAnnotations(getProcessorConfig(), getKind()));
     }
 
     private Map<String, String> getMapFromConfiguration(MetaDataConfig config, Kind kind) {
@@ -240,6 +241,23 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(DaemonSetBuilder item) {
+            ObjectMeta ret = item.getMetadata();
+            return ret == null ? item.withNewMetadata().endMetadata().getMetadata() : ret;
+        }
+    }
+
+    public static class PetSetBuilderVisitor extends MetadataVisitor<PetSetBuilder> {
+        public PetSetBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
+            super(resourceConfig, enricher);
+        }
+
+        @Override
+        protected Kind getKind() {
+            return Kind.DAEMON_SET;
+        }
+
+        @Override
+        protected ObjectMeta getOrCreateMetadata(PetSetBuilder item) {
             ObjectMeta ret = item.getMetadata();
             return ret == null ? item.withNewMetadata().endMetadata().getMetadata() : ret;
         }
