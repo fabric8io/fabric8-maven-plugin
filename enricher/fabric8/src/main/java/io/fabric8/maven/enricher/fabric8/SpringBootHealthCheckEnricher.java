@@ -9,13 +9,18 @@ import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 
-import static io.fabric8.maven.core.util.MavenUtil.hasClass;
+import static io.fabric8.maven.core.util.MavenUtil.hasAllClasses;
 import static io.fabric8.utils.PropertiesHelper.getInteger;
 
 /**
  * Enriches spring-boot containers with health checks if the actuator module is present.
  */
 public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
+
+    private static final String[] REQUIRED_CLASSES = {
+            "org.springframework.boot.actuate.health.HealthIndicator",
+            "org.springframework.web.context.support.GenericWebApplicationContext"
+    };
 
     private static final int DEFAULT_MANAGEMENT_PORT = 8080;
 
@@ -37,7 +42,7 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
     private Probe discoverSpringBootHealthCheck(int initialDelay) {
         try {
-            if (hasClass(this.getProject(), "org.springframework.boot.actuate.health.HealthIndicator")) {
+            if (hasAllClasses(this.getProject(), REQUIRED_CLASSES)) {
                 Properties properties = SpringBootUtil.getSpringBootApplicationProperties(this.getProject());
                 Integer port = getInteger(properties, SpringBootProperties.MANAGEMENT_PORT, getInteger(properties, SpringBootProperties.SERVER_PORT, DEFAULT_MANAGEMENT_PORT));
 

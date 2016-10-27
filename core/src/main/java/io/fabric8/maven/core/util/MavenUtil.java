@@ -179,6 +179,22 @@ public class MavenUtil {
     }
 
     /**
+     * Returns true if all the given class names could be found on the given class loader
+     */
+    public static boolean hasAllClasses(MavenProject project, String ... classNames) {
+        URLClassLoader compileClassLoader = getCompileClassLoader(project);
+        for (String className : classNames) {
+            try {
+                compileClassLoader.loadClass(className);
+            } catch (Throwable e) {
+                // ignore message
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Returns the root maven project or null if there is no maven project
      */
     public static MavenProject getRootProject(MavenProject project) {
