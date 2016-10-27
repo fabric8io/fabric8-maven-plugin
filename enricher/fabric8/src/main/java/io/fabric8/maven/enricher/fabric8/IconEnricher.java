@@ -139,7 +139,8 @@ public class IconEnricher extends BaseEnricher {
         if (Strings.isNullOrBlank(answer)) {
             log.debug("No icon file found for this project");
         } else {
-            log.info("Icon URL: " + answer);
+            log.info("Adding icon");
+            log.verbose("Icon URL: " + answer);
         }
 
         return answer;
