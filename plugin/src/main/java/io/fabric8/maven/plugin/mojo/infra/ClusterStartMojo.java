@@ -54,8 +54,8 @@ public class ClusterStartMojo extends AbstractInstallMojo {
      * Which VM Driver do you wish to use such as
      * <code>hyperv</code>, <code>xhyve</code>, <code>kvm</code>, <code>virtualbox</code>, <code>vmwarefusion</code>
      */
-    @Parameter(property = "fabric8.vm.driver")
-    private String vmDriver;
+    @Parameter(property = "fabric8.cluster.driver")
+    private String clusterDriver;
 
 
     @Override
@@ -64,13 +64,11 @@ public class ClusterStartMojo extends AbstractInstallMojo {
 
         ArrayList<String> arguments = new ArrayList<>();
         arguments.add("start");
-        if (Strings.isNotBlank(clusterKind)) {
-            if (isMinishift()) {
-                arguments.add("--minishift");
-            } else {
-                // lets assume its valid and let gofabric8 fail
-                arguments.add("--" + clusterKind);
-            }
+        if (isMinishift()) {
+            arguments.add("--minishift");
+        } else if (Strings.isNotBlank(clusterKind)) {
+            // lets assume its valid and let gofabric8 fail
+            arguments.add("--" + clusterKind);
         }
         if (!clusterApp.equals("fabric8") && !clusterApp.equals("platform")) {
             arguments.add("--" + clusterApp);
@@ -79,9 +77,9 @@ public class ClusterStartMojo extends AbstractInstallMojo {
             // TODO add --app= CLI argument when gofabric8 start supports it
             // see https://github.com/fabric8io/gofabric8/issues/224
         }
-        if (Strings.isNotBlank(vmDriver)) {
+        if (Strings.isNotBlank(clusterDriver)) {
             arguments.add("--vm-driver");
-            arguments.add(vmDriver);
+            arguments.add(clusterDriver);
         }
         if (Strings.isNotBlank(clusterCPUs)) {
             arguments.add("--cpus");
