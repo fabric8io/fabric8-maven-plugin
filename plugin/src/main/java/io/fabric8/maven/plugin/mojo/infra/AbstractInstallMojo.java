@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.plugin.mojo.infra;
 
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.IoUtil;
 import io.fabric8.maven.core.util.ProcessUtil;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
@@ -57,6 +58,13 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
      */
     @Parameter(property = "fabric8.cluster.kind")
     protected String clusterKind;
+
+    /**
+     * Alternatively, the platform mode is evaluated to detect the kind of cluster
+     * to use. 'clusterKind' takes precedence
+     */
+    @Parameter(property = "fabric8.mode")
+    protected PlatformMode mode;
 
     @Parameter(property = "fabric8.dir", defaultValue = "${user.home}/.fabric8/bin")
     private File fabric8BinDir;
@@ -297,7 +305,10 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         if (Strings.isNotBlank(clusterKind)) {
             String text = clusterKind.toLowerCase().trim();
             return text.equals("minishift") || text.equals("openshift");
+        } else if (mode != null && mode == PlatformMode.openshift) {
+            return true;
+        } else {
+            return false;
         }
-        return false;
     }
 }
