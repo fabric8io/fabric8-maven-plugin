@@ -34,7 +34,7 @@ public abstract class AbstractAppServerHandler implements AppServerHandler {
      * @return list of files found
      */
     protected String[] scanFiles(String... patterns) {
-        String buildOutputDir = project.getBuild().getOutputDirectory();
+        String buildOutputDir = project.getBuild().getDirectory();
         if (buildOutputDir != null && new File(buildOutputDir).exists()) {
             DirectoryScanner directoryScanner = new DirectoryScanner();
             directoryScanner.setBasedir(buildOutputDir);
