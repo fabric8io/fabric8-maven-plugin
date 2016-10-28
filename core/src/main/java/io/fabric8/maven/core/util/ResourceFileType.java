@@ -18,8 +18,10 @@ package io.fabric8.maven.core.util;
 
 import java.io.File;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 
 /**
  * Type of resources supported
@@ -39,7 +41,8 @@ public enum ResourceFileType {
     yaml("yml","yml") {
         @Override
         public ObjectMapper getObjectMapper() {
-            return new ObjectMapper(new YAMLFactory());
+            return new ObjectMapper(new YAMLFactory()
+                                        .configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true));
         }
     };
 
