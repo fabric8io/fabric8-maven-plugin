@@ -94,7 +94,9 @@ public class EnricherManager {
             new SelectorVisitor.DeploymentSpecBuilderVisitor(this),
             new SelectorVisitor.ReplicaSetSpecBuilderVisitor(this),
             new SelectorVisitor.ReplicationControllerSpecBuilderVisitor(this),
-            new SelectorVisitor.ServiceSpecBuilderVisitor(this)
+            new SelectorVisitor.ServiceSpecBuilderVisitor(this),
+            new SelectorVisitor.DaemonSetSpecBuilderVisitor(this),
+            new SelectorVisitor.PetSetSpecBuilderVisitor(this)
         };
     }
 

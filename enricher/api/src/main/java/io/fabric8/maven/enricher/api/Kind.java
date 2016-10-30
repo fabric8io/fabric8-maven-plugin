@@ -28,6 +28,7 @@ public enum Kind {
     DEPLOYMENT,
     DEPLOYMENT_CONFIG,
     DAEMON_SET,
+    PET_SET,
     POD_SPEC;
 
     /**

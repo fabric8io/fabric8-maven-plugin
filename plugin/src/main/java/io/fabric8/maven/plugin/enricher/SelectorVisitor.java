@@ -17,17 +17,9 @@
 package io.fabric8.maven.plugin.enricher;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-<<<<<<< HEAD
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpecBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpecBuilder;
-=======
-import io.fabric8.kubernetes.api.builder.Visitor;
-import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.*;
->>>>>>> Fixed up dependency regression due to libary rollback, allowed empty host field for probe check to leave the host field out of the check as per Kubernetes documentation
-import io.fabric8.kubernetes.api.model.extensions.LabelSelector;
-import io.fabric8.kubernetes.api.model.extensions.LabelSelectorBuilder;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.enricher.api.Kind;
@@ -97,9 +89,9 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    static public class PetSet extends SelectorVisitor<PetSetSpecBuilder> {
+    static public class PetSetSpecBuilderVisitor extends SelectorVisitor<PetSetSpecBuilder> {
 
-        public PetSet(EnricherManager enricherManager) {
+        public PetSetSpecBuilderVisitor(EnricherManager enricherManager) {
             super(enricherManager);
         }
 
@@ -116,8 +108,26 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    static public class ReplicationControllerSpecBuilderVisitor extends SelectorVisitor<ReplicationControllerSpecBuilder> {
+    static public class DaemonSetSpecBuilderVisitor extends SelectorVisitor<DaemonSetSpecBuilder> {
 
+        public DaemonSetSpecBuilderVisitor(EnricherManager enricherManager) {
+            super(enricherManager);
+        }
+
+        @Override
+        public void visit(DaemonSetSpecBuilder item) {
+            Map<String, String> selectorMatchLabels =
+                    KubernetesResourceUtil.removeVersionSelector(enricherManager.extractSelector(getConfig(), Kind.REPLICATION_CONTROLLER));
+            final LabelSelector selector = item.getSelector();
+            if (selector == null) {
+                item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
+            } else {
+                selector.getMatchLabels().putAll(selectorMatchLabels);
+            }
+        }
+    }
+
+    static public class ReplicationControllerSpecBuilderVisitor extends SelectorVisitor<ReplicationControllerSpecBuilder> {
         public ReplicationControllerSpecBuilderVisitor(EnricherManager enricherManager) {
             super(enricherManager);
         }
