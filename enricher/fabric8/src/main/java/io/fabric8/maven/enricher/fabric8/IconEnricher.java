@@ -54,7 +54,6 @@ public class IconEnricher extends BaseEnricher {
 
     private File templateTempDir;
     private File appConfigDir;
-    private String iconRef;
     private String iconBranch;
 
     // Available configuration keys
@@ -77,22 +76,32 @@ public class IconEnricher extends BaseEnricher {
         String baseDir = getProject().getBasedir().getAbsolutePath();
         templateTempDir = new File(getConfig(Config.templateTempDir, baseDir + "/target/fabric8/template-workdir"));
         appConfigDir = new File(getConfig(Config.sourceDir, baseDir + "/src/main/fabric8"));
-        iconRef = getConfig(Config.ref);
     }
 
     @Override
     public Map<String, String> getAnnotations(Kind kind) {
         if (kind.isDeployOrReplicaKind() || kind.isService() || kind.isDaemonSet()) {
-            String iconUrl = getIconUrl();
-            return iconUrl != null ? Collections.singletonMap(Annotations.Builds.ICON_URL,iconUrl) : null;
-        } else {
-            return null;
+            String iconUrl = getIconUrl(extractIconRef());
+            if (iconUrl != null) {
+                log.info("Adding icon for %s", kind);
+                log.verbose("Icon URL: %s", iconUrl);
+                return Collections.singletonMap(Annotations.Builds.ICON_URL,iconUrl);
+            } else {
+                log.debug("No icon file found for resources of type " + kind);
+            }
         }
+        return null;
     }
 
     // ====================================================================================================
 
-    protected String getIconUrl() {
+    private String extractIconRef() {
+        return Strings.isNullOrBlank(getConfig(Config.ref)) ?
+            getConfig(Config.ref) :
+            getDefaultIconRef();
+    }
+
+    protected String getIconUrl(String iconRef) {
         String answer = getConfig(Config.url);
         if (Strings.isNullOrBlank(answer)) {
             try {
@@ -112,7 +121,7 @@ public class IconEnricher extends BaseEnricher {
                         }
                     }
                     if (iconFile != null) {
-                        answer = convertIconFileToURL(iconFile);
+                        answer = convertIconFileToURL(iconFile, iconRef);
                     }
                 }
             } catch (Exception e) {
@@ -120,11 +129,6 @@ public class IconEnricher extends BaseEnricher {
             }
         }
         if (Strings.isNullOrBlank(answer)) {
-            if (Strings.isNullOrBlank(iconRef)) {
-                iconRef = chooseDefaultIconRef();
-                log.debug("Chosen iconRef: " + iconRef);
-            }
-
             // maybe its a common icon that is embedded in fabric8-console
             if (Strings.isNotBlank(iconRef)) {
                 String embeddedIcon = embeddedIconsInConsole(iconRef, "img/icons/");
@@ -136,13 +140,6 @@ public class IconEnricher extends BaseEnricher {
             }
         }
 
-        if (Strings.isNullOrBlank(answer)) {
-            log.debug("No icon file found for this project");
-        } else {
-            log.info("Adding icon");
-            log.verbose("Icon URL: " + answer);
-        }
-
         return answer;
     }
 
@@ -151,7 +148,7 @@ public class IconEnricher extends BaseEnricher {
      *
      * @return the icon ref if we can detect one or return null
      */
-    private String chooseDefaultIconRef() {
+    private String getDefaultIconRef() {
         MavenProject project = getProject();
         EnricherContext context = getContext();
 
@@ -254,7 +251,7 @@ public class IconEnricher extends BaseEnricher {
     }
 
 
-    private String convertIconFileToURL(File iconFile) throws IOException {
+    private String convertIconFileToURL(File iconFile, String iconRef) throws IOException {
         long length = iconFile.length();
 
         int sizeK = Math.round(length / 1024);
@@ -306,7 +303,7 @@ public class IconEnricher extends BaseEnricher {
                 if (embeddedIcon != null) {
                     return embeddedIcon;
                 } else {
-                    log.warn("Cannot find url for icon to use " + getIconUrl());
+                    log.warn("Cannot find url for icon to use %s", iconRef);
                 }
             }
         }
