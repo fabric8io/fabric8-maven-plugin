@@ -4212,6 +4212,10 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add an URL to icons for well known application types.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#f8-prometheus">f8-prometheus</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add Prometheus annotations.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-controller">fmp-controller</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Create default controller (replication controller, replica set or deployment) if missing.</p></td>
 </tr>
@@ -4295,6 +4299,29 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <div class="sect4">
 <h5 id="f8-icon">f8-icon</h5>
 
+</div>
+<div class="sect4">
+<h5 id="f8-prometheus">f8-prometheus</h5>
+<div class="paragraph">
+<p>This enricher adds Prometheus annotation like:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="key">apiVersion</span>: <span class="string"><span class="content">v1</span></span>
+<span class="key">kind</span>: <span class="string"><span class="content">List</span></span>
+<span class="key">items</span>:
+- <span class="string"><span class="content">apiVersion: v1</span></span>
+  <span class="key">kind</span>: <span class="string"><span class="content">Service</span></span>
+  <span class="key">metadata</span>:
+    <span class="key">annotations</span>:
+      <span class="key">prometheus.io/scrape</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">true</span><span class="delimiter">&quot;</span></span>
+      <span class="key">prometheus.io/port</span>: <span class="string"><span class="content">9779</span></span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>By default the enricher inspects the images' BuildConfiguration and add the annotations if the port 9779 is listed.
+You can force the plugin to add annotations by setting enricher&#8217;s config <code><code>prometheusPort</code></code></p>
+</div>
 </div>
 </div>
 </div>
@@ -4765,7 +4792,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.81<br>
-Last updated 2016-10-31 11:09:24 UTC
+Last updated 2016-10-31 16:04:56 UTC
 </div>
 </div>
 </body>
