@@ -42,7 +42,9 @@ public enum ResourceFileType {
         @Override
         public ObjectMapper getObjectMapper() {
             return new ObjectMapper(new YAMLFactory()
-                                        .configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true));
+                                        // disabled for now, need to fix upstream for plain numbers, too
+                                        //.configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true)
+                                    );
         }
     };
 
