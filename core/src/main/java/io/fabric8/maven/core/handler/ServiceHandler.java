@@ -16,7 +16,12 @@
 
 package io.fabric8.maven.core.handler;
 
-import io.fabric8.kubernetes.api.Annotations;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
@@ -26,12 +31,6 @@ import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.maven.core.config.ServiceConfig;
 import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.utils.Strings;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author roland
@@ -102,13 +101,6 @@ public class ServiceHandler {
 
     private Map<String, String> getAnnotations(ServiceConfig service) {
         Map<String, String> serviceAnnotations = new HashMap<>();
-        // TODO: Use a prometheus enricher
-        // lets add the prometheus annotations if required
-        String prometheusPort = findPrometheusPort(service.getPorts());
-        if (Strings.isNotBlank(prometheusPort)) {
-            MapUtil.putIfAbsent(serviceAnnotations, Annotations.Management.PROMETHEUS_PORT, prometheusPort);
-            MapUtil.putIfAbsent(serviceAnnotations, Annotations.Management.PROMETHEUS_SCRAPE, "true");
-        }
         return serviceAnnotations;
     }
 
@@ -119,20 +111,4 @@ public class ServiceHandler {
         }
         return labels;
     }
-
-    private String findPrometheusPort(List<ServiceConfig.Port> ports) {
-        for (ServiceConfig.Port port : ports) {
-            int number = port.getPort();
-            boolean valid = number == 9779;
-            String name = port.getName();
-            if (name != null && name.toLowerCase().equals("prometheus")) {
-                valid = true;
-            }
-            if (valid) {
-                return "" + number;
-            }
-        }
-        return null;
-    }
-
 }

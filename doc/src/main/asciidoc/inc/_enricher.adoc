@@ -54,6 +54,9 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 | <<f8-icon>>
 | Add an URL to icons for well known application types.
 
+| <<f8-prometheus>>
+| Add Prometheus annotations.
+
 | <<fmp-controller>>
 | Create default controller (replication controller, replica set or deployment) if missing.
 
@@ -118,6 +121,27 @@ Fabric8 enrichers are used for providing the connection to other components of t
 
 [[f8-icon]]
 ==== f8-icon
+
+[[f8-prometheus]]
+==== f8-prometheus
+
+This enricher adds Prometheus annotation like:
+
+[source,yaml]
+----
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: 9779
+----
+
+By default the enricher inspects the images' BuildConfiguration and add the annotations if the port 9779 is listed.
+You can force the plugin to add annotations by setting enricher's config ```prometheusPort```
 
 == Enricher API
 
