@@ -4,6 +4,21 @@
 - name: raw
   enricher:
     includes: []
+# Only deployment & service
+- name: minimal
+  enricher:
+    includes:
+    - fmp-name
+    - fmp-image
+    - fmp-controller
+    - fmp-service
+# Only dependencies, no build, use other resources raw
+- name: aggregate
+  generator:
+    includes: []
+  enricher:
+    includes:
+    - fmp-dependency
 # Use only the Spring Boot generator
 - name: fmp-spring-boot
   generator:

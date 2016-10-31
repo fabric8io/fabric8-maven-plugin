@@ -723,14 +723,13 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     private List<ImageConfiguration> getResolvedImages(List<ImageConfiguration> images, final Logger log) throws MojoExecutionException {
         List<ImageConfiguration> ret;
-        final Properties resolveProperties = project.getProperties();
         ret = ConfigHelper.resolveImages(
             log,
             images,
             new ConfigHelper.Resolver() {
                 @Override
                 public List<ImageConfiguration> resolve(ImageConfiguration image) {
-                    return imageConfigResolver.resolve(image, resolveProperties);
+                    return imageConfigResolver.resolve(image, project, session);
                 }
             },
             null,  // no filter on image name yet (TODO: Maybe add this, too ?)
