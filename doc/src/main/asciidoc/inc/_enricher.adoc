@@ -73,7 +73,11 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 | Add Maven coordinates as labels to all objects.
 
 | <<fmp-service>>
-| Create a default service if missing and extrac ports from the Docker image configuration.
+| Create a default service if missing and extract ports from the Docker image configuration.
+
+| <<fmp-healthcheck>>
+| Configures livenessProbe and readinessProbe health checks using the liveness and readiness resources
+
 |===
 
 [[enrichers-standard]]
@@ -101,6 +105,36 @@ Default enrichers are used for adding missing resources or adding metadata to gi
 
 [[fmp-dependency]]
 ==== fmp-dependency
+
+[[fmp-healthcheck]]
+==== fmp-healthcheck
+
+For the difference between the liveness and readiness probes, see http://kubernetes.io/docs/user-guide/pod-states/#container-probes
+
+Example health checks:
+
+```
+<liveness>
+    <initialDelaySeconds>30</initialDelaySeconds>
+    <timeoutSeconds>3</timeoutSeconds>
+    <getUrl>HTTP://:8080/alive</getUrl>
+</liveness>
+```
+
+The readiness probe lets Kubernetes know if a given pod is ready to receive traffic from it's service. Traffic will only be routed to a pod if it's readiness probe executes correctly.
+```
+<readiness>
+    <initialDelaySeconds>30</initialDelaySeconds>
+    <timeoutSeconds>3</timeoutSeconds>
+    <getUrl>HTTP://:8080/status</getUrl>
+</readiness>
+```
+
+Kubernetes documentation on health checks:
+
+* http://kubernetes.io/docs/user-guide/liveness/
+* http://kubernetes.io/docs/user-guide/production-pods/#liveness-and-readiness-probes-aka-health-checks
+
 
 [[enrichers-fabric8]]
 === Fabric8 Enrichers
