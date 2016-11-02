@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.extensions.Templates;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -412,7 +413,8 @@ public class ApplyMojo extends AbstractFabric8Mojo {
 
         if (dto instanceof Template) {
             Template template = (Template) dto;
-            dto = applyTemplates(template, kubernetes, controller, namespace, fileName, project, log);
+            boolean failOnMissingParameterValue = false;
+            dto = Templates.processTemplatesLocally(template, failOnMissingParameterValue);
         }
 
         Set<KubernetesResource> resources = new LinkedHashSet<>();
