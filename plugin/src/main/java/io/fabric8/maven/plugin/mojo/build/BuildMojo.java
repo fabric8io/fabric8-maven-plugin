@@ -36,7 +36,6 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.Gofabric8Util;
-import io.fabric8.maven.core.util.KindAndName;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.core.util.ProfileUtil;
@@ -81,7 +80,6 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -90,6 +88,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+import static io.fabric8.maven.core.config.BuildRecreateMode.imageStream;
 import static io.fabric8.maven.core.util.KubernetesResourceUtil.watchLogInThread;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.loadResources;
@@ -206,6 +205,9 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter(property = "fabric8.openshiftManifest", defaultValue = DEFAULT_OPENSHIFT_MANIFEST)
     private File openshiftManifest;
 
+    @Parameter(property = "fabric8.openshiftTag.retryCount", defaultValue = "15")
+    private int findImageStreamTagAttempts;
+
     /**
      * The generated kubernetes and openshift manifests
      */
@@ -225,6 +227,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     private String lastBuildStatus;
 
     private OpenShiftDependencyResources openshiftDependencyResources;
+
+    private long imageStreamRetryTimeoutMillis = 1000;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -435,11 +439,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         String namespace = client.getNamespace();
         String imageName = imageConfig.getName();
         String label = getImageLabel(imageName);
-        ImageStream currentImageStream = client.imageStreams().withName(imageStreamName).get();
-        if (currentImageStream == null) {
-            throw new MojoExecutionException("Could not find a current ImageStream with name " + imageStreamName + " in namespace " + namespace);
-        }
-        String tagSha = findTagSha(currentImageStream);
+        String tagSha = findTagSha(client, imageStreamName);
         String name = imageStreamName + "@" + tagSha;
         String kind = "ImageStreamImage";
 
@@ -499,27 +499,56 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
 
-    private String findTagSha(ImageStream imageStream) throws MojoExecutionException {
-        ImageStreamStatus status = imageStream.getStatus();
-        if (status != null) {
-            List<NamedTagEventList> tags = status.getTags();
-            if (tags != null && !tags.isEmpty()) {
-                // latest tag is the first
-                for (NamedTagEventList list : tags) {
-                    List<TagEvent> items = list.getItems();
-                    if (items != null) {
-                        // latest item is the first
-                        for (TagEvent item : items) {
-                            String image = item.getImage();
-                            if (Strings.isNotBlank(image)) {
-                                return image;
+    private String findTagSha(OpenShiftClient client, String imageStreamName) throws MojoExecutionException {
+        ImageStream currentImageStream = null;
+        for (int i = 0; i < findImageStreamTagAttempts; i++) {
+            if (i > 0) {
+                log.info("Retrying to find tag on ImageStream " + imageStreamName);
+                try {
+                    Thread.sleep(imageStreamRetryTimeoutMillis);
+                } catch (InterruptedException e) {
+                    log.debug("interrupted", e);
+                }
+            }
+            currentImageStream = client.imageStreams().withName(imageStreamName).get();
+            if (currentImageStream != null) {
+                ImageStreamStatus status = currentImageStream.getStatus();
+                if (status != null) {
+                    List<NamedTagEventList> tags = status.getTags();
+                    if (tags != null && !tags.isEmpty()) {
+                        // latest tag is the first
+                        for (NamedTagEventList list : tags) {
+                            List<TagEvent> items = list.getItems();
+                            if (items != null) {
+                                // latest item is the first
+                                for (TagEvent item : items) {
+                                    String image = item.getImage();
+                                    if (Strings.isNullOrBlank(image)) {
+                                        // lets work around: https://github.com/fabric8io/kubernetes-model/issues/173
+                                        Map<String, Object> additionalProperties = item.getAdditionalProperties();
+                                        if (additionalProperties != null) {
+                                            Object value = additionalProperties.get("image");
+                                            if (value != null) {
+                                                image = value.toString();
+                                            }
+                                        }
+                                    }
+                                    if (Strings.isNotBlank(image)) {
+                                        log.info("Found tag on ImageStream " + imageStreamName + " tag: " + image);
+                                        return image;
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
         }
-        throw new MojoExecutionException("Could not find a tag in the ImageStream " + KubernetesHelper.getName(imageStream));
+        if (currentImageStream == null) {
+            throw new MojoExecutionException("Could not find a current ImageStream with name " + imageStreamName + " in namespace " + namespace);
+        } else {
+            throw new MojoExecutionException("Could not find a tag in the ImageStream " + imageStreamName);
+        }
     }
 
     private boolean isBuildCompleted(Watcher.Action action, Build build) {
