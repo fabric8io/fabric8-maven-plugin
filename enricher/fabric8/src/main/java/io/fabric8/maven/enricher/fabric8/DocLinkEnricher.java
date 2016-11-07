@@ -84,7 +84,7 @@ public class DocLinkEnricher extends AbstractLiveEnricher {
                             }
                         }
                     } catch (MalformedURLException e) {
-                        getLog().error("Failed to parse URL: " + url + ". " + e, e);
+                        getLog().error("Failed to parse URL: %s. %s", url, e);
                     }
                     return url;
                 }
