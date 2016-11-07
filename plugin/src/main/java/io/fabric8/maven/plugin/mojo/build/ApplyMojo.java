@@ -449,7 +449,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         try {
             file = getKubeCtlExecutable(controller);
         } catch (MojoExecutionException e) {
-            log.warn(e.getMessage());
+            log.warn("%s", e.getMessage());
         }
         if (file != null) {
             log.info("[[B]]HINT:[[B]] Use the command `%s get pods -w` to watch your pods start up",file.getName());
@@ -741,7 +741,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
             } else if (entity instanceof DeploymentConfig) {
                 OpenShiftClient openshiftClient = new Controller(kubernetes).getOpenShiftClientOrNull();
                 if (openshiftClient == null) {
-                    log.warn("Ignoring DeploymentConfig " + name + " as not connected to an OpenShift cluster");
+                    log.warn("Ignoring DeploymentConfig %s as not connected to an OpenShift cluster", name);
                     continue;
                 }
                 scalable = openshiftClient.deploymentConfigs().inNamespace(namespace).withName(name);
@@ -802,11 +802,11 @@ public class ApplyMojo extends AbstractFabric8Mojo {
                 String key = expression.getKey();
                 List<String> values = expression.getValues();
                 if (Strings.isNullOrBlank(key)) {
-                    log.warn("Ignoring empty key in selector expression " + expression);
+                    log.warn("Ignoring empty key in selector expression %s", expression);
                     continue;
                 }
                 if (values == null && values.isEmpty()) {
-                    log.warn("Ignoring empty values in selector expression " + expression);
+                    log.warn("Ignoring empty values in selector expression %s", expression);
                     continue;
                 }
                 String[] valuesArray = values.toArray(new String[values.size()]);
@@ -819,7 +819,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
                         answer = answer.withLabelNotIn(key, valuesArray);
                         break;
                     default:
-                        log.warn("Ignoring unknown operator " + operator + " in selector expression " + expression);
+                        log.warn("Ignoring unknown operator %s in selector expression %s", operator, expression);
                 }
             }
         }

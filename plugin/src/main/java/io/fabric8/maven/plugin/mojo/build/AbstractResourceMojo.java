@@ -109,7 +109,7 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
         for (HasMetadata item : resources.getItems()) {
             String name = KubernetesHelper.getName(item);
             if (Strings.isNullOrBlank(name)) {
-                log.error("No name for generated item " + item);
+                log.error("No name for generated item %s", item);
                 continue;
             }
             String itemFile = KubernetesResourceUtil.getNameWithSuffix(name, item.getKind());

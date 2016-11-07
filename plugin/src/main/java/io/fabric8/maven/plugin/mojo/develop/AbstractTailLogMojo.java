@@ -89,7 +89,7 @@ public class AbstractTailLogMojo extends ApplyMojo {
                 } else if (onExitOperationLower.equals(OPERATION_STOP)) {
                     ctrlCMessage = "scale down the app and stop tailing the log";
                 } else {
-                    log.warn("Unknown on-exit command: `" + onExitOperationLower + "`");
+                    log.warn("Unknown on-exit command: `%s`", onExitOperationLower);
                 }
                 resizeApp(kubernetes, namespace, entities, 1);
                 Runtime.getRuntime().addShutdownHook(new Thread("mvn fabric8:run-interactive shutdown hook") {
@@ -258,7 +258,7 @@ public class AbstractTailLogMojo extends ApplyMojo {
                     return logContainerName;
                 }
             }
-            log.error("log container name " + logContainerName + " does not exist in pod!! Did you set the correct value for property " + FABRIC8_LOG_CONTAINER);
+            log.error("log container name %s does not exist in pod!! Did you set the correct value for property %s", logContainerName, FABRIC8_LOG_CONTAINER);
         }
         return containers.get(0).getName();
     }

@@ -104,7 +104,7 @@ public class WatchSpringBootMojo extends AbstractTailLogMojo {
         Properties properties = SpringBootUtil.getSpringBootApplicationProperties(project);
         String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET, System.getProperty(DEV_TOOLS_REMOTE_SECRET));
         if (Strings.isNullOrBlank(remoteSecret)) {
-            log.warn("There is no `" + DEV_TOOLS_REMOTE_SECRET + "` property defined in your src/main/resources/application.properties. Please add one!");
+            log.warn("There is no `%s` property defined in your src/main/resources/application.properties. Please add one!", DEV_TOOLS_REMOTE_SECRET);
             throw new MojoExecutionException("No " + DEV_TOOLS_REMOTE_SECRET + " property defined in application.properties or system properties");
         }
 
@@ -153,7 +153,7 @@ public class WatchSpringBootMojo extends AbstractTailLogMojo {
                 processOutput(logger, process.getErrorStream(), true);
                 int status = process.waitFor();
                 if (status != 0) {
-                    log.warn("Process returned status: " + status);
+                    log.warn("Process returned status: %s", status);
                 }
             } catch (Exception e) {
                 throw new MojoExecutionException("Failed to run RemoteSpringApplication: " + e, e);

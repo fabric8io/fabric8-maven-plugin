@@ -119,7 +119,7 @@ public class DebugMojo extends ApplyMojo {
                     if (enableDebugging(entity, spec.getTemplate())) {
                         OpenShiftClient openshiftClient = new Controller(kubernetes).getOpenShiftClientOrNull();
                         if (openshiftClient == null) {
-                            log.warn("Ignoring DeploymentConfig " + name + " as not connected to an OpenShift cluster");
+                            log.warn("Ignoring DeploymentConfig %s as not connected to an OpenShift cluster", name);
                             continue;
                         }
                         openshiftClient.deploymentConfigs().inNamespace(namespace).withName(name).replace(resource);
