@@ -2,35 +2,45 @@
 [[introduction]]
 = Introduction
 
-The *fabric8-maven-plugin* (f8-m-p) brings your Java applications on to http://kubernetes.io/[Kubernetes] and https://www.openshift.com/[OpenShift].  It provides a tight integration into http://maven.apache.org[Maven] builds and benefits from the build information already provided. This plugin focus on two tasks: _Building Docker images_ and _creating Kubernetes and OpenShift resource descriptors_. It can be configured very flexibly and supports multiple configuration models for creating : A _Zero-Config_ setup allows for a quick ramp-up with some opinionated defaults. For more advanced requirementes an _XML configuration_ provides additional configuration options which can be added to the pom.xml. For the full power in order to tune all facets of the creation external _resource fragments_ and _Dockerfiles_ can be used.
-
-This introduction will explain how f8-m-p supports these tasks and demonstrates the different configuration models with examples.
+The *fabric8-maven-plugin* (f8-m-p) brings your Java applications on to http://kubernetes.io/[Kubernetes] and https://www.openshift.com/[OpenShift].
+It provides a tight integration into http://maven.apache.org[Maven] and benefits from the build configration already provided.
+This plugin focus on two tasks: _Building Docker images_ and _creating Kubernetes and OpenShift resource descriptors_.
+It can be configured very flexibly and supports multiple configuration models for creating : A _Zero-Config_ setup allows for a quick ramp-up with some opinionated defaults.
+For more advanced requirementes an _XML configuration_ provides additional configuration options which can be added to the `pom.xml`.
+For the full power in order to tune all facets of the creation external _resource fragments_ and _Dockerfiles_ can be used.
 
 [[building-images]]
 == Building Images
 
-The <<fabric8:build>> goal is for creating Docker images which carry the actual application and which can be deployed on Kubernetes or OpenShift. It is easy to include build artifacts and their dependencies. The plugin uses the assembly descriptor format from the http://maven.apache.org/plugins/maven-assembly-plugin/[maven-assembly-plugin] to specify the content which will be added to a sub-directory in the image (`/deployments` by default). Images that are built with this plugin can then be pushed to public or private Docker registries with <<fabric8:push>>.
+The <<fabric8:build>> goal is for creating Docker images containing the actual application. These then can be deployed later on Kubernetes or OpenShift.
+It is easy to include build artifacts and their dependencies into these images.
+This plugin uses the assembly descriptor format from the http://maven.apache.org/plugins/maven-assembly-plugin/[maven-assembly-plugin] to specify the content which will be added to the image.
+That images can then be pushed to public or private Docker registries with <<fabric8:push>>.
 
-Depending on the operational mode, for building the actual image either a Docker daemon is contacted directly or an https://docs.openshift.com/enterprise/3.0/architecture/core_concepts/builds_and_image_streams.html#docker-build[OpenShift Docker Build] is performed.
+Depending on the operational mode, for building the actual image either a Docker daemon is used directly or an https://docs.openshift.com/enterprise/3.0/architecture/core_concepts/builds_and_image_streams.html#docker-build[OpenShift Docker Build] is performed.
 
-A special <<fabric8:watch>> goal allows for reacting on code changes and automatic recreation of images or copying new artifacts into running container.
+A special <<fabric8:watch>> goal allows for reacting on code changes and automatic recreation of images or copying new artifacts into running containers.
 
-These image related features are inherited from the https://github.com/fabric8io/docker-maven-plugin[fabric8io/docker-maven-plugin] which is transparently included in this plugin.
+These image related features are inherited from the https://github.com/fabric8io/docker-maven-plugin[fabric8io/docker-maven-plugin] which is part of this plugin.
 
 [[resource-descriptors]]
 == Kubernetes and OpenShift Resources
 
-With <<fabric8:resource>> Kubernetes and OpenShift resource descriptors can be created from the build information for creating the corresponding resource object. These files are packaged within the Maven artifacts created and can be deployed to a running orchestration platform with <<fabric8:deploy>>.
+Kubernetes and OpenShift resource descriptors can be created  with <<fabric8:resource>>.
+These files are packaged within the Maven artifacts and can be deployed to a running orchestration platform with <<fabric8:apply>>.
 
-You only specify a fragment of the real resource descriptors which will be enriched by this plugin with various extra informations taken from the build. This drastically can reduce boilerplate code for common scenarios. It is also possible to auto-create resource objects like services or replica-set without explicitly declaring it.
+Typically you only specify a small part of the real resource descriptors which will be enriched by this plugin with various extra informations taken from the `pom.xml`.
+This drastically reduces boilerplate code for common scenarios.
 
 == Configuration
 
-In order to capture many use case scenarios, there are three levels of configuration:
+As mentioned already there are three levels of configuration:
 
-* *Zero-Config* mode makes some decisions based what is present in the pom.xml like what base image to use or which ports to expose. This is great for starting up things and for keeping quickstart applications small and tidy.
+* *Zero-Config* mode makes some very opinionated decisions based on what is present in the pom.xml like what base image to use or which ports to expose.
+This is great for starting up things and for keeping quickstart applications small and tidy.
 
-* *XML plugin configuration* mode is similar to what https://fabric8io.github.io/docker-maven-plugin/#example[docker-maven-plugin] provides. This allows for type safe configuration with IDE support, but only a subset of possible resource descriptor features is provided.
+* *XML plugin configuration* mode is similar to what https://fabric8io.github.io/docker-maven-plugin/#example[docker-maven-plugin] provides.
+This allows for type safe configuration with IDE support, but only a subset of possible resource descriptor features is provided.
 
 * *Kubernetes &amp; OpenShift resource fragments* are user provided YAML files that can be _enriched_ by the plugin. This allows expert users to use plain configuration file with all their capabilities, but also to add project specific build information and avoid boilerplate code.
 
