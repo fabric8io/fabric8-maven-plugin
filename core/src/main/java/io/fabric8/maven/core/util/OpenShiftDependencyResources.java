@@ -66,7 +66,7 @@ public class OpenShiftDependencyResources {
             KindAndName key = new KindAndName(item);
             HasMetadata old = openshiftDependencyResources.get(key);
             if (old != null && !isAppCatalog) {
-                log.warn("Duplicate OpenShift resources for " + key + " at " + location(old) + " and " + location(item));
+                log.warn("Duplicate OpenShift resources for %s at %s and %s", key, location(old), location(item));
             }
             openshiftDependencyResources.put(key, item);
         }

@@ -60,7 +60,7 @@ public class ProcessUtil {
             try {
                 thread.join();
             } catch (InterruptedException e) {
-                log.warn("Caught "+ e, e);
+                log.warn("Caught %s", e);
             }
         }
     }
@@ -72,7 +72,7 @@ public class ProcessUtil {
                 File file = new File(directory, name + extension);
                 if (file.exists() && file.isFile()) {
                     if (!file.canExecute()) {
-                        log.warn("Found " + file + " on the PATH but it is not executable. Ignoring ...");
+                        log.warn("Found %s on the PATH but it is not executable. Ignoring ...", file);
                     } else {
                         return file;
                     }

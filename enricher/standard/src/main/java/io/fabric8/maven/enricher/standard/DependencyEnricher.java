@@ -94,7 +94,7 @@ public class DependencyEnricher extends BaseEnricher {
                     URL url = new URL("jar:" + file.toURI().toURL() + "!/" + dependencyYaml);
                     artifactSet.add(url);
                 } catch (MalformedURLException e) {
-                    getLog().debug("Failed to create URL for " + file + ": " + e, e);
+                    getLog().debug("Failed to create URL for %s: %s", file, e);
                 }
             }
         }
@@ -104,7 +104,7 @@ public class DependencyEnricher extends BaseEnricher {
             try {
                 resources = getClass().getClassLoader().getResources(dependencyYaml);
             } catch (IOException e) {
-                getLog().error("Could not find " + dependencyYaml + " on the classpath: " + e, e);
+                getLog().error("Could not find %s on the classpath: %s", dependencyYaml, e);
             }
             if (resources != null) {
                 while (resources.hasMoreElements()) {
@@ -132,7 +132,7 @@ public class DependencyEnricher extends BaseEnricher {
                 try {
                     isAppCatalog = getContext().runningWithGoal("fabric8:app-catalog");
                 } catch (MojoExecutionException e) {
-                    log.warn("Caught: " + e, e);
+                    log.warn("Caught: %s", e);
                 }
                 getContext().getOpenshiftDependencyResources().addOpenShiftResources(items, isAppCatalog);
                 return null;
@@ -145,7 +145,7 @@ public class DependencyEnricher extends BaseEnricher {
             try {
                 InputStream is = url.openStream();
                 if (is != null) {
-                    log.debug("Processing Kubernetes YAML in at: " + url);
+                    log.debug("Processing Kubernetes YAML in at: %s", url);
 
                     KubernetesList resources = new ObjectMapper(new YAMLFactory()).readValue(is, KubernetesList.class);
                     List<HasMetadata> items = notNullList(resources.getItems());
@@ -158,12 +158,12 @@ public class DependencyEnricher extends BaseEnricher {
                     }
                     for (HasMetadata item : items) {
                         KubernetesResourceUtil.setLocation(item, url.toString());
-                        log.debug("  found " + getKind(item) + "  " + KubernetesHelper.getName(item));
+                        log.debug("  found %s  %s", getKind(item), KubernetesHelper.getName(item));
                     }
                     function.apply(items);
                 }
             } catch (IOException e) {
-                getLog().debug("Skipping " + url + ": " + e, e);
+                getLog().debug("Skipping %s: %s", url, e);
             }
         }
     }

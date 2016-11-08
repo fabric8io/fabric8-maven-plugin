@@ -100,7 +100,7 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
                         return null;
                     } else if (t instanceof IllegalArgumentException ||
                                t.getMessage() != null && t.getMessage().matches("^No.*found.*$")) {
-                        getLog().warn(cause.getMessage());
+                        getLog().warn("%s", cause.getMessage());
                         return null;
                     };
                 }
