@@ -21,6 +21,7 @@ import java.util.*;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
@@ -44,6 +45,7 @@ public class EnricherManagerTest {
     public void createDefaultResources() {
         new Expectations() {{
            context.getConfig(); result = ProcessorConfig.INCLUDE_ALL;
+           context.getImages(); result = new ImageConfiguration.Builder().alias("img1").name("img1").build();
         }};
         EnricherManager manager = new EnricherManager(context);
 
