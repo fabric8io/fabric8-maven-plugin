@@ -41,6 +41,7 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
+import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigSpec;
@@ -153,7 +154,18 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
             generator = new ProcessorConfig(includes, excludes, config);
         }
         try {
-            return GeneratorManager.generate(configs, generator, project, session, goalFinder, "fabric8:watch", log, mode, buildStrategy, false);
+            GeneratorContext ctx = new GeneratorContext.Builder()
+                .config(generator)
+                .project(project)
+                .session(session)
+                .goalFinder(goalFinder)
+                .goalName("fabric8:watch")
+                .logger(log)
+                .mode(mode)
+                .strategy(buildStrategy)
+                .useProjectClasspath(false)
+                .build();
+            return GeneratorManager.generate(configs, ctx, false);
         } catch (MojoExecutionException e) {
             throw new IllegalArgumentException("Cannot extract generator config: " + e, e);
         }

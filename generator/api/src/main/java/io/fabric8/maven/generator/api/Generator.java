@@ -32,15 +32,16 @@ public interface Generator extends Named {
      * @return true if the generator is applicable
      * @param configs all configuration already available
      */
-    boolean isApplicable(List<ImageConfiguration> configs);
+    boolean isApplicable(List<ImageConfiguration> configs) throws MojoExecutionException;
 
     /**
      * Provide additional image configurations
      *
      * @param existingConfigs the already detected and resolved configuration
+     * @param prePackagePhase if true this is called in a prepackage phase where no artifacts has been packaged in target/
      * @return list of image configurations
      */
-    List<ImageConfiguration> customize(List<ImageConfiguration> existingConfigs) throws MojoExecutionException;
+    List<ImageConfiguration> customize(List<ImageConfiguration> existingConfigs, boolean prePackagePhase) throws MojoExecutionException;
 }
 
 

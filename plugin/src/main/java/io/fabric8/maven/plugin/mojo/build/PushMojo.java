@@ -26,6 +26,7 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -94,7 +95,7 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        if( skip ) {
+        if (skip) {
             return;
         }
         super.execute();
@@ -109,11 +110,22 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
         try {
-            ProcessorConfig generatorConcfig =
+            ProcessorConfig generatorConfig =
                 generator != null ?
                     generator :
                     ProfileUtil.extractProcesssorConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, resourceDir);
-            return GeneratorManager.generate(configs, generatorConcfig, project, session, goalFinder, "fabric8:push", log, mode, buildStrategy, false);
+            GeneratorContext ctx = new GeneratorContext.Builder()
+                .config(generatorConfig)
+                .project(project)
+                .session(session)
+                .goalFinder(goalFinder)
+                .goalName("fabric8:push")
+                .logger(log)
+                .mode(mode)
+                .strategy(buildStrategy)
+                .useProjectClasspath(false)
+                .build();
+            return GeneratorManager.generate(configs, ctx, true);
         } catch (Exception e) {
             throw new IllegalArgumentException("Cannot extract generator config: " + e,e);
         }

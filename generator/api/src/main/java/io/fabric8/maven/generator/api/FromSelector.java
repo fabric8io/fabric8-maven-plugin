@@ -31,11 +31,11 @@ import org.apache.maven.project.MavenProject;
  */
 public abstract class FromSelector {
 
-    private final MavenGeneratorContext context;
+    private final GeneratorContext context;
 
     private final Pattern REDHAT_VERSION_PATTERN = Pattern.compile("^.*\\.(redhat|fuse)-.*$");
 
-    public FromSelector(MavenGeneratorContext context) {
+    public FromSelector(GeneratorContext context) {
         this.context = context;
     }
 
@@ -70,7 +70,7 @@ public abstract class FromSelector {
         private final String redhatDocker;
         private final String redhatS2i;
 
-        public Default(MavenGeneratorContext context, String prefix) {
+        public Default(GeneratorContext context, String prefix) {
             super(context);
             DefaultImageLookup lookup = new DefaultImageLookup(Default.class);
             this.upstreamDocker = lookup.getImageName(prefix + ".upstream.docker");

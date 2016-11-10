@@ -14,10 +14,11 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.generator.javaexec;
+package io.fabric8.maven.generator.vertx;
 
 import java.util.List;
 
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.support.JavaRunGenerator;
@@ -26,14 +27,26 @@ import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  */
-public class JavaExecGenerator extends JavaRunGenerator {
+public class VertxGenerator extends JavaRunGenerator {
 
-    public JavaExecGenerator(GeneratorContext context) {
-        super(context, "java-exec");
+    public VertxGenerator(GeneratorContext context) {
+        super(context, "vertx");
     }
+
+    private enum Config implements Configs.Key {
+        // Name of the main verticle. If not given, it tries to detect
+        // single main verticle from the source code
+        verticle;
+
+        public String def() { return d; } protected String d;
+    }
+
+    // Only extract one time
+    private String mainClass = null;
+    private boolean alreadySearchedForMainClass = false;
 
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) throws MojoExecutionException {
-        return shouldAddImageConfiguration(configs) && (isFatJar() || Strings.isNotBlank(getMainClass()));
+        return shouldAddImageConfiguration(configs) && Strings.isNotBlank(getMainClass());
     }
 }

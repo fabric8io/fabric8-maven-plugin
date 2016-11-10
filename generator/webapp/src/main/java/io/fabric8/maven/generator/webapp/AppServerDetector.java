@@ -1,6 +1,5 @@
 package io.fabric8.maven.generator.webapp;
 
-import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.maven.generator.webapp.handler.JettyAppSeverHandler;
 import io.fabric8.maven.generator.webapp.handler.TomcatAppSeverHandler;
 import io.fabric8.maven.generator.webapp.handler.WildFlyAppSeverHandler;
