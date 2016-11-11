@@ -26,6 +26,12 @@ import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
+ * Vert.x Generator.
+ *
+ * Then main part of creating the base image is taken java-exec generator.
+ *
+ * In addition this generator here adds an appropriate healthcheck when vertx-dropwizard-metrics is
+ * given as a dependency (TODO)
  */
 public class VertxGenerator extends JavaExecGenerator {
 
@@ -33,11 +39,9 @@ public class VertxGenerator extends JavaExecGenerator {
         super(context, "vertx");
     }
 
-    private enum Config implements Configs.Key {
-        // Name of the main verticle. If not given, it tries to detect
-        // single main verticle from the source code
-        verticle;
-
-        public String def() { return d; } protected String d;
+    @Override
+    public boolean isApplicable(List<ImageConfiguration> configs) throws MojoExecutionException {
+        // Disabled for now
+        return false;
     }
 }
