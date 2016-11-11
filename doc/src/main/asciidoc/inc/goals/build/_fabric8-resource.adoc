@@ -19,11 +19,20 @@ Labels and annotations can be easily added to any resource object. This is best 
     <resources>
       <labels> <!--1-->
         <all> <!--1-->
-          <organisation>unesco</organisation> <!--2-->
+          <property> <!--2-->
+            <name>organisation</name>
+            <value>unesco</value>
+          </property>
         </all>
         <service> <!--3-->
-          <persistent>true</persistent>
-          <database>mysql</dabatabase>
+          <property>
+            <name>database</name>
+            <value>mysql</value>
+          </property>
+          <property>
+            <name>persistent</name>
+            <value>true</value>
+          </property>
         </service>
         <replicaSet> <!--4-->
           ...

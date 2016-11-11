@@ -16,19 +16,19 @@ package io.fabric8.maven.plugin.enricher;
  * limitations under the License.
  */
 
-import java.util.Map;
-
-import javax.lang.model.type.TypeVisitor;
-
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.builder.Visitor;
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.client.HasMetadataVisitiableBuilder;
 import io.fabric8.maven.core.config.MetaDataConfig;
 import io.fabric8.maven.core.util.MapUtil;
-import io.fabric8.maven.enricher.api.*;
+import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.Enricher;
+import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.Kind;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * @author roland
@@ -65,7 +65,7 @@ public class MetadataEnricher extends BaseEnricher implements Enricher {
 
     @Override
     public void adapt(KubernetesListBuilder builder) {
-        final Map<String, String> all = config.getAll();
+        final Map<String, String> all = propertiesToMap(config.getAll());
         if (all != null) {
             // Adapt specified all labels to every object in the builder
             builder.accept(new TypedVisitor<ObjectMetaBuilder>() {
@@ -86,16 +86,31 @@ public class MetadataEnricher extends BaseEnricher implements Enricher {
 
     private Map<String, String> getConfiguredData(Kind kind) {
         if (kind == Kind.SERVICE) {
-            return config.getService();
+            return propertiesToMap(config.getService());
         } else if (kind == Kind.DEPLOYMENT || kind == Kind.DEPLOYMENT_CONFIG) {
-            return config.getDeployment();
+            return propertiesToMap(config.getDeployment());
         } else if (kind == Kind.REPLICATION_CONTROLLER || kind == Kind.REPLICA_SET) {
-            return config.getReplicaSet();
+            return propertiesToMap(config.getReplicaSet());
         } else if (kind == Kind.POD_SPEC) {
-            return config.getPod();
+            return propertiesToMap(config.getPod());
         } else {
             return null;
         }
+    }
+
+    /**
+     * Convert a Properties object into a String/String HashMap
+     * @param properties the properties object
+     * @return a hashmap of strings mapping the keys to values contained in the original properties list
+     */
+    private Map<String, String> propertiesToMap(Properties properties) {
+        Map<String, String> propertyMap = new HashMap<>();
+        if(properties != null) {
+            for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+                propertyMap.put(entry.getKey().toString(), entry.getValue().toString());
+            }
+        }
+        return propertyMap;
     }
 
     public enum Type {

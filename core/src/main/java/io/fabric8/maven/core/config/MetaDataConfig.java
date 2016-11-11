@@ -17,6 +17,7 @@
 package io.fabric8.maven.core.config;
 
 import java.util.Map;
+import java.util.Properties;
 
 import javax.validation.constraints.Pattern;
 
@@ -33,49 +34,50 @@ public class MetaDataConfig {
      * Labels or annotations which should be applied to every object
      */
     @Parameter
-    private Map<String, String> all;
+    private Properties all;
 
     /**
      * Labels or annoations for a Pod within a controller or deployment
      */
     @Parameter
-    private Map<String, String> pod;
+    private Properties pod;
+
 
     /**
      * Labels or annotations for replica sets (or replication controller)
      */
     @Parameter
-    private Map<String, String> replicaSet;
+    private Properties replicaSet;
 
     /**
      * Labels or annotation for services
      */
     @Parameter
-    private Map<String, String> service;
+    private Properties service;
 
     /**
      * Labels or annotations for deployment or deployment configs
      */
     @Parameter
-    private Map<String, String> deployment;
+    private Properties deployment;
 
-    public Map<String, String> getPod() {
+    public Properties getPod() {
         return pod;
     }
 
-    public Map<String, String> getReplicaSet() {
+    public Properties getReplicaSet() {
         return replicaSet;
     }
 
-    public Map<String, String> getService() {
+    public Properties getService() {
         return service;
     }
 
-    public Map<String, String> getAll() {
+    public Properties getAll() {
         return all;
     }
 
-    public Map<String, String> getDeployment() {
+    public Properties getDeployment() {
         return deployment;
     }
 }

@@ -82,7 +82,7 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 [[enrichers-standard]]
 === Standard Enrichers
 
-Default enrichers are used for adding missing resources or adding metadata to given resource objects. The following default enhancers are availables out of the box
+Default enrichers are used for adding missing resources or adding metadata to given resource objects. The following default enhancers are available out of the box
 
 [[fmp-controller]]
 ==== fmp-controller
