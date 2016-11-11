@@ -20,9 +20,9 @@ public class WildFlyAppSeverHandler extends AbstractAppServerHandler {
     @Override
     public boolean isApplicable() {
         return
-            hasOneOf("**/WEB-INF/jboss-deployment-structure.xml",
+            !MavenUtil.hasPlugin(project, "org.wildfly.swarm:wildfly-swarm-plugin") &&
+            (hasOneOf("**/WEB-INF/jboss-deployment-structure.xml",
                      "**/META-INF/jboss-deployment-structure.xml",
-                     "**/WEB-INF/beans.xml", "**/META-INF/beans.xml",
                      "**/WEB-INF/jboss-web.xml", "**/WEB-INF/ejb-jar.xml",
                      "**/WEB-INF/jboss-ejb3.xml", "**/META-INF/persistence.xml",
                      "**/META-INF/*-jms.xml", "**/WEB-INF/*-jms.xml",
@@ -30,7 +30,7 @@ public class WildFlyAppSeverHandler extends AbstractAppServerHandler {
                      "**/WEB-INF/jboss-ejb-client.xml", "**/META-INF/jbosscmp-jdbc.xml",
                      "**/WEB-INF/jboss-webservices.xml") ||
             MavenUtil.hasPlugin(project, "org.jboss.as.plugins:jboss-as-maven-plugin") ||
-            MavenUtil.hasPlugin(project, "org.wildfly.plugins:wildfly-maven-plugin");
+            MavenUtil.hasPlugin(project, "org.wildfly.plugins:wildfly-maven-plugin"));
     }
 
     @Override
@@ -50,7 +50,7 @@ public class WildFlyAppSeverHandler extends AbstractAppServerHandler {
 
     @Override
     public String getCommand() {
-        return "/opt/jboss/wildfly/bin/standalone.sh";
+        return null;
     }
 
     @Override
