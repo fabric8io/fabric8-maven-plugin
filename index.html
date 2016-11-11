@@ -1442,11 +1442,20 @@ This is chapter is incomplete, but there is work in progress.
     <span class="tag">&lt;resources&gt;</span>
       <span class="tag">&lt;labels&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
         <span class="tag">&lt;all&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
-          <span class="tag">&lt;organisation&gt;</span>unesco<span class="tag">&lt;/organisation&gt;</span> <i class="conum" data-value="2"></i><b>(2)</b>
+          <span class="tag">&lt;property&gt;</span> <i class="conum" data-value="2"></i><b>(2)</b>
+            <span class="tag">&lt;name&gt;</span>organisation<span class="tag">&lt;/name&gt;</span>
+            <span class="tag">&lt;value&gt;</span>unesco<span class="tag">&lt;/value&gt;</span>
+          <span class="tag">&lt;/property&gt;</span>
         <span class="tag">&lt;/all&gt;</span>
         <span class="tag">&lt;service&gt;</span> <i class="conum" data-value="3"></i><b>(3)</b>
-          <span class="tag">&lt;persistent&gt;</span>true<span class="tag">&lt;/persistent&gt;</span>
-          <span class="tag">&lt;database&gt;</span>mysql<span class="tag">&lt;/dabatabase&gt;</span>
+          <span class="tag">&lt;property&gt;</span>
+            <span class="tag">&lt;name&gt;</span>database<span class="tag">&lt;/name&gt;</span>
+            <span class="tag">&lt;value&gt;</span>mysql<span class="tag">&lt;/value&gt;</span>
+          <span class="tag">&lt;/property&gt;</span>
+          <span class="tag">&lt;property&gt;</span>
+            <span class="tag">&lt;name&gt;</span>persistent<span class="tag">&lt;/name&gt;</span>
+            <span class="tag">&lt;value&gt;</span>true<span class="tag">&lt;/value&gt;</span>
+          <span class="tag">&lt;/property&gt;</span>
         <span class="tag">&lt;/service&gt;</span>
         <span class="tag">&lt;replicaSet&gt;</span> <i class="conum" data-value="4"></i><b>(4)</b>
           ...
@@ -4257,7 +4266,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <div class="sect3">
 <h4 id="enrichers-standard">9.1.1. Standard Enrichers</h4>
 <div class="paragraph">
-<p>Default enrichers are used for adding missing resources or adding metadata to given resource objects. The following default enhancers are availables out of the box</p>
+<p>Default enrichers are used for adding missing resources or adding metadata to given resource objects. The following default enhancers are available out of the box</p>
 </div>
 <div class="sect4">
 <h5 id="fmp-controller">fmp-controller</h5>
@@ -4801,7 +4810,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.92<br>
-Last updated 2016-11-11 13:56:40 UTC
+Last updated 2016-11-11 14:38:36 UTC
 </div>
 </div>
 </body>
