@@ -361,7 +361,7 @@ public class KubernetesResourceUtil {
         try {
             portValue = Integer.parseInt(portNumberText);
         } catch (NumberFormatException e) {
-            log.warn("Could not parse remote debugging port " + portNumberText + " as an integer: " + e, e);
+            log.warn("Could not parse remote debugging port %s as an integer: %s", portNumberText, e);
             return false;
         }
         for (ContainerPort port : ports) {
@@ -421,7 +421,7 @@ public class KubernetesResourceUtil {
             logger.error("Could not connect to kubernetes cluster!");
             logger.error("Have you started a local cluster via `mvn fabric8:cluster-start` or connected to a remote cluster via `kubectl`?");
             logger.info("For more help see: http://fabric8.io/guide/getStarted/");
-            logger.error("Connection error: " + cause);
+            logger.error("Connection error: %s", cause);
 
             String message = "Could not connect to kubernetes cluster. Have you started a cluster via `mvn fabric8:cluster-start` or connected to a remote cluster via `kubectl`? Error: " + cause;
             throw new MojoExecutionException(message, e);

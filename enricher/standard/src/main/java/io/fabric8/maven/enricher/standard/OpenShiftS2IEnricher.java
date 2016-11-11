@@ -110,7 +110,7 @@ public class OpenShiftS2IEnricher extends BaseEnricher {
                 return imageConfiguration;
             }
         }
-        log.warn("Could not find ImageConfiguration for image name: " + imageName);
+        log.warn("Could not find ImageConfiguration for image name: %s", imageName);
         return null;
     }
 }
