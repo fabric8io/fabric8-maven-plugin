@@ -53,7 +53,7 @@ class MainClassDetector {
             } else if (foundMainClasses.size() == 1) {
                 return mainClass = foundMainClasses.get(0);
             } else {
-                log.warn("Found more than one main class : " + foundMainClasses + ". Ignoring ....");
+                log.warn("Found more than one main class : %s. Ignoring ....",  foundMainClasses);
                 return mainClass = null;
             }
         } catch (IOException e) {
