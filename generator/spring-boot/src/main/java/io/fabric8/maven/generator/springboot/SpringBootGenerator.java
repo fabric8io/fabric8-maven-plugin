@@ -22,7 +22,7 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
-import io.fabric8.maven.generator.api.support.JavaRunGenerator;
+import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
 import io.fabric8.utils.IOHelpers;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
@@ -41,14 +41,14 @@ import java.util.Properties;
 import java.util.UUID;
 
 import static io.fabric8.maven.core.util.SpringBootProperties.DEV_TOOLS_REMOTE_SECRET;
-import static io.fabric8.maven.generator.api.support.JavaRunGenerator.Config.fatJar;
+import static io.fabric8.maven.generator.javaexec.JavaExecGenerator.Config.fatJar;
 import static io.fabric8.maven.generator.springboot.SpringBootGenerator.Config.color;
 
 /**
  * @author roland
  * @since 15/05/16
  */
-public class SpringBootGenerator extends JavaRunGenerator {
+public class SpringBootGenerator extends JavaExecGenerator {
 
     public static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
     private Boolean springBootRepackage;
@@ -120,8 +120,8 @@ public class SpringBootGenerator extends JavaRunGenerator {
     }
 
     @Override
-    protected Map<String, String> getEnv() throws MojoExecutionException {
-        Map<String, String> ret = super.getEnv();
+    protected Map<String, String> getEnv(boolean isPrePackagePhase) throws MojoExecutionException {
+        Map<String, String> ret = super.getEnv(isPrePackagePhase);
         if (getConfig(color) != null) {
             ret.put("JAVA_OPTIONS","-Dspring.output.ansi.enabled=" + getConfig(color));
         }

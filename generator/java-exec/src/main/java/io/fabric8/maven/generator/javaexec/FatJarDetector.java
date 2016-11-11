@@ -1,4 +1,4 @@
-package io.fabric8.maven.generator.api.support;
+package io.fabric8.maven.generator.javaexec;
 /*
  *
  * Copyright 2016 Roland Huss
@@ -31,17 +31,16 @@ import org.apache.maven.plugin.MojoExecutionException;
  * @author roland
  * @since 10/11/16
  */
-public class FatJarDetector {
+class FatJarDetector {
 
     private File directory;
-
     private Result result;
 
-    public FatJarDetector(String dir) {
+    FatJarDetector(String dir) {
         this.directory = new File(dir);
     }
 
-    public Result scan() throws MojoExecutionException {
+    Result scan() throws MojoExecutionException {
         // Scanning is lazy ...
         if (result == null) {
             if (!directory.exists()) {

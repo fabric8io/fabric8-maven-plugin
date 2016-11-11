@@ -58,17 +58,14 @@ abstract public class BaseGenerator implements Generator {
     }
 
     private enum Config implements Configs.Key {
-        // Whether to merge in existing configuration or not
-        merge,
-
         // The image name
         name,
 
         // The alias to use (default to the generator name)
         alias,
 
-        // whether the generator should always run
-        always {{d = "false"; }},
+        // whether the generator should always add to already existing image configurationws
+        add {{d = "false"; }},
 
         // Base image
         from;
@@ -157,7 +154,7 @@ abstract public class BaseGenerator implements Generator {
     }
 
     protected boolean shouldAddImageConfiguration(List<ImageConfiguration> configs) {
-        return !containsBuildConfiguration(configs) || Configs.asBoolean(getConfig(Config.always));
+        return !containsBuildConfiguration(configs) || Configs.asBoolean(getConfig(Config.add));
     }
 
     private String getConfigWithSystemFallbackAndDefault(Config name, String key, String defaultVal) {

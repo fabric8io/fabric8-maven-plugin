@@ -19,7 +19,7 @@ package io.fabric8.maven.generator.wildflyswarm;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
-import io.fabric8.maven.generator.api.support.JavaRunGenerator;
+import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import java.util.List;
@@ -29,15 +29,15 @@ import java.util.Map;
  * Created by ceposta
  * <a href="http://christianposta.com/blog>http://christianposta.com/blog</a>.
  */
-public class WildFlySwarmGenerator extends JavaRunGenerator {
+public class WildFlySwarmGenerator extends JavaExecGenerator {
 
     public WildFlySwarmGenerator(GeneratorContext context) {
         super(context, "wildfly-swarm");
     }
 
     @Override
-    protected Map<String, String> getEnv() throws MojoExecutionException {
-        Map<String, String> ret = super.getEnv();
+    protected Map<String, String> getEnv(boolean isPrepackagePhase) throws MojoExecutionException {
+        Map<String, String> ret = super.getEnv(isPrepackagePhase);
         // Switch off agent_bond until logging issue with wilfdlfy-swarm is resolved
         // See:
         // - https://github.com/fabric8io/fabric8-maven-plugin/issues/320

@@ -21,13 +21,13 @@ import java.util.List;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
-import io.fabric8.maven.generator.api.support.JavaRunGenerator;
+import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  */
-public class VertxGenerator extends JavaRunGenerator {
+public class VertxGenerator extends JavaExecGenerator {
 
     public VertxGenerator(GeneratorContext context) {
         super(context, "vertx");
@@ -39,14 +39,5 @@ public class VertxGenerator extends JavaRunGenerator {
         verticle;
 
         public String def() { return d; } protected String d;
-    }
-
-    // Only extract one time
-    private String mainClass = null;
-    private boolean alreadySearchedForMainClass = false;
-
-    @Override
-    public boolean isApplicable(List<ImageConfiguration> configs) throws MojoExecutionException {
-        return shouldAddImageConfiguration(configs) && Strings.isNotBlank(getMainClass());
     }
 }
