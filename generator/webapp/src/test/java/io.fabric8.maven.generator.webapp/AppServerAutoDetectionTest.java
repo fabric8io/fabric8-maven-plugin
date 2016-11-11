@@ -1,6 +1,5 @@
 package io.fabric8.maven.generator.webapp;
 
-import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
 import org.apache.maven.project.MavenProject;

@@ -23,8 +23,7 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.handler.property.ConfigKey;
-import io.fabric8.maven.generator.api.MavenGeneratorContext;
+import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
 import io.fabric8.maven.generator.webapp.handler.CustomAppServerHandler;
 
@@ -62,18 +61,18 @@ public class WebAppGenerator extends BaseGenerator {
         public String def() { return d; }
     }
 
-    public WebAppGenerator(MavenGeneratorContext context) {
+    public WebAppGenerator(GeneratorContext context) {
         super(context, "webapp");
     }
 
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
-        return shouldAddDefaultImage(configs) &&
+        return shouldAddImageConfiguration(configs) &&
                MavenUtil.hasPlugin(getProject(), "org.apache.maven.plugins:maven-war-plugin");
     }
 
     @Override
-    public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {
+    public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean prePackagePhase) {
         if (getContext().getMode() == PlatformMode.openshift &&
             getContext().getStrategy() == OpenShiftBuildStrategy.s2i) {
             throw new IllegalArgumentException("S2I not yet supported for the webapp-generator. Use -Dfabric8.mode=kubernetes or " +
@@ -89,11 +88,13 @@ public class WebAppGenerator extends BaseGenerator {
         ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
 
         BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
-            .assembly(createAssembly(handler))
             .from(getFrom(handler))
             .ports(handler.exposedPorts())
             .cmd(getDockerRunCommand(handler))
             .env(getEnv(handler));
+        if (!prePackagePhase) {
+            buildBuilder.assembly(createAssembly(handler));
+        }
         addLatestTagIfSnapshot(buildBuilder);
         imageBuilder
             .name(getImageName())
@@ -104,7 +105,7 @@ public class WebAppGenerator extends BaseGenerator {
         return configs;
     }
 
-    private AppServerHandler getAppServerHandler(MavenGeneratorContext context) {
+    private AppServerHandler getAppServerHandler(GeneratorContext context) {
         String from = super.getFrom();
         if (from != null) {
             // If a base image is provided use this exclusively and dont do a custom lookup

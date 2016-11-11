@@ -24,7 +24,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.Generator;
 import io.fabric8.maven.generator.api.GeneratorConfig;
-import io.fabric8.maven.generator.api.MavenGeneratorContext;
+import io.fabric8.maven.generator.api.GeneratorContext;
 import org.apache.maven.project.MavenProject;
 
 import java.util.Collections;
@@ -37,7 +37,7 @@ import java.util.Properties;
  */
 abstract public class BaseGenerator implements Generator {
 
-    private final MavenGeneratorContext context;
+    private final GeneratorContext context;
     private final String name;
     private final GeneratorConfig config;
     protected final PrefixedLogger log;
@@ -58,14 +58,14 @@ abstract public class BaseGenerator implements Generator {
     }
 
     private enum Config implements Configs.Key {
-        // Whether to merge in existing configuration or not
-        merge,
-
         // The image name
         name,
 
         // The alias to use (default to the generator name)
         alias,
+
+        // whether the generator should always add to already existing image configurationws
+        add {{d = "false"; }},
 
         // Base image
         from;
@@ -73,16 +73,16 @@ abstract public class BaseGenerator implements Generator {
         public String def() { return d; } protected String d;
 
     }
-    public BaseGenerator(MavenGeneratorContext context, String name) {
+    public BaseGenerator(GeneratorContext context, String name) {
         this(context, name, null);
     }
 
-    public BaseGenerator(MavenGeneratorContext context, String name, FromSelector fromSelector) {
+    public BaseGenerator(GeneratorContext context, String name, FromSelector fromSelector) {
         this.context = context;
         this.name = name;
         this.fromSelector = fromSelector;
         this.config = new GeneratorConfig(context.getProject().getProperties(), getName(), context.getConfig());
-        this.log = new PrefixedLogger(name, context.getLog());
+        this.log = new PrefixedLogger(name, context.getLogger());
     }
 
     protected MavenProject getProject() {
@@ -93,7 +93,7 @@ abstract public class BaseGenerator implements Generator {
         return name;
     }
 
-    public MavenGeneratorContext getContext() {
+    public GeneratorContext getContext() {
         return context;
     }
 
@@ -153,8 +153,8 @@ abstract public class BaseGenerator implements Generator {
         return getConfigWithSystemFallbackAndDefault(Config.alias, "fabric8.generator.alias", getName());
     }
 
-    protected boolean shouldAddDefaultImage(List<ImageConfiguration> configs) {
-        return !containsBuildConfiguration(configs);
+    protected boolean shouldAddImageConfiguration(List<ImageConfiguration> configs) {
+        return !containsBuildConfiguration(configs) || Configs.asBoolean(getConfig(Config.add));
     }
 
     private String getConfigWithSystemFallbackAndDefault(Config name, String key, String defaultVal) {

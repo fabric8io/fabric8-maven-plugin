@@ -23,7 +23,7 @@ import java.util.*;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.generator.api.FromSelector;
-import io.fabric8.maven.generator.api.MavenGeneratorContext;
+import io.fabric8.maven.generator.api.GeneratorContext;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -42,7 +42,7 @@ import static org.junit.Assert.assertEquals;
 public class JavaRunGeneratorTest {
 
     @Mocked
-    MavenGeneratorContext ctx;
+    GeneratorContext ctx;
 
     @Mocked
     MavenProject project;
@@ -65,7 +65,7 @@ public class JavaRunGeneratorTest {
 
         for (int i = 0; i < data.length; i += 4) {
             prepareExpectation((String) data[i], (PlatformMode) data[i+1], (OpenShiftBuildStrategy) data[i+2]);
-            final MavenGeneratorContext context = ctx;
+            final GeneratorContext context = ctx;
             FromSelector selector = new FromSelector.Default(context, "java");
             String from = selector.getFrom();
             assertEquals(imageProps.getProperty((String) data[i+3]), from);

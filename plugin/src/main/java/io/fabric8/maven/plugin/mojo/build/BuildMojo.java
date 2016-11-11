@@ -49,6 +49,7 @@ import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.Build;
@@ -100,7 +101,7 @@ import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.loadResources;
  * @since 16/03/16
  */
 @Mojo(name = "build", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST, requiresDependencyResolution = ResolutionScope.COMPILE)
-public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
+public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
 
     /**
      * Generator specific options. This is a generic prefix where the keys have the form
@@ -297,7 +298,18 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             log.info("Building Docker image in [[B]]Kubernetes[[B]] mode");
         }
         try {
-            return GeneratorManager.generate(configs, extractGeneratorConfig(), project, session, goalFinder, "fabric8:build", log, platformMode, buildStrategy, useProjectClasspath);
+            GeneratorContext ctx = new GeneratorContext.Builder()
+                .config(extractGeneratorConfig())
+                .project(project)
+                .session(session)
+                .goalFinder(goalFinder)
+                .goalName("fabric8:build")
+                .logger(log)
+                .mode(platformMode)
+                .strategy(buildStrategy)
+                .useProjectClasspath(useProjectClasspath)
+                .build();
+            return GeneratorManager.generate(configs, ctx, false);
         } catch (MojoExecutionException e) {
             throw new IllegalArgumentException("Cannot extract generator config: " + e, e);
         }

@@ -302,7 +302,6 @@
         <version>1.0-alpha-6</version>
       </dependency>
 
-
       <!-- == test ====================================== -->
 
       <dependency>
@@ -356,6 +355,23 @@
         <artifactId>javassist</artifactId>
         <version>3.20.0-GA</version>
       </dependency>
+
+      <dependency>
+        <groupId>org.jboss.shrinkwrap</groupId>
+        <artifactId>shrinkwrap-api</artifactId>
+        <version>1.2.6</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.shrinkwrap</groupId>
+        <artifactId>shrinkwrap-spi</artifactId>
+        <version>1.2.6</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.shrinkwrap</groupId>
+        <artifactId>shrinkwrap-impl-base</artifactId>
+        <version>1.2.6</version>
+      </dependency>
+
     </dependencies>
 
   </dependencyManagement>

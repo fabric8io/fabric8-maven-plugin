@@ -21,8 +21,8 @@ import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.generator.api.MavenGeneratorContext;
-import io.fabric8.maven.generator.api.support.JavaRunGenerator;
+import io.fabric8.maven.generator.api.GeneratorContext;
+import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
 import io.fabric8.utils.IOHelpers;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
@@ -41,13 +41,14 @@ import java.util.Properties;
 import java.util.UUID;
 
 import static io.fabric8.maven.core.util.SpringBootProperties.DEV_TOOLS_REMOTE_SECRET;
-import static io.fabric8.maven.generator.api.support.JavaRunGenerator.Config.fatJar;
+import static io.fabric8.maven.generator.javaexec.JavaExecGenerator.Config.fatJar;
+import static io.fabric8.maven.generator.springboot.SpringBootGenerator.Config.color;
 
 /**
  * @author roland
  * @since 15/05/16
  */
-public class SpringBootGenerator extends JavaRunGenerator {
+public class SpringBootGenerator extends JavaExecGenerator {
 
     public static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
     private Boolean springBootRepackage;
@@ -58,26 +59,22 @@ public class SpringBootGenerator extends JavaRunGenerator {
         public String def() { return d; } protected String d;
     }
 
-    public SpringBootGenerator(MavenGeneratorContext context) {
+    public SpringBootGenerator(GeneratorContext context) {
         super(context, "spring-boot");
     }
 
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
-        return shouldAddDefaultImage(configs) &&
-                MavenUtil.hasPlugin(getProject(), SPRING_BOOT_MAVEN_PLUGIN_GA) &&
-                // if we don't use spring boot repackaging then lets use regular JavaExecGenerator
-                // and pass in a mainClass etc
-                isSpringBootRepackage();
+        return shouldAddImageConfiguration(configs) && MavenUtil.hasPlugin(getProject(), SPRING_BOOT_MAVEN_PLUGIN_GA);
     }
 
     @Override
-    public List<ImageConfiguration> customize(List<ImageConfiguration> configs) throws MojoExecutionException {
-        if (getContext().isWatchMode()) {
+    public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean prePackagePhase) throws MojoExecutionException {
+        if (!prePackagePhase && getContext().isWatchMode()) {
             generateSpringDevToolsToken();
             addDevToolsJar(configs);
         }
-        return super.customize(configs);
+        return super.customize(configs, prePackagePhase);
     }
 
     private void generateSpringDevToolsToken() throws MojoExecutionException {
@@ -103,7 +100,7 @@ public class SpringBootGenerator extends JavaRunGenerator {
     }
 
     private void addDevToolsJar(List<ImageConfiguration> configs) throws MojoExecutionException {
-        if (Objects.equals("fabric8:resource", getContext().getGoalName()) && isFatJarWithNoDependencies()) {
+        if (Objects.equals("fabric8:resource", getContext().getGoalName()) && isFatJar()) {
             MavenProject project = getProject();
             File basedir = project.getBasedir();
             File outputFile = new File(basedir, "target/classes/BOOT-INF/lib/spring-devtools.jar");
@@ -123,16 +120,16 @@ public class SpringBootGenerator extends JavaRunGenerator {
     }
 
     @Override
-    protected Map<String, String> getEnv() {
-        Map<String, String> ret = super.getEnv();
-        if (getConfig(Config.color) != null) {
-            ret.put("JAVA_OPTIONS","-Dspring.output.ansi.enabled=" + getConfig(Config.color));
+    protected Map<String, String> getEnv(boolean isPrePackagePhase) throws MojoExecutionException {
+        Map<String, String> ret = super.getEnv(isPrePackagePhase);
+        if (getConfig(color) != null) {
+            ret.put("JAVA_OPTIONS","-Dspring.output.ansi.enabled=" + getConfig(color));
         }
         return ret;
     }
 
     @Override
-    protected boolean isFatJarWithNoDependencies() {
+    protected boolean isFatJar() throws MojoExecutionException {
         String fatJarConfig = getConfig(fatJar);
         if (Strings.isNullOrEmpty(fatJarConfig)) {
             boolean springBootRepackage = isSpringBootRepackage();
@@ -140,7 +137,7 @@ public class SpringBootGenerator extends JavaRunGenerator {
                 return true;
             }
         }
-        return super.isFatJarWithNoDependencies();
+        return super.isFatJar();
     }
 
     protected boolean isSpringBootRepackage() {
@@ -156,7 +153,7 @@ public class SpringBootGenerator extends JavaRunGenerator {
                             List<String> goals = execution.getGoals();
                             if (goals.contains("repackage")) {
                                 springBootRepackage = true;
-                                log.info("Using fat jar packaging as the spring boot plugin is using `repackage` goal execution");
+                                log.verbose("Using fat jar packaging as the spring boot plugin is using `repackage` goal execution");
                                 break;
                             }
                         }

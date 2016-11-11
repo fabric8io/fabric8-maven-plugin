@@ -16,12 +16,11 @@
  */
 package io.fabric8.maven.generator.wildflyswarm;
 
-import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.generator.api.MavenGeneratorContext;
-import io.fabric8.maven.generator.api.support.JavaRunGenerator;
-import org.apache.maven.project.MavenProject;
+import io.fabric8.maven.generator.api.GeneratorContext;
+import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
+import org.apache.maven.plugin.MojoExecutionException;
 
 import java.util.List;
 import java.util.Map;
@@ -30,26 +29,15 @@ import java.util.Map;
  * Created by ceposta
  * <a href="http://christianposta.com/blog>http://christianposta.com/blog</a>.
  */
-public class WildFlySwarmGenerator extends JavaRunGenerator {
+public class WildFlySwarmGenerator extends JavaExecGenerator {
 
-    public WildFlySwarmGenerator(MavenGeneratorContext context) {
+    public WildFlySwarmGenerator(GeneratorContext context) {
         super(context, "wildfly-swarm");
     }
 
-    private enum Config implements Configs.Key {
-        assemblyRef    {{ d = "wildfly-swarm"; }};
-
-        public String def() { return d; } protected String d;
-    }
-
     @Override
-    protected String getAssemblyRef() {
-        return getConfig(Config.assemblyRef);
-    }
-
-    @Override
-    protected Map<String, String> getEnv() {
-        Map<String, String> ret = super.getEnv();
+    protected Map<String, String> getEnv(boolean isPrepackagePhase) throws MojoExecutionException {
+        Map<String, String> ret = super.getEnv(isPrepackagePhase);
         // Switch off agent_bond until logging issue with wilfdlfy-swarm is resolved
         // See:
         // - https://github.com/fabric8io/fabric8-maven-plugin/issues/320
@@ -62,8 +50,7 @@ public class WildFlySwarmGenerator extends JavaRunGenerator {
 
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
-        return shouldAddDefaultImage(configs) &&
-               MavenUtil.hasPlugin(getProject(), "org.wildfly.swarm:wildfly-swarm-plugin");
+        return shouldAddImageConfiguration(configs) && MavenUtil.hasPlugin(getProject(), "org.wildfly.swarm:wildfly-swarm-plugin");
     }
 
 }

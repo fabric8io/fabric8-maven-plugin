@@ -48,8 +48,11 @@ public final class PluginServiceFactory<C> {
     // Parameters for service constructors
     private C context;
 
-    public PluginServiceFactory(C context) {
+    public PluginServiceFactory(C context, ClassLoader ... loaders) {
         this.context = context;
+        for (ClassLoader loader : loaders) {
+            addAdditionalClassLoader(loader);
+        }
     }
 
     /**

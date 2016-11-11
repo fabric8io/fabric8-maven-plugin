@@ -62,6 +62,7 @@ import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.converter.DeploymentConfigOpenShiftConverter;
 import io.fabric8.maven.plugin.converter.DeploymentOpenShiftConverter;
 import io.fabric8.maven.plugin.converter.KubernetesToOpenShiftConverter;
@@ -737,7 +738,18 @@ public class ResourceMojo extends AbstractResourceMojo {
                 @Override
                 public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
                     try {
-                        return GeneratorManager.generate(configs, extractGeneratorConfig(), project, session, goalFinder, "fabric8:resource", log, mode, buildStrategy, useProjectClasspath);
+                        GeneratorContext ctx = new GeneratorContext.Builder()
+                            .config(extractGeneratorConfig())
+                            .project(project)
+                            .session(session)
+                            .goalFinder(goalFinder)
+                            .goalName("fabric8:resource")
+                            .logger(log)
+                            .mode(mode)
+                            .strategy(buildStrategy)
+                            .useProjectClasspath(useProjectClasspath)
+                            .build();
+                        return GeneratorManager.generate(configs, ctx, true);
                     } catch (Exception e) {
                         throw new IllegalArgumentException("Cannot extract generator: " + e,e);
                     }

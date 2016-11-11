@@ -48,6 +48,7 @@
     <module>generator/wildfly-swarm</module>
     <module>generator/karaf</module>
     <module>generator/webapp</module>
+    <module>generator/vertx</module>
   </modules>
 
   <scm>

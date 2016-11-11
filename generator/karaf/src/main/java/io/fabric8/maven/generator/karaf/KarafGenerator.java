@@ -15,10 +15,8 @@
  */
 package io.fabric8.maven.generator.karaf;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
@@ -27,12 +25,12 @@ import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
 import io.fabric8.maven.generator.api.FromSelector;
-import io.fabric8.maven.generator.api.MavenGeneratorContext;
+import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.utils.Strings;
 
 public class KarafGenerator extends BaseGenerator {
 
-    public KarafGenerator(MavenGeneratorContext context) {
+    public KarafGenerator(GeneratorContext context) {
         super(context, "karaf", new FromSelector.Default(context,"karaf"));
     }
 
@@ -47,25 +45,27 @@ public class KarafGenerator extends BaseGenerator {
     }
 
     @Override
-    public List<ImageConfiguration> customize(List<ImageConfiguration> configs) {
+    public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean prePackagePhase) {
         ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
         BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
-            .assembly(createAssembly())
-                .from(getFrom())
-                .ports(extractPorts())
-                .cmd(getConfig(Config.cmd));
-            addLatestTagIfSnapshot(buildBuilder);
-            imageBuilder
-                .name(getImageName())
-                .alias(getAlias())
-                .buildConfig(buildBuilder.build());
-            configs.add(imageBuilder.build());
+            .from(getFrom())
+            .ports(extractPorts())
+            .cmd(getConfig(Config.cmd));
+        if (!prePackagePhase) {
+            buildBuilder.assembly(createAssembly());
+        }
+        addLatestTagIfSnapshot(buildBuilder);
+        imageBuilder
+            .name(getImageName())
+            .alias(getAlias())
+            .buildConfig(buildBuilder.build());
+        configs.add(imageBuilder.build());
         return configs;
     }
 
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
-        return shouldAddDefaultImage(configs) &&
+        return shouldAddImageConfiguration(configs) &&
                MavenUtil.hasPlugin(getProject(), "org.apache.karaf.tooling:karaf-maven-plugin");
     }
 

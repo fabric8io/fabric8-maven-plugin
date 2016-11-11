@@ -74,8 +74,14 @@ public class FromSelectorTest {
         };
 
         for (int i = 0; i < data.length; i += 4) {
-            MavenGeneratorContext ctx = new MavenGeneratorContext(project, null, null, new ProcessorConfig(), "fabric8:testing", logger,
-                                                                  (PlatformMode) data[i], (OpenShiftBuildStrategy) data[i + 1]);
+            GeneratorContext ctx = new GeneratorContext.Builder()
+                .project(project)
+                .config(new ProcessorConfig())
+                .goalName("fabric8:testing")
+                .logger(logger)
+                .mode((PlatformMode) data[i])
+                .strategy((OpenShiftBuildStrategy) data[i + 1])
+                .build();
 
             final String version = (String) data[i + 2];
             new Expectations() {{

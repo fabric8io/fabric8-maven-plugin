@@ -25,10 +25,10 @@
     <relativePath>../../parent/pom.xml</relativePath>
   </parent>
 
-  <artifactId>fabric8-maven-generator-wildfly-swarm</artifactId>
+  <artifactId>fabric8-maven-generator-vertx</artifactId>
   <version>3.1-SNAPSHOT</version>
 
-  <name>Fabric8 Maven :: Generator :: WildFly Swarm</name>
+  <name>Fabric8 Maven :: Generator :: Vert.x</name>
 
   <dependencies>
     <dependency>
@@ -40,6 +40,7 @@
       <groupId>io.fabric8</groupId>
       <artifactId>fabric8-maven-generator-java-exec</artifactId>
     </dependency>
+
   </dependencies>
 
 </project>
