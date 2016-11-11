@@ -24,7 +24,6 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.config.ProbeConfig;
 import io.fabric8.maven.core.util.Commandline;
 import io.fabric8.utils.Strings;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author roland
@@ -47,9 +46,6 @@ public class ProbeHandler {
             probe.setTimeoutSeconds(timeoutSeconds);
         }
         HTTPGetAction getAction = getHTTPGetAction(probeConfig.getGetUrl());
-        if(StringUtils.isEmpty(getAction.getHost())) {
-            getAction.setHost(null);
-        }
         if (getAction != null) {
             probe.setHttpGet(getAction);
             return probe;
