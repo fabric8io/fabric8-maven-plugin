@@ -40,7 +40,7 @@ import java.util.*;
  * @since 21/09/16
  */
 
-abstract public class JavaExecGenerator extends BaseGenerator {
+public class JavaExecGenerator extends BaseGenerator {
 
     // Environment variable used for specifying a main class
     private static final String JAVA_MAIN_CLASS_ENV_VAR = "JAVA_MAIN_CLASS";
