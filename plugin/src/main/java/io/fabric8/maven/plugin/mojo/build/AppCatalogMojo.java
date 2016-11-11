@@ -109,11 +109,11 @@ public class AppCatalogMojo extends AbstractResourceMojo {
                     annotations.put(APP_CATALOG_ANNOTATION, "true");
                     String name = extractNameFromURL(url, labels);
                     if (name.equals("META-INF")) {
-                        log.debug("Ignoring local build dependency " + url);
+                        log.debug("Ignoring local build dependency %s", url);
                         continue;
                     }
                     if (Strings.isNullOrBlank(name)) {
-                        log.warn("Cannot generate a template name from URL: " + url);
+                        log.warn("Cannot generate a template name from URL: %s", url);
                         continue;
                     }
                     populateLabelsFromResources(resource, labels);
@@ -124,7 +124,7 @@ public class AppCatalogMojo extends AbstractResourceMojo {
                     KubernetesList list = (KubernetesList) resource;
                     List<HasMetadata> items = list.getItems();
                     if (items == null || items.isEmpty()) {
-                        log.warn("Ignoring resource " + url + " as it contains a List which contains no items!");
+                        log.warn("Ignoring resource %s as it contains a List which contains no items!", url);
                         continue;
                     }
                     builder.withObjects(items);
@@ -144,11 +144,11 @@ public class AppCatalogMojo extends AbstractResourceMojo {
                 Template template = (Template) resource;
                 String name = getName(template);
                 if (Strings.isNullOrBlank(name)) {
-                    log.warn("Ignoring Template from " + url + " as it has no name!");
+                    log.warn("Ignoring Template from %s as it has no name!", url);
                     continue;
                 }
                 if (kubernetesTemplates.containsKey(name)) {
-                    log.warn("Found duplicate template named: " + name + " for url: " + url);
+                    log.warn("Found duplicate template named: %s for url: %s", name, url);
                 }
                 kubernetesTemplates.put(name, template);
             }
@@ -165,15 +165,15 @@ public class AppCatalogMojo extends AbstractResourceMojo {
             Map<String, String> annotations = new HashMap<>();
             String name = extractNameFromURL(url, labels);
             if (name.equals("META-INF")) {
-                log.debug("Ignoring local build dependency " + url);
+                log.debug("Ignoring local build dependency %s", url);
                 continue;
             }
             if (Strings.isNullOrBlank(name)) {
-                log.warn("Cannot generate a template name from URL: " + url);
+                log.warn("Cannot generate a template name from URL: %s", url);
                 continue;
             }
             if (kubernetesTemplates.containsKey(name)) {
-                log.info("Ignoring duplicate template " + name + " from url: " + url);
+                log.info("Ignoring duplicate template %s from url: %s", name, url);
                 continue;
             }
             populateLabelsFromResources(resource, labels);
@@ -185,7 +185,7 @@ public class AppCatalogMojo extends AbstractResourceMojo {
                 KubernetesList list = (KubernetesList) resource;
                 List<HasMetadata> items = list.getItems();
                 if (items == null || items.isEmpty()) {
-                    log.warn("Ignoring resource " + url + " as it contains a List which contains no items!");
+                    log.warn("Ignoring resource %s as it contains a List which contains no items!", url);
                     continue;
                 }
                 builder.withObjects(items);
@@ -349,12 +349,12 @@ public class AppCatalogMojo extends AbstractResourceMojo {
                         resource = KubernetesHelper.loadYaml(is, KubernetesResource.class);
                         resourceMap.put(url, resource);
                     } catch (IOException e) {
-                        log.warn("Ignoring resource " + url + " as it could not be parsed: " + e, e);
+                        log.warn("Ignoring resource %s as it could not be parsed: %s", url, e);
                         continue;
                     }
                 }
             } catch (IOException e) {
-                log.warn("Ignoring resource " + url + " as it could not be opened: " + e, e);
+                log.warn("Ignoring resource %s as it could not be opened: %s", url, e);
                 continue;
             }
         }

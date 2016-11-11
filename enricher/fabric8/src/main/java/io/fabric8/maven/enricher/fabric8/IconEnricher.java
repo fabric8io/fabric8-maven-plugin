@@ -125,7 +125,7 @@ public class IconEnricher extends BaseEnricher {
                     }
                 }
             } catch (Exception e) {
-                log.warn("Failed to load icon file: " + e, e);
+                log.warn("Failed to load icon file: %s", e);
             }
         }
         if (Strings.isNullOrBlank(answer)) {
@@ -135,7 +135,7 @@ public class IconEnricher extends BaseEnricher {
                 if (embeddedIcon != null) {
                     return embeddedIcon;
                 } else {
-                    log.warn("Could not resolve iconRef: " + iconRef);
+                    log.warn("Could not resolve iconRef: %s", iconRef);
                 }
             }
         }

@@ -186,9 +186,8 @@ public class ImportMojo extends AbstractFabric8Mojo {
                     Response response = e.getResponse();
                     if (response.getStatus() > 400) {
                         String message = getEntityMessage(response);
-                        log.warn("Could not create the git repository: " + e + message);
-                        log.warn("Are your username and password correct in the Secret " +
-                                secretNamespace + "/" + gogsSecretName + "?");
+                        log.warn("Could not create the git repository: %s %s", e, message);
+                        log.warn("Are your username and password correct in the Secret %s/%s?", secretNamespace, gogsSecretName);
                         log.warn("To re-enter your password rerun this command with -Dfabric8.passsword.retry=true");
 
                         throw new MojoExecutionException("Could not create the git repository. " +
@@ -239,7 +238,7 @@ public class ImportMojo extends AbstractFabric8Mojo {
                 try {
                     answer = prompter.prompt("Would you like to import your local SSH public/private key pair from your ~/.ssh folder? (Y/n)");
                 } catch (PrompterException e) {
-                    log.warn("Failed to get prompt: " + e, e);
+                    log.warn("Failed to get prompt: %s", e);
                 }
                 if (answer != null && answer.trim().startsWith("Y")) {
                     chooseSshKeyPairs(secretData, host);
@@ -307,7 +306,7 @@ public class ImportMojo extends AbstractFabric8Mojo {
         }
 
         if (keyPairs.isEmpty()) {
-            log.warn("No SSH key pairs could be found in " + sshDir + " to choose from!");
+            log.warn("No SSH key pairs could be found in %s to choose from!", sshDir);
             log.warn("You may want to clone the git repository over https:// instead to avoid ssh key pairs?");
         } else {
             if (keyPairs.size() == 0) {
@@ -319,12 +318,12 @@ public class ImportMojo extends AbstractFabric8Mojo {
                 try {
                     privateKey = prompter.prompt("Which public / private key pair do you wish to use for SSH authentication with host: " + host, privateKeys);
                 } catch (PrompterException e) {
-                    log.warn("Failed to get user input: " + e, e);
+                    log.warn("Failed to get user input: %s", e);
                 }
                 if (Strings.isNotBlank(privateKey)) {
                     String publicKey = keyPairs.get(privateKey);
                     if (Strings.isNullOrBlank(publicKey)) {
-                        log.warn("Invalid answer: " + privateKey + " when available values are: " + privateKeys);
+                        log.warn("Invalid answer: %s when available values are: %s", privateKey, privateKeys);
                     } else {
                         importSshKeys(secretData, sshDir, privateKey, publicKey);
                     }
@@ -441,7 +440,7 @@ public class ImportMojo extends AbstractFabric8Mojo {
         try {
             map = GitUtils.parseGitConfig();
         } catch (IOException e) {
-            log.warn("Failed to parse ~/.gitconfig file. " + e, e);
+            log.warn("Failed to parse ~/.gitconfig file. %s", e);
         }
         if (map != null) {
             Properties user = map.get("user");
@@ -567,11 +566,12 @@ public class ImportMojo extends AbstractFabric8Mojo {
             }
         }
         if (runningEndpoints == 0) {
-            log.warn("No running endpoints for service " + ServiceNames.GOGS + " in namespace " + namespace
-                    + ". Please run the `gogs` or the `cd-pipeline` application in the fabric8 console.");
+            log.warn("No running endpoints for service %s in namespace %s. " +
+                     "Please run the `gogs` or the `cd-pipeline` application in the fabric8 console.",
+                    ServiceNames.GOGS, namespace);
             throw new MojoExecutionException("No service " + ServiceNames.GOGS + " running in namespace " + namespace);
         }
-        log.info("Running " + runningEndpoints + " endpoints of " + ServiceNames.GOGS + " in namespace " + namespace);
+        log.info("Running %s endpoints of %s in namespace %s", runningEndpoints, ServiceNames.GOGS, namespace);
         return KubernetesHelper.getServiceURL(kubernetes, ServiceNames.GOGS, namespace, "http", true);
     }
 

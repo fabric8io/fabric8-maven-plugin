@@ -133,7 +133,7 @@ public class MergeEnricher extends BaseEnricher {
                 log.warn("Duplicate resources for " + getKind(item1) + " " + KubernetesHelper.getName(item1) + " from " + KubernetesResourceUtil.location(item1) + " and " + KubernetesResourceUtil.location(item2));
             }
         } catch (MojoExecutionException e) {
-            log.warn("Failed to check if generated an app-catalog: " + e, e);
+            log.warn("Failed to check if generated an app-catalog: %s", e);
         }
         return null;
     }

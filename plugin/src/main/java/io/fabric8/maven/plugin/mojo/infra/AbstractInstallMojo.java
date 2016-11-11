@@ -139,7 +139,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
                 log.info("     [[C]]source ~/%s[[C]]", rcFile.getName());
             }
         } catch (PrompterException e) {
-            log.warn("Failed to ask user prompt: " + e, e);
+            log.warn("Failed to ask user prompt: %s", e);
         }
     }
 

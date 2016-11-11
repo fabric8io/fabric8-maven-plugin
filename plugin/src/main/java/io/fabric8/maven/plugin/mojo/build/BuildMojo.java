@@ -724,7 +724,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
         if (source != null) {
             String sourceType = source.getType();
             if (!Objects.equals("Binary", sourceType)) {
-                log.warn("BuildConfig " + buildName + " is not of type: 'Binary' but is '" + sourceType + "' !");
+                log.warn("BuildConfig %s is not of type: 'Binary' but is '%s' !", buildName, sourceType);
             }
         }
     }
