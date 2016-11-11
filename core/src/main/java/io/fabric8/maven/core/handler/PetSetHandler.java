@@ -36,14 +36,14 @@ public class PetSetHandler {
 
     private ObjectMeta createPetSetMetaData(ResourceConfig config) {
         return new ObjectMetaBuilder()
-                .withName(KubernetesHelper.validateKubernetesId(config.getReplicaSetName(), "replica set name"))
+                .withName(KubernetesHelper.validateKubernetesId(config.getControllerName(), "controller name"))
                 .build();
     }
 
     private PetSetSpec createPetSetSpec(ResourceConfig config, List<ImageConfiguration> images) {
         return new PetSetSpecBuilder()
                 .withReplicas(config.getReplicas())
-                .withServiceName(config.getReplicaSetName())
+                .withServiceName(config.getControllerName())
                 .withTemplate(podTemplateHandler.getPodTemplate(config,images))
                 .build();
     }

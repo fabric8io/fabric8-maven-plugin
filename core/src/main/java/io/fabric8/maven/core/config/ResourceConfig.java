@@ -41,7 +41,7 @@ public class ResourceConfig {
     private List<VolumeConfig> volumes;
 
     @Parameter(defaultValue = "${project.artifactId}")
-    private String replicaSetName;
+    private String controllerName;
 
     @Parameter
     private List<ServiceConfig> services;
@@ -118,8 +118,8 @@ public class ResourceConfig {
         return imagePullPolicy;
     }
 
-    public String getReplicaSetName() {
-        return replicaSetName;
+    public String getControllerName() {
+        return controllerName;
     }
 
     public Map<String, Integer> getPorts() {
@@ -143,8 +143,8 @@ public class ResourceConfig {
     public static class Builder {
         private ResourceConfig config = new ResourceConfig();
 
-        public Builder replicaSetName(String name) {
-            config.replicaSetName = name;
+        public Builder controllerName(String name) {
+            config.controllerName = name;
             return this;
         }
 

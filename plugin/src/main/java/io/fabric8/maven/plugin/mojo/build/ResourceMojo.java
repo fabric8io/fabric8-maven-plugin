@@ -668,7 +668,7 @@ public class ResourceMojo extends AbstractResourceMojo {
     private void addController(KubernetesListBuilder builder, List<ImageConfiguration> images) {
         // TODO: Change to ReplicaSet
         ReplicationControllerHandler rcHandler = handlerHub.getReplicationControllerHandler();
-        if (resources.getReplicaSetName() != null) {
+        if (resources.getControllerName() != null) {
             builder.addToReplicationControllerItems(rcHandler.getReplicationController(resources, images));
         }
     }

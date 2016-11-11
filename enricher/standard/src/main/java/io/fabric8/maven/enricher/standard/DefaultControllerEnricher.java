@@ -86,7 +86,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
         final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject()));
         ResourceConfig config =
             new ResourceConfig.Builder()
-                .replicaSetName(name)
+                .controllerName(name)
                 .imagePullPolicy(getConfig(Config.pullPolicy))
                 .build();
 

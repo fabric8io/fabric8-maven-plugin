@@ -33,7 +33,7 @@ public class DaemonSetHandler {
 
     private ObjectMeta createDaemonSetMetaData(ResourceConfig config) {
         return new ObjectMetaBuilder()
-                .withName(KubernetesHelper.validateKubernetesId(config.getReplicaSetName(), "replica set name"))
+                .withName(KubernetesHelper.validateKubernetesId(config.getControllerName(), "controller name"))
                 .build();
     }
 

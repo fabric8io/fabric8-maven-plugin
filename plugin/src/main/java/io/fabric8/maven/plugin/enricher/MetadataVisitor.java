@@ -253,7 +253,7 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected Kind getKind() {
-            return Kind.DAEMON_SET;
+            return Kind.PET_SET;
         }
 
         @Override
