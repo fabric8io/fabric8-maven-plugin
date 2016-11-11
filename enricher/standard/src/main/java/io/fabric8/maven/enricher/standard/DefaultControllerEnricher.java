@@ -16,6 +16,8 @@
 
 package io.fabric8.maven.enricher.standard;
 
+import java.util.List;
+
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodSpec;
@@ -33,8 +35,10 @@ import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.utils.Lists;
 
 /**
  * Enrich with controller if not already present.
@@ -87,20 +91,26 @@ public class DefaultControllerEnricher extends BaseEnricher {
                 .replicaSetName(defaultName)
                 .imagePullPolicy(getConfig(Config.pullPolicy))
                 .build();
-        final Deployment defaultDeployment = deployHandler.getDeployment(config, getImages());
+
+        final List<ImageConfiguration> images = getImages();
+
+        final Deployment defaultDeployment = deployHandler.getDeployment(config, images);
 
         // Check if at least a replica set is added. If not add a default one
         if (!KubernetesResourceUtil.checkForKind(builder, POD_CONTROLLER_KINDS)) {
-            String type = getConfig(Config.type);
-            if (type.equalsIgnoreCase("deployment")) {
-                log.info("Adding a default Deployment");
-                builder.addToDeploymentItems(defaultDeployment);
-            } else if (type.equalsIgnoreCase("replicaSet")) {
-                log.info("Adding a default ReplicaSet");
-                builder.addToReplicaSetItems(rsHandler.getReplicaSet(config, getImages()));
-            } else if (type.equalsIgnoreCase("replicationController")) {
-                log.info("Adding a default ReplicationController");
-                builder.addToReplicationControllerItems(rcHandler.getReplicationController(config, getImages()));
+            // At least one image must be present, otherwise the resulting config will be invalid
+            if (!Lists.isNullOrEmpty(images)) {
+                String type = getConfig(Config.type);
+                if (type.equalsIgnoreCase("deployment")) {
+                    log.info("Adding a default Deployment");
+                    builder.addToDeploymentItems(defaultDeployment);
+                } else if (type.equalsIgnoreCase("replicaSet")) {
+                    log.info("Adding a default ReplicaSet");
+                    builder.addToReplicaSetItems(rsHandler.getReplicaSet(config, images));
+                } else if (type.equalsIgnoreCase("replicationController")) {
+                    log.info("Adding a default ReplicationController");
+                    builder.addToReplicationControllerItems(rcHandler.getReplicationController(config, images));
+                }
             }
         } else {
             final DeploymentSpec spec = defaultDeployment.getSpec();
