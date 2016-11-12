@@ -1,0 +1,28 @@
+[[generator-spring-boot]]
+=== Spring Boot
+
+This generator is called `spring-boot` and gets activated when it finds a `spring-boot-maven-plugin` in the pom.xml.
+
+This generator is based on the <<generator-java-exec, Java Application>> Generator and inherits all of its configuration values. It also uses the same default images as the <<generator-java-exec-from, java-exec Generator>>.
+
+Beside the  <<generator-options-common, common generator options>> and the <<generator-java-exec-options, java-exec options>> the following additional configuration is recognized:
+
+.Spring-Boot configuration options
+[cols="1,6,1"]
+|===
+| Element | Description | Default
+
+| *color*
+| If seth force the use of color in the Spring Boot console output.
+|
+|===
+
+The generator works differently when called together with `fabric8:watch`.
+In that case it enables support for http://docs.spring.io/spring-boot/docs/current/reference/html/using-boot-devtools.html[Spring Boot Developer Tools] which allows for hot reloading of the Spring Bott app.
+In particular, the following steps are performed:
+
+* If a secret token is not provided within the Spring Boot application configuration `appliction.properties` or `application.yml` with the key `spring.devtools.remote.secret` then a custom secret token is created and added to `application.properties`
+* Copy over a `spring-boot-devtools.jar` into `BOOT-INF/lib/spring-devtools.jar` of the generate fat jar.
+
+Since during `fabric8:watch` the application itself within the `target/` directory is modified for allowing easy reloading you must ensure that you do a `mvn clean` before building an artefact which should be put into production.
+Since the released version are typically generated with a CI system which does a clean build anyway this should be only a theoretical problem.

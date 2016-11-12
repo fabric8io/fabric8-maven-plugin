@@ -2,349 +2,50 @@
 [[generators]]
 = Generators
 
-The usual way to define Docker images is with the plugin configuration as explained in <<fabric8:build>>. This can either be done completely within the `pom.xml` or by refering to an external Dockerfile. Since fabric8-maven-plugin includes https://github.com/fabric8io/docker-maven-plugin[docker-maven-plugin] the way how images are built is identical.
-
-However, this plugin provides an additional route for defining image configurations. This is done by so called _Generators_. A generator is a Java component providing an auto-detection mechanism for certain build types like a Spring Boot build or a plain Java build. As soon as a _Generator_ detects that it is applicable it will be called with the list of images configured in the `pom.xml`. Typically a generator only creates dynamically a new image configuration if this list is empty. But a generator is free to also add new images to an existing list or even change the current image list.
-
-You can easily create your own generator as explained in <<generators-api, Generator API>>. This section will focus on existing generators and how you can configure them.
-
-The included _Generators_ are enabled by default, but you can easily disable them or only select a certain set of generators. Each generator has a _name_, which is unique for a generator.
-
-The generator configuration is embedded in a `<generator>` configuration section:
-
-[[generator-example]]
-.Example for a generator configuration
-[source,xml,indent=0,subs="verbatim,quotes,attributes"]
-----
-<plugin>
-  ....
-  <configuration>
-    ....
-    <generator> <!--1-->
-      <includes> <!--2-->
-        <include>spring-boot</include>
-      </includes>
-      <config> <!--3-->
-        <spring-boot> <!--4-->
-          <alias>ping</alias>
-        </spring-boot>
-      </config>
-    </generator>
-  </configuration>
-</plugin>
-----
-<1> Start of generators' configuration.
-<2> Generators can be included and excluded. Includes have precedence, and the generators are called in the given order.
-<3> Configuration for individual generators.
-<4> The config is a map of supported config values. Each section is embedded in a tag named after the generator.
-
-The following sub-elements are supported:
-
-.Generator configuration
-[cols="1,6"]
-|===
-| Element | Description
-
-| `<includes>`
-| Contains one ore more `<include>` elements with generator names which should be included. If given only this list of generators are included in this given order. The order is important because by default only the first matching generator kicks in.
-
-| `<excludes>`
-| Holds one or more `<exclude>` elements with generator names to exclude. If set then all detected generators are used except the ones mentioned in this section.
-
-| `<config>`
-| Configuration for all generators. Each generator support a specific set of configuration values as described in the documentation. The subelements of this section are generator names to configure. E.g. for generator `spring-boot`, the sub-element is called `<spring-boot>`. This element then holds the specific generator configuration like `<name>` for specifying the final image name. See above for an example.
-|===
-
-Beside ny specifying generator configuration in the plugin's configuration it can be set directly with properties, too:
-
-.Example generator property config
-[source, sh]
-----
-mvn -Dfabric8.generator.spring-boot.alias="myapp"
-----
-
-The general scheme is a prefix `fabric8.generator.` followed by the unique generator name and then the generator specific key.
-
-In addition to the provided default _Generators_ described in the next secion <<generators-fabric8, Fabric8 Generators>>, custom generators can be easily added. There are two ways to include generators:
-
-.Plugin dependency
-
-You can declare the generator holding jars as dependency to this plugin as shown in this example
-
-[source, xml]
-----
-<plugin>
-  <artifactId>fabric8-maven-plugin</artifactId>
-  ....
-  <dependencies>
-    <dependency>
-      <groupId>io.acme</groupId>
-      <artifactId>mygenerator</artifactId>
-      <version>1.0</version>
-    <dependency>
-  </dependencies>
-</plugin>
-----
-
-.Compile time dependency
-
-Alternatively and if your application code comes with a custom generator you can set the global configuration option `useProjectClasspath` (property: `fabric8.useProjectClasspath`) to true. In this case also the project artifact and its dependencies are looked up for _Generators_. See <<generators-api, Generator API>> for details how to write your own generators.
+include::generator/_overview.adoc[]
 
 [[generators-default]]
 == Default Generators
 
-All default generators examine the build information for certain aspects and generate a Docker build configuration on the fly. They can be configured to a certrain degree, where the configuration is generator specific.
+All default generators examine the build information for certain aspects and generate a Docker build configuration on the fly. They can be configured to a certain degree, where the configuration is generator specific.
 
-There are some configuration options which are shared by all generators:
-
-[[generator-options-common]]
-.Common generator options
-[cols="1,6,1"]
+.Default Generators
+[cols="1,1,4"]
 |===
-| Element | Description | Property
+| Generator | Name | Description
 
-| *add*
-| When this set to `true`, then the generator _adds_ to an existing image configuration. By default this is disabled, so that a generator only kicks in when there are no other image configurations in the build, which are either configured directly for a `fabric8:build` or already added by a generator which has been run previously.
-|
+| <<generator-java-exec,Java Applications>>
+| `java-exec`
+| Generic generator for flat classpath and fat-jar Java applications
 
-| *alias*
-| An alias name for referencing this image in various other parts of the configuration. This is also used in the log output. The default alias name is the name of the generator.
-| `fabric8.generator.alias`
+| <<generator-spring-boot,Spring Boot>>
+| `spring-boot`
+| Spring Boot specific generator
 
-| *from*
-| This is the base image from where to start when creating the images. By default the generators make an opinionated decision for the base image which are described in the respective generator section.
-| `fabric8.generator.from`
+| <<generator-wildfly-swarm,Wildfly Swarm>>
+| `wildfly-swarm`
+| Generator for Wildfly Swarm apps
 
-| *name*
-| The Docker image name used when doing Docker builds. For OpenShift S2I builds its the name of the image stream. This can be a pattern as descibed in <<image-name-placeholders, Name Placeholders>>. The default is `%g/%a:%l`.
-| `fabric8.generator.name`
-|===
+| <<generator-vertx,Vert.x>>
+| `vertx`
+| Generator for Vert.x applications
 
-When used as properties they can be directly referenced with the property names above.
+| <<generator-karaf,Karaf>>
+| `karaf`
+| Generator for Karaf based appps
 
-[[generator-java-exec]]
-=== Java Applications (java-exec)
-
-One of the most generic _Generators_ is the `java-exec`.
-It is responsible to start up arbitrary Java application.
-It knows how to deal with fat-jar applications where the application and all dependencies are included within a single jar and the `MANIFEST.MF` within the jar references a main class.
-But also flat classpath applications, where the dependencies are separate jar files and a main class is given.
-
-If no main class is explicitely configured, first a fat jar is tried to be found.
-If the Maven build creates a JAR file with a `META-INF/MANIFEST.MF` containing a `Main-Class´` entry, then this is considered to be the fat jar to use.
-If there are more than one of such files then the largest is taken.
-
-If a main class is configured (see below) then the image configuration will contain the application jar plus all dependency jars.
-If no main clasas is configured but also not fat jar is detected, then this _Generator_ tries to detect a single main class by searching for `public static void main(String args[])` among the application classes. If exactly one class is found this is considered to be the main class. If no or more than one is found the _Generator_ finally does nothing.
-
-It will use the following base image by default, but as explained <<generator-options-common, above>> and can be changed with the `from` configuration.
-
-[[generator-java-exec-from]]
-.Java Base Images
-[cols="1,4,4"]
-|===
-| | Docker Build | S2I Build
-
-| *Community*
-| `fabric8/java-alpine-openjdk8-jdk`
-| `fabric8/s2i-java`
-
-| *Red Hat*
-| `jboss-fuse-6/fis-java-openshift`
-| `jboss-fuse-6/fis-java-openshift`
+| <<generator-webapp,Web applications>>
+| `webapps`
+| Generator for WAR based applications supporting Tomcat, Jetty and Wildfly base images
 |===
 
-These images refer always to the latest tag. The _Red Hat_ base images are selected, when the plugin itself is a Red Hat supported version (which is detected by the plugins version number).
+include::generator/_options_common.adoc[]
 
-Beside the common configuration parameters described in the table <<generator-options-common, Commong Generator Options>> the following additional configuration options are recognized:
+include::generator/_java_exec.adoc[]
+include::generator/_spring_boot.adoc[]
+include::generator/_wildfly_swarm.adoc[]
+include::generator/_vertx.adoc[]
+include::generator/_karaf.adoc[]
+include::generator/_webapp.adoc[]
 
-.Java Application configuration options
-[cols="1,6,1"]
-|===
-| Element | Description | Default
-
-| *assemblyRef*
-| If a reference to an assembly is given, then this is used without trying to detect the artifacts to include.
-|
-| *baseDir*
-| Directory within the generated image where to put the detected artefacts into. Change this only if the base image is changed, too.
-| `/deployments`
-
-| *jolokiaPort*
-| Port of the Jolokia agent exposed by the base image. Set this to 0 if you don't want to expose the Jolokia port.
-| 8778
-
-| *mainClass*
-| Main class to call. If not given first a check is performed to detect a fat-jar (see above). Next a class is tried to be found by scanning `target/classes` for a single class with a main method. If no if found or more than one is found, then this generator does nothing.
-|
-
-| *prometheusPort*
-| Port of the Prometheus jmx_exporter exposed by the base image. Set this to 0 if you don't want to expose the Jolokia port.
-| 9779
-
-| *webPort*
-| Port to expose as service, which is supposed to be the port of a web application. Set this to 0 if you don't want to expose a port.
-| 8080
-|===
-
-The exposed ports are typically later on use by <<enrichers, Enrichers>> to create default Kubernetes or OpenShift services.
-
-[[generator-spring-boot]]
-=== Spring Boot (spring-boot)
-
-This generator is called `spring-boot` and gets activated when it finds a `spring-boot-maven-plugin` in the pom.xml.
-
-This generator is based on the <<generator-java-exec, Java Application>> Generator and inherits all of its configuration values. It also uses the same default images as the <<generator-java-exec-from, java-exec Generator>>.
-
-The following additional configuration options can be set:
-
-.Spring-Boot configuration options
-[cols="1,6,1"]
-|===
-| Element | Description | Default
-
-| *color*
-| If seth force the use of color in the Spring Boot console output.
-|
-|===
-
-The generator works differently when called together with `fabric8:watch`.
-In that case it enables support for http://docs.spring.io/spring-boot/docs/current/reference/html/using-boot-devtools.html[Spring Boot Developer Tools] which allows for hot reloading of the Spring Bott app.
-In particular, the following steps are performed:
-
-* If a secret token is not provided within the Spring Boot application configuration `appliction.properties` or `application.yml` with the key `spring.devtools.remote.secret` then a custom secret token is created and added to `application.properties`
-* Copy over a `spring-boot-devtools.jar` into `BOOT-INF/lib/spring-devtools.jar` of the generate fat jar.
-
-Since during `fabric8:watch` the application itself within the `target/` directory is modified for allowing easy reloading you must ensure that you do a `mvn clean` before building an artefact which should be put into production.
-Since the released version are typically generated with a CI system which does a clean build anyway this should be only a theoretical problem.
-
-[[generator-wildfly-swarm]]
-=== Wildfly Swarm (wildfly-swarm)
-
-The Wildfly-Swarm generator detects a wildlfy swarm build an enables some workaround to disable Jolokia because of this https://issues.jboss.org/browse/SWARM-204[issue]. This will be fixed with a workaround in a new Jolokia agent.
-
-Otherwise this generator is identical to the <<generator-java-exec,java-exec generator>>.
-
-[[generator-vertx]]
-=== Vert.x (vertx)
-
-[CAUTION]
-====
-Vert.x specific features like detecting metrics for exposing an health check has not yet been added yet. Up to now its the same as the <<generator-java-exec, java-exec generator>>.
-====
-
-[[generator-karaf]]
-=== Karaf (karaf)
-
-This generator named `karaf` kicks in when the build uses a `karaf-maven-plugin`. By default the following base images are used:
-
-[[generator-karaf-from]]
-.Karaf Base Images
-[cols="1,4,4"]
-|===
-| | Docker Build | S2I Build
-
-| *Community*
-| `fabric8/s2i-karaf`
-| `fabric8/s2i-karaf`
-
-| *Red Hat*
-| `jboss-fuse-6/fis-karaf-openshift`
-| `jboss-fuse-6/fis-karaf-openshift`
-|===
-
-In addition this generator can be configued with the following options:
-
-.Karaf configuration options
-[cols="1,6,1"]
-|===
-| Element | Description | Default
-
-| *baseDir*
-| Directory within the generated image where to put the detected artefacts into. Change this only if the base image is changed, too.
-| `/deployments`
-
-| *jolokiaPort*
-| Port of the Jolokia agent exposed by the base image. Set this to 0 if you don't want to expose the Jolokia port.
-| 8778
-
-| *mainClass*
-| Main class to call. If not given first a check is performed to detect a fat-jar (see above). Next a class is tried to be found by scanning `target/classes` for a single class with a main method. If no if found or more than one is found, then this generator does nothing.
-|
-
-| *user*
-| User and/or group under which the files should be added. The syntax of this options is descriped in <<config-image-build-assembly-user, Assembly Configuration>>.
-| `jboss:jboss:jboss`
-
-| *webPort*
-| Port to expose as service, which is supposed to be the port of a web application. Set this to 0 if you don't want to expose a port.
-| 8080
-|===
-
-[[generator-webapp]]
-=== Web Application (webapp)
-
-The `webapp` generator tries to detect WAR builds and selects a base servlet container image based on the configuration found in the `pom.xml`:
-
-* A **Tomcat** base image is selected when a `tomcat6-maven-plugin` or `tomcat7-maven-plugin` is present or when a `META-INF/context.xml` could be found in the classes directory.
-* A **Jetty** base image is selected when a `jetty-maven-plugin` is present or one of the files `WEB-INF/jetty-web.xml` or `WEB-INF/jetty-logging.properties` is found.
-* A **Wildfly** base image is chosen for a given `jboss-as-maven-plugin` or `wildfly-maven-plugin` or when a Wildfly specific deployment descriptor like `jboss-web.xml` is found.
-
-The base images chosen are:
-
-[[generator-webapp-from]]
-.Webapp Base Images
-[cols="1,4,4"]
-|===
-| | Docker Build | S2I Build
-
-| *Tomcaty*
-| `fabric8/tomcat-8`
-| ---
-
-| *Jetty*
-| `fabric8/jetty-9`
-| ---
-
-| *Wildfly*
-| `jboss/wildfly`
-| ---
-|===
-
-[IMPORTANT]
-====
-S2I builds are currently not yet supported for the webapp generator.
-====
-
-The image generation can be influenced with the following options:
-
-.Webapp configuration options
-[cols="1,6,1"]
-|===
-| Element | Description | Default
-
-| *server*
-| Fix server to use in the base image. Can be either **tomcat**, **jetty** or **wildfly**
-|
-
-| *deploymentDir*
-| Where to put the war file into the target image. By default its selected by the base image chosen but can be overwritten with this option.
-|
-
-| *user*
-| User and/or group under which the files should be added. The syntax of this options is descriped in <<config-image-build-assembly-user, Assembly Configuration>>.
-|
-
-| *cmd*
-| Command to use to start the container. By default the base images startup command is used.
-|
-
-| *ports*
-| Comma separated list of ports to expose in the image and which eventually are translated later to Kubernertes services. The ports depend on the base image and are selecte automatically. But they can be overwritten here.
-|
-|===
-
-[[generators-api]]
-== Generator API
-
-WARNING: The API is still a bit in flux and will be documented later. Please refer to the  https://github.com/fabric8io/fabric8-maven-plugin/blob/master/generator/api/src/main/java/io/fabric8/maven/generator/api/Generator.java[Generator] Interface in the meantime.
+include::generator/_api.adoc[]
