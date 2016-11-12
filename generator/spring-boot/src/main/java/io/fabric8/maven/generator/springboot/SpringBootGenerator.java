@@ -22,26 +22,23 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
+import io.fabric8.maven.generator.javaexec.FatJarDetector;
 import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
-import io.fabric8.utils.IOHelpers;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.UUID;
+import java.nio.file.*;
+import java.util.*;
 
 import static io.fabric8.maven.core.util.SpringBootProperties.DEV_TOOLS_REMOTE_SECRET;
-import static io.fabric8.maven.generator.javaexec.JavaExecGenerator.Config.fatJar;
 import static io.fabric8.maven.generator.springboot.SpringBootGenerator.Config.color;
 
 /**
@@ -50,11 +47,11 @@ import static io.fabric8.maven.generator.springboot.SpringBootGenerator.Config.c
  */
 public class SpringBootGenerator extends JavaExecGenerator {
 
-    public static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
-    private Boolean springBootRepackage;
+    private static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
+    private static final String SPRING_BOOT_DEVTOOLS_ENTRY = "fabric8-spring-devtools/spring-boot-devtools.jar";
 
     public enum Config implements Configs.Key {
-        color;
+        color {{ d = "false"; }};
 
         public String def() { return d; } protected String d;
     }
@@ -69,60 +66,18 @@ public class SpringBootGenerator extends JavaExecGenerator {
     }
 
     @Override
-    public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean prePackagePhase) throws MojoExecutionException {
-        if (!prePackagePhase && getContext().isWatchMode()) {
-            generateSpringDevToolsToken();
-            addDevToolsJar(configs);
+    public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean isPrePackagePhase) throws MojoExecutionException {
+        if (!isPrePackagePhase && getContext().isWatchMode()) {
+            ensureSpringDevToolSecretToken();
+            addDevToolsToFatJar(configs);
         }
-        return super.customize(configs, prePackagePhase);
-    }
-
-    private void generateSpringDevToolsToken() throws MojoExecutionException {
-        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getProject());
-        String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET);
-        if (Strings.isNullOrEmpty(remoteSecret)) {
-            String newToken = UUID.randomUUID().toString();
-            log.verbose("Generating the spring devtools token in property: " + DEV_TOOLS_REMOTE_SECRET);
-
-            File file = new File(getProject().getBasedir(), "target/classes/application.properties");
-            file.getParentFile().mkdirs();
-            String text = "# lets configure the spring devtools remote secret\nspring.devtools.remote.secret=" + newToken + "\n";
-
-            if (file.exists()) {
-                text = "\n" + text;
-            }
-            try (FileWriter writer = new FileWriter(file, true)) {
-                writer.append(text);
-            } catch (IOException e) {
-                throw new MojoExecutionException("Failed to append to file: " + file + ". " + e, e);
-            }
-        }
-    }
-
-    private void addDevToolsJar(List<ImageConfiguration> configs) throws MojoExecutionException {
-        if (Objects.equals("fabric8:resource", getContext().getGoalName()) && isFatJar()) {
-            MavenProject project = getProject();
-            File basedir = project.getBasedir();
-            File outputFile = new File(basedir, "target/classes/BOOT-INF/lib/spring-devtools.jar");
-            outputFile.getParentFile().mkdirs();
-
-            String resourceName = "fabric8-spring-devtools/spring-boot-devtools.jar";
-            URL resource = getClass().getClassLoader().getResource(resourceName);
-            if (resource == null) {
-                throw new MojoExecutionException("Could not find resource " + resourceName + " on the classpath!");
-            }
-            try {
-                IOHelpers.copy(resource.openStream(), new FileOutputStream(outputFile));
-            } catch (IOException e) {
-                throw new MojoExecutionException("Failed to copy " + resource + " to temp file " + outputFile + ". " + e, e);
-            }
-        }
+        return super.customize(configs, isPrePackagePhase);
     }
 
     @Override
     protected Map<String, String> getEnv(boolean isPrePackagePhase) throws MojoExecutionException {
         Map<String, String> ret = super.getEnv(isPrePackagePhase);
-        if (getConfig(color) != null) {
+        if (Boolean.parseBoolean(getConfig(color))) {
             ret.put("JAVA_OPTIONS","-Dspring.output.ansi.enabled=" + getConfig(color));
         }
         return ret;
@@ -130,37 +85,104 @@ public class SpringBootGenerator extends JavaExecGenerator {
 
     @Override
     protected boolean isFatJar() throws MojoExecutionException {
-        String fatJarConfig = getConfig(fatJar);
-        if (Strings.isNullOrEmpty(fatJarConfig)) {
-            boolean springBootRepackage = isSpringBootRepackage();
-            if (springBootRepackage) {
-                return true;
-            }
+        if (!hasMainClass() && isSpringBootRepackage()) {
+            return true;
         }
         return super.isFatJar();
     }
 
-    protected boolean isSpringBootRepackage() {
-        if (springBootRepackage == null) {
-            springBootRepackage = false;
-            MavenProject project = getProject();
-            if (project != null) {
-                Plugin plugin = project.getPlugin(SPRING_BOOT_MAVEN_PLUGIN_GA);
-                if (plugin != null) {
-                    Map<String, PluginExecution> executionsAsMap = plugin.getExecutionsAsMap();
-                    if (executionsAsMap != null) {
-                        for (PluginExecution execution : executionsAsMap.values()) {
-                            List<String> goals = execution.getGoals();
-                            if (goals.contains("repackage")) {
-                                springBootRepackage = true;
-                                log.verbose("Using fat jar packaging as the spring boot plugin is using `repackage` goal execution");
-                                break;
-                            }
-                        }
+    // =============================================================================
+
+    private void ensureSpringDevToolSecretToken() throws MojoExecutionException {
+        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getProject());
+        String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET);
+        if (Strings.isNullOrEmpty(remoteSecret)) {
+            addSecretTokenToApplicationProperties();
+        }
+    }
+
+    private void addDevToolsToFatJar(List<ImageConfiguration> configs) throws MojoExecutionException {
+        if (isFatJar()) {
+            File target = getFatJarFile();
+            String devToolsFile = getDevToolsJarContainingJarFile();
+            try (FileSystem devToolsJarFs = FileSystems.newFileSystem(new URI("jar:" + devToolsFile),
+                                                                      Collections.<String,String>emptyMap())) {
+                Path resourcePath = devToolsJarFs.getPath(SPRING_BOOT_DEVTOOLS_ENTRY);
+                URI targetUri = new URI("jar:file:" + target.getAbsolutePath());
+                copyDevToolsJarToFatTargetJar(resourcePath, targetUri);
+            } catch (URISyntaxException | IOException e) {
+                throw new MojoExecutionException("Failed to add " + SPRING_BOOT_DEVTOOLS_ENTRY + " to temp file " + target + ". " + e, e);
+            }
+        }
+    }
+
+    private File getFatJarFile() throws MojoExecutionException {
+        FatJarDetector.Result fatJarDetectResult = detectFatJar();
+        if (fatJarDetectResult == null) {
+            throw new MojoExecutionException("No fat jar built yet. Please ensure that the 'package' phase has run");
+        }
+        return fatJarDetectResult.getArchiveFile();
+    }
+
+    private String getDevToolsJarContainingJarFile() throws MojoExecutionException {
+        URL resource = getClass().getClassLoader().getResource(SPRING_BOOT_DEVTOOLS_ENTRY);
+        if (resource == null) {
+            throw new MojoExecutionException("Could not find resource " + SPRING_BOOT_DEVTOOLS_ENTRY + " on the classpath!");
+        }
+        try {
+            String all = resource.toURI().getRawSchemeSpecificPart();
+            int idx = all.indexOf("!/");
+            if(idx == -1) {
+                throw new MojoExecutionException("Internal error: Cannot extract tools jar from internal jar");
+            }
+            return all.substring(0,idx);
+        } catch (URISyntaxException e) {
+            throw new MojoExecutionException("Invalid URI syntax of " + resource, e);
+        }
+    }
+
+    private void copyDevToolsJarToFatTargetJar(Path resourcePath, URI uri) throws IOException {
+        try (FileSystem jarfs = FileSystems.newFileSystem(uri, Collections.<String,String>emptyMap())) {
+            // copy a file into the Jara file
+            Files.copy(resourcePath, jarfs.getPath("/BOOT-INF/lib/spring-devtools.jar"), StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    private void addSecretTokenToApplicationProperties() throws MojoExecutionException {
+        String newToken = UUID.randomUUID().toString();
+        log.verbose("Generating the spring devtools token in property: " + DEV_TOOLS_REMOTE_SECRET);
+
+        // We always add to application.properties, even when an application.yml exists, since both
+        // files are evaluated by Spring Boot.
+        File file = new File(getProject().getBasedir(), "target/classes/application.properties");
+        file.getParentFile().mkdirs();
+        String text = String.format("%s" +
+                                    "# Remote secret added by fabric8-maven-plugin\n" +
+                                    "%s=%s\n",
+                                    file.exists() ? "\n" : "", DEV_TOOLS_REMOTE_SECRET, newToken);
+
+        try (FileWriter writer = new FileWriter(file, true)) {
+            writer.append(text);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to append to file: " + file + ". " + e, e);
+        }
+    }
+
+    private boolean isSpringBootRepackage() {
+        MavenProject project = getProject();
+        Plugin plugin = project.getPlugin(SPRING_BOOT_MAVEN_PLUGIN_GA);
+        if (plugin != null) {
+            Map<String, PluginExecution> executionsAsMap = plugin.getExecutionsAsMap();
+            if (executionsAsMap != null) {
+                for (PluginExecution execution : executionsAsMap.values()) {
+                    List<String> goals = execution.getGoals();
+                    if (goals.contains("repackage")) {
+                        log.verbose("Using fat jar packaging as the spring boot plugin is using `repackage` goal execution");
+                        return true;
                     }
                 }
             }
         }
-        return springBootRepackage;
+        return false;
     }
 }

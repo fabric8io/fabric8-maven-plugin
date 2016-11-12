@@ -77,11 +77,8 @@ public class JavaExecGenerator extends BaseGenerator {
         // to find a main class within target/classes.
         mainClass,
 
-        // Reference to a predefined assembly descriptor to use. By deafult it is tried to be detected
-        assemblyRef,
-
-        // Force it to be a fat jar. Otherwise the generator tries to detect.
-        fatJar;
+        // Reference to a predefined assembly descriptor to use. By defult it is tried to be detected
+        assemblyRef;
 
         public String def() { return d; } protected String d;
     }
@@ -189,11 +186,11 @@ public class JavaExecGenerator extends BaseGenerator {
     }
 
     protected boolean isFatJar() throws MojoExecutionException {
-        String isFatJar = getConfig(Config.fatJar);
-        if (isFatJar != null) {
-            return Boolean.parseBoolean(isFatJar);
-        }
-        return detectFatJar() != null;
+        return !hasMainClass() && detectFatJar() != null;
+    }
+
+    protected boolean hasMainClass() {
+        return Boolean.parseBoolean(getConfig(Config.mainClass,"false"));
     }
 
     public FatJarDetector.Result detectFatJar() throws MojoExecutionException {
