@@ -7,7 +7,7 @@ It knows how to deal with fat-jar applications where the application and all dep
 But also flat classpath applications, where the dependencies are separate jar files and a main class is given.
 
 If no main class is explicitely configured, first a fat jar is tried to be found.
-If the Maven build creates a JAR file with a `META-INF/MANIFEST.MF` containing a `Main-Class´` entry, then this is considered to be the fat jar to use.
+If the Maven build creates a JAR file with a `META-INF/MANIFEST.MF` containing a `Main-Class` entry, then this is considered to be the fat jar to use.
 If there are more than one of such files then the largest is taken.
 
 If a main class is configured (see below) then the image configuration will contain the application jar plus all dependency jars.
