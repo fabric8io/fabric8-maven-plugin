@@ -1,0 +1,7 @@
+[[generator-vertx]]
+=== Vert.x
+
+[CAUTION]
+====
+Vert.x specific features like detecting metrics for exposing an health check has not yet been added yet. Up to now its the same as the <<generator-java-exec, java-exec generator>>.
+====

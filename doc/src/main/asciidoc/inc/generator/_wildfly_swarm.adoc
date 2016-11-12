@@ -1,0 +1,6 @@
+[[generator-wildfly-swarm]]
+=== Wildfly Swarm
+
+The Wildfly-Swarm generator detects a wildlfy swarm build an enables some workaround to disable Jolokia because of this https://issues.jboss.org/browse/SWARM-204[issue]. This will be fixed with a workaround in a new Jolokia agent.
+
+Otherwise this generator is identical to the <<generator-java-exec,java-exec generator>>. It supports the  <<generator-options-common, common generator options>> and the <<generator-java-exec-options, `java-exec` options>>.

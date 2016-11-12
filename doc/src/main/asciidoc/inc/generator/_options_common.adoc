@@ -1,0 +1,26 @@
+There are some configuration options which are shared by all generators:
+
+[[generator-options-common]]
+.Common generator options
+[cols="1,6,1"]
+|===
+| Element | Description | Property
+
+| *add*
+| When this set to `true`, then the generator _adds_ to an existing image configuration. By default this is disabled, so that a generator only kicks in when there are no other image configurations in the build, which are either configured directly for a `fabric8:build` or already added by a generator which has been run previously.
+|
+
+| *alias*
+| An alias name for referencing this image in various other parts of the configuration. This is also used in the log output. The default alias name is the name of the generator.
+| `fabric8.generator.alias`
+
+| *from*
+| This is the base image from where to start when creating the images. By default the generators make an opinionated decision for the base image which are described in the respective generator section.
+| `fabric8.generator.from`
+
+| *name*
+| The Docker image name used when doing Docker builds. For OpenShift S2I builds its the name of the image stream. This can be a pattern as descibed in <<image-name-placeholders, Name Placeholders>>. The default is `%g/%a:%l`.
+| `fabric8.generator.name`
+|===
+
+When used as properties they can be directly referenced with the property names above.
