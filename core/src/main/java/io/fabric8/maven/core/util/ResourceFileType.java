@@ -42,8 +42,8 @@ public enum ResourceFileType {
         @Override
         public ObjectMapper getObjectMapper() {
             return new ObjectMapper(new YAMLFactory()
-                                        // disabled for now, need to fix upstream for plain numbers, too
-                                        //.configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true)
+                                        .configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true)
+                                        .configure(YAMLGenerator.Feature.ALWAYS_QUOTE_NUMBERS_AS_STRINGS, true)
                                     );
         }
     };
