@@ -31,7 +31,7 @@ import org.apache.maven.plugin.MojoExecutionException;
  * @author roland
  * @since 10/11/16
  */
-class FatJarDetector {
+public class FatJarDetector {
 
     private File directory;
     private Result result;

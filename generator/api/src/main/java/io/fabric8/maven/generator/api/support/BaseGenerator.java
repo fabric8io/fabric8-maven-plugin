@@ -43,19 +43,6 @@ abstract public class BaseGenerator implements Generator {
     protected final PrefixedLogger log;
     private final FromSelector fromSelector;
 
-    /**
-     * Returns the maven project property or the default value
-     */
-    protected String getProjectProperty(String propertyName, String defaultValue) {
-        MavenProject project = getProject();
-        if (project != null) {
-            Properties properties = project.getProperties();
-            if (properties != null) {
-                return properties.getProperty(propertyName, defaultValue);
-            }
-        }
-        return defaultValue;
-    }
 
     private enum Config implements Configs.Key {
         // The image name
@@ -179,5 +166,6 @@ abstract public class BaseGenerator implements Generator {
         }
         return false;
     }
+
 
 }
