@@ -624,12 +624,12 @@ table.CodeRay td.code>pre{padding:0}
 <ul class="sectlevel2">
 <li><a href="#generators-default">8.1. Default Generators</a>
 <ul class="sectlevel3">
-<li><a href="#generator-java-exec">8.1.1. Java Applications (java-exec)</a></li>
-<li><a href="#generator-spring-boot">8.1.2. Spring Boot (spring-boot)</a></li>
-<li><a href="#generator-wildfly-swarm">8.1.3. Wildfly Swarm (wildfly-swarm)</a></li>
-<li><a href="#generator-vertx">8.1.4. Vert.x (vertx)</a></li>
-<li><a href="#generator-karaf">8.1.5. Karaf (karaf)</a></li>
-<li><a href="#generator-webapp">8.1.6. Web Application (webapp)</a></li>
+<li><a href="#generator-java-exec">8.1.1. Java Applications</a></li>
+<li><a href="#generator-spring-boot">8.1.2. Spring Boot</a></li>
+<li><a href="#generator-wildfly-swarm">8.1.3. Wildfly Swarm</a></li>
+<li><a href="#generator-vertx">8.1.4. Vert.x</a></li>
+<li><a href="#generator-karaf">8.1.5. Karaf</a></li>
+<li><a href="#generator-webapp">8.1.6. Web Applications</a></li>
 </ul>
 </li>
 <li><a href="#generators-api">8.2. Generator API</a></li>
@@ -3946,13 +3946,60 @@ This plugin definition includes the configuration to generate the Docker image.
 <div class="sect2">
 <h3 id="generators-default">8.1. Default Generators</h3>
 <div class="paragraph">
-<p>All default generators examine the build information for certain aspects and generate a Docker build configuration on the fly. They can be configured to a certrain degree, where the configuration is generator specific.</p>
+<p>All default generators examine the build information for certain aspects and generate a Docker build configuration on the fly. They can be configured to a certain degree, where the configuration is generator specific.</p>
 </div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 22. Default Generators</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Generator</th>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#generator-java-exec">Java Applications</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>java-exec</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Generic generator for flat classpath and fat-jar Java applications</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#generator-spring-boot">Spring Boot</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>spring-boot</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Spring Boot specific generator</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#generator-wildfly-swarm">Wildfly Swarm</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wildfly-swarm</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Generator for Wildfly Swarm apps</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#generator-vertx">Vert.x</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vertx</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Generator for Vert.x applications</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#generator-karaf">Karaf</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>karaf</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Generator for Karaf based appps</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#generator-webapp">Web applications</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>webapps</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Generator for WAR based applications supporting Tomcat, Jetty and Wildfly base images</p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
 <p>There are some configuration options which are shared by all generators:</p>
 </div>
 <table id="generator-options-common" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 22. Common generator options</caption>
+<caption class="title">Table 23. Common generator options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -3992,9 +4039,9 @@ This plugin definition includes the configuration to generate the Docker image.
 <p>When used as properties they can be directly referenced with the property names above.</p>
 </div>
 <div class="sect3">
-<h4 id="generator-java-exec">8.1.1. Java Applications (java-exec)</h4>
+<h4 id="generator-java-exec">8.1.1. Java Applications</h4>
 <div class="paragraph">
-<p>One of the most generic <em>Generators</em> is the <code>java-exec</code>.
+<p>One of the most generic <em>Generators</em> is the <code>java-exec</code> generator.
 It is responsible to start up arbitrary Java application.
 It knows how to deal with fat-jar applications where the application and all dependencies are included within a single jar and the <code>MANIFEST.MF</code> within the jar references a main class.
 But also flat classpath applications, where the dependencies are separate jar files and a main class is given.</p>
@@ -4012,7 +4059,7 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 <p>It will use the following base image by default, but as explained <a href="#generator-options-common">above</a> and can be changed with the <code>from</code> configuration.</p>
 </div>
 <table id="generator-java-exec-from" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 23. Java Base Images</caption>
+<caption class="title">Table 24. Java Base Images</caption>
 <colgroup>
 <col style="width: 11.1111%;">
 <col style="width: 44.4444%;">
@@ -4042,10 +4089,10 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 <p>These images refer always to the latest tag. The <em>Red Hat</em> base images are selected, when the plugin itself is a Red Hat supported version (which is detected by the plugins version number).</p>
 </div>
 <div class="paragraph">
-<p>Beside the common configuration parameters described in the table <a href="#generator-options-common">Commong Generator Options</a> the following additional configuration options are recognized:</p>
+<p>Beside the common configuration parameters described in the table <a href="#generator-options-common">common generator options</a> the following additional configuration options are recognized:</p>
 </div>
-<table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 24. Java Application configuration options</caption>
+<table id="generator-java-exec-options" class="tableblock frame-all grid-all spread">
+<caption class="title">Table 25. Java Application configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4096,7 +4143,7 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 </div>
 </div>
 <div class="sect3">
-<h4 id="generator-spring-boot">8.1.2. Spring Boot (spring-boot)</h4>
+<h4 id="generator-spring-boot">8.1.2. Spring Boot</h4>
 <div class="paragraph">
 <p>This generator is called <code>spring-boot</code> and gets activated when it finds a <code>spring-boot-maven-plugin</code> in the pom.xml.</p>
 </div>
@@ -4104,10 +4151,10 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 <p>This generator is based on the <a href="#generator-java-exec">Java Application</a> Generator and inherits all of its configuration values. It also uses the same default images as the <a href="#generator-java-exec-from">java-exec Generator</a>.</p>
 </div>
 <div class="paragraph">
-<p>The following additional configuration options can be set:</p>
+<p>Beside the  <a href="#generator-options-common">common generator options</a> and the <a href="#generator-java-exec-options">java-exec options</a> the following additional configuration is recognized:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 25. Spring-Boot configuration options</caption>
+<caption class="title">Table 26. Spring-Boot configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4149,16 +4196,16 @@ Since the released version are typically generated with a CI system which does a
 </div>
 </div>
 <div class="sect3">
-<h4 id="generator-wildfly-swarm">8.1.3. Wildfly Swarm (wildfly-swarm)</h4>
+<h4 id="generator-wildfly-swarm">8.1.3. Wildfly Swarm</h4>
 <div class="paragraph">
 <p>The Wildfly-Swarm generator detects a wildlfy swarm build an enables some workaround to disable Jolokia because of this <a href="https://issues.jboss.org/browse/SWARM-204">issue</a>. This will be fixed with a workaround in a new Jolokia agent.</p>
 </div>
 <div class="paragraph">
-<p>Otherwise this generator is identical to the <a href="#generator-java-exec">java-exec generator</a>.</p>
+<p>Otherwise this generator is identical to the <a href="#generator-java-exec">java-exec generator</a>. It supports the  <a href="#generator-options-common">common generator options</a> and the <a href="#generator-java-exec-options"><code>java-exec</code> options</a>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="generator-vertx">8.1.4. Vert.x (vertx)</h4>
+<h4 id="generator-vertx">8.1.4. Vert.x</h4>
 <div class="admonitionblock caution">
 <table>
 <tr>
@@ -4175,12 +4222,12 @@ Since the released version are typically generated with a CI system which does a
 </div>
 </div>
 <div class="sect3">
-<h4 id="generator-karaf">8.1.5. Karaf (karaf)</h4>
+<h4 id="generator-karaf">8.1.5. Karaf</h4>
 <div class="paragraph">
 <p>This generator named <code>karaf</code> kicks in when the build uses a <code>karaf-maven-plugin</code>. By default the following base images are used:</p>
 </div>
 <table id="generator-karaf-from" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 26. Karaf Base Images</caption>
+<caption class="title">Table 27. Karaf Base Images</caption>
 <colgroup>
 <col style="width: 11.1111%;">
 <col style="width: 44.4444%;">
@@ -4207,10 +4254,13 @@ Since the released version are typically generated with a CI system which does a
 </tbody>
 </table>
 <div class="paragraph">
-<p>In addition this generator can be configued with the following options:</p>
+<p>Beside the</p>
+</div>
+<div class="paragraph">
+<p>In addition to the  <a href="#generator-options-common">common generator options</a> this generator can be configured with the following options:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 27. Karaf configuration options</caption>
+<caption class="title">Table 28. Karaf configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4253,7 +4303,7 @@ Since the released version are typically generated with a CI system which does a
 </table>
 </div>
 <div class="sect3">
-<h4 id="generator-webapp">8.1.6. Web Application (webapp)</h4>
+<h4 id="generator-webapp">8.1.6. Web Applications</h4>
 <div class="paragraph">
 <p>The <code>webapp</code> generator tries to detect WAR builds and selects a base servlet container image based on the configuration found in the <code>pom.xml</code>:</p>
 </div>
@@ -4274,7 +4324,7 @@ Since the released version are typically generated with a CI system which does a
 <p>The base images chosen are:</p>
 </div>
 <table id="generator-webapp-from" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 28. Webapp Base Images</caption>
+<caption class="title">Table 29. Webapp Base Images</caption>
 <colgroup>
 <col style="width: 11.1111%;">
 <col style="width: 44.4444%;">
@@ -4320,10 +4370,10 @@ Since the released version are typically generated with a CI system which does a
 </table>
 </div>
 <div class="paragraph">
-<p>The image generation can be influenced with the following options:</p>
+<p>In addition to the  <a href="#generator-options-common">common generator options</a> this generator can be configured with the following options:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 29. Webapp configuration options</caption>
+<caption class="title">Table 30. Webapp configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4409,7 +4459,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <p>The <a href="#generator-example">Generator example</a> is a good bluebprint, simply replace <code>&lt;generator&gt;</code> with <code>&lt;enricher&gt;</code>. The configuration is structural identical:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 30. Enricher configuration</caption>
+<caption class="title">Table 31. Enricher configuration</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -4454,7 +4504,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </ul>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 31. Default Enrichers Overview</caption>
+<caption class="title">Table 32. Default Enrichers Overview</caption>
 <colgroup>
 <col style="width: 22.2222%;">
 <col style="width: 77.7778%;">
@@ -5063,7 +5113,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.92<br>
-Last updated 2016-11-12 12:50:30 UTC
+Last updated 2016-11-12 13:30:20 UTC
 </div>
 </div>
 </body>
