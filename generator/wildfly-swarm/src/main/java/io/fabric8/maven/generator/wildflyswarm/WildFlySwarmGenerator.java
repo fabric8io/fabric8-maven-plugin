@@ -36,6 +36,11 @@ public class WildFlySwarmGenerator extends JavaExecGenerator {
     }
 
     @Override
+    public boolean isApplicable(List<ImageConfiguration> configs) {
+        return shouldAddImageConfiguration(configs) && MavenUtil.hasPlugin(getProject(), "org.wildfly.swarm:wildfly-swarm-plugin");
+    }
+
+    @Override
     protected Map<String, String> getEnv(boolean isPrepackagePhase) throws MojoExecutionException {
         Map<String, String> ret = super.getEnv(isPrepackagePhase);
         // Switch off agent_bond until logging issue with wilfdlfy-swarm is resolved
@@ -46,11 +51,6 @@ public class WildFlySwarmGenerator extends JavaExecGenerator {
         ret.put("AB_OFF", "true");
         ret.put("AB_JOLOKIA_OFF", "true");
         return ret;
-    }
-
-    @Override
-    public boolean isApplicable(List<ImageConfiguration> configs) {
-        return shouldAddImageConfiguration(configs) && MavenUtil.hasPlugin(getProject(), "org.wildfly.swarm:wildfly-swarm-plugin");
     }
 
 }

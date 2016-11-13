@@ -44,7 +44,8 @@ public class FatJarDetector {
         // Scanning is lazy ...
         if (result == null) {
             if (!directory.exists()) {
-                throw new IllegalArgumentException("No directory " + directory + " found to check for fat jars");
+                // No directory to check found so we return null here ...
+                return null;
             }
             String[] jarOrWars = directory.list(new FilenameFilter() {
                 @Override

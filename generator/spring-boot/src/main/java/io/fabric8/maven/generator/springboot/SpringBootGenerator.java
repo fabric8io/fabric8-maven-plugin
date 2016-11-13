@@ -62,7 +62,8 @@ public class SpringBootGenerator extends JavaExecGenerator {
 
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
-        return shouldAddImageConfiguration(configs) && MavenUtil.hasPlugin(getProject(), SPRING_BOOT_MAVEN_PLUGIN_GA);
+        return shouldAddImageConfiguration(configs)
+               && MavenUtil.hasPlugin(getProject(), SPRING_BOOT_MAVEN_PLUGIN_GA);
     }
 
     @Override
