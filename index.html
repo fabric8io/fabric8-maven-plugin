@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.1.92,</span>
-<span id="revdate">2016-11-12</span>
+<span id="revdate">2016-11-13</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -4048,7 +4048,7 @@ But also flat classpath applications, where the dependencies are separate jar fi
 </div>
 <div class="paragraph">
 <p>If no main class is explicitely configured, first a fat jar is tried to be found.
-If the Maven build creates a JAR file with a <code>META-INF/MANIFEST.MF</code> containing a <code>Main-Class´</code> entry, then this is considered to be the fat jar to use.
+If the Maven build creates a JAR file with a <code>META-INF/MANIFEST.MF</code> containing a <code>Main-Class</code> entry, then this is considered to be the fat jar to use.
 If there are more than one of such files then the largest is taken.</p>
 </div>
 <div class="paragraph">
@@ -4141,6 +4141,9 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 <div class="paragraph">
 <p>The exposed ports are typically later on use by <a href="#enrichers">Enrichers</a> to create default Kubernetes or OpenShift services.</p>
 </div>
+<div class="paragraph">
+<p>You can add additional files to the target image within <code>baseDir</code> by putting files into <code>src/main/fabric8-include</code>. These will be added with mode <code>0644</code>, everything in <code>src/main/fabric8-include/bin</code> will be added with <code>0755</code>.</p>
+</div>
 </div>
 <div class="sect3">
 <h4 id="generator-spring-boot">8.1.2. Spring Boot</h4>
@@ -4186,7 +4189,7 @@ In particular, the following steps are performed:</p>
 <p>If a secret token is not provided within the Spring Boot application configuration <code>appliction.properties</code> or <code>application.yml</code> with the key <code>spring.devtools.remote.secret</code> then a custom secret token is created and added to <code>application.properties</code></p>
 </li>
 <li>
-<p>Copy over a <code>spring-boot-devtools.jar</code> into <code>BOOT-INF/lib/spring-devtools.jar</code> of the generate fat jar.</p>
+<p>Add <code>spring-boot-devtools.jar</code> as <code>BOOT-INF/lib/spring-devtools.jar</code> to the spring-boot fat jar.</p>
 </li>
 </ul>
 </div>
@@ -5113,7 +5116,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.1.92<br>
-Last updated 2016-11-12 13:30:20 UTC
+Last updated 2016-11-13 09:28:59 UTC
 </div>
 </div>
 </body>
