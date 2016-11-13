@@ -18,6 +18,7 @@ package io.fabric8.maven.generator.javaexec;
 
 import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -44,6 +45,12 @@ public class JavaExecGenerator extends BaseGenerator {
 
     // Environment variable used for specifying a main class
     private static final String JAVA_MAIN_CLASS_ENV_VAR = "JAVA_MAIN_CLASS";
+
+    // Plugins indicating a plain java build
+    private static final String[] JAVA_EXEC_MAVEN_PLUGINS = new String[] {
+        "org.codehaus.mojo:exec-maven-plugin",
+        "org.apache.maven.plugins:maven-shade-plugin"
+    };
 
     private final FatJarDetector fatJarDetector;
     private final MainClassDetector mainClassDetector;
@@ -85,7 +92,19 @@ public class JavaExecGenerator extends BaseGenerator {
 
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) throws MojoExecutionException {
-        return shouldAddImageConfiguration(configs) && (isFatJar() || Strings.isNotBlank(mainClassDetector.getMainClass()));
+        if (shouldAddImageConfiguration(configs)) {
+            // If a main class is configured, we always kick in
+            if (getConfig(Config.mainClass) != null) {
+                return true;
+            }
+            // Check for the existing of plugins indicating a plain java exec app
+            for (String plugin : JAVA_EXEC_MAVEN_PLUGINS) {
+                if (MavenUtil.hasPlugin(getProject(), plugin)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override

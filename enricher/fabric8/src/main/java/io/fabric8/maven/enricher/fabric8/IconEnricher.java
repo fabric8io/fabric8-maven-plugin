@@ -83,7 +83,7 @@ public class IconEnricher extends BaseEnricher {
         if (kind.isDeployOrReplicaKind() || kind.isService() || kind.isDaemonSet()) {
             String iconUrl = getIconUrl(extractIconRef());
             if (iconUrl != null) {
-                log.info("Adding icon for %s", kind);
+                log.info("Adding icon for %s", kind.toString().toLowerCase());
                 log.verbose("Icon URL: %s", iconUrl);
                 return Collections.singletonMap(Annotations.Builds.ICON_URL,iconUrl);
             } else {
