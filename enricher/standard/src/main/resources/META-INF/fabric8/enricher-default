@@ -23,6 +23,9 @@ io.fabric8.maven.enricher.standard.PortNameEnricher
 # Add port names from IANA service definitions
 io.fabric8.maven.enricher.standard.IANAServicePortNameEnricher
 
+# Add configured health checks
+io.fabric8.maven.enricher.standard.HealthCheckEnricher
+
 # Add Maven coordinates as labels
 io.fabric8.maven.enricher.standard.ProjectEnricher
 

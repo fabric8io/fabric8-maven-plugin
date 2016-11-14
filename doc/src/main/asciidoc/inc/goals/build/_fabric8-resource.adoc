@@ -45,7 +45,18 @@ Labels and annotations can be easily added to any resource object. This is best 
         </deployment>
       </labels>
 
-      <annotations> <!--7-->
+      <liveness> <!--7-->
+        <initialDelaySeconds>30</initialDelaySeconds>
+        <timeoutSeconds>5</timeoutSeconds>
+        <getUrl>HTTP://:8080/status</getUrl>
+      </liveness>
+      <readiness>
+        <initialDelaySeconds>30</initialDelaySeconds>
+        <timeoutSeconds>5</timeoutSeconds>
+        <getUrl>HTTP://:8080/status</getUrl>
+      </readiness>
+
+      <annotations> <!--8-->
          ...
       </annotations>
     </resource>
@@ -58,7 +69,8 @@ Labels and annotations can be easily added to any resource object. This is best 
 <4> `<replicaSet>` labels are for replica set and replication controller
 <5> `<pod>` holds lables for pod specifications in replication controller, replica sets and deployments
 <6> `<deployment>` is for labels on deployments (kubernetes) and deployment configs (openshift)
-<7> The subelements are also available for specifying annotations.
+<7> `<liveness>` is for defining pod health checks (see http://kubernetes.io/docs/user-guide/liveness/ and http://kubernetes.io/docs/user-guide/production-pods/#liveness-and-readiness-probes-aka-health-checks)
+<8> The subelements are also available for specifying annotations.
 
 Labels and annotations can be specified in free form as a map. In this map the element name is the name of the label or annotation respectively, whereas the content is the value to set.
 
