@@ -47,3 +47,6 @@ io.fabric8.maven.enricher.standard.MergeEnricher,1003
 
 # Add an enricher for merging duplicates
 io.fabric8.maven.enricher.standard.RemoveBuildAnnotationsEnricher,5002
+
+# Add an enricher for adding an init container fixing volume mount permissions
+io.fabric8.maven.enricher.standard.VolumePermissionEnricher

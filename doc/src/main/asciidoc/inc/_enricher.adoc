@@ -105,6 +105,11 @@ Default enrichers are used for adding missing resources or adding metadata to gi
 [[fmp-dependency]]
 ==== fmp-dependency
 
+[[fmp-volume-permission]]
+==== fmp-volume-permission
+
+Enricher which fixes the permission of persisten volume mount with the help of an init container.
+
 [[enrichers-fabric8]]
 === Fabric8 Enrichers
 
