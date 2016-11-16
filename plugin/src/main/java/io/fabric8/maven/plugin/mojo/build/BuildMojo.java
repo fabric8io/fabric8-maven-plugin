@@ -84,6 +84,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -117,7 +118,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
     private ProcessorConfig enricher;
 
     /**
-     * Resource config for getting annotation and labels to be apllied to enriched build objects
+     * Resource config for getting annotation and labels to be applied to enriched build objects
      */
     @Parameter
     private ResourceConfig resources;
@@ -147,7 +148,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
     private boolean skipBuildPom;
 
     /**
-     * Whether to perform a Kubernetes build (i.e. agains a vanilla Docker daemon) or
+     * Whether to perform a Kubernetes build (i.e. against a vanilla Docker daemon) or
      * an OpenShift build (with a Docker build against the OpenShift API server.
      */
     @Parameter(property = "fabric8.mode")
@@ -169,7 +170,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
     private String s2iBuildNameSuffix;
 
     /**
-     * Should we use the project's compmile-time classpath to scan for additional enrichers/generators?
+     * Should we use the project's compile-time classpath to scan for additional enrichers/generators?
      */
     @Parameter(property = "fabric8.useProjectClasspath", defaultValue = "false")
     private boolean useProjectClasspath = false;
@@ -297,6 +298,14 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
         } else {
             log.info("Building Docker image in [[B]]Kubernetes[[B]] mode");
         }
+
+        if (platformMode.equals(PlatformMode.openshift)) {
+            Properties properties = project.getProperties();
+            if (!properties.contains(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE)) {
+                properties.setProperty(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, platformMode.toString());
+            }
+        }
+
         try {
             GeneratorContext ctx = new GeneratorContext.Builder()
                 .config(extractGeneratorConfig())
@@ -619,7 +628,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
         enricherManager.enrich(builder);
     }
 
-    //
     private void checkOrCreateImageStream(OpenShiftClient client, KubernetesListBuilder builder, String imageStreamName) {
         boolean hasImageStream = client.imageStreams().withName(imageStreamName).get() != null;
         if (hasImageStream && getBuildRecreateMode().isImageStream()) {
