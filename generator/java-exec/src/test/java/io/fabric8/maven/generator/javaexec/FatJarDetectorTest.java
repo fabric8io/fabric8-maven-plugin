@@ -17,7 +17,9 @@ package io.fabric8.maven.generator.javaexec;
  */
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.net.URLDecoder;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
@@ -31,9 +33,9 @@ import static org.junit.Assert.*;
 public class FatJarDetectorTest {
 
     @Test
-    public void simple() throws MojoExecutionException {
+    public void simple() throws MojoExecutionException, UnsupportedEncodingException {
         URL testDirUrl = getClass().getResource("/fatjar-simple");
-        FatJarDetector detector = new FatJarDetector(testDirUrl.getPath());
+        FatJarDetector detector = new FatJarDetector(URLDecoder.decode(testDirUrl.getPath(), "UTF-8"));
         FatJarDetector.Result result = detector.scan();
         assertNotNull(result);
         assertEquals(new File(testDirUrl.getPath() + "/test.jar"), result.getArchiveFile());
