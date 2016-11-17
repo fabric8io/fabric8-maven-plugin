@@ -16,7 +16,6 @@ package io.fabric8.maven.generator.javaexec;
  * limitations under the License.
  */
 
-import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
@@ -33,7 +32,6 @@ import org.apache.maven.plugin.assembly.model.FileSet;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -78,7 +76,7 @@ public class JavaExecGenerator extends BaseGenerator {
         prometheusPort {{ d = "9779"; }},
 
         // Basedirectory where to put the application data into (within the Docker image
-        baseDir        {{ d = "/deployments"; }},
+        targetDir {{d = "/deployments"; }},
 
         // The name of the main class for non-far jars. If not speficied it is tried
         // to find a main class within target/classes.
@@ -120,7 +118,7 @@ public class JavaExecGenerator extends BaseGenerator {
             buildBuilder.assembly(createAssembly());
         }
         Map<String, String> envMap = getEnv(prePackagePhase);
-        envMap.put("JAVA_APP_DIR", getConfig(Config.baseDir));
+        envMap.put("JAVA_APP_DIR", getConfig(Config.targetDir));
         buildBuilder.env(envMap);
         addLatestTagIfSnapshot(buildBuilder);
         imageBuilder
@@ -149,9 +147,8 @@ public class JavaExecGenerator extends BaseGenerator {
         return ret;
     }
 
-
     protected AssemblyConfiguration createAssembly() throws MojoExecutionException {
-        AssemblyConfiguration.Builder builder = new AssemblyConfiguration.Builder().basedir(getConfig(Config.baseDir));
+        AssemblyConfiguration.Builder builder = new AssemblyConfiguration.Builder().targetDir(getConfig(Config.targetDir));
         addAssembly(builder);
         return builder.build();
     }

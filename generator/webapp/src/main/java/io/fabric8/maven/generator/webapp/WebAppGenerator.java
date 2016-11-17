@@ -131,7 +131,7 @@ public class WebAppGenerator extends BaseGenerator {
 
     private AssemblyConfiguration createAssembly(AppServerHandler handler) {
         AssemblyConfiguration.Builder builder = new AssemblyConfiguration.Builder()
-                .basedir(getDeploymentDir(handler))
+                .targetDir(getDeploymentDir(handler))
                 .descriptorRef("webapp");
         String user = getUser(handler);
         if (user != null) {
