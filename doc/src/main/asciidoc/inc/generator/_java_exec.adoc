@@ -43,7 +43,7 @@ Beside the common configuration parameters described in the table <<generator-op
 | *assemblyRef*
 | If a reference to an assembly is given, then this is used without trying to detect the artifacts to include.
 |
-| *baseDir*
+| *targetDir*
 | Directory within the generated image where to put the detected artefacts into. Change this only if the base image is changed, too.
 | `/deployments`
 
