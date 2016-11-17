@@ -64,7 +64,7 @@ public class FatJarDetector {
                     Manifest mf = archive.getManifest();
                     Attributes mainAttributes = mf.getMainAttributes();
                     if (mainAttributes != null) {
-                        String mainClass = (String) mainAttributes.get(new Attributes.Name("Main-Class"));
+                        String mainClass = mainAttributes.getValue("Main-Class");
                         if (mainClass != null) {
                             long size = archiveFile.length();
                             // Take the largest jar / war file found
@@ -103,7 +103,7 @@ public class FatJarDetector {
         }
 
         public String getManifestEntry(String key) {
-            return (String) attributes.get(key);
+            return attributes.getValue(key);
         }
     }
 }
