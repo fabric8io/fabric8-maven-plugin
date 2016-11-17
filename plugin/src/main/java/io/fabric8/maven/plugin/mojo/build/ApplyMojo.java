@@ -63,6 +63,7 @@ import io.fabric8.kubernetes.internal.HasMetadataComparator;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.ProcessUtil;
+import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
 import io.fabric8.openshift.api.model.DeploymentConfig;
@@ -76,6 +77,7 @@ import io.fabric8.openshift.api.model.Template;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Strings;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
@@ -220,6 +222,13 @@ public class ApplyMojo extends AbstractFabric8Mojo {
      */
     @Parameter(property = "fabric8.serviceUrl.waitSeconds", defaultValue = "5")
     protected long serviceUrlWaitTimeSeconds;
+
+    /**
+     * The S2I binary builder BuildConfig name suffix appended to the image name to avoid
+     * clashing with the underlying BuildConfig for the Jenkins pipeline
+     */
+    @Parameter(property = "fabric8.s2i.buildNameSuffix", defaultValue = "-s2i")
+    private String s2iBuildNameSuffix;
 
     private ClusterAccess clusterAccess;
 
@@ -719,6 +728,19 @@ public class ApplyMojo extends AbstractFabric8Mojo {
     protected void deleteEntities(KubernetesClient kubernetes, String namespace, Set<HasMetadata> entities) {
         List<HasMetadata> list = new ArrayList<>(entities);
 
+        // For OpenShift cluster, also delete s2i buildconfig
+        OpenShiftClient openshiftClient = new Controller(kubernetes).getOpenShiftClientOrNull();
+        if (openshiftClient != null) {
+            for (HasMetadata entity : list) {
+                if ("ImageStream".equals(getKind(entity))) {
+                    ImageName imageName = new ImageName(entity.getMetadata().getName());
+                    String buildName = getS2IBuildName(imageName);
+                    log.info("Deleting resource BuildConfig " + namespace + "/" + buildName);
+                    openshiftClient.buildConfigs().inNamespace(namespace).withName(buildName).delete();
+                }
+            }
+        }
+
         // lets delete in reverse order
         Collections.reverse(list);
 
@@ -726,6 +748,10 @@ public class ApplyMojo extends AbstractFabric8Mojo {
             log.info("Deleting resource " + getKind(entity) + " " + namespace + "/" + getName(entity));
             kubernetes.resource(entity).inNamespace(namespace).cascading(true).delete();
         }
+    }
+
+    private String getS2IBuildName(ImageName imageName) {
+        return imageName.getSimpleName() + s2iBuildNameSuffix;
     }
 
     protected void resizeApp(KubernetesClient kubernetes, String namespace, Set<HasMetadata> entities, int replicas) {
