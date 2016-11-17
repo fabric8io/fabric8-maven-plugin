@@ -60,7 +60,7 @@
     <assertj.core.version>2.4.1</assertj.core.version>
 
     <!-- latest release version of this plugin. Used in the docs.-->
-    <fabric8.maven.plugin.version>3.1.92</fabric8.maven.plugin.version>
+    <fabric8.maven.plugin.version>3.2.1</fabric8.maven.plugin.version>
 
     <spring-boot.version>1.4.1.RELEASE</spring-boot.version>
     <spring.version>4.3.3.RELEASE</spring.version>
