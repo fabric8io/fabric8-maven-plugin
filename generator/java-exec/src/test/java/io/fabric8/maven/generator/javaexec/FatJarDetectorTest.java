@@ -35,11 +35,15 @@ public class FatJarDetectorTest {
     @Test
     public void simple() throws MojoExecutionException, UnsupportedEncodingException {
         URL testDirUrl = getClass().getResource("/fatjar-simple");
-        FatJarDetector detector = new FatJarDetector(URLDecoder.decode(testDirUrl.getPath(), "UTF-8"));
+        FatJarDetector detector = new FatJarDetector(decodeUrl(testDirUrl));
         FatJarDetector.Result result = detector.scan();
         assertNotNull(result);
-        assertEquals(new File(testDirUrl.getPath() + "/test.jar"), result.getArchiveFile());
+        assertEquals(new File(decodeUrl(testDirUrl) + "/test.jar"), result.getArchiveFile());
         assertEquals("org.springframework.boot.loader.JarLauncher", result.getMainClass());
         assertEquals("Plexus Archiver", result.getManifestEntry("Archiver-Version"));
+    }
+
+    private String decodeUrl(URL testDirUrl) throws UnsupportedEncodingException {
+        return URLDecoder.decode(testDirUrl.getPath(), "UTF-8");
     }
 }
