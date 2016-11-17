@@ -44,7 +44,7 @@ In addition to the  <<generator-options-common, common generator options>> this 
 | Fix server to use in the base image. Can be either **tomcat**, **jetty** or **wildfly**
 |
 
-| *deploymentDir*
+| *targetDir*
 | Where to put the war file into the target image. By default its selected by the base image chosen but can be overwritten with this option.
 |
 
