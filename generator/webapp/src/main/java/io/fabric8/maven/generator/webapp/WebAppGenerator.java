@@ -45,7 +45,7 @@ public class WebAppGenerator extends BaseGenerator {
         server,
 
         // Directory where to deploy to
-        deploymentDir,
+        targetDir,
 
         // Unix user under which the war should be installed. If null, the default image user is used
         user,
@@ -117,7 +117,7 @@ public class WebAppGenerator extends BaseGenerator {
 
     private AppServerHandler createCustomAppServerHandler(String from) {
         String user = getConfig(Config.user);
-        String deploymentDir = getConfig(Config.deploymentDir,"/deployments");
+        String deploymentDir = getConfig(Config.targetDir, "/deployments");
         String command = getConfig(Config.cmd);
         List<String> ports = Arrays.asList(getConfig(Config.ports, "8080").split("\\s*,\\s*"));
         return new CustomAppServerHandler(from, deploymentDir, command, user, ports);
@@ -153,7 +153,7 @@ public class WebAppGenerator extends BaseGenerator {
     }
 
     private String getDeploymentDir(AppServerHandler handler) {
-        String deploymentDir = getConfig(Config.deploymentDir);
+        String deploymentDir = getConfig(Config.targetDir);
         return deploymentDir != null ? deploymentDir : handler.getDeploymentDir();
     }
 
