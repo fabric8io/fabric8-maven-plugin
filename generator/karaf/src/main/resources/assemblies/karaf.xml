@@ -18,12 +18,13 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
   <id>karaf</id>
-  <files>
-    <!-- copy karaf archive -->
-    <file>
-      <source>${project.build.directory}/${project.artifactId}-${project.version}.zip</source>
-      <outputDirectory>/</outputDirectory>
-      <fileMode>0644</fileMode>
-    </file>
-  </files>
+  <fileSets>
+    <!-- copy karaf assembly files -->
+    <fileSet>
+      <directory>${project.build.directory}/assembly/</directory>
+      <outputDirectory>/${project.artifactId}-${project.version}</outputDirectory>
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <directoryMode>0774</directoryMode>
+    </fileSet>
+  </fileSets>
 </assembly>
