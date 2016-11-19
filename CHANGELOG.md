@@ -2,11 +2,13 @@
 
 This document main purpose is to list changes which might affect backwards compatibility. It will not list all releases as fabric8-maven-plugin is build in a continous delivery fashion.
 
-We use semantic version in some slight variation until our feature set has stabilized and the missing pieces has been filled in:
+We use semantic versioning in some slight variation until our feature set has stabilized and the missing pieces has been filled in:
 
 * The `MAJOR_VERSION` is kept to `3`
 * The `MINOR_VERSION` changes when there is an API or configuration change which is not fully backward compatible. 
-* The `PATCH_LEVEL` is used for regular CD release which add new features and bug fixes. 
+* The `PATCH_LEVEL` is used for regular CD releases which add new features and bug fixes. 
+
+After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
 ### 3.2.1 (2016-11-17)
 
