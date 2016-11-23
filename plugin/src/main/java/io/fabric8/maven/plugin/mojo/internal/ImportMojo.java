@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.plugin.mojo.internal;
 
+import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.ServiceNames;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -167,7 +168,9 @@ public class ImportMojo extends AbstractFabric8Mojo {
                     throw new MojoExecutionException("Project already imported into build " +
                             getName(buildConfig) + " for URI: " + gitRemoteURL + " and branch: " + branch);
                 } else {
-                    buildConfig = createBuildConfig(kubernetes, namespace, projectName, gitRemoteURL);
+                    Map<String, String> annotations = new HashMap<>();
+                    annotations.put(Annotations.Builds.GIT_CLONE_URL, gitRemoteURL);
+                    buildConfig = createBuildConfig(kubernetes, namespace, projectName, gitRemoteURL, annotations);
 
                     openShiftClient.buildConfigs().inNamespace(namespace).create(buildConfig);
 
