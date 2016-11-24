@@ -134,7 +134,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     @Override
     protected synchronized void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
         clusterAccess = new ClusterAccess(namespace);
-        kubernetes = clusterAccess.createKubernetesClient();
+        kubernetes = clusterAccess.createKubernetesOrOpenshiftClient(log);
         controller = new Controller(kubernetes);
 
         URL masterUrl = kubernetes.getMasterUrl();
