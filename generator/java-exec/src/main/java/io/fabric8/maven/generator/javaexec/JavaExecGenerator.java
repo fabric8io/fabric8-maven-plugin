@@ -138,11 +138,18 @@ public class JavaExecGenerator extends BaseGenerator {
     protected Map<String, String> getEnv(boolean prePackagePhase) throws MojoExecutionException {
         Map<String, String> ret = new HashMap<>();
         if (!isFatJar()) {
-            String mainClass = mainClassDetector.getMainClass();
+            String mainClass = getConfig(Config.mainClass);
             if (mainClass == null) {
-                throw new MojoExecutionException("Cannot extract main class to startup");
+                mainClassDetector.getMainClass();
+                if (mainClass == null) {
+                    if (prePackagePhase) {
+                        return ret;
+                    } else {
+                        throw new MojoExecutionException("Cannot extract main class to startup");
+                    }
+                }
+                ret.put(JAVA_MAIN_CLASS_ENV_VAR, mainClass);
             }
-            ret.put(JAVA_MAIN_CLASS_ENV_VAR, mainClass);
         }
         return ret;
     }

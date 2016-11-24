@@ -44,6 +44,12 @@ import static io.fabric8.utils.Lists.notNullList;
  * Merges local resources with dependent resources which have the same name.
  * <p>
  * e.g. if you wish to take a dependent set of resources and tweak them a little bit.
+ *
+ * (used by ipaas-platform/packages/console)
+ *
+ * TODO: Don't use a config enable, but use it in profiles so that its only included if required.
+ * Also consider to move it to f8- since it adds some dependencies to special lifecycle flows like if that fabric8:app-catalog
+ * is called. This should not be here.
  */
 public class MergeEnricher extends BaseEnricher {
 
@@ -130,7 +136,7 @@ public class MergeEnricher extends BaseEnricher {
         // we expect lots of duplicates when making an app catalog as we have the composites and individual manifests
         try {
             if (!getContext().runningWithGoal("fabric8:app-catalog")) {
-                log.warn("Duplicate resources for " + getKind(item1) + " " + KubernetesHelper.getName(item1) + " from " + KubernetesResourceUtil.location(item1) + " and " + KubernetesResourceUtil.location(item2));
+                log.warn("Duplicate resources for %s %s from %s and %s", getKind(item1), KubernetesHelper.getName(item1), KubernetesResourceUtil.location(item1), KubernetesResourceUtil.location(item2));
             }
         } catch (MojoExecutionException e) {
             log.warn("Failed to check if generated an app-catalog: %s", e);
