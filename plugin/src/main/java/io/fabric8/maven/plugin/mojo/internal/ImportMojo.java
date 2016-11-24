@@ -152,7 +152,7 @@ public class ImportMojo extends AbstractFabric8Mojo {
                 projectName = basedir.getName();
             }
 
-            KubernetesClient kubernetes = clusterAccess.createKubernetesOrOpenshiftClient(log);
+            KubernetesClient kubernetes = clusterAccess.createDefaultClient(log);
             KubernetesResourceUtil.validateKubernetesMasterUrl(kubernetes.getMasterUrl());
 
             String namespace = clusterAccess.getNamespace();

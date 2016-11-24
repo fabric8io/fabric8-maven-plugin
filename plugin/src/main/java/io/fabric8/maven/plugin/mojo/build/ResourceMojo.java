@@ -47,7 +47,6 @@ import io.fabric8.maven.core.config.ServiceConfig;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
-import io.fabric8.maven.core.util.KindAndName;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
@@ -624,7 +623,7 @@ public class ResourceMojo extends AbstractResourceMojo {
             // lets add any ImageStream / ImageStreamTag objects which are already on disk
             // from a previous `BuildMojo` execution
             String namespace = clusterAccess.getNamespace();
-            KubernetesClient client = clusterAccess.createKubernetesOrOpenshiftClient(log);
+            KubernetesClient client = clusterAccess.createDefaultClient(log);
             Controller controller = new Controller(client);
             Set<HasMetadata> oldEntities;
             try {

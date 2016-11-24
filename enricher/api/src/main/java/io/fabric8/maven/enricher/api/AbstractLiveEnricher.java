@@ -143,7 +143,7 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
     private KubernetesClient getKubernetes() {
         if (kubernetesClient == null) {
             String namespace = getNamespace();
-            kubernetesClient = new ClusterAccess(namespace).createKubernetesOrOpenshiftClient(log);
+            kubernetesClient = new ClusterAccess(namespace).createDefaultClient(log);
         }
         return kubernetesClient;
     }

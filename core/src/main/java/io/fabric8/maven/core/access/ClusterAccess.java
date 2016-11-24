@@ -47,7 +47,7 @@ public class ClusterAccess {
         }
     }
 
-    public KubernetesClient createKubernetesOrOpenshiftClient(Logger log) {
+    public KubernetesClient createDefaultClient(Logger log) {
         if (isOpenShift(log)) {
             return createOpenShiftClient();
         }
