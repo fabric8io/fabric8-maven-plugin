@@ -51,7 +51,7 @@ public class EnricherManager {
     private final MetadataVisitor[] metaDataVisitors;
     private final SelectorVisitor[] selectorVisitorCreators;
 
-    public EnricherManager(EnricherContext enricherContext) {
+    public EnricherManager(ResourceConfig resourceConfig, EnricherContext enricherContext) {
         PluginServiceFactory<EnricherContext> pluginFactory = new PluginServiceFactory<>(enricherContext);
 
         if (enricherContext.isUseProjectClasspath()) {
@@ -66,10 +66,9 @@ public class EnricherManager {
                                                             "META-INF/fabric8-enricher",
                                                             "META-INF/fabric8/enricher");
 
-        ResourceConfig resources = enricherContext.getResourceConfig();
-        if (resources != null) {
-            unshiftMetaDataEnricher(enrichers, enricherContext, MetadataEnricher.Type.ANNOTATION, resources.getAnnotations());
-            unshiftMetaDataEnricher(enrichers, enricherContext, MetadataEnricher.Type.LABEL, resources.getLabels());
+        if (resourceConfig != null) {
+            unshiftMetaDataEnricher(enrichers, enricherContext, MetadataEnricher.Type.ANNOTATION, resourceConfig.getAnnotations());
+            unshiftMetaDataEnricher(enrichers, enricherContext, MetadataEnricher.Type.LABEL, resourceConfig.getLabels());
         }
 
         logEnrichers(filterEnrichers(defaultEnricherConfig,enrichers));

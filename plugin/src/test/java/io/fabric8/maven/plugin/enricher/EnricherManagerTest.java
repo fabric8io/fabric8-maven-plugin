@@ -47,7 +47,7 @@ public class EnricherManagerTest {
            context.getConfig(); result = ProcessorConfig.INCLUDE_ALL;
            context.getImages(); result = new ImageConfiguration.Builder().alias("img1").name("img1").build();
         }};
-        EnricherManager manager = new EnricherManager(context);
+        EnricherManager manager = new EnricherManager(null, context);
 
         KubernetesListBuilder builder = new KubernetesListBuilder();
         manager.createDefaultResources(builder);
@@ -59,7 +59,7 @@ public class EnricherManagerTest {
         new Expectations() {{
            context.getConfig(); result = ProcessorConfig.INCLUDE_ALL;
         }};
-        EnricherManager manager = new EnricherManager(context);
+        EnricherManager manager = new EnricherManager(null, context);
 
         KubernetesListBuilder builder = new KubernetesListBuilder();
         manager.enrich(builder);
@@ -71,7 +71,7 @@ public class EnricherManagerTest {
         new Expectations() {{
            context.getConfig(); result = new ProcessorConfig(Arrays.asList("fmp-project"),null,new HashMap());
         }};
-        EnricherManager manager = new EnricherManager(context);
+        EnricherManager manager = new EnricherManager(null, context);
 
         KubernetesListBuilder builder = new KubernetesListBuilder();
         builder.addNewReplicaSetItem()

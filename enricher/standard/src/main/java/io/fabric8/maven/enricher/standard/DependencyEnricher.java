@@ -24,6 +24,7 @@ import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.openshift.api.model.Template;
@@ -157,7 +158,7 @@ public class DependencyEnricher extends BaseEnricher {
                         }
                     }
                     for (HasMetadata item : items) {
-                        KubernetesResourceUtil.setLocation(item, url.toString());
+                        KubernetesResourceUtil.setSourceUrlAnnotationIfNotSet(item, url.toString());
                         log.debug("  found %s  %s", getKind(item), KubernetesHelper.getName(item));
                     }
                     function.apply(items);

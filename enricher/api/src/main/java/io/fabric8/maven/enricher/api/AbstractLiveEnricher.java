@@ -61,7 +61,7 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
      * Return the value to return if no online mode is explicitely specified.
      * Can be overridden, by default it returns <code>false</code>.
      *
-     * @return the defaul valuet.
+     * @return the default value.
      */
     protected boolean getDefaultOnline() {
         return false;
@@ -149,20 +149,16 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
         return kubernetesClient;
     }
 
+    // Get names space in the order:
+    // - plugin configuration
+    // - default name space from the kubernetes helper
+    // - "default"
     private String getNamespace() {
-        String namespace = getNamespaceConfig();
+        String namespace = getContext().getNamespace();
         if (Strings.isNullOrBlank(namespace)) {
             namespace = KubernetesHelper.defaultNamespace();
         }
-        if (Strings.isNullOrBlank(namespace)) {
-            namespace = DEFAULT_NAMESPACE;
-        }
-        return namespace;
-    }
-
-    private String getNamespaceConfig() {
-        ResourceConfig config = getContext().getResourceConfig();
-        return config != null ? config.getNamespace() : null;
+        return Strings.isNullOrBlank(namespace) ? DEFAULT_NAMESPACE : namespace;
     }
 
 }
