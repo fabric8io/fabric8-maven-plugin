@@ -29,14 +29,13 @@ import org.apache.maven.model.PluginExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.*;
 import java.util.*;
+import java.util.zip.*;
 
 import static io.fabric8.maven.core.util.SpringBootProperties.DEV_TOOLS_REMOTE_SECRET;
 import static io.fabric8.maven.generator.springboot.SpringBootGenerator.Config.color;
@@ -109,8 +108,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
             try (FileSystem devToolsJarFs = FileSystems.newFileSystem(new URI("jar:" + devToolsFile),
                                                                       Collections.<String,String>emptyMap())) {
                 Path resourcePath = devToolsJarFs.getPath(SPRING_BOOT_DEVTOOLS_ENTRY);
-                URI targetUri = new URI("jar:file:" + target.getAbsolutePath());
-                copyDevToolsJarToFatTargetJar(resourcePath, targetUri);
+                copyDevToolsJarToFatTargetJar(resourcePath, target);
             } catch (URISyntaxException | IOException e) {
                 throw new MojoExecutionException("Failed to add " + SPRING_BOOT_DEVTOOLS_ENTRY + " to temp file " + target + ". " + e, e);
             }
@@ -142,11 +140,52 @@ public class SpringBootGenerator extends JavaExecGenerator {
         }
     }
 
-    private void copyDevToolsJarToFatTargetJar(Path resourcePath, URI uri) throws IOException {
-        try (FileSystem jarfs = FileSystems.newFileSystem(uri, Collections.<String,String>emptyMap())) {
-            // copy a file into the Jara file
-            Files.copy(resourcePath, jarfs.getPath("/BOOT-INF/lib/spring-devtools.jar"), StandardCopyOption.REPLACE_EXISTING);
+    private void copyDevToolsJarToFatTargetJar(Path resourcePath, File target) throws IOException {
+        File tmpZip = File.createTempFile(target.getName(), null);
+        tmpZip.delete();
+        if (!target.renameTo(tmpZip)) {
+            throw new IOException("Could not make temp file (" + target.getName() + ")");
         }
+        byte[] buffer = new byte[8192];
+        ZipInputStream zin = new ZipInputStream(new FileInputStream(tmpZip));
+        ZipOutputStream out = new ZipOutputStream(new FileOutputStream(target));
+        for (ZipEntry ze = zin.getNextEntry(); ze != null; ze = zin.getNextEntry()) {
+            out.putNextEntry(ze);
+            for(int read = zin.read(buffer); read > -1; read = zin.read(buffer)){
+                out.write(buffer, 0, read);
+            }
+            out.closeEntry();
+        }
+
+        InputStream in = Files.newInputStream(resourcePath);
+        out.putNextEntry(createZipEntry(resourcePath, "/BOOT-INF/lib/"));
+        for(int read = in.read(buffer); read > -1; read = in.read(buffer)){
+            out.write(buffer, 0, read);
+        }
+        out.closeEntry();
+
+        in.close();
+        out.close();
+        tmpZip.delete();
+    }
+
+    private ZipEntry createZipEntry(Path file, String path) throws IOException {
+        ZipEntry entry = new ZipEntry(path + file.getFileName().toString());
+
+        byte[] buffer = new byte[8192];
+        int bytesRead = -1;
+        InputStream is = Files.newInputStream(file);
+        CRC32 crc = new CRC32();
+        int size = 0;
+        while ((bytesRead = is.read(buffer)) != -1) {
+            crc.update(buffer, 0, bytesRead);
+            size += bytesRead;
+        }
+        entry.setSize(size);
+        entry.setCompressedSize(size);
+        entry.setCrc(crc.getValue());
+        entry.setMethod(ZipEntry.STORED);
+        return entry;
     }
 
     private void addSecretTokenToApplicationProperties() throws MojoExecutionException {
