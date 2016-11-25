@@ -17,13 +17,10 @@
 package io.fabric8.maven.enricher.api;
 
 import java.util.List;
-import java.util.Map;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.GoalFinder;
-import io.fabric8.maven.core.util.KindAndName;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
@@ -31,46 +28,28 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
-import static io.fabric8.maven.core.util.KubernetesResourceUtil.location;
-
 /**
+ * The context given to each enricher from where it can extract build specific information.
+ *
  * @author roland
  * @since 01/04/16
  */
 public class EnricherContext {
 
-    private final MavenProject project;
-    private final Logger log;
+    private MavenProject project;
+    private Logger log;
 
-    private final List<ImageConfiguration> images;
-    private final ResourceConfig resourceConfig;
+    private List<ImageConfiguration> images;
+    private String namespace;
 
     private ProcessorConfig config;
 
     private boolean useProjectClasspath;
-    private final OpenShiftDependencyResources openshiftDependencyResources;
-    private final MavenSession session;
-    private final GoalFinder goalFinder;
+    private OpenShiftDependencyResources openshiftDependencyResources;
+    private MavenSession session;
+    private GoalFinder goalFinder;
 
-    public EnricherContext(MavenProject project,
-                           MavenSession session,
-                           GoalFinder goalFinder,
-                           ProcessorConfig enricherConfig,
-                           List<ImageConfiguration> images,
-                           ResourceConfig kubernetesConfig,
-                           Logger log,
-                           boolean useProjectClasspath,
-                           OpenShiftDependencyResources openshiftDependencyResources) {
-        this.session = session;
-        this.goalFinder = goalFinder;
-        this.log = log;
-        this.project = project;
-        this.config = enricherConfig;
-        this.images = images;
-        this.resourceConfig = kubernetesConfig;
-        this.useProjectClasspath = useProjectClasspath;
-        this.openshiftDependencyResources = openshiftDependencyResources;
-    }
+    private EnricherContext() {}
 
     public MavenProject getProject() {
         return project;
@@ -88,8 +67,8 @@ public class EnricherContext {
         return config;
     }
 
-    public ResourceConfig getResourceConfig() {
-        return resourceConfig;
+    public String getNamespace() {
+        return namespace;
     }
 
     public boolean isUseProjectClasspath() {
@@ -110,5 +89,60 @@ public class EnricherContext {
             }
         }
         return false;
+    }
+
+    // =======================================================================================================
+    public static class Builder {
+
+        private EnricherContext ctx = new EnricherContext();
+
+        public Builder session(MavenSession session) {
+            ctx.session = session;
+            return this;
+        };
+
+        public Builder goalFinder(GoalFinder goalFinder) {
+            ctx.goalFinder = goalFinder;
+            return this;
+        }
+
+        public Builder log(Logger log) {
+            ctx.log = log;
+            return this;
+        }
+
+        public Builder project(MavenProject project) {
+            ctx.project = project;
+            return this;
+        }
+
+        public Builder config(ProcessorConfig config) {
+            ctx.config = config;
+            return this;
+        }
+
+        public Builder images(List<ImageConfiguration> images) {
+            ctx.images = images;
+            return this;
+        }
+
+        public Builder namespace(String namespace) {
+            ctx.namespace = namespace;
+            return this;
+        }
+
+        public Builder useProjectClasspath(boolean useProjectClasspath) {
+            ctx.useProjectClasspath = useProjectClasspath;
+            return this;
+        }
+
+        public Builder openshiftDependencyResources(OpenShiftDependencyResources openShiftDependencyResources) {
+            ctx.openshiftDependencyResources = openShiftDependencyResources;
+            return this;
+        }
+
+        public EnricherContext build() {
+            return ctx;
+        }
     }
 }

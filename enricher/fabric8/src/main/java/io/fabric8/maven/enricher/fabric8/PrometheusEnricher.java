@@ -64,7 +64,7 @@ public class PrometheusEnricher extends BaseEnricher {
     private String findPrometheusPort() {
         String prometheusPort = getConfig(Config.prometheusPort);
         if (!Strings.isNotBlank(prometheusPort)) {
-            for (ImageConfiguration configuration : getContext().getImages()) {
+            for (ImageConfiguration configuration : getImages()) {
                 List<String> ports = configuration.getBuildConfiguration().getPorts();
                 if (ports != null && ports.contains(PROMETHEUS_PORT)) {
                     prometheusPort = PROMETHEUS_PORT;

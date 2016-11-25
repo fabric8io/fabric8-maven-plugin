@@ -104,7 +104,7 @@ public class OpenShiftS2IEnricher extends BaseEnricher {
      * Returns the image configuration for the given image name
      */
     private ImageConfiguration getImage(String imageName) {
-        List<ImageConfiguration> images = getContext().getImages();
+        List<ImageConfiguration> images = getImages();
         for (ImageConfiguration imageConfiguration : images) {
             if (Objects.equals(imageName, imageConfiguration.getName())) {
                 return imageConfiguration;
