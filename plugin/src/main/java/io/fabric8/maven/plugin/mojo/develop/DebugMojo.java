@@ -236,14 +236,14 @@ public class DebugMojo extends ApplyMojo {
             PodSpec podSpec = template.getSpec();
             if (podSpec != null) {
                 List<Container> containers = podSpec.getContainers();
-                if (containers.size() > 0) {
-                    Container container = containers.get(0);
+                boolean enabled = false;
+                 for (int i = 0; i < containers.size(); i++) {
+                    Container container = containers.get(i);
                     List<EnvVar> env = container.getEnv();
                     if (env == null) {
                         env = new ArrayList<>();
                     }
                     remoteDebugPort = KubernetesResourceUtil.getEnvVar(env, DebugConstants.ENV_VAR_JAVA_DEBUG_PORT, DebugConstants.ENV_VAR_JAVA_DEBUG_PORT_DEFAULT);
-                    boolean enabled = false;
                     if (KubernetesResourceUtil.setEnvVar(env, DebugConstants.ENV_VAR_JAVA_DEBUG, "true")) {
                         container.setEnv(env);
                         enabled = true;
@@ -256,10 +256,10 @@ public class DebugMojo extends ApplyMojo {
                         container.setPorts(ports);
                         enabled = true;
                     }
-                    if (enabled) {
-                        log.info("Enabling debug on " + getKind(entity) + " " + getName(entity));
-                        return true;
-                    }
+                }
+                if (enabled) {
+                    log.info("Enabling debug on " + getKind(entity) + " " + getName(entity));
+                    return true;
                 }
             }
         }
