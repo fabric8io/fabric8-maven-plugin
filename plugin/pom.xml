@@ -91,6 +91,11 @@
 
     <dependency>
       <groupId>io.fabric8</groupId>
+      <artifactId>fabric8-maven-generator-vertx</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.fabric8</groupId>
       <artifactId>fabric8-maven-generator-karaf</artifactId>
     </dependency>
 

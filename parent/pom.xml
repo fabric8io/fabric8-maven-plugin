@@ -188,6 +188,12 @@
 
       <dependency>
         <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-generator-vertx</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-generator-karaf</artifactId>
         <version>${project.version}</version>
       </dependency>
