@@ -53,7 +53,6 @@ public class ImageEnricher extends BaseEnricher {
         super(buildContext, "fmp-image");
     }
 
-
     // Available configuration keys
     private enum Config implements Configs.Key {
         // What pull policy to use when fetching images
