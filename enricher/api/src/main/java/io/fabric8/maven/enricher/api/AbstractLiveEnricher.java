@@ -74,7 +74,6 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
      * @param protocol URL protocol such as <code>http</code>
      */
     protected String getExternalServiceURL(String serviceName, String protocol) {
-        String publicUrl = null;
         if (!isOnline()) {
             getLog().info("Not looking for service " + serviceName + " as we are in offline mode");
             return null;
@@ -82,6 +81,9 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
             try {
                 KubernetesClient kubernetes = getKubernetes();
                 String ns = kubernetes.getNamespace();
+                if (Strings.isNullOrBlank(ns)) {
+                    ns = getNamespace();
+                }
                 Service service = kubernetes.services().inNamespace(ns).withName(serviceName).get();
                 return service != null ?
                     KubernetesHelper.getServiceURL(kubernetes, serviceName, ns, protocol, true) :
