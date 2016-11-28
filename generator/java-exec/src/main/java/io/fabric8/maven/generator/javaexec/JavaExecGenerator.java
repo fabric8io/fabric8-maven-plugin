@@ -21,6 +21,7 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
@@ -42,7 +43,7 @@ import java.util.*;
 public class JavaExecGenerator extends BaseGenerator {
 
     // Environment variable used for specifying a main class
-    private static final String JAVA_MAIN_CLASS_ENV_VAR = "JAVA_MAIN_CLASS";
+    public static final String JAVA_MAIN_CLASS_ENV_VAR = "JAVA_MAIN_CLASS";
 
     // Plugins indicating a plain java build
     private static final String[] JAVA_EXEC_MAVEN_PLUGINS = new String[] {
@@ -138,18 +139,15 @@ public class JavaExecGenerator extends BaseGenerator {
     protected Map<String, String> getEnv(boolean prePackagePhase) throws MojoExecutionException {
         Map<String, String> ret = new HashMap<>();
         if (!isFatJar()) {
-            String mainClass = getConfig(Config.mainClass);
+            String mainClass = mainClassDetector.getMainClass();
             if (mainClass == null) {
-                mainClassDetector.getMainClass();
-                if (mainClass == null) {
-                    if (prePackagePhase) {
-                        return ret;
-                    } else {
-                        throw new MojoExecutionException("Cannot extract main class to startup");
-                    }
+                if (prePackagePhase) {
+                    return ret;
+                } else {
+                    throw new MojoExecutionException("Cannot extract main class to startup");
                 }
-                ret.put(JAVA_MAIN_CLASS_ENV_VAR, mainClass);
             }
+            ret.put(JAVA_MAIN_CLASS_ENV_VAR, mainClass);
         }
         return ret;
     }
@@ -213,7 +211,7 @@ public class JavaExecGenerator extends BaseGenerator {
     }
 
     protected boolean hasMainClass() {
-        return Boolean.parseBoolean(getConfig(Config.mainClass,"false"));
+        return getConfig(Config.mainClass) != null;
     }
 
     public FatJarDetector.Result detectFatJar() throws MojoExecutionException {
