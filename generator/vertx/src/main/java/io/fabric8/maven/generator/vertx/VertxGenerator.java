@@ -19,13 +19,17 @@ package io.fabric8.maven.generator.vertx;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
+import io.fabric8.maven.generator.api.PortsExtractor;
 import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static io.fabric8.maven.generator.vertx.Constants.*;
 
 /**
  * Vert.x Generator.
@@ -36,10 +40,6 @@ import java.util.Map;
  * given as a dependency (TODO)
  */
 public class VertxGenerator extends JavaExecGenerator {
-
-  private static final String VERTX_MAVEN_PLUGIN_GA = "io.fabric8:vertx-maven-plugin";
-  private static final String SHADE_PLUGIN_GA = "org.apache.maven.plugins:maven-shade-plugin";
-  private static final String VERTX_GROUPID = "io.vertx";
 
   public VertxGenerator(GeneratorContext context) {
     super(context, "vertx");
@@ -76,5 +76,15 @@ public class VertxGenerator extends JavaExecGenerator {
     Plugin shade = project.getPlugin(SHADE_PLUGIN_GA);
     Plugin vertx = project.getPlugin(VERTX_MAVEN_PLUGIN_GA);
     return shade != null || vertx != null;
+  }
+
+  @Override
+  protected List<String> extractPorts() {
+    List<String> ports = new ArrayList<>();
+    PortsExtractor portsExtractor = new VertxPortsExtractor(log);
+    for (Integer p : portsExtractor.extract(getProject()).values()) {
+      ports.add(String.valueOf(p));
+    }
+    return ports;
   }
 }
