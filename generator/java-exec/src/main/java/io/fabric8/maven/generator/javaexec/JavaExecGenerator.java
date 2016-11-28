@@ -21,7 +21,6 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
@@ -43,7 +42,7 @@ import java.util.*;
 public class JavaExecGenerator extends BaseGenerator {
 
     // Environment variable used for specifying a main class
-    public static final String JAVA_MAIN_CLASS_ENV_VAR = "JAVA_MAIN_CLASS";
+    private static final String JAVA_MAIN_CLASS_ENV_VAR = "JAVA_MAIN_CLASS";
 
     // Plugins indicating a plain java build
     private static final String[] JAVA_EXEC_MAVEN_PLUGINS = new String[] {
