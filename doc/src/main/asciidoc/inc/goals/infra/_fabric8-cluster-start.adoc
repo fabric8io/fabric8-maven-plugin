@@ -42,11 +42,11 @@ This will then use `minishift` instead to create a single node local OpenShift c
 
 By default the VM drivers used will be `hyperv` on Windows, `xhyve` on OS X and `kvm` on Linux.
 
-If you wish to switch to a different VM driver you can specify the `fabric8.vm.driver` property. For example if you have installed https://www.virtualbox.org/wiki/Downloads[VirtualBox] and wish to use that then type:
+If you wish to switch to a different VM driver you can specify the `fabric8.cluster.driver` property. For example if you have installed https://www.virtualbox.org/wiki/Downloads[VirtualBox] and wish to use that then type:
 
 [source,sh,subs="attributes"]
 ----
-mvn fabric8:cluster-start -Pfmp-snapshot -Dfabric8.vm.driver=virtualbox
+mvn fabric8:cluster-start -Pfmp-snapshot -Dfabric8.cluster.driver=virtualbox
 ----
 
 Note that we highly recommend using the default VM drivers (`hyperv` on Windows, `xhyve` on OS X and `kvm` on Linux) as they tend to work better and use less resources on your laptop than the alternatives.
