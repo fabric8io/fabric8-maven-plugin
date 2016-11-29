@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.2.7,</span>
-<span id="revdate">2016-11-28</span>
+<span id="revdate">2016-11-29</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -3661,11 +3661,11 @@ This plugin definition includes the configuration to generate the Docker image.
 <p>By default the VM drivers used will be <code>hyperv</code> on Windows, <code>xhyve</code> on OS X and <code>kvm</code> on Linux.</p>
 </div>
 <div class="paragraph">
-<p>If you wish to switch to a different VM driver you can specify the <code>fabric8.vm.driver</code> property. For example if you have installed <a href="https://www.virtualbox.org/wiki/Downloads">VirtualBox</a> and wish to use that then type:</p>
+<p>If you wish to switch to a different VM driver you can specify the <code>fabric8.cluster.driver</code> property. For example if you have installed <a href="https://www.virtualbox.org/wiki/Downloads">VirtualBox</a> and wish to use that then type:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-start -Pfmp-snapshot -Dfabric8.vm.driver=virtualbox</code></pre>
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:cluster-start -Pfmp-snapshot -Dfabric8.cluster.driver=virtualbox</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5122,7 +5122,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.7<br>
-Last updated 2016-11-28 14:20:16 UTC
+Last updated 2016-11-29 08:54:39 UTC
 </div>
 </div>
 </body>
