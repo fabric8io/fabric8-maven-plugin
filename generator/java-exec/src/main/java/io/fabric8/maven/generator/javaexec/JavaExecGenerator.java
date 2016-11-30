@@ -42,7 +42,7 @@ import java.util.*;
 public class JavaExecGenerator extends BaseGenerator {
 
     // Environment variable used for specifying a main class
-    private static final String JAVA_MAIN_CLASS_ENV_VAR = "JAVA_MAIN_CLASS";
+    static final String JAVA_MAIN_CLASS_ENV_VAR = "JAVA_MAIN_CLASS";
 
     // Plugins indicating a plain java build
     private static final String[] JAVA_EXEC_MAVEN_PLUGINS = new String[] {
@@ -106,7 +106,7 @@ public class JavaExecGenerator extends BaseGenerator {
     }
 
     @Override
-    public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean prePackagePhase) throws MojoExecutionException {
+    public List<ImageConfiguration> customize(List<ImageConfiguration>  configs, boolean prePackagePhase) throws MojoExecutionException {
         ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
         BuildImageConfiguration.Builder buildBuilder = null;
         buildBuilder = new BuildImageConfiguration.Builder()
