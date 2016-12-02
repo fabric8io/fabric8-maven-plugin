@@ -261,6 +261,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
                 case 9090:
                     return "http";
                 case 443:
+                case 8443:
                     return "https";
                 case 8778:
                     return "jolokia";
