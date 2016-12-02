@@ -139,7 +139,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
             if (buildConfig != null) {
                 List<String> ports = buildConfig.getPorts();
                 if (ports != null) {
-                    Set<Integer> portNumbers = new HashSet<>();
+                    List<Integer> portNumbers = new ArrayList<>();
                     Set<String> portNames = new HashSet<>();
 
                     for (String port : ports) {
