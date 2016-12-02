@@ -501,7 +501,7 @@ public class ResourceMojo extends AbstractResourceMojo {
             // lets add any ImageStream / ImageStreamTag objects which are already on disk
             // from a previous `BuildMojo` execution
             String namespace = clusterAccess.getNamespace();
-            KubernetesClient client = clusterAccess.createKubernetesClient();
+            KubernetesClient client = clusterAccess.createDefaultClient(log);
             Controller controller = new Controller(client);
             Set<HasMetadata> oldEntities;
             try {

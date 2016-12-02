@@ -344,7 +344,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         clusterAccess = new ClusterAccess(namespace);
 
         try {
-            KubernetesClient kubernetes = clusterAccess.createKubernetesClient();
+            KubernetesClient kubernetes = clusterAccess.createDefaultClient(log);
             URL masterUrl = kubernetes.getMasterUrl();
             File manifest;
             if (KubernetesHelper.isOpenShift(kubernetes)) {
@@ -675,7 +675,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
     }
 
     protected Controller createController() {
-        Controller controller = new Controller(clusterAccess.createKubernetesClient());
+        Controller controller = new Controller(clusterAccess.createDefaultClient(log));
         controller.setThrowExceptionOnError(failOnError);
         controller.setRecreateMode(recreate);
         getLog().debug("Using recreate mode: " + recreate);
