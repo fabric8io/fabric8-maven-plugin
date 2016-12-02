@@ -229,7 +229,7 @@ public class JavaExecGenerator extends BaseGenerator {
         return answer;
     }
 
-    private void addPortIfValid(List<String> list, String port) {
+    protected void addPortIfValid(List<String> list, String port) {
         if (Strings.isNotBlank(port) && Integer.parseInt(port) != 0) {
             list.add(port);
         }
