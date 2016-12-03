@@ -143,11 +143,21 @@ public class MavenUtil {
      * Returns true if the maven project has a dependency with the given groupId
      */
     public static boolean hasDependency(MavenProject project, String groupId) {
+        return hasDependency(project, groupId, null);
+    }
+
+    /**
+     * Returns true if the maven project has a dependency with the given groupId and artifactId (if not null)
+     */
+    public static boolean hasDependency(MavenProject project, String groupId, String artifactId) {
         Set<Artifact> artifacts = project.getArtifacts();
         if (artifacts != null) {
             for (Artifact artifact : artifacts) {
                 String scope = artifact.getScope();
                 if (Objects.equal("test", scope)) {
+                    continue;
+                }
+                if (artifactId != null && !Objects.equal(artifact, artifact.getArtifactId())) {
                     continue;
                 }
                 if (Objects.equal(groupId, artifact.getGroupId())) {
