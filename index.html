@@ -882,10 +882,33 @@ This allows for type safe configuration with IDE support, but only a subset of p
 <p>By default a <em>Service</em> and a <em>Deployment</em> object pointing to the created Docker image is created. When running in OpenShift mode, a <em>Service</em> and <em>DeploymentConfig</em> which refers the <em>ImageStream</em> created with <code>fabric8:build</code> will be installed.</p>
 </div>
 <div class="paragraph">
-<p>Of course you can bind all those fabric8-goals to execution phases as well, so that they are called along with standard lifecycle goals like <code>install</code>:</p>
+<p>Of course you can bind all those fabric8-goals to execution phases as well, so that they are called along with standard lifecycle goals like <code>install</code>. For example, to bind the building of the Kubernetes resource files and the Docker images, add the following goals to the execution of the f-m-p:</p>
 </div>
 <div class="listingblock">
 <div class="title">Example for lifecycle bindings</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+
+  <span class="comment">&lt;!-- ... --&gt;</span>
+
+  <span class="tag">&lt;executions&gt;</span>
+    <span class="tag">&lt;execution&gt;</span>
+      <span class="tag">&lt;goals&gt;</span>
+        <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
+        <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
+      <span class="tag">&lt;/goals&gt;</span>
+    <span class="tag">&lt;/execution&gt;</span>
+  <span class="tag">&lt;/executions&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you&#8217;d also like to automatically deploy to Kubernetes each time you do a <code>mvn install</code> you can add the <code>deploy</code> goal:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example for lifecycle bindings with automatic deploys for mvn install</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
@@ -5125,7 +5148,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.7<br>
-Last updated 2016-12-03 08:34:28 UTC
+Last updated 2016-12-03 08:44:08 UTC
 </div>
 </div>
 </body>
