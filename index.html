@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.2.7,</span>
-<span id="revdate">2016-12-02</span>
+<span id="revdate">2016-12-03</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -4151,7 +4151,7 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 <p>This generator is called <code>spring-boot</code> and gets activated when it finds a <code>spring-boot-maven-plugin</code> in the pom.xml.</p>
 </div>
 <div class="paragraph">
-<p>This generator is based on the <a href="#generator-java-exec">Java Application</a> Generator and inherits all of its configuration values. It also uses the same default images as the <a href="#generator-java-exec-from">java-exec Generator</a>.</p>
+<p>This generator is based on the <a href="#generator-java-exec">Java Application</a> Generator and inherits all of its configuration values. The generated container port is read from the <code>server.port</code> property <code>application.properties</code>, defaulting to <code>8080</code> if it is not found. It also uses the same default images as the <a href="#generator-java-exec-from">java-exec Generator</a>.</p>
 </div>
 <div class="paragraph">
 <p>Beside the  <a href="#generator-options-common">common generator options</a> and the <a href="#generator-java-exec-options">java-exec options</a> the following additional configuration is recognized:</p>
@@ -4178,6 +4178,9 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 </tr>
 </tbody>
 </table>
+<div class="paragraph">
+<p>The generator adds Kubernetes liveness and readiness probes pointing to either the management or server port as read from the <code>application.properties</code>. If the <code>server.ssl.key-store</code> property is set in <code>application.properties</code> then the probes are automatically set to use <code>https</code>.</p>
+</div>
 <div class="paragraph">
 <p>The generator works differently when called together with <code>fabric8:watch</code>.
 In that case it enables support for <a href="http://docs.spring.io/spring-boot/docs/current/reference/html/using-boot-devtools.html">Spring Boot Developer Tools</a> which allows for hot reloading of the Spring Bott app.
@@ -5122,7 +5125,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.7<br>
-Last updated 2016-12-02 18:48:50 UTC
+Last updated 2016-12-03 08:34:28 UTC
 </div>
 </div>
 </body>
