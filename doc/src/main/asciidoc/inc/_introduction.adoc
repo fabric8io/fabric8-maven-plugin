@@ -144,9 +144,31 @@ mvn fabric8:resource fabric8:deploy
 
 By default a _Service_ and a _Deployment_ object pointing to the created Docker image is created. When running in OpenShift mode, a _Service_ and _DeploymentConfig_ which refers the _ImageStream_ created with `fabric8:build` will be installed.
 
-Of course you can bind all those fabric8-goals to execution phases as well, so that they are called along with standard lifecycle goals like `install`:
+Of course you can bind all those fabric8-goals to execution phases as well, so that they are called along with standard lifecycle goals like `install`. For example, to bind the building of the Kubernetes resource files and the Docker images, add the following goals to the execution of the f-m-p:
 
 .Example for lifecycle bindings
+[source, xml, indent=0]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>fabric8-maven-plugin</artifactId>
+
+  <!-- ... -->
+
+  <executions>
+    <execution>
+      <goals>
+        <goal>resource</goal>
+        <goal>build</goal>
+      </goals>
+    </execution>
+  </executions>
+</plugin>
+----
+
+If you'd also like to automatically deploy to Kubernetes each time you do a `mvn install` you can add the `deploy` goal:
+
+.Example for lifecycle bindings with automatic deploys for mvn install
 [source, xml, indent=0]
 ----
 <plugin>
