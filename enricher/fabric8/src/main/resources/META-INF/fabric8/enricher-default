@@ -7,4 +7,5 @@ io.fabric8.maven.enricher.fabric8.WildFlySwarmHealthCheckEnricher,505
 io.fabric8.maven.enricher.fabric8.KarafHealthCheckEnricher,506
 io.fabric8.maven.enricher.fabric8.VertxHealthCheckEnricher,507
 io.fabric8.maven.enricher.fabric8.PrometheusEnricher,508
+io.fabric8.maven.enricher.fabric8.AutoTLSEnricher,509
 io.fabric8.maven.enricher.fabric8.ExposeEnricher,1000

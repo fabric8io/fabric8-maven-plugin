@@ -1,0 +1,126 @@
+/*
+ * Copyright 2016 Red Hat, Inc.
+ *
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+package io.fabric8.maven.enricher.standard;
+
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.PodTemplate;
+import io.fabric8.kubernetes.api.model.PodTemplateBuilder;
+import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.utils.Strings;
+import mockit.Expectations;
+import mockit.Mocked;
+import mockit.integration.junit4.JMockit;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import java.util.Collections;
+import java.util.TreeMap;
+
+import static org.junit.Assert.assertEquals;
+
+@RunWith(JMockit.class)
+public class VolumePermissionEnricherTest {
+
+    @Mocked
+    private EnricherContext context;
+
+    // *******************************
+    // Tests
+    // *******************************
+
+    private static final class TestConfig {
+        private final String permission;
+        private final String initContainerName;
+        private final String[] volumeNames;
+
+        private TestConfig(String permission, String initContainerName, String... volumeNames) {
+            this.permission = permission;
+            this.initContainerName = initContainerName;
+            this.volumeNames = volumeNames;
+        }
+    }
+
+    @Test
+    public void testAdapt() throws Exception {
+        final TestConfig[] data = new TestConfig[]{
+            new TestConfig(null, null),
+            new TestConfig(null, "init", "volumeA"),
+            new TestConfig(null, "init", "volumeA", "volumeB")
+        };
+
+        for (final TestConfig tc : data) {
+            final ProcessorConfig config = new ProcessorConfig(null, null,
+                    Collections.singletonMap(VolumePermissionEnricher.ENRICHER_NAME, new TreeMap(Collections
+                            .singletonMap(VolumePermissionEnricher.Config.permission.name(), tc.permission))));
+
+            // Setup mock behaviour
+            new Expectations() {{ context.getConfig(); result = config; }};
+
+            VolumePermissionEnricher enricher = new VolumePermissionEnricher(context);
+
+            PodTemplateBuilder ptb = new PodTemplateBuilder().withNewMetadata().and()
+                .withNewTemplate()
+                .withNewMetadata().and()
+                .withNewSpec().addNewContainer().and()
+                .and().and();
+
+            for (String vn : tc.volumeNames) {
+              ptb = ptb.editTemplate().
+                  editSpec().
+                  addNewVolume().withName(vn).withNewPersistentVolumeClaim().and().and().
+                  and().and();
+              ptb = ptb.editTemplate().editSpec().withContainers(
+                  new ContainerBuilder(ptb.getTemplate().getSpec().getContainers().get(0))
+                      .addNewVolumeMount().withName(vn).withMountPath("/tmp/" + vn).and()
+                      .build()
+              ).and().and();
+            }
+
+            KubernetesListBuilder klb = new KubernetesListBuilder().addToPodTemplateItems(ptb.build());
+
+            enricher.adapt(klb);
+
+            PodTemplate pt = (PodTemplate) klb.getItems().get(0);
+
+            String initContainers = pt.getTemplate().getMetadata().getAnnotations()
+                    .get(BaseEnricher.INIT_CONTAINER_ANNOTATION);
+            boolean shouldHaveInitContainer = tc.volumeNames.length > 0;
+            assertEquals(shouldHaveInitContainer, initContainers != null);
+            if (!shouldHaveInitContainer) {
+                continue;
+            }
+
+            JSONArray ja = new JSONArray(initContainers);
+            assertEquals(1, ja.length());
+
+            JSONObject jo = ja.getJSONObject(0);
+            assertEquals(tc.initContainerName, jo.get("name"));
+            String permission = Strings.isNullOrBlank(tc.permission) ? "777" : tc.permission;
+            JSONArray chmodCmd = new JSONArray();
+            chmodCmd.put("chmod");
+            chmodCmd.put(permission);
+            for (String vn : tc.volumeNames) {
+              chmodCmd.put("/tmp/" + vn);
+            }
+            assertEquals(chmodCmd.toString(), jo.getJSONArray("command").toString());
+        }
+    }
+}

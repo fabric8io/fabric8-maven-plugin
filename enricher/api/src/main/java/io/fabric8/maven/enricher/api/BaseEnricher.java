@@ -17,12 +17,17 @@
 package io.fabric8.maven.enricher.api;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.List;
 import java.util.Map;
@@ -33,6 +38,8 @@ import java.util.Properties;
  * @since 01/04/16
  */
 public abstract class BaseEnricher implements Enricher {
+
+    public static final String INIT_CONTAINER_ANNOTATION = "pod.alpha.kubernetes.io/init-containers";
 
     private final EnricherConfig config;
     private final String name;
@@ -113,5 +120,23 @@ public abstract class BaseEnricher implements Enricher {
             }
         }
         return false;
+    }
+
+    protected void ensureMetadata(PodTemplateSpecBuilder obj) {
+        ObjectMeta metadata = obj.buildMetadata();
+        if (metadata == null) {
+            obj.withNewMetadata().endMetadata();
+        }
+    }
+
+    protected void addInitContainer(PodTemplateSpecBuilder builder, JSONObject initContainer) {
+        ensureMetadata(builder);
+        String initContainerAnnotation = builder.buildMetadata().getAnnotations().get(INIT_CONTAINER_ANNOTATION);
+
+        JSONArray initContainers = Strings.isNullOrBlank(initContainerAnnotation) ? new JSONArray()
+                : new JSONArray(initContainerAnnotation);
+        initContainers.put(initContainer);
+
+        builder.editMetadata().addToAnnotations(INIT_CONTAINER_ANNOTATION, initContainers.toString()).endMetadata();
     }
 }

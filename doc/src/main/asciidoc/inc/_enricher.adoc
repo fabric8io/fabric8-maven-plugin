@@ -128,6 +128,90 @@ Default enrichers are used for adding missing resources or adding metadata to gi
 
 Enricher which fixes the permission of persisten volume mount with the help of an init container.
 
+[[fmp-autotls]]
+==== fmp-autotls
+
+Enricher which adds appropriate annotations and volumes to enable OpenShift's automatic https://docs.openshift.org/latest/dev_guide/secrets.html#service-serving-certificate-secrets[Service Serving Certificate Secrets].
+This enricher adds an init container to convert the service serving certificates from PEM (the format that OpenShift generates them in) to
+a JKS-format Java keystore ready for consumption in Java services.
+
+This enricher is disabled by default. In order to use it, you must configure the Fabric8 Maven plugin to use this enricher:
+
+[source,xml]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>fabric8-maven-plugin</artifactId>
+  <version>3.3.0</version>
+  <executions>
+    <execution>
+      <goals>
+        <goal>resource</goal>
+      </goals>
+    </execution>
+  </executions>
+  <configuration>
+    <enricher>
+      <includes>
+        <include>fmp-autotls</include>
+      </includes>
+      <config>
+        <fmp-autotls>
+          ...
+        </fmp-autotls>
+      </config>
+    </enricher>
+  </configuration>
+</plugin>
+----
+
+The auto-TLS enricher supports the following configuration options:
+
+[cols="2,6,3"]
+|===
+| Option | Description | Default
+
+| `tlsSecretName`
+| The name of the secret to be used to store the generated service serving certs.
+| `<project.artifactId>-tls`
+
+| `tlsSecretVolumeMountPoint`
+| Where the service serving secret should be mounted to in the pod.
+| `/var/run/secrets/fabric8.io/tls-pem`
+
+| `tlsSecretVolumeName`
+| The name of the secret volume.
+| `tls-pem`
+
+| `jksVolumeMountPoint`
+| Where the generated keystore volume should be mounted to in the pod.
+| `/var/run/secrets/fabric8.io/tls-jks`
+
+| `jksVolumeName`
+| The name of the keystore volume.
+| `tls-jks`
+
+| `pemToJKSInitContainerImage`
+| The name of the image used as an init container to convert PEM certificate/key to Java keystore.
+| `jimmidyson/pemtokeystore:v0.1.0`
+
+| `pemToJKSInitContainerName`
+| the name of the init container to convert PEM certificate/key to Java keystore.
+| `tls-jks-converter`
+
+| `keystoreFileName`
+| The name of the generated keystore file.
+| `keystore.jks`
+
+| `keystorePassword`
+| The password to use for the generated keystore.
+| `changeit`
+
+| `keystoreCertAlias`
+| The alias in the keystore used for the imported service serving certificate.
+| `server`
+|===
+
 [[enrichers-fabric8]]
 === Fabric8 Enrichers
 
