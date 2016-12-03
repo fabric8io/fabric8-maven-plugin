@@ -3,7 +3,7 @@
 
 This generator is called `spring-boot` and gets activated when it finds a `spring-boot-maven-plugin` in the pom.xml.
 
-This generator is based on the <<generator-java-exec, Java Application>> Generator and inherits all of its configuration values. It also uses the same default images as the <<generator-java-exec-from, java-exec Generator>>.
+This generator is based on the <<generator-java-exec, Java Application>> Generator and inherits all of its configuration values. The generated container port is read from the `server.port` property `application.properties`, defaulting to `8080` if it is not found. It also uses the same default images as the <<generator-java-exec-from, java-exec Generator>>.
 
 Beside the  <<generator-options-common, common generator options>> and the <<generator-java-exec-options, java-exec options>> the following additional configuration is recognized:
 
@@ -16,6 +16,8 @@ Beside the  <<generator-options-common, common generator options>> and the <<gen
 | If seth force the use of color in the Spring Boot console output.
 |
 |===
+
+The generator adds Kubernetes liveness and readiness probes pointing to either the management or server port as read from the `application.properties`. If the `server.ssl.key-store` property is set in `application.properties` then the probes are automatically set to use `https`.
 
 The generator works differently when called together with `fabric8:watch`.
 In that case it enables support for http://docs.spring.io/spring-boot/docs/current/reference/html/using-boot-devtools.html[Spring Boot Developer Tools] which allows for hot reloading of the Spring Bott app.

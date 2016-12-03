@@ -19,6 +19,7 @@ package io.fabric8.maven.generator.springboot;
 import com.google.common.base.Strings;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.core.util.SpringBootProperties;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
@@ -48,6 +49,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
 
     private static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
     private static final String SPRING_BOOT_DEVTOOLS_ENTRY = "fabric8-spring-devtools/spring-boot-devtools.jar";
+    private static final String DEFAULT_SERVER_PORT = "8080";
 
     public enum Config implements Configs.Key {
         color {{ d = "false"; }};
@@ -89,6 +91,17 @@ public class SpringBootGenerator extends JavaExecGenerator {
             return true;
         }
         return super.isFatJar();
+    }
+
+    @Override
+    protected List<String> extractPorts() {
+        List<String> answer = new ArrayList<>();
+        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(this.getProject());
+        String port = properties.getProperty(SpringBootProperties.SERVER_PORT, DEFAULT_SERVER_PORT);
+        addPortIfValid(answer, getConfig(JavaExecGenerator.Config.webPort, port));
+        addPortIfValid(answer, getConfig(JavaExecGenerator.Config.jolokiaPort));
+        addPortIfValid(answer, getConfig(JavaExecGenerator.Config.prometheusPort));
+        return answer;
     }
 
     // =============================================================================

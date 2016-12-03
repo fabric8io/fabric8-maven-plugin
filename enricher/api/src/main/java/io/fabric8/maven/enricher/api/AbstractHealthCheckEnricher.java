@@ -72,6 +72,9 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
             desc.append(", path='");
             desc.append(probe.getHttpGet().getPath());
             desc.append("'");
+            desc.append(", scheme='");
+            desc.append(probe.getHttpGet().getScheme());
+            desc.append("'");
         }
         if (probe.getInitialDelaySeconds() != null) {
             desc.append(", with initial delay ");
