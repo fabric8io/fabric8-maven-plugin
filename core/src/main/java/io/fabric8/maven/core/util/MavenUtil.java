@@ -157,7 +157,7 @@ public class MavenUtil {
                 if (Objects.equal("test", scope)) {
                     continue;
                 }
-                if (artifactId != null && !Objects.equal(artifact, artifact.getArtifactId())) {
+                if (artifactId != null && !Objects.equal(artifactId, artifact.getArtifactId())) {
                     continue;
                 }
                 if (Objects.equal(groupId, artifact.getGroupId())) {
