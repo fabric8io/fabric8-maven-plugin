@@ -77,12 +77,12 @@ public class SpringBootGenerator extends JavaExecGenerator {
     }
 
     @Override
-    protected Map<String, String> getEnv(boolean isPrePackagePhase) throws MojoExecutionException {
-        Map<String, String> ret = super.getEnv(isPrePackagePhase);
+    protected List<String> getExtraJavaOptions() {
+        List<String> opts = super.getExtraJavaOptions();
         if (Boolean.parseBoolean(getConfig(color))) {
-            ret.put("JAVA_OPTIONS","-Dspring.output.ansi.enabled=" + getConfig(color));
+            opts.add("-Dspring.output.ansi.enabled=" + getConfig(color));
         }
-        return ret;
+        return opts;
     }
 
     @Override

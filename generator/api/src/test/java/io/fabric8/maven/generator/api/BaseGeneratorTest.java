@@ -14,14 +14,10 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.core.util.mainclass.two;
+package io.fabric8.maven.generator.api;
 /**
  * @author roland
- * @since 01/08/16
+ * @since 28/11/16
  */
-public class OneMain {
-
-    public static void main(String[] args) {
-
-    }
+public class BaseGeneratorTest {
 }

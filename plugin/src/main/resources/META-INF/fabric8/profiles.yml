@@ -4,7 +4,7 @@
 - name: raw
   enricher:
     includes: []
-# No defaults added, useful for explicit configuratiomn
+# No defaults added, useful for explicit configuration
 - name: explicit
   enricher:
     excludes:
