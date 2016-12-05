@@ -17,7 +17,6 @@
 package io.fabric8.maven.plugin.enricher;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpecBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentSpecBuilder;

@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateLabels;
-import static io.fabric8.maven.core.config.BuildRecreateMode.is;
 
 /**
  * Enricher for enabling exposing of HTTP / HTTPS based services

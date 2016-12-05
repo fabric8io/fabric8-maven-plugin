@@ -19,7 +19,6 @@ package io.fabric8.maven.enricher.api;
 import java.util.List;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.docker.config.ImageConfiguration;

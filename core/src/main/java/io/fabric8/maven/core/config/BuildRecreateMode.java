@@ -16,8 +16,6 @@
 
 package io.fabric8.maven.core.config;
 
-import org.apache.maven.shared.utils.StringUtils;
-
 import static io.fabric8.utils.Strings.isNullOrBlank;
 
 /**

@@ -22,7 +22,6 @@ import java.util.*;
 
 import io.fabric8.maven.docker.access.DockerConnectionDetector;
 import io.fabric8.maven.docker.access.util.EnvCommand;
-import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
 
 /**

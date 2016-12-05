@@ -22,11 +22,9 @@ import java.util.*;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.docker.config.handler.property.ConfigKey;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.utils.Lists;
-import org.apache.maven.shared.utils.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

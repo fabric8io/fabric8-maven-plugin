@@ -16,7 +16,6 @@ package io.fabric8.maven.generator.webapp.handler;
  * limitations under the License.
  */
 
-import java.util.Arrays;
 import java.util.List;
 
 import io.fabric8.maven.generator.webapp.AppServerHandler;

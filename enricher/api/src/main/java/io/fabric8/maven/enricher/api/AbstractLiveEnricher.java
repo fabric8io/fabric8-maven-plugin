@@ -23,7 +23,6 @@ import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterAccess;
-import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.utils.Strings;
 

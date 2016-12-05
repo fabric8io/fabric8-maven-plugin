@@ -29,7 +29,6 @@ import org.apache.maven.project.MavenProject;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * @author roland
