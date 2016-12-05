@@ -105,9 +105,6 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
             }
             return KubernetesHelper.createJenkinshiftOpenShiftClient(jenkinshiftUrl);
         }
-        if (openShiftClient == null) {
-            throw new MojoExecutionException("Not connected to an OpenShift cluster and JenkinShift could not be found! Cluster: " + kubernetes.getMasterUrl());
-        }
         return openShiftClient;
     }
 
