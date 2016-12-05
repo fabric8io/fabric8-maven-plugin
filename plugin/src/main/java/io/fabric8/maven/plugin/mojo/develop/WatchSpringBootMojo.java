@@ -23,7 +23,6 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ClientResource;
 import io.fabric8.maven.core.util.ClassUtil;
-import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Closeables;

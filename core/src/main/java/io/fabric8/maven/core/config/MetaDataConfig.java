@@ -16,10 +16,7 @@
 
 package io.fabric8.maven.core.config;
 
-import java.util.Map;
 import java.util.Properties;
-
-import javax.validation.constraints.Pattern;
 
 import org.apache.maven.plugins.annotations.Parameter;
 

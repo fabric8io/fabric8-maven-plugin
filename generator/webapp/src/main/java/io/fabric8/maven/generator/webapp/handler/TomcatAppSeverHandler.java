@@ -3,7 +3,6 @@ package io.fabric8.maven.generator.webapp.handler;
 import io.fabric8.maven.core.util.MavenUtil;
 import org.apache.maven.project.MavenProject;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 

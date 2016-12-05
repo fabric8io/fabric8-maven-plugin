@@ -24,7 +24,6 @@ import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
-import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.openshift.api.model.Template;

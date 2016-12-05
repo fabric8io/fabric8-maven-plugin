@@ -16,13 +16,7 @@
 
 package io.fabric8.maven.core.config;
 
-import java.io.*;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 /**
  * A profile is a named configuration with ernicher and generator configs.
