@@ -69,7 +69,7 @@ public class EnricherManagerTest {
     @Test
     public void enrichSimple() {
         new Expectations() {{
-           context.getConfig(); result = new ProcessorConfig(Arrays.asList("fmp-project"),null,new HashMap());
+           context.getConfig(); result = new ProcessorConfig(Arrays.asList("fmp-project"),null,new HashMap<String, TreeMap>());
         }};
         EnricherManager manager = new EnricherManager(null, context);
 
@@ -90,7 +90,7 @@ public class EnricherManagerTest {
         KubernetesList list = builder.build();
         assertEquals(1, list.getItems().size());
         ReplicaSet pod = (ReplicaSet) list.getItems().get(0);
-        Map labels = pod.getMetadata().getLabels();
+        Map<String, String> labels = pod.getMetadata().getLabels();
         assertNotNull(labels);
         assertEquals("fabric8", labels.get("provider"));
     }

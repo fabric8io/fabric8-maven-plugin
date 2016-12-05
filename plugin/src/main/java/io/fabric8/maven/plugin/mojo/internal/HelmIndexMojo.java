@@ -130,7 +130,7 @@ public class HelmIndexMojo extends AbstractArtifactSearchMojo {
             String key = chartInfo.getName();
             SortedSet<ChartInfo> set = chartMap.get(key);
             if (set == null) {
-                set = new TreeSet(createChartComparator());
+                set = new TreeSet<>(createChartComparator());
                 chartMap.put(key, set);
             }
             set.add(chartInfo);

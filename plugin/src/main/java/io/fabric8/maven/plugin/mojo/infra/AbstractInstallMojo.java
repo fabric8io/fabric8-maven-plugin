@@ -202,7 +202,6 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
 
     // Where to put the initial download of gofabric8
     private File createGofabric8DownloadFile() throws MojoExecutionException {
-        File file = null;
         try {
             File downloadDir = Files.createTempDirectory(fabric8BinDir.toPath(), "download").toFile();
             downloadDir.deleteOnExit();
@@ -285,7 +284,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
 
     protected void runGofabric8(File command, String ... args) throws MojoExecutionException {
         // Be sure to run in batch mode
-        List argList = new ArrayList(Arrays.asList(args));
+        List<String> argList = new ArrayList<>(Arrays.asList(args));
         argList.add("--batch");
         String argLine = Strings.join(argList, " ");
         log.info("Running %s %s", command, argLine);

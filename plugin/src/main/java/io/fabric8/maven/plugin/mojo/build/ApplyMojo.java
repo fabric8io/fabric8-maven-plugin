@@ -414,7 +414,6 @@ public class ApplyMojo extends AbstractFabric8Mojo {
 
     // TODO: Move it out into an utility class
     public static Set<HasMetadata> loadResources(KubernetesClient kubernetes, Controller controller, String namespace, File manifest, MavenProject project, Logger log) throws Exception {
-        String fileName = manifest.getName();
         Object dto = KubernetesHelper.loadYaml(manifest, KubernetesResource.class);
         if (dto == null) {
             throw new MojoFailureException("Cannot load kubernetes YAML: " + manifest);
@@ -426,10 +425,10 @@ public class ApplyMojo extends AbstractFabric8Mojo {
             dto = Templates.processTemplatesLocally(template, failOnMissingParameterValue);
         }
 
-        Set<KubernetesResource> resources = new LinkedHashSet<>();
+        Set<KubernetesResource<?>> resources = new LinkedHashSet<>();
 
         Set<HasMetadata> entities = new TreeSet<>(new HasMetadataComparator());
-        for (KubernetesResource resource : resources) {
+        for (KubernetesResource<?> resource : resources) {
             entities.addAll(KubernetesHelper.toItemList(resource));
         }
 
@@ -757,7 +756,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
     protected void resizeApp(KubernetesClient kubernetes, String namespace, Set<HasMetadata> entities, int replicas) {
         for (HasMetadata entity : entities) {
             String name = getName(entity);
-            Scaleable scalable = null;
+            Scaleable<?> scalable = null;
             if (entity instanceof Deployment) {
                 scalable = kubernetes.extensions().deployments().inNamespace(namespace).withName(name);
             } else if (entity instanceof ReplicaSet) {
@@ -831,7 +830,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
                     log.warn("Ignoring empty key in selector expression %s", expression);
                     continue;
                 }
-                if (values == null && values.isEmpty()) {
+                if (values == null || values.isEmpty()) {
                     log.warn("Ignoring empty values in selector expression %s", expression);
                     continue;
                 }
