@@ -53,18 +53,10 @@ public class VertxGenerator extends JavaExecGenerator {
   }
 
   @Override
-  protected Map<String, String> getEnv(boolean isPrePackagePhase) throws MojoExecutionException {
-    Map<String, String> ret = super.getEnv(isPrePackagePhase);
-    String cacheDirConfig = "-Dvertx.cacheDirBase=/tmp";
-    String javaOpts = ret.get("JAVA_OPTIONS");
-    if (javaOpts != null) {
-      // If already set, append it.
-      javaOpts = javaOpts + " " + cacheDirConfig;
-    } else {
-      javaOpts = cacheDirConfig;
-    }
-    ret.put("JAVA_OPTIONS", javaOpts);
-    return ret;
+  protected List<String> getExtraJavaOptions() {
+    List opts = super.getExtraJavaOptions();
+    opts.add("-Dvertx.cacheDirBase=/tmp");
+    return opts;
   }
 
   @Override

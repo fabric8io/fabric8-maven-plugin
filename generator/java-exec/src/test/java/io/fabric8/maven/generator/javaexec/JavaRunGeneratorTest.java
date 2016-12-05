@@ -1,4 +1,4 @@
-package io.fabric8.maven.generator.api.support;
+package io.fabric8.maven.generator.javaexec;
 /*
  *
  * Copyright 2016 Roland Huss

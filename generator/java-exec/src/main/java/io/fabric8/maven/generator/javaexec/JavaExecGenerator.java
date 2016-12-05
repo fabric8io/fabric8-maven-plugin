@@ -30,6 +30,7 @@ import org.apache.maven.plugin.assembly.model.Assembly;
 import org.apache.maven.plugin.assembly.model.DependencySet;
 import org.apache.maven.plugin.assembly.model.FileSet;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.StringUtils;
 
 import java.io.File;
 import java.util.*;
@@ -43,6 +44,7 @@ public class JavaExecGenerator extends BaseGenerator {
 
     // Environment variable used for specifying a main class
     private static final String JAVA_MAIN_CLASS_ENV_VAR = "JAVA_MAIN_CLASS";
+    private static final String JAVA_OPTIONS = "JAVA_OPTIONS";
 
     // Plugins indicating a plain java build
     private static final String[] JAVA_EXEC_MAVEN_PLUGINS = new String[] {
@@ -151,7 +153,15 @@ public class JavaExecGenerator extends BaseGenerator {
                 ret.put(JAVA_MAIN_CLASS_ENV_VAR, mainClass);
             }
         }
+        List<String> javaOptions = getExtraJavaOptions();
+        if (javaOptions.size() > 0) {
+            ret.put(JAVA_OPTIONS, StringUtils.join(javaOptions.iterator()," "));
+        }
         return ret;
+    }
+
+    protected List<String> getExtraJavaOptions() {
+        return new ArrayList<>();
     }
 
     protected AssemblyConfiguration createAssembly() throws MojoExecutionException {
