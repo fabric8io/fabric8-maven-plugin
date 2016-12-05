@@ -83,7 +83,7 @@ public class AppCatalogMojo extends AbstractResourceMojo {
         log.info("Found " + openshiftMap.size() + " openshift resources");
         for (Map.Entry<URL, KubernetesResource> entry : openshiftMap.entrySet()) {
             URL url = entry.getKey();
-            KubernetesResource resource = entry.getValue();
+            KubernetesResource<?> resource = entry.getValue();
             Template template = null;
             if (resource instanceof Template) {
                 template = (Template) resource;
@@ -139,7 +139,7 @@ public class AppCatalogMojo extends AbstractResourceMojo {
         Map<URL, KubernetesResource> kubernetesTemplateMap = loadYamlResourcesOnClassPath("META-INF/fabric8/" + KUBERNETES_TEMPLATE.getValue() + ".yml");
         for (Map.Entry<URL, KubernetesResource> entry : kubernetesTemplateMap.entrySet()) {
             URL url = entry.getKey();
-            KubernetesResource resource = entry.getValue();
+            KubernetesResource<?> resource = entry.getValue();
             if (resource instanceof Template) {
                 Template template = (Template) resource;
                 String name = getName(template);
@@ -160,7 +160,7 @@ public class AppCatalogMojo extends AbstractResourceMojo {
         Map<URL, KubernetesResource> kubernetesMap = loadYamlResourcesOnClassPath("META-INF/fabric8/kubernetes.yml");
         for (Map.Entry<URL, KubernetesResource> entry : kubernetesMap.entrySet()) {
             URL url = entry.getKey();
-            KubernetesResource resource = entry.getValue();
+            KubernetesResource<?> resource = entry.getValue();
             Map<String, String> labels = new HashMap<>();
             Map<String, String> annotations = new HashMap<>();
             String name = extractNameFromURL(url, labels);
@@ -344,7 +344,7 @@ public class AppCatalogMojo extends AbstractResourceMojo {
         for (URL url : resourceList) {
             try (InputStream is = url.openStream()) {
                 if (is != null) {
-                    KubernetesResource resource;
+                    KubernetesResource<?> resource;
                     try {
                         resource = KubernetesHelper.loadYaml(is, KubernetesResource.class);
                         resourceMap.put(url, resource);

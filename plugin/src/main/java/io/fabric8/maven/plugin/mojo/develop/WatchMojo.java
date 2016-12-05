@@ -149,7 +149,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
         if (generator == null) {
             // TODO discover the generators - not sure how yet ;)....
             List<String> includes = Arrays.asList("spring-boot");
-            Set<String> excludes = new HashSet(Arrays.asList());
+            Set<String> excludes = new HashSet<>();
             Map<String, TreeMap> config = new HashMap<>();
             generator = new ProcessorConfig(includes, excludes, config);
         }

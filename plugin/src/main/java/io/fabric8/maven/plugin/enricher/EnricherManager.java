@@ -48,8 +48,8 @@ public class EnricherManager {
     private Logger log;
 
     // List of visitors used to enrich with labels
-    private final MetadataVisitor[] metaDataVisitors;
-    private final SelectorVisitor[] selectorVisitorCreators;
+    private final MetadataVisitor<?>[] metaDataVisitors;
+    private final SelectorVisitor<?>[] selectorVisitorCreators;
 
     public EnricherManager(ResourceConfig resourceConfig, EnricherContext enricherContext) {
         PluginServiceFactory<EnricherContext> pluginFactory = new PluginServiceFactory<>(enricherContext);
@@ -154,7 +154,7 @@ public class EnricherManager {
     private void addMissingSelectors(ProcessorConfig config, KubernetesListBuilder builder) {
         SelectorVisitor.setProcessorConfig(config);
         try {
-            for (SelectorVisitor visitor : selectorVisitorCreators) {
+            for (SelectorVisitor<?> visitor : selectorVisitorCreators) {
                 builder.accept(visitor);
             }
         } finally {
@@ -250,10 +250,10 @@ public class EnricherManager {
         }
     }
 
-    private void visit(ProcessorConfig config, KubernetesListBuilder builder, MetadataVisitor[] visitors) {
+    private void visit(ProcessorConfig config, KubernetesListBuilder builder, MetadataVisitor<?>[] visitors) {
         MetadataVisitor.setProcessorConfig(config);
         try {
-            for (MetadataVisitor visitor : visitors) {
+            for (MetadataVisitor<?> visitor : visitors) {
                 builder.accept(visitor);
             }
         } finally {

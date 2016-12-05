@@ -142,7 +142,7 @@ public class ManifestIndexMojo extends AbstractArtifactSearchMojo {
             String key = manifestInfo.getName();
             SortedSet<ManifestInfo> set = manifestMap.get(key);
             if (set == null) {
-                set = new TreeSet(createManifestComparator());
+                set = new TreeSet<>(createManifestComparator());
                 manifestMap.put(key, set);
             }
             set.add(manifestInfo);

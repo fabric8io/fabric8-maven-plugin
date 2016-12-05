@@ -707,7 +707,7 @@ public class ResourceMojo extends AbstractResourceMojo {
             return new Service[0];
         }
         if (services instanceof ArrayList) {
-            return (Service[]) ((ArrayList) services).toArray(new Service[services.size()]);
+            return ((ArrayList<Service>) services).toArray(new Service[services.size()]);
         } else {
             Service[] ret = new Service[services.size()];
             for (int i = 0; i < services.size(); i++) {
