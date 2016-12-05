@@ -37,7 +37,7 @@ public class WildFlySwarmHealthCheckEnricher extends AbstractHealthCheckEnricher
             Integer port = DEFAULT_HEALTH_PORT;
             String scheme = SCHEME_HTTP;
 
-            // lets default to adding a spring boot actuator health check
+            // lets default to adding a wildfly swarm health check
             return new ProbeBuilder().
                     withNewHttpGet().withNewPort(port).withPath("/health").withScheme(scheme).endHttpGet().
                     withInitialDelaySeconds(initialDelay).build();
