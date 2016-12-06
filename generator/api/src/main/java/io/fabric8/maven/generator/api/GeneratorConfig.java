@@ -32,7 +32,7 @@ public class GeneratorConfig {
     private final Properties properties;
 
     public GeneratorConfig(Properties properties, String name, ProcessorConfig config) {
-        this.config = config != null ? config : ProcessorConfig.INCLUDE_ALL;
+        this.config =  config;
         this.name = name;
         this.properties = properties;
     }
@@ -56,7 +56,7 @@ public class GeneratorConfig {
      */
     public String get(Configs.Key key, String defaultVal) {
         String keyVal = key != null ? key.name() : "";
-        String val = config.getConfig(name, key.name());
+        String val = config != null ? config.getConfig(name, key.name()) : null;
         if (val == null) {
             String fullKey = GENERATOR_PROP_PREFIX + "." + name + "." + key;
             val = Configs.getPropertyWithSystemAsFallback(properties, fullKey);

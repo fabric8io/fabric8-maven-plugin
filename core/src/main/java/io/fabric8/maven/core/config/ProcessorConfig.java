@@ -19,6 +19,7 @@ package io.fabric8.maven.core.config;
 import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
@@ -29,33 +30,20 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 public class ProcessorConfig {
 
-    public static final ProcessorConfig EXCLUDE_ALL = new ProcessorConfig() {
-        @Override
-        public boolean use(String name) {
-            return false;
-        }
-    };
-
-    public static final ProcessorConfig INCLUDE_ALL = new ProcessorConfig() {
-        @Override
-        public boolean use(String name) {
-            return true;
-        }
-    };
-
+    public static final ProcessorConfig EMPTY = new ProcessorConfig();
     /**
      * Modules to includes, should holde <code>&lt;include&gt;</code> elements
      */
     @Parameter
     @JsonProperty(value = "includes")
-    private List<String> includes;
+    List<String> includes = new ArrayList<>();
 
     /**
      * Modules to excludes, should hold <code>&lt;exclude&gt;</code> elements
      */
     @Parameter
     @JsonProperty(value = "excludes")
-    private Set<String> excludes;
+    Set<String> excludes = new HashSet<>();
 
     /**
      * Configuration for enricher / generators
@@ -69,8 +57,8 @@ public class ProcessorConfig {
     public ProcessorConfig() { }
 
     public ProcessorConfig(List<String> includes, Set<String> excludes, Map<String, TreeMap> config) {
-        this.includes = includes;
-        this.excludes = excludes;
+        this.includes = includes != null ? includes : Collections.<String>emptyList();
+        this.excludes = excludes != null ? excludes : Collections.<String>emptySet();
         if (config != null) {
             this.config = config;
         }
@@ -79,32 +67,6 @@ public class ProcessorConfig {
     public String getConfig(String name, String key) {
         TreeMap processorMap =  config.get(name);
         return processorMap != null ? (String) processorMap.get(key) : null;
-    }
-
-    /**
-     * Check whether the given name is to be used according to the includes and excludes
-     * given.
-     *
-     * <ul>
-     *     <li>If "includes" are set, check whether name is in this list and return true if so</li>
-     *     <li>If "excludes" are set, check whether name is in this list and return false if so</li>
-     *     <li>If neither of this is true, check whether "includes" were given. When yes, return false, otherwise
-     *         return true;</li>.
-     * </ul>
-     *
-     * This implies that includes always have precedence over excludes.
-     *
-     * @param name the name to check
-     * @return true if the processor with this name should be used, false otherwise.
-     */
-    public boolean use(String name) {
-        if (includes != null && includes.contains(name)) {
-            return true;
-        } else if (excludes != null && excludes.contains(name)) {
-            return false;
-        } else {
-            return includes != null ? false : true;
-        }
     }
 
     /**
@@ -121,24 +83,117 @@ public class ProcessorConfig {
      * @return the ordered list according to the algorithm described above
      * @throws IllegalArgumentException if the includes reference an non existing element
      */
-    public <T extends Named> List<T> order(List<T> namedList, String type) {
-        if (includes == null) {
-            return namedList;
-        }
+    public <T extends Named> List<T> prepareProcessors(List<T> namedList, String type) {
         List<T> ret = new ArrayList<>();
         Map<String, T> lookup = new HashMap<>();
         for (T named : namedList) {
             lookup.put(named.getName(), named);
         }
         for (String inc : includes) {
-            T named = lookup.get(inc);
-            if (named == null) {
-                throw new IllegalArgumentException("No " + type + " with name '" + inc +
-                                                   "' found to include. " +
-                                                   "Please check spelling and your project dependencies");
+            if (use(inc)) {
+                T named = lookup.get(inc);
+                if (named == null) {
+                    List<String> keys = new ArrayList<>(lookup.keySet());
+                    Collections.sort(keys);
+                    throw new IllegalArgumentException(
+                        "No " + type + " with name '" + inc +
+                        "' found to include. " +
+                        "Please check spelling in your profile / config and your project dependencies. Included " + type + "s: " +
+                        StringUtils.join(keys,", "));
+                }
+                ret.add(named);
             }
-            ret.add(named);
         }
         return ret;
     }
+
+    public boolean use(String inc) {
+        return !excludes.contains(inc) && includes.contains(inc);
+    }
+
+    /**
+     * Merge in another processor configuration, with an higher priority. This operation mutates
+     * the current config.
+     *
+     * @param config config to merge in
+     * @return this merged configuration for convenience of chaining and returning.
+     */
+    public static ProcessorConfig mergeProcessorConfigs(ProcessorConfig ... processorConfigs) {
+        // Merge the configuration
+        Map<String, TreeMap> configs = mergeConfig(processorConfigs);
+
+        // Get all includes
+        Set<String> excludes = mergeExcludes(processorConfigs);
+
+        // Find the set of includes, which are the ones from the profile + the ones configured
+        List<String> includes = mergeIncludes(processorConfigs);
+
+        return new ProcessorConfig(includes, excludes, configs);
+    }
+
+    private static Set<String> mergeExcludes(ProcessorConfig ... configs) {
+        Set<String> ret = new HashSet<>();
+        for (ProcessorConfig config : configs) {
+            if (config != null) {
+                Set<String> excludes = config.excludes;
+                if (excludes != null) {
+                    ret.addAll(excludes);
+                }
+            }
+        }
+        return ret;
+    }
+
+    private static List<String> mergeIncludes(ProcessorConfig ... configs) {
+        List<String> ret = new ArrayList<>();
+        for (ProcessorConfig config : configs) {
+            if (config != null) {
+                List<String> includes = config.includes;
+                if (includes != null) {
+                    ret.addAll(includes);
+                }
+            }
+        }
+        return removeDups(ret);
+    }
+
+    // Remove duplicates such that the later element remains
+    // Only good for small list (thats what we expect for enrichers and generators)
+    private static List<String> removeDups(List<String> list) {
+        List<String> ret = new ArrayList<>();
+        for (int i = list.size() - 1; i >= 0; i--) {
+            String el = list.get(i);
+            if (!ret.contains(el)) {
+                ret.add(el);
+            }
+        }
+        Collections.reverse(ret);
+        return ret;
+    }
+
+    private static Map<String, TreeMap> mergeConfig(ProcessorConfig ... processorConfigs) {
+        Map<String, TreeMap> ret = new HashMap<>();
+        for (ProcessorConfig processorConfig : processorConfigs) {
+            if (processorConfig != null) {
+                Map<String, TreeMap> config = processorConfig.config;
+                if (config != null) {
+                    for (Map.Entry<String, TreeMap> entry : config.entrySet()) {
+                        TreeMap newValues = entry.getValue();
+                        if (newValues != null) {
+                            TreeMap existing = ret.get(entry.getKey());
+                            if (existing == null) {
+                                ret.put(entry.getKey(), new TreeMap(newValues));
+                            } else {
+                                for (Map.Entry newValue : (Set<Map.Entry>) newValues.entrySet()) {
+                                    existing.put(newValue.getKey(), newValue.getValue());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return ret.size() > 0 ? ret : null;
+    }
+
 }

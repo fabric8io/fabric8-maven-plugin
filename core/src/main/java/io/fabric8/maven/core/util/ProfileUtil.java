@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.Profile;
+import org.apache.maven.shared.utils.StringUtils;
 
 /**
  * Helper class for dealing with profiles.
@@ -34,11 +35,16 @@ import io.fabric8.maven.core.config.Profile;
  */
 public class ProfileUtil {
 
+    private ProfileUtil() {}
+
     // Alowed profile names
-    public static final String[] PROFILE_FILENAMES = {"profiles.yml", "profiles.yaml", "profiles"};
+    public static final String[] PROFILE_FILENAMES = {"profiles%s.yml", "profiles%s.yaml", "profiles%s"};
 
     // Mapper for handling YAML formats
     private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+
+    // Default profile which will be always there
+    public static final String DEFAULT_PROFILE = "default";
 
     /**
      * Find a profile. Profiles are looked up at various locations:
@@ -46,68 +52,49 @@ public class ProfileUtil {
      * <ul>
      *     <li>A given directory with the name profiles.yml (and variations, {@link #findProfile(String, File)}</li>
      * </ul>
-     * @param profile the profile's name
+     * @param profileArg the profile's name
      * @param resourceDir a directory to check for profiles.
-     * @return the profile found or null if none of this name is given
+     * @return the profile found or the default profile if none of this name is given
      * @throws IOException
      */
-    public static Profile findProfile(String profile, File resourceDir) throws IOException {
+    public static Profile findProfile(String profileArg, File resourceDir) throws IOException {
         try {
-            if (profile != null) {
-                Profile profileFound = lookup(profile, resourceDir);
-                if (profileFound != null) {
-                    return profileFound;
-                } else {
-                    throw new IllegalArgumentException("No profile " + profile + " defined");
-                }
+            String profile = profileArg == null ? DEFAULT_PROFILE : profileArg;
+            Profile profileFound = lookup(profile, resourceDir);
+            if (profileFound != null) {
+                return profileFound;
+            } else {
+                throw new IllegalArgumentException("No profile '" + profile + "' defined");
             }
         } catch (IOException e) {
-            throw new IOException("Error while looking up profile " + profile + ": " + e.getMessage(),e);
+            throw new IOException("Error while looking up profile " + profileArg + ": " + e.getMessage(),e);
         }
-        return null;
     }
 
     /**
-     * Find an enricher or generator config, possibly via a profile
+     * Find an enricher or generator config, possibly via a profile and merge it with a given configuration.
      *
      * @param extractor how to extract the config from a profile when found
      * @param profile the profile name (can be null, then no profile is used)
      * @param resourceDir resource directory where to lookup the profile (in addition to a classpath lookup)
-     * @return the configuration found or {@link ProcessorConfig#INCLUDE_ALL} to include all enricher / generators
-     * if no profile was found
+     * @return the merged configuration which can be emoty if no profile is given
+     * @param config the provided configuration
      * @throws MojoExecutionException
      */
-    public static ProcessorConfig extractProcesssorConfiguration(ProcessorConfigurationExtractor extractor,
-                                                                 String profile,
-                                                                 File resourceDir) throws IOException {
-        Profile profileFound = findProfile(profile, resourceDir);
-        if (profileFound != null) {
-            return extractor.extract(profileFound);
-        }
-        return ProcessorConfig.INCLUDE_ALL;
+    public static ProcessorConfig blendProfileWithConfiguration(ProcessorConfigurationExtractor configExtractor,
+                                                                String profile,
+                                                                File resourceDir,
+                                                                ProcessorConfig config) throws IOException {
+        // Get specified profile or the default profile
+        ProcessorConfig profileConfig = extractProcesssorConfiguration(configExtractor, profile, resourceDir);
+
+        return ProcessorConfig.mergeProcessorConfigs(profileConfig, config);
     }
 
-    /**
-     * Read all profiles found in the classpath.
-     *
-     * @return map of profiles, keyed by their names
-     *
-     * @throws IOException if reading of a profile fails
-     */
-    public static Map<String,Profile> readAllFromClasspath() throws IOException {
-        Map<String,Profile> ret = new HashMap<>();
-        for (String location : getMetaInfProfilePaths()) {
-            for (String url : ClassUtil.getResources(location)) {
-                for (Profile profile : fromYaml(new URL(url).openStream())) {
-                    ret.put(profile.getName(), profile);
-                }
-            }
-        }
-        return ret;
-    }
 
     /**
-     * Lookup profiles from a given directory
+     * Lookup profiles from a given directory and merge it with a profile of the
+     * same name found in the classpath
      *
      * @param name name of the profile to lookup
      * @param directory directory to lookup
@@ -115,16 +102,73 @@ public class ProfileUtil {
      * @throws IOException if somethings fails during lookup
      */
     public static Profile lookup(String name, File directory) throws IOException {
+        // First check from the classpath, these profiles are used as a basis
+        Profile cpProfile = readProfileFromClasspath(name);
+
         File profileFile = findProfileYaml(directory);
         if (profileFile != null) {
             List<Profile> profiles = fromYaml(new FileInputStream(profileFile));
             for (Profile profile : profiles) {
                 if (profile.getName().equals(name)) {
-                    return profile;
+                    return mergeProfiles(cpProfile, profile);
                 }
             }
         }
-        return readAllFromClasspath().get(name);
+        return cpProfile;
+    }
+
+    private static ProcessorConfig extractProcesssorConfiguration(ProcessorConfigurationExtractor extractor,
+                                                                 String profile,
+                                                                 File resourceDir) throws IOException {
+        Profile profileFound = findProfile(profile, resourceDir);
+        return extractor.extract(profileFound);
+    }
+
+
+    private static Profile mergeProfiles(Profile ... profiles) {
+        Profile ret = null;
+        for (Profile profile : profiles) {
+            if (profile != null) {
+                if (ret == null) {
+                    ret = new Profile(profile);
+                } else {
+                    ret = new Profile(ret, profile);
+                }
+            }
+        }
+        return ret;
+    }
+
+    // Read all default profiles first, then merge in custom profiles found on the classpath
+    private static Profile readProfileFromClasspath(String name) throws IOException {
+        Profile basePofile = mergeProfiles(readAllFromClasspath(name, "default"));
+        Profile addOnProfile = mergeProfiles(readAllFromClasspath(name, ""));
+        return mergeProfiles(basePofile, addOnProfile);
+    }
+
+    /**
+     * Read all profiles found in the classpath.
+     *
+     * @param name name of the profile to lookup
+     * @param ext to use (e.g. 'default' for checking 'profile-default.yml'. Can also be null or empty.
+     * @return all profiles with this name stored in files with this extension
+     *
+     * @throws IOException if reading of a profile fails
+     */
+    public static Profile[] readAllFromClasspath(String name, String ext) throws IOException {
+        List<Profile > ret = new ArrayList<>();
+        for (String location : getMetaInfProfilePaths(ext)) {
+            for (String url : ClassUtil.getResources(location)) {
+                for (Profile profile : fromYaml(new URL(url).openStream())) {
+                    if (name.equals(profile.getName())) {
+                        ret.add(profile);
+                    }
+                }
+            }
+        }
+        // Sort it according to order
+        Collections.sort(ret, new Profile.OrderComparator());
+        return ret.toArray(new Profile[ret.size()]);
     }
 
     // ================================================================================
@@ -132,7 +176,7 @@ public class ProfileUtil {
     // check for various variations of profile files
     private static File findProfileYaml(File directory) {
         for (String profileFile : PROFILE_FILENAMES) {
-            File ret = new File(directory, profileFile);
+            File ret = new File(directory, String.format(profileFile, ""));
             if (ret.exists()) {
                 return ret;
             }
@@ -141,12 +185,16 @@ public class ProfileUtil {
     }
 
     // prepend meta-inf location
-    private static List<String> getMetaInfProfilePaths() {
+    private static List<String> getMetaInfProfilePaths(String ext) {
         List<String> ret = new ArrayList<>(PROFILE_FILENAMES.length);
         for (String p : PROFILE_FILENAMES) {
-            ret.add("META-INF/fabric8/" + p);
+            ret.add("META-INF/fabric8/" + getProfileFileName(p,ext));
         }
         return ret;
+    }
+
+    private static String getProfileFileName(String fileName, String ext) {
+        return String.format(fileName, StringUtils.isNotBlank(ext) ? "-" + ext : "");
     }
 
     /**
@@ -174,8 +222,7 @@ public class ProfileUtil {
     public final static ProcessorConfigurationExtractor GENERATOR_CONFIG = new ProcessorConfigurationExtractor() {
         @Override
         public ProcessorConfig extract(Profile profile) {
-            ProcessorConfig processorConfig = profile.getGeneratorConfig();
-            return processorConfig != null ? processorConfig : ProcessorConfig.INCLUDE_ALL;
+            return profile.getGeneratorConfig();
         }
     };
 
@@ -185,8 +232,7 @@ public class ProfileUtil {
     public final static ProcessorConfigurationExtractor ENRICHER_CONFIG = new ProcessorConfigurationExtractor() {
         @Override
         public ProcessorConfig extract(Profile profile) {
-            ProcessorConfig processorConfig = profile.getEnricherConfig();
-            return processorConfig != null ? processorConfig : ProcessorConfig.INCLUDE_ALL;
+            return profile.getEnricherConfig();
         }
     };
 

@@ -34,7 +34,7 @@ public class EnricherConfig {
     private final Properties projectProperties;
 
     public EnricherConfig(Properties projectProperties, String name, ProcessorConfig config) {
-        this.config = config != null ? config : ProcessorConfig.INCLUDE_ALL;
+        this.config = config;
         this.name = name;
         this.projectProperties = projectProperties;
     }
@@ -58,7 +58,7 @@ public class EnricherConfig {
      * @return the value looked up or the default value.
      */
     public String get(Configs.Key key, String defaultVal) {
-        String val = config.getConfig(name, key.name());
+        String val = config != null ? config.getConfig(name, key.name()) : null;
 
         if (val == null) {
             String fullKey = ENRICHER_PROP_PREFIX + "." + name + "." + key;

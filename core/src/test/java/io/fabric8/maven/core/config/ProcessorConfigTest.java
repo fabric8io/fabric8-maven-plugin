@@ -19,6 +19,7 @@ package io.fabric8.maven.core.config;
 import java.util.*;
 
 import org.junit.Test;
+import org.yaml.snakeyaml.Yaml;
 
 import static org.junit.Assert.*;
 
@@ -35,49 +36,43 @@ public class ProcessorConfigTest {
     @Test
     public void incAndExc() {
         ProcessorConfig pConfig = new ProcessorConfig(includes, excludes, config);
-
-        assertTrue(pConfig.use("i2"));
-        assertFalse(pConfig.use("e1"));
-        assertFalse(pConfig.use("n1"));
+        List<TestNamed> filtered = pConfig.prepareProcessors(getAllTestData(), "test");
+        assertTrue(contains(filtered, "i2"));
+        assertFalse(contains(filtered, "e1"));
+        assertFalse(contains(filtered, "n1"));
     }
 
     @Test
     public void inc() {
         ProcessorConfig pConfig = new ProcessorConfig(includes, null, config);
+        List<TestNamed> filtered = pConfig.prepareProcessors(getAllTestData(), "test");
 
-        assertTrue(pConfig.use("i2"));
-        assertFalse(pConfig.use("e1"));
-        assertFalse(pConfig.use("n1"));
+        assertTrue(contains(filtered, "i2"));
+        assertFalse(contains(filtered, "e1"));
+        assertFalse(contains(filtered, "n1"));
     }
 
     @Test
     public void exc() {
         ProcessorConfig pConfig = new ProcessorConfig(null, excludes, config);
+        List<TestNamed> filtered = pConfig.prepareProcessors(getAllTestData(), "test");
 
-        assertTrue(pConfig.use("i2"));
-        assertFalse(pConfig.use("e1"));
-        assertTrue(pConfig.use("n1"));
+        assertFalse(contains(filtered, "i2"));
+        assertFalse(contains(filtered, "e1"));
+        assertFalse(contains(filtered, "n1"));
     }
 
-
-    @Test
-    public void none() {
-        ProcessorConfig pConfig = new ProcessorConfig(null, null, config);
-
-        assertTrue(pConfig.use("i2"));
-        assertTrue(pConfig.use("e1"));
-        assertTrue(pConfig.use("n1"));
-    }
 
     @Test
     public void empty() {
         ProcessorConfig pConfig = new ProcessorConfig(Collections.<String>emptyList(), null, config);
+        List<TestNamed> filtered = pConfig.prepareProcessors(getAllTestData(), "test");
 
-        assertFalse(pConfig.use("i2"));
-        assertFalse(pConfig.use("e1"));
-        assertFalse(pConfig.use("n1"));
-
+        assertFalse(contains(filtered, "i2"));
+        assertFalse(contains(filtered, "e1"));
+        assertFalse(contains(filtered, "n1"));
     }
+
     @Test
     public void config() {
         ProcessorConfig pConfig = new ProcessorConfig(null, null, config);
@@ -98,7 +93,7 @@ public class ProcessorConfigTest {
         List<String> inc = Arrays.asList("t4", "t2");
 
         ProcessorConfig pConfig = new ProcessorConfig(inc, null, null);
-        List<TestNamed> result = pConfig.order(data,"test");
+        List<TestNamed> result = pConfig.prepareProcessors(data, "test");
         assertEquals(2,result.size());
         assertEquals("t4", result.get(0).getName());
         assertEquals("t2", result.get(1).getName());
@@ -111,21 +106,68 @@ public class ProcessorConfigTest {
 
         ProcessorConfig pConfig = new ProcessorConfig(inc, null, null);
         try {
-            pConfig.order(data, "bla");
+            pConfig.prepareProcessors(data, "bla");
             fail();
         } catch (IllegalArgumentException exp) {
             assertTrue(exp.getMessage().contains("bla"));
         }
     }
 
-    @Test
-    public void orderWithEmptyInclude() {
-        List<TestNamed> data = Arrays.asList(new TestNamed("t1"), new TestNamed("t2"));
 
-        ProcessorConfig pConfig = ProcessorConfig.INCLUDE_ALL;
-        List<TestNamed> result = pConfig.order(data, "bla");
-        assertEquals(data,result);
+    @Test
+    public void merge() {
+        Yaml yaml = new Yaml();
+        List<Map> data = (List<Map>) yaml.load(getClass().getResourceAsStream("/fabric8/config/ProcessorConfigTest.yml"));
+
+        for (Map entry : data) {
+            List<Map> inputs = (List<Map>) entry.get("input");
+            ArrayList<ProcessorConfig> processorConfigs  = new ArrayList<>();
+            for (Map input : inputs) {
+                processorConfigs.add(extractProcessorConfig(input));
+            }
+            ProcessorConfig merged = ProcessorConfig.mergeProcessorConfigs(processorConfigs.toArray(new ProcessorConfig[0]));
+            ProcessorConfig expected = extractProcessorConfig((Map) entry.get("merged"));
+            assertEquals(expected.includes, merged.includes);
+            assertEquals(expected.excludes, merged.excludes);
+            assertEquals(expected.config.keySet(), merged.config.keySet());
+            for (Map.Entry<String, TreeMap> configEntry : merged.config.entrySet()) {
+                TreeMap<String, String> expectedValues = expected.config.get(configEntry.getKey());
+                TreeMap<String, String> mergedValues = configEntry.getValue();
+                assertEquals(expectedValues.size(),mergedValues.size());
+                for (Map.Entry<String, String> valEntry : mergedValues.entrySet()) {
+                    assertEquals(expectedValues.get(valEntry.getKey()), valEntry.getValue());
+                }
+            }
+        }
     }
+
+    // =================================================================================
+
+    private ProcessorConfig extractProcessorConfig(Map input) {
+        List<String> i = (List<String>) input.get("includes");
+        List<String> eL = (List<String>) input.get("excludes");
+        Set<String> e = eL != null ? new HashSet(eL) : null;
+        Map<String,Map> cV = (Map<String, Map>) input.get("config");
+        Map<String, TreeMap> c = null;
+        if (cV != null) {
+            c = new HashMap<>();
+            for (Map.Entry<String, Map> el : cV.entrySet()) {
+                c.put(el.getKey(), new TreeMap(el.getValue()));
+            }
+        }
+        return new ProcessorConfig(i, e, c);
+    }
+
+
+
+    private boolean contains(List<TestNamed> list, String element) {
+        return list.contains(new TestNamed(element));
+    }
+
+    private List<TestNamed> getAllTestData() {
+        return Arrays.asList(new TestNamed("i2"), new TestNamed("i1"), new TestNamed("i3"), new TestNamed("e1"));
+    }
+
 
     private class TestNamed implements Named {
 
@@ -138,6 +180,23 @@ public class ProcessorConfigTest {
 
         public TestNamed(String name) {
             this.name = name;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            TestNamed testNamed = (TestNamed) o;
+
+            if (name != null ? !name.equals(testNamed.name) : testNamed.name != null) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            return name != null ? name.hashCode() : 0;
         }
     }
 }

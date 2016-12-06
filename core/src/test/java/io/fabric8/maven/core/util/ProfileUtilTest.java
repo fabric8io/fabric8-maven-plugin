@@ -20,12 +20,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.Profile;
-import io.fabric8.maven.core.util.ProfileUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -38,11 +38,11 @@ public class ProfileUtilTest {
 
     @Test
     public void simple() throws IOException {
-        InputStream is = getClass().getResourceAsStream("/fabric8/config/profiles.yaml");
+        InputStream is = getClass().getResourceAsStream("/fabric8/config/profiles-lookup-dir/profiles.yaml");
         assertNotNull(is);
         List<Profile> profiles = ProfileUtil.fromYaml(is);
         assertNotNull(profiles);
-        assertEquals(profiles.size(),1);
+        assertEquals(profiles.size(),2);
         Profile profile = profiles.get(0);
         assertEquals("simple", profile.getName());
         ProcessorConfig config = profile.getEnricherConfig();
@@ -55,7 +55,7 @@ public class ProfileUtilTest {
 
     @Test
     public void multiple() throws IOException {
-        InputStream is = getClass().getResourceAsStream("/fabric8/config/multiple-profiles.yml");
+        InputStream is = getClass().getResourceAsStream("/fabric8/config/ProfileUtilTest-multiple.yml");
         assertNotNull(is);
         List<Profile> profiles = ProfileUtil.fromYaml(is);
         assertEquals(2,profiles.size());
@@ -63,15 +63,14 @@ public class ProfileUtilTest {
 
     @Test
     public void fromClasspath() throws IOException {
-        Map<String,Profile> profiles = ProfileUtil.readAllFromClasspath();
-        assertEquals(2, profiles.size());
-        assertTrue(profiles.containsKey("one"));
-        assertTrue(profiles.containsKey("second"));
+        Profile[] profiles = ProfileUtil.readAllFromClasspath("one", "");
+        assertEquals(1, profiles.length);
+        assertNotNull(profiles[0]);
     }
 
     @Test
     public void lookup() throws IOException, URISyntaxException {
-        File dir = new File(getClass().getResource("/fabric8/config/profiles.yaml").toURI()).getParentFile();
+        File dir = getProfileDir();
         Profile profile = ProfileUtil.lookup("simple", dir);
         assertEquals("simple", profile.getName());
         assertEquals("http://jolokia.org", profile.getEnricherConfig().getConfig("base","url"));
@@ -82,4 +81,48 @@ public class ProfileUtilTest {
         assertNull(ProfileUtil.lookup("three", dir));
     }
 
+    public File getProfileDir() throws URISyntaxException {
+        return new File(getClass().getResource("/fabric8/config/profiles-lookup-dir/profiles.yaml").toURI()).getParentFile();
+    }
+
+    @Test
+    public void findProfile() throws URISyntaxException, IOException {
+        assertNotNull(ProfileUtil.findProfile("simple", getProfileDir()));
+        try {
+            ProfileUtil.findProfile("not-there", getProfileDir());
+            fail();
+        } catch (IllegalArgumentException exp) {
+            assertTrue(exp.getMessage().contains("not-there"));
+        }
+
+    }
+
+    @Test
+    public void mergeProfiles() throws Exception {
+        Profile profile = ProfileUtil.findProfile("merge-1", getProfileDir());
+        assertFalse(profile.getEnricherConfig().use("fmp-project"));
+        assertTrue(profile.getEnricherConfig().use("fmp-image"));
+    }
+
+    @Test
+    public void blendProfiles() throws Exception {
+
+        ProcessorConfig origConfig = new ProcessorConfig(Arrays.asList("i1", "i2"), Collections.singleton("spring.swarm"), null);
+        ProcessorConfig mergeConfig = ProfileUtil.blendProfileWithConfiguration(ProfileUtil.ENRICHER_CONFIG,
+                                                                                "simple",
+                                                                                getProfileDir(),
+                                                                                origConfig);
+        assertTrue(mergeConfig.use("base"));
+        assertTrue(mergeConfig.use("i1"));
+        assertEquals(mergeConfig.getConfig("base", "url"),"http://jolokia.org");
+
+
+        mergeConfig = ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG,
+                                                                "simple",
+                                                                getProfileDir(),
+                                                                origConfig);
+        assertTrue(mergeConfig.use("i2"));
+        assertFalse(mergeConfig.use("spring.swarm"));
+
+    }
 }

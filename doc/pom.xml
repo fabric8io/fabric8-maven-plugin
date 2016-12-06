@@ -38,8 +38,6 @@
     <dependency>
       <groupId>io.fabric8</groupId>
       <artifactId>docker-maven-plugin</artifactId>
-      <!-- with snapshot version temporarily to find d-m-p doc snippets -->
-      <version>0.15-SNAPSHOT</version>
     </dependency>
 
     <!-- == asciidoctor ================================= -->
@@ -88,6 +86,7 @@
               <icons>font</icons>
               <pagenums/>
               <version>${fabric8.maven.plugin.version}</version>
+              <plugindir>${project.basedir}/../plugin</plugindir>
               <idprefix/>
               <idseparator>-</idseparator>
               <allow-uri-read>true</allow-uri-read>

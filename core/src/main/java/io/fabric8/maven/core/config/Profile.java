@@ -16,6 +16,8 @@
 
 package io.fabric8.maven.core.config;
 
+import java.util.Comparator;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -44,6 +46,42 @@ public class Profile {
     @JsonProperty(value = "generator")
     private ProcessorConfig generatorConfig;
 
+    /**
+     * An order in case multiple profiles are found
+     * with the same name
+     */
+    @JsonProperty(value = "order")
+    private int order;
+
+    // No-arg constructor for YAML deserialization
+    public Profile() {}
+
+    // Copy constructor
+    public Profile(Profile profile) {
+        this.name = profile.name;
+        this.order = profile.order;
+        this.enricherConfig = ProcessorConfig.mergeProcessorConfigs(profile.enricherConfig);
+        this.generatorConfig = ProcessorConfig.mergeProcessorConfigs(profile.generatorConfig);
+    }
+
+    // Merge constructor
+    public Profile(Profile profileA, Profile profileB) {
+        this.name = profileA.name;
+        if (!profileB.name.equals(profileA.getName())) {
+            throw new IllegalArgumentException(String.format("Cannot merge to profiles with different names (%s vs. %s)", profileA.getName(), profileB.getName()));
+        }
+        // Respect order: The higher order overrides the smaller order. If equal, use the argument order given.
+        if (profileA.order > profileB.order) {
+            this.order = profileA.order;
+            this.enricherConfig = ProcessorConfig.mergeProcessorConfigs(profileB.enricherConfig, profileA.enricherConfig);
+            this.generatorConfig = ProcessorConfig.mergeProcessorConfigs(profileB.generatorConfig, profileA.generatorConfig);
+        } else {
+            this.order = profileB.order;
+            this.enricherConfig = ProcessorConfig.mergeProcessorConfigs(profileA.enricherConfig, profileB.enricherConfig);
+            this.generatorConfig = ProcessorConfig.mergeProcessorConfigs(profileA.generatorConfig, profileB.generatorConfig);
+        }
+    }
+
     public String getName() {
         return name;
     }
@@ -56,4 +94,13 @@ public class Profile {
         return generatorConfig;
     }
 
+    public int getOrder() { return order; }
+
+    public static class OrderComparator implements Comparator<Profile> {
+
+        @Override
+        public int compare(Profile o1, Profile o2) {
+            return o1.order - o2.order;
+        }
+    }
 }

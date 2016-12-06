@@ -1,0 +1,82 @@
+# Default profiles delivered with f-m-p
+
+# tag::default[]
+# Default profile which is always activated
+- name: default
+  enricher:
+    includes:
+    - fmp-name
+    - fmp-image
+    - fmp-controller
+    - fmp-service
+    - fmp-portname
+    - fmp-ianaservice
+    - fmp-project
+    - fmp-dependency
+    - fmp-pod-annotations
+    - fmp-git
+    # TODO: Documents and verify enrichers below
+    - fmp-dependency
+    - fmp-openshift-s2i
+    - fmp-debug
+    - fmp-merge
+    - fmp-remove-build-annotations
+    - fmp-volume-permission
+    # -----------------------------------------
+    - f8-cd
+    - f8-cd-doc-link
+    - f8-cd-grafana-link
+    - f8-icon
+    # TODO: Document and verify enrichers below
+    - f8-expose
+    - spring-boot-health-check
+    - karaf-health-check
+    - f8-prometheus
+
+  generator:
+    includes:
+    - spring-boot
+    - wildfly-swarm
+    - karaf
+    - vertx
+    - java-exec
+    - webapp
+# end::default[]
+# No enrichment at all
+- name: raw
+  enricher:
+    includes: []
+# No defaults added, useful for explicit configuration
+- name: explicit
+  enricher:
+    excludes:
+    - fmp-image
+    - fmp-controller
+    - fmp-service
+# Only deployment & service
+- name: minimal
+  enricher:
+    includes:
+    - fmp-name
+    - fmp-image
+    - fmp-controller
+    - fmp-service
+# Only dependencies, no build, use other resources raw
+- name: aggregate
+  generator:
+    includes: []
+  enricher:
+    includes:
+    - fmp-dependency
+# Use only the Spring Boot generator
+- name: spring-boot
+  generator:
+    includes:
+      - spring-boot
+# does not expose services by default
+- name: internal-microservice
+  generator:
+    excludes: []
+  enricher:
+    excludes:
+      - f8-expose

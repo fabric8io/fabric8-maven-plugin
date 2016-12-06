@@ -39,6 +39,10 @@ import static io.fabric8.maven.plugin.enricher.EnricherManager.Extractor.*;
  */
 public class EnricherManager {
 
+    // Meta data from config
+    private final MetaDataConfig labelConfig;
+    private final MetaDataConfig annotationConfig;
+
     // List of enrichers used for customizing the generated deployment descriptors
     private List<Enricher> enrichers;
 
@@ -67,26 +71,29 @@ public class EnricherManager {
                                                             "META-INF/fabric8/enricher");
 
         if (resourceConfig != null) {
-            unshiftMetaDataEnricher(enrichers, enricherContext, MetadataEnricher.Type.ANNOTATION, resourceConfig.getAnnotations());
-            unshiftMetaDataEnricher(enrichers, enricherContext, MetadataEnricher.Type.LABEL, resourceConfig.getLabels());
+            labelConfig = resourceConfig.getLabels();
+            annotationConfig = resourceConfig.getAnnotations();
+        } else {
+            labelConfig = null;
+            annotationConfig = null;
         }
 
-        logEnrichers(filterEnrichers(defaultEnricherConfig,enrichers));
+        logEnrichers(filterEnrichers(defaultEnricherConfig, enrichers));
 
         metaDataVisitors = new MetadataVisitor[] {
-            new MetadataVisitor.Deployment(this),
-            new MetadataVisitor.ReplicaSet(this),
-            new MetadataVisitor.ReplicationController(this),
-            new MetadataVisitor.Service(this),
-            new MetadataVisitor.PodSpec(this),
-            new MetadataVisitor.DaemonSet(this)
+            new MetadataVisitor.DeploymentBuilderVisitor(resourceConfig, this),
+            new MetadataVisitor.ReplicaSet(resourceConfig, this),
+            new MetadataVisitor.ReplicationControllerBuilderVisitor(resourceConfig, this),
+            new MetadataVisitor.ServiceBuilderVisitor(resourceConfig, this),
+            new MetadataVisitor.PodTemplateSpecBuilderVisitor(resourceConfig, this),
+            new MetadataVisitor.DaemonSetBuilderVisitor(resourceConfig, this)
         };
 
         selectorVisitorCreators = new SelectorVisitor[] {
-            new SelectorVisitor.Deployment(this),
-            new SelectorVisitor.ReplicaSet(this),
-            new SelectorVisitor.ReplicationController(this),
-            new SelectorVisitor.Service(this)
+            new SelectorVisitor.DeploymentSpecBuilderVisitor(this),
+            new SelectorVisitor.ReplicaSetSpecBuilderVisitor(this),
+            new SelectorVisitor.ReplicationControllerSpecBuilderVisitor(this),
+            new SelectorVisitor.ServiceSpecBuilderVisitor(this)
         };
     }
 
@@ -123,11 +130,6 @@ public class EnricherManager {
 
     // ==================================================================================================
 
-    private void unshiftMetaDataEnricher(List<Enricher> enrichers, EnricherContext ctx, MetadataEnricher.Type type, MetaDataConfig metaData) {
-        if (metaData != null) {
-            enrichers.add(0,new MetadataEnricher(ctx, type, metaData));
-        }
-    }
 
     private void logEnrichers(List<Enricher> enrichers) {
         log.verbose("Enrichers:");
@@ -199,13 +201,7 @@ public class EnricherManager {
 
 
     private List<Enricher> filterEnrichers(ProcessorConfig config, List<Enricher> enrichers) {
-        List<Enricher> ret = new ArrayList<>();
-        for (Enricher enricher : defaultEnricherConfig.order(enrichers, "enricher")) {
-            if (config.use(enricher.getName())) {
-                ret.add(enricher);
-            }
-        }
-        return ret;
+        return defaultEnricherConfig.prepareProcessors(enrichers, "enricher");
     }
 
     private void loop(ProcessorConfig config, Function<Enricher, Void> function) {
@@ -221,6 +217,7 @@ public class EnricherManager {
         }
         return ret;
     }
+
 
     // ========================================================================================================
     // Simple extractors

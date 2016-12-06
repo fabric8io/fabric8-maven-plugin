@@ -7,5 +7,11 @@
       base:
         url: http://jolokia.org
   generator:
+    includes:
+      - spring.swarm
     excludes:
       - java.app
+- name: merge-1
+  enricher:
+    excludes: [ fmp-project ]
+    includes: [ fmp-image ]

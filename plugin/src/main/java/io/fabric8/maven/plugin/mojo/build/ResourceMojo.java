@@ -403,6 +403,7 @@ public class ResourceMojo extends AbstractResourceMojo {
                                     "Please either define a profile of this name or move this directory away",
                             profileDir.getName(), resourceDir));
                 }
+
                 ProcessorConfig enricherConfig = profile.getEnricherConfig();
                 File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(profileDir);
                 if (resourceFiles.length > 0) {
@@ -463,20 +464,11 @@ public class ResourceMojo extends AbstractResourceMojo {
     }
 
     private ProcessorConfig extractEnricherConfig() throws IOException {
-        if (enricher != null) {
-            // A given configuration always takes precedence
-            return enricher;
-        }
-        // Check for a profile configuration
-        return ProfileUtil.extractProcesssorConfiguration(ProfileUtil.ENRICHER_CONFIG, profile, resourceDir);
+        return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.ENRICHER_CONFIG, profile, resourceDir, enricher);
     }
 
     private ProcessorConfig extractGeneratorConfig() throws IOException {
-        if (generator != null) {
-            // A given configuration always takes precedence
-            return generator;
-        }
-        return ProfileUtil.extractProcesssorConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, resourceDir);
+        return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, resourceDir, generator);
     }
 
     // Converts the kubernetes resources into OpenShift resources

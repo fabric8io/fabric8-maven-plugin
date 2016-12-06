@@ -44,7 +44,7 @@ public class EnricherManagerTest {
     @Test
     public void createDefaultResources() {
         new Expectations() {{
-           context.getConfig(); result = ProcessorConfig.INCLUDE_ALL;
+           context.getConfig(); result = new ProcessorConfig(Arrays.asList("fmp-controller"), null, null);
            context.getImages(); result = new ImageConfiguration.Builder().alias("img1").name("img1").build();
         }};
         EnricherManager manager = new EnricherManager(null, context);
@@ -57,7 +57,7 @@ public class EnricherManagerTest {
     @Test
     public void enrichEmpty() {
         new Expectations() {{
-           context.getConfig(); result = ProcessorConfig.INCLUDE_ALL;
+           context.getConfig(); result = ProcessorConfig.EMPTY;
         }};
         EnricherManager manager = new EnricherManager(null, context);
 

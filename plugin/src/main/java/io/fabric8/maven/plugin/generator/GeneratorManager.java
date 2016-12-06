@@ -53,16 +53,10 @@ public class GeneratorManager {
                                                "META-INF/fabric8-generator");
         ProcessorConfig config = genCtx.getConfig();
         Logger log = genCtx.getLogger();
-        generators = config.order(generators,"generator");
-        List<Generator> usableGenerators = new ArrayList<>();
+        List<Generator> usableGenerators = config.prepareProcessors(generators, "generator");
         log.verbose("Generators:");
-        for (Generator generator : generators) {
-            if (config.use(generator.getName())) {
-                log.verbose(" - %s",generator.getName());
-                usableGenerators.add(generator);
-            }
-        }
         for (Generator generator : usableGenerators) {
+            log.verbose(" - %s",generator.getName());
             if (generator.isApplicable(ret)) {
                 log.info("Running generator %s", generator.getName());
                 ret = generator.customize(ret, prePackagePhase);
