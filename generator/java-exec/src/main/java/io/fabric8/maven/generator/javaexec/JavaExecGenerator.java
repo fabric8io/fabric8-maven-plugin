@@ -142,14 +142,14 @@ public class JavaExecGenerator extends BaseGenerator {
         if (!isFatJar()) {
             String mainClass = getConfig(Config.mainClass);
             if (mainClass == null) {
-                mainClassDetector.getMainClass();
+                mainClass = mainClassDetector.getMainClass();
                 if (mainClass == null) {
-                    if (prePackagePhase) {
-                        return ret;
-                    } else {
+                    if (!prePackagePhase) {
                         throw new MojoExecutionException("Cannot extract main class to startup");
                     }
                 }
+            }
+            if (mainClass != null) {
                 ret.put(JAVA_MAIN_CLASS_ENV_VAR, mainClass);
             }
         }
