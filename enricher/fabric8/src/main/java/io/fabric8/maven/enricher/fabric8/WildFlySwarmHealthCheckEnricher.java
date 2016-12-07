@@ -2,6 +2,7 @@ package io.fabric8.maven.enricher.fabric8;
 
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 
@@ -12,11 +13,28 @@ import static io.fabric8.maven.core.util.MavenUtil.hasDependency;
  */
 public class WildFlySwarmHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
-    private static final int DEFAULT_HEALTH_PORT = 8080;
-    private static final String SCHEME_HTTP = "HTTP";
-
     public WildFlySwarmHealthCheckEnricher(EnricherContext buildContext) {
         super(buildContext, "wildfly-swarm-health-check");
+    }
+
+    // Available configuration keys
+    private enum Config implements Configs.Key {
+
+        defaultScheme {{
+            d = "HTTP";
+        }},
+        defaultPort {{
+            d = "8080";
+        }},
+        defaultPath {{
+            d = "/health";
+        }};
+
+        protected String d;
+
+        public String def() {
+            return d;
+        }
     }
 
     @Override
@@ -33,16 +51,30 @@ public class WildFlySwarmHealthCheckEnricher extends AbstractHealthCheckEnricher
 
     private Probe discoverWildFlySwarmHealthCheck(int initialDelay) {
         if (hasDependency(this.getProject(), "org.wildfly.swarm", "monitor")) {
-            // TODO: wildfly-swarm does not yet have a standard configuration file
-            Integer port = DEFAULT_HEALTH_PORT;
-            String scheme = SCHEME_HTTP;
+            Integer port = getPort();
+            // scheme must be in upper case in k8s
+            String scheme = getScheme().toUpperCase();
+            String path = getPath();
 
             // lets default to adding a wildfly swarm health check
             return new ProbeBuilder().
-                    withNewHttpGet().withNewPort(port).withPath("/health").withScheme(scheme).endHttpGet().
+                    withNewHttpGet().withNewPort(port).withPath(path).withScheme(scheme).endHttpGet().
                     withInitialDelaySeconds(initialDelay).build();
         }
         return null;
     }
+
+    protected String getScheme() {
+        return Configs.asString(getConfig(Config.defaultScheme));
+    }
+
+    protected int getPort() {
+        return Configs.asInt(getConfig(Config.defaultPort));
+    }
+
+    protected String getPath() {
+        return Configs.asString(getConfig(Config.defaultPath));
+    }
+
 
 }
