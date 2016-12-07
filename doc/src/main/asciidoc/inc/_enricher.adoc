@@ -127,6 +127,21 @@ Fabric8 enrichers are used for providing the connection to other components of t
 [[f8-icon]]
 ==== f8-icon
 
+[[f8-karaf-health-check]]
+==== f8-karaf-health-check
+
+This enricher adds kubernetes readiness and liveness probes with Apache Karaf. This requires that
+ `fabric8-karaf-checks` has been enabled in the Karaf startup features.
+
+The enricher will use the following settings by default:
+
+- port = `8181`
+- scheme = `HTTP`
+
+and use paths `/readiness-check` for readiness check and `/health-check` for liveness check.
+
+These options cannot be configured.
+
 [[f8-prometheus]]
 ==== f8-prometheus
 
@@ -147,6 +162,53 @@ items:
 
 By default the enricher inspects the images' BuildConfiguration and add the annotations if the port 9779 is listed.
 You can force the plugin to add annotations by setting enricher's config ```prometheusPort```
+
+[[f8-spring-boot-health-check]]
+==== f8-spring-boot-health-check
+
+This enricher adds kubernetes readiness and liveness probes with Spring Boot. This requires the following dependency
+ has been enabled in Spring Boot
+
+[source,xml]
+   <dependency>
+     <groupId>org.springframework.boot</groupId>
+     <artifactId>spring-boot-starter-actuator</artifactId>
+   </dependency>
+
+The enricher will try to discover the settings from the `application.properties` / `application.yaml` Spring Boot
+ configuration file.
+
+The port number is read from the `management.port` option, and will use the default value of `8080`
+The scheme will use HTTPS if `server.ssl.key-store` option is in use, and fallback to use `HTTP` otherwise.
+
+These values can be configured by the enricher in the `fabric8-maven-plugin` configuration as shown below:
+[source,xml]
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-plugin</artifactId>
+        <version>3.3.0</version>
+        <executions>
+          <execution>
+            <id>fmp</id>
+            <goals>
+              <goal>resource</goal>
+              <goal>helm</goal>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <enricher>
+            <config>
+              <spring-boot-health-check>
+                <port>4444</port>
+              </spring-boot-health-check>
+            </config>
+          </enricher>
+        </configuration>
+      </plugin>
+
+
 
 [[f8-wildfly-swarm-health-check]]
 ==== f8-wildfly-swarm-health-check
