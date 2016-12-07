@@ -37,6 +37,8 @@ public class Configs {
         return value != null ? Boolean.parseBoolean(value) : false;
     }
 
+    public static String asString(String value) { return value; }
+
     public static String getPropertyWithSystemAsFallback(Properties properties, String key) {
         String val = properties.getProperty(key);
         if (val == null) {
