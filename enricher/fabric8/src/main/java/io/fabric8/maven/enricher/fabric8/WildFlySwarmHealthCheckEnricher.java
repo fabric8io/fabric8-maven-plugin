@@ -20,13 +20,13 @@ public class WildFlySwarmHealthCheckEnricher extends AbstractHealthCheckEnricher
     // Available configuration keys
     private enum Config implements Configs.Key {
 
-        defaultScheme {{
+        scheme {{
             d = "HTTP";
         }},
-        defaultPort {{
+        port {{
             d = "8080";
         }},
-        defaultPath {{
+        path {{
             d = "/health";
         }};
 
@@ -65,15 +65,15 @@ public class WildFlySwarmHealthCheckEnricher extends AbstractHealthCheckEnricher
     }
 
     protected String getScheme() {
-        return Configs.asString(getConfig(Config.defaultScheme));
+        return Configs.asString(getConfig(Config.scheme));
     }
 
     protected int getPort() {
-        return Configs.asInt(getConfig(Config.defaultPort));
+        return Configs.asInt(getConfig(Config.port));
     }
 
     protected String getPath() {
-        return Configs.asString(getConfig(Config.defaultPath));
+        return Configs.asString(getConfig(Config.path));
     }
 
 
