@@ -446,7 +446,7 @@ public class ResourceMojo extends AbstractResourceMojo {
             return builder;
         } catch (ConstraintViolationException e) {
             String message = ValidationUtil.createValidationMessage(e.getConstraintViolations());
-            getLog().error("ConstraintViolationException: " + message, e);
+            log.error("ConstraintViolationException: %s", message);
             throw new MojoExecutionException(message, e);
         }
     }
