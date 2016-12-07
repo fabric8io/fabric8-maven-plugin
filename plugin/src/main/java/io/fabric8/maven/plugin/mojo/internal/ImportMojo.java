@@ -1,11 +1,11 @@
 /*
- * Copyright 2005-2016 Red Hat, Inc.
+ * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
  * 2.0 (the "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -153,7 +153,7 @@ public class ImportMojo extends AbstractFabric8Mojo {
                 projectName = basedir.getName();
             }
 
-            KubernetesClient kubernetes = clusterAccess.createKubernetesClient();
+            KubernetesClient kubernetes = clusterAccess.createDefaultClient(log);
             KubernetesResourceUtil.validateKubernetesMasterUrl(kubernetes.getMasterUrl());
 
             String namespace = clusterAccess.getNamespace();

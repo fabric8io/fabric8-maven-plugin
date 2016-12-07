@@ -16,19 +16,16 @@
 
 package io.fabric8.maven.enricher.standard;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.maven.core.util.Constants;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 
 import java.util.List;
 import java.util.Map;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
-import static io.fabric8.maven.core.util.Constants.RESOURCE_LOCATION_ANNOTATION;
+import static io.fabric8.maven.core.util.Constants.RESOURCE_SOURCE_URL_ANNOTATION;
 import static io.fabric8.utils.Lists.notNullList;
 
 /**
@@ -55,7 +52,7 @@ public class RemoveBuildAnnotationsEnricher extends BaseEnricher {
             if (metadata != null) {
                 Map<String, String> annotations = metadata.getAnnotations();
                 if (annotations != null) {
-                    annotations.remove(RESOURCE_LOCATION_ANNOTATION);
+                    annotations.remove(RESOURCE_SOURCE_URL_ANNOTATION);
                 }
             }
         }

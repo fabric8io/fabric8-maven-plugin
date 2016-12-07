@@ -60,13 +60,13 @@
     <assertj.core.version>2.4.1</assertj.core.version>
 
     <!-- latest release version of this plugin. Used in the docs.-->
-    <fabric8.maven.plugin.version>3.2.4</fabric8.maven.plugin.version>
+    <fabric8.maven.plugin.version>3.2.8</fabric8.maven.plugin.version>
 
     <spring-boot.version>1.4.1.RELEASE</spring-boot.version>
     <spring.version>4.3.3.RELEASE</spring.version>
 
     <version.maven>3.3.1</version.maven>
-    <version.fabric8>2.2.181</version.fabric8>
+    <version.fabric8>2.2.183</version.fabric8>
     <version.docker-maven-plugin>0.18.1</version.docker-maven-plugin>
 
     <!-- Version of default images, updatable by CD -->
@@ -183,6 +183,12 @@
       <dependency>
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-generator-spring-boot</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-generator-vertx</artifactId>
         <version>${project.version}</version>
       </dependency>
 

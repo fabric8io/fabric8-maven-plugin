@@ -19,24 +19,11 @@ import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.extensions.Templates;
 import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaimVolumeSource;
-import io.fabric8.kubernetes.api.model.PodSpec;
-import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.Volume;
-import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
@@ -48,7 +35,6 @@ import io.fabric8.maven.core.config.ServiceConfig;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
-import io.fabric8.maven.core.util.KindAndName;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
@@ -71,7 +57,6 @@ import io.fabric8.maven.plugin.converter.ReplicSetOpenShiftConverter;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.DeploymentConfig;
-import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.ImageStreamTag;
 import io.fabric8.openshift.api.model.Template;
@@ -96,9 +81,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-import java.util.TreeMap;
 
-import static io.fabric8.maven.core.util.Constants.APP_CATALOG_ANNOTATION;
+import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
 import static io.fabric8.maven.core.util.KubernetesResourceUtil.isAppCatalogResource;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.loadResources;
@@ -378,9 +362,19 @@ public class ResourceMojo extends AbstractResourceMojo {
 
         // Manager for calling enrichers.
         openshiftDependencyResources = new OpenShiftDependencyResources(log);
-        EnricherContext ctx = new EnricherContext(project, session, goalFinder, extractEnricherConfig(), resolvedImages, resources, log,
-                                                  useProjectClasspath, openshiftDependencyResources);
-        EnricherManager enricherManager = new EnricherManager(ctx);
+        EnricherContext.Builder ctxBuilder = new EnricherContext.Builder()
+            .project(project)
+            .session(session)
+            .goalFinder(goalFinder)
+            .config(extractEnricherConfig())
+            .images(resolvedImages)
+            .log(log)
+            .useProjectClasspath(useProjectClasspath)
+            .openshiftDependencyResources(openshiftDependencyResources);
+        if (resources != null) {
+            ctxBuilder.namespace(resources.getNamespace());
+        }
+        EnricherManager enricherManager = new EnricherManager(resources, ctxBuilder.build());
 
         // Generate all resources from the main resource diretory, configuration and enrich them accordingly
         KubernetesListBuilder builder = generateAppResources(images, enricherManager);
@@ -465,6 +459,7 @@ public class ResourceMojo extends AbstractResourceMojo {
             // A given configuration always takes precedence
             return enricher;
         }
+        // Check for a profile configuration
         return ProfileUtil.extractProcesssorConfiguration(ProfileUtil.ENRICHER_CONFIG, profile, resourceDir);
     }
 
@@ -506,7 +501,7 @@ public class ResourceMojo extends AbstractResourceMojo {
             // lets add any ImageStream / ImageStreamTag objects which are already on disk
             // from a previous `BuildMojo` execution
             String namespace = clusterAccess.getNamespace();
-            KubernetesClient client = clusterAccess.createKubernetesClient();
+            KubernetesClient client = clusterAccess.createDefaultClient(log);
             Controller controller = new Controller(client);
             Set<HasMetadata> oldEntities;
             try {
@@ -576,7 +571,7 @@ public class ResourceMojo extends AbstractResourceMojo {
      */
     private HasMetadata convertKubernetesItemToOpenShift(HasMetadata item) {
         if (item instanceof ConfigMap) {
-            if (Objects.equals("true", KubernetesHelper.getOrCreateAnnotations(item).get(APP_CATALOG_ANNOTATION))) {
+            if (Objects.equals("true", KubernetesHelper.getOrCreateAnnotations(item).get(RESOURCE_APP_CATALOG_ANNOTATION))) {
                 // kubernetes App Catalog so we use a Template instead on OpenShift
                 return null;
             }
@@ -712,7 +707,7 @@ public class ResourceMojo extends AbstractResourceMojo {
             return new Service[0];
         }
         if (services instanceof ArrayList) {
-            return (Service[]) ((ArrayList) services).toArray(new Service[services.size()]);
+            return ((ArrayList<Service>) services).toArray(new Service[services.size()]);
         } else {
             Service[] ret = new Service[services.size()];
             for (int i = 0; i < services.size(); i++) {

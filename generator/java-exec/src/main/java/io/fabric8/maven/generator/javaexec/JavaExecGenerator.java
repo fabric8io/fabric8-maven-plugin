@@ -1,20 +1,20 @@
-package io.fabric8.maven.generator.javaexec;
 /*
+ * Copyright 2016 Red Hat, Inc.
  *
- * Copyright 2016 Roland Huss
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
  */
+
+package io.fabric8.maven.generator.javaexec;
 
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
@@ -30,6 +30,7 @@ import org.apache.maven.plugin.assembly.model.Assembly;
 import org.apache.maven.plugin.assembly.model.DependencySet;
 import org.apache.maven.plugin.assembly.model.FileSet;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.StringUtils;
 
 import java.io.File;
 import java.util.*;
@@ -43,6 +44,7 @@ public class JavaExecGenerator extends BaseGenerator {
 
     // Environment variable used for specifying a main class
     static final String JAVA_MAIN_CLASS_ENV_VAR = "JAVA_MAIN_CLASS";
+    private static final String JAVA_OPTIONS = "JAVA_OPTIONS";
 
     // Plugins indicating a plain java build
     private static final String[] JAVA_EXEC_MAVEN_PLUGINS = new String[] {
@@ -106,7 +108,7 @@ public class JavaExecGenerator extends BaseGenerator {
     }
 
     @Override
-    public List<ImageConfiguration> customize(List<ImageConfiguration>  configs, boolean prePackagePhase) throws MojoExecutionException {
+    public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean prePackagePhase) throws MojoExecutionException {
         ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
         BuildImageConfiguration.Builder buildBuilder = null;
         buildBuilder = new BuildImageConfiguration.Builder()
@@ -138,17 +140,28 @@ public class JavaExecGenerator extends BaseGenerator {
     protected Map<String, String> getEnv(boolean prePackagePhase) throws MojoExecutionException {
         Map<String, String> ret = new HashMap<>();
         if (!isFatJar()) {
-            String mainClass = mainClassDetector.getMainClass();
+            String mainClass = getConfig(Config.mainClass);
             if (mainClass == null) {
-                if (prePackagePhase) {
-                    return ret;
-                } else {
-                    throw new MojoExecutionException("Cannot extract main class to startup");
+                mainClass = mainClassDetector.getMainClass();
+                if (mainClass == null) {
+                    if (!prePackagePhase) {
+                        throw new MojoExecutionException("Cannot extract main class to startup");
+                    }
                 }
             }
-            ret.put(JAVA_MAIN_CLASS_ENV_VAR, mainClass);
+            if (mainClass != null) {
+                ret.put(JAVA_MAIN_CLASS_ENV_VAR, mainClass);
+            }
+        }
+        List<String> javaOptions = getExtraJavaOptions();
+        if (javaOptions.size() > 0) {
+            ret.put(JAVA_OPTIONS, StringUtils.join(javaOptions.iterator()," "));
         }
         return ret;
+    }
+
+    protected List<String> getExtraJavaOptions() {
+        return new ArrayList<>();
     }
 
     protected AssemblyConfiguration createAssembly() throws MojoExecutionException {
@@ -226,7 +239,7 @@ public class JavaExecGenerator extends BaseGenerator {
         return answer;
     }
 
-    private void addPortIfValid(List<String> list, String port) {
+    protected void addPortIfValid(List<String> list, String port) {
         if (Strings.isNotBlank(port) && Integer.parseInt(port) != 0) {
             list.add(port);
         }

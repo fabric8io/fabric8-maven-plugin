@@ -139,7 +139,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
             if (buildConfig != null) {
                 List<String> ports = buildConfig.getPorts();
                 if (ports != null) {
-                    Set<Integer> portNumbers = new HashSet<>();
+                    List<Integer> portNumbers = new ArrayList<>();
                     Set<String> portNames = new HashSet<>();
 
                     for (String port : ports) {
@@ -261,6 +261,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
                 case 9090:
                     return "http";
                 case 443:
+                case 8443:
                     return "https";
                 case 8778:
                     return "jolokia";

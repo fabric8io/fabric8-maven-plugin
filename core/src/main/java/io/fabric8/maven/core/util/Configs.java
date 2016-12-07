@@ -18,8 +18,6 @@ package io.fabric8.maven.core.util;
 
 import java.util.Properties;
 
-import org.apache.maven.project.MavenProject;
-
 /**
  * Helper functions for working with typesafe configs
  */

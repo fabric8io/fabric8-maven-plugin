@@ -123,7 +123,7 @@ public class MergeEnricher extends BaseEnricher {
                         }
                     }
                 }
-                log.info("Merging 2 resources for " + getKind(item1) + " " + KubernetesHelper.getName(item1) + " from " + KubernetesResourceUtil.location(item1) + " and " + KubernetesResourceUtil.location(item2) + " and removing " + KubernetesResourceUtil.location(answer));
+                log.info("Merging 2 resources for " + getKind(item1) + " " + KubernetesHelper.getName(item1) + " from " + KubernetesResourceUtil.getSourceUrlAnnotation(item1) + " and " + KubernetesResourceUtil.getSourceUrlAnnotation(item2) + " and removing " + KubernetesResourceUtil.getSourceUrlAnnotation(answer));
                 return answer;
             }
             /*
@@ -136,7 +136,7 @@ public class MergeEnricher extends BaseEnricher {
         // we expect lots of duplicates when making an app catalog as we have the composites and individual manifests
         try {
             if (!getContext().runningWithGoal("fabric8:app-catalog")) {
-                log.warn("Duplicate resources for %s %s from %s and %s", getKind(item1), KubernetesHelper.getName(item1), KubernetesResourceUtil.location(item1), KubernetesResourceUtil.location(item2));
+                log.warn("Duplicate resources for %s %s from %s and %s", getKind(item1), KubernetesHelper.getName(item1), KubernetesResourceUtil.getSourceUrlAnnotation(item1), KubernetesResourceUtil.getSourceUrlAnnotation(item2));
             }
         } catch (MojoExecutionException e) {
             log.warn("Failed to check if generated an app-catalog: %s", e);

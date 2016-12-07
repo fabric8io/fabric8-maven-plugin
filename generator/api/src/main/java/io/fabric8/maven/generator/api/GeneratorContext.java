@@ -41,7 +41,8 @@ public class GeneratorContext {
     private boolean useProjectClasspath;
     private boolean prePackagePhase;
 
-    private GeneratorContext() {}
+    private GeneratorContext() {
+    }
 
     public MavenProject getProject() {
         return project;
@@ -88,7 +89,7 @@ public class GeneratorContext {
      */
     public boolean runningWithGoal(String... goals) throws MojoExecutionException {
         for (String goal : goals) {
-            if (goalFinder.runningWithGoal(project, session,  goal)) {
+            if (goalFinder.runningWithGoal(project, session, goal)) {
                 return true;
             }
         }
@@ -105,62 +106,62 @@ public class GeneratorContext {
 
     // ========================================================================
 
-     public static class Builder {
+    public static class Builder {
 
-         private GeneratorContext ctx = new GeneratorContext();
+        private GeneratorContext ctx = new GeneratorContext();
 
-         public Builder config(ProcessorConfig config) {
-             ctx.config = config;
-             return this;
-         }
+        public Builder config(ProcessorConfig config) {
+            ctx.config = config;
+            return this;
+        }
 
-         public Builder project(MavenProject project) {
-             ctx.project = project;
-             return this;
-         }
+        public Builder project(MavenProject project) {
+            ctx.project = project;
+            return this;
+        }
 
-         public Builder session(MavenSession session) {
-             ctx.session = session;
-             return this;
-         }
+        public Builder session(MavenSession session) {
+            ctx.session = session;
+            return this;
+        }
 
-         public Builder goalFinder(GoalFinder goalFinder) {
-             ctx.goalFinder = goalFinder;
-             return this;
-         }
+        public Builder goalFinder(GoalFinder goalFinder) {
+            ctx.goalFinder = goalFinder;
+            return this;
+        }
 
-         public Builder goalName(String goalName) {
-             ctx.goalName = goalName;
-             return this;
-         }
+        public Builder goalName(String goalName) {
+            ctx.goalName = goalName;
+            return this;
+        }
 
-         public Builder logger(Logger logger) {
-             ctx.logger = logger;
-             return this;
-         }
+        public Builder logger(Logger logger) {
+            ctx.logger = logger;
+            return this;
+        }
 
-         public Builder mode(PlatformMode mode) {
-             ctx.mode = mode;
-             return this;
-         }
+        public Builder mode(PlatformMode mode) {
+            ctx.mode = mode;
+            return this;
+        }
 
-         public Builder strategy(OpenShiftBuildStrategy strategy) {
-             ctx.strategy = strategy;
-             return this;
-         }
+        public Builder strategy(OpenShiftBuildStrategy strategy) {
+            ctx.strategy = strategy;
+            return this;
+        }
 
-         public Builder useProjectClasspath(boolean useProjectClasspath) {
-             ctx.useProjectClasspath = useProjectClasspath;
-             return this;
-         }
+        public Builder useProjectClasspath(boolean useProjectClasspath) {
+            ctx.useProjectClasspath = useProjectClasspath;
+            return this;
+        }
 
-         public Builder prePackagePhase(boolean prePackagePhase) {
-             ctx.prePackagePhase = prePackagePhase;
-             return this;
-         }
+        public Builder prePackagePhase(boolean prePackagePhase) {
+            ctx.prePackagePhase = prePackagePhase;
+            return this;
+        }
 
-         public GeneratorContext build() {
-             return ctx;
-         }
-     }
+        public GeneratorContext build() {
+            return ctx;
+        }
+    }
 }

@@ -44,7 +44,6 @@ import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.BuildStatus;
-import io.fabric8.openshift.api.model.Template;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -80,8 +79,8 @@ import java.util.regex.Pattern;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.kubernetes.api.KubernetesHelper.parseDate;
-import static io.fabric8.maven.core.util.Constants.APP_CATALOG_ANNOTATION;
-import static io.fabric8.maven.core.util.Constants.RESOURCE_LOCATION_ANNOTATION;
+import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
+import static io.fabric8.maven.core.util.Constants.RESOURCE_SOURCE_URL_ANNOTATION;
 import static io.fabric8.utils.Strings.isNullOrBlank;
 
 /**
@@ -607,13 +606,14 @@ public class KubernetesResourceUtil {
         Class<?> tc = targetValues.getClass();
         Class<?> sc = defaultValues.getClass();
         for (Method targetGetMethod : tc.getMethods()) {
-            if( !targetGetMethod.getName().startsWith("get") )
+            if (!targetGetMethod.getName().startsWith("get")) {
                 continue;
+            }
 
             Class<?> fieldType = targetGetMethod.getReturnType();
-            if( !SIMPLE_FIELD_TYPES.contains(fieldType) )
+            if (!SIMPLE_FIELD_TYPES.contains(fieldType)) {
                 continue;
-
+            }
 
             String fieldName = targetGetMethod.getName().substring(3);
             Method withMethod = null;
@@ -635,7 +635,7 @@ public class KubernetesResourceUtil {
             }
 
             try {
-                if( targetGetMethod.invoke(targetValues) == null ) {
+                if (targetGetMethod.invoke(targetValues) == null) {
                     withMethod.invoke(targetValues, sourceGetMethod.invoke(defaultValues));
                 }
             } catch (IllegalAccessException e) {
@@ -676,13 +676,13 @@ public class KubernetesResourceUtil {
                             ensureHasPort(container, port);
                         }
                     }
-                    if (container.getReadinessProbe()==null) {
+                    if (container.getReadinessProbe() == null) {
                         container.setReadinessProbe(defaultContainer.getReadinessProbe());
                     }
-                    if (container.getLivenessProbe()==null) {
+                    if (container.getLivenessProbe() == null) {
                         container.setLivenessProbe(defaultContainer.getLivenessProbe());
                     }
-                    if (container.getSecurityContext()==null) {
+                    if (container.getSecurityContext() == null) {
                         container.setSecurityContext(defaultContainer.getSecurityContext());
                     }
                     idx++;
@@ -734,22 +734,20 @@ public class KubernetesResourceUtil {
         ports.add(port);
     }
 
-    public static String location(HasMetadata item) {
-        return KubernetesHelper.getOrCreateAnnotations(item).get(RESOURCE_LOCATION_ANNOTATION);
+    public static String getSourceUrlAnnotation(HasMetadata item) {
+        return KubernetesHelper.getOrCreateAnnotations(item).get(RESOURCE_SOURCE_URL_ANNOTATION);
     }
 
-    public static void setLocation(HasMetadata item, String location) {
-        if (Strings.isNotBlank(location)) {
-            Map<String, String> annotations = KubernetesHelper.getOrCreateAnnotations(item);
-            if (!annotations.containsKey(RESOURCE_LOCATION_ANNOTATION)) {
-                annotations.put(RESOURCE_LOCATION_ANNOTATION, location);
-                item.getMetadata().setAnnotations(annotations);
-            }
+    public static void setSourceUrlAnnotationIfNotSet(HasMetadata item, String sourceUrl) {
+        Map<String, String> annotations = KubernetesHelper.getOrCreateAnnotations(item);
+        if (!annotations.containsKey(RESOURCE_SOURCE_URL_ANNOTATION)) {
+            annotations.put(RESOURCE_SOURCE_URL_ANNOTATION, sourceUrl);
+            item.getMetadata().setAnnotations(annotations);
         }
     }
 
     public static boolean isAppCatalogResource(HasMetadata templateOrConfigMap) {
-        String catalogAnnotation = KubernetesHelper.getOrCreateAnnotations(templateOrConfigMap).get(APP_CATALOG_ANNOTATION);
-        return io.fabric8.utils.Objects.equal("true", catalogAnnotation);
+        String catalogAnnotation = KubernetesHelper.getOrCreateAnnotations(templateOrConfigMap).get(RESOURCE_APP_CATALOG_ANNOTATION);
+        return "true".equals(catalogAnnotation);
     }
 }

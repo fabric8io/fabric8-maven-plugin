@@ -135,7 +135,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     @Override
     protected synchronized void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
         clusterAccess = new ClusterAccess(namespace);
-        kubernetes = clusterAccess.createKubernetesClient();
+        kubernetes = clusterAccess.createDefaultClient(log);
         controller = new Controller(kubernetes);
 
         URL masterUrl = kubernetes.getMasterUrl();
@@ -149,7 +149,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
         if (generator == null) {
             // TODO discover the generators - not sure how yet ;)....
             List<String> includes = Arrays.asList("spring-boot");
-            Set<String> excludes = new HashSet(Arrays.asList());
+            Set<String> excludes = new HashSet<>();
             Map<String, TreeMap> config = new HashMap<>();
             generator = new ProcessorConfig(includes, excludes, config);
         }

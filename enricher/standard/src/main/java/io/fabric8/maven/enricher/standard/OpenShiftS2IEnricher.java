@@ -21,9 +21,6 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
-import io.fabric8.maven.core.config.PlatformMode;
-import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
@@ -104,7 +101,7 @@ public class OpenShiftS2IEnricher extends BaseEnricher {
      * Returns the image configuration for the given image name
      */
     private ImageConfiguration getImage(String imageName) {
-        List<ImageConfiguration> images = getContext().getImages();
+        List<ImageConfiguration> images = getImages();
         for (ImageConfiguration imageConfiguration : images) {
             if (Objects.equals(imageName, imageConfiguration.getName())) {
                 return imageConfiguration;

@@ -89,12 +89,6 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
-import static io.fabric8.maven.core.config.BuildRecreateMode.imageStream;
-import static io.fabric8.maven.core.util.KubernetesResourceUtil.watchLogInThread;
-import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
-import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.loadResources;
-
 /**
  * Builds the docker images configured for this project via a Docker or S2I binary build.
  *
@@ -204,7 +198,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
     /**
      * The generated openshift YAML file
      */
-    @Parameter(property = "fabric8.openshiftManifest", defaultValue = DEFAULT_OPENSHIFT_MANIFEST)
+    @Parameter(property = "fabric8.openshiftManifest", defaultValue = ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST)
     private File openshiftManifest;
 
     @Parameter(property = "fabric8.openshiftTag.retryCount", defaultValue = "15")
@@ -349,20 +343,18 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
         File dockerTar = hub.getArchiveService().createDockerBuildArchive(imageConfig, params);
 
         OpenShiftClient client = getOpenShiftClient();
-
         KubernetesListBuilder builder = new KubernetesListBuilder();
 
         // Check for buildconfig / imagestream and create them if necessary
         String buildName = updateOrCreateBuildConfig(client, builder, imageConfig);
         checkOrCreateImageStream(client, builder, getImageStreamName(imageName));
-
         applyResourceObjects(client, builder);
 
-        // Start the actual build
+        // Start the actual build and wait for it to finish
         Build build = startBuild(dockerTar, client, buildName);
-
         waitForOpenShiftBuildToComplete(client, build);
 
+        //
         generateImageStreamTags(client, imageConfig, getImageStreamName(imageName), build);
     }
 
@@ -371,7 +363,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
         final CountDownLatch latch = new CountDownLatch(1);
         final CountDownLatch logTerminateLatch = new CountDownLatch(1);
         final AtomicReference<Build> buildHolder = new AtomicReference<>();
-        String buildName = getName(build);
+        String buildName = KubernetesHelper.getName(build);
         Watcher<Build> buildWatcher = new Watcher<Build>() {
             @Override
             public void eventReceived(Action action, Build resource) {
@@ -387,7 +379,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
         };
         log.info("Waiting for build " + buildName + " to complete...");
         try (LogWatch logWatch = client.pods().withName(buildName + "-build").watchLog()) {
-            watchLogInThread(logWatch, "Failed to tail build log", logTerminateLatch, log);
+            KubernetesResourceUtil.watchLogInThread(logWatch, "Failed to tail build log", logTerminateLatch, log);
 
             try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {
                 while (latch.getCount() > 0L) {
@@ -426,7 +418,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
             String namespace = clusterAccess.getNamespace();
             Controller controller = new Controller(client);
 
-            Set<HasMetadata> entities = loadResources(client, controller, namespace, manifest, project, log);
+            Set<HasMetadata> entities = ApplyMojo.loadResources(client, controller, namespace, manifest, project, log);
             boolean updated = false;
             ImageStream is = KubernetesResourceUtil.findResourceByName(entities, ImageStream.class, imageStreamName);
             if (is == null) {
@@ -577,7 +569,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
         if (Strings.isNotBlank(status)) {
             if (!Objects.equals(status, lastBuildStatus)) {
                 lastBuildStatus = status;
-                log.verbose("Build %s status: %s", getName(build), status);
+                log.verbose("Build %s status: %s", KubernetesHelper.getName(build), status);
             }
             return Builds.isFinished(status);
         }
@@ -621,10 +613,21 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
 
     // Build up an enricher manager to enrich also our implicit created build ojects
     private void enrich(KubernetesListBuilder builder) throws IOException {
-        ProcessorConfig resolvedEnricherConfig = enricher != null ? enricher : ProfileUtil.extractProcesssorConfiguration(ProfileUtil.ENRICHER_CONFIG, profile, resourceDir);
+        ProcessorConfig enricherConfig = enricher != null ? enricher : ProfileUtil.extractProcesssorConfiguration(ProfileUtil.ENRICHER_CONFIG, profile, resourceDir);
         openshiftDependencyResources = new OpenShiftDependencyResources(log);
-        EnricherContext enricherContext = new EnricherContext(project, session, goalFinder, resolvedEnricherConfig, getResolvedImages(), resources, log, useProjectClasspath, openshiftDependencyResources);
-        EnricherManager enricherManager = new EnricherManager(enricherContext);
+        EnricherContext.Builder ctxBuilder = new EnricherContext.Builder()
+            .project(project)
+            .session(session)
+            .goalFinder(goalFinder)
+            .config(enricherConfig)
+            .images(getResolvedImages())
+            .log(log)
+            .openshiftDependencyResources(openshiftDependencyResources)
+            .useProjectClasspath(useProjectClasspath);
+        if (resources != null && resources.getNamespace() != null) {
+            ctxBuilder.namespace(resources.getNamespace());
+        }
+        EnricherManager enricherManager = new EnricherManager(resources, ctxBuilder.build());
         enricherManager.enrich(builder);
     }
 

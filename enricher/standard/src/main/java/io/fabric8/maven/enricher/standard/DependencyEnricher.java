@@ -157,7 +157,7 @@ public class DependencyEnricher extends BaseEnricher {
                         }
                     }
                     for (HasMetadata item : items) {
-                        KubernetesResourceUtil.setLocation(item, url.toString());
+                        KubernetesResourceUtil.setSourceUrlAnnotationIfNotSet(item, url.toString());
                         log.debug("  found %s  %s", getKind(item), KubernetesHelper.getName(item));
                     }
                     function.apply(items);

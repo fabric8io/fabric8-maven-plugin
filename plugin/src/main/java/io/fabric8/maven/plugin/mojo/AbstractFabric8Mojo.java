@@ -19,9 +19,7 @@ package io.fabric8.maven.plugin.mojo;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.ServiceNames;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.maven.core.util.GoalFinder;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -36,7 +34,6 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
-import org.fusesource.jansi.Ansi;
 
 public abstract class AbstractFabric8Mojo extends AbstractMojo {
 
@@ -104,9 +101,6 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
                 throw new MojoExecutionException("Could not find the service `" + ServiceNames.JENKINSHIFT + "` im namespace `" + namespace + "` on this kubernetes cluster " + kubernetes.getMasterUrl());
             }
             return KubernetesHelper.createJenkinshiftOpenShiftClient(jenkinshiftUrl);
-        }
-        if (openShiftClient == null) {
-            throw new MojoExecutionException("Not connected to an OpenShift cluster and JenkinShift could not be found! Cluster: " + kubernetes.getMasterUrl());
         }
         return openShiftClient;
     }

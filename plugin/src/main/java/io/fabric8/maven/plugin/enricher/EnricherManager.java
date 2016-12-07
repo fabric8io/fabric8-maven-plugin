@@ -48,10 +48,10 @@ public class EnricherManager {
     private Logger log;
 
     // List of visitors used to enrich with labels
-    private final MetadataVisitor[] metaDataVisitors;
-    private final SelectorVisitor[] selectorVisitorCreators;
+    private final MetadataVisitor<?>[] metaDataVisitors;
+    private final SelectorVisitor<?>[] selectorVisitorCreators;
 
-    public EnricherManager(EnricherContext enricherContext) {
+    public EnricherManager(ResourceConfig resourceConfig, EnricherContext enricherContext) {
         PluginServiceFactory<EnricherContext> pluginFactory = new PluginServiceFactory<>(enricherContext);
 
         if (enricherContext.isUseProjectClasspath()) {
@@ -66,10 +66,9 @@ public class EnricherManager {
                                                             "META-INF/fabric8-enricher",
                                                             "META-INF/fabric8/enricher");
 
-        ResourceConfig resources = enricherContext.getResourceConfig();
-        if (resources != null) {
-            unshiftMetaDataEnricher(enrichers, enricherContext, MetadataEnricher.Type.ANNOTATION, resources.getAnnotations());
-            unshiftMetaDataEnricher(enrichers, enricherContext, MetadataEnricher.Type.LABEL, resources.getLabels());
+        if (resourceConfig != null) {
+            unshiftMetaDataEnricher(enrichers, enricherContext, MetadataEnricher.Type.ANNOTATION, resourceConfig.getAnnotations());
+            unshiftMetaDataEnricher(enrichers, enricherContext, MetadataEnricher.Type.LABEL, resourceConfig.getLabels());
         }
 
         logEnrichers(filterEnrichers(defaultEnricherConfig,enrichers));
@@ -155,7 +154,7 @@ public class EnricherManager {
     private void addMissingSelectors(ProcessorConfig config, KubernetesListBuilder builder) {
         SelectorVisitor.setProcessorConfig(config);
         try {
-            for (SelectorVisitor visitor : selectorVisitorCreators) {
+            for (SelectorVisitor<?> visitor : selectorVisitorCreators) {
                 builder.accept(visitor);
             }
         } finally {
@@ -251,10 +250,10 @@ public class EnricherManager {
         }
     }
 
-    private void visit(ProcessorConfig config, KubernetesListBuilder builder, MetadataVisitor[] visitors) {
+    private void visit(ProcessorConfig config, KubernetesListBuilder builder, MetadataVisitor<?>[] visitors) {
         MetadataVisitor.setProcessorConfig(config);
         try {
-            for (MetadataVisitor visitor : visitors) {
+            for (MetadataVisitor<?> visitor : visitors) {
                 builder.accept(visitor);
             }
         } finally {

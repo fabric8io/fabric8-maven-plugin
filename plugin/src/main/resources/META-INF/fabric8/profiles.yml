@@ -4,6 +4,13 @@
 - name: raw
   enricher:
     includes: []
+# No defaults added, useful for explicit configuration
+- name: explicit
+  enricher:
+    excludes:
+    - fmp-image
+    - fmp-controller
+    - fmp-service
 # Only deployment & service
 - name: minimal
   enricher:

@@ -28,10 +28,8 @@ import java.util.List;
 import java.util.Map;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
-import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateAnnotations;
-import static io.fabric8.maven.core.util.Constants.APP_CATALOG_ANNOTATION;
-import static io.fabric8.maven.core.util.KubernetesResourceUtil.location;
-import static io.fabric8.maven.core.util.KubernetesResourceUtil.setLocation;
+import static io.fabric8.maven.core.util.KubernetesResourceUtil.getSourceUrlAnnotation;
+import static io.fabric8.maven.core.util.KubernetesResourceUtil.setSourceUrlAnnotationIfNotSet;
 import static io.fabric8.utils.Lists.notNullList;
 
 /**
@@ -51,10 +49,10 @@ public class OpenShiftDependencyResources {
                 Template template = (Template) item;
                 if (!KubernetesResourceUtil.isAppCatalogResource(template) && !isAppCatalog) {
                     List<HasMetadata> objects = notNullList(template.getObjects());
-                    String location = location(template);
-                    if (Strings.isNotBlank(location)) {
+                    String sourceUrl = getSourceUrlAnnotation(template);
+                    if (Strings.isNotBlank(sourceUrl)) {
                         for (HasMetadata object : objects) {
-                            setLocation(object, location);
+                            setSourceUrlAnnotationIfNotSet(object, sourceUrl);
                         }
                     }
                     addOpenShiftResources(objects, isAppCatalog);
@@ -66,21 +64,21 @@ public class OpenShiftDependencyResources {
             KindAndName key = new KindAndName(item);
             HasMetadata old = openshiftDependencyResources.get(key);
             if (old != null && !isAppCatalog) {
-                log.warn("Duplicate OpenShift resources for %s at %s and %s", key, location(old), location(item));
+                log.warn("Duplicate OpenShift resources for %s at %s and %s", key, getSourceUrlAnnotation(old), getSourceUrlAnnotation(item));
             }
             openshiftDependencyResources.put(key, item);
         }
     }
 
-    private void mergeParametersIntoMap(Map<String, Parameter> parameterMap, Iterable<Parameter> parameters) {
+    private void mergeParametersIntoMap(Map<String, Parameter> targetMap, Iterable<Parameter> parameters) {
         for (Parameter parameter : parameters) {
             String name = parameter.getName();
             if (Strings.isNotBlank(name)) {
-                Parameter old = parameterMap.get(name);
+                Parameter old = targetMap.get(name);
                 if (old != null) {
                     mergeParameters(old, parameter);
                 } else {
-                    parameterMap.put(name, parameter);
+                    targetMap.put(name, parameter);
                 }
             }
         }

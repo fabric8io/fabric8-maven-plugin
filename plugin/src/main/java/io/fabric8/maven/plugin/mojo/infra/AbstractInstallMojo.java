@@ -1,11 +1,11 @@
 /*
- * Copyright 2005-2016 Red Hat, Inc.
+ * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
  * 2.0 (the "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -202,7 +202,6 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
 
     // Where to put the initial download of gofabric8
     private File createGofabric8DownloadFile() throws MojoExecutionException {
-        File file = null;
         try {
             File downloadDir = Files.createTempDirectory(fabric8BinDir.toPath(), "download").toFile();
             downloadDir.deleteOnExit();
@@ -285,7 +284,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
 
     protected void runGofabric8(File command, String ... args) throws MojoExecutionException {
         // Be sure to run in batch mode
-        List argList = new ArrayList(Arrays.asList(args));
+        List<String> argList = new ArrayList<>(Arrays.asList(args));
         argList.add("--batch");
         String argLine = Strings.join(argList, " ");
         log.info("Running %s %s", command, argLine);

@@ -17,14 +17,12 @@
 package io.fabric8.maven.enricher.api;
 
 import java.net.ConnectException;
-import java.util.*;
+import java.util.Stack;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.client.ConfigBuilder;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.utils.Strings;
 
@@ -61,7 +59,7 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
      * Return the value to return if no online mode is explicitely specified.
      * Can be overridden, by default it returns <code>false</code>.
      *
-     * @return the defaul valuet.
+     * @return the default value.
      */
     protected boolean getDefaultOnline() {
         return false;
@@ -74,7 +72,6 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
      * @param protocol URL protocol such as <code>http</code>
      */
     protected String getExternalServiceURL(String serviceName, String protocol) {
-        String publicUrl = null;
         if (!isOnline()) {
             getLog().info("Not looking for service " + serviceName + " as we are in offline mode");
             return null;
@@ -82,6 +79,9 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
             try {
                 KubernetesClient kubernetes = getKubernetes();
                 String ns = kubernetes.getNamespace();
+                if (Strings.isNullOrBlank(ns)) {
+                    ns = getNamespace();
+                }
                 Service service = kubernetes.services().inNamespace(ns).withName(serviceName).get();
                 return service != null ?
                     KubernetesHelper.getServiceURL(kubernetes, serviceName, ns, protocol, true) :
@@ -144,25 +144,21 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
     private KubernetesClient getKubernetes() {
         if (kubernetesClient == null) {
             String namespace = getNamespace();
-            kubernetesClient = new DefaultKubernetesClient(new ConfigBuilder().withNamespace(namespace).build());
+            kubernetesClient = new ClusterAccess(namespace).createDefaultClient(log);
         }
         return kubernetesClient;
     }
 
+    // Get names space in the order:
+    // - plugin configuration
+    // - default name space from the kubernetes helper
+    // - "default"
     private String getNamespace() {
-        String namespace = getNamespaceConfig();
+        String namespace = getContext().getNamespace();
         if (Strings.isNullOrBlank(namespace)) {
             namespace = KubernetesHelper.defaultNamespace();
         }
-        if (Strings.isNullOrBlank(namespace)) {
-            namespace = DEFAULT_NAMESPACE;
-        }
-        return namespace;
-    }
-
-    private String getNamespaceConfig() {
-        ResourceConfig config = getContext().getResourceConfig();
-        return config != null ? config.getNamespace() : null;
+        return Strings.isNullOrBlank(namespace) ? DEFAULT_NAMESPACE : namespace;
     }
 
 }

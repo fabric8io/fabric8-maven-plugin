@@ -85,10 +85,10 @@ public class DefaultControllerEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
-        final String defaultName = getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject()));
+        final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject()));
         ResourceConfig config =
             new ResourceConfig.Builder()
-                .replicaSetName(defaultName)
+                .replicaSetName(name)
                 .imagePullPolicy(getConfig(Config.pullPolicy))
                 .build();
 
@@ -122,7 +122,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
                         builder.accept(new TypedVisitor<PodSpecBuilder>() {
                             @Override
                             public void visit(PodSpecBuilder builder) {
-                                KubernetesResourceUtil.mergePodSpec(builder, podSpec, defaultName);
+                                KubernetesResourceUtil.mergePodSpec(builder, podSpec, name);
                             }
                         });
 
@@ -147,7 +147,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
                                         specBuilder.editTemplate().withNewSpecLike(podSpec).endSpec().endTemplate().endSpec();
                                     } else {
                                         PodSpecBuilder podSpecBuilder = new PodSpecBuilder(builderSpec);
-                                        KubernetesResourceUtil.mergePodSpec(podSpecBuilder, podSpec, defaultName);
+                                        KubernetesResourceUtil.mergePodSpec(podSpecBuilder, podSpec, name);
                                     }
                                 }
                             }

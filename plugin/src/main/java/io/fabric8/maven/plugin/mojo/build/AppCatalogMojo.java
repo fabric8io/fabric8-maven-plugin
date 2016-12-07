@@ -51,7 +51,7 @@ import java.util.Set;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateAnnotations;
-import static io.fabric8.maven.core.util.Constants.APP_CATALOG_ANNOTATION;
+import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
 import static io.fabric8.maven.core.util.ResourceClassifier.KUBERNETES_TEMPLATE;
 import static io.fabric8.utils.Lists.notNullList;
 
@@ -83,11 +83,11 @@ public class AppCatalogMojo extends AbstractResourceMojo {
         log.info("Found " + openshiftMap.size() + " openshift resources");
         for (Map.Entry<URL, KubernetesResource> entry : openshiftMap.entrySet()) {
             URL url = entry.getKey();
-            KubernetesResource resource = entry.getValue();
+            KubernetesResource<?> resource = entry.getValue();
             Template template = null;
             if (resource instanceof Template) {
                 template = (Template) resource;
-                getOrCreateAnnotations(template).put(APP_CATALOG_ANNOTATION, "true");
+                getOrCreateAnnotations(template).put(RESOURCE_APP_CATALOG_ANNOTATION, "true");
                 log.debug("Found Template " + getName(template) + " with " + notNullList(template.getParameters()).size() + " parameters");
             } else {
                 TemplateBuilder builder = new TemplateBuilder();
@@ -98,7 +98,7 @@ public class AppCatalogMojo extends AbstractResourceMojo {
                     if (metadata != null) {
                         if (Strings.isNotBlank(metadata.getName())) {
                             foundMetadata = true;
-                            getOrCreateAnnotations(hasMetadata).put(APP_CATALOG_ANNOTATION, "true");
+                            getOrCreateAnnotations(hasMetadata).put(RESOURCE_APP_CATALOG_ANNOTATION, "true");
                             builder.withMetadata(metadata);
                         }
                     }
@@ -106,7 +106,7 @@ public class AppCatalogMojo extends AbstractResourceMojo {
                 if (!foundMetadata) {
                     Map<String, String> labels = new HashMap<>();
                     Map<String, String> annotations = new HashMap<>();
-                    annotations.put(APP_CATALOG_ANNOTATION, "true");
+                    annotations.put(RESOURCE_APP_CATALOG_ANNOTATION, "true");
                     String name = extractNameFromURL(url, labels);
                     if (name.equals("META-INF")) {
                         log.debug("Ignoring local build dependency %s", url);
@@ -139,7 +139,7 @@ public class AppCatalogMojo extends AbstractResourceMojo {
         Map<URL, KubernetesResource> kubernetesTemplateMap = loadYamlResourcesOnClassPath("META-INF/fabric8/" + KUBERNETES_TEMPLATE.getValue() + ".yml");
         for (Map.Entry<URL, KubernetesResource> entry : kubernetesTemplateMap.entrySet()) {
             URL url = entry.getKey();
-            KubernetesResource resource = entry.getValue();
+            KubernetesResource<?> resource = entry.getValue();
             if (resource instanceof Template) {
                 Template template = (Template) resource;
                 String name = getName(template);
@@ -160,7 +160,7 @@ public class AppCatalogMojo extends AbstractResourceMojo {
         Map<URL, KubernetesResource> kubernetesMap = loadYamlResourcesOnClassPath("META-INF/fabric8/kubernetes.yml");
         for (Map.Entry<URL, KubernetesResource> entry : kubernetesMap.entrySet()) {
             URL url = entry.getKey();
-            KubernetesResource resource = entry.getValue();
+            KubernetesResource<?> resource = entry.getValue();
             Map<String, String> labels = new HashMap<>();
             Map<String, String> annotations = new HashMap<>();
             String name = extractNameFromURL(url, labels);
@@ -212,7 +212,7 @@ public class AppCatalogMojo extends AbstractResourceMojo {
 
             Map<String, String> labels = new LinkedHashMap<>(KubernetesHelper.getLabels(template));
             Map<String, String> annotations = getOrCreateAnnotations(template);
-            annotations.put(APP_CATALOG_ANNOTATION, "true");
+            annotations.put(RESOURCE_APP_CATALOG_ANNOTATION, "true");
             populateLabelsFromResources(template, labels);
             populateAnnotationsFromResources(template, annotations);
             labels.put("kind", "catalog");
@@ -344,7 +344,7 @@ public class AppCatalogMojo extends AbstractResourceMojo {
         for (URL url : resourceList) {
             try (InputStream is = url.openStream()) {
                 if (is != null) {
-                    KubernetesResource resource;
+                    KubernetesResource<?> resource;
                     try {
                         resource = KubernetesHelper.loadYaml(is, KubernetesResource.class);
                         resourceMap.put(url, resource);
