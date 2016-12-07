@@ -43,7 +43,7 @@ import java.util.*;
 public class JavaExecGenerator extends BaseGenerator {
 
     // Environment variable used for specifying a main class
-    private static final String JAVA_MAIN_CLASS_ENV_VAR = "JAVA_MAIN_CLASS";
+    static final String JAVA_MAIN_CLASS_ENV_VAR = "JAVA_MAIN_CLASS";
     private static final String JAVA_OPTIONS = "JAVA_OPTIONS";
 
     // Plugins indicating a plain java build
@@ -223,7 +223,7 @@ public class JavaExecGenerator extends BaseGenerator {
     }
 
     protected boolean hasMainClass() {
-        return Boolean.parseBoolean(getConfig(Config.mainClass,"false"));
+        return getConfig(Config.mainClass) != null;
     }
 
     public FatJarDetector.Result detectFatJar() throws MojoExecutionException {
