@@ -238,7 +238,8 @@ public final class PluginServiceFactory<C> {
 
         /** {@inheritDoc} */
         public int compareTo(ServiceEntry o) {
-            return order - o.order;
+            int ret = this.order - o.order;
+            return ret != 0 ? ret : this.className.compareTo(o.className);
         }
     }
 }
