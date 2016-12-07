@@ -9,10 +9,12 @@ import io.fabric8.maven.generator.api.GeneratorContext;
 import mockit.Invocation;
 import mockit.Mock;
 import mockit.MockUp;
+import mockit.integration.junit4.JMockit;
 import org.apache.maven.model.Build;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +33,7 @@ import static org.junit.Assert.assertNull;
  * @author: Oliver Weise
  * @since: 2016-11-30
  */
+@RunWith(JMockit.class)
 public class JavaExecGeneratorMainClassDeterminationTest {
 
     // Only to mock unwanted fatjar directory functionality
