@@ -40,6 +40,7 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.core.util.ResourceClassifier;
+import io.fabric8.maven.core.util.ValidationUtil;
 import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -70,6 +71,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 
+import javax.validation.ConstraintViolationException;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -417,30 +419,36 @@ public class ResourceMojo extends AbstractResourceMojo {
     }
 
     private KubernetesListBuilder generateAppResources(List<ImageConfiguration> images, EnricherManager enricherManager) throws IOException, MojoExecutionException {
-        File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
-        KubernetesListBuilder builder;
+        try {
+            File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
+            KubernetesListBuilder builder;
 
-        // Add resource files found in the fabric8 directory
-        if (resourceFiles != null && resourceFiles.length > 0) {
-            log.info("Using resource templates from %s", resourceDir);
-            builder = readResourceFragments(resourceFiles);
-        } else {
-            builder = new KubernetesListBuilder();
+            // Add resource files found in the fabric8 directory
+            if (resourceFiles != null && resourceFiles.length > 0) {
+                log.info("Using resource templates from %s", resourceDir);
+                builder = readResourceFragments(resourceFiles);
+            } else {
+                builder = new KubernetesListBuilder();
+            }
+
+            // Add locally configured objects
+            if (resources != null) {
+                // TODO: Allow also support resources to be specified via XML
+                addConfiguredResources(builder, images);
+            }
+
+            // Create default resources for app resources only
+            enricherManager.createDefaultResources(builder);
+
+            // Enrich descriptors
+            enricherManager.enrich(builder);
+
+            return builder;
+        } catch (ConstraintViolationException e) {
+            String message = ValidationUtil.createValidationMessage(e.getConstraintViolations());
+            log.error("ConstraintViolationException: %s", message);
+            throw new MojoExecutionException(message, e);
         }
-
-        // Add locally configured objects
-        if (resources != null) {
-            // TODO: Allow also support resources to be specified via XML
-            addConfiguredResources(builder, images);
-        }
-
-        // Create default resources for app resources only
-        enricherManager.createDefaultResources(builder);
-
-        // Enrich descriptors
-        enricherManager.enrich(builder);
-
-        return builder;
     }
 
     private KubernetesListBuilder readResourceFragments(File[] resourceFiles) throws IOException, MojoExecutionException {
