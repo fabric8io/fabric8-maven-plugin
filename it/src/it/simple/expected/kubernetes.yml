@@ -8,7 +8,7 @@ items:
     annotations:
       fabric8.io/git-commit: "@ignore@"
       prometheus.io/scrape: "true"
-      fabric8.io/git-branch: master
+      fabric8.io/git-branch: "@ignore@"
       prometheus.io/port: "9779"
     labels:
       expose: "true"
