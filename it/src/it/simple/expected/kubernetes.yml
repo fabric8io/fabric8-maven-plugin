@@ -27,7 +27,6 @@ items:
       project: fabric8-maven-sample-zero-config
       provider: fabric8
       group: io.fabric8
-    type: LoadBalancer
 - apiVersion: extensions/v1beta1
   kind: Deployment
   metadata:
@@ -51,7 +50,7 @@ items:
     template:
       metadata:
         annotations:
-          fabric8.io/git-commit: 618b1afd51adda757a3ad19125256cda96750f9d
+          fabric8.io/git-commit: "@ignore@"
           fabric8.io/metrics-path: "@ignore@"
           fabric8.io/git-branch: master
         labels:

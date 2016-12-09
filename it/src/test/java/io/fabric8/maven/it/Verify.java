@@ -57,6 +57,7 @@ public class Verify {
 
 
         JsonTextMessageValidator validator = new JsonTextMessageValidator();
+        validator.setStrict(false);
 
         validator.validateMessagePayload(newMessage(actualText),
                                          newMessage(expectedText),
