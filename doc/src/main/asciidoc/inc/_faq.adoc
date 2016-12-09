@@ -1,0 +1,107 @@
+[[faq]]
+= FAQ
+
+== General questions
+
+=== How do I define an environment variable?
+
+The easiest way is to add a `src/main/fabric8/deployment.yml` file to your project containing something like:
+
+[source, yaml]
+----
+spec:
+  template:
+    spec:
+      containers:
+        -env:
+          - name: FOO
+            value: bar
+----
+
+The above will generate an environment variable `$FOO` of value `bar
+
+For a full list of the environments used in java base images https://hub.docker.com/r/fabric8/java-alpine-openjdk8-jdk[see this list]
+
+=== How do I define a system property?
+
+The simplest way is to add system properties to the `JAVA_OPTS` environment variable.
+
+For a full list of the environments used in java base images https://hub.docker.com/r/fabric8/java-alpine-openjdk8-jdk[see this list]
+
+=== How do I mount a config file from a ConfigMap?
+
+First you need to create your `ConfigMap` resource via a file `src/main/fabric8/configmap.yml`
+
+[source, yaml]
+----
+data:
+  application.properties: |
+    # spring application properties file
+    welcome = Hello from Kubernetes ConfigMap!!!
+    dummy = some value
+----
+
+Then mount the entry in the `ConfigMap` into your `Deployment` via a file `src/main/fabric8/deployment.yml`
+
+[source, yaml]
+----
+metadata:
+  annotations:
+    configmap.fabric8.io/update-on-change: ${project.artifactId}
+spec:
+  replicas: 1
+  template:
+    spec:
+      volumes:
+        - name: config
+          configMap:
+            name: ${project.artifactId}
+            items:
+            - key: application.properties
+              path: application.properties
+      containers:
+        - volumeMounts:
+            - name: config
+              mountPath: /deployments/config
+----
+
+Here is https://github.com/fabric8-quickstarts/spring-boot-webmvc/tree/master/src/main/fabric8[an example quickstart doing this]
+
+Note that the annotation `configmap.fabric8.io/update-on-change` is optional; its used if your application is not capable of watching for changes in the `/deployments/config/application.properties` file. In this case if you are also running the https://github.com/fabric8io/configmapcontroller[configmapcontroller] then this will cause a rolling upgrade of your application to use the new `ConfigMap` contents as you change it.
+
+=== How do I use a Persistent Volume?
+
+First you need to create your `PersistentVolumeClaim` resource via a file `src/main/fabric8/foo-pvc.yml` where `foo` is the name of the `PersistentVolumeClaim`. It might be your app requires multiple vpersistent volumes so you will need multiple `PersistentVolumeClaim` resources.
+
+
+[source, yaml]
+----
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+----
+
+Then to mount the `PersistentVolumeClaim` into your `Deployment` create a file `src/main/fabric8/deployment.yml`
+
+[source, yaml]
+----
+spec:
+  template:
+    spec:
+      volumes:
+      - name: foo
+        persistentVolumeClaim:
+          claimName: foo
+      containers:
+      - volumeMounts:
+        - mountPath: /whatnot
+          name: foo
+----
+
+Where the above defines the `PersistentVolumeClaim` called `foo` which is then mounted into the container at `/whatnot`
+
+Here is https://github.com/fabric8io/fabric8-devops/tree/master/gogs/src/main/fabric8[an example application]
+
