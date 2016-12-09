@@ -41,6 +41,7 @@ import com.consol.citrus.message.Message;
 import com.consol.citrus.util.FileUtils;
 import com.consol.citrus.validation.json.JsonMessageValidationContext;
 import com.consol.citrus.validation.json.JsonTextMessageValidator;
+import com.consol.citrus.validation.matcher.ValidationMatcherConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.springframework.util.FileCopyUtils;
@@ -74,7 +75,11 @@ public class Verify {
     public static TestContext createTestContext() {
         // TODO: Doesnt work, getting classpath lookup issues
         // TestContext ctx = Citrus.newInstance().createTestContext();
-        return new TestContext();
+        TestContext context = new TestContext();
+        context.getValidationMatcherRegistry()
+               .getValidationMatcherLibraries()
+               .add(new ValidationMatcherConfig().getValidationMatcherLibrary());
+        return context;
     }
 
     public static Message newMessage(String txt) throws IOException {
