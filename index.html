@@ -5331,10 +5331,27 @@ mvn fabric8:migrate
 <div class="sect3">
 <h4 id="how-do-i-define-a-system-property">15.1.2. How do I define a system property?</h4>
 <div class="paragraph">
-<p>The simplest way is to add system properties to the <code>JAVA_OPTS</code> environment variable.</p>
+<p>The simplest way is to add system properties to the <code>JAVA_OPTIONS</code> environment variable.</p>
 </div>
 <div class="paragraph">
 <p>For a full list of the environments used in java base images <a href="https://hub.docker.com/r/fabric8/java-alpine-openjdk8-jdk">see this list</a></p>
+</div>
+<div class="paragraph">
+<p>e.g. add a <code>src/main/fabric8/deployment.yml</code> file to your project containing something like:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="key">spec</span>:
+ <span class="key">template</span>:
+   <span class="key">spec</span>:
+     <span class="key">containers</span>:
+       <span class="key">-env</span>:
+         - <span class="string"><span class="content">name: JAVA_OPTIONS</span></span>
+           <span class="key">value</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">-Dfoo=bar -Dxyz=abc</span><span class="delimiter">&quot;</span></span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The above will define the system properties <code>foo=bar</code> and <code>xyz=abc</code></p>
 </div>
 </div>
 <div class="sect3">
@@ -5430,7 +5447,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.8<br>
-Last updated 2016-12-09 09:35:41 UTC
+Last updated 2016-12-09 09:46:46 UTC
 </div>
 </div>
 </body>
