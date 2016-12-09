@@ -27,8 +27,8 @@ items:
       project: fabric8-maven-sample-zero-config
       provider: fabric8
       group: io.fabric8
-- apiVersion: extensions/v1beta1
-  kind: Deployment
+- apiVersion: v1
+  kind: DeploymentConfig
   metadata:
     annotations:
       fabric8.io/git-commit: "@ignore@"
@@ -43,10 +43,13 @@ items:
   spec:
     replicas: 1
     selector:
-      matchLabels:
-        project: fabric8-maven-sample-zero-config
-        provider: fabric8
-        group: io.fabric8
+      project: fabric8-maven-sample-zero-config
+      provider: fabric8
+      group: io.fabric8
+    strategy:
+      rollingParams:
+        timeoutSeconds: 10800
+      type: Rolling
     template:
       metadata:
         annotations:
@@ -80,3 +83,5 @@ items:
             protocol: TCP
           securityContext:
             privileged: false
+    triggers:
+    - type: ConfigChange

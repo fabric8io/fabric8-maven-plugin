@@ -86,6 +86,11 @@
           <skipInvocation>${skipTests}</skipInvocation>
           <streamLogs>true</streamLogs>
           <invokerPropertiesFile>invoker.properties</invokerPropertiesFile>
+          <scriptVariables>
+            <version>${project.version}</version>
+            <artifactId>${project.artifactId}</artifactId>
+            <groupId>${project.groupId}</groupId>
+          </scriptVariables>
         </configuration>
         <executions>
           <execution>
