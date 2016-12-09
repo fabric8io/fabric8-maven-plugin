@@ -33,7 +33,7 @@ items:
     annotations:
       fabric8.io/git-commit: "@ignore@"
       fabric8.io/metrics-path: "@ignore@"
-      fabric8.io/git-branch: master
+      fabric8.io/git-branch: "@ignore@"
     labels:
       provider: fabric8
       project: fabric8-maven-sample-zero-config
@@ -52,7 +52,7 @@ items:
         annotations:
           fabric8.io/git-commit: "@ignore@"
           fabric8.io/metrics-path: "@ignore@"
-          fabric8.io/git-branch: master
+          fabric8.io/git-branch: "@ignore@"
         labels:
           provider: fabric8
           project: fabric8-maven-sample-zero-config
