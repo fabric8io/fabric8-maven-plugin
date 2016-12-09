@@ -24,9 +24,24 @@ For a full list of the environments used in java base images https://hub.docker.
 
 === How do I define a system property?
 
-The simplest way is to add system properties to the `JAVA_OPTS` environment variable.
+The simplest way is to add system properties to the `JAVA_OPTIONS` environment variable.
 
 For a full list of the environments used in java base images https://hub.docker.com/r/fabric8/java-alpine-openjdk8-jdk[see this list]
+
+e.g. add a `src/main/fabric8/deployment.yml` file to your project containing something like:
+
+[source, yaml]
+----
+spec:
+ template:
+   spec:
+     containers:
+       -env:
+         - name: JAVA_OPTIONS
+           value: "-Dfoo=bar -Dxyz=abc"
+----
+
+The above will define the system properties `foo=bar` and `xyz=abc`
 
 === How do I mount a config file from a ConfigMap?
 
