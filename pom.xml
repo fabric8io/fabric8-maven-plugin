@@ -49,6 +49,7 @@
     <module>generator/karaf</module>
     <module>generator/webapp</module>
     <module>generator/vertx</module>
+    <module>it</module>
   </modules>
 
   <scm>
