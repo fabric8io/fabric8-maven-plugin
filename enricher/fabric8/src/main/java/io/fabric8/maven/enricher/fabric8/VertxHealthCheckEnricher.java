@@ -7,8 +7,6 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 
-import java.util.Properties;
-
 /**
  * Configures the health checks for a Vert.x project. Unlike other enricher this enricher extract the configuration from
  * the following project properties: `vertx.health.port`, `vertx.health.path`.
