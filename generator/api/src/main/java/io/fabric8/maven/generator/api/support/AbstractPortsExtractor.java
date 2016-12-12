@@ -32,7 +32,7 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
 
     private static final String NUMBER_REGEX = "\\d+";
 
-    private static final String PORT_REGEX = "([a-zA-Z0-9_]+)(([\\.-_]+p{1})|([P]{1}))ort";
+    private static final String PORT_REGEX = "([a-zA-Z0-9_]+)(([\\.-_]+p)|([P]))ort";
     private static final Pattern PORT_PATTERN = Pattern.compile(PORT_REGEX);
 
     private final PrefixedLogger log;
@@ -55,9 +55,13 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
 
 
     public File getConfigLocation(MavenProject project) {
+        String propertyName = getConfigPathPropertyName();
+        if (Strings.isNullOrBlank(propertyName)) {
+            return null;
+        }
         //The system property has priority over what is specified in the pom.
-        String configPath = System.getProperty(getConfigPathPropertyName(), getConfigPathFromProject(project));
-        if (configPath == null) {
+        String configPath = System.getProperty(propertyName, getConfigPathFromProject(project));
+        if (Strings.isNullOrBlank(configPath)) {
             return null;
         }
         return Paths.get(configPath).toFile();
@@ -105,7 +109,7 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
             properties.load(new FileInputStream(f));
             map = propertiesToMap(properties);
         } else {
-            map = Collections.emptyMap();
+            throw new IllegalArgumentException("Can't read configuration from: [" + f.getName() + "]. Unknown file extension.");
         }
         return map;
     }

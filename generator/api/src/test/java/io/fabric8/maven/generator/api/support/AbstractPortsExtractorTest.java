@@ -64,6 +64,10 @@ public class AbstractPortsExtractorTest {
         assertTrue(isValidPortPropertyKey("web_port"));
         assertTrue(isValidPortPropertyKey("webPort"));
         assertFalse(isValidPortPropertyKey("ssl.support"));
+        assertFalse(isValidPortPropertyKey("ports"));
+        assertFalse(isValidPortPropertyKey("ports.http"));
+        assertFalse(isValidPortPropertyKey("ports.https"));
+
     }
 
     @Test
