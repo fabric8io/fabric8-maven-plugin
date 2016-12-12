@@ -14,9 +14,10 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
-node{
-  ws{
+@Library('github.com/rawlingsj/fabric8-pipeline-library@master')
+def dummy
+mavenNode {
+  dockerNode {
     checkout scm
     sh "git remote set-url origin git@github.com:fabric8io/fabric8-maven-plugin.git"
 
