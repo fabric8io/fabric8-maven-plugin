@@ -36,12 +36,14 @@ import java.nio.charset.Charset;
 
 import com.consol.citrus.Citrus;
 import com.consol.citrus.context.TestContext;
+import com.consol.citrus.exceptions.ValidationException;
 import com.consol.citrus.message.DefaultMessage;
 import com.consol.citrus.message.Message;
 import com.consol.citrus.util.FileUtils;
 import com.consol.citrus.validation.json.JsonMessageValidationContext;
 import com.consol.citrus.validation.json.JsonTextMessageValidator;
 import com.consol.citrus.validation.matcher.ValidationMatcherConfig;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.springframework.util.FileCopyUtils;
@@ -64,7 +66,6 @@ public class Verify {
                                          newMessage(expectedText),
                                          new JsonMessageValidationContext(),
                                          createTestContext());
-
     }
 
     private static String readFile(File path) throws IOException {
@@ -73,8 +74,6 @@ public class Verify {
 
 
     public static TestContext createTestContext() {
-        // TODO: Doesnt work, getting classpath lookup issues
-        // TestContext ctx = Citrus.newInstance().createTestContext();
         TestContext context = new TestContext();
         context.getValidationMatcherRegistry()
                .getValidationMatcherLibraries()
@@ -88,6 +87,6 @@ public class Verify {
 
     public static String asJson(String txt) throws IOException {
         Object obj = new ObjectMapper(new YAMLFactory()).readValue(txt, Object.class);
-        return new ObjectMapper().writeValueAsString(obj);
+        return new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(obj);
     }
 }
