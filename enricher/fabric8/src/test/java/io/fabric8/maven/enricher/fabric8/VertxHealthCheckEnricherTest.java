@@ -1,6 +1,8 @@
 package io.fabric8.maven.enricher.fabric8;
 
+import com.google.common.collect.ImmutableMap;
 import io.fabric8.kubernetes.api.model.Probe;
+import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
@@ -8,7 +10,9 @@ import mockit.integration.junit4.JMockit;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Collections;
 import java.util.Properties;
+import java.util.TreeMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -46,6 +50,46 @@ public class VertxHealthCheckEnricherTest {
         assertNull(probe.getHttpGet().getHost());
         assertEquals(probe.getHttpGet().getPort().getIntVal().intValue(), 8080);
         assertEquals(probe.getHttpGet().getPath(), "/");
+    }
+
+    @Test
+    public void testWithCustomConfigurationComingFromConf() {
+        final ProcessorConfig config = new ProcessorConfig(
+                null,
+                null,
+                Collections.singletonMap(
+                        "vertx-health-check",
+                        new TreeMap(
+                        ImmutableMap.of(
+                                VertxHealthCheckEnricher.Config.path.name(),
+                                "health",
+                                VertxHealthCheckEnricher.Config.port.name(),
+                                "1234",
+                                VertxHealthCheckEnricher.Config.scheme.name(),
+                                "HTTPS"
+                        ))
+                )
+        );
+
+        new Expectations() {{
+            context.getConfig(); result = config;
+        }};
+
+        VertxHealthCheckEnricher enricher = new VertxHealthCheckEnricher(context);
+
+        Probe probe = enricher.getLivenessProbe();
+        assertNotNull(probe);
+        assertNull(probe.getHttpGet().getHost());
+        assertEquals(probe.getHttpGet().getScheme(), "HTTPS");
+        assertEquals(probe.getHttpGet().getPort().getIntVal().intValue(), 1234);
+        assertEquals(probe.getHttpGet().getPath(), "/health");
+
+        probe = enricher.getReadinessProbe();
+        assertNotNull(probe);
+        assertEquals(probe.getHttpGet().getScheme(), "HTTPS");
+        assertNull(probe.getHttpGet().getHost());
+        assertEquals(probe.getHttpGet().getPort().getIntVal().intValue(), 1234);
+        assertEquals(probe.getHttpGet().getPath(), "/health");
     }
 
     @Test
@@ -100,6 +144,33 @@ public class VertxHealthCheckEnricherTest {
         new Expectations() {{
             context.getProject().getProperties(); result = props;
         }};
+
+        Probe probe = enricher.getLivenessProbe();
+        assertNull(probe);
+        probe = enricher.getReadinessProbe();
+        assertNull(probe);
+    }
+
+    @Test
+    public void testDisabledUsingNegativePortUsingConfiguration() {
+        final ProcessorConfig config = new ProcessorConfig(
+                null,
+                null,
+                Collections.singletonMap(
+                        "vertx-health-check",
+                        new TreeMap(
+                                ImmutableMap.of(
+                                        VertxHealthCheckEnricher.Config.port.name(),
+                                        "-1"
+                                ))
+                )
+        );
+
+        new Expectations() {{
+            context.getConfig(); result = config;
+        }};
+
+        VertxHealthCheckEnricher enricher = new VertxHealthCheckEnricher(context);
 
         Probe probe = enricher.getLivenessProbe();
         assertNull(probe);
