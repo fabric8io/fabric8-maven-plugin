@@ -25,15 +25,17 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Vert.x Generator.
  * <p>
  * Then main part of creating the base image is taken java-exec generator.
  * <p>
- * In addition this generator here adds an appropriate healthcheck when vertx-dropwizard-metrics is
- * given as a dependency (TODO)
+ *
+ * It detects whether or not it's a Vert.x project by looking if there is the vertx-core dependency associated by the
+ * Maven Shader Plugin or if the project use the Vert.x Maven Plugin.
+ *
+ * To avoid the issue to write file in the current working directory the `cacheDirBase` is configured to `/tmp`.
  */
 public class VertxGenerator extends JavaExecGenerator {
 
@@ -54,7 +56,7 @@ public class VertxGenerator extends JavaExecGenerator {
 
   @Override
   protected List<String> getExtraJavaOptions() {
-    List opts = super.getExtraJavaOptions();
+    List<String> opts = super.getExtraJavaOptions();
     opts.add("-Dvertx.cacheDirBase=/tmp");
     return opts;
   }
@@ -63,13 +65,6 @@ public class VertxGenerator extends JavaExecGenerator {
   protected boolean isFatJar() throws MojoExecutionException {
     return !hasMainClass() && isUsingFatJarPlugin() || super.isFatJar();
   }
-
-  @Override
-  public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean isPrePackagePhase) throws MojoExecutionException {
-    // TODO Check what need to be done here
-    return super.customize(configs, isPrePackagePhase);
-  }
-
 
   private boolean isUsingFatJarPlugin() {
     MavenProject project = getProject();
