@@ -258,6 +258,110 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
       </plugin>
 
 
+[[f8-vertx-health-check]]
+==== f8-vertx-health-check
+
+This enricher adds kubernetes readiness and liveness probes with Eclipse Vert.x. The readiness probe lets Kubernetes
+detects when the application is ready, while the liveness probe allows Kubernetes to verify that the application is
+still alive.
+
+By default, this enricher use the same URL for liveness and readiness probes. But the readiness path can be explicitly
+configured to use different paths.
+
+The probes are added if the projects uses the Vert.x Maven Plugin or depends on the `io.vertx:vertx-core` artifact
+**and** the path is explicitly configured.
+
+The enricher will use the following settings by default:
+
+- port = `8080`
+- scheme = `HTTP`
+- path = _none_ (disabled)
+- readiness path = same as the path by default
+
+To enable the health checks, configure the probed path using:
+
+* the `vertx.health.path` project properties (`<vertx.health.path>/ping</vertx.health.path>`)
+* the `path` in the `fabric8-maven-plugin` configuration:
+
+[source, xml]
+<plugin>
+    <groupId>io.fabric8</groupId>
+    <artifactId>fabric8-maven-plugin</artifactId>
+    <version>3.3.0</version>
+    <executions>
+    <execution>
+    <id>fmp</id>
+    <goals>
+      <goal>resource</goal>
+      <goal>helm</goal>
+      <goal>build</goal>
+    </goals>
+    </execution>
+    </executions>
+    <configuration>
+    <enricher>
+    <config>
+      <vertx-health-check>
+        <path>/health</path>
+      </vertx-health-check>
+    </config>
+    </enricher>
+    </configuration>
+</plugin>
+
+
+
+These path, port and scheme can be configured by the enricher in the `fabric8-maven-plugin` configuration as shown below:
+
+[source,xml]
+  <plugin>
+    <groupId>io.fabric8</groupId>
+    <artifactId>fabric8-maven-plugin</artifactId>
+    <version>3.3.0</version>
+    <executions>
+      <execution>
+        <id>fmp</id>
+        <goals>
+          <goal>resource</goal>
+          <goal>helm</goal>
+          <goal>build</goal>
+        </goals>
+      </execution>
+    </executions>
+    <configuration>
+      <enricher>
+        <config>
+          <vertx-health-check>
+            <port>4444</port>
+            <scheme>HTTPS</scheme>
+            <path>/ping</path>
+            <readiness>/ping</readiness>
+          </vertx-health-check>
+        </config>
+      </enricher>
+    </configuration>
+  </plugin>
+
+
+Alternatively, you can use project's properties to configure the health checks:
+
+* `vertx.health.port` - the port, 8080 by default, a negative number disables the health check
+* `vertx.health.path` - the path, an empty (non null) value disables the health check.
+* `vertx.health.readiness.path` - the path used for the readiness probe, an empty (non null) value disables the readiness
+check. If not set it uses the regular path.
+* `vertx.health.scheme` - the scheme, HTTP by default, can be set to HTTPS (adjusts the port accordingly)
+
+By playing with the `vertx.health.path` and ``vertx.health.readiness.path` properties (and also the `<path>` and
+`<readiness`> values in the configuration), you can enables or disables the check individually:
+
+*  `vertx.health.path` not set => the health checks are disabled
+*  `vertx.health.path` set to "" (empty) and `vertx.health.readiness.path` set to "/ping => the liveness check is disabled,
+ the readiness check uses `GET localhost:8080/ping`
+*  `vertx.health.path` set to "/ping" and `vertx.health.readiness.path` set to "" (empty) => the readiness check is
+disabled, the liveness check uses `GET localhost:8080/ping`
+*  `vertx.health.path` set to "/ping" and `vertx.health.readiness.path` set to "/ready"  => the readiness check uses
+`GET localhost:8080/ready` , the liveness check uses the `GET localhost:8080/ping`
+
 == Enricher API
 
 _howto write your own enricher and install them_

@@ -1,7 +1,13 @@
 [[generator-vertx]]
 === Vert.x
 
-[CAUTION]
-====
-Vert.x specific features like detecting metrics for exposing an health check has not yet been added yet. Up to now its the same as the <<generator-java-exec, java-exec generator>>.
-====
+The Vert.x generator detects an application using Eclipse Vert.x. It generates the metadata to start the application as a
+fat jar.
+
+Currently, this generator is enabled if:
+
+* you are using the Vert.x Maven Plugin (https://github.com/fabric8io/vertx-maven-plugin)
+* you are depending on `io.vertx:vertx-core` and uses the Maven Shader plugin
+
+Otherwise this generator is identical to the <<generator-java-exec,java-exec generator>>. It supports the  <<generator-options-common, common generator options>> and the <<generator-java-exec-options, `java-exec` options>>.
+
