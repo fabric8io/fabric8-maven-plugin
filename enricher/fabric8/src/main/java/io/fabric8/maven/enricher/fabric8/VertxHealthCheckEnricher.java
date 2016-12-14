@@ -29,6 +29,10 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
     private static final int DEFAULT_MANAGEMENT_PORT = 8080;
     private static final String SCHEME_HTTP = "HTTP";
 
+    private static final int READINESS_INITIAL_DELAY = 10;
+
+    private static final int LIVENESS_INITIAL_DELAY = 180;
+
     /**
      * The project property to configure the Vert.x health check scheme.
      */
@@ -38,6 +42,11 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
      * The project property to configure the Vert.x health check path.
      */
     public static final String VERTX_HEALTH_PATH = "vertx.health.path";
+
+    /**
+     * The project property to configure the Vert.x readiness health check path.
+     */
+    public static final String VERTX_READINESS_HEALTH_PATH = "vertx.health.readiness.path";
 
     /**
      * The project property to configure the Vert.x health check port.
@@ -55,6 +64,9 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
         }},
         path {{
             d = null;
+        }},
+        readiness {{
+            d = null;
         }};
 
         protected String d;
@@ -70,12 +82,12 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
     @Override
     protected Probe getReadinessProbe() {
-        return discoverVertxHealthCheck(10);
+        return discoverVertxHealthCheck(READINESS_INITIAL_DELAY, true);
     }
 
     @Override
     protected Probe getLivenessProbe() {
-        return discoverVertxHealthCheck(180);
+        return discoverVertxHealthCheck(LIVENESS_INITIAL_DELAY, false);
     }
 
     private boolean isApplicable() {
@@ -83,19 +95,32 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
                 || MavenUtil.hasDependency(getProject(), VERTX_GROUPID);
     }
 
-    private Probe discoverVertxHealthCheck(int initialDelay) {
+    private Probe discoverVertxHealthCheck(int initialDelay, boolean readiness) {
         if (!isApplicable()) {
             return null;
         }
 
         int port = getPort();
-        String path = getPath();
-        String scheme = getScheme();
 
-        if (port <= 0  || path == null) {
+        String path = null;
+        if (readiness) {
+            path = getReadinessPath();
+            if (path != null  && path.isEmpty()) {
+                // Disabled.
+                return null;
+            }
+        }
+
+        if (path == null) {
+            path = getPath();
+        }
+
+        if (port <= 0  || path == null  || path.isEmpty()) {
             // Health check disabled
             return null;
         }
+
+        String scheme = getScheme();
 
         return new ProbeBuilder()
                 .withNewHttpGet()
@@ -138,15 +163,11 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
         return Configs.asInt(getConfig(VertxHealthCheckEnricher.Config.port));
     }
 
-    private String getPath() {
-        String path = getContext().getProject().getProperties()
-                .getProperty(VERTX_HEALTH_PATH);
-
+    private String processPath(String path) {
         if (path != null) {
             path = path.trim();
             if (path.isEmpty()) {
-                // Health check disabled.
-                return null;
+                return "";
             } else {
                 if (! path.startsWith("/")) {
                     path = "/" + path;
@@ -155,17 +176,34 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
                 return path;
             }
         }
+        return null;
+    }
+
+    private String getPath() {
+        String path = getContext().getProject().getProperties()
+                .getProperty(VERTX_HEALTH_PATH);
+
+        path = processPath(path);
+        if (path != null) {
+            return path;
+        }
 
         path = Configs.asString(getConfig(VertxHealthCheckEnricher.Config.path));
 
-        if (path == null) {
-            return null;
+        return processPath(path);
+    }
+
+    private String getReadinessPath() {
+        String path = getContext().getProject().getProperties()
+                .getProperty(VERTX_READINESS_HEALTH_PATH);
+
+        path = processPath(path);
+        if (path != null) {
+            return path;
         }
 
-        if (! path.startsWith("/")) {
-            path = "/" + path;
-        }
-        return path;
+        path = Configs.asString(getConfig(Config.readiness));
+        return processPath(path);
     }
 
 }
