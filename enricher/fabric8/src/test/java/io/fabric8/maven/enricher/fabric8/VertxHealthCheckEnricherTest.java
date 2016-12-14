@@ -38,18 +38,34 @@ public class VertxHealthCheckEnricherTest {
         }};
 
         Probe probe = enricher.getLivenessProbe();
+        assertNull(probe);
+        probe = enricher.getReadinessProbe();
+        assertNull(probe);
+    }
+
+    @Test
+    public void testDefaultConfiguration_Enabled() {
+        VertxHealthCheckEnricher enricher = new VertxHealthCheckEnricher(context);
+
+        final Properties props = new Properties();
+        props.put("vertx.health.path", "/ping");
+        new Expectations() {{
+            context.getProject().getProperties(); result = props;
+        }};
+
+        Probe probe = enricher.getLivenessProbe();
         assertNotNull(probe);
         assertNull(probe.getHttpGet().getHost());
         assertEquals(probe.getHttpGet().getScheme(), "HTTP");
         assertEquals(probe.getHttpGet().getPort().getIntVal().intValue(), 8080);
-        assertEquals(probe.getHttpGet().getPath(), "/");
+        assertEquals(probe.getHttpGet().getPath(), "/ping");
 
         probe = enricher.getReadinessProbe();
         assertNotNull(probe);
         assertEquals(probe.getHttpGet().getScheme(), "HTTP");
         assertNull(probe.getHttpGet().getHost());
         assertEquals(probe.getHttpGet().getPort().getIntVal().intValue(), 8080);
-        assertEquals(probe.getHttpGet().getPath(), "/");
+        assertEquals(probe.getHttpGet().getPath(), "/ping");
     }
 
     @Test

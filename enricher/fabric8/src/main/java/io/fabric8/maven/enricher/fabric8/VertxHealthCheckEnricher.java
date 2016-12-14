@@ -54,7 +54,7 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
             d = Integer.toString(DEFAULT_MANAGEMENT_PORT);
         }},
         path {{
-            d = "/";
+            d = null;
         }};
 
         protected String d;
@@ -157,6 +157,11 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
         }
 
         path = Configs.asString(getConfig(VertxHealthCheckEnricher.Config.path));
+
+        if (path == null) {
+            return null;
+        }
+
         if (! path.startsWith("/")) {
             path = "/" + path;
         }

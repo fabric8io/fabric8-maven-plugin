@@ -262,49 +262,82 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
 ==== f8-vertx-health-check
 
 This enricher adds kubernetes readiness and liveness probes with Eclipse Vert.x. The probes are added if the projects
-uses the Vert.x Maven Plugin or depends on the `io.vertx:vertx-core` artifact.
+uses the Vert.x Maven Plugin or depends on the `io.vertx:vertx-core` artifact **and** the path is explicitly configured.
 
 The enricher will use the following settings by default:
 
 - port = `8080`
 - scheme = `HTTP`
-- path = `/`
+- path = _none_ (disabled)
+
+To enable the health checks, configure the probed path using:
+
+* the `vertx.health.path` project properties (`<vertx.health.path>/ping</vertx.health.path>`)
+* the `path` in the `fabric8-maven-plugin` configuration:
+
+[source, xml]
+<plugin>
+    <groupId>io.fabric8</groupId>
+    <artifactId>fabric8-maven-plugin</artifactId>
+    <version>3.3.0</version>
+    <executions>
+    <execution>
+    <id>fmp</id>
+    <goals>
+      <goal>resource</goal>
+      <goal>helm</goal>
+      <goal>build</goal>
+    </goals>
+    </execution>
+    </executions>
+    <configuration>
+    <enricher>
+    <config>
+      <vertx-health-check>
+        <path>/health</path>
+      </vertx-health-check>
+    </config>
+    </enricher>
+    </configuration>
+</plugin>
 
 
-These values can be configured by the enricher in the `fabric8-maven-plugin` configuration as shown below:
+
+These path, port and scheme can be configured by the enricher in the `fabric8-maven-plugin` configuration as shown below:
+
 [source,xml]
-      <plugin>
-        <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-plugin</artifactId>
-        <version>3.3.0</version>
-        <executions>
-          <execution>
-            <id>fmp</id>
-            <goals>
-              <goal>resource</goal>
-              <goal>helm</goal>
-              <goal>build</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <enricher>
-            <config>
-              <vertx-health-check>
-                <port>4444</port>
-                <scheme>HTTPS</scheme>
-                <path>health/myapp</path>
-              </vertx-health-check>
-            </config>
-          </enricher>
-        </configuration>
-      </plugin>
+  <plugin>
+    <groupId>io.fabric8</groupId>
+    <artifactId>fabric8-maven-plugin</artifactId>
+    <version>3.3.0</version>
+    <executions>
+      <execution>
+        <id>fmp</id>
+        <goals>
+          <goal>resource</goal>
+          <goal>helm</goal>
+          <goal>build</goal>
+        </goals>
+      </execution>
+    </executions>
+    <configuration>
+      <enricher>
+        <config>
+          <vertx-health-check>
+            <port>4444</port>
+            <scheme>HTTPS</scheme>
+            <path>/ping</path>
+          </vertx-health-check>
+        </config>
+      </enricher>
+    </configuration>
+  </plugin>
 
 
 Alternatively, you can use project's properties to configure the health checks:
 
 * `vertx.health.port` - the port, 8080 by default, a negative number disables the health check
-* `vertx.health.path` - the path, / by default, an empty (non null) value disables the health check
+* `vertx.health.path` - the path, an empty (non null) value disables the health check.
 * `vertx.health.scheme` - the scheme, HTTP by default, can be set to HTTPS (adjusts the port accordingly)
 
 
