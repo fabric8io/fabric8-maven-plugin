@@ -604,8 +604,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
     }
 
     private void applyResourceObjects(OpenShiftClient client, KubernetesListBuilder builder) throws IOException {
+        enrich(builder);
         if (builder.getItems().size() > 0) {
-            enrich(builder);
             KubernetesList k8sList = builder.build();
             client.lists().create(k8sList);
         }

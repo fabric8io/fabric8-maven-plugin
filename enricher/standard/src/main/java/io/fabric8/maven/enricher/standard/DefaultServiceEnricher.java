@@ -45,6 +45,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * An enricher for creating default services when not present.
@@ -285,12 +286,14 @@ public class DefaultServiceEnricher extends BaseEnricher {
     }
 
     private boolean hasServices(KubernetesListBuilder builder) {
-        for (HasMetadata item : builder.getItems()) {
-            if ("Service".equals(item.getKind())) {
-                return true;
+        final AtomicBoolean hasService = new AtomicBoolean(false);
+        builder.accept(new TypedVisitor<ServiceBuilder>() {
+            @Override
+            public void visit(ServiceBuilder element) {
+                hasService.set(true);
             }
-        }
-        return false;
+        });
+        return hasService.get();
     }
 
 }
