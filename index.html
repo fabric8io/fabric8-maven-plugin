@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.2.8,</span>
-<span id="revdate">2016-12-12</span>
+<span id="revdate">2016-12-14</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -4247,19 +4247,25 @@ Since the released version are typically generated with a CI system which does a
 </div>
 <div class="sect3">
 <h4 id="generator-vertx">8.1.4. Vert.x</h4>
-<div class="admonitionblock caution">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-caution" title="Caution"></i>
-</td>
-<td class="content">
 <div class="paragraph">
-<p>Vert.x specific features like detecting metrics for exposing an health check has not yet been added yet. Up to now its the same as the <a href="#generator-java-exec">java-exec generator</a>.</p>
+<p>The Vert.x generator detects an application using Eclipse Vert.x. It generates the metadata to start the application as a
+fat jar.</p>
 </div>
-</td>
-</tr>
-</table>
+<div class="paragraph">
+<p>Currently, this generator is enabled if:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>you are using the Vert.x Maven Plugin (<a href="https://github.com/fabric8io/vertx-maven-plugin" class="bare">https://github.com/fabric8io/vertx-maven-plugin</a>)</p>
+</li>
+<li>
+<p>you are depending on <code>io.vertx:vertx-core</code> and uses the Maven Shader plugin</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Otherwise this generator is identical to the <a href="#generator-java-exec">java-exec generator</a>. It supports the  <a href="#generator-options-common">common generator options</a> and the <a href="#generator-java-exec-options"><code>java-exec</code> options</a>.</p>
 </div>
 </div>
 <div class="sect3">
@@ -4833,6 +4839,159 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
         <span class="tag">&lt;/configuration&gt;</span>
       <span class="tag">&lt;/plugin&gt;</span></code></pre>
 </div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="f8-vertx-health-check">f8-vertx-health-check</h5>
+<div class="paragraph">
+<p>This enricher adds kubernetes readiness and liveness probes with Eclipse Vert.x. The readiness probe lets Kubernetes
+detects when the application is ready, while the liveness probe allows Kubernetes to verify that the application is
+still alive.</p>
+</div>
+<div class="paragraph">
+<p>By default, this enricher use the same URL for liveness and readiness probes. But the readiness path can be explicitly
+configured to use different paths.</p>
+</div>
+<div class="paragraph">
+<p>The probes are added if the projects uses the Vert.x Maven Plugin or depends on the <code>io.vertx:vertx-core</code> artifact
+<strong>and</strong> the path is explicitly configured.</p>
+</div>
+<div class="paragraph">
+<p>The enricher will use the following settings by default:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>port = <code>8080</code></p>
+</li>
+<li>
+<p>scheme = <code>HTTP</code></p>
+</li>
+<li>
+<p>path = <em>none</em> (disabled)</p>
+</li>
+<li>
+<p>readiness path = same as the path by default</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>To enable the health checks, configure the probed path using:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>the <code>vertx.health.path</code> project properties (<code>&lt;vertx.health.path&gt;/ping&lt;/vertx.health.path&gt;</code>)</p>
+</li>
+<li>
+<p>the <code>path</code> in the <code>fabric8-maven-plugin</code> configuration:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+    <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+    <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+    <span class="tag">&lt;version&gt;</span>3.3.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;executions&gt;</span>
+    <span class="tag">&lt;execution&gt;</span>
+    <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
+    <span class="tag">&lt;goals&gt;</span>
+      <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
+      <span class="tag">&lt;goal&gt;</span>helm<span class="tag">&lt;/goal&gt;</span>
+      <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
+    <span class="tag">&lt;/goals&gt;</span>
+    <span class="tag">&lt;/execution&gt;</span>
+    <span class="tag">&lt;/executions&gt;</span>
+    <span class="tag">&lt;configuration&gt;</span>
+    <span class="tag">&lt;enricher&gt;</span>
+    <span class="tag">&lt;config&gt;</span>
+      <span class="tag">&lt;vertx-health-check&gt;</span>
+        <span class="tag">&lt;path&gt;</span>/health<span class="tag">&lt;/path&gt;</span>
+      <span class="tag">&lt;/vertx-health-check&gt;</span>
+    <span class="tag">&lt;/config&gt;</span>
+    <span class="tag">&lt;/enricher&gt;</span>
+    <span class="tag">&lt;/configuration&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>These path, port and scheme can be configured by the enricher in the <code>fabric8-maven-plugin</code> configuration as shown below:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml">  <span class="tag">&lt;plugin&gt;</span>
+    <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+    <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+    <span class="tag">&lt;version&gt;</span>3.3.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;executions&gt;</span>
+      <span class="tag">&lt;execution&gt;</span>
+        <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
+        <span class="tag">&lt;goals&gt;</span>
+          <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
+          <span class="tag">&lt;goal&gt;</span>helm<span class="tag">&lt;/goal&gt;</span>
+          <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
+        <span class="tag">&lt;/goals&gt;</span>
+      <span class="tag">&lt;/execution&gt;</span>
+    <span class="tag">&lt;/executions&gt;</span>
+    <span class="tag">&lt;configuration&gt;</span>
+      <span class="tag">&lt;enricher&gt;</span>
+        <span class="tag">&lt;config&gt;</span>
+          <span class="tag">&lt;vertx-health-check&gt;</span>
+            <span class="tag">&lt;port&gt;</span>4444<span class="tag">&lt;/port&gt;</span>
+            <span class="tag">&lt;scheme&gt;</span>HTTPS<span class="tag">&lt;/scheme&gt;</span>
+            <span class="tag">&lt;path&gt;</span>/ping<span class="tag">&lt;/path&gt;</span>
+            <span class="tag">&lt;readiness&gt;</span>/ping<span class="tag">&lt;/readiness&gt;</span>
+          <span class="tag">&lt;/vertx-health-check&gt;</span>
+        <span class="tag">&lt;/config&gt;</span>
+      <span class="tag">&lt;/enricher&gt;</span>
+    <span class="tag">&lt;/configuration&gt;</span>
+  <span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Alternatively, you can use project&#8217;s properties to configure the health checks:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>vertx.health.port</code> - the port, 8080 by default, a negative number disables the health check</p>
+</li>
+<li>
+<p><code>vertx.health.path</code> - the path, an empty (non null) value disables the health check.</p>
+</li>
+<li>
+<p><code>vertx.health.readiness.path</code> - the path used for the readiness probe, an empty (non null) value disables the readiness
+check. If not set it uses the regular path.</p>
+</li>
+<li>
+<p><code>vertx.health.scheme</code> - the scheme, HTTP by default, can be set to HTTPS (adjusts the port accordingly)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>By playing with the <code>vertx.health.path</code> and <code>`vertx.health.readiness.path</code> properties (and also the <code>&lt;path&gt;</code> and
+<code>&lt;readiness</code>&gt; values in the configuration), you can enables or disables the check individually:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>vertx.health.path</code> not set &#8658; the health checks are disabled</p>
+</li>
+<li>
+<p><code>vertx.health.path</code> set to "" (empty) and <code>vertx.health.readiness.path</code> set to "/ping &#8658; the liveness check is disabled,
+the readiness check uses <code>GET localhost:8080/ping</code></p>
+</li>
+<li>
+<p><code>vertx.health.path</code> set to "/ping" and <code>vertx.health.readiness.path</code> set to "" (empty) &#8658; the readiness check is
+disabled, the liveness check uses <code>GET localhost:8080/ping</code></p>
+</li>
+<li>
+<p><code>vertx.health.path</code> set to "/ping" and <code>vertx.health.readiness.path</code> set to "/ready"  &#8658; the readiness check uses
+<code>GET localhost:8080/ready</code> , the liveness check uses the <code>GET localhost:8080/ping</code></p>
+</li>
+</ul>
 </div>
 </div>
 </div>
@@ -5447,7 +5606,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.8<br>
-Last updated 2016-12-12 15:36:50 UTC
+Last updated 2016-12-14 17:02:41 UTC
 </div>
 </div>
 </body>
