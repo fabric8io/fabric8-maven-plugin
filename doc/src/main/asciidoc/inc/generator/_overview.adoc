@@ -61,7 +61,7 @@ mvn -Dfabric8.generator.spring-boot.alias="myapp"
 
 The general scheme is a prefix `fabric8.generator.` followed by the unique generator name and then the generator specific key.
 
-In addition to the provided default _Generators_ described in the next secion <<generators-fabric8, Fabric8 Generators>>, custom generators can be easily added. There are two ways to include generators:
+In addition to the provided default _Generators_ described in the next secion <<generators-default, Default Generators>>, custom generators can be easily added. There are two ways to include generators:
 
 .Plugin dependency
 
