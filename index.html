@@ -3148,6 +3148,14 @@ mvn fabric8:stop</code></pre>
 </div>
 </div>
 <div class="paragraph">
+<p>If your app is running in multiple pods you can configure the pod name to log via the <code>fabric8.log.pod</code> property, otherwise it defaults to the latest pod:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:log -Dfabric8.log.pod=foo</code></pre>
+</div>
+</div>
+<div class="paragraph">
 <p>If your pod has multiple containers you can configure the container name to log via the <code>fabric8.log.container</code> property, otherwise it defaults to the first container:</p>
 </div>
 <div class="listingblock">
@@ -5606,7 +5614,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.8<br>
-Last updated 2016-12-15 09:40:20 UTC
+Last updated 2016-12-15 12:41:59 UTC
 </div>
 </div>
 </body>
