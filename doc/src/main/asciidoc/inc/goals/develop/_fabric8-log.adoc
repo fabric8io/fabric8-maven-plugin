@@ -25,6 +25,13 @@ This lets you pipe the output into grep or some other tool
 mvn fabric8:log -Dfabric8.log.follow=false | grep Exception
 ----
 
+If your app is running in multiple pods you can configure the pod name to log via the `fabric8.log.pod` property, otherwise it defaults to the latest pod:
+
+[source, sh]
+----
+mvn fabric8:log -Dfabric8.log.pod=foo
+----
+
 If your pod has multiple containers you can configure the container name to log via the `fabric8.log.container` property, otherwise it defaults to the first container:
 
 [source, sh]
