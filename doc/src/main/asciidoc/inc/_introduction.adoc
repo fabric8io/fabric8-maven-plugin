@@ -52,7 +52,7 @@ The following table gives an overview of the different models.
 | Model | Docker Images | Resource Descriptors
 
 | *Zero-Config*
-| <<generators, Generators>> are used to creatin Docker image configurations. Generators can detect certain aspects of the build (e.g. whether Spring Boot is used) and then choose some default like the base image, which ports to expose and the startup command. The can be configured, but offer only a few options.
+| <<generators, Generators>> are used to create Docker image configurations. Generators can detect certain aspects of the build (e.g. whether Spring Boot is used) and then choose some default like the base image, which ports to expose and the startup command. The can be configured, but offer only a few options.
 | Default <<enrichers, Enrichers>> will create a default _Service_ and _Deployment_ (_DeploymentConfig_ for OpenShift) when no other resource objects are provided. Depending on the image they can detect which port to expose in the service. As with Generators, Enrichers support a limited set of configuration options.
 
 | *XML configuration*
@@ -122,7 +122,7 @@ This setup make some opinionated decisions for you:
 
 * As base image https://github.com/fabric8io-images/java/tree/master/images/alpine/openjdk8/jdk[fabric8/java-alpine-openjdk8-jdk] is chosen which enables https://www.jolokia.org[Jolokia] and https://github.com/prometheus/jmx_exporter[jmx_exporter]. It also comes with a sophisticated https://github.com/fabric8io-images/run-java-sh[startup script].
 * It will create a Kubernetes http://kubernetes.io/docs/user-guide/deployments/[Deployment] and a http://kubernetes.io/docs/user-guide/services/[Service] as resource objects
-* It exports port 8080 as the apllication service port (and 8778 and 9779 for Jolokia and jmx_exporter access, respectively)
+* It exports port 8080 as the application service port (and 8778 and 9779 for Jolokia and jmx_exporter access, respectively)
 
 These choices can be influenced by configuration options as decribed in <<generator-spring-boot,Spring Boot Generator>>.
 
