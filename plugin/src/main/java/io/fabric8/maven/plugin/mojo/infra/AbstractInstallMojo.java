@@ -133,7 +133,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     private void updateStartupScript(File rcFile, String setPathCmd) throws MojoExecutionException {
         try {
             String answer = prompter.prompt("Would you like to add the path setting to your ~/" + rcFile.getName() + " now? (Y/n)");
-            if (answer != null && answer.startsWith("Y")) {
+            if (answer != null && answer.trim().isEmpty() || answer.trim().toUpperCase().startsWith("Y")) {
                 addToStartupScript(rcFile, setPathCmd);
                 log.info("Updated %s. Please type the following command to update your current shell:", rcFile);
                 log.info("     [[C]]source ~/%s[[C]]", rcFile.getName());
