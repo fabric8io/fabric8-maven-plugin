@@ -243,7 +243,7 @@ public class ImportMojo extends AbstractFabric8Mojo {
                 } catch (PrompterException e) {
                     log.warn("Failed to get prompt: %s", e);
                 }
-                if (answer != null && answer.trim().startsWith("Y")) {
+                if (answer != null && answer.trim().isEmpty() || answer.trim().toUpperCase().startsWith("Y")) {
                     chooseSshKeyPairs(secretData, host);
                     secret.setData(secretData);
                 }
