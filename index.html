@@ -766,7 +766,7 @@ This allows for type safe configuration with IDE support, but only a subset of p
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Zero-Config</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#generators">Generators</a> are used to creatin Docker image configurations. Generators can detect certain aspects of the build (e.g. whether Spring Boot is used) and then choose some default like the base image, which ports to expose and the startup command. The can be configured, but offer only a few options.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#generators">Generators</a> are used to create Docker image configurations. Generators can detect certain aspects of the build (e.g. whether Spring Boot is used) and then choose some default like the base image, which ports to expose and the startup command. The can be configured, but offer only a few options.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Default <a href="#enrichers">Enrichers</a> will create a default <em>Service</em> and <em>Deployment</em> (<em>DeploymentConfig</em> for OpenShift) when no other resource objects are provided. Depending on the image they can detect which port to expose in the service. As with Generators, Enrichers support a limited set of configuration options.</p></td>
 </tr>
 <tr>
@@ -864,7 +864,7 @@ This allows for type safe configuration with IDE support, but only a subset of p
 <p>It will create a Kubernetes <a href="http://kubernetes.io/docs/user-guide/deployments/">Deployment</a> and a <a href="http://kubernetes.io/docs/user-guide/services/">Service</a> as resource objects</p>
 </li>
 <li>
-<p>It exports port 8080 as the apllication service port (and 8778 and 9779 for Jolokia and jmx_exporter access, respectively)</p>
+<p>It exports port 8080 as the application service port (and 8778 and 9779 for Jolokia and jmx_exporter access, respectively)</p>
 </li>
 </ul>
 </div>
@@ -3961,7 +3961,7 @@ This plugin definition includes the configuration to generate the Docker image.
 <p>The general scheme is a prefix <code>fabric8.generator.</code> followed by the unique generator name and then the generator specific key.</p>
 </div>
 <div class="paragraph">
-<p>In addition to the provided default <em>Generators</em> described in the next secion <a href="#generators-fabric8">Fabric8 Generators</a>, custom generators can be easily added. There are two ways to include generators:</p>
+<p>In addition to the provided default <em>Generators</em> described in the next secion <a href="#generators-default">Default Generators</a>, custom generators can be easily added. There are two ways to include generators:</p>
 </div>
 <div class="paragraph">
 <div class="title">Plugin dependency</div>
@@ -5614,7 +5614,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.8<br>
-Last updated 2016-12-15 12:41:59 UTC
+Last updated 2016-12-15 13:25:30 UTC
 </div>
 </div>
 </body>
