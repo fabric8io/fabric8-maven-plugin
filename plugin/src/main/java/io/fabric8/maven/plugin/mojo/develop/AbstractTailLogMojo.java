@@ -54,9 +54,13 @@ public class AbstractTailLogMojo extends ApplyMojo {
     public static final String OPERATION_UNDEPLOY = "undeploy";
     public static final String OPERATION_STOP = "stop";
     public static final String FABRIC8_LOG_CONTAINER = "fabric8.log.container";
+    private static final String FABRIC8_LOG_POD = "fabric8.log.pod";
 
     @Parameter(property = FABRIC8_LOG_CONTAINER)
     private String logContainerName;
+
+    @Parameter(property = FABRIC8_LOG_POD)
+    private String podName;
 
     private Watch podWatcher;
     private LogWatch logWatcher;
@@ -117,7 +121,12 @@ public class AbstractTailLogMojo extends ApplyMojo {
 
     private void waitAndLogPods(final KubernetesClient kubernetes, final String namespace, LabelSelector selector, final boolean watchAddedPodsOnly, final String ctrlCMessage, final boolean followLog, Date ignorePodsOlderThan, boolean waitInCurrentThread) {
         FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> pods = withSelector(kubernetes.pods().inNamespace(namespace), selector);
-        log.info("Watching pods with selector %s waiting for a running pod...",selector);
+        if (podName != null) {
+            log.info("Watching pod with selector %s, and name %s waiting for a running pod...", selector, podName);
+            pods = pods.withField("metadata.name", podName);
+        } else {
+            log.info("Watching pods with selector %s waiting for a running pod...", selector);
+        }
         Pod latestPod = null;
         boolean runningPod = false;
         PodList list = pods.list();
