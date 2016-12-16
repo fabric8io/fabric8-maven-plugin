@@ -20,14 +20,13 @@ import java.util.Properties;
 
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
+import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootProperties;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.utils.PropertiesHelper;
 import io.fabric8.utils.Strings;
-
-import static io.fabric8.maven.core.util.MavenUtil.hasAllClasses;
-import static io.fabric8.utils.PropertiesHelper.getInteger;
 
 /**
  * Enriches spring-boot containers with health checks if the actuator module is present.
@@ -49,21 +48,20 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
     @Override
     protected Probe getReadinessProbe() {
-        Probe probe = discoverSpringBootHealthCheck(10);
-        return probe;
+        return discoverSpringBootHealthCheck(10);
     }
 
     @Override
     protected Probe getLivenessProbe() {
-        Probe probe = discoverSpringBootHealthCheck(180);
-        return probe;
+        return discoverSpringBootHealthCheck(180);
     }
 
     private Probe discoverSpringBootHealthCheck(int initialDelay) {
         try {
-            if (hasAllClasses(this.getProject(), REQUIRED_CLASSES)) {
+            if (MavenUtil.hasAllClasses(this.getProject(), REQUIRED_CLASSES)) {
                 Properties properties = SpringBootUtil.getSpringBootApplicationProperties(this.getProject());
-                Integer port = getInteger(properties, SpringBootProperties.MANAGEMENT_PORT, getInteger(properties, SpringBootProperties.SERVER_PORT, DEFAULT_MANAGEMENT_PORT));
+                Integer port = PropertiesHelper.getInteger(properties, SpringBootProperties.MANAGEMENT_PORT,
+                                                           PropertiesHelper.getInteger(properties, SpringBootProperties.SERVER_PORT, DEFAULT_MANAGEMENT_PORT));
                 String scheme = Strings.isNotBlank(properties.getProperty(SpringBootProperties.SERVER_KEYSTORE)) ? SCHEME_HTTPS : SCHEME_HTTP;
 
                 // lets default to adding a spring boot actuator health check
