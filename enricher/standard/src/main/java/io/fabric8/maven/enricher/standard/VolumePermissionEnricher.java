@@ -124,6 +124,7 @@ public class VolumePermissionEnricher extends BaseEnricher {
         JSONObject entry = new JSONObject();
         entry.put("name","init");
         entry.put("image","busybox");
+        entry.put("imagePullPolicy","IfNotPresent");
         entry.put("command", createChmodCommandArray(mountPoints));
         entry.put("volumeMounts", createMounts(mountPoints));
         anno.put(entry);
