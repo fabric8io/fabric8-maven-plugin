@@ -22,11 +22,13 @@ import java.util.Map;
 import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MapUtil;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 import io.fabric8.utils.Strings;
+import org.apache.commons.lang3.StringUtils;
 
 public class PrometheusEnricher extends BaseEnricher {
     static final String ENRICHER_NAME = "f8-prometheus";
@@ -63,12 +65,15 @@ public class PrometheusEnricher extends BaseEnricher {
 
     private String findPrometheusPort() {
         String prometheusPort = getConfig(Config.prometheusPort);
-        if (!Strings.isNotBlank(prometheusPort)) {
-            for (ImageConfiguration configuration : getContext().getImages()) {
-                List<String> ports = configuration.getBuildConfiguration().getPorts();
-                if (ports != null && ports.contains(PROMETHEUS_PORT)) {
-                    prometheusPort = PROMETHEUS_PORT;
-                    break;
+        if (Strings.isNullOrBlank(prometheusPort)) {
+            for (ImageConfiguration configuration : getImages()) {
+                BuildImageConfiguration buildImageConfiguration = configuration.getBuildConfiguration();
+                if (buildImageConfiguration != null) {
+                    List<String> ports = buildImageConfiguration.getPorts();
+                    if (ports != null && ports.contains(PROMETHEUS_PORT)) {
+                        prometheusPort = PROMETHEUS_PORT;
+                        break;
+                    }
                 }
             }
         }

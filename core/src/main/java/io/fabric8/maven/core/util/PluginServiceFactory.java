@@ -48,8 +48,11 @@ public final class PluginServiceFactory<C> {
     // Parameters for service constructors
     private C context;
 
-    public PluginServiceFactory(C context) {
+    public PluginServiceFactory(C context, ClassLoader ... loaders) {
         this.context = context;
+        for (ClassLoader loader : loaders) {
+            addAdditionalClassLoader(loader);
+        }
     }
 
     /**
@@ -235,7 +238,8 @@ public final class PluginServiceFactory<C> {
 
         /** {@inheritDoc} */
         public int compareTo(ServiceEntry o) {
-            return order - o.order;
+            int ret = this.order - o.order;
+            return ret != 0 ? ret : this.className.compareTo(o.className);
         }
     }
 }
