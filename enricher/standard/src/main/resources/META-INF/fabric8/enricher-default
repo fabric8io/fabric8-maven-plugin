@@ -2,48 +2,49 @@
 # =================
 
 # Add a default name for any resource missing
-io.fabric8.maven.enricher.standard.NameEnricher
+io.fabric8.maven.enricher.standard.NameEnricher,100
 
 # Add an image from the docker build configuration if missing. Note that
 # the order of the images in the docker build section must be the same as
 # in an given external descriptor (if more than one images are used within
 # a pod)
-io.fabric8.maven.enricher.standard.ImageEnricher
+io.fabric8.maven.enricher.standard.ImageEnricher,101
 
 # Add a default Deployment, ReplicaSet or ReplicationController if none is given
-io.fabric8.maven.enricher.standard.DefaultControllerEnricher
+io.fabric8.maven.enricher.standard.DefaultControllerEnricher,102
 
 # Add a default service if none is given. Enrich also with
 # other information found
-io.fabric8.maven.enricher.standard.DefaultServiceEnricher
+io.fabric8.maven.enricher.standard.DefaultServiceEnricher,103
 
 # Add port names from IANA service definitions
-io.fabric8.maven.enricher.standard.PortNameEnricher
+io.fabric8.maven.enricher.standard.PortNameEnricher,104
 
 # Add port names from IANA service definitions
-io.fabric8.maven.enricher.standard.IANAServicePortNameEnricher
+io.fabric8.maven.enricher.standard.IANAServicePortNameEnricher,105
 
 # Add Maven coordinates as labels
-io.fabric8.maven.enricher.standard.ProjectEnricher
+io.fabric8.maven.enricher.standard.ProjectEnricher,106
 
 # Copy over annotation from a deployment to its pod spec
-io.fabric8.maven.enricher.standard.PodAnnotationEnricher
+io.fabric8.maven.enricher.standard.PodAnnotationEnricher,107
 
 # Add SCM information found in .git as annotations
-io.fabric8.maven.enricher.standard.GitEnricher
+io.fabric8.maven.enricher.standard.GitEnricher,108
 
 # Add all objects found in dependencies' jar within META-INF/fabric8/kubernetes.yml
-io.fabric8.maven.enricher.standard.DependencyEnricher
+io.fabric8.maven.enricher.standard.DependencyEnricher,109
 
 # Add docker environment variables to the kubernetes manifest if using S2I binary builds
 # which strip out docker environment variables
-io.fabric8.maven.enricher.standard.OpenShiftS2IEnricher
+io.fabric8.maven.enricher.standard.OpenShiftS2IEnricher,110
 
 # Add an enricher for enabling debug information
-io.fabric8.maven.enricher.standard.DebugEnricher,1001
+io.fabric8.maven.enricher.standard.DebugEnricher,1100
 
 # Add an enricher for merging duplicates
-io.fabric8.maven.enricher.standard.MergeEnricher,1003
+io.fabric8.maven.enricher.standard.MergeEnricher,1101
 
 # Add an enricher for merging duplicates
-io.fabric8.maven.enricher.standard.RemoveBuildAnnotationsEnricher,5002
+io.fabric8.maven.enricher.standard.RemoveBuildAnnotationsEnricher,1200
+
