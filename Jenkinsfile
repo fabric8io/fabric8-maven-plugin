@@ -28,8 +28,10 @@ mavenNode {
   stage 'Promote'
   pipeline.release(stagedProject)
 
-  stage 'Website'
-  pipeline.website(stagedProject)
+  // Disabled for now as it probably doesn't work because of the different directory structure
+  // with a dedicated doc-module
+  //stage 'Website'
+  //pipeline.website(stagedProject)
 
   stage 'Update downstream dependencies'
   pipeline.updateDownstreamDependencies(stagedProject)

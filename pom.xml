@@ -59,7 +59,7 @@
   </scm>
 
   <profiles>
-    <!-- Generate HTML and PDF documentation (with -Ppdf-->
+    <!-- Generate HTML and PDF documentation (with -Pdoc) -->
     <profile>
       <id>doc</id>
       <modules>
