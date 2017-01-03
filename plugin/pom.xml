@@ -108,7 +108,7 @@
       <groupId>io.fabric8</groupId>
       <artifactId>fabric8-maven-generator-webapp</artifactId>
     </dependency>
-    
+
     <!-- == Fabric8 ===================================== -->
 
     <dependency>
