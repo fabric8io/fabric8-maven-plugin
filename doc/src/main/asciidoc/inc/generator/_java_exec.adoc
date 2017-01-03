@@ -66,4 +66,4 @@ Beside the common configuration parameters described in the table <<generator-op
 
 The exposed ports are typically later on use by <<enrichers, Enrichers>> to create default Kubernetes or OpenShift services.
 
-You can add additional files to the target image within `baseDir` by putting files into `src/main/fabric8-include`. These will be added with mode `0644`, everything in `src/main/fabric8-include/bin` will be added with `0755`.
+You can add additional files to the target image within `baseDir` by putting files into `src/main/fabric8-includes`. These will be added with mode `0644`, everything in `src/main/fabric8-includes/bin` will be added with `0755`.
