@@ -11,11 +11,12 @@ script:
   # Only build docs when commited on master and not a pull request.
   # See https://docs.travis-ci.com/user/environment-variables/#Default-Environment-Variables
   # for more details about Travis default vars
-  - "[[ $TRAVIS_BRANCH == master && $TRAVIS_PULL_REQUEST == false ]] && sh doc/ci-docs.sh"
+  - if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then sh doc/ci-docs.sh; else true; fi
 after_success:
   # Update codecov site. See https://codecov.io/gh/fabric8io/fabric8-maven-plugin
   # Also look into .codecov.yml for configuraton of codecov
   - bash <(curl -s https://codecov.io/bash)
 after_script:
   # Update our sonar instalation at https://sonarqube.com/dashboard?id=io.fabric8%3Afabric8-maven-plugin-build
-  - "[[ $TRAVIS_PULL_REQUEST == false ]] && mvn -Pjacoco package sonar:sonar -Dsonar.host.url=https://sonarqube.com -Dsonar.login=${SONARQUBE_TOKEN}"
+  - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then mvn -Pjacoco package sonar:sonar -Dsonar.host .url=https://sonarqube.com -Dsonar.login=${SONARQUBE_TOKEN}; else true; fi
+

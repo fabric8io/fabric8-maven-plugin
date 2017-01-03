@@ -1,5 +1,5 @@
 coverage:
-  range: "45...90"
+  range: "10...90"
   precision: 2
   round: down
   notify:
@@ -12,6 +12,6 @@ coverage:
       default:
         threshold: "2%"
 comment:
-  layout: "header, diff, tree, sunburst"
+  layout: "header, diff"
   require_changes: true
-   
+
