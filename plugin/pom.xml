@@ -108,12 +108,7 @@
       <groupId>io.fabric8</groupId>
       <artifactId>fabric8-maven-generator-webapp</artifactId>
     </dependency>
-
-    <dependency>
-      <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-generator-vertx</artifactId>
-    </dependency>
-
+    
     <!-- == Fabric8 ===================================== -->
 
     <dependency>
