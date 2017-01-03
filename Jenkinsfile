@@ -17,25 +17,20 @@
 @Library('github.com/fabric8io/fabric8-pipeline-library@master')
 def dummy
 mavenNode {
-  dockerNode {
-    checkout scm
-    sh "git remote set-url origin git@github.com:fabric8io/fabric8-maven-plugin.git"
+  checkout scm
+  sh "git remote set-url origin git@github.com:fabric8io/fabric8-maven-plugin.git"
 
-    def pipeline = load 'release.groovy'
+  def pipeline = load 'release.groovy'
 
-    stage 'Stage'
-    def stagedProject = pipeline.stage()
+  stage 'Stage'
+  def stagedProject = pipeline.stage()
 
-    // stage 'Approve'
-    // pipeline.approveRelease(stagedProject)
+  stage 'Promote'
+  pipeline.release(stagedProject)
 
-    stage 'Website'
-    pipeline.website(stagedProject)
+  stage 'Website'
+  pipeline.website(stagedProject)
 
-    stage 'Promote'
-    pipeline.release(stagedProject)
-
-    stage 'Update downstream dependencies'
-    pipeline.updateDownstreamDependencies(stagedProject)
-  }
+  stage 'Update downstream dependencies'
+  pipeline.updateDownstreamDependencies(stagedProject)
 }
