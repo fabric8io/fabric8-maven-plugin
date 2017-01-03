@@ -66,6 +66,7 @@
     <spring.version>4.3.3.RELEASE</spring.version>
 
     <version.maven>3.3.1</version.maven>
+    <version.jacoco>0.7.8</version.jacoco>
     <version.fabric8>2.2.188</version.fabric8>
     <version.docker-maven-plugin>0.18.1</version.docker-maven-plugin>
 
@@ -378,10 +379,10 @@
       </dependency>
 
       <dependency>
-      <groupId>com.consol.citrus</groupId>
-      <artifactId>citrus-core</artifactId>
-      <version>2.6.2</version>
-    </dependency>
+        <groupId>com.consol.citrus</groupId>
+        <artifactId>citrus-core</artifactId>
+        <version>2.6.2</version>
+      </dependency>
 
     </dependencies>
 
@@ -469,6 +470,17 @@
           <version>2.19.1</version>
         </plugin>
 
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.19.1</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>${version.jacoco}</version>
+        </plugin>
       </plugins>
     </pluginManagement>
 
@@ -610,6 +622,60 @@
           </plugin>
         </plugins>
         <defaultGoal>generate-resources asciidoctor:process-asciidoc</defaultGoal>
+      </build>
+    </profile>
+
+    <!-- Enable JaCoCo test coverage -->
+    <profile>
+      <id>jacoco</id>
+
+      <dependencies>
+        <!-- JaCoCo runtime must be in classpath for offline mode -->
+        <dependency>
+          <groupId>org.jacoco</groupId>
+          <artifactId>org.jacoco.agent</artifactId>
+          <classifier>runtime</classifier>
+          <version>${version.jacoco}</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>instrument</id>
+                <phase>process-classes</phase>
+                <goals>
+                  <goal>instrument</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>restore</id>
+                <phase>test</phase>
+                <goals>
+                  <goal>restore-instrumented-classes</goal>
+                  <goal>report</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <systemPropertyVariables>
+                <!-- JaCoCo runtime must know where to dump coverage: -->
+                <jacoco-agent.destfile>target/jacoco.exec</jacoco-agent.destfile>
+              </systemPropertyVariables>
+            </configuration>
+          </plugin>
+
+        </plugins>
       </build>
     </profile>
 
