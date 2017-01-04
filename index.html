@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.2.8,</span>
-<span id="revdate">2017-01-03</span>
+<span id="revdate">2017-01-04</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -646,7 +646,14 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#enricher-api">9.2. Enricher API</a></li>
 </ul>
 </li>
-<li><a href="#profiles">10. Profiles</a></li>
+<li><a href="#profiles">10. Profiles</a>
+<ul class="sectlevel2">
+<li><a href="#generator-enricher-definition">10.1. Generator and Enricher definitions</a></li>
+<li><a href="#profiles-lookup-order">10.2. Lookup order</a></li>
+<li><a href="#profiles-using">10.3. Using Profiles</a></li>
+<li><a href="#profiles-predefined">10.4. Predefined Profiles</a></li>
+</ul>
+</li>
 <li><a href="#access-configuration">11. Access configuration</a>
 <ul class="sectlevel2">
 <li><a href="#docker-access">11.1. Docker Access</a></li>
@@ -1916,7 +1923,7 @@ the URL is:</p>
 <div class="paragraph">
 <p>The <code>&lt;image&gt;</code> element can contain the following sub elements:</p>
 </div>
-<table class="tableblock frame-all grid-all spread">
+<table id="config-image" class="tableblock frame-all grid-all spread">
 <caption class="title">Table 10. Image Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
@@ -1941,11 +1948,11 @@ identifying the image within this configuration. This is used when
 linking images together or for specifying it with the global <strong>image</strong> configuration element.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>registry</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#registry"><strong>registry</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Registry to use for this image. If the <code>name</code> already contains a registry this takes precedence. See <a href="#registry">Registry handling</a> for more details.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>build</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#config-image-build"><strong>build</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Element which contains all the configuration aspects when doing a <a href="#fabric8:build"><strong>fabric8:build</strong></a>. This element can be omitted if the image is only pulled from a registry e.g. as support for integration tests like database images.</p></td>
 </tr>
 </tbody>
@@ -2059,7 +2066,7 @@ the <code>&lt;build&gt;</code> configuration section.</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>If <code>dockerFileDir</code> is a relative path looked up in <code>${project.basedir}/src/main/docker</code>. You can make easily an absolute path by prefixing with <code>${project.basedir}</code>.</p>
+<p>If <code>dockerFileDir</code> is a relative path it is looked up in <code>${project.basedir}/src/main/docker</code>. You can make easily an absolute path by prefixing with <code>${project.basedir}</code>.</p>
 </div>
 <div class="paragraph">
 <p>Any additional files located in the <code>dockerFileDir</code> directory will also be added to the build context as well as any files specified by an assembly. However, you still need to insert <code>ADD</code> or <code>COPY</code> directives yourself into the Dockerfile.</p>
@@ -2076,7 +2083,7 @@ the <code>&lt;build&gt;</code> configuration section.</p>
 <div class="sidebarblock">
 <div class="content">
 <div class="paragraph">
-<p>For the future it is planned to introduce special keywords lile <code>DMP_ADD_ASSEMBLY</code> which can be used in the Dockerfile template to placing the configuration resulting from the additional configuration.</p>
+<p>For the future it is planned to introduce special keywords like <code>DMP_ADD_ASSEMBLY</code> which can be used in the Dockerfile template to placing the configuration resulting from the additional configuration.</p>
 </div>
 </div>
 </div>
@@ -2103,12 +2110,18 @@ the <code>&lt;build&gt;</code> configuration section.</p>
 </div>
 </div>
 <div class="paragraph">
+<p>Please note that <code>docker:build</code> fork the Maven lifecycle and calls all phases up to and including <code>package</code>. The reason for this is that for the assembly to be able to reference an artifact which is part of the build it needs to be included with this <code>package</code> phase. This is a general restriction of the Maven lifecycle which applies also to the <code>maven-assembly-plugin</code> itself.</p>
+</div>
+<div class="paragraph">
+<p>When you want to bind the build to an <code>&lt;execution&gt;</code> in the plugin configuration to bind it to a phase, please use the goal <code>build-nofork</code> which does not fork the lifecycle and avoids calling goals twice.</p>
+</div>
+<div class="paragraph">
 <p>All build relevant configuration is contained in the <code>&lt;build&gt;</code> section
 of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
 <code>&lt;dockerFile&gt;</code> the following configuration options are available:</p>
 </div>
-<table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 12. Build configuration</caption>
+<table id="config-image-build" class="tableblock frame-all grid-all spread">
+<caption class="title">Table 12. Build configuration (<a href="#config-image">&lt;image&gt;</a>)</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2121,11 +2134,11 @@ of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>assembly</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#config-image-build-assembly"><strong>assembly</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">specifies the assembly configuration as described in <a href="#build-assembly">Build Assembly</a></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>buildArgs</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#config-image-build-buildargs"><strong>buildArgs</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Map specifying the value of <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg">Docker build args</a>
 which should be used when building the image with an external Dockerfile which uses build arguments. The key-value syntax is the same as when defining Maven properties (or <code>labels</code> or <code>env</code>).
 This argument is ignored when no external Dockerfile is used. Build args can also be specified as properties as
@@ -2136,28 +2149,56 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Cleanup dangling (untagged) images after each build (including any containers created from them). Default is <code>try</code> which tries to remove the old image, but doesn&#8217;t fail the build if this is not possible because e.g. the image is still used by a running container. Use <code>remove</code> if you want to fail the build and <code>none</code> if no cleanup is requested.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>nocache</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Don&#8217;t use Docker&#8217;s build cache. This can be overwritten by setting a system property <code>docker.nocache</code> when running Maven.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cmd</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#misc-startup"><strong>cmd</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">A command to execute by default (i.e. if no command is provided when a container for this image is started). See <a href="#misc-startup">Startup Arguments</a> for details.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>entryPoint</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>compression</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The compression mode how the build archive is transmitted to the docker daemon (<code>fabric8:build</code>) and how docker build archives are attached to this build as sources (<code>fabric8:source</code>). The value can be <code>none</code> (default), <code>gzip</code> or <code>bzip2</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#misc-startup"><strong>entryPoint</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">An entrypoint allows you to configure a container that will run as an executable. See <a href="#misc-startup">Startup Arguments</a> for details.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>env</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#misc-env"><strong>env</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The environments as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a id="build-config-from"></a><strong>from</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The base image which should be used for this image. If not given this default to <code>busybox:latest</code> and is suitable for a pure data image.
-In case of an <a href="#build-openshift">S2I Binary build</a> this parameter specifies the S2I Builder Image to use, which by default is <code>fabric8/s2i-java:latest</code>.</p></td>
+In case of an <a href="#build-openshift">S2I Binary build</a> this parameter specifies the S2I Builder Image to use, which by default is <code>fabric8/s2i-java:latest</code>. See also <a href="#build-config-from-ext">from-ext</a> how to add additional properties for the base image.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>labels</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="build-config-from-ext"></a><strong>fromExt</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Extended definition for a base image. This field holds a map of defined in <code>&lt;key&gt;value&lt;/key&gt;</code> format. The known keys are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>&lt;name&gt;</code> : Name of the base image</p>
+</li>
+<li>
+<p><code>&lt;kind&gt;</code> : Kind of the reference to the builder image when in S2I build mode. By default its <code>ImageStreamTag</code> but can be also <code>ImageStream</code>. An alternative would be <code>DockerImage</code></p>
+</li>
+<li>
+<p><code>&lt;namespace&gt;</code> : Namespace where this builder image lives.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>A provided <code>&lt;from&gt;</code> takes precedence over the name given here. This tag is useful for extensions of this plugin like the <a href="https://maven.fabric8.io">fabric8-maven-plugin</a> which can evaluate the additional information given here.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#build-healthcheck"><strong>healthCheck</strong></a></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Definition of a health check as described in <a href="#build-healthcheck">Healthcheck</a></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#misc-env"><strong>labels</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Labels  as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
 </tr>
 <tr>
@@ -2165,20 +2206,20 @@ In case of an <a href="#build-openshift">S2I Binary build</a> this parameter spe
 <td class="tableblock halign-left valign-top"><p class="tableblock">The author (<code>MAINTAINER</code>) field for the generated image</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ports</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The exposed ports which is a list of <code>&lt;port&gt;</code> elements, one for each port to expose.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>runCmds</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Commands to be run during the build process. It contains <strong>run</strong> elements which are passed to the shell. The run commands are inserted right after the assembly and after <strong>workdir</strong> in to the Dockerfile. This tag is not to be confused with the <code>&lt;run&gt;</code> section for this image which specifies the runtime behaviour when starting containers.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>nocache</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Don&#8217;t use Docker&#8217;s build cache. This can be overwritten by setting a system property <code>docker.nocache</code> when running Maven.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>optimise</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">if set to true then it will compress all the <code>runCmds</code> into a single <code>RUN</code> directive so that only one image layer is created.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>compression</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The compression mode how the build archive is transmitted to the docker daemon (<code>fabric8:build</code>) and how docker build archives are attached to this build as sources (<code>fabric8:source</code>). The value can be <code>none</code> (default), <code>gzip</code> or <code>bzip2</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ports</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The exposed ports which is a list of <code>&lt;port&gt;</code> elements, one for each port to expose. The format can be either pure numerical ("8080") or with the protocol attached ("8080/tcp"),</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>runCmds</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Commands to be run during the build process. It contains <strong>run</strong> elements which are passed to the shell. The run commands are inserted right after the assembly and after <strong>workdir</strong> in to the Dockerfile. This tag is not to be confused with the <code>&lt;run&gt;</code> section for this image which specifies the runtime behaviour when starting containers.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skip</strong></p></td>
@@ -2235,7 +2276,7 @@ remote API.</p>
 
   <span class="tag">&lt;assembly&gt;</span>
     <span class="tag">&lt;mode&gt;</span>dir<span class="tag">&lt;/mode&gt;</span>
-    <span class="tag">&lt;basedir&gt;</span>/opt/demo<span class="tag">&lt;/basedir&gt;</span>
+    <span class="tag">&lt;targetDir&gt;</span>/opt/demo<span class="tag">&lt;/targetDir&gt;</span>
     <span class="tag">&lt;descriptor&gt;</span>assembly.xml<span class="tag">&lt;/descriptor&gt;</span>
   <span class="tag">&lt;/assembly&gt;</span>
 <span class="tag">&lt;/build&gt;</span></code></pre>
@@ -2250,8 +2291,8 @@ remote API.</p>
 <div class="paragraph">
 <p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
 </div>
-<table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 13. Assembly Configuration</caption>
+<table id="config-image-build-assembly" class="tableblock frame-all grid-all spread">
+<caption class="title">Table 13. Assembly Configuration (<a href="#config-image">&lt;image&gt;</a> : <a href="#config-image-build">&lt;build&gt;</a>)</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2264,28 +2305,28 @@ remote API.</p>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>basedir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>targetDir</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Directory under which the files and artifacts contained in the assembly will be copied within the container. The default value for this is <code>/maven</code>.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>inline</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#build-assembly-descriptor"><strong>inline</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Inlined assembly descriptor as described in <a href="#build-assembly-descriptor">Assembly Descriptor</a> below.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>descriptor</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#build-assembly-descriptor"><strong>descriptor</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Path to an assembly descriptor file, whose format is described  <a href="#build-assembly-descriptor">Assembly Descriptor</a> below.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>descriptorRef</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#build-assembly-descriptor-refs"><strong>descriptorRef</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Alias to a predefined assembly descriptor. The available aliases are also described in <a href="#build-assembly-descriptor">Assembly Descriptor</a> below.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerFileDir</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Directory containing an external Dockerfile. _This option is deprecated, please use &lt;dockerfiledir&gt; directly in the &lt;build&gt; section.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Directory containing an external Dockerfile. <em>This option is deprecated, please use &lt;dockerfiledir&gt; directly in the &lt;build&gt; section</em>.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>exportBasedir</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Specification whether the <code>basedir</code> should be exported as a volume.  This value is <code>true</code> by default except in the case the <code>basedir</code> is set to the container root (<code>/</code>). It is also <code>false</code> by default when a base image is used with <code>from</code> since exporting makes no sense in this case and will waste disk space unnecessarily.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>exportTargetDir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specification whether the <code>targetDir</code> should be exported as a volume.  This value is <code>true</code> by default except in the case the <code>targetDir</code> is set to the container root (<code>/</code>). It is also <code>false</code> by default when a base image is used with <code>from</code> since exporting makes no sense in this case and will waste disk space unnecessarily.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ignorePermissions</strong></p></td>
@@ -2341,7 +2382,11 @@ assembly configuration</p>
 </div></div></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>user</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>tarLongFileMode</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets the TarArchiver behaviour on file paths with more than 100 characters length. Valid values are: "warn"(default), "fail", "truncate", "gnu", "posix", "posix_warn" or "omit"</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="config-image-build-assembly-user"></a> <strong>user</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">User and/or group under which the files should be added. The user must already exist in the base image.
 </p><p class="tableblock">It has the general format <code>user[:group[:run-user]]</code>. The user and group can be given either as numeric user- and group-id or as names. The group id is optional.
 </p><p class="tableblock">If a third part is given, then the build changes to user <code>root</code> before changing the ownerships, changes the ownerships and then change to user <code>run-user</code> which is then used for the final command to execute. This feature might be needed, if the base image already changed the user (e.g. to 'jboss') so that a <code>chown</code> from root to this user would fail.
@@ -2380,14 +2425,14 @@ used (no need to distinguish multiple descriptors)</p>
 <p>Also you can inline the assembly description with a <code>inline</code> description
 directly into the pom file. Adding the proper namespace even allows for
 IDE autocompletion. As an example, refer to the profile <code>inline</code> in
-the `data-jolokia-demo&#8217;s pom.xml.</p>
+the <code>data-jolokia-demo</code> 's pom.xml.</p>
 </div>
 <div class="paragraph">
 <p>Alternatively <code>descriptorRef</code> can be used with the name of a
 predefined assembly descriptor. The following symbolic names can be
 used for <code>descriptorRef</code>:</p>
 </div>
-<table class="tableblock frame-all grid-all spread">
+<table id="build-assembly-descriptor-refs" class="tableblock frame-all grid-all spread">
 <caption class="title">Table 14. Predefined Assembly Descriptors</caption>
 <colgroup>
 <col style="width: 25%;">
@@ -2430,24 +2475,14 @@ used for <code>descriptorRef</code>:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>will add the created artifact with the name <code>${project.build.finalName}.${artifact.extension}</code> and all jar dependencies in the the <code>baseDir</code> (which is <code>/maven</code> by default).</p>
+<p>will add the created artifact with the name <code>${project.build.finalName}.${artifact.extension}</code> and all jar dependencies in the the <code>targetDir</code> (which is <code>/maven</code> by default).</p>
 </div>
 <div class="paragraph">
-<p>All declared files end up in the configured <code>basedir</code> (or <code>/maven</code> by default) in the created image.</p>
+<p>All declared files end up in the configured <code>targetDir</code> (or <code>/maven</code> by default) in the created image.</p>
 </div>
 <div class="paragraph">
-<p>If the assembly references the artifact to build with this pom, it is required that the <code>package</code> phase is included in the run. This happens either automatically when the <code>fabric8:build</code> target is called as part of a binding (e.g. is <code>fabric8:build</code> is bound to the <code>pre-integration-test</code>
-phase) or it must be ensured when called on the command line:</p>
-</div>
-<div class="listingblock">
-<div class="title">Example</div>
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn package fabric8:build</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This is a general restriction of the Maven lifecycle which applies also
-for the <code>maven-assembly-plugin</code> itself.</p>
+<p>If the assembly references the artifact to build with this pom, it is required that the <code>package</code> phase is included in the run. This happens either automatically when the <code>fabric8:build</code> target is called, or when <code>fabric8:build-nofork</code> is bound to an execution phase in the plugin configuration. By default <code>fabric8:build-nofork</code> is bound to the <code>install</code>
+phase).</p>
 </div>
 <div class="paragraph">
 <p>In the following example a dependency from the pom.xml is included and
@@ -2551,7 +2586,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 </div>
 </div>
 <div class="paragraph">
-<p>A entry point or command can be specified in two alternative formats:</p>
+<p>An entry point or command can be specified in two alternative formats:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 15. Entrypoint and Command Configuration</caption>
@@ -2597,9 +2632,9 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entryPoint&gt;</span>
    <span class="comment">&lt;!-- exec form  --&gt;</span>
    <span class="tag">&lt;exec&gt;</span>
-     <span class="tag">&lt;args&gt;</span>java<span class="tag">&lt;/args&gt;</span>
-     <span class="tag">&lt;args&gt;</span>-jar<span class="tag">&lt;/args&gt;</span>
-     <span class="tag">&lt;args&gt;</span>/opt/demo/server.jar<span class="tag">&lt;/args&gt;</span>
+     <span class="tag">&lt;arg&gt;</span>java<span class="tag">&lt;/arg&gt;</span>
+     <span class="tag">&lt;arg&gt;</span>-jar<span class="tag">&lt;/arg&gt;</span>
+     <span class="tag">&lt;arg&gt;</span>/opt/demo/server.jar<span class="tag">&lt;/arg&gt;</span>
    <span class="tag">&lt;/exec&gt;</span>
 <span class="tag">&lt;/entryPoint&gt;</span></code></pre>
 </div>
@@ -2682,6 +2717,9 @@ Section needs review and rearrangments
 <div class="paragraph">
 <p>This goal uploads images to the registry which have a <code>&lt;build&gt;</code> configuration section. The images to push can be restricted with with
 the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code> with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
+</div>
+<div class="paragraph">
+<p>By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option <code>-B</code>). A very simplified progress meter is provided when using no color output (i.e. with <code>-Ddocker.useColor=false</code>).</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 16. Push options</caption>
@@ -4604,12 +4642,24 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <td class="tableblock halign-left valign-top"><p class="tableblock">Check local <code>.git</code> directory and add build information as annotations.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-ianaservice">fmp-ianaservice</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add a default portname looking up IANA services</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-image">fmp-image</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add the image name into a <code>PodSpec</code> of replication controller, replication sets and deployments, if missing.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-name">fmp-name</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add a default name to every object which misses a name.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-pod-annotation">fmp-pod-annotation</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Copy over annotations from a <code>Deployment</code> to a <code>Pod</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-portname">fmp-portname</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add a default portname for commonly known service.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-project">fmp-project</a></p></td>
@@ -4640,6 +4690,18 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </div>
 <div class="sect4">
 <h5 id="fmp-name">fmp-name</h5>
+
+</div>
+<div class="sect4">
+<h5 id="fmp-portname">fmp-portname</h5>
+
+</div>
+<div class="sect4">
+<h5 id="fmp-pod-annotation">fmp-pod-annotation</h5>
+
+</div>
+<div class="sect4">
+<h5 id="fmp-ianaservice">fmp-ianaservice</h5>
 
 </div>
 <div class="sect4">
@@ -5016,47 +5078,228 @@ disabled, the liveness check uses <code>GET localhost:8080/ping</code></p>
 <h2 id="profiles">10. Profiles</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Profiles can be used to combine a set of enrichers and generators and gives this combination a referenceable name. Profiles can be defined externally either directly as a build resource in <code>src/main/fabric8/profiles.yml</code> or provided as part of a plugin&#8217;s dependency where it is supposed to be included as <code>META-INF/fabric8/profiles.yml</code>. Multiple profiles can be added in these <code>profiles.yml</code> descriptors.</p>
+<p>Profiles can be used to combine a set of enrichers and generators and to give this combination a referable name.</p>
 </div>
 <div class="paragraph">
-<p>Profiles are defined in YAML. The following example shows a simple profiles which uses only the <a href="#generator-spring-boot">Spring Boot generator</a> and only those enrichers adding default objects:</p>
+<p>Profiles are defined in YAML. The following example shows a simple profiles which uses only the <a href="#generator-spring-boot">Spring Boot generator</a> and some enrichers adding for adding default resources:</p>
 </div>
 <div class="listingblock">
 <div class="title">Profile Definition</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="yaml">- <span class="string"><span class="content">name: my-spring-boot-apps</span></span>
-  <span class="key">generator</span>:
+<pre class="CodeRay highlight"><code data-lang="yaml">- <span class="string"><span class="content">name: my-spring-boot-apps </span></span><i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="key">generator</span>: <i class="conum" data-value="2"></i><b>(2)</b>
     <span class="key">includes</span>:
       - <span class="string"><span class="content">spring-boot</span></span>
-  <span class="key">enrichers</span>:
-    <span class="key">includes</span>:
+  <span class="key">enricher</span>: <i class="conum" data-value="3"></i><b>(3)</b>
+    <span class="key">includes</span>: <i class="conum" data-value="4"></i><b>(4)</b>
       <span class="comment"># Default Deployment object</span>
       - <span class="string"><span class="content">fmp-controller</span></span>
       <span class="comment"># Add a default service</span>
       - <span class="string"><span class="content">fmp-service</span></span>
-  <span class="key">config</span>:
-    <span class="key">fmp-service</span>:
-      <span class="comment"># Expose service as NodePort</span>
-      <span class="key">type</span>: <span class="string"><span class="content">NodePort</span></span></code></pre>
+    <span class="key">excludes</span>: <i class="conum" data-value="5"></i><b>(5)</b>
+      - <span class="string"><span class="content">f8-icon</span></span>
+    <span class="key">config</span>: <i class="conum" data-value="6"></i><b>(6)</b>
+      <span class="key">fmp-service</span>:
+        <span class="comment"># Expose service as NodePort</span>
+        <span class="key">type</span>: <span class="string"><span class="content">NodePort</span></span>
+  <span class="key">order</span>: <span class="string"><span class="content">10 </span></span><i class="conum" data-value="7"></i><b>(7)</b>
+- <span class="string"><span class="content">name: another-profile</span></span>
+  <span class="error">....</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Profile&#8217;s name</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><a href="#generators">Generators</a> to use</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td><a href="#enrichers">Enrichers</a> to use</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>List of enricher to <strong>include</strong> in that given order</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>List of enricher to <strong>exclude</strong></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Configuration for services an enrichers</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>An order which influences the way how profiles with the same name are merged</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Each <code>profiles.yml</code> has a list of profiles which are defined with these elements:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 33. Profile elements</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 85.7143%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Profile name. This plugin comes with a set of <a href="#profile-predefined">predefined profiles</a>. Those profiles can be extended by defining a custom profile with the same name of the profile to extend.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>generator</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of generator definitions. See <a href="#generator-enricher-definition">below</a> for the format of this definitions.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>enricher</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of enrichers definitions. See <a href="#generator-enricher-definition">below</a> for the format of this definitions.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>order</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The order of the profile which is used when profiles of the same name are merged.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect2">
+<h3 id="generator-enricher-definition">10.1. Generator and Enricher definitions</h3>
+<div class="paragraph">
+<p>The definition of generators and enrichers in the profile follow the same format:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 34. Generator and Enericher definition</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 85.7143%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>includes</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of generators or enrichers to include. The order in the list determines the order in which the processors are applied.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>excludes</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of generators or enrichers. These have precedences over <em>includes</em> and will exclude a processor even when referenced in an <em>includes</em> sections</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>config</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configuration for genertors or enrichers. This is a map where the keys are the name of the processor to configure and the value is again a map with configuration keys and values specific to the processor. See the documentation of the respective generator or enricher for the available configuration keys.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="profiles-lookup-order">10.2. Lookup order</h3>
+<div class="paragraph">
+<p>Profiles can be defined externally either directly as a build resource in <code>src/main/fabric8/profiles.yml</code> or provided as part of a plugin&#8217;s dependency where it is supposed to be included as <code>META-INF/fabric8/profiles.yml</code>. Multiple profiles can be include in these <code>profiles.yml</code> descriptors as a list:</p>
+</div>
+<div class="paragraph">
+<p>If a profile is <a href="#profiles-using">used</a> then it is looked up from various places in the following order:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>From the compile and plugin classpath from <code>META-INF/fabric8/profiles-default.yml</code>. These files are reserved for profiles defined by this plugin</p>
+</li>
+<li>
+<p>From the compile and plugin classpath from <code>META-INF/fabric8/profiles.yml</code>. Use this location for defining your custom profiles which you want to include via dependencies.</p>
+</li>
+<li>
+<p>From the project in <code>src/main/fabric8/profiles.yml</code>. The directory can be tuned with the plugin option <code>resourceDir</code> (property: <code>fabric8.resourceDir</code>)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>When multiple profiles of the same name are found, then these profiles are merged. If profile have an order number, then the <em>higher</em> order takes precedences when merging profiles.</p>
+</div>
+<div class="paragraph">
+<p>For <em>includes</em> of the same processors, the processor is moved to the latest position. E.g consider the following two profiles with the name <code>my-profile</code></p>
+</div>
+<div class="listingblock">
+<div class="title">Profile A</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="key">name</span>: <span class="string"><span class="content">my-profile</span></span>
+<span class="key">enricher</span>:
+  <span class="key">includes</span>: <span class="string"><span class="content">[ e1, e2 ]</span></span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Profile B</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="key">name</span>: <span class="string"><span class="content">my-profile</span></span>
+<span class="key">enricher</span>:
+  <span class="key">includes</span>: <span class="string"><span class="content">[ e3, e1 ]</span></span>
+<span class="key">order</span>: <span class="string"><span class="content">10</span></span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>This profile then can be referenced from various plugin goals. The easiest way is to add the profile as top-level configuration parameter.</p>
+<p>then when merged results in the following profile (when no order is given, it defaults to 0):</p>
 </div>
 <div class="listingblock">
-<div class="title">Specification of profile in plugin configuration</div>
+<div class="title">Profile merged</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="key">name</span>: <span class="string"><span class="content">my-profile</span></span>
+<span class="key">enricher</span>:
+  <span class="key">includes</span>: <span class="string"><span class="content">[ e2, e3, e1 ]</span></span>
+<span class="key">order</span>: <span class="string"><span class="content">10</span></span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Profile with the same order number are merged according to the lookup order described above, where the latter profile is supposed to have a higher order.</p>
+</div>
+<div class="paragraph">
+<p>The configuration for enrichers and generators are merged, too, where higher order profiles override configuration values with the same key of lower order profile configuration.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="profiles-using">10.3. Using Profiles</h3>
+<div class="paragraph">
+<p>Profiles can be selected by defining them in the plugin configuration, by giving a system property or by using <a href="#profile-resource-fragments">special directories</a> in the directory holding the resource fragments.</p>
+</div>
+<div class="paragraph">
+<div class="title">Profile used in plugin configuration</div>
+<p>Here is an example how the profile can be used in a plugin configuration:</p>
+</div>
+<div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
   <span class="tag">&lt;configuration&gt;</span>
-    <span class="tag">&lt;profile&gt;</span>my-spring-boot-apps<span class="tag">&lt;/profile&gt;</span>
+    <span class="tag">&lt;profile&gt;</span>my-spring-boot-apps<span class="tag">&lt;/profile&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
     .....
   <span class="tag">&lt;/configuration&gt;</span>
 <span class="tag">&lt;/plugin&gt;</span></code></pre>
 </div>
 </div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Name which select the profile from the <code>profiles.yml</code></td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
+<div class="title">Profile as system property</div>
 <p>Alternatively a profile can be also specified on the command line when calling Maven:</p>
 </div>
 <div class="listingblock">
@@ -5067,7 +5310,7 @@ disabled, the liveness check uses <code>GET localhost:8080/ping</code></p>
 <div class="paragraph">
 <p>If a configuration for enrichers and generators are provided as part of the plugin&#8217;s <code>&lt;configuration&gt;</code> then this takes precedence over any profile specified.</p>
 </div>
-<div class="paragraph">
+<div id="profiles-resource-fragments" class="paragraph">
 <div class="title">Profiles for resource fragments</div>
 <p>Profiles are also very useful when used together with resource fragments in <code>src/main/fabric8</code>. By default the resource objects defined here are enriched with the configured profile (if any). A different profile can be selected easily by using a sub directory within <code>src/main/fabric8</code>. The name of each sub directory is interpreted as a profile name and all resource definition files found in this sub directory are enhanced with the enhancers defined in this profile.</p>
 </div>
@@ -5086,6 +5329,93 @@ disabled, the liveness check uses <code>GET localhost:8080/ping</code></p>
 </div>
 <div class="paragraph">
 <p>Here, the resource descriptors <code>app-rc.yml</code> and <code>app-svc.yml</code> are enhanced with the enrichers defined in the main configuration. The files two files <code>couchbase-rc.yml</code> and <code>couchbase-svc.yml</code> in the sub directory <code>raw/</code> instead are enriched with the profile <strong>raw</strong>. This is a predefined profile which includes no enricher at all, so the couchbase resource objects are not enriched and taken over literally. This is an easy way how you can fine tune enrichment for different object set.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="profiles-predefined">10.4. Predefined Profiles</h3>
+<div class="paragraph">
+<p>This plugin comes with a list of the following predefined profiles:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 35. Predefined Profiles</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 85.7143%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Profile</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>default</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The default profile which is active if no profile is specified. It consists of a curated set of generator and enrichers. See <a href="#profiles-default">below</a> for the current definition.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>minimal</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This profile contains no generators and only enrichers for adding default objects (controller and services). No other enrichment is included.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>explicit</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Like default but without adding default objects like controllers and services.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>aggregate</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Includes no generators and only the <a href="#fmp-dependency">fmp-dependency</a> enricher for picking up and combining resources from the compile time dependencies.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>internal-microsercice</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Do not expose a port for the service to generate. Otherwise the same as the <em>default</em> profile.</p></td>
+</tr>
+</tbody>
+</table>
+<div id="profiles-default" class="listingblock">
+<div class="title">Default Profile</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="comment"># Default profile which is always activated</span>
+- <span class="string"><span class="content">name: default</span></span>
+  <span class="key">enricher</span>:
+    <span class="key">includes</span>:
+    - <span class="string"><span class="content">fmp-name</span></span>
+    - <span class="string"><span class="content">fmp-image</span></span>
+    - <span class="string"><span class="content">fmp-controller</span></span>
+    - <span class="string"><span class="content">fmp-service</span></span>
+    - <span class="string"><span class="content">fmp-portname</span></span>
+    - <span class="string"><span class="content">fmp-ianaservice</span></span>
+    - <span class="string"><span class="content">fmp-project</span></span>
+    - <span class="string"><span class="content">fmp-dependency</span></span>
+    - <span class="string"><span class="content">fmp-pod-annotations</span></span>
+    - <span class="string"><span class="content">fmp-git</span></span>
+    <span class="comment"># TODO: Documents and verify enrichers below</span>
+    - <span class="string"><span class="content">fmp-dependency</span></span>
+    - <span class="string"><span class="content">fmp-openshift-s2i</span></span>
+    - <span class="string"><span class="content">fmp-debug</span></span>
+    - <span class="string"><span class="content">fmp-merge</span></span>
+    - <span class="string"><span class="content">fmp-remove-build-annotations</span></span>
+    - <span class="string"><span class="content">fmp-volume-permission</span></span>
+    <span class="comment"># -----------------------------------------</span>
+    - <span class="string"><span class="content">f8-cd</span></span>
+    - <span class="string"><span class="content">f8-cd-doc-link</span></span>
+    - <span class="string"><span class="content">f8-cd-grafana-link</span></span>
+    - <span class="string"><span class="content">f8-icon</span></span>
+    <span class="comment"># TODO: Document and verify enrichers below</span>
+    - <span class="string"><span class="content">f8-expose</span></span>
+    - <span class="string"><span class="content">spring-boot-health-check</span></span>
+    - <span class="string"><span class="content">karaf-health-check</span></span>
+    - <span class="string"><span class="content">f8-prometheus</span></span>
+
+  <span class="key">generator</span>:
+    <span class="key">includes</span>:
+    - <span class="string"><span class="content">spring-boot</span></span>
+    - <span class="string"><span class="content">wildfly-swarm</span></span>
+    - <span class="string"><span class="content">karaf</span></span>
+    - <span class="string"><span class="content">vertx</span></span>
+    - <span class="string"><span class="content">java-exec</span></span>
+    - <span class="string"><span class="content">webapp</span></span></code></pre>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -5614,7 +5944,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.8<br>
-Last updated 2017-01-03 16:46:26 UTC
+Last updated 2017-01-04 16:12:05 UTC
 </div>
 </div>
 </body>
