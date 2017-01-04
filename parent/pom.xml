@@ -68,7 +68,7 @@
     <version.maven>3.3.1</version.maven>
     <version.jacoco>0.7.8</version.jacoco>
     <version.fabric8>2.2.188</version.fabric8>
-    <version.docker-maven-plugin>0.18.1</version.docker-maven-plugin>
+    <version.docker-maven-plugin>0.19.0</version.docker-maven-plugin>
 
     <!-- Version of default images, updatable by CD -->
     <version.image.java.upstream.docker>1.2.1</version.image.java.upstream.docker>
