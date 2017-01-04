@@ -77,7 +77,7 @@ public class ProfileUtil {
      * @param extractor how to extract the config from a profile when found
      * @param profile the profile name (can be null, then no profile is used)
      * @param resourceDir resource directory where to lookup the profile (in addition to a classpath lookup)
-     * @return the merged configuration which can be emoty if no profile is given
+     * @return the merged configuration which can be empty if no profile is given
      * @param config the provided configuration
      * @throws MojoExecutionException
      */
@@ -156,7 +156,7 @@ public class ProfileUtil {
      * @throws IOException if reading of a profile fails
      */
     public static Profile[] readAllFromClasspath(String name, String ext) throws IOException {
-        List<Profile > ret = new ArrayList<>();
+        Set<Profile > ret = new TreeSet<>(new Profile.OrderComparator());
         for (String location : getMetaInfProfilePaths(ext)) {
             for (String url : ClassUtil.getResources(location)) {
                 for (Profile profile : fromYaml(new URL(url).openStream())) {
@@ -166,8 +166,6 @@ public class ProfileUtil {
                 }
             }
         }
-        // Sort it according to order
-        Collections.sort(ret, new Profile.OrderComparator());
         return ret.toArray(new Profile[ret.size()]);
     }
 
