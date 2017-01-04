@@ -26,3 +26,7 @@
     includes: [ i1, i2, i3 ]
     excludes: [ e1 ]
   order: 2
+- name: order-test-3
+  generator:
+    includes: [ i1, i2, i3 ]
+    excludes: [ e1 ]

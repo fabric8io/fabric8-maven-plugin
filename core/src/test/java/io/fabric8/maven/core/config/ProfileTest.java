@@ -22,6 +22,7 @@ import java.util.List;
 
 import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.ProfileUtil;
+import org.codehaus.plexus.util.ReflectionUtils;
 import org.junit.Test;
 
 import static java.util.Arrays.asList;
@@ -83,6 +84,33 @@ public class ProfileTest {
         }
     }
 
+    @Test
+    public void sort1() throws IOException {
+        Profile one = ProfileUtil.readAllFromClasspath("order-test-3", "")[0]; // in META-INF/fabric8/profiles.yml in test' resources
+        Profile two = ProfileUtil.fromYaml(getClass().getResourceAsStream("/fabric8/config/ProfileTest.yml")).get(2);
+        assertTrue(one.compareTo(two) < 0);
+        assertTrue(two.compareTo(one) > 0);
+        assertEquals(one.compareTo(one),0);
+        assertEquals(two.compareTo(two),0);
+    }
+
+    @Test
+    public void sort2() throws IOException, IllegalAccessException {
+        Profile one = ProfileUtil.readAllFromClasspath("order-test-3", "")[0]; // in META-INF/fabric8/profiles.yml in test' resources
+        Profile two = ProfileUtil.fromYaml(getClass().getResourceAsStream("/fabric8/config/ProfileTest.yml")).get(2);
+        long t1 = (long) ReflectionUtils.getValueIncludingSuperclasses("creationTime", one);
+        ReflectionUtils.setVariableValueInObject(two,"creationTime", t1);
+        assertFalse(one.compareTo(two) == 0);
+        assertFalse(two.compareTo(one) == 0);
+    }
+
+    @Test
+    public void sort3() throws IOException {
+        Profile one = ProfileUtil.readAllFromClasspath("order-test-1", "")[0]; // in META-INF/fabric8/profiles.yml in test' resources
+        Profile two = ProfileUtil.fromYaml(getClass().getResourceAsStream("/fabric8/config/ProfileTest.yml")).get(0);
+        assertTrue(one.compareTo(two) < 0);
+        assertTrue(two.compareTo(one) > 0);
+    }
 
     private static class TN implements Named {
 

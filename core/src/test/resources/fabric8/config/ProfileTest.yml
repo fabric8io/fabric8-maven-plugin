@@ -8,3 +8,7 @@
     includes: [ i3, i1, i4 ]
     excludes: [ e1, i2 ]
   order: 1
+- name: order-test-3
+  generator:
+    includes: [ i3, i1, i4 ]
+    excludes: [ e1, i2 ]

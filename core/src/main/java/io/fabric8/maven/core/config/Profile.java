@@ -17,6 +17,7 @@
 package io.fabric8.maven.core.config;
 
 import java.util.Comparator;
+import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -26,7 +27,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @author roland
  * @since 24/07/16
  */
-public class Profile {
+public class Profile implements Comparable<Profile> {
+
+    // Remember creation time, used in ordering
+    private final long creationTime;
 
     /**
      * Profile name
@@ -54,10 +58,13 @@ public class Profile {
     private int order;
 
     // No-arg constructor for YAML deserialization
-    public Profile() {}
+    public Profile() {
+        this.creationTime = System.currentTimeMillis();
+    }
 
     // Copy constructor
     public Profile(Profile profile) {
+        this();
         this.name = profile.name;
         this.order = profile.order;
         this.enricherConfig = ProcessorConfig.mergeProcessorConfigs(profile.enricherConfig);
@@ -66,6 +73,7 @@ public class Profile {
 
     // Merge constructor
     public Profile(Profile profileA, Profile profileB) {
+        this();
         this.name = profileA.name;
         if (!profileB.name.equals(profileA.getName())) {
             throw new IllegalArgumentException(String.format("Cannot merge to profiles with different names (%s vs. %s)", profileA.getName(), profileB.getName()));
@@ -94,13 +102,30 @@ public class Profile {
         return generatorConfig;
     }
 
-    public int getOrder() { return order; }
+    public int getOrder() {
+        return order;
+    }
 
-    public static class OrderComparator implements Comparator<Profile> {
-
-        @Override
-        public int compare(Profile o1, Profile o2) {
-            return o1.order - o2.order;
+    @Override
+    public int compareTo(Profile o) {
+        int orderDiff = order - o.order;
+        if (orderDiff != 0) {
+            return orderDiff;
+        }
+        // Equals is only the very same object. This is ok, since at the end
+        // profiles are merge to a single profile
+        if (this.equals(o)) {
+            return 0;
+        } else {
+            // Try to determine the order based on creation time. The rule is, a newer profile
+            // is supposed to have a higher order.
+            long timeDiff = creationTime - o.creationTime;
+            if (timeDiff != 0) {
+                return (int) timeDiff;
+            } else {
+                // Arbitrary order (please not be the same :)
+                return hashCode() - o.hashCode();
+            }
         }
     }
 }

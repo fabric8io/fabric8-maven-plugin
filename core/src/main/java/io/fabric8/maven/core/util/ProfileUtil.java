@@ -156,7 +156,7 @@ public class ProfileUtil {
      * @throws IOException if reading of a profile fails
      */
     public static Profile[] readAllFromClasspath(String name, String ext) throws IOException {
-        Set<Profile > ret = new TreeSet<>(new Profile.OrderComparator());
+        Set<Profile > ret = new TreeSet<>();
         for (String location : getMetaInfProfilePaths(ext)) {
             for (String url : ClassUtil.getResources(location)) {
                 for (Profile profile : fromYaml(new URL(url).openStream())) {
