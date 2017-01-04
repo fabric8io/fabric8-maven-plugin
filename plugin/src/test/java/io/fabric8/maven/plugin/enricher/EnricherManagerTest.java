@@ -90,7 +90,9 @@ public class EnricherManagerTest {
         KubernetesList list = builder.build();
         assertEquals(1, list.getItems().size());
         ReplicaSet pod = (ReplicaSet) list.getItems().get(0);
-        Map<String, String> labels = pod.getMetadata().getLabels();
+        ObjectMeta metadata = pod.getMetadata();
+        assertNotNull(metadata);
+        Map<String, String> labels = metadata.getLabels();
         assertNotNull(labels);
         assertEquals("fabric8", labels.get("provider"));
     }
