@@ -666,6 +666,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#pull-vs-push-authentication">13.1. Pull vs. Push Authentication</a></li>
 <li><a href="#openshift-authentication">13.2. OpenShift Authentication</a></li>
 <li><a href="#password-encryption">13.3. Password encryption</a></li>
+<li><a href="#extended-authentication">13.4. Extended Authentication</a></li>
 </ul>
 </li>
 <li><a href="#migration">14. Migration from version 2</a></li>
@@ -2051,22 +2052,24 @@ linking images together or for specifying it with the global <strong>image</stro
 <p>When using this mode, the Dockerfile is created on the fly with all instructions extracted from the configuration given.</p>
 </div>
 <div id="external-dockerfile" class="paragraph">
-<div class="title">External Dockerfile</div>
-<p>Alternatively an external Dockerfile template can be used. This mode is switch on by using one of these two configuration options within
-the <code>&lt;build&gt;</code> configuration section.</p>
+<div class="title">External Dockerfile or docker archive</div>
+<p>Alternatively an external Dockerfile template or Docker archive can be used. This mode is switch on by using one of these three configuration options within</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>dockerFileDir</strong> specifies a directory containing a <code>Dockerfile</code> that will be used to create the image.</p>
+<p><strong>dockerFileDir</strong> specifies a directory containing a Dockerfile that will be used to create the image. The name of the Dockerfile is <code>Dockerfile</code> by default but can be also set with the option <code>dockerFile</code> (see below).</p>
 </li>
 <li>
-<p><strong>dockerFile</strong> specifies a specific Dockerfile. The <code>dockerFileDir</code> is set to the directory containing the file.</p>
+<p><strong>dockerFile</strong> specifies a specific Dockerfile path. The Docker build context directory is set to <code>dockerFileDir</code> if given. If not the directory by default is the directory in which the Dockerfile is stored.</p>
+</li>
+<li>
+<p><strong>dockerArchive</strong> specifies a previously saved image archive to load directly. Such a tar archive can be created with <code>docker save</code>. If a <code>dockerArchive</code> is provided, no <code>dockerFile</code> or <code>dockerFileDir</code> must be given.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>If <code>dockerFileDir</code> is a relative path it is looked up in <code>${project.basedir}/src/main/docker</code>. You can make easily an absolute path by prefixing with <code>${project.basedir}</code>.</p>
+<p>All paths can be either absolute or relative paths (except when both <code>dockerFileDir</code> and <code>dockerFile</code> are provided in which case <code>dockerFile</code> must not be absolute). A relative path is looked up in <code>${project.basedir}/src/main/docker</code> by default. You can make it easily an absolute path by using `${project.basedir} in your configuration.</p>
 </div>
 <div class="paragraph">
 <p>Any additional files located in the <code>dockerFileDir</code> directory will also be added to the build context as well as any files specified by an assembly. However, you still need to insert <code>ADD</code> or <code>COPY</code> directives yourself into the Dockerfile.</p>
@@ -2143,6 +2146,12 @@ of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
 which should be used when building the image with an external Dockerfile which uses build arguments. The key-value syntax is the same as when defining Maven properties (or <code>labels</code> or <code>env</code>).
 This argument is ignored when no external Dockerfile is used. Build args can also be specified as properties as
 described in <a href="#build-buildargs">Build Args</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>buildOptions</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Map specifying the build options to provide to the docker daemon when building the image. These options map to the ones listed as query parameters in the
+<a href="https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-image-from-a-dockerfile">Docker Remote API</a> and are restricted to simple options
+(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. <code>nocache</code>, <code>cleanup</code> for <code>forcerm=1</code> and <code>buildArgs</code>) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cleanup</strong></p></td>
@@ -2264,6 +2273,9 @@ remote API.</p>
   <span class="tag">&lt;volumes&gt;</span>
     <span class="tag">&lt;volume&gt;</span>/path/to/expose<span class="tag">&lt;/volume&gt;</span>
   <span class="tag">&lt;/volumes&gt;</span>
+  <span class="tag">&lt;buildOptions&gt;</span>
+    <span class="tag">&lt;shmsize&gt;</span>2147483648<span class="tag">&lt;/shmsize&gt;</span>
+  <span class="tag">&lt;/buildOptions&gt;</span>
 
   <span class="tag">&lt;entryPoint&gt;</span>
     <span class="comment">&lt;!-- exec form for ENTRYPOINT --&gt;</span>
@@ -2716,7 +2728,7 @@ Section needs review and rearrangments
 </div>
 <div class="paragraph">
 <p>This goal uploads images to the registry which have a <code>&lt;build&gt;</code> configuration section. The images to push can be restricted with with
-the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code> with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
+the global option <code>filter</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code> with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
 </div>
 <div class="paragraph">
 <p>By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option <code>-B</code>). A very simplified progress meter is provided when using no color output (i.e. with <code>-Ddocker.useColor=false</code>).</p>
@@ -3329,7 +3341,7 @@ Section needs review and rearrangments
 <p><code>none</code> : Image is completely ignored for watching.</p>
 </li>
 <li>
-<p><code>copy</code> : Copy changed files into the running container. This is the fast way to update a container, however the target container must support hot deply, too so that it makes sense. Most application servers like Tomcat supports this.</p>
+<p><code>copy</code> : Copy changed files into the running container. This is the fast way to update a container, however the target container must support hot deploy, too so that it makes sense. Most application servers like Tomcat supports this.</p>
 </li>
 </ul>
 </div>
@@ -5584,23 +5596,24 @@ because Docker can only push registry-named images.</p>
 might be necessary to authenticate against a Docker registry.</p>
 </div>
 <div class="paragraph">
-<p>There are three different ways for providing credentials:</p>
+<p>There are five different locations searched for credentials.  In order, these are:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Using a <code>&lt;authConfig&gt;</code> section in the plugin configuration with
-<code>&lt;username&gt;</code> and <code>&lt;password&gt;</code> elements.</p>
+<p>Providing system properties <code>docker.username</code> and <code>docker.password</code> from the outside.</p>
 </li>
 <li>
-<p>Providing system properties <code>docker.username</code> and <code>docker.password</code>
-from the outside</p>
+<p>Using a <code>&lt;authConfig&gt;</code> section in the plugin configuration with <code>&lt;username&gt;</code> and <code>&lt;password&gt;</code> elements.</p>
+</li>
+<li>
+<p>Using OpenShift configuration in <code>~/.config/kube</code></p>
 </li>
 <li>
 <p>Using a <code>&lt;server&gt;</code> configuration in <code>~/.m2/settings.xml</code></p>
 </li>
 <li>
-<p>Login into a registry with <code>docker login</code></p>
+<p>Login into a registry with <code>docker login</code> (credentials in <code>~/.docker/config.json</code>)</p>
 </li>
 </ul>
 </div>
@@ -5656,7 +5669,7 @@ the Maven settings file <code>~/.m2/settings.xml</code>:</p>
 default is central index <code>docker.io</code> (or <code>index.docker.io</code> / <code>registry.hub.docker.com</code> as fallbacks).
 Here you should add your docker.io account for your repositories. If you have multiple accounts
 for the same registry, the second user can be specified as part of the ID. In the example above, if you
-have a second accorunt 'fabric8io' then use an <code>&lt;id&gt;docker.io/fabric8io&lt;/id&gt;</code> for this second entry. I.e. add the
+have a second account 'fabric8io' then use an <code>&lt;id&gt;docker.io/fabric8io&lt;/id&gt;</code> for this second entry. I.e. add the
 username with a slash to the id name. The default without username is only taken if no server entry with
 a username appended id is chosen.</p>
 </div>
@@ -5706,7 +5719,7 @@ as described in the previous section is used as fallback.</p>
 <h3 id="openshift-authentication">13.2. OpenShift Authentication</h3>
 <div class="paragraph">
 <p>When working with the default registry in OpenShift, the credentials
-to authtenticate are the OpenShift username and access token. So, a
+to authenticate are the OpenShift username and access token. So, a
 typical interaction with the OpenShift registry from the outside is:</p>
 </div>
 <div class="listingblock">
@@ -5741,7 +5754,7 @@ mvn -Ddocker.registry=docker-registry.domain.com:80/default/myimage \
 added to the <code>&lt;authConfig&gt;</code> section.</p>
 </div>
 <div class="paragraph">
-<p>For dedicted <em>pull</em> and <em>push</em> configuration the system properties
+<p>For dedicated <em>pull</em> and <em>push</em> configuration the system properties
 <code>docker.pull.useOpenShiftAuth</code> and <code>docker.push.useOpenShiftAuth</code> are
 available as well as the configuration option <code>&lt;useOpenShiftAuth&gt;</code> in
 an <code>&lt;pull&gt;</code> or <code>&lt;push&gt;</code> section within the <code>&lt;authConfig&gt;</code>
@@ -5755,7 +5768,7 @@ configuration.</p>
 in the
 <a href="http://maven.apache.org/guides/mini/guide-encryption.html">Maven documentation</a>. Assuming
 that you have setup a <em>master password</em> in
-<code>~/.m2/security-settings.xml</code> you can create easily encrypted
+<code>~/.m2/security-settings.xml</code> you can create easily encrypt
 passwords:</p>
 </div>
 <div class="listingblock">
@@ -5772,6 +5785,15 @@ and/or the <code>&lt;server&gt;</code> setting configuration. However, putting a
 encrypted password into <code>authConfig</code> in the <code>pom.xml</code> doesn&#8217;t make
 much sense, since this password is encrypted with an individual master
 password.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="extended-authentication">13.4. Extended Authentication</h3>
+<div class="paragraph">
+<p>Some docker registries require additional steps to authenticate.  <a href="https://docs.aws.amazon.com/AmazonECR/latest/userguide/ECR_GetStarted.html">Amazon ECR</a> requires using an IAM access key to obtain temporary docker login credentials. The <code>docker:push</code> and <code>docker:pull</code> goals automatically execute this exchange for any registry of the form <em>awsAccountId</em>*.dkr.ecr.<strong><em>awsRegion</em></strong>.amazonaws.com*, unless the <code>skipExtendedAuth</code> configuration (<code>docker.skip.extendedAuth</code> property) is set true.</p>
+</div>
+<div class="paragraph">
+<p>You can use any IAM access key with the necessary permissions in any of the locations mentioned above except <code>~/.docker/config.json</code>. Use the IAM <strong>Access key ID</strong> as the username and the <strong>Secret access key</strong> as the password.</p>
 </div>
 </div>
 </div>
@@ -5944,7 +5966,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.8<br>
-Last updated 2017-01-04 16:47:23 UTC
+Last updated 2017-01-04 16:54:27 UTC
 </div>
 </div>
 </body>
