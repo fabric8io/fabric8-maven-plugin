@@ -67,7 +67,6 @@ public class ProjectEnricher extends BaseEnricher {
             @Override
             public void visit(ObjectMetaBuilder element) {
                 Map<String, String> labels = element.getLabels();
-                MavenProject project = getProject();
                 MapUtil.mergeIfAbsent(labels, createLabels());
             }
         });
