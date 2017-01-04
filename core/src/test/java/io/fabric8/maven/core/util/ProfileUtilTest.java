@@ -63,9 +63,9 @@ public class ProfileUtilTest {
 
     @Test
     public void fromClasspath() throws IOException {
-        Profile[] profiles = ProfileUtil.readAllFromClasspath("one", "");
-        assertEquals(1, profiles.length);
-        assertNotNull(profiles[0]);
+        List<Profile> profiles = ProfileUtil.readAllFromClasspath("one", "");
+        assertEquals(1, profiles.size());
+        assertNotNull(profiles.get(0));
     }
 
     @Test

@@ -103,18 +103,20 @@ public class ProfileUtil {
      */
     public static Profile lookup(String name, File directory) throws IOException {
         // First check from the classpath, these profiles are used as a basis
-        Profile cpProfile = readProfileFromClasspath(name);
+        List<Profile> profiles = readProfileFromClasspath(name);
 
         File profileFile = findProfileYaml(directory);
         if (profileFile != null) {
-            List<Profile> profiles = fromYaml(new FileInputStream(profileFile));
-            for (Profile profile : profiles) {
+            List<Profile> fileProfiles = fromYaml(new FileInputStream(profileFile));
+            for (Profile profile : fileProfiles) {
                 if (profile.getName().equals(name)) {
-                    return mergeProfiles(cpProfile, profile);
+                    profiles.add(profile);
+                    break;
                 }
             }
         }
-        return cpProfile;
+        Collections.sort(profiles);
+        return mergeProfiles(profiles);
     }
 
     private static ProcessorConfig extractProcesssorConfiguration(ProcessorConfigurationExtractor extractor,
@@ -125,7 +127,7 @@ public class ProfileUtil {
     }
 
 
-    private static Profile mergeProfiles(Profile ... profiles) {
+    private static Profile mergeProfiles(List<Profile> profiles) {
         Profile ret = null;
         for (Profile profile : profiles) {
             if (profile != null) {
@@ -140,10 +142,11 @@ public class ProfileUtil {
     }
 
     // Read all default profiles first, then merge in custom profiles found on the classpath
-    private static Profile readProfileFromClasspath(String name) throws IOException {
-        Profile basePofile = mergeProfiles(readAllFromClasspath(name, "default"));
-        Profile addOnProfile = mergeProfiles(readAllFromClasspath(name, ""));
-        return mergeProfiles(basePofile, addOnProfile);
+    private static List<Profile> readProfileFromClasspath(String name) throws IOException {
+        List<Profile> ret = new ArrayList<>();
+        ret.addAll(readAllFromClasspath(name, "default"));
+        ret.addAll(readAllFromClasspath(name, ""));
+        return ret;
     }
 
     /**
@@ -155,8 +158,8 @@ public class ProfileUtil {
      *
      * @throws IOException if reading of a profile fails
      */
-    public static Profile[] readAllFromClasspath(String name, String ext) throws IOException {
-        Set<Profile > ret = new TreeSet<>();
+    public static List<Profile> readAllFromClasspath(String name, String ext) throws IOException {
+        List<Profile > ret = new ArrayList<>();
         for (String location : getMetaInfProfilePaths(ext)) {
             for (String url : ClassUtil.getResources(location)) {
                 for (Profile profile : fromYaml(new URL(url).openStream())) {
@@ -166,7 +169,7 @@ public class ProfileUtil {
                 }
             }
         }
-        return ret.toArray(new Profile[ret.size()]);
+        return ret;
     }
 
     // ================================================================================

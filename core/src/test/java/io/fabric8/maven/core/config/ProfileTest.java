@@ -36,7 +36,7 @@ public class ProfileTest {
 
     @Test
     public void copy() throws IOException {
-        Profile one = ProfileUtil.readAllFromClasspath("order-test-1", "")[0];
+        Profile one = ProfileUtil.readAllFromClasspath("order-test-1", "").get(0);
 
         Profile copy = new Profile(one);
         assertEquals("order-test-1", copy.getName());
@@ -49,8 +49,8 @@ public class ProfileTest {
     @Test
     public void mergeDifferentNames() throws IOException {
         try {
-            Profile one = ProfileUtil.readAllFromClasspath("order-test-1", "")[0];
-            Profile two = ProfileUtil.readAllFromClasspath("order-test-2", "")[0];
+            Profile one = ProfileUtil.readAllFromClasspath("order-test-1", "").get(0);
+            Profile two = ProfileUtil.readAllFromClasspath("order-test-2", "").get(0);
             new Profile(one, two);
             fail();
         } catch (IllegalArgumentException exp) {
@@ -71,7 +71,7 @@ public class ProfileTest {
 
 
     private void merge(String profile, int profileIndexInProfileTestYaml, String[] expected) throws Exception {
-        Profile one = ProfileUtil.readAllFromClasspath(profile, "")[0]; // in META-INF/fabric8/profiles.yml in test' resources
+        Profile one = ProfileUtil.readAllFromClasspath(profile, "").get(0);; // in META-INF/fabric8/profiles.yml in test' resources
         Profile two = ProfileUtil.fromYaml(getClass().getResourceAsStream("/fabric8/config/ProfileTest.yml")).get(profileIndexInProfileTestYaml);
 
         for (Profile merge : new Profile[] {new Profile(one, two), new Profile(two, one)}) {
@@ -86,7 +86,7 @@ public class ProfileTest {
 
     @Test
     public void sort1() throws IOException {
-        Profile one = ProfileUtil.readAllFromClasspath("order-test-3", "")[0]; // in META-INF/fabric8/profiles.yml in test' resources
+        Profile one = ProfileUtil.readAllFromClasspath("order-test-3", "").get(0);; // in META-INF/fabric8/profiles.yml in test' resources
         Profile two = ProfileUtil.fromYaml(getClass().getResourceAsStream("/fabric8/config/ProfileTest.yml")).get(2);
         assertTrue(one.compareTo(two) < 0);
         assertTrue(two.compareTo(one) > 0);
@@ -95,18 +95,8 @@ public class ProfileTest {
     }
 
     @Test
-    public void sort2() throws IOException, IllegalAccessException {
-        Profile one = ProfileUtil.readAllFromClasspath("order-test-3", "")[0]; // in META-INF/fabric8/profiles.yml in test' resources
-        Profile two = ProfileUtil.fromYaml(getClass().getResourceAsStream("/fabric8/config/ProfileTest.yml")).get(2);
-        long t1 = (long) ReflectionUtils.getValueIncludingSuperclasses("creationTime", one);
-        ReflectionUtils.setVariableValueInObject(two,"creationTime", t1);
-        assertFalse(one.compareTo(two) == 0);
-        assertFalse(two.compareTo(one) == 0);
-    }
-
-    @Test
     public void sort3() throws IOException {
-        Profile one = ProfileUtil.readAllFromClasspath("order-test-1", "")[0]; // in META-INF/fabric8/profiles.yml in test' resources
+        Profile one = ProfileUtil.readAllFromClasspath("order-test-1", "").get(0);; // in META-INF/fabric8/profiles.yml in test' resources
         Profile two = ProfileUtil.fromYaml(getClass().getResourceAsStream("/fabric8/config/ProfileTest.yml")).get(0);
         assertTrue(one.compareTo(two) < 0);
         assertTrue(two.compareTo(one) > 0);

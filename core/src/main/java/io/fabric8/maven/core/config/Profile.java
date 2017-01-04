@@ -18,6 +18,7 @@ package io.fabric8.maven.core.config;
 
 import java.util.Comparator;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -29,8 +30,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class Profile implements Comparable<Profile> {
 
-    // Remember creation time, used in ordering
-    private final long creationTime;
+    // Create id for each object
+    private static final AtomicInteger idCreator = new AtomicInteger(0);
+    private final int id;
 
     /**
      * Profile name
@@ -59,7 +61,7 @@ public class Profile implements Comparable<Profile> {
 
     // No-arg constructor for YAML deserialization
     public Profile() {
-        this.creationTime = System.currentTimeMillis();
+        this.id = idCreator.getAndIncrement();
     }
 
     // Copy constructor
@@ -111,21 +113,8 @@ public class Profile implements Comparable<Profile> {
         int orderDiff = order - o.order;
         if (orderDiff != 0) {
             return orderDiff;
-        }
-        // Equals is only the very same object. This is ok, since at the end
-        // profiles are merge to a single profile
-        if (this.equals(o)) {
-            return 0;
         } else {
-            // Try to determine the order based on creation time. The rule is, a newer profile
-            // is supposed to have a higher order.
-            long timeDiff = creationTime - o.creationTime;
-            if (timeDiff != 0) {
-                return (int) timeDiff;
-            } else {
-                // Arbitrary order (please not be the same :)
-                return hashCode() - o.hashCode();
-            }
+            return id - o.id;
         }
     }
 }
