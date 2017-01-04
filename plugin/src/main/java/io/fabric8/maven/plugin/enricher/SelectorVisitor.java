@@ -61,9 +61,9 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
 
     // ========================================================================
 
-    static public class Service extends SelectorVisitor<ServiceSpecBuilder> {
+    static public class ServiceSpecBuilderVisitor extends SelectorVisitor<ServiceSpecBuilder> {
 
-        public Service(EnricherManager enricherManager) {
+        public ServiceSpecBuilderVisitor(EnricherManager enricherManager) {
             super(enricherManager);
         }
 
@@ -73,9 +73,9 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    static public class Deployment extends SelectorVisitor<DeploymentSpecBuilder> {
+    static public class DeploymentSpecBuilderVisitor extends SelectorVisitor<DeploymentSpecBuilder> {
 
-        public Deployment(EnricherManager enricherManager) {
+        public DeploymentSpecBuilderVisitor(EnricherManager enricherManager) {
             super(enricherManager);
         }
 
@@ -92,9 +92,9 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    static public class ReplicationController extends SelectorVisitor<ReplicationControllerSpecBuilder> {
+    static public class ReplicationControllerSpecBuilderVisitor extends SelectorVisitor<ReplicationControllerSpecBuilder> {
 
-        public ReplicationController(EnricherManager enricherManager) {
+        public ReplicationControllerSpecBuilderVisitor(EnricherManager enricherManager) {
             super(enricherManager);
         }
 
@@ -104,9 +104,9 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    static public class ReplicaSet extends SelectorVisitor<ReplicaSetSpecBuilder> {
+    static public class ReplicaSetSpecBuilderVisitor extends SelectorVisitor<ReplicaSetSpecBuilder> {
 
-        public ReplicaSet(EnricherManager enricherManager) {
+        public ReplicaSetSpecBuilderVisitor(EnricherManager enricherManager) {
             super(enricherManager);
         }
 

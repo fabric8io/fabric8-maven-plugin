@@ -328,7 +328,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
     // Get generator config
     private ProcessorConfig extractGeneratorConfig() {
         try {
-            return generator != null ? generator : ProfileUtil.extractProcesssorConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, resourceDir);
+            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, resourceDir, generator);
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot extract generator config: " + e,e);
         }
@@ -613,7 +613,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
 
     // Build up an enricher manager to enrich also our implicit created build ojects
     private void enrich(KubernetesListBuilder builder) throws IOException {
-        ProcessorConfig enricherConfig = enricher != null ? enricher : ProfileUtil.extractProcesssorConfiguration(ProfileUtil.ENRICHER_CONFIG, profile, resourceDir);
+        ProcessorConfig enricherConfig = ProfileUtil.blendProfileWithConfiguration(ProfileUtil.ENRICHER_CONFIG, profile, resourceDir, enricher);
         openshiftDependencyResources = new OpenShiftDependencyResources(log);
         EnricherContext.Builder ctxBuilder = new EnricherContext.Builder()
             .project(project)

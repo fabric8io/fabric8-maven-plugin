@@ -111,9 +111,7 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
         try {
             ProcessorConfig generatorConfig =
-                generator != null ?
-                    generator :
-                    ProfileUtil.extractProcesssorConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, resourceDir);
+                ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, resourceDir, generator);
             GeneratorContext ctx = new GeneratorContext.Builder()
                 .config(generatorConfig)
                 .project(project)

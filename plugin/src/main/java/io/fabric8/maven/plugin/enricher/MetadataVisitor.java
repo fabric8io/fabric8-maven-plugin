@@ -18,13 +18,16 @@ package io.fabric8.maven.plugin.enricher;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSetBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
+import io.fabric8.maven.core.config.MetaDataConfig;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.enricher.api.Kind;
 
 /**
@@ -38,9 +41,18 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
     private final EnricherManager enricherManager;
 
     private static ThreadLocal<ProcessorConfig> configHolder = new ThreadLocal<>();
+    private final Map<String, String> labelsFromConfig;
+    private final Map<String, String> annotationFromConfig;
 
-    private MetadataVisitor(EnricherManager enricherManager) {
+    private MetadataVisitor(ResourceConfig resourceConfig, EnricherManager enricherManager) {
         this.enricherManager = enricherManager;
+        if (resourceConfig != null) {
+            labelsFromConfig = getMapFromConfiguration(resourceConfig.getLabels(), getKind());
+            annotationFromConfig = getMapFromConfiguration(resourceConfig.getAnnotations(), getKind());
+        } else {
+            labelsFromConfig = new HashMap<>();
+            annotationFromConfig = new HashMap<>();
+        }
     }
 
     public static void setProcessorConfig(ProcessorConfig config) {
@@ -51,19 +63,67 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
         configHolder.set(null);
     }
 
-    public void visit(T item) {
+    private ProcessorConfig getProcessorConfig() {
         ProcessorConfig config = configHolder.get();
         if (config == null) {
             throw new IllegalArgumentException("No ProcessorConfig set");
         }
-        ObjectMeta metadata = getOrCreateMetadata(item);
-        overlayMap(metadata.getLabels(), enricherManager.extractLabels(config, getKind()));
-        overlayMap(metadata.getAnnotations(), enricherManager.extractAnnotations(config, getKind()));
+        return config;
     }
 
+    public void visit(T item) {
+        ProcessorConfig config = getProcessorConfig();
+        ObjectMeta metadata = getOrCreateMetadata(item);
+        updateLabels(metadata);
+        updateAnnotations(metadata);
+    }
+
+    private void updateLabels(ObjectMeta metadata) {
+        overlayMap(metadata.getLabels(),labelsFromConfig);
+        overlayMap(metadata.getLabels(),enricherManager.extractLabels(getProcessorConfig(), getKind()));
+    }
+
+    private void updateAnnotations(ObjectMeta metadata) {
+        overlayMap(metadata.getAnnotations(),annotationFromConfig);
+        overlayMap(metadata.getAnnotations(),enricherManager.extractAnnotations(getProcessorConfig(), getKind()));
+    }
+
+    private Map<String, String> getMapFromConfiguration(MetaDataConfig config, Kind kind) {
+        if (config == null) {
+            return new HashMap<>();
+        }
+        Map<String, String> ret;
+        if (kind == Kind.SERVICE) {
+            ret = propertiesToMap(config.getService());
+        } else if (kind == Kind.DEPLOYMENT || kind == Kind.DEPLOYMENT_CONFIG) {
+            ret = propertiesToMap(config.getDeployment());
+        } else if (kind == Kind.REPLICATION_CONTROLLER || kind == Kind.REPLICA_SET) {
+            ret = propertiesToMap(config.getReplicaSet());
+        } else if (kind == Kind.POD_SPEC) {
+            ret = propertiesToMap(config.getPod());
+        } else {
+            ret = new HashMap<>();
+        }
+        if (config.getAll() != null) {
+            ret.putAll(propertiesToMap(config.getAll()));
+        }
+        return ret;
+    }
+
+    private Map<String, String> propertiesToMap(Properties properties) {
+        Map<String, String> propertyMap = new HashMap<>();
+        if(properties != null) {
+            for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+                propertyMap.put(entry.getKey().toString(), entry.getValue().toString());
+            }
+        }
+        return propertyMap;
+    }
+
+
     private void overlayMap(Map<String, String> targetMap, Map<String, String> enrichMap) {
-        targetMap = getOrCreateMap(targetMap);
-        enrichMap = getOrCreateMap(enrichMap);
+        targetMap = ensureMap(targetMap);
+        enrichMap = ensureMap(enrichMap);
         for (Map.Entry<String, String> entry : enrichMap.entrySet()) {
             if (!targetMap.containsKey(entry.getKey())) {
                 targetMap.put(entry.getKey(), entry.getValue());
@@ -74,17 +134,17 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
     protected abstract Kind getKind();
     protected abstract ObjectMeta getOrCreateMetadata(T item);
 
-    private Map<String, String> getOrCreateMap(Map<String, String> labels) {
+    private Map<String, String> ensureMap(Map<String, String> labels) {
         return labels != null ? labels : new HashMap<String, String>();
     }
 
 
     // =======================================================================================
 
-    public static class PodSpec extends MetadataVisitor<PodTemplateSpecBuilder> {
+    public static class PodTemplateSpecBuilderVisitor extends MetadataVisitor<PodTemplateSpecBuilder> {
 
-        public PodSpec(EnricherManager enricher) {
-            super(enricher);
+        public PodTemplateSpecBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
+            super(resourceConfig, enricher);
         }
 
         @Override
@@ -99,10 +159,10 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    public static class Service extends MetadataVisitor<ServiceBuilder> {
+    public static class ServiceBuilderVisitor extends MetadataVisitor<ServiceBuilder> {
 
-        public Service(EnricherManager enricher) {
-            super(enricher);
+        public ServiceBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
+            super(resourceConfig, enricher);
         }
 
         @Override
@@ -118,8 +178,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
     }
 
     public static class ReplicaSet extends MetadataVisitor<ReplicaSetBuilder> {
-        public ReplicaSet(EnricherManager enricher) {
-            super(enricher);
+        public ReplicaSet(ResourceConfig resourceConfig, EnricherManager enricher) {
+            super(resourceConfig, enricher);
         }
 
         @Override
@@ -134,9 +194,9 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    public static class ReplicationController extends MetadataVisitor<ReplicationControllerBuilder> {
-        public ReplicationController(EnricherManager enricher) {
-            super(enricher);
+    public static class ReplicationControllerBuilderVisitor extends MetadataVisitor<ReplicationControllerBuilder> {
+        public ReplicationControllerBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
+            super(resourceConfig, enricher);
         }
 
         @Override
@@ -151,9 +211,9 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    public static class Deployment extends MetadataVisitor<DeploymentBuilder> {
-        public Deployment(EnricherManager enricher) {
-            super(enricher);
+    public static class DeploymentBuilderVisitor extends MetadataVisitor<DeploymentBuilder> {
+        public DeploymentBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
+            super(resourceConfig, enricher);
         }
 
         @Override
@@ -168,9 +228,9 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    public static class DaemonSet extends MetadataVisitor<DaemonSetBuilder> {
-        public DaemonSet(EnricherManager enricher) {
-            super(enricher);
+    public static class DaemonSetBuilderVisitor extends MetadataVisitor<DaemonSetBuilder> {
+        public DaemonSetBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
+            super(resourceConfig, enricher);
         }
 
         @Override

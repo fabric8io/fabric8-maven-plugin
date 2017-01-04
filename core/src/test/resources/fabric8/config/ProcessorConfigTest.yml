@@ -1,0 +1,44 @@
+# Test data for checking config merge. The input is a list of objects with two entries:
+#
+# input: List of processor configs declarations
+# merged: The expected merge result if the inputs are merged in the given order
+- input:
+  - includes: [ i1, i2, i3 ]
+    excludes: [ e1 ]
+    config:
+      k1:
+        i1: v1
+        i2: v2
+      k2:
+        j1: w1
+        k2: w2
+  - includes: [ i4 ]
+    excludes: [ e2 ]
+    config:
+      k1:
+        i1: v3
+        i3: v4
+      k3:
+        l1: x1
+  merged:
+    includes: [ i1, i2, i3, i4 ]
+    excludes: [ e1, e2 ]
+    config:
+      k1:
+        i1: v3
+        i2: v2
+        i3: v4
+      k2:
+        j1: w1
+        k2: w2
+      k3:
+        l1: x1
+- input:
+  - includes: [ i1, i2, i3, i4 ]
+    excludes: [ e1 ]
+  - includes: [ i2, i1, i5 ]
+  - includes: [ i1 ]
+    excludes: [ e1, e3 ]
+  merged:
+    includes: [ i3, i4, i2, i5, i1 ]
+    excludes: [ e3, e1 ]

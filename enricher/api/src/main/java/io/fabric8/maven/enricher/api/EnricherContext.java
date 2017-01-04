@@ -41,7 +41,7 @@ public class EnricherContext {
     private List<ImageConfiguration> images;
     private String namespace;
 
-    private ProcessorConfig config;
+    private ProcessorConfig config = ProcessorConfig.EMPTY;
 
     private boolean useProjectClasspath;
     private OpenShiftDependencyResources openshiftDependencyResources;

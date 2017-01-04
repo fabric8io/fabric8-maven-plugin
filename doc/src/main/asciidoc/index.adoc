@@ -8,6 +8,7 @@ Roland Huß, James Strachan;
 :doctype: book
 :icons: font
 :plugin: fabric8
+:plugindir: {plugindir}
 
 ifndef::ebook-format[:leveloffset: 1]
 

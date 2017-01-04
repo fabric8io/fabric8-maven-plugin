@@ -4,9 +4,29 @@
       - base
       - default.service
   generator:
+    includes:
+      - foobar
     excludes:
       - java.app
 - name: second
   enricher:
     includes:
       - default.deployment
+- name: merge-1
+  enricher:
+    includes:
+    - fmp-project
+- name: order-test-1
+  generator:
+    includes: [ i1, i2, i3 ]
+    excludes: [ e1 ]
+  order: 1
+- name: order-test-2
+  generator:
+    includes: [ i1, i2, i3 ]
+    excludes: [ e1 ]
+  order: 2
+- name: order-test-3
+  generator:
+    includes: [ i1, i2, i3 ]
+    excludes: [ e1 ]
