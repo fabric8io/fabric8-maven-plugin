@@ -231,10 +231,10 @@ public class ApplyMojo extends AbstractFabric8Mojo {
 
     private ClusterAccess clusterAccess;
 
-    public static Route createRouteForService(String routeDomainPostfix, String namespace, Service service, Log log) {
+    private Route createRouteForService(String routeDomainPostfix, String namespace, Service service) {
         Route route = null;
         String id = KubernetesHelper.getName(service);
-        if (Strings.isNotBlank(id) && shouldCreateExternalURLForService(log, service, id)) {
+        if (Strings.isNotBlank(id) && hasExactlyOneService(service, id)) {
             route = new Route();
             String routeId = id;
             KubernetesHelper.setName(route, namespace, routeId);
@@ -260,12 +260,11 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         return route;
     }
 
-    public static Ingress createIngressForService(String routeDomainPostfix, String namespace, Service service, Log log) {
+    private Ingress createIngressForService(String routeDomainPostfix, String namespace, Service service) {
         Ingress ingress = null;
         String serviceName = KubernetesHelper.getName(service);
         ServiceSpec serviceSpec = service.getSpec();
-        if (serviceSpec != null && Strings.isNotBlank(serviceName) &&
-                shouldCreateExternalURLForService(log, service, serviceName)) {
+        if (serviceSpec != null && Strings.isNotBlank(serviceName) && shouldCreateExternalURLForService(service, serviceName)) {
             String ingressId = serviceName;
             String host = "";
             if (Strings.isNotBlank(routeDomainPostfix)) {
@@ -316,7 +315,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
      *
      * @return true if we should create an OpenShift Route for this service.
      */
-    protected static boolean shouldCreateExternalURLForService(Log log, Service service, String id) {
+    private boolean shouldCreateExternalURLForService(Service service, String id) {
         if ("kubernetes".equals(id) || "kubernetes-ro".equals(id)) {
             return false;
         }
@@ -336,6 +335,17 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         } else {
             log.info("Not generating route for service " + id + " as only single port services are supported. Has ports: " + ports);
             return false;
+        }
+    }
+
+    private boolean hasExactlyOneService(Service service, String id) {
+        Set<Integer> ports = KubernetesHelper.getPorts(service);
+        if (ports.size() != 1) {
+            log.info("Not generating route for service " + id + " as only single port services are supported. Has ports: " +
+                     ports);
+            return false;
+        } else {
+            return true;
         }
     }
 
@@ -590,7 +600,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         for (Object object : collection) {
             if (object instanceof Service) {
                 Service service = (Service) object;
-                Route route = createRouteForService(routeDomainPostfix, namespace, service, log);
+                Route route = createRouteForService(routeDomainPostfix, namespace, service);
                 if (route != null) {
                     routes.add(route);
                 }
@@ -619,7 +629,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
             if (object instanceof Service) {
                 Service service = (Service) object;
                 if (!serviceHasIngressRule(ingressList, service)) {
-                    Ingress ingress = createIngressForService(routeDomainPostfix, namespace, service, log);
+                    Ingress ingress = createIngressForService(routeDomainPostfix, namespace, service);
                     if (ingress != null) {
                         ingresses.add(ingress);
                         log.info("Created ingress for " + namespace + ":" + KubernetesHelper.getName(service));
