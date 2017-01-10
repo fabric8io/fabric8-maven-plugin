@@ -23,7 +23,6 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.handler.property.ConfigKey;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
 import io.fabric8.maven.generator.webapp.handler.CustomAppServerHandler;
@@ -105,7 +104,7 @@ public class WebAppGenerator extends BaseGenerator {
     }
 
     private AppServerHandler getAppServerHandler(MavenGeneratorContext context) {
-        String from = super.getFrom();
+        String from = super.getFromAsConfigured();
         if (from != null) {
             // If a base image is provided use this exclusively and dont do a custom lookup
             return createCustomAppServerHandler(from);
@@ -142,8 +141,7 @@ public class WebAppGenerator extends BaseGenerator {
     // To be called **only** from customize() as they require an already
     // initialized appServerHandler:
     protected String getFrom(AppServerHandler handler) {
-        String from = super.getFrom();
-        return from != null ? from : handler.getFrom();
+        return handler.getFrom();
     }
 
     private String getDockerRunCommand(AppServerHandler handler) {

@@ -90,10 +90,12 @@
     <image.java.upstream.s2i>fabric8/s2i-java:${version.image.java.upstream.s2i}</image.java.upstream.s2i>
     <image.java.upstream.docker>fabric8/java-alpine-openjdk8-jdk:${version.image.java.upstream.docker}</image.java.upstream.docker>
     <image.java.redhat>jboss-fuse-6/fis-java-openshift:${version.image.java.redhat}</image.java.redhat>
+    <image.java.istag>fis-java-openshift:${version.image.java.redhat}</image.java.istag>
 
     <!-- karaf -->
     <image.karaf.upstream>fabric8/s2i-karaf:${version.image.karaf.upstream}</image.karaf.upstream>
     <image.karaf.redhat>jboss-fuse-6/fis-karaf-openshift:${version.image.karaf.redhat}</image.karaf.redhat>
+    <image.karaf.istag>fis-karaf-openshift:${version.image.karaf.redhat}</image.karaf.istag>
 
     <!-- webapp -->
     <image.tomcat.upstream>fabric8/tomcat-8:${version.image.tomcat.upstream}</image.tomcat.upstream>

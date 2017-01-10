@@ -16,6 +16,8 @@ package io.fabric8.maven.generator.api;
  * limitations under the License.
  */
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
@@ -49,8 +51,17 @@ public abstract class FromSelector {
         }
     }
 
+    public Map<String, String> getImageStreamTagFromExt() {
+        Map<String, String> ret = new HashMap<>();
+        ret.put("type", "ImageStreamTag");
+        ret.put("namespace", "openshift");
+        ret.put("name", getIstagFrom());
+        return ret;
+    }
+
     abstract protected String getDockerBuildFrom();
     abstract protected String getS2iBuildFrom();
+    abstract protected String getIstagFrom();
 
     public boolean isRedHat() {
         MavenProject project = context.getProject();
@@ -69,6 +80,8 @@ public abstract class FromSelector {
         private final String upstreamS2i;
         private final String redhatDocker;
         private final String redhatS2i;
+        private final String redhatIstag;
+        private final String upstreamIstag;
 
         public Default(MavenGeneratorContext context, String prefix) {
             super(context);
@@ -77,6 +90,8 @@ public abstract class FromSelector {
             this.upstreamS2i = lookup.getImageName(prefix + ".upstream.s2i");
             this.redhatDocker = lookup.getImageName(prefix + ".redhat.docker");
             this.redhatS2i = lookup.getImageName(prefix + ".redhat.s2i");
+            this.upstreamIstag = lookup.getImageName(prefix + ".upstream.istag");
+            this.redhatIstag = lookup.getImageName(prefix + ".redhat.istag");
         }
 
         @Override
@@ -87,6 +102,10 @@ public abstract class FromSelector {
         @Override
         protected String getS2iBuildFrom() {
             return isRedHat() ? redhatS2i : upstreamS2i;
+        }
+
+        protected String getIstagFrom() {
+            return isRedHat() ? redhatIstag : upstreamIstag;
         }
     }
 }

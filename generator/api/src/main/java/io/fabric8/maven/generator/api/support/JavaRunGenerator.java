@@ -58,8 +58,8 @@ abstract public class JavaRunGenerator extends BaseGenerator {
         ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
         BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
             .assembly(createAssembly())
-            .from(getFrom())
             .ports(extractPorts());
+        addFrom(buildBuilder);
         Map<String, String> envMap = getEnv();
         envMap.put("JAVA_APP_DIR", getConfig(Config.baseDir));
         buildBuilder.env(envMap);
