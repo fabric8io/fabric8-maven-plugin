@@ -112,8 +112,8 @@ public class JavaExecGenerator extends BaseGenerator {
         ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
         BuildImageConfiguration.Builder buildBuilder = null;
         buildBuilder = new BuildImageConfiguration.Builder()
-            .from(getFrom())
             .ports(extractPorts());
+        addFrom(buildBuilder);
         if (!prePackagePhase) {
             // Only add assembly if not in a pre-package phase where the referenced files
             // won't be available.
