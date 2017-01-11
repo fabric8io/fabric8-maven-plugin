@@ -49,6 +49,7 @@ import org.apache.maven.project.MavenProject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.*;
 import static org.junit.Assert.*;
 
 /**
@@ -130,13 +131,13 @@ public class BaseGeneratorTest {
             assertEquals(from == null ? "selectorIstagFrom" : "test_image:2.0", config.getFrom());
             Map<String, String> fromExt = config.getFromExt();
             assertEquals(3, fromExt.size());
-            assertEquals("ImageStreamTag", fromExt.get("type"));
+            assertEquals("ImageStreamTag", fromExt.get(kind.key()));
             if (from != null) {
-                assertEquals("test_namespace", fromExt.get("namespace"));
-                assertEquals("test_image:2.0", fromExt.get("name"));
+                assertEquals("test_namespace", fromExt.get(namespace.key()));
+                assertEquals("test_image:2.0", fromExt.get(name.key()));
             } else {
-                assertEquals("openshift", fromExt.get("namespace"));
-                assertEquals("selectorIstagFrom", fromExt.get("name"));
+                assertEquals("openshift", fromExt.get(namespace.key()));
+                assertEquals("selectorIstagFrom", fromExt.get(name.key()));
             }
         }
     }
@@ -158,9 +159,9 @@ public class BaseGeneratorTest {
                 assertNull(fromExt);
             } else {
                 assertEquals(3, fromExt.size());
-                assertEquals("ImageStreamTag", fromExt.get("type"));
-                assertEquals("test_namespace", fromExt.get("namespace"));
-                assertEquals("test_image:2.0", fromExt.get("name"));
+                assertEquals("ImageStreamTag", fromExt.get(kind.key()));
+                assertEquals("test_namespace", fromExt.get(namespace.key()));
+                assertEquals("test_image:2.0", fromExt.get(name.key()));
             }
         }
     }

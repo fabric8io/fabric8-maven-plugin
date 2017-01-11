@@ -16,6 +16,7 @@
 
 package io.fabric8.maven.generator.api.support;
 
+import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
@@ -26,10 +27,15 @@ import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.Generator;
 import io.fabric8.maven.generator.api.GeneratorConfig;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
+import io.fabric8.openshift.api.model.BuildStrategy;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
 
 import java.util.*;
+
+import javax.xml.transform.Source;
+
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.*;
 
 /**
  * @author roland
@@ -116,17 +122,17 @@ abstract public class BaseGenerator implements Generator {
             }
         } else if (fromMode.equalsIgnoreCase("istag")) {
             if (from != null) {
-                ImageName name = new ImageName(from);
+                ImageName iName = new ImageName(from);
                 // user/project is considered to be the namespace
                 Map<String, String> fromExt = new HashMap();
-                if (StringUtils.isBlank(name.getTag())) {
+                if (StringUtils.isBlank(iName.getTag())) {
                     throw new IllegalArgumentException(String.format("A tag must be provided in 'from' field '%s' if an ImageStreamTag is to be used", from));
                 }
-                fromExt.put("name",name.getSimpleName() + ":" + name.getTag());
-                if (name.getUser() != null) {
-                    fromExt.put("namespace", name.getUser());
+                fromExt.put(OpenShiftBuildStrategy.SourceStrategy.name.key(), iName.getSimpleName() + ":" + iName.getTag());
+                if (iName.getUser() != null) {
+                    fromExt.put(OpenShiftBuildStrategy.SourceStrategy.namespace.key(), iName.getUser());
                 }
-                fromExt.put("type","ImageStreamTag");
+                fromExt.put(OpenShiftBuildStrategy.SourceStrategy.kind.key(), "ImageStreamTag");
                 builder.fromExt(fromExt);
             } else {
                 builder.fromExt(fromSelector != null ? fromSelector.getImageStreamTagFromExt() : null);
