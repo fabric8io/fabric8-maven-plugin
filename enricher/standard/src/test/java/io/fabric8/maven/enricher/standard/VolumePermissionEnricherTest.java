@@ -86,10 +86,12 @@ public class VolumePermissionEnricherTest {
               ptb = ptb.editTemplate().
                   editSpec().
                   addNewVolume().withName(vn).withNewPersistentVolumeClaim().and().and().
+                  addNewVolume().withName("non-pvc").withNewEmptyDir().and().and().
                   and().and();
               ptb = ptb.editTemplate().editSpec().withContainers(
-                  new ContainerBuilder(ptb.getTemplate().getSpec().getContainers().get(0))
+                  new ContainerBuilder(ptb.buildTemplate().getSpec().getContainers().get(0))
                       .addNewVolumeMount().withName(vn).withMountPath("/tmp/" + vn).and()
+                      .addNewVolumeMount().withName("non-pvc").withMountPath("/tmp/non-pvc").and()
                       .build()
               ).and().and();
             }
@@ -98,7 +100,7 @@ public class VolumePermissionEnricherTest {
 
             enricher.adapt(klb);
 
-            PodTemplate pt = (PodTemplate) klb.getItems().get(0);
+            PodTemplate pt = (PodTemplate) klb.buildItem(0);
 
             String initContainers = pt.getTemplate().getMetadata().getAnnotations()
                     .get(BaseEnricher.INIT_CONTAINER_ANNOTATION);

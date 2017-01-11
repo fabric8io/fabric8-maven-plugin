@@ -16,8 +16,6 @@
 
 package io.fabric8.maven.enricher.standard;
 
-import java.util.*;
-
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
@@ -26,11 +24,16 @@ import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.EnricherContext;
-import mockit.*;
+import mockit.Expectations;
+import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.TreeMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -60,7 +63,7 @@ public class DefaultServiceEnricherTest {
         // Setup mock behaviour
         new Expectations() {{
             context.getConfig(); result =
-                new ProcessorConfig(null, null, Collections.singletonMap("default.service", new TreeMap(Collections.singletonMap("type", "LoadBalancer"))));
+                new ProcessorConfig(null, null, Collections.singletonMap("fmp-service", new TreeMap(Collections.singletonMap("type", "LoadBalancer"))));
             imageConfiguration.getBuildConfiguration(); result = buildConfig;
             context.getImages(); result = Arrays.asList(imageConfiguration);
         }};
