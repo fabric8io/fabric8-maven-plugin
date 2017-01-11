@@ -23,6 +23,7 @@ package io.fabric8.maven.core.config;
  */
 public enum OpenShiftBuildStrategy {
 
+    // Constants used to extract extra information from a `fromExt` build configuration
     /**
      * S2i build with a binary source
      */
@@ -32,6 +33,19 @@ public enum OpenShiftBuildStrategy {
      * Docker build with a binary source
      */
     docker("Docker");
+
+    // Source strategy elemens
+    public enum SourceStrategy {
+        kind,
+        namespace,
+        name;
+
+        public String key() {
+            // Return the name, could be mapped if needed.
+            return name();
+        }
+    }
+
 
     private final String label;
 

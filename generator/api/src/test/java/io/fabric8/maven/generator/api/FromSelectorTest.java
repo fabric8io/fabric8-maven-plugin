@@ -95,9 +95,9 @@ public class FromSelectorTest {
             assertEquals(data[i + 3], selector.getFrom());
             Map<String, String> fromExt = selector.getImageStreamTagFromExt();
             assertEquals(fromExt.size(),3);
-            assertEquals(fromExt.get("type"),"ImageStreamTag");
-            assertEquals(fromExt.get("namespace"), "openshift");
-            assertEquals(fromExt.get("name"), data[i + 4]);
+            assertEquals(fromExt.get(SourceStrategy.kind.key()), "ImageStreamTag");
+            assertEquals(fromExt.get(SourceStrategy.namespace.key()), "openshift");
+            assertEquals(fromExt.get(SourceStrategy.name.key()), data[i + 4]);
         }
     }
 

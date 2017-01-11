@@ -25,6 +25,8 @@ import io.fabric8.maven.core.config.PlatformMode;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.*;
+
 /**
  * Helper class to encapsulate the selection of a base image
  *
@@ -53,9 +55,9 @@ public abstract class FromSelector {
 
     public Map<String, String> getImageStreamTagFromExt() {
         Map<String, String> ret = new HashMap<>();
-        ret.put("type", "ImageStreamTag");
-        ret.put("namespace", "openshift");
-        ret.put("name", getIstagFrom());
+        ret.put(kind.key(), "ImageStreamTag");
+        ret.put(namespace.key(), "openshift");
+        ret.put(name.key(), getIstagFrom());
         return ret;
     }
 
