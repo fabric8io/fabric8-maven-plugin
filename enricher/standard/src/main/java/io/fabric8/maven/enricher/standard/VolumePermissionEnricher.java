@@ -90,7 +90,7 @@ public class VolumePermissionEnricher extends BaseEnricher {
             return;
         }
 
-        String pvAnnotation = createPvAnnotation(containers);
+        String pvAnnotation = createPvAnnotation(podSpec);
         log.verbose("Adding annotation %s for changing persistent volumes access mode to %s",
                     INIT_CONTAINER_ANNOTATION, getConfig(Config.permission) );
 
@@ -117,8 +117,8 @@ public class VolumePermissionEnricher extends BaseEnricher {
         return metadata;
     }
 
-    private String createPvAnnotation(List<Container> containers) {
-        Map<String, String> mountPoints = extractMountPoints(containers);
+    private String createPvAnnotation(PodSpec podSpec) {
+        Map<String, String> mountPoints = extractMountPoints(podSpec);
 
         JSONArray anno = new JSONArray();
         JSONObject entry = new JSONObject();
@@ -153,20 +153,36 @@ public class VolumePermissionEnricher extends BaseEnricher {
         return ret;
     }
 
-    private Map<String, String> extractMountPoints(List<Container> containers) {
+    private Map<String, String> extractMountPoints(PodSpec podSpec) {
         Map<String, String> nameToMount = new TreeMap<>();
-        for (Container container : containers) {
-            List<VolumeMount> volumeMounts = container.getVolumeMounts();
-            if (volumeMounts != null) {
-                for (VolumeMount volumeMount : volumeMounts) {
-                    String name = volumeMount.getName();
-                    if (!nameToMount.containsKey(name)) {
-                        nameToMount.put(name, volumeMount.getMountPath());
-                    }
+
+        List<Volume> volumes = podSpec.getVolumes();
+        if (volumes != null) {
+            for (Volume volume : volumes) {
+                PersistentVolumeClaimVolumeSource persistentVolumeClaim = volume.getPersistentVolumeClaim();
+                if (persistentVolumeClaim != null) {
+                    String name = volume.getName();
+                    String mountPath = getMountPath(podSpec.getContainers(), name);
+
+                    nameToMount.put(name, mountPath);
                 }
             }
         }
         return nameToMount;
+    }
+
+    private String getMountPath(List<Container> containers, String name){
+        for (Container container : containers) {
+            List<VolumeMount> volumeMounts = container.getVolumeMounts();
+            if (volumeMounts != null) {
+                for (VolumeMount volumeMount : volumeMounts) {
+                    if (name.equals(volumeMount.getName())){
+                        return volumeMount.getMountPath();
+                    }
+                }
+            }
+        }
+        throw new IllegalArgumentException("No matching volume mount found for volume "+ name);
     }
 
     private boolean checkForPvc(PodSpec podSpec) {
