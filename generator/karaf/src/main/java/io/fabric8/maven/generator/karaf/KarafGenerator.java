@@ -51,15 +51,15 @@ public class KarafGenerator extends BaseGenerator {
         ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
         BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
             .assembly(createAssembly())
-                .from(getFrom())
-                .ports(extractPorts())
-                .cmd(getConfig(Config.cmd));
-            addLatestTagIfSnapshot(buildBuilder);
-            imageBuilder
-                .name(getImageName())
-                .alias(getAlias())
-                .buildConfig(buildBuilder.build());
-            configs.add(imageBuilder.build());
+            .ports(extractPorts())
+            .cmd(getConfig(Config.cmd));
+        addFrom(buildBuilder);
+        addLatestTagIfSnapshot(buildBuilder);
+        imageBuilder
+            .name(getImageName())
+            .alias(getAlias())
+            .buildConfig(buildBuilder.build());
+        configs.add(imageBuilder.build());
         return configs;
     }
 

@@ -109,6 +109,10 @@ There are some configuration options which are shared by all generators:
 | This is the base image from where to start when creating the images. By default the generators make an opinionated decision for the base image which are described in the respective generator section.
 | `fabric8.generator.from`
 
+| *fromMode*
+| Whe using OpenShift S2I builds the base image can be either a plain docker image (mode: `docker`) or a reference to an https://docs.openshift.com/container-platform/3.3/architecture/core_concepts/builds_and_image_streams.html[ ImageStreamTag] (mode: `istag`). In the case of an ImageStreamTag, `from` has to be specified in the form `namespace/image-stream:tag`. The mode takes only effect when running in OpenShift mode.
+| `fabric8.generator.fromMode`
+
 | *alias*
 | An alias name for referencing this image in various other parts of the configuration. This is also used in the log output. The default alias name is the name of the generator.
 | `fabric8.generator.alias`
@@ -145,6 +149,8 @@ The name of this generator is `spring-boot` and gets activated when it finds a `
 |===
 
 These images refer always to the latest tag. The _Red Hat_ base images are selected, when the plugin itself is a Red Hat supported version (which is detected by the plugins version number).
+
+When a `fromMode` of `istag` is used to specify an `ImageStreamTag` and when no `from` is given, then as default the `ImageStreamTag` `fis-java-openshift:2.0` in the namespace `openshift` is chosen.
 
 The following additional configuration options can be set:
 
@@ -196,7 +202,55 @@ Beside the common configuration parameters described in the table <<generator-op
 | 9779
 |===
 
+[[generator-karaf]]
 === Karaf
+
+This generator named `karaf` kicks in when the build uses a `karaf-maven-plugin`. By default the following base images are used:
+
+[[generator-karaf-from]]
+.Karaf Base Images
+[cols="1,4,4"]
+|===
+| | Docker Build | S2I Build
+
+| *Community*
+| `fabric8/s2i-karaf`
+| `fabric8/s2i-karaf`
+
+| *Red Hat*
+| `jboss-fuse-6/fis-karaf-openshift`
+| `jboss-fuse-6/fis-karaf-openshift`
+|===
+
+When a `fromMode` of `istag` is used to specify an `ImageStreamTag` and when no `from` is given, then as default the `ImageStreamTag` `fis-karaf-openshift:2.0` in the namespace `openshift` is chosen.
+
+In addition to the  <<generator-options-common, common generator options>> this generator can be configured with the following options:
+
+.Karaf configuration options
+[cols="1,6,1"]
+|===
+| Element | Description | Default
+
+| *baseDir*
+| Directory within the generated image where to put the detected artefacts into. Change this only if the base image is changed, too.
+| `/deployments`
+
+| *jolokiaPort*
+| Port of the Jolokia agent exposed by the base image. Set this to 0 if you don't want to expose the Jolokia port.
+| 8778
+
+| *mainClass*
+| Main class to call. If not given first a check is performed to detect a fat-jar (see above). Next a class is tried to be found by scanning `target/classes` for a single class with a main method. If no if found or more than one is found, then this generator does nothing.
+|
+
+| *user*
+| User and/or group under which the files should be added. The syntax of this options is descriped in <<config-image-build-assembly-user, Assembly Configuration>>.
+| `jboss:jboss:jboss`
+
+| *webPort*
+| Port to expose as service, which is supposed to be the port of a web application. Set this to 0 if you don't want to expose a port.
+| 8080
+|===
 
 [[generators-api]]
 == Generator API

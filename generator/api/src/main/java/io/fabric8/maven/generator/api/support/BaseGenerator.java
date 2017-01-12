@@ -16,20 +16,26 @@
 
 package io.fabric8.maven.generator.api.support;
 
+import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.Generator;
 import io.fabric8.maven.generator.api.GeneratorConfig;
 import io.fabric8.maven.generator.api.MavenGeneratorContext;
+import io.fabric8.openshift.api.model.BuildStrategy;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.utils.StringUtils;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
+
+import javax.xml.transform.Source;
+
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.*;
 
 /**
  * @author roland
@@ -43,20 +49,6 @@ abstract public class BaseGenerator implements Generator {
     protected final PrefixedLogger log;
     private final FromSelector fromSelector;
 
-    /**
-     * Returns the maven project property or the default value
-     */
-    protected String getProjectProperty(String propertyName, String defaultValue) {
-        MavenProject project = getProject();
-        if (project != null) {
-            Properties properties = project.getProperties();
-            if (properties != null) {
-                return properties.getProperty(propertyName, defaultValue);
-            }
-        }
-        return defaultValue;
-    }
-
     private enum Config implements Configs.Key {
         // Whether to merge in existing configuration or not
         merge,
@@ -68,11 +60,14 @@ abstract public class BaseGenerator implements Generator {
         alias,
 
         // Base image
-        from;
+        from,
+
+        // Base image mode (only relevant for OpenShift)
+        fromMode;
 
         public String def() { return d; } protected String d;
-
     }
+
     public BaseGenerator(MavenGeneratorContext context, String name) {
         this(context, name, null);
     }
@@ -97,10 +92,6 @@ abstract public class BaseGenerator implements Generator {
         return context;
     }
 
-    public GeneratorConfig getConfig() {
-        return config;
-    }
-
     protected String getConfig(Configs.Key key) {
         return config.get(key);
     }
@@ -109,17 +100,46 @@ abstract public class BaseGenerator implements Generator {
         return config.get(key, defaultVal);
     }
 
+    // Get 'from' as configured without any default and image stream tag handling
+    protected String getFromAsConfigured() {
+        return getConfigWithSystemFallbackAndDefault(Config.from, "fabric8.generator.from", null);
+    }
+
     /**
      * Get base image either from configuration or from a given selector
      *
      * @return the base image or <code>null</code> when none could be detected.
+     * @param buildBuilder
      */
-    protected String getFrom() {
+    protected void addFrom(BuildImageConfiguration.Builder builder) {
+        String fromMode = getConfigWithSystemFallbackAndDefault(Config.fromMode, "fabric8.generator.fromMode", "docker");
         String from = getConfigWithSystemFallbackAndDefault(Config.from, "fabric8.generator.from", null);
-        if (from != null) {
-            return from;
+        if (fromMode.equalsIgnoreCase("docker")) {
+            if (from != null) {
+                builder.from(from);
+            } else {
+                builder.from(fromSelector != null ? fromSelector.getFrom() : null);
+            }
+        } else if (fromMode.equalsIgnoreCase("istag")) {
+            if (from != null) {
+                ImageName iName = new ImageName(from);
+                // user/project is considered to be the namespace
+                Map<String, String> fromExt = new HashMap();
+                if (StringUtils.isBlank(iName.getTag())) {
+                    throw new IllegalArgumentException(String.format("A tag must be provided in 'from' field '%s' if an ImageStreamTag is to be used", from));
+                }
+                fromExt.put(OpenShiftBuildStrategy.SourceStrategy.name.key(), iName.getSimpleName() + ":" + iName.getTag());
+                if (iName.getUser() != null) {
+                    fromExt.put(OpenShiftBuildStrategy.SourceStrategy.namespace.key(), iName.getUser());
+                }
+                fromExt.put(OpenShiftBuildStrategy.SourceStrategy.kind.key(), "ImageStreamTag");
+                builder.fromExt(fromExt);
+            } else {
+                builder.fromExt(fromSelector != null ? fromSelector.getImageStreamTagFromExt() : null);
+            }
+        } else {
+            throw new IllegalArgumentException(String.format("Invalid 'fromMode' in generator configuration for '%s'", getName()));
         }
-        return fromSelector != null ? fromSelector.getFrom() : null;
     }
 
     /**
@@ -128,21 +148,15 @@ abstract public class BaseGenerator implements Generator {
      * @return Docker image name which is never null
      */
     protected String getImageName() {
-        return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", getDefaultImageUserExpression() + "%a:" + getDefaultImageLabelExpression());
+        return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", getDefaultImageUser());
     }
 
-    private String getDefaultImageUserExpression() {
+    private String getDefaultImageUser() {
         if (PlatformMode.isOpenShiftMode(getProject().getProperties())) {
-            return "";
+            return "%a:%l";
+        } else {
+            return "%g/%a:%t";
         }
-        return "%g/";
-    }
-
-    private String getDefaultImageLabelExpression() {
-        if (PlatformMode.isOpenShiftMode(getProject().getProperties())) {
-            return "%l";
-        }
-        return "%t";
     }
 
     /**
@@ -157,13 +171,14 @@ abstract public class BaseGenerator implements Generator {
         return !containsBuildConfiguration(configs);
     }
 
-    private String getConfigWithSystemFallbackAndDefault(Config name, String key, String defaultVal) {
+    protected String getConfigWithSystemFallbackAndDefault(Config name, String key, String defaultVal) {
         String value = getConfig(name);
         if (value == null) {
             value = Configs.getPropertyWithSystemAsFallback(getProject().getProperties(), key);
         }
         return value != null ? value : defaultVal;
     }
+
     protected void addLatestTagIfSnapshot(BuildImageConfiguration.Builder buildBuilder) {
         MavenProject project = getProject();
         if (project.getVersion().endsWith("-SNAPSHOT")) {
