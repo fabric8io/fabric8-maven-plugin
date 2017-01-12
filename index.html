@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.2.14,</span>
-<span id="revdate">2017-01-11</span>
+<span id="revdate">2017-01-12</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -4734,6 +4734,114 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <p>Enricher which fixes the permission of persisten volume mount with the help of an init container.</p>
 </div>
 </div>
+<div class="sect4">
+<h5 id="fmp-autotls">fmp-autotls</h5>
+<div class="paragraph">
+<p>Enricher which adds appropriate annotations and volumes to enable OpenShift&#8217;s automatic <a href="https://docs.openshift.org/latest/dev_guide/secrets.html#service-serving-certificate-secrets">Service Serving Certificate Secrets</a>.
+This enricher adds an init container to convert the service serving certificates from PEM (the format that OpenShift generates them in) to
+a JKS-format Java keystore ready for consumption in Java services.</p>
+</div>
+<div class="paragraph">
+<p>This enricher is disabled by default. In order to use it, you must configure the Fabric8 Maven plugin to use this enricher:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.3.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;executions&gt;</span>
+    <span class="tag">&lt;execution&gt;</span>
+      <span class="tag">&lt;goals&gt;</span>
+        <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
+      <span class="tag">&lt;/goals&gt;</span>
+    <span class="tag">&lt;/execution&gt;</span>
+  <span class="tag">&lt;/executions&gt;</span>
+  <span class="tag">&lt;configuration&gt;</span>
+    <span class="tag">&lt;enricher&gt;</span>
+      <span class="tag">&lt;includes&gt;</span>
+        <span class="tag">&lt;include&gt;</span>fmp-autotls<span class="tag">&lt;/include&gt;</span>
+      <span class="tag">&lt;/includes&gt;</span>
+      <span class="tag">&lt;config&gt;</span>
+        <span class="tag">&lt;fmp-autotls&gt;</span>
+          ...
+        <span class="tag">&lt;/fmp-autotls&gt;</span>
+      <span class="tag">&lt;/config&gt;</span>
+    <span class="tag">&lt;/enricher&gt;</span>
+  <span class="tag">&lt;/configuration&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The auto-TLS enricher supports the following configuration options:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 18.1818%;">
+<col style="width: 54.5454%;">
+<col style="width: 27.2728%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tlsSecretName</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The name of the secret to be used to store the generated service serving certs.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>&lt;project.artifactId&gt;-tls</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tlsSecretVolumeMountPoint</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Where the service serving secret should be mounted to in the pod.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/var/run/secrets/fabric8.io/tls-pem</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tlsSecretVolumeName</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The name of the secret volume.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tls-pem</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>jksVolumeMountPoint</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Where the generated keystore volume should be mounted to in the pod.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/var/run/secrets/fabric8.io/tls-jks</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>jksVolumeName</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The name of the keystore volume.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tls-jks</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>pemToJKSInitContainerImage</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The name of the image used as an init container to convert PEM certificate/key to Java keystore.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>jimmidyson/pemtokeystore:v0.1.0</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>pemToJKSInitContainerName</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">the name of the init container to convert PEM certificate/key to Java keystore.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tls-jks-converter</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>keystoreFileName</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The name of the generated keystore file.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>keystore.jks</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>keystorePassword</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The password to use for the generated keystore.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>changeit</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>keystoreCertAlias</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The alias in the keystore used for the imported service serving certificate.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>server</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div class="sect3">
 <h4 id="enrichers-fabric8">9.1.2. Fabric8 Enrichers</h4>
@@ -5966,7 +6074,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.14<br>
-Last updated 2017-01-11 17:13:11 UTC
+Last updated 2017-01-12 07:43:32 UTC
 </div>
 </div>
 </body>
