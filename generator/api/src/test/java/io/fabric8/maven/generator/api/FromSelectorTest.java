@@ -16,6 +16,8 @@
 
 package io.fabric8.maven.generator.api;
 
+import java.util.Map;
+
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
@@ -51,29 +53,29 @@ public class FromSelectorTest {
     @Test
     public void simple() {
         final Object[] data = new Object[] {
-            openshift, s2i, "1.2.3.redhat-00009", "redhat-s2i-prop",
-            openshift, docker, "1.2.3.redhat-00009", "redhat-docker-prop",
-            openshift, s2i, "1.2.3.fuse-00009", "redhat-s2i-prop",
-            openshift, docker, "1.2.3.fuse-00009", "redhat-docker-prop",
-            openshift, s2i, "1.2.3.foo-00009", "s2i-prop",
-            openshift, docker, "1.2.3.foo-00009", "docker-prop",
-            openshift, s2i, "1.2.3", "s2i-prop",
-            openshift, docker, "1.2.3", "docker-prop",
-            null, s2i, "1.2.3.redhat-00009", "redhat-docker-prop",
-            null, docker, "1.2.3.redhat-00009", "redhat-docker-prop",
-            null, s2i, "1.2.3.fuse-00009", "redhat-docker-prop",
-            null, docker, "1.2.3.fuse-00009", "redhat-docker-prop",
-            null, s2i, "1.2.3.foo-00009", "docker-prop",
-            null, docker, "1.2.3.foo-00009", "docker-prop",
-            null, s2i, "1.2.3", "docker-prop",
-            null, docker, "1.2.3", "docker-prop",
-            openshift, null, "1.2.3.redhat-00009", "redhat-docker-prop",
-            openshift, null, "1.2.3.fuse-00009", "redhat-docker-prop",
-            openshift, null, "1.2.3.foo-00009", "docker-prop",
-            openshift, null, "1.2.3", "docker-prop",
+            openshift, s2i, "1.2.3.redhat-00009", "redhat-s2i-prop", "redhat-istag-prop",
+            openshift, docker, "1.2.3.redhat-00009", "redhat-docker-prop", "redhat-istag-prop",
+            openshift, s2i, "1.2.3.fuse-00009", "redhat-s2i-prop", "redhat-istag-prop",
+            openshift, docker, "1.2.3.fuse-00009", "redhat-docker-prop", "redhat-istag-prop",
+            openshift, s2i, "1.2.3.foo-00009", "s2i-prop", "istag-prop",
+            openshift, docker, "1.2.3.foo-00009", "docker-prop", "istag-prop",
+            openshift, s2i, "1.2.3", "s2i-prop", "istag-prop",
+            openshift, docker, "1.2.3", "docker-prop", "istag-prop",
+            null, s2i, "1.2.3.redhat-00009", "redhat-docker-prop", "redhat-istag-prop",
+            null, docker, "1.2.3.redhat-00009", "redhat-docker-prop", "redhat-istag-prop",
+            null, s2i, "1.2.3.fuse-00009", "redhat-docker-prop", "redhat-istag-prop",
+            null, docker, "1.2.3.fuse-00009", "redhat-docker-prop", "redhat-istag-prop",
+            null, s2i, "1.2.3.foo-00009", "docker-prop", "istag-prop",
+            null, docker, "1.2.3.foo-00009", "docker-prop", "istag-prop",
+            null, s2i, "1.2.3", "docker-prop", "istag-prop",
+            null, docker, "1.2.3", "docker-prop", "istag-prop",
+            openshift, null, "1.2.3.redhat-00009", "redhat-docker-prop", "redhat-istag-prop",
+            openshift, null, "1.2.3.fuse-00009", "redhat-docker-prop", "redhat-istag-prop",
+            openshift, null, "1.2.3.foo-00009", "docker-prop", "istag-prop",
+            openshift, null, "1.2.3", "docker-prop", "istag-prop"
         };
 
-        for (int i = 0; i < data.length; i += 4) {
+        for (int i = 0; i < data.length; i += 5) {
             GeneratorContext ctx = new GeneratorContext.Builder()
                 .project(project)
                 .config(new ProcessorConfig())
@@ -91,6 +93,12 @@ public class FromSelectorTest {
             FromSelector selector = new FromSelector.Default(ctx, "test");
 
             assertEquals(data[i + 3], selector.getFrom());
+            Map<String, String> fromExt = selector.getImageStreamTagFromExt();
+            assertEquals(fromExt.size(),3);
+            assertEquals(fromExt.get(SourceStrategy.kind.key()), "ImageStreamTag");
+            assertEquals(fromExt.get(SourceStrategy.namespace.key()), "openshift");
+            assertEquals(fromExt.get(SourceStrategy.name.key()), data[i + 4]);
         }
     }
+
 }

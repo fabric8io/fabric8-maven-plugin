@@ -751,9 +751,9 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             Map<String, String> fromExt = buildConfig.getFromExt();
 
-            String fromName = getMapValueWithDefault(fromExt, "name", buildConfig.getFrom());
-            String fromNamespace = getMapValueWithDefault(fromExt, "namespace", "");
-            String fromKind = getMapValueWithDefault(fromExt, "kind", "DockerImage");
+            String fromName = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.name, buildConfig.getFrom());
+            String fromNamespace = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.namespace, "");
+            String fromKind = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.kind, "DockerImage");
 
             if ("ImageStreamTag".equals(fromKind) && fromNamespace == null) {
                 fromNamespace = "openshift";
@@ -775,6 +775,10 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
         } else {
             throw new IllegalArgumentException("Unsupported BuildStrategy " + buildStrategy);
         }
+    }
+
+    private String getMapValueWithDefault(Map<String, String> map, OpenShiftBuildStrategy.SourceStrategy strategy, String defaultValue) {
+        return getMapValueWithDefault(map, strategy.key(), defaultValue);
     }
 
     private String getMapValueWithDefault(Map<String, String> map, String field, String defaultValue) {

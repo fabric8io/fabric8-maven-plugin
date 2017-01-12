@@ -16,12 +16,16 @@
 
 package io.fabric8.maven.generator.api;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
+
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.*;
 
 /**
  * Helper class to encapsulate the selection of a base image
@@ -49,8 +53,17 @@ public abstract class FromSelector {
         }
     }
 
+    public Map<String, String> getImageStreamTagFromExt() {
+        Map<String, String> ret = new HashMap<>();
+        ret.put(kind.key(), "ImageStreamTag");
+        ret.put(namespace.key(), "openshift");
+        ret.put(name.key(), getIstagFrom());
+        return ret;
+    }
+
     abstract protected String getDockerBuildFrom();
     abstract protected String getS2iBuildFrom();
+    abstract protected String getIstagFrom();
 
     public boolean isRedHat() {
         MavenProject project = context.getProject();
@@ -69,6 +82,8 @@ public abstract class FromSelector {
         private final String upstreamS2i;
         private final String redhatDocker;
         private final String redhatS2i;
+        private final String redhatIstag;
+        private final String upstreamIstag;
 
         public Default(GeneratorContext context, String prefix) {
             super(context);
@@ -77,6 +92,8 @@ public abstract class FromSelector {
             this.upstreamS2i = lookup.getImageName(prefix + ".upstream.s2i");
             this.redhatDocker = lookup.getImageName(prefix + ".redhat.docker");
             this.redhatS2i = lookup.getImageName(prefix + ".redhat.s2i");
+            this.upstreamIstag = lookup.getImageName(prefix + ".upstream.istag");
+            this.redhatIstag = lookup.getImageName(prefix + ".redhat.istag");
         }
 
         @Override
@@ -87,6 +104,10 @@ public abstract class FromSelector {
         @Override
         protected String getS2iBuildFrom() {
             return isRedHat() ? redhatS2i : upstreamS2i;
+        }
+
+        protected String getIstagFrom() {
+            return isRedHat() ? redhatIstag : upstreamIstag;
         }
     }
 }

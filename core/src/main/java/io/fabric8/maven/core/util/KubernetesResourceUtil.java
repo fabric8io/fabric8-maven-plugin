@@ -142,7 +142,11 @@ public class KubernetesResourceUtil {
                                           File file, String appName) throws IOException {
         Map<String,Object> fragment = readAndEnrichFragment(defaultApiVersion, apiExtensionsVersion, file, appName);
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.convertValue(fragment, HasMetadata.class);
+        try {
+            return mapper.convertValue(fragment, HasMetadata.class);
+        } catch (ClassCastException exp) {
+            throw new IllegalArgumentException(String.format("Resource fragment %s has an invalid syntax (%s)", file.getPath(), exp.getMessage()));
+        }
     }
 
     public static String toYaml(Object resource) throws JsonProcessingException {
@@ -317,8 +321,7 @@ public class KubernetesResourceUtil {
         try {
             return mapper.readValue(file, typeRef);
         } catch (JsonProcessingException e) {
-            // TODO is there a cleaner way to associate the file information in the exception message?
-            throw new JsonMappingException("file: " + file + ". " + e.getMessage(), e.getLocation(), e);
+            throw new JsonMappingException(String.format("[%s] %s", file, e.getMessage()), e.getLocation(), e);
         }
     }
 

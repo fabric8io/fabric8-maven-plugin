@@ -18,7 +18,7 @@ This generator named `karaf` kicks in when the build uses a `karaf-maven-plugin`
 | `jboss-fuse-6/fis-karaf-openshift`
 |===
 
-Beside the
+When a `fromMode` of `istag` is used to specify an `ImageStreamTag` and when no `from` is given, then as default the `ImageStreamTag` `fis-karaf-openshift:2.0` in the namespace `openshift` is chosen.
 
 In addition to the  <<generator-options-common, common generator options>> this generator can be configured with the following options:
 

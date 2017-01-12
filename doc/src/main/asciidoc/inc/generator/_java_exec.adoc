@@ -32,6 +32,8 @@ It will use the following base image by default, but as explained <<generator-op
 
 These images refer always to the latest tag. The _Red Hat_ base images are selected, when the plugin itself is a Red Hat supported version (which is detected by the plugins version number).
 
+When a `fromMode` of `istag` is used to specify an `ImageStreamTag` and when no `from` is given, then as default the `ImageStreamTag` `fis-java-openshift:2.0` in the namespace `openshift` is chosen.
+
 Beside the common configuration parameters described in the table <<generator-options-common, common generator options>> the following additional configuration options are recognized:
 
 [[generator-java-exec-options]]
