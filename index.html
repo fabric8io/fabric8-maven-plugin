@@ -4122,6 +4122,11 @@ This plugin definition includes the configuration to generate the Docker image.
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.generator.from</code></p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>fromMode</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Whe using OpenShift S2I builds the base image can be either a plain docker image (mode: <code>docker</code>) or a reference to an <a href="https://docs.openshift.com/container-platform/3.3/architecture/core_concepts/builds_and_image_streams.html"> ImageStreamTag</a> (mode: <code>istag</code>). In the case of an ImageStreamTag, <code>from</code> has to be specified in the form <code>namespace/image-stream:tag</code>. The mode takes only effect when running in OpenShift mode.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.generator.fromMode</code></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The Docker image name used when doing Docker builds. For OpenShift S2I builds its the name of the image stream. This can be a pattern as descibed in <a href="#image-name-placeholders">Name Placeholders</a>. The default is <code>%g/%a:%l</code>.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.generator.name</code></p></td>
@@ -4180,6 +4185,9 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 </table>
 <div class="paragraph">
 <p>These images refer always to the latest tag. The <em>Red Hat</em> base images are selected, when the plugin itself is a Red Hat supported version (which is detected by the plugins version number).</p>
+</div>
+<div class="paragraph">
+<p>When a <code>fromMode</code> of <code>istag</code> is used to specify an <code>ImageStreamTag</code> and when no <code>from</code> is given, then as default the <code>ImageStreamTag</code> <code>fis-java-openshift:2.0</code> in the namespace <code>openshift</code> is chosen.</p>
 </div>
 <div class="paragraph">
 <p>Beside the common configuration parameters described in the table <a href="#generator-options-common">common generator options</a> the following additional configuration options are recognized:</p>
@@ -4359,7 +4367,7 @@ fat jar.</p>
 </tbody>
 </table>
 <div class="paragraph">
-<p>Beside the</p>
+<p>When a <code>fromMode</code> of <code>istag</code> is used to specify an <code>ImageStreamTag</code> and when no <code>from</code> is given, then as default the <code>ImageStreamTag</code> <code>fis-karaf-openshift:2.0</code> in the namespace <code>openshift</code> is chosen.</p>
 </div>
 <div class="paragraph">
 <p>In addition to the  <a href="#generator-options-common">common generator options</a> this generator can be configured with the following options:</p>
@@ -6074,7 +6082,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.14<br>
-Last updated 2017-01-12 07:43:32 UTC
+Last updated 2017-01-12 20:31:22 UTC
 </div>
 </div>
 </body>
