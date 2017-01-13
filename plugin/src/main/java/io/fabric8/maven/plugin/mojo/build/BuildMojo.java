@@ -70,6 +70,7 @@ import io.fabric8.openshift.api.model.TagReference;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Strings;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -81,6 +82,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -411,14 +413,15 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
         }
         try {
             File manifest = openshiftManifest;
-            if (!Files.isFile(manifest)) {
-                throw new MojoFailureException("No such generated manifest file: " + manifest);
-            }
-
             String namespace = clusterAccess.getNamespace();
             Controller controller = new Controller(client);
 
-            Set<HasMetadata> entities = ApplyMojo.loadResources(client, controller, namespace, manifest, project, log);
+            Set<HasMetadata> entities = new LinkedHashSet<>();
+            if (!Files.isFile(manifest)) {
+                log.warn("No such generated manifest file: " + manifest, ", only ImageStream will be generated, MUST use 'resource' goal for full manifest!!!");
+            } else {
+                entities = ApplyMojo.loadResources(client, controller, namespace, manifest, project, log);
+            }
             boolean updated = false;
             ImageStream is = KubernetesResourceUtil.findResourceByName(entities, ImageStream.class, imageStreamName);
             if (is == null) {
