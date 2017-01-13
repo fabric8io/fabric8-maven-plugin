@@ -36,7 +36,6 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.Gofabric8Util;
-import io.fabric8.maven.core.util.KindAndName;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.core.util.ProfileUtil;
@@ -70,6 +69,7 @@ import io.fabric8.openshift.api.model.TagReference;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Strings;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -81,7 +81,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -93,7 +93,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.maven.core.util.KubernetesResourceUtil.watchLogInThread;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
-import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.loadResources;
 
 /**
  * Builds the docker images configured for this project via a Docker or S2I binary build.
@@ -403,14 +402,15 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         }
         try {
             File manifest = openshiftManifest;
-            if (!Files.isFile(manifest)) {
-                throw new MojoFailureException("No such generated manifest file: " + manifest);
-            }
-
             String namespace = clusterAccess.getNamespace();
             Controller controller = new Controller(client);
 
-            Set<HasMetadata> entities = loadResources(client, controller, namespace, manifest, project, log);
+            Set<HasMetadata> entities = new LinkedHashSet<>();
+            if (!Files.isFile(manifest)) {
+                log.warn("No such generated manifest file: " + manifest, ", only ImageStream will be generated, MUST use 'resource' goal for full manifest!!!");
+            } else {
+                entities = ApplyMojo.loadResources(client, controller, namespace, manifest, project, log);
+            }
             boolean updated = false;
             ImageStream is = KubernetesResourceUtil.findResourceByName(entities, ImageStream.class, imageStreamName);
             if (is == null) {
