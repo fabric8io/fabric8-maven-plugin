@@ -61,6 +61,12 @@ items:
                 fieldPath: metadata.namespace
           image: "@matches('fabric8/fabric8-maven-sample-spring-boot:.*$')@"
           imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 180
           name: spring-boot
           ports:
           - containerPort: 8080
@@ -77,7 +83,7 @@ items:
               path: /health
               port: 8080
               scheme: HTTP
-            initialDelaySeconds: 180
+            initialDelaySeconds: 10
           securityContext:
             privileged: false
     triggers:

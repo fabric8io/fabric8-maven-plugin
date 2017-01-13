@@ -51,7 +51,7 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
                     Probe probe = getLivenessProbe();
                     if (probe != null) {
                         log.info("Adding liveness " + describe(probe));
-                        container.withReadinessProbe(probe);
+                        container.withLivenessProbe(probe);
                     }
                 }
             }
