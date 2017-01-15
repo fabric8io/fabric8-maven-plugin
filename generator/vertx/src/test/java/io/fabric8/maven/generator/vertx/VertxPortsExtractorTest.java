@@ -52,6 +52,16 @@ public class VertxPortsExtractorTest {
         assertEquals((Integer) 80, result.get("http.port"));
     }
 
+    @Test
+    public void testNoVertxConfiguration() throws Exception {
+        new Expectations() {{
+            project.getPlugin(Constants.VERTX_MAVEN_PLUGIN_GA);
+            plugin.getConfiguration(); result = null;
+        }};
+        Map<String, Integer> result = new VertxPortsExtractor(log).extract(project);
+        assertEquals(0,result.size());
+    }
+
     /**
      * Simple method to decode url. Needed when reading resources via url in environments where path
      * contains url escaped chars (e.g. jenkins workspace).

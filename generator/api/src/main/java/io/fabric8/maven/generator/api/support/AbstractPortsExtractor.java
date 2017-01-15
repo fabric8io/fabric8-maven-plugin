@@ -49,7 +49,7 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
     /**
      * Finds the name of the configuration file from the {@link MavenProject}.
      * @param project   The {@link MavenProject} to use.
-     * @return          The path to the configuration file.
+     * @return          The path to the configuration file or null if none has been found
      */
     public abstract String getConfigPathFromProject(MavenProject project);
 
@@ -59,7 +59,7 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
         if (Strings.isNullOrBlank(propertyName)) {
             return null;
         }
-        //The system property has priority over what is specified in the pom.
+        // The system property has priority over what is specified in the pom.
         String configPath = System.getProperty(propertyName, getConfigPathFromProject(project));
         if (Strings.isNullOrBlank(configPath)) {
             return null;
@@ -71,6 +71,10 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
     public Map<String, Integer> extract(MavenProject project) {
         Map<String, Integer> answer = new HashMap<>();
         File configFile = getConfigLocation(project);
+        if (configFile == null) {
+            // No config file configured
+            return answer;
+        }
         if (!configFile.exists()) {
             log.warn("Could not find config: [%s]. Ignoring.", configFile.getAbsolutePath());
             return null;
