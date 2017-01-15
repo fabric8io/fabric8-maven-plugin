@@ -76,8 +76,8 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
             return answer;
         }
         if (!configFile.exists()) {
-            log.warn("Could not find config: [%s]. Ignoring.", configFile.getAbsolutePath());
-            return null;
+            log.warn("Could not find config: %s. Ignoring.", configFile.getAbsolutePath());
+            return answer;
         }
 
         try {
@@ -88,10 +88,11 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
                     addPortIfValid(answer, key, entry.getValue());
                 }
             }
+            return answer;
         } catch (IOException e) {
             log.warn("Error reading config: [%s], due to: [%s]. Ignoring.", configFile.getAbsolutePath(), e.getMessage());
+            return answer;
         }
-        return answer;
     }
 
 
@@ -102,7 +103,7 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
      * @return
      * @throws IOException
      */
-    static Map<String, String> readConfig(File f) throws IOException {
+    private Map<String, String> readConfig(File f) throws IOException {
         Map<String, String> map;
         if (f.getName().endsWith(JSON_EXTENSION)) {
             map = flatten(JSON_MAPPER.readValue(f, Map.class));
@@ -125,7 +126,7 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
      * @param map   The target map.
      * @return      The flattened map.
      */
-    static Map<String, String> flatten(Map map) {
+    private Map<String, String> flatten(Map map) {
         Map<String, String> flat = new HashMap<>();
         for (Object key : map.keySet()) {
             String stringKey = String.valueOf(key);
@@ -151,7 +152,7 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
      * @param properties    The properties object.
      * @return              The map.
      */
-    static Map<String, String> propertiesToMap(Properties properties) {
+    private Map<String, String> propertiesToMap(Properties properties) {
         Map<String, String> map = new HashMap<>();
         for(Map.Entry<Object, Object> entry : properties.entrySet()) {
             map.put(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
@@ -165,7 +166,7 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
      * @param candidate The string to check
      * @return
      */
-    static boolean isValidPortPropertyKey(String candidate) {
+    private boolean isValidPortPropertyKey(String candidate) {
         return PORT_PATTERN.matcher(candidate).matches();
     }
 
@@ -175,7 +176,7 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
      * @param key   The key.
      * @param port  The candidate port.
      */
-    static void addPortIfValid(Map<String, Integer> map, String key, String port) {
+    private void addPortIfValid(Map<String, Integer> map, String key, String port) {
         if (Strings.isNotBlank(port)) {
             String t = port.trim();
             if (t.matches(NUMBER_REGEX)) {
