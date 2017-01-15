@@ -1,0 +1,4 @@
+http.port: 8080
+https.port: 443
+ssh.port: 22
+ssl.enabled: "true"
