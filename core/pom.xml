@@ -63,6 +63,11 @@
       <artifactId>javassist</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.jmockit</groupId>
+      <artifactId>jmockit</artifactId>
+    </dependency>
+
   </dependencies>
 
   <build>
