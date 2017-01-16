@@ -474,7 +474,7 @@ public class KubernetesResourceUtil {
         return "";
     }
 
-    public static void watchLogInThread(LogWatch logWatcher, final String failureMessage, final CountDownLatch terminateLatch, final Logger log) {
+    public static void pringLogsAsync(LogWatch logWatcher, final String failureMessage, final CountDownLatch terminateLatch, final Logger log) {
         final InputStream in = logWatcher.getOutput();
         Thread thread = new Thread() {
             @Override
