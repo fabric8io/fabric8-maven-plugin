@@ -125,10 +125,11 @@ abstract public class BaseGenerator implements Generator {
                 ImageName iName = new ImageName(from);
                 // user/project is considered to be the namespace
                 Map<String, String> fromExt = new HashMap();
-                if (StringUtils.isBlank(iName.getTag())) {
-                    throw new IllegalArgumentException(String.format("A tag must be provided in 'from' field '%s' if an ImageStreamTag is to be used", from));
+                String tag = iName.getTag();
+                if (StringUtils.isBlank(tag)) {
+                    tag = "latest";
                 }
-                fromExt.put(OpenShiftBuildStrategy.SourceStrategy.name.key(), iName.getSimpleName() + ":" + iName.getTag());
+                fromExt.put(OpenShiftBuildStrategy.SourceStrategy.name.key(), iName.getSimpleName() + ":" + tag);
                 if (iName.getUser() != null) {
                     fromExt.put(OpenShiftBuildStrategy.SourceStrategy.namespace.key(), iName.getUser());
                 }

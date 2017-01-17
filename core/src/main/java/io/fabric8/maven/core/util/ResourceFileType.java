@@ -65,4 +65,18 @@ public enum ResourceFileType {
     public String getArtifactType() {
         return artifactType;
     }
+
+    public static ResourceFileType fromExtension(String ext) {
+        try {
+            return ResourceFileType.valueOf(ext);
+        } catch (IllegalArgumentException exp) {
+            // Try extensions, too:
+            for (ResourceFileType type : ResourceFileType.values()) {
+                if (type.extension.equals(ext)) {
+                    return type;
+                }
+            }
+            throw exp;
+        }
+    }
 }
