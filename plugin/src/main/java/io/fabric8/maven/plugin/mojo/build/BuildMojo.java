@@ -32,11 +32,7 @@ import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.service.ImageStreamService;
-import io.fabric8.maven.core.util.GoalFinder;
-import io.fabric8.maven.core.util.Gofabric8Util;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
-import io.fabric8.maven.core.util.OpenShiftDependencyResources;
-import io.fabric8.maven.core.util.ProfileUtil;
+import io.fabric8.maven.core.util.*;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.DockerConnectionDetector;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -178,12 +174,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
     @Parameter(property = "fabric8.namespace")
     private String namespace;
 
-    /**
-     * The generated openshift YAML file. By default no file will be written
-     */
-    @Parameter(property = "fabric8.build.imageStreamFile")
-    private File imageStreamFile;
-
     // Used for determining which mojos are called during a run
     @Component
     protected GoalFinder goalFinder;
@@ -323,13 +313,19 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
 
         // Start the actual build and wait for it to finish
         Build build = startBuild(dockerTar, client, buildName);
+
+        // Wait until the build finishes
         waitForOpenShiftBuildToComplete(client, build);
 
-        // If requested create a file with the generated image streams
-        if (imageStreamFile != null) {
-            ImageStreamService imageStreamHandler = new ImageStreamService(client, log);
-            imageStreamHandler.saveImageStreamResource(imageName, imageStreamFile);
-        }
+        // Create a file with generated image streams
+        saveImageStreamToFile(imageName, client);
+    }
+
+    private void saveImageStreamToFile(ImageName imageName, OpenShiftClient client) throws MojoExecutionException {
+        File imageStreamFile = ResourceFileType.yaml.addExtension(new File(project.getBuild().getDirectory(),
+                                                                           imageName.getSimpleName() + "-is"));
+        ImageStreamService imageStreamHandler = new ImageStreamService(client, log);
+        imageStreamHandler.saveImageStreamResource(imageName, imageStreamFile);
     }
 
 
