@@ -166,18 +166,14 @@ public class BaseGeneratorTest {
     }
 
     @Test
-    public void addFromIstagWithInvalidName() {
-        try {
-            Properties props = new Properties();
-            setupContext(props, false, "test_namespace/test_image", "istag");
-            BuildImageConfiguration.Builder builder = new BuildImageConfiguration.Builder();
-            BaseGenerator generator = createGenerator(null);
-            generator.addFrom(builder);
-            fail();
-        } catch (IllegalArgumentException exp) {
-            assertTrue(exp.getMessage().contains("tag"));
-            assertTrue(exp.getMessage().contains("test_namespace/test_image"));
-        }
+    public void addFromIstagWithNameWithoutTag() {
+        Properties props = new Properties();
+        setupContext(props, false, "test_namespace/test_image", "istag");
+        BuildImageConfiguration.Builder builder = new BuildImageConfiguration.Builder();
+        BaseGenerator generator = createGenerator(null);
+        generator.addFrom(builder);
+        BuildImageConfiguration config = builder.build();
+        assertEquals("test_image:latest",config.getFrom());
     }
 
 
