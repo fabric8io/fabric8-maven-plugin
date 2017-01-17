@@ -3,6 +3,7 @@ package io.fabric8.maven.generator.api.support;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import io.fabric8.maven.core.util.Configs;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
@@ -59,8 +60,11 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
         if (Strings.isNullOrBlank(propertyName)) {
             return null;
         }
-        // The system property has priority over what is specified in the pom.
-        String configPath = System.getProperty(propertyName, getConfigPathFromProject(project));
+        // The system property / Maven property has priority over what is specified in the pom.
+        String configPath = Configs.getPropertyWithSystemAsFallback(project.getProperties(),getConfigPathPropertyName());
+        if (configPath == null) {
+            configPath = getConfigPathFromProject(project);
+        }
         if (Strings.isNullOrBlank(configPath)) {
             return null;
         }
