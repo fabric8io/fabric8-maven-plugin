@@ -17,17 +17,19 @@
 package io.fabric8.maven.core.openshift;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.builds.Builds;
+import io.fabric8.kubernetes.api.model.Status;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
-import io.fabric8.openshift.api.model.Build;
+import io.fabric8.openshift.api.model.*;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -36,50 +38,68 @@ import org.apache.maven.plugin.MojoExecutionException;
  * @author roland
  * @since 16/01/17
  */
-public class OpenShiftBuildService {
+public class BuildService {
 
     private final OpenShiftClient client;
     private final Logger log;
 
     private String lastBuildStatus;
 
-    public OpenShiftBuildService(OpenShiftClient client, Logger log) {
+    public BuildService(OpenShiftClient client, Logger log) {
         this.client = client;
         this.log = log;
     }
 
     public Build startBuild(OpenShiftClient client, File dockerTar, String buildName) {
         log.info("Starting Build %s", buildName);
-        return client.buildConfigs().withName(buildName)
-                     .instantiateBinary()
-                     .fromFile(dockerTar);
+        try {
+            return client.buildConfigs().withName(buildName)
+                         .instantiateBinary()
+                         .fromFile(dockerTar);
+        } catch (KubernetesClientException exp) {
+            Status status = exp.getStatus();
+            if (status != null) {
+                log.error("OpenShift Error: [%d %s] [%s] %s", status.getCode(), status.getStatus(), status.getReason(), status.getMessage());
+            }
+            if (exp.getCause() instanceof IOException && exp.getCause().getMessage().contains("Stream Closed")) {
+                log.error("Build for %s failed: %s", buildName, exp.getCause().getMessage());
+                log.error("If you are refering to an ImageStream as S2I builder image, please ensure that this ImageStream exists (with 'oc get is')");
+            }
+            throw exp;
+        }
     }
 
     public void waitForOpenShiftBuildToComplete(OpenShiftClient client, Build build) throws MojoExecutionException {
         final CountDownLatch latch = new CountDownLatch(1);
-        final CountDownLatch logTerminateLatch = new CountDownLatch(1);final String buildName = KubernetesHelper.getName(build);
+        final CountDownLatch logTerminateLatch = new CountDownLatch(1);
+        final String buildName = KubernetesHelper.getName(build);
 
         final AtomicReference<Build> buildHolder = new AtomicReference<>();
 
         log.info("Waiting for build " + buildName + " to complete...");
         try (LogWatch logWatch = client.pods().withName(buildName + "-build").watchLog()) {
-            KubernetesResourceUtil.printLogsAsync(logWatch, "Failed to tail build log", logTerminateLatch, log);
-
-            try (Watch watcher = client.builds().withName(buildName).watch(getBuildWatcher(latch, buildName, buildHolder))) {
-                while (latch.getCount() > 0L) {
-                    try {
-                        latch.await();
-                    } catch (InterruptedException e) {
-                        // ignore
-                    }
-                }
+            KubernetesResourceUtil.printLogsAsync(logWatch,
+                                                  "Failed to tail build log", logTerminateLatch, log);
+            Watcher<Build> buildWatcher = getBuildWatcher(latch, buildName, buildHolder);
+            try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {
+                waitUntilBuildFinished(latch);
                 logTerminateLatch.countDown();
                 build = buildHolder.get();
                 String status = KubernetesResourceUtil.getBuildStatusPhase(build);
                 if (Builds.isFailed(status) || Builds.isCancelled(status)) {
-                    throw new MojoExecutionException("OpenShift Build " + buildName + " " + KubernetesResourceUtil.getBuildStatusReason(build));
+                    throw new MojoExecutionException("OpenShift Build " + buildName + ": " + KubernetesResourceUtil.getBuildStatusReason(build));
                 }
                 log.info("Build " + buildName + " " + status);
+            }
+        }
+    }
+
+    public void waitUntilBuildFinished(CountDownLatch latch) {
+        while (latch.getCount() > 0L) {
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                // ignore
             }
         }
     }
@@ -90,13 +110,13 @@ public class OpenShiftBuildService {
                 String lastStatus = "";
 
                 @Override
-                public void eventReceived(Action action, Build resource) {
-                    buildHolder.set(resource);
-                    String status = KubernetesResourceUtil.getBuildStatusPhase(resource);
-                    log.verbose("BuildWatch: Received event %s , build status: %s",action,resource.getStatus());
+                public void eventReceived(Action action, Build build) {
+                    buildHolder.set(build);
+                    String status = KubernetesResourceUtil.getBuildStatusPhase(build);
+                    log.verbose("BuildWatch: Received event %s , build status: %s", action, build.getStatus());
                     if (!lastStatus.equals(status)) {
                         lastStatus = status;
-                        log.info("Build %s status: %s", buildName, status);
+                        log.verbose("Build %s status: %s", buildName, status);
                     }
                     if (Builds.isFinished(status)) {
                         latch.countDown();
@@ -105,6 +125,15 @@ public class OpenShiftBuildService {
 
                 @Override
                 public void onClose(KubernetesClientException cause) {
+                    if (cause != null) {
+                        log.error("Error while watching for build to finish: %s [%d]",
+                                  cause.getMessage(), cause.getCode());
+                        Status status = cause.getStatus();
+                        if (status != null) {
+                            log.error("%s [%s]", status.getReason(), status.getStatus());
+                        }
+                    }
+                    latch.countDown();
                 }
             };
     }
