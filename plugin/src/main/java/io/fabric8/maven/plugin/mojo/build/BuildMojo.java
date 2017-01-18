@@ -18,20 +18,21 @@ package io.fabric8.maven.plugin.mojo.build;
 
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.builds.Builds;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.BuildRecreateMode;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.maven.core.service.ImageStreamService;
+import io.fabric8.maven.core.openshift.ImageStreamService;
+import io.fabric8.maven.core.openshift.BuildService;
+import io.fabric8.maven.core.util.GoalFinder;
+import io.fabric8.maven.core.util.Gofabric8Util;
+import io.fabric8.maven.core.util.OpenShiftDependencyResources;
+import io.fabric8.maven.core.util.ProfileUtil;
+import io.fabric8.maven.core.util.ResourceFileType;
 import io.fabric8.maven.core.util.*;
 import io.fabric8.maven.core.openshift.OpenShiftBuildService;
 import io.fabric8.maven.core.util.GoalFinder;
@@ -60,7 +61,6 @@ import io.fabric8.openshift.api.model.BuildSource;
 import io.fabric8.openshift.api.model.BuildStrategy;
 import io.fabric8.openshift.api.model.BuildStrategyBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -71,12 +71,10 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.Set;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -385,7 +383,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                      .endMetadata()
                    .endImageStreamItem();
         } else {
-            log.info("Using ImageStream %s", imageStreamName);
+            log.info("Adding to ImageStream %s", imageStreamName);
         }
     }
 
@@ -399,7 +397,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         String imageStreamName = getImageStreamName(imageName);
         String outputImageStreamTag = imageStreamName + ":" + imageName.getTag();
 
-        BuildStrategy buildStrategy = createBuildStrategy(imageConfig);
+        BuildStrategy buildStrategyResource = createBuildStrategy(imageConfig, buildStrategy);
         BuildOutput buildOutput = new BuildOutputBuilder().withNewTo()
                 .withKind("ImageStreamTag")
                 .withName(outputImageStreamTag)
@@ -415,19 +413,19 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             if (getBuildRecreateMode().isBuildConfig()) {
                 // Delete and recreate afresh
                 client.buildConfigs().withName(buildName).delete();
-                return createBuildConfig(builder, buildName, buildStrategy, buildOutput);
+                return createBuildConfig(builder, buildName, buildStrategyResource, buildOutput);
             } else {
                 // Update & return
-                return updateBuildConfig(client, buildName, buildStrategy, buildOutput, spec);
+                return updateBuildConfig(client, buildName, buildStrategyResource, buildOutput, spec);
             }
         } else {
             // Create afresh
-            return createBuildConfig(builder, buildName, buildStrategy, buildOutput);
+            return createBuildConfig(builder, buildName, buildStrategyResource, buildOutput);
         }
     }
 
-    private String createBuildConfig(KubernetesListBuilder builder, String buildName, BuildStrategy buildStrategy, BuildOutput buildOutput) {
-        log.info("Creating BuildConfig %s for %s build", buildName, getStrategyLabel());
+    private String createBuildConfig(KubernetesListBuilder builder, String buildName, BuildStrategy buildStrategyResource, BuildOutput buildOutput) {
+        log.info("Creating BuildConfig %s for %s build", buildName, buildStrategyResource.getType());
         builder.addNewBuildConfigItem()
                      .withNewMetadata()
                        .withName(buildName)
@@ -436,27 +434,27 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                        .withNewSource()
                           .withType("Binary")
                        .endSource()
-                       .withStrategy(buildStrategy)
+                       .withStrategy(buildStrategyResource)
                        .withOutput(buildOutput)
                      .endSpec()
                    .endBuildConfigItem();
         return buildName;
     }
 
-    private String updateBuildConfig(OpenShiftClient client, String buildName, BuildStrategy buildStrategy, BuildOutput buildOutput, BuildConfigSpec spec) {
+    private String updateBuildConfig(OpenShiftClient client, String buildName, BuildStrategy buildStrategy,
+                                     BuildOutput buildOutput, BuildConfigSpec spec) {
         // lets check if the strategy or output has changed and if so lets update the BC
         // e.g. the S2I builder image or the output tag and
         if (!Objects.equals(buildStrategy, spec.getStrategy()) || !Objects.equals(buildOutput, spec.getOutput())) {
-            log.warn("Updating BuildConfig %s with given output and strategy", buildName);
             client.buildConfigs().withName(buildName).edit()
                   .editSpec()
                   .withStrategy(buildStrategy)
                   .withOutput(buildOutput)
                   .endSpec()
                   .done();
-            log.info("Editing BuildConfig %s for %s build", buildName, getStrategyLabel());
+            log.info("Updating BuildConfig %s for %s build", buildName, buildStrategy.getType());
         } else {
-            log.info("Using BuildConfig %s for %s build", buildName, getStrategyLabel());
+            log.info("Using BuildConfig %s for %s build", buildName, buildStrategy.getType());
         }
         return buildName;
     }
@@ -480,14 +478,10 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         }
     }
 
-    private String getStrategyLabel() {
-        return buildStrategy == OpenShiftBuildStrategy.s2i ? "S2I" : "Docker";
-    }
-
-    private BuildStrategy createBuildStrategy(ImageConfiguration imageConfig) {
-        if (buildStrategy == OpenShiftBuildStrategy.docker) {
+    private BuildStrategy createBuildStrategy(ImageConfiguration imageConfig, OpenShiftBuildStrategy osBuildStrategy) {
+        if (osBuildStrategy == OpenShiftBuildStrategy.docker) {
             return new BuildStrategyBuilder().withType("Docker").build();
-        } else if (buildStrategy == OpenShiftBuildStrategy.s2i) {
+        } else if (osBuildStrategy == OpenShiftBuildStrategy.s2i) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             Map<String, String> fromExt = buildConfig.getFromExt();
 
@@ -513,7 +507,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .endSourceStrategy()
                 .build();
         } else {
-            throw new IllegalArgumentException("Unsupported BuildStrategy " + buildStrategy);
+            throw new IllegalArgumentException("Unsupported BuildStrategy " + osBuildStrategy);
         }
     }
 
