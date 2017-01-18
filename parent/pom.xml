@@ -70,17 +70,27 @@
     <version.fabric8>2.2.192</version.fabric8>
     <version.docker-maven-plugin>0.19.0</version.docker-maven-plugin>
 
-    <!-- Version of default images, updatable by CD -->
-    <version.image.java.upstream.docker>1.2.1</version.image.java.upstream.docker>
-    <version.image.java.upstream.s2i>1.3</version.image.java.upstream.s2i>
+    <!-- =======================================================  -->
+    <!-- === Java base image versions for docker, s2i (istag == s2i) -->
+    <!-- Upstream -->
+    <version.image.java.upstream.docker>1.2</version.image.java.upstream.docker>
+    <version.image.java.upstream.s2i>2.0</version.image.java.upstream.s2i>
 
-    <!-- Hybrid image for S2I & Docker for RedHat -->
-    <version.image.java.redhat>2.0</version.image.java.redhat>
+    <!-- RedHat -->
+    <version.image.java.redhat.docker>2.0</version.image.java.redhat.docker>
+    <version.image.java.redhat.s2i>${version.image.java.redhat.docker}</version.image.java.redhat.s2i>
 
-    <!-- Hybrid images for S2I & docker for Karaf -->
-    <version.image.karaf.upstream>1.3</version.image.karaf.upstream>
-    <version.image.karaf.redhat>2.0</version.image.karaf.redhat>
+    <!-- =======================================================  -->
+    <!-- === Karaf base image versions for docker, s2i (istag == s2i) -->
+    <!-- Upstream -->
+    <version.image.karaf.upstream.docker>2.0</version.image.karaf.upstream.docker>
+    <version.image.karaf.upstream.s2i>${version.image.karaf.upstream.docker}</version.image.karaf.upstream.s2i>
 
+    <!-- RedHat  -->
+    <version.image.karaf.redhat.docker>2.0</version.image.karaf.redhat.docker>
+    <version.image.karaf.redhat.s2i>${version.image.karaf.redhat.docker}</version.image.karaf.redhat.s2i>
+
+    <!-- =======================================================  -->
     <!-- Servlet container images -->
     <version.image.tomcat.upstream>1.1.5</version.image.tomcat.upstream>
     <version.image.jetty.upstream>1.1.10</version.image.jetty.upstream>
@@ -93,13 +103,20 @@
     <!-- java (java-exec, spring-boot, wildfly-swarm) -->
     <image.java.upstream.s2i>fabric8/s2i-java:${version.image.java.upstream.s2i}</image.java.upstream.s2i>
     <image.java.upstream.docker>fabric8/java-alpine-openjdk8-jdk:${version.image.java.upstream.docker}</image.java.upstream.docker>
-    <image.java.redhat>jboss-fuse-6/fis-java-openshift:${version.image.java.redhat}</image.java.redhat>
-    <image.java.istag>fis-java-openshift:${version.image.java.redhat}</image.java.istag>
+    <image.java.upstream.istag>fabric8-java:${version.image.java.upstream.s2i}</image.java.upstream.istag>
+
+    <image.java.redhat.s2i>jboss-fuse-6/fis-java-openshift:${version.image.java.redhat.s2i}</image.java.redhat.s2i>
+    <image.java.redhat.docker>jboss-fuse-6/fis-java-openshift:${version.image.java.redhat.docker}</image.java.redhat.docker>
+    <image.java.redhat.istag>fis-java-openshift:${version.image.java.redhat.s2i}</image.java.redhat.istag>
 
     <!-- karaf -->
-    <image.karaf.upstream>fabric8/s2i-karaf:${version.image.karaf.upstream}</image.karaf.upstream>
-    <image.karaf.redhat>jboss-fuse-6/fis-karaf-openshift:${version.image.karaf.redhat}</image.karaf.redhat>
-    <image.karaf.istag>fis-karaf-openshift:${version.image.karaf.redhat}</image.karaf.istag>
+    <image.karaf.upstream.docker>fabric8/s2i-karaf:${version.image.karaf.upstream.docker}</image.karaf.upstream.docker>
+    <image.karaf.upstream.s2i>fabric8/s2i-karaf:${version.image.karaf.upstream.s2i}</image.karaf.upstream.s2i>
+    <image.karaf.upstream.istag>fabric8-karaf:${version.image.karaf.upstream.s2i}</image.karaf.upstream.istag>
+
+    <image.karaf.redhat.docker>jboss-fuse-6/fis-karaf-openshift:${version.image.karaf.redhat.docker}</image.karaf.redhat.docker>
+    <image.karaf.redhat.s2i>jboss-fuse-6/fis-karaf-openshift:${version.image.karaf.redhat.s2i}</image.karaf.redhat.s2i>
+    <image.karaf.redhat.istag>fis-karaf-openshift:${version.image.karaf.redhat.s2i}</image.karaf.redhat.istag>
 
     <!-- webapp -->
     <image.tomcat.upstream>fabric8/tomcat-8:${version.image.tomcat.upstream}</image.tomcat.upstream>

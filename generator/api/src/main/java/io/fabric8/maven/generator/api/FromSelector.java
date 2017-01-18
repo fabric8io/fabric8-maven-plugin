@@ -88,11 +88,13 @@ public abstract class FromSelector {
         public Default(GeneratorContext context, String prefix) {
             super(context);
             DefaultImageLookup lookup = new DefaultImageLookup(Default.class);
+
             this.upstreamDocker = lookup.getImageName(prefix + ".upstream.docker");
             this.upstreamS2i = lookup.getImageName(prefix + ".upstream.s2i");
+            this.upstreamIstag = lookup.getImageName(prefix + ".upstream.istag");
+
             this.redhatDocker = lookup.getImageName(prefix + ".redhat.docker");
             this.redhatS2i = lookup.getImageName(prefix + ".redhat.s2i");
-            this.upstreamIstag = lookup.getImageName(prefix + ".upstream.istag");
             this.redhatIstag = lookup.getImageName(prefix + ".redhat.istag");
         }
 
