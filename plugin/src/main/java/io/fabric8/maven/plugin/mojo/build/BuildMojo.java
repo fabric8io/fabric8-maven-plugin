@@ -33,6 +33,14 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.service.ImageStreamService;
 import io.fabric8.maven.core.util.*;
+import io.fabric8.maven.core.openshift.OpenShiftBuildService;
+import io.fabric8.maven.core.util.GoalFinder;
+import io.fabric8.maven.core.util.Gofabric8Util;
+import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.OpenShiftDependencyResources;
+import io.fabric8.maven.core.util.ProfileUtil;
+import io.fabric8.maven.core.util.ResourceClassifier;
+import io.fabric8.maven.core.util.ResourceFileType;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.DockerConnectionDetector;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -64,9 +72,18 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
+import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.loadResources;
 
 /**
  * Builds the docker images configured for this project via a Docker or S2I binary build.
@@ -183,7 +200,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
 
     // Mode which is resolved, also when 'auto' is set
     private PlatformMode platformMode;
-    private String lastBuildStatus;
 
     private OpenShiftDependencyResources openshiftDependencyResources;
 
@@ -311,11 +327,12 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
         checkOrCreateImageStream(client, builder, getImageStreamName(imageName));
         applyResourceObjects(client, builder);
 
-        // Start the actual build and wait for it to finish
-        Build build = startBuild(dockerTar, client, buildName);
+        // Start the actual build
+        OpenShiftBuildService buildService = new OpenShiftBuildService(client, log);
+        Build build = buildService.startBuild(client, dockerTar, buildName);
 
         // Wait until the build finishes
-        waitForOpenShiftBuildToComplete(client, build);
+        buildService.waitForOpenShiftBuildToComplete(client, build);
 
         // Create a file with generated image streams
         saveImageStreamToFile(imageName, client);
@@ -327,61 +344,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
         ImageStreamService imageStreamHandler = new ImageStreamService(client, log);
         imageStreamHandler.saveImageStreamResource(imageName, imageStreamFile);
     }
-
-
-    private void waitForOpenShiftBuildToComplete(OpenShiftClient client, Build build) throws MojoExecutionException {
-        final CountDownLatch latch = new CountDownLatch(1);
-        final CountDownLatch logTerminateLatch = new CountDownLatch(1);
-        final AtomicReference<Build> buildHolder = new AtomicReference<>();
-        String buildName = KubernetesHelper.getName(build);
-        Watcher<Build> buildWatcher = new Watcher<Build>() {
-            @Override
-            public void eventReceived(Action action, Build resource) {
-                buildHolder.set(resource);
-                if (isBuildCompleted(action, resource)) {
-                    latch.countDown();
-                }
-            }
-
-            @Override
-            public void onClose(KubernetesClientException cause) {
-            }
-        };
-        log.info("Waiting for build " + buildName + " to complete...");
-        try (LogWatch logWatch = client.pods().withName(buildName + "-build").watchLog()) {
-            KubernetesResourceUtil.watchLogInThread(logWatch, "Failed to tail build log", logTerminateLatch, log);
-
-            try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {
-                while (latch.getCount() > 0L) {
-                    try {
-                        latch.await();
-                    } catch (InterruptedException e) {
-                        // ignore
-                    }
-                }
-                logTerminateLatch.countDown();
-                build = buildHolder.get();
-                String status = KubernetesResourceUtil.getBuildStatusPhase(build);
-                if (Builds.isFailed(status) || Builds.isCancelled(status)) {
-                    throw new MojoExecutionException("OpenShift Build " + buildName + " " + KubernetesResourceUtil.getBuildStatusReason(build));
-                }
-                log.info("Build " + buildName + " " + status);
-            }
-        }
-    }
-
-    private boolean isBuildCompleted(Watcher.Action action, Build build) {
-        String status = KubernetesResourceUtil.getBuildStatusPhase(build);
-        if (Strings.isNotBlank(status)) {
-            if (!Objects.equals(status, lastBuildStatus)) {
-                lastBuildStatus = status;
-                log.verbose("Build %s status: %s", KubernetesHelper.getName(build), status);
-            }
-            return Builds.isFinished(status);
-        }
-        return false;
-    }
-
 
     private String getS2IBuildName(ImageName imageName) {
         return imageName.getSimpleName() + s2iBuildNameSuffix;
@@ -401,13 +363,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
         return client;
     }
 
-
-    private Build startBuild(File dockerTar, OpenShiftClient client, String buildName) {
-        log.info("Starting Build %s",buildName);
-        return client.buildConfigs().withName(buildName)
-                .instantiateBinary()
-                .fromFile(dockerTar);
-    }
 
     private void applyResourceObjects(OpenShiftClient client, KubernetesListBuilder builder) throws IOException {
         enrich(builder);
