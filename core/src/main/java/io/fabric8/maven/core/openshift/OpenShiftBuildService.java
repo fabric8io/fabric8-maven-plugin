@@ -63,7 +63,7 @@ public class OpenShiftBuildService {
 
         log.info("Waiting for build " + buildName + " to complete...");
         try (LogWatch logWatch = client.pods().withName(buildName + "-build").watchLog()) {
-            KubernetesResourceUtil.pringLogsAsync(logWatch, "Failed to tail build log", logTerminateLatch, log);
+            KubernetesResourceUtil.printLogsAsync(logWatch, "Failed to tail build log", logTerminateLatch, log);
 
             try (Watch watcher = client.builds().withName(buildName).watch(getBuildWatcher(latch, buildName, buildHolder))) {
                 while (latch.getCount() > 0L) {
