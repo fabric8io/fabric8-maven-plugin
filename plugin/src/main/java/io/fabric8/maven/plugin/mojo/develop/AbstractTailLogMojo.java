@@ -287,7 +287,7 @@ public class AbstractTailLogMojo extends ApplyMojo {
         newPodLog.info("Press Ctrl-C to " + ctrlCMessage);
         newPodLog.info("");
 
-        KubernetesResourceUtil.watchLogInThread(logWatcher, failureMessage, this.logWatchTerminateLatch, log);
+        KubernetesResourceUtil.pringLogsAsync(logWatcher, failureMessage, this.logWatchTerminateLatch, log);
     }
 
     private String containerNameMessage(String containerName) {
