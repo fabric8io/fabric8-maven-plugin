@@ -112,19 +112,20 @@ abstract public class BaseGenerator implements Generator {
      * @param buildBuilder
      */
     protected void addFrom(BuildImageConfiguration.Builder builder) {
-        String fromMode = getConfigWithSystemFallbackAndDefault(Config.fromMode, "fabric8.generator.fromMode", "docker");
+        String fromMode = getConfigWithSystemFallbackAndDefault(Config.fromMode, "fabric8.generator.fromMode", getFromModeDefault(context.getMode()));
         String from = getConfigWithSystemFallbackAndDefault(Config.from, "fabric8.generator.from", null);
         if (fromMode.equalsIgnoreCase("docker")) {
-            if (from != null) {
-                builder.from(from);
-            } else {
-                builder.from(fromSelector != null ? fromSelector.getFrom() : null);
+            String fromImage = from;
+            if (fromImage == null) {
+                fromImage = fromSelector != null ? fromSelector.getFrom() : null;
             }
+            builder.from(fromImage);
+            log.info("Using Docker image %s as base / builder", fromImage);
         } else if (fromMode.equalsIgnoreCase("istag")) {
+            Map<String, String> fromExt = new HashMap<>();
             if (from != null) {
                 ImageName iName = new ImageName(from);
                 // user/project is considered to be the namespace
-                Map<String, String> fromExt = new HashMap();
                 String tag = iName.getTag();
                 if (StringUtils.isBlank(tag)) {
                     tag = "latest";
@@ -134,12 +135,31 @@ abstract public class BaseGenerator implements Generator {
                     fromExt.put(OpenShiftBuildStrategy.SourceStrategy.namespace.key(), iName.getUser());
                 }
                 fromExt.put(OpenShiftBuildStrategy.SourceStrategy.kind.key(), "ImageStreamTag");
-                builder.fromExt(fromExt);
             } else {
-                builder.fromExt(fromSelector != null ? fromSelector.getImageStreamTagFromExt() : null);
+                fromExt = fromSelector != null ? fromSelector.getImageStreamTagFromExt() : null;
+            }
+            if (fromExt != null) {
+                String namespace = fromExt.get(OpenShiftBuildStrategy.SourceStrategy.namespace.key());
+                if (namespace != null) {
+                    log.info("Using ImageStreamTag '%s' from namespace '%s' as builder image",
+                             fromExt.get(OpenShiftBuildStrategy.SourceStrategy.name.key()), namespace);
+                } else {
+                    log.info("Using ImageStreamTag '%s' as builder image",
+                             fromExt.get(OpenShiftBuildStrategy.SourceStrategy.name.key()));
+                }
+                builder.fromExt(fromExt);
             }
         } else {
             throw new IllegalArgumentException(String.format("Invalid 'fromMode' in generator configuration for '%s'", getName()));
+        }
+    }
+
+    // Use "istag" as default for "redhat" versions of this plugin
+    private String getFromModeDefault(PlatformMode mode) {
+        if (mode == PlatformMode.openshift && fromSelector != null && fromSelector.isRedHat()) {
+            return "istag";
+        } else {
+            return "docker";
         }
     }
 
