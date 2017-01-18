@@ -88,31 +88,52 @@ public class BaseGeneratorTest {
     }
 
     @Test
-    public void addFromDockerMode() {
+    public void defaultAddFrom() {
         Properties props = new Properties();
-        for (boolean isOpenShift : new Boolean[] { false, true }) {
-            for (TestFromSelector selector : new TestFromSelector[] { null, new TestFromSelector(ctx)}) {
-                for (String from : new String[]{null, "testFrom"}) {
-                    setupContext(props, isOpenShift, from, null);
+        for (boolean isOpenShift : new Boolean[]{false, true}) {
+            for (boolean isRedHat : new Boolean[]{false, true}) {
+                for (TestFromSelector selector : new TestFromSelector[]{null, new TestFromSelector(ctx, isRedHat)}) {
+                    for (String from : new String[]{null, "openshift/testfrom"}) {
+                        setupContext(props, isOpenShift, from, null);
 
-                    BuildImageConfiguration.Builder builder = new BuildImageConfiguration.Builder();
-                    BaseGenerator generator = createGenerator(selector);
-                    generator.addFrom(builder);
-                    BuildImageConfiguration config = builder.build();
-                    assertNull(config.getFromExt());
-                    if (from != null) {
-                        assertEquals(config.getFrom(), from);
-                    } else {
-                        assertEquals(config.getFrom(),
-                                     selector != null ?
-                                         (isOpenShift ?
-                                             selector.getS2iBuildFrom() :
-                                             selector.getDockerBuildFrom())
-                                         : null);
+                        BuildImageConfiguration.Builder builder = new BuildImageConfiguration.Builder();
+                        BaseGenerator generator = createGenerator(selector);
+                        generator.addFrom(builder);
+                        BuildImageConfiguration config = builder.build();
+                        if (isRedHat && isOpenShift && selector != null) {
+                            if (from != null) {
+                                assertEquals("testfrom:latest", config.getFrom());
+                                assertFromExt(config.getFromExt(), "testfrom:latest", "openshift");
+                            } else {
+                                assertEquals("selectorIstagFromRedhat", config.getFrom());
+                                assertFromExt(config.getFromExt(), selector.getIstagFrom(), "openshift");
+                            }
+                        } else {
+                            if (from != null) {
+                                assertEquals(config.getFrom(), from);
+                                assertNull(config.getFromExt());
+                            } else {
+                                System.out.println(isRedHat + " " + isOpenShift);
+                                assertNull(config.getFromExt());
+                                assertEquals(config.getFrom(),
+                                             selector != null ?
+                                                 (isOpenShift ?
+                                                     selector.getS2iBuildFrom() :
+                                                     selector.getDockerBuildFrom())
+                                                 : null);
+                            }
+                        }
                     }
                 }
             }
         }
+    }
+
+    public void assertFromExt(Map<String, String> fromExt, String fromName, String namespaceName) {
+        assertEquals(3, fromExt.keySet().size());
+        assertEquals(fromName, fromExt.get(name.key()));
+        assertEquals("ImageStreamTag", fromExt.get(kind.key()));
+        assertEquals(namespaceName, fromExt.get(namespace.key()));
     }
 
     @Test
@@ -124,19 +145,15 @@ public class BaseGeneratorTest {
             setupContext(props, false, from, null);
 
             BuildImageConfiguration.Builder builder = new BuildImageConfiguration.Builder();
-            BaseGenerator generator = createGenerator(new TestFromSelector(ctx));
+            BaseGenerator generator = createGenerator(new TestFromSelector(ctx, false));
             generator.addFrom(builder);
             BuildImageConfiguration config = builder.build();
-            assertEquals(from == null ? "selectorIstagFrom" : "test_image:2.0", config.getFrom());
+            assertEquals(from == null ? "selectorIstagFromUpstream" : "test_image:2.0", config.getFrom());
             Map<String, String> fromExt = config.getFromExt();
-            assertEquals(3, fromExt.size());
-            assertEquals("ImageStreamTag", fromExt.get(kind.key()));
             if (from != null) {
-                assertEquals("test_namespace", fromExt.get(namespace.key()));
-                assertEquals("test_image:2.0", fromExt.get(name.key()));
+                assertFromExt(fromExt,"test_image:2.0", "test_namespace");
             } else {
-                assertEquals("openshift", fromExt.get(namespace.key()));
-                assertEquals("selectorIstagFrom", fromExt.get(name.key()));
+                assertFromExt(fromExt, "selectorIstagFromUpstream", "openshift");
             }
         }
     }
@@ -157,10 +174,7 @@ public class BaseGeneratorTest {
             if (from == null) {
                 assertNull(fromExt);
             } else {
-                assertEquals(3, fromExt.size());
-                assertEquals("ImageStreamTag", fromExt.get(kind.key()));
-                assertEquals("test_namespace", fromExt.get(namespace.key()));
-                assertEquals("test_image:2.0", fromExt.get(name.key()));
+                assertFromExt(fromExt, "test_image:2.0", "test_namespace");
             }
         }
     }
@@ -308,23 +322,31 @@ public class BaseGeneratorTest {
 
     private class TestFromSelector extends FromSelector {
 
-        public TestFromSelector(GeneratorContext context) {
+        private boolean isRedHat;
+
+        public TestFromSelector(GeneratorContext context, boolean isRedHat) {
             super(context);
+            this.isRedHat = isRedHat;
+        }
+
+        @Override
+        public boolean isRedHat() {
+            return isRedHat;
         }
 
         @Override
         protected String getDockerBuildFrom() {
-            return "selectorDockerFrom";
+            return !isRedHat ? "selectorDockerFromUpstream" : "selectorDockerFromRedhat";
         }
 
         @Override
         protected String getS2iBuildFrom() {
-            return "selectorS2iFrom";
+            return !isRedHat ? "selectorS2iFromUpstream" : "selectorS2iFromRedhat";
         }
 
         @Override
         protected String getIstagFrom() {
-            return "selectorIstagFrom";
+            return !isRedHat ? "selectorIstagFromUpstream" : "selectorIstagFromRedhat";
         }
     }
 }
