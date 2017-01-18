@@ -78,7 +78,7 @@ public class BuildService {
 
         log.info("Waiting for build " + buildName + " to complete...");
         try (LogWatch logWatch = client.pods().withName(buildName + "-build").watchLog()) {
-            KubernetesResourceUtil.watchLogInThread(logWatch,
+            KubernetesResourceUtil.printLogsAsync(logWatch,
                                                   "Failed to tail build log", logTerminateLatch, log);
             Watcher<Build> buildWatcher = getBuildWatcher(latch, buildName, buildHolder);
             try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {
