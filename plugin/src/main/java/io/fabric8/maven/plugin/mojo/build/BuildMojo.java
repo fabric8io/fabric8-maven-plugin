@@ -34,7 +34,7 @@ import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.openshift.ImageStreamService;
-import io.fabric8.maven.core.openshift.OpenShiftBuildService;
+import io.fabric8.maven.core.openshift.BuildService;
 import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.Gofabric8Util;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
@@ -310,7 +310,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         applyResourceObjects(client, builder);
 
         // Start the actual build
-        OpenShiftBuildService buildService = new OpenShiftBuildService(client, log);
+        BuildService buildService = new BuildService(client, log);
         Build build = buildService.startBuild(client, dockerTar, buildName);
 
         // Wait until the build finishes

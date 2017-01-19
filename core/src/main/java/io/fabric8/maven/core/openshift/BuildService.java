@@ -64,7 +64,7 @@ public class BuildService {
             }
             if (exp.getCause() instanceof IOException && exp.getCause().getMessage().contains("Stream Closed")) {
                 log.error("Build for %s failed: %s", buildName, exp.getCause().getMessage());
-                log.error("If you are refering to an ImageStream as S2I builder image, please ensure that this ImageStream exists (with 'oc get is')");
+                log.error("If you are refering to an ImageStream as S2I builder image, please ensure that this ImageStream exists (with 'oc get is -n openshift')");
             }
             throw exp;
         }
