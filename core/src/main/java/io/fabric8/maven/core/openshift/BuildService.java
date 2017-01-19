@@ -148,9 +148,13 @@ public class BuildService {
             if ("DockerImage".equals(kind)) {
                 log.error("Please, ensure that the Docker image '%s' exists and is accessible by OpenShift", name);
             } else if ("ImageStreamTag".equals(kind)) {
-                String namespace = ref.getNamespace() != null ? ref.getNamespace() : "";
-                String namespaceInfo = !namespace.isEmpty() ? "'" + namespace + "'" : "current";
-                String namespaceParams = !namespace.isEmpty() ? " -n " + namespace : "";
+                String namespace = ref.getNamespace();
+                String namespaceInfo = "current";
+                String namespaceParams = "";
+                if (namespace != null && !namespace.isEmpty()) {
+                    namespaceInfo = "'" + namespace + "'";
+                    namespaceParams = " -n " + namespace;
+                }
 
                 log.error("Please, ensure that the ImageStream Tag '%s' exists in the %s namespace (with 'oc get is%s')", name, namespaceInfo, namespaceParams);
             }
