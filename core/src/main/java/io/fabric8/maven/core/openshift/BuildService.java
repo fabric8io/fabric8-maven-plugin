@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.builds.Builds;
+import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.fabric8.kubernetes.api.model.Status;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
@@ -43,8 +44,6 @@ public class BuildService {
     private final OpenShiftClient client;
     private final Logger log;
 
-    private String lastBuildStatus;
-
     public BuildService(OpenShiftClient client, Logger log) {
         this.client = client;
         this.log = log;
@@ -63,7 +62,7 @@ public class BuildService {
             }
             if (exp.getCause() instanceof IOException && exp.getCause().getMessage().contains("Stream Closed")) {
                 log.error("Build for %s failed: %s", buildName, exp.getCause().getMessage());
-                log.error("If you are refering to an ImageStream as S2I builder image, please ensure that this ImageStream exists (with 'oc get is')");
+                logBuildBuildFailedDetails(client, buildName);
             }
             throw exp;
         }
@@ -136,6 +135,31 @@ public class BuildService {
                     latch.countDown();
                 }
             };
+    }
+
+    private void logBuildBuildFailedDetails(OpenShiftClient client, String buildName) {
+        try {
+            BuildConfig build = client.buildConfigs().withName(buildName).get();
+            ObjectReference ref = build.getSpec().getStrategy().getSourceStrategy().getFrom();
+            String kind = ref.getKind();
+            String name = ref.getName();
+
+            if ("DockerImage".equals(kind)) {
+                log.error("Please, ensure that the Docker image '%s' exists and is accessible by OpenShift", name);
+            } else if ("ImageStreamTag".equals(kind)) {
+                String namespace = ref.getNamespace();
+                String namespaceInfo = "current";
+                String namespaceParams = "";
+                if (namespace != null && !namespace.isEmpty()) {
+                    namespaceInfo = "'" + namespace + "'";
+                    namespaceParams = " -n " + namespace;
+                }
+
+                log.error("Please, ensure that the ImageStream Tag '%s' exists in the %s namespace (with 'oc get is%s')", name, namespaceInfo, namespaceParams);
+            }
+        } catch (Exception ex) {
+            log.error("Unable to get detailed information from the BuildConfig: " + ex.getMessage());
+        }
     }
 
 }
