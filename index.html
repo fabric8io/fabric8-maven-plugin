@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.2.14,</span>
-<span id="revdate">2017-01-17</span>
+<span id="revdate">2017-01-27</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -4159,15 +4159,17 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 <table id="generator-java-exec-from" class="tableblock frame-all grid-all spread">
 <caption class="title">Table 24. Java Base Images</caption>
 <colgroup>
-<col style="width: 11.1111%;">
-<col style="width: 44.4444%;">
-<col style="width: 44.4445%;">
+<col style="width: 7.6923%;">
+<col style="width: 30.7692%;">
+<col style="width: 30.7692%;">
+<col style="width: 30.7693%;">
 </colgroup>
 <thead>
 <tr>
 <th class="tableblock halign-left valign-top"></th>
 <th class="tableblock halign-left valign-top">Docker Build</th>
 <th class="tableblock halign-left valign-top">S2I Build</th>
+<th class="tableblock halign-left valign-top">ImageStream</th>
 </tr>
 </thead>
 <tbody>
@@ -4175,11 +4177,13 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Community</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8/java-alpine-openjdk8-jdk</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8/s2i-java</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8-java</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Red Hat</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>jboss-fuse-6/fis-java-openshift</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>jboss-fuse-6/fis-java-openshift</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fis-java-openshift</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -4187,7 +4191,7 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 <p>These images refer always to the latest tag. The <em>Red Hat</em> base images are selected, when the plugin itself is a Red Hat supported version (which is detected by the plugins version number).</p>
 </div>
 <div class="paragraph">
-<p>When a <code>fromMode</code> of <code>istag</code> is used to specify an <code>ImageStreamTag</code> and when no <code>from</code> is given, then as default the <code>ImageStreamTag</code> <code>fis-java-openshift:2.0</code> in the namespace <code>openshift</code> is chosen.</p>
+<p>When a <code>fromMode</code> of <code>istag</code> is used to specify an <code>ImageStreamTag</code> and when no <code>from</code> is given, then as default the <code>ImageStreamTag</code> <code>fis-java-openshift</code> in the namespace <code>openshift</code> is chosen. If you are using a RedHat variation of this plugin (i.e. if the version is ending with <code>-redhat</code>), then a <code>fromMode</code> of <code>istag</code> is the default, otherwise its <code>fromMode = "docker"</code> which use the a plain Docker image reference for the S2I builder image.</p>
 </div>
 <div class="paragraph">
 <p>Beside the common configuration parameters described in the table <a href="#generator-options-common">common generator options</a> the following additional configuration options are recognized:</p>
@@ -6082,7 +6086,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.14<br>
-Last updated 2017-01-17 14:08:20 UTC
+Last updated 2017-01-27 20:49:30 UTC
 </div>
 </div>
 </body>
