@@ -5,10 +5,9 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.GeneratorContext;
-import mockit.Invocation;
-import mockit.Mock;
-import mockit.MockUp;
+import mockit.*;
 import mockit.integration.junit4.JMockit;
 import org.apache.maven.model.Build;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -35,6 +34,9 @@ import static org.junit.Assert.assertNull;
  */
 @RunWith(JMockit.class)
 public class JavaExecGeneratorMainClassDeterminationTest {
+
+    @Mocked
+    Logger log;
 
     // Only to mock unwanted fatjar directory functionality
     public static class MockJavaExecGenerator extends MockUp<JavaExecGenerator> {
@@ -150,11 +152,12 @@ public class JavaExecGeneratorMainClassDeterminationTest {
         new MockBuild();
         new MockProcessorConfig("the.main.ClassName");
         new MockMavenProject();
-
+        
         final GeneratorContext generatorContext = new GeneratorContext.Builder()
                 .project(new MavenProject())
                 .config(new ProcessorConfig())
                 .strategy(OpenShiftBuildStrategy.docker)
+                .logger(log)
                 .build();
 
         JavaExecGenerator generator = new JavaExecGenerator(generatorContext);
@@ -192,6 +195,7 @@ public class JavaExecGeneratorMainClassDeterminationTest {
                 .project(new MavenProject())
                 .config(new ProcessorConfig())
                 .strategy(OpenShiftBuildStrategy.docker)
+                .logger(log)
                 .build();
 
         JavaExecGenerator generator = new JavaExecGenerator(generatorContext);
@@ -229,7 +233,9 @@ public class JavaExecGeneratorMainClassDeterminationTest {
                 .project(new MavenProject())
                 .config(new ProcessorConfig())
                 .strategy(OpenShiftBuildStrategy.docker)
+                .logger(log)
                 .build();
+
 
         JavaExecGenerator generator = new JavaExecGenerator(generatorContext);
 
