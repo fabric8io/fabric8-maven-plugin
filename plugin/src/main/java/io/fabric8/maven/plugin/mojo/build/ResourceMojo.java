@@ -18,11 +18,7 @@ package io.fabric8.maven.plugin.mojo.build;
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.extensions.Templates;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterAccess;
@@ -75,16 +71,9 @@ import javax.validation.ConstraintViolationException;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
-import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
+import static io.fabric8.maven.core.util.Constants.*;
 import static io.fabric8.maven.core.util.KubernetesResourceUtil.isAppCatalogResource;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.loadResources;
@@ -570,23 +559,40 @@ public class ResourceMojo extends AbstractResourceMojo {
      * @return the converted kubernetes resource or null if it should be ignored
      */
     private HasMetadata convertKubernetesItemToOpenShift(HasMetadata item) {
-        if (item instanceof ConfigMap) {
-            if (Objects.equals("true", KubernetesHelper.getOrCreateAnnotations(item).get(RESOURCE_APP_CATALOG_ANNOTATION))) {
-                // kubernetes App Catalog so we use a Template instead on OpenShift
-                return null;
-            }
+
+        // TODO-F8SPEC: App Catalog is Fabric8 specific. Its best handled outside the 'regular' resource generation chain
+        //              better in an 'AppCatalog' specific processing
+        // vvvvvvv (begin)
+        if (item instanceof ConfigMap &&
+            "true".equals(getAnnotations(item).get(RESOURCE_APP_CATALOG_ANNOTATION))) {
+            // kubernetes App Catalog so we use a Template instead on OpenShift
+            return null;
         }
+
         // lets check if there's an OpenShift resource of this name already from a dependency...
         HasMetadata dependencyResource = openshiftDependencyResources.convertKubernetesItemToOpenShift(item);
         if (dependencyResource != null) {
             return dependencyResource;
         }
+        // TODO-F8SPEC: ^^^^^ (end)
+
         KubernetesToOpenShiftConverter converter = openShiftConverters.get(item.getKind());
         return converter != null ? converter.convert(item) : item;
     }
 
     // ==================================================================================
 
+    private Map<String, String> getAnnotations(HasMetadata item) {
+        ObjectMeta meta = item.getMetadata();
+        if (meta == null) {
+            return Collections.EMPTY_MAP;
+        }
+        Map<String, String> annos = meta.getAnnotations();
+        if (annos == null) {
+            return Collections.EMPTY_MAP;
+        }
+        return annos;
+    }
 
     private List<ImageConfiguration> getResolvedImages(List<ImageConfiguration> images, final Logger log) throws MojoExecutionException {
         List<ImageConfiguration> ret;

@@ -16,9 +16,7 @@
 
 package io.fabric8.maven.enricher.api;
 
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
@@ -32,6 +30,8 @@ import org.json.JSONObject;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+import static io.fabric8.maven.core.util.Constants.*;
 
 /**
  * @author roland
@@ -123,8 +123,7 @@ public abstract class BaseEnricher implements Enricher {
     }
 
     protected void ensureMetadata(PodTemplateSpecBuilder obj) {
-        ObjectMeta metadata = obj.buildMetadata();
-        if (metadata == null) {
+        if (obj.buildMetadata() == null) {
             obj.withNewMetadata().endMetadata();
         }
     }
@@ -132,7 +131,6 @@ public abstract class BaseEnricher implements Enricher {
     protected void addInitContainer(PodTemplateSpecBuilder builder, JSONObject initContainer) {
         ensureMetadata(builder);
         String initContainerAnnotation = builder.buildMetadata().getAnnotations().get(INIT_CONTAINER_ANNOTATION);
-
         JSONArray initContainers = Strings.isNullOrBlank(initContainerAnnotation) ? new JSONArray()
                 : new JSONArray(initContainerAnnotation);
         initContainers.put(initContainer);
