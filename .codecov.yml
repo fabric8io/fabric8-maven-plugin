@@ -10,7 +10,7 @@ coverage:
   status:
     project:
       default:
-        threshold: "2%"
+        threshold: "4%"
 comment:
   layout: "header, diff"
   require_changes: true
