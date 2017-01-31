@@ -42,7 +42,7 @@ public class VertxPortsExtractorTest {
             result = plugin;
             plugin.getConfiguration();
             result = configuration;
-            configuration.getChild(Constants.CONFIG);
+            configuration.getChild("config");
             result = vertxConfig;
             vertxConfig.getValue();
             result = decodeUrl(VertxPortsExtractorTest.class.getResource("/config.json").getFile());

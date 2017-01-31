@@ -19,7 +19,6 @@ package io.fabric8.maven.generator.vertx;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
-import io.fabric8.maven.generator.api.PortsExtractor;
 import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -27,6 +26,7 @@ import org.apache.maven.project.MavenProject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static io.fabric8.maven.generator.vertx.Constants.*;
 
@@ -51,7 +51,7 @@ public class VertxGenerator extends JavaExecGenerator {
   public boolean isApplicable(List<ImageConfiguration> configs) throws MojoExecutionException {
     return shouldAddImageConfiguration(configs)
         && (MavenUtil.hasPlugin(getProject(), VERTX_MAVEN_PLUGIN_GA)
-        || MavenUtil.hasDependency(getProject(), VERTX_GROUPID));
+        || MavenUtil.hasDependencyOnAnyArtifactOfGroup(getProject(), VERTX_GROUPID));
   }
 
   @Override
@@ -75,9 +75,9 @@ public class VertxGenerator extends JavaExecGenerator {
 
   @Override
   protected List<String> extractPorts() {
+    Map<String, Integer> extractedPorts = new VertxPortsExtractor(log).extract(getProject());
     List<String> ports = new ArrayList<>();
-    PortsExtractor portsExtractor = new VertxPortsExtractor(log);
-    for (Integer p : portsExtractor.extract(getProject()).values()) {
+    for (Integer p : extractedPorts.values()) {
       ports.add(String.valueOf(p));
     }
     // If there are no specific vertx ports found, we reuse the ports from the JavaExecGenerator
