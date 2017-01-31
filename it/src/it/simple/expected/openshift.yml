@@ -46,10 +46,6 @@ items:
       project: fabric8-maven-sample-zero-config
       provider: fabric8
       group: io.fabric8
-    strategy:
-      rollingParams:
-        timeoutSeconds: 10800
-      type: Rolling
     template:
       metadata:
         annotations:

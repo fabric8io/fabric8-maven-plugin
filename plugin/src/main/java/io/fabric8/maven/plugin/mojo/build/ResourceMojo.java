@@ -88,7 +88,6 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     // THe key how we got the the docker maven plugin
     private static final String DOCKER_MAVEN_PLUGIN_KEY = "io.fabric8:docker-maven-plugin";
-    public static final long DEFAULT_OPENSHIFT_DEPLOY_TIMEOUT_SECONDS = 3L * 60 * 60;
     private static final String DOCKER_IMAGE_USER = "docker.image.user";
 
     @Component(role = MavenFileFilter.class, hint = "default")
@@ -317,10 +316,6 @@ public class ResourceMojo extends AbstractResourceMojo {
     }
 
     public Long getOpenshiftDeployTimeoutSeconds() {
-        if (openshiftDeployTimeoutSeconds == null) {
-            // lets default to a large amount of time which should be enough to download most docker images
-            openshiftDeployTimeoutSeconds = DEFAULT_OPENSHIFT_DEPLOY_TIMEOUT_SECONDS;
-        }
         return openshiftDeployTimeoutSeconds;
     }
 

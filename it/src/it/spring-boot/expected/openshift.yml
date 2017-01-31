@@ -40,10 +40,6 @@ items:
       project: fabric8-maven-sample-spring-boot
       provider: fabric8
       group: io.fabric8
-    strategy:
-      rollingParams:
-        timeoutSeconds: 10800
-      type: Rolling
     template:
       metadata:
         labels:
