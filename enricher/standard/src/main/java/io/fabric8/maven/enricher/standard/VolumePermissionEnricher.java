@@ -43,8 +43,8 @@ import java.util.Set;
  */
 public class VolumePermissionEnricher extends BaseEnricher {
 
-    public static final String ENRICHER_NAME = "fmp-volume-permission";
-    public static final String VOLUME_STORAGE_CLASS_ANNOTATION = "volume.beta.kubernetes.io/storage-class";
+    static final String ENRICHER_NAME = "fmp-volume-permission";
+    static final String VOLUME_STORAGE_CLASS_ANNOTATION = "volume.beta.kubernetes.io/storage-class";
 
     enum Config implements Configs.Key {
         permission {{ d = "777"; }};
@@ -58,6 +58,11 @@ public class VolumePermissionEnricher extends BaseEnricher {
 
     @Override
     public void adapt(KubernetesListBuilder builder) {
+        // Don't build for OpenShift.
+        // But please be aware of https://github.com/fabric8io/fabric8-maven-plugin/pull/698/files#r98304204
+        if (isOpenShiftMode()) {
+            return;
+        }
         builder.accept(new TypedVisitor<PodTemplateSpecBuilder>() {
             @Override
             public void visit(PodTemplateSpecBuilder builder) {

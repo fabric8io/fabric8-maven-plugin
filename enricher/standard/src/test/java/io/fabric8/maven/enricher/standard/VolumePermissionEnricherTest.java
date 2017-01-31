@@ -15,10 +15,10 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import io.fabric8.kubernetes.api.model.ContainerBuilder;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.PodTemplate;
-import io.fabric8.kubernetes.api.model.PodTemplateBuilder;
+import java.util.Collections;
+import java.util.TreeMap;
+
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
@@ -30,9 +30,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.util.Collections;
-import java.util.TreeMap;
 
 import static org.junit.Assert.assertEquals;
 

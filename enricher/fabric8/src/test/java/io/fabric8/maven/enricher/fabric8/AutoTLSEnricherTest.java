@@ -15,6 +15,8 @@
  */
 package io.fabric8.maven.enricher.fabric8;
 
+import java.util.*;
+
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplate;
 import io.fabric8.maven.core.config.PlatformMode;
@@ -31,13 +33,7 @@ import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TreeMap;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 @RunWith(JMockit.class)
 public class AutoTLSEnricherTest {
@@ -181,7 +177,7 @@ public class AutoTLSEnricherTest {
             PodTemplate pt = (PodTemplate) klb.getItems().get(0);
 
             String initContainers = pt.getTemplate().getMetadata().getAnnotations()
-                    .get(BaseEnricher.INIT_CONTAINER_ANNOTATION);
+                                      .get(BaseEnricher.INIT_CONTAINER_ANNOTATION);
             assertEquals(tc.mode == PlatformMode.openshift, initContainers != null);
 
             if (tc.mode == PlatformMode.kubernetes) {
