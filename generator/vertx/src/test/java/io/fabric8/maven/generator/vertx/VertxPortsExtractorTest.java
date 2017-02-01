@@ -42,7 +42,7 @@ public class VertxPortsExtractorTest {
             result = plugin;
             plugin.getConfiguration();
             result = configuration;
-            configuration.getChild(Constants.CONFIG);
+            configuration.getChild("config");
             result = vertxConfig;
             vertxConfig.getValue();
             result = decodeUrl(VertxPortsExtractorTest.class.getResource("/config.json").getFile());
@@ -50,6 +50,16 @@ public class VertxPortsExtractorTest {
 
         Map<String, Integer> result = new VertxPortsExtractor(log).extract(project);
         assertEquals((Integer) 80, result.get("http.port"));
+    }
+
+    @Test
+    public void testNoVertxConfiguration() throws Exception {
+        new Expectations() {{
+            project.getPlugin(Constants.VERTX_MAVEN_PLUGIN_GA);
+            plugin.getConfiguration(); result = null;
+        }};
+        Map<String, Integer> result = new VertxPortsExtractor(log).extract(project);
+        assertEquals(0,result.size());
     }
 
     /**

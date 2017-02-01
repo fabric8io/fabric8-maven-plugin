@@ -142,7 +142,7 @@ public class MavenUtil {
     /**
      * Returns true if the maven project has a dependency with the given groupId
      */
-    public static boolean hasDependency(MavenProject project, String groupId) {
+    public static boolean hasDependencyOnAnyArtifactOfGroup(MavenProject project, String groupId) {
         return hasDependency(project, groupId, null);
     }
 

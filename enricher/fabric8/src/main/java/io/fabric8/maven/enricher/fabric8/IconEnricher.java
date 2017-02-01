@@ -38,7 +38,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import static io.fabric8.maven.core.util.MavenUtil.hasClass;
-import static io.fabric8.maven.core.util.MavenUtil.hasDependency;
 import static io.fabric8.maven.core.util.MavenUtil.hasPlugin;
 import static io.fabric8.utils.Files.guessMediaType;
 
@@ -152,7 +151,7 @@ public class IconEnricher extends BaseEnricher {
         MavenProject project = getProject();
         EnricherContext context = getContext();
 
-        if (hasClass(project, "io.fabric8.funktion.runtime.Main") || hasDependency(project, "io.fabric8.funktion")) {
+        if (hasClass(project, "io.fabric8.funktion.runtime.Main") || MavenUtil.hasDependencyOnAnyArtifactOfGroup(project, "io.fabric8.funktion")) {
             return "funktion";
         }
         if (hasClass(project, "org.apache.camel.CamelContext")) {
@@ -170,7 +169,7 @@ public class IconEnricher extends BaseEnricher {
         }
 
         if (hasPlugin(project, "org.wildfly.swarm:wildfly-swarm-plugin") ||
-            hasDependency(project, "org.wildfly.swarm")) {
+            MavenUtil.hasDependencyOnAnyArtifactOfGroup(project, "org.wildfly.swarm")) {
             return "wildfly-swarm";
         }
         return null;

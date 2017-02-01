@@ -7,8 +7,6 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.generator.api.support.AbstractPortsExtractor;
 
-import static io.fabric8.maven.generator.vertx.Constants.*;
-
 
 public class VertxPortsExtractor extends AbstractPortsExtractor {
 
@@ -19,7 +17,7 @@ public class VertxPortsExtractor extends AbstractPortsExtractor {
 
     @Override
     public String getConfigPathPropertyName() {
-        return VERTX_CONFIG_PROPERTY;
+        return "vertx.config";
     }
 
     @Override
@@ -33,7 +31,7 @@ public class VertxPortsExtractor extends AbstractPortsExtractor {
         if (configuration == null) {
             return null;
         }
-        Xpp3Dom config = configuration.getChild(CONFIG);
+        Xpp3Dom config = configuration.getChild("config");
         return config != null ? config.getValue() : null;
     }
 }
