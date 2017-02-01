@@ -240,7 +240,7 @@ public class JavaExecGenerator extends BaseGenerator {
     }
 
     protected void addPortIfValid(List<String> list, String port) {
-        if (Strings.isNotBlank(port) && Integer.parseInt(port) != 0) {
+        if (Strings.isNotBlank(port) && Integer.parseInt(port) > 0) {
             list.add(port);
         }
     }
