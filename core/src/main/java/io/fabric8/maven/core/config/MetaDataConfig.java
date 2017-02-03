@@ -34,7 +34,7 @@ public class MetaDataConfig {
     private Properties all;
 
     /**
-     * Labels or annoations for a Pod within a controller or deployment
+     * Labels or annotation for a Pod within a controller or deployment
      */
     @Parameter
     private Properties pod;
