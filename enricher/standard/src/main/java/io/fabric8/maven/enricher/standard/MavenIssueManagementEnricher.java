@@ -14,7 +14,7 @@
  *    permissions and limitations under the License.
  */
 
-package io.fabric8.maven.enricher.fabric8;
+package io.fabric8.maven.enricher.standard;
 
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.AbstractLiveEnricher;
@@ -49,21 +49,21 @@ public class MavenIssueManagementEnricher extends BaseEnricher {
 
     @Override
     public Map<String, String> getAnnotations(Kind kind) {
-        if (kind.isDeployOrReplicaKind()) {
-            MavenProject rootProject = MavenUtil.getRootProject(getProject());
+        Map<String, String> annotations = new HashMap<>();
+        if (kind.isDeployOrReplicaKind() || kind.isService()) {
+            MavenProject rootProject = getProject();
             if (hasIssueManagement(rootProject)) {
                 IssueManagement issueManagement = rootProject.getIssueManagement();
                 String system = issueManagement.getSystem();
                 String url = issueManagement.getUrl();
                 if (StringUtils.isNotEmpty(system) && StringUtils.isNotEmpty(url)) {
-                    Map<String, String> annotations = new HashMap<>();
                     annotations.put(ISSUE_MANAGEMENT_SYSTEM, system);
                     annotations.put(ISSUE_MANAGEMENT_URL, url);
                     return annotations;
                 }
             }
         }
-        return null;
+        return annotations;
     }
 
     private boolean hasIssueManagement(MavenProject project) {

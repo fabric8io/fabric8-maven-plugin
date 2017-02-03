@@ -51,3 +51,9 @@ io.fabric8.maven.enricher.standard.MergeEnricher,1101
 # Add an enricher for merging duplicates
 io.fabric8.maven.enricher.standard.RemoveBuildAnnotationsEnricher,1200
 
+# Add an enricher for adding Maven SCM metadata based on pom.xml scm details
+io.fabric8.maven.enricher.standard.MavenScmEnricher,1300
+
+# Add an enricher for adding Maven SCM metadata based on pom.xml IssueManagement details
+io.fabric8.maven.enricher.standard.MavenIssueManagementEnricher,1301
+

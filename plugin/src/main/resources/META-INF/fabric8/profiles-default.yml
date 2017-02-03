@@ -32,6 +32,8 @@
     - spring-boot-health-check
     - karaf-health-check
     - f8-prometheus
+    - f8-maven-scm
+    - f8-maven-issue-mgmt
 
   generator:
     includes:

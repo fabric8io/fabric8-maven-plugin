@@ -14,7 +14,7 @@
  *    permissions and limitations under the License.
  */
 
-package io.fabric8.maven.enricher.fabric8;
+package io.fabric8.maven.enricher.standard;
 
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
@@ -29,9 +29,7 @@ import org.junit.runner.RunWith;
 
 import java.util.Map;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertNull;
+import static junit.framework.TestCase.*;
 
 /**
  * @author kameshs
@@ -186,9 +184,8 @@ public class MavenScmEnricherTest {
         MavenScmEnricher mavenScmEnricher = new MavenScmEnricher(context);
 
         Map<String, String> scmAnnotations = mavenScmEnricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
-        assertNull(scmAnnotations);
+        assertTrue(scmAnnotations.isEmpty());
 
     }
-
 
 }

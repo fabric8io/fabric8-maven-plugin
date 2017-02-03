@@ -14,7 +14,7 @@
  *    permissions and limitations under the License.
  */
 
-package io.fabric8.maven.enricher.fabric8;
+package io.fabric8.maven.enricher.standard;
 
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
@@ -88,7 +88,7 @@ public class MavenIssueManagementEnricherTest {
 
         MavenIssueManagementEnricher enricher = new MavenIssueManagementEnricher(context);
         Map<String, String> scmAnnotations = enricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
-        assertNull(scmAnnotations);
+        assertTrue(scmAnnotations.isEmpty());
     }
 
     @Test
@@ -110,7 +110,7 @@ public class MavenIssueManagementEnricherTest {
 
         MavenIssueManagementEnricher enricher = new MavenIssueManagementEnricher(context);
         Map<String, String> scmAnnotations = enricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
-        assertNull(scmAnnotations);
+        assertTrue(scmAnnotations.isEmpty());
     }
 
 
@@ -130,7 +130,7 @@ public class MavenIssueManagementEnricherTest {
 
         MavenIssueManagementEnricher enricher = new MavenIssueManagementEnricher(context);
         Map<String, String> scmAnnotations = enricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
-        assertNull(scmAnnotations);
+        assertTrue(scmAnnotations.isEmpty());
     }
 
 

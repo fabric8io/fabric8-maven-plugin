@@ -14,7 +14,7 @@
  *    permissions and limitations under the License.
  */
 
-package io.fabric8.maven.enricher.fabric8;
+package io.fabric8.maven.enricher.standard;
 
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
@@ -52,11 +52,10 @@ public class MavenScmEnricher extends BaseEnricher {
 
     @Override
     public Map<String, String> getAnnotations(Kind kind) {
-        if (kind.isDeployOrReplicaKind()) {
-
-            MavenProject rootProject = MavenUtil.getRootProject(getProject());
+        Map<String, String> annotations = new HashMap<>();
+        if (kind.isDeployOrReplicaKind() || kind.isService()) {
+            MavenProject rootProject = getProject();
             if (hasScm(rootProject)) {
-                Map<String, String> annotations = new HashMap<>();
                 Scm scm = rootProject.getScm();
                 String connectionUrl = scm.getConnection();
                 String devConnectionUrl = scm.getDeveloperConnection();
@@ -75,10 +74,9 @@ public class MavenScmEnricher extends BaseEnricher {
                 if (StringUtils.isNotEmpty(url)) {
                     annotations.put(SCM_URL, url);
                 }
-                return annotations;
             }
         }
-        return null;
+        return annotations;
     }
 
     private boolean hasScm(MavenProject project) {
