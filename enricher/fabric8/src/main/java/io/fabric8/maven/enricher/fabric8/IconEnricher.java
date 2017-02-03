@@ -79,7 +79,7 @@ public class IconEnricher extends BaseEnricher {
 
     @Override
     public Map<String, String> getAnnotations(Kind kind) {
-        if (kind.isDeployOrReplicaKind() || kind.isService() || kind.isDaemonSet()) {
+        if (kind.isDeployOrReplicaKind() || kind.isService() || kind.isDaemonSet() || kind.isPetSet()) {
             String iconUrl = getIconUrl(extractIconRef());
             if (iconUrl != null) {
                 log.info("Adding icon for %s", kind.toString().toLowerCase());

@@ -36,7 +36,8 @@ public enum Kind {
      */
     public boolean isDeployOrReplicaKind() {
         return this == Kind.REPLICA_SET || this == Kind.REPLICATION_CONTROLLER ||
-               this == Kind.DEPLOYMENT || this == Kind.DEPLOYMENT_CONFIG;
+               this == Kind.DEPLOYMENT || this == Kind.DEPLOYMENT_CONFIG ||
+               this == Kind.DAEMON_SET || this == Kind.PET_SET;
     }
 
     /**
@@ -51,5 +52,9 @@ public enum Kind {
 
     public boolean isDaemonSet() {
         return this == Kind.DAEMON_SET;
+    }
+
+    public boolean isPetSet() {
+        return this == Kind.PET_SET;
     }
 }
