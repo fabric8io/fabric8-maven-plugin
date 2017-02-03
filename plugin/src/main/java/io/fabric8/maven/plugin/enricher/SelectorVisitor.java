@@ -98,7 +98,7 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         @Override
         public void visit(PetSetSpecBuilder item) {
             Map<String, String> selectorMatchLabels =
-                    KubernetesResourceUtil.removeVersionSelector(enricherManager.extractSelector(getConfig(), Kind.REPLICATION_CONTROLLER));
+                    KubernetesResourceUtil.removeVersionSelector(enricherManager.extractSelector(getConfig(), Kind.PET_SET));
             final io.fabric8.kubernetes.api.model.LabelSelector selector = item.getSelector();
             if (selector == null) {
                 item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
@@ -117,7 +117,7 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         @Override
         public void visit(DaemonSetSpecBuilder item) {
             Map<String, String> selectorMatchLabels =
-                    KubernetesResourceUtil.removeVersionSelector(enricherManager.extractSelector(getConfig(), Kind.REPLICATION_CONTROLLER));
+                    KubernetesResourceUtil.removeVersionSelector(enricherManager.extractSelector(getConfig(), Kind.DAEMON_SET));
             final LabelSelector selector = item.getSelector();
             if (selector == null) {
                 item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
