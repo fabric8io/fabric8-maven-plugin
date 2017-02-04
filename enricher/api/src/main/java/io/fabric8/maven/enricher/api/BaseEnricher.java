@@ -22,6 +22,7 @@ import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
 import org.json.JSONArray;
@@ -133,8 +134,30 @@ public abstract class BaseEnricher implements Enricher {
         String initContainerAnnotation = builder.buildMetadata().getAnnotations().get(INIT_CONTAINER_ANNOTATION);
         JSONArray initContainers = Strings.isNullOrBlank(initContainerAnnotation) ? new JSONArray()
                 : new JSONArray(initContainerAnnotation);
-        initContainers.put(initContainer);
 
+        // lets avoid duplicates being added
+        boolean duplicate = false;
+        int length = initContainers.length();
+        for (int i = 0; i < length; i++) {
+            JSONObject obj = initContainers.getJSONObject(i);
+            if (duplicateInitcontainer(obj, initContainer)) {
+                duplicate = true;
+            }
+
+        }
+        if (!duplicate) {
+            initContainers.put(initContainer);
+        }
         builder.editMetadata().addToAnnotations(INIT_CONTAINER_ANNOTATION, initContainers.toString()).endMetadata();
+    }
+
+    private boolean duplicateInitcontainer(JSONObject a, JSONObject b) {
+        Object name1 = a.get("name");
+        Object name2 = b.get("name");
+        if (Objects.equal(name1, name2)) {
+            log.warn("Found duplicate init containers with names " + name1 + " so ignoring " + b);
+            return true;
+        }
+        return false;
     }
 }
