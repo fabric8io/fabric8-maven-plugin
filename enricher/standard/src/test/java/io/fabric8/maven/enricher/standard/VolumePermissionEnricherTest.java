@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 @RunWith(JMockit.class)
 public class VolumePermissionEnricherTest {
@@ -56,11 +57,39 @@ public class VolumePermissionEnricherTest {
     }
 
     @Test
+    public void alreadyExistingInitContainer(@Mocked final ProcessorConfig config) throws Exception {
+        new Expectations() {{
+            context.getConfig(); result = config;
+        }};
+
+        PodTemplateBuilder ptb = createEmptyPodTemplate();
+        addVolume(ptb, "VolumeA");
+
+        JSONArray initContainers = new JSONArray();
+        JSONObject initContainer = new JSONObject();
+        initContainer.put("name", VolumePermissionEnricher.ENRICHER_NAME);
+        initContainer.put("mountPath", "blub");
+        initContainers.put(initContainer);
+        ptb.editTemplate().editMetadata().withAnnotations(Collections.singletonMap(BaseEnricher.INIT_CONTAINER_ANNOTATION, initContainers.toString())).endMetadata().endTemplate();
+        KubernetesListBuilder klb = new KubernetesListBuilder().addToPodTemplateItems(ptb.build());
+
+        VolumePermissionEnricher enricher = new VolumePermissionEnricher(context);
+        enricher.adapt(klb);
+
+        String initS = ((PodTemplate) klb.build().getItems().get(0)).getTemplate().getMetadata().getAnnotations().get(BaseEnricher.INIT_CONTAINER_ANNOTATION);
+        assertNotNull(initS);
+        JSONArray actualInitContainers = new JSONArray(initS);
+        assertEquals(1, actualInitContainers.length());
+        JSONObject actualInitContainer = actualInitContainers.getJSONObject(0);
+        assertEquals("blub", actualInitContainer.get("mountPath"));
+    }
+
+    @Test
     public void testAdapt() throws Exception {
         final TestConfig[] data = new TestConfig[]{
             new TestConfig(null, null),
-            new TestConfig(null, "init", "volumeA"),
-            new TestConfig(null, "init", "volumeA", "volumeB")
+            new TestConfig(null, VolumePermissionEnricher.ENRICHER_NAME, "volumeA"),
+            new TestConfig(null, VolumePermissionEnricher.ENRICHER_NAME, "volumeA", "volumeB")
         };
 
         for (final TestConfig tc : data) {
@@ -73,24 +102,10 @@ public class VolumePermissionEnricherTest {
 
             VolumePermissionEnricher enricher = new VolumePermissionEnricher(context);
 
-            PodTemplateBuilder ptb = new PodTemplateBuilder().withNewMetadata().and()
-                .withNewTemplate()
-                .withNewMetadata().and()
-                .withNewSpec().addNewContainer().and()
-                .and().and();
+            PodTemplateBuilder ptb = createEmptyPodTemplate();
 
             for (String vn : tc.volumeNames) {
-              ptb = ptb.editTemplate().
-                  editSpec().
-                  addNewVolume().withName(vn).withNewPersistentVolumeClaim().and().and().
-                  addNewVolume().withName("non-pvc").withNewEmptyDir().and().and().
-                  and().and();
-              ptb = ptb.editTemplate().editSpec().withContainers(
-                  new ContainerBuilder(ptb.buildTemplate().getSpec().getContainers().get(0))
-                      .addNewVolumeMount().withName(vn).withMountPath("/tmp/" + vn).and()
-                      .addNewVolumeMount().withName("non-pvc").withMountPath("/tmp/non-pvc").and()
-                      .build()
-              ).and().and();
+                ptb = addVolume(ptb, vn);
             }
 
             KubernetesListBuilder klb = new KubernetesListBuilder().addToPodTemplateItems(ptb.build());
@@ -121,5 +136,28 @@ public class VolumePermissionEnricherTest {
             }
             assertEquals(chmodCmd.toString(), jo.getJSONArray("command").toString());
         }
+    }
+
+    public PodTemplateBuilder addVolume(PodTemplateBuilder ptb, String vn) {
+        ptb = ptb.editTemplate().
+            editSpec().
+            addNewVolume().withName(vn).withNewPersistentVolumeClaim().and().and().
+            addNewVolume().withName("non-pvc").withNewEmptyDir().and().and().
+            and().and();
+        ptb = ptb.editTemplate().editSpec().withContainers(
+            new ContainerBuilder(ptb.buildTemplate().getSpec().getContainers().get(0))
+                .addNewVolumeMount().withName(vn).withMountPath("/tmp/" + vn).and()
+                .addNewVolumeMount().withName("non-pvc").withMountPath("/tmp/non-pvc").and()
+                .build()
+           ).and().and();
+        return ptb;
+    }
+
+    public PodTemplateBuilder createEmptyPodTemplate() {
+        return new PodTemplateBuilder().withNewMetadata().endMetadata()
+                                .withNewTemplate()
+                                  .withNewMetadata().endMetadata()
+                                  .withNewSpec().addNewContainer().endContainer().endSpec()
+                                .endTemplate();
     }
 }

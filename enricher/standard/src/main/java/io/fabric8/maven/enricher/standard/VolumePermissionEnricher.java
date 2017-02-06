@@ -82,7 +82,9 @@ public class VolumePermissionEnricher extends BaseEnricher {
 
                 log.verbose("Adding init container for changing persistent volumes access mode to %s",
                         getConfig(Config.permission));
-                addInitContainer(builder, createPvInitContainer(podSpec));
+                if (!hasInitContainer(builder, ENRICHER_NAME)) {
+                    addInitContainer(builder, createPvInitContainer(podSpec));
+                }
             }
 
             private boolean checkForPvc(PodSpec podSpec) {
@@ -102,7 +104,7 @@ public class VolumePermissionEnricher extends BaseEnricher {
                 Map<String, String> mountPoints = extractMountPoints(podSpec);
 
                 JSONObject entry = new JSONObject();
-                entry.put("name","init");
+                entry.put("name", ENRICHER_NAME);
                 entry.put("image","busybox");
                 entry.put("imagePullPolicy","IfNotPresent");
                 entry.put("command", createChmodCommandArray(mountPoints));

@@ -129,35 +129,34 @@ public abstract class BaseEnricher implements Enricher {
         }
     }
 
-    protected void addInitContainer(PodTemplateSpecBuilder builder, JSONObject initContainer) {
-        ensureMetadata(builder);
-        String initContainerAnnotation = builder.buildMetadata().getAnnotations().get(INIT_CONTAINER_ANNOTATION);
-        JSONArray initContainers = Strings.isNullOrBlank(initContainerAnnotation) ? new JSONArray()
-                : new JSONArray(initContainerAnnotation);
-
-        // lets avoid duplicates being added
-        boolean duplicate = false;
-        int length = initContainers.length();
-        for (int i = 0; i < length; i++) {
-            JSONObject obj = initContainers.getJSONObject(i);
-            if (duplicateInitcontainer(obj, initContainer)) {
-                duplicate = true;
+    protected boolean hasInitContainer(PodTemplateSpecBuilder builder, String name) {
+        if (builder.hasMetadata()) {
+            String initContainerAnnotation = builder.buildMetadata().getAnnotations().get(INIT_CONTAINER_ANNOTATION);
+            if (Strings.isNotBlank(initContainerAnnotation)) {
+                JSONArray initContainers = new JSONArray(initContainerAnnotation);
+                for (int i = 0; i < initContainers.length(); i++) {
+                    JSONObject obj = initContainers.getJSONObject(i);
+                    String existingName = obj.getString("name");
+                    if (Objects.equal(existingName, name)) {
+                        return true;
+                    }
+                }
             }
-
-        }
-        if (!duplicate) {
-            initContainers.put(initContainer);
-        }
-        builder.editMetadata().addToAnnotations(INIT_CONTAINER_ANNOTATION, initContainers.toString()).endMetadata();
-    }
-
-    private boolean duplicateInitcontainer(JSONObject a, JSONObject b) {
-        Object name1 = a.get("name");
-        Object name2 = b.get("name");
-        if (Objects.equal(name1, name2)) {
-            log.warn("Found duplicate init containers with names " + name1 + " so ignoring " + b);
-            return true;
         }
         return false;
+    }
+
+    protected void addInitContainer(PodTemplateSpecBuilder builder, JSONObject initContainer) {
+        String name = initContainer.getString("name");
+        if (hasInitContainer(builder,name)) {
+            throw new IllegalArgumentException(
+                String.format("PodSpec %s already contains an init container with name %s. Cannot add a second one",
+                              builder.build().getMetadata().getName(), name));
+        }
+        ensureMetadata(builder);
+        String initContainerAnnotation = builder.buildMetadata().getAnnotations().get(INIT_CONTAINER_ANNOTATION);
+        JSONArray initContainers = Strings.isNullOrBlank(initContainerAnnotation) ? new JSONArray() : new JSONArray(initContainerAnnotation);
+        initContainers.put(initContainer);
+        builder.editMetadata().addToAnnotations(INIT_CONTAINER_ANNOTATION, initContainers.toString()).endMetadata();
     }
 }
