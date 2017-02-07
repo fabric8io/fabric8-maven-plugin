@@ -11,6 +11,7 @@ import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
+import io.fabric8.maven.enricher.api.util.InitContainerHandler;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -30,6 +31,8 @@ public class AutoTLSEnricher extends BaseEnricher {
     static final String AUTOTLS_ANNOTATION_KEY = "service.alpha.openshift.io/serving-cert-secret-name";
 
     private String secretName;
+
+    private final InitContainerHandler initContainerHandler;
 
     enum Config implements Configs.Key {
         tlsSecretName,
@@ -59,6 +62,7 @@ public class AutoTLSEnricher extends BaseEnricher {
         super(buildContext, ENRICHER_NAME);
 
         this.secretName = getConfig(Config.tlsSecretName, getProject().getArtifactId() + "-tls");
+        this.initContainerHandler = new InitContainerHandler(buildContext.getLog());
     }
 
     @Override
@@ -136,7 +140,7 @@ public class AutoTLSEnricher extends BaseEnricher {
         builder.accept(new TypedVisitor<PodTemplateSpecBuilder>() {
             @Override
             public void visit(PodTemplateSpecBuilder builder) {
-                addInitContainer(builder, createInitContainer());
+                initContainerHandler.appendInitContainer(builder, createInitContainer());
             }
 
             private JSONObject createInitContainer() {

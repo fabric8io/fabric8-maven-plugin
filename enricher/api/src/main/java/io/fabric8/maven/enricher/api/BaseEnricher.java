@@ -40,8 +40,6 @@ import static io.fabric8.maven.core.util.Constants.*;
  */
 public abstract class BaseEnricher implements Enricher {
 
-    public static final String INIT_CONTAINER_ANNOTATION = "pod.alpha.kubernetes.io/init-containers";
-
     private final EnricherConfig config;
     private final String name;
     private EnricherContext buildContext;
@@ -123,40 +121,4 @@ public abstract class BaseEnricher implements Enricher {
         return false;
     }
 
-    protected void ensureMetadata(PodTemplateSpecBuilder obj) {
-        if (obj.buildMetadata() == null) {
-            obj.withNewMetadata().endMetadata();
-        }
-    }
-
-    protected boolean hasInitContainer(PodTemplateSpecBuilder builder, String name) {
-        if (builder.hasMetadata()) {
-            String initContainerAnnotation = builder.buildMetadata().getAnnotations().get(INIT_CONTAINER_ANNOTATION);
-            if (Strings.isNotBlank(initContainerAnnotation)) {
-                JSONArray initContainers = new JSONArray(initContainerAnnotation);
-                for (int i = 0; i < initContainers.length(); i++) {
-                    JSONObject obj = initContainers.getJSONObject(i);
-                    String existingName = obj.getString("name");
-                    if (Objects.equal(existingName, name)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    protected void addInitContainer(PodTemplateSpecBuilder builder, JSONObject initContainer) {
-        String name = initContainer.getString("name");
-        if (hasInitContainer(builder,name)) {
-            throw new IllegalArgumentException(
-                String.format("PodSpec %s already contains an init container with name %s. Cannot add a second one",
-                              builder.build().getMetadata().getName(), name));
-        }
-        ensureMetadata(builder);
-        String initContainerAnnotation = builder.buildMetadata().getAnnotations().get(INIT_CONTAINER_ANNOTATION);
-        JSONArray initContainers = Strings.isNullOrBlank(initContainerAnnotation) ? new JSONArray() : new JSONArray(initContainerAnnotation);
-        initContainers.put(initContainer);
-        builder.editMetadata().addToAnnotations(INIT_CONTAINER_ANNOTATION, initContainers.toString()).endMetadata();
-    }
 }

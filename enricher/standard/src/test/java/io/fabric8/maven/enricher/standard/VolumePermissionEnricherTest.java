@@ -22,6 +22,7 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.util.InitContainerHandler;
 import io.fabric8.utils.Strings;
 import mockit.Expectations;
 import mockit.Mocked;
@@ -70,13 +71,13 @@ public class VolumePermissionEnricherTest {
         initContainer.put("name", VolumePermissionEnricher.ENRICHER_NAME);
         initContainer.put("mountPath", "blub");
         initContainers.put(initContainer);
-        ptb.editTemplate().editMetadata().withAnnotations(Collections.singletonMap(BaseEnricher.INIT_CONTAINER_ANNOTATION, initContainers.toString())).endMetadata().endTemplate();
+        ptb.editTemplate().editMetadata().withAnnotations(Collections.singletonMap(InitContainerHandler.INIT_CONTAINER_ANNOTATION, initContainers.toString())).endMetadata().endTemplate();
         KubernetesListBuilder klb = new KubernetesListBuilder().addToPodTemplateItems(ptb.build());
 
         VolumePermissionEnricher enricher = new VolumePermissionEnricher(context);
         enricher.adapt(klb);
 
-        String initS = ((PodTemplate) klb.build().getItems().get(0)).getTemplate().getMetadata().getAnnotations().get(BaseEnricher.INIT_CONTAINER_ANNOTATION);
+        String initS = ((PodTemplate) klb.build().getItems().get(0)).getTemplate().getMetadata().getAnnotations().get(InitContainerHandler.INIT_CONTAINER_ANNOTATION);
         assertNotNull(initS);
         JSONArray actualInitContainers = new JSONArray(initS);
         assertEquals(1, actualInitContainers.length());
@@ -115,7 +116,7 @@ public class VolumePermissionEnricherTest {
             PodTemplate pt = (PodTemplate) klb.buildItem(0);
 
             String initContainers = pt.getTemplate().getMetadata().getAnnotations()
-                    .get(BaseEnricher.INIT_CONTAINER_ANNOTATION);
+                    .get(InitContainerHandler.INIT_CONTAINER_ANNOTATION);
             boolean shouldHaveInitContainer = tc.volumeNames.length > 0;
             assertEquals(shouldHaveInitContainer, initContainers != null);
             if (!shouldHaveInitContainer) {
