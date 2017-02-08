@@ -44,6 +44,9 @@
     - vertx
     - java-exec
     - webapp
+  watcher:
+    includes:
+    - docker-image
 # end::default[]
 # No enrichment at all
 - name: raw

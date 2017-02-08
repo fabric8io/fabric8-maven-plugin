@@ -17,6 +17,13 @@
 package io.fabric8.maven.plugin.mojo.build;
 
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
@@ -27,25 +34,16 @@ import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.openshift.ImageStreamService;
-import io.fabric8.maven.core.openshift.BuildService;
-import io.fabric8.maven.core.util.GoalFinder;
-import io.fabric8.maven.core.util.Gofabric8Util;
-import io.fabric8.maven.core.util.OpenShiftDependencyResources;
-import io.fabric8.maven.core.util.ProfileUtil;
-import io.fabric8.maven.core.util.ResourceFileType;
-import io.fabric8.maven.core.util.*;
 import io.fabric8.maven.core.openshift.OpenShiftBuildService;
 import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.Gofabric8Util;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.core.util.ProfileUtil;
-import io.fabric8.maven.core.util.ResourceClassifier;
 import io.fabric8.maven.core.util.ResourceFileType;
 import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.access.DockerConnectionDetector;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.service.DockerAccessFactory;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.MojoParameters;
@@ -62,6 +60,7 @@ import io.fabric8.openshift.api.model.BuildSource;
 import io.fabric8.openshift.api.model.BuildStrategy;
 import io.fabric8.openshift.api.model.BuildStrategyBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -69,19 +68,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
-import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.loadResources;
 
 /**
  * Builds the docker images configured for this project via a Docker or S2I binary build.
@@ -228,13 +214,11 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
         super.executeInternal(hub);
     }
 
-    public BuildMojo() {
-        super();
-    }
-
     @Override
-    protected List<DockerConnectionDetector.DockerHostProvider> getDockerHostProviders() {
-        return Gofabric8Util.extractDockerHostProvider(log);
+    protected DockerAccessFactory.DockerAccessContext getDockerAccessContext() {
+        return new DockerAccessFactory.DockerAccessContext.Builder(super.getDockerAccessContext())
+                .dockerHostProviders(Gofabric8Util.extractDockerHostProvider(log))
+                .build();
     }
 
     @Override

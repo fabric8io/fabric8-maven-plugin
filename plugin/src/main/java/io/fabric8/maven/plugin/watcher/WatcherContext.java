@@ -1,0 +1,203 @@
+/*
+ * Copyright 2016 Red Hat, Inc.
+ *
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+package io.fabric8.maven.plugin.watcher;
+
+import java.io.File;
+
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
+import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.docker.service.BuildService;
+import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.service.WatchService;
+import io.fabric8.maven.docker.util.Logger;
+
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.project.MavenProject;
+
+/**
+ * @author nicola
+ * @since 06/02/17
+ */
+public class WatcherContext {
+
+    private MavenProject project;
+    private MavenSession session;
+    private ProcessorConfig config;
+    private String goalName;
+    private Logger logger;
+    private PlatformMode mode;
+    private OpenShiftBuildStrategy strategy;
+    private boolean useProjectClasspath;
+    private ServiceHub serviceHub;
+    private WatchService.WatchContext watchContext;
+    private BuildService.BuildContext buildContext;
+    private String namespace;
+    private File openshiftManifest;
+    private File kubernetesManifest;
+    private KubernetesClient kubernetesClient;
+
+    private WatcherContext() {
+    }
+
+    public MavenProject getProject() {
+        return project;
+    }
+
+    public MavenSession getSession() {
+        return session;
+    }
+
+    public ProcessorConfig getConfig() {
+        return config;
+    }
+
+    public String getGoalName() {
+        return goalName;
+    }
+
+    public Logger getLogger() {
+        return logger;
+    }
+
+    public PlatformMode getMode() {
+        return mode;
+    }
+
+    public OpenShiftBuildStrategy getStrategy() {
+        return strategy;
+    }
+
+    public boolean isUseProjectClasspath() {
+        return useProjectClasspath;
+    }
+
+    public ServiceHub getServiceHub() {
+        return serviceHub;
+    }
+
+    public WatchService.WatchContext getWatchContext() {
+        return watchContext;
+    }
+
+    public BuildService.BuildContext getBuildContext() {
+        return buildContext;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public File getOpenshiftManifest() {
+        return openshiftManifest;
+    }
+
+    public File getKubernetesManifest() {
+        return kubernetesManifest;
+    }
+
+    public KubernetesClient getKubernetesClient() {
+        return kubernetesClient;
+    }
+
+    // ========================================================================
+
+    public static class Builder {
+
+        private WatcherContext ctx = new WatcherContext();
+
+        public Builder project(MavenProject project) {
+            ctx.project = project;
+            return this;
+        }
+
+        public Builder session(MavenSession session) {
+            ctx.session = session;
+            return this;
+        }
+
+        public Builder config(ProcessorConfig config) {
+            ctx.config = config;
+            return this;
+        }
+
+        public Builder goalName(String goalName) {
+            ctx.goalName = goalName;
+            return this;
+        }
+
+        public Builder logger(Logger logger) {
+            ctx.logger = logger;
+            return this;
+        }
+
+        public Builder mode(PlatformMode mode) {
+            ctx.mode = mode;
+            return this;
+        }
+
+        public Builder strategy(OpenShiftBuildStrategy strategy) {
+            ctx.strategy = strategy;
+            return this;
+        }
+
+        public Builder useProjectClasspath(boolean useProjectClasspath) {
+            ctx.useProjectClasspath = useProjectClasspath;
+            return this;
+        }
+
+        public Builder serviceHub(ServiceHub serviceHub) {
+            ctx.serviceHub = serviceHub;
+            return this;
+        }
+
+        public Builder watchContext(WatchService.WatchContext watchContext) {
+            ctx.watchContext = watchContext;
+            return this;
+        }
+
+        public Builder buildContext(BuildService.BuildContext buildContext) {
+            ctx.buildContext = buildContext;
+            return this;
+        }
+
+        public Builder namespace(String namespace) {
+            ctx.namespace = namespace;
+            return this;
+        }
+
+        public Builder kubernetesManifest(File kubernetesManifest) {
+            ctx.kubernetesManifest = kubernetesManifest;
+            return this;
+        }
+
+        public Builder openshiftManifest(File openshiftManifest) {
+            ctx.openshiftManifest = openshiftManifest;
+            return this;
+        }
+
+        public Builder kubernetesClient(KubernetesClient kubernetesClient) {
+            ctx.kubernetesClient = kubernetesClient;
+            return this;
+        }
+
+        public WatcherContext build() {
+            return ctx;
+        }
+    }
+}

@@ -237,4 +237,14 @@ public class ProfileUtil {
         }
     };
 
+    /**
+     * Get the watcher configuration
+     */
+    public final static ProcessorConfigurationExtractor WATCHER_CONFIG = new ProcessorConfigurationExtractor() {
+        @Override
+        public ProcessorConfig extract(Profile profile) {
+            return profile.getWatcherConfig();
+        }
+    };
+
 }
