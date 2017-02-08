@@ -60,8 +60,6 @@ public class GitEnricher extends BaseEnricher {
                     if (id != null) {
                         annotations.put(Annotations.Builds.GIT_COMMIT, id);
                     }
-                } else {
-                    log.warn("No .git/config file could be found so cannot annotate kubernetes resources with git commit SHA and branch");
                 }
             }
             return annotations;

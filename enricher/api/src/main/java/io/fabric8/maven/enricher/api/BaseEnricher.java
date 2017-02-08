@@ -40,8 +40,6 @@ import static io.fabric8.maven.core.util.Constants.*;
  */
 public abstract class BaseEnricher implements Enricher {
 
-    public static final String INIT_CONTAINER_ANNOTATION = "pod.alpha.kubernetes.io/init-containers";
-
     private final EnricherConfig config;
     private final String name;
     private EnricherContext buildContext;
@@ -123,41 +121,4 @@ public abstract class BaseEnricher implements Enricher {
         return false;
     }
 
-    protected void ensureMetadata(PodTemplateSpecBuilder obj) {
-        if (obj.buildMetadata() == null) {
-            obj.withNewMetadata().endMetadata();
-        }
-    }
-
-    protected void addInitContainer(PodTemplateSpecBuilder builder, JSONObject initContainer) {
-        ensureMetadata(builder);
-        String initContainerAnnotation = builder.buildMetadata().getAnnotations().get(INIT_CONTAINER_ANNOTATION);
-        JSONArray initContainers = Strings.isNullOrBlank(initContainerAnnotation) ? new JSONArray()
-                : new JSONArray(initContainerAnnotation);
-
-        // lets avoid duplicates being added
-        boolean duplicate = false;
-        int length = initContainers.length();
-        for (int i = 0; i < length; i++) {
-            JSONObject obj = initContainers.getJSONObject(i);
-            if (duplicateInitcontainer(obj, initContainer)) {
-                duplicate = true;
-            }
-
-        }
-        if (!duplicate) {
-            initContainers.put(initContainer);
-        }
-        builder.editMetadata().addToAnnotations(INIT_CONTAINER_ANNOTATION, initContainers.toString()).endMetadata();
-    }
-
-    private boolean duplicateInitcontainer(JSONObject a, JSONObject b) {
-        Object name1 = a.get("name");
-        Object name2 = b.get("name");
-        if (Objects.equal(name1, name2)) {
-            log.warn("Found duplicate init containers with names " + name1 + " so ignoring " + b);
-            return true;
-        }
-        return false;
-    }
 }
