@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.2.17,</span>
-<span id="revdate">2017-02-04</span>
+<span id="revdate">2017-02-08</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -5521,7 +5521,6 @@ disabled, the liveness check uses <code>GET localhost:8080/ping</code></p>
     - <span class="string"><span class="content">fmp-pod-annotations</span></span>
     - <span class="string"><span class="content">fmp-git</span></span>
     <span class="comment"># TODO: Documents and verify enrichers below</span>
-    - <span class="string"><span class="content">fmp-dependency</span></span>
     - <span class="string"><span class="content">fmp-openshift-s2i</span></span>
     - <span class="string"><span class="content">fmp-debug</span></span>
     - <span class="string"><span class="content">fmp-merge</span></span>
@@ -5539,6 +5538,8 @@ disabled, the liveness check uses <code>GET localhost:8080/ping</code></p>
     - <span class="string"><span class="content">f8-prometheus</span></span>
     - <span class="string"><span class="content">f8-maven-scm</span></span>
     - <span class="string"><span class="content">f8-maven-issue-mgmt</span></span>
+    <span class="comment"># Depenendcies shouldn't be enricher anymore, it's last in the list</span>
+    - <span class="string"><span class="content">fmp-dependency</span></span>
 
   <span class="key">generator</span>:
     <span class="key">includes</span>:
@@ -6088,7 +6089,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.17<br>
-Last updated 2017-02-04 16:04:09 UTC
+Last updated 2017-02-08 09:21:33 UTC
 </div>
 </div>
 </body>
