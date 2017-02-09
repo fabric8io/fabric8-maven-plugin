@@ -41,7 +41,7 @@ public class DocLinkEnricher extends AbstractLiveEnricher {
 
     @Override
     public Map<String, String> getAnnotations(Kind kind) {
-        if (kind.isDeployOrReplicaKind()) {
+        if (kind.isController()) {
             String url = findDocumentationUrl();
             return url != null ? Collections.singletonMap(Annotations.Builds.DOCS_URL, url) : null;
         } else {

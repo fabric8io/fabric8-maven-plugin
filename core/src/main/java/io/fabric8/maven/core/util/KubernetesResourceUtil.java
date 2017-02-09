@@ -220,7 +220,8 @@ public class KubernetesResourceUtil {
             "rc", "ReplicationController",
             "rs", "ReplicaSet",
             "daemonset", "DaemonSet",
-            "petset", "PetSet",
+            "ds", "DaemonSet",
+            "statefulset", "StatefulSet",
 
             // OpenShift Resources:
             "route", "Route",

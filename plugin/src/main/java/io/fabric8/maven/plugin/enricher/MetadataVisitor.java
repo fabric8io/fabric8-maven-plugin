@@ -22,10 +22,7 @@ import java.util.Properties;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSetBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
-import io.fabric8.kubernetes.api.model.extensions.PetSetBuilder;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
+import io.fabric8.kubernetes.api.model.extensions.*;
 import io.fabric8.maven.core.config.MetaDataConfig;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
@@ -56,11 +53,11 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    public static void setProcessorConfig(ProcessorConfig config) {
+    static void setProcessorConfig(ProcessorConfig config) {
         configHolder.set(config);
     }
 
-    public static void clearProcessorConfig() {
+    static void clearProcessorConfig() {
         configHolder.set(null);
     }
 
@@ -144,7 +141,7 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
     public static class PodTemplateSpecBuilderVisitor extends MetadataVisitor<PodTemplateSpecBuilder> {
 
-        public PodTemplateSpecBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
+        PodTemplateSpecBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
             super(resourceConfig, enricher);
         }
 
@@ -155,14 +152,13 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(PodTemplateSpecBuilder item) {
-            ObjectMeta ret = item.getMetadata();
-            return ret == null ? item.withNewMetadata().endMetadata().getMetadata() : ret;
+            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
         }
     }
 
     public static class ServiceBuilderVisitor extends MetadataVisitor<ServiceBuilder> {
 
-        public ServiceBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
+        ServiceBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
             super(resourceConfig, enricher);
         }
 
@@ -173,13 +169,12 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(ServiceBuilder item) {
-            ObjectMeta ret = item.getMetadata();
-            return ret == null ? item.withNewMetadata().endMetadata().getMetadata() : ret;
+            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
         }
     }
 
     public static class ReplicaSet extends MetadataVisitor<ReplicaSetBuilder> {
-        public ReplicaSet(ResourceConfig resourceConfig, EnricherManager enricher) {
+        ReplicaSet(ResourceConfig resourceConfig, EnricherManager enricher) {
             super(resourceConfig, enricher);
         }
 
@@ -190,13 +185,12 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(ReplicaSetBuilder item) {
-            ObjectMeta ret = item.getMetadata();
-            return ret == null ? item.withNewMetadata().endMetadata().getMetadata() : ret;
+            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
         }
     }
 
     public static class ReplicationControllerBuilderVisitor extends MetadataVisitor<ReplicationControllerBuilder> {
-        public ReplicationControllerBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
+        ReplicationControllerBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
             super(resourceConfig, enricher);
         }
 
@@ -207,13 +201,12 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(ReplicationControllerBuilder item) {
-            ObjectMeta ret = item.getMetadata();
-            return ret == null ? item.withNewMetadata().endMetadata().getMetadata() : ret;
+            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
         }
     }
 
     public static class DeploymentBuilderVisitor extends MetadataVisitor<DeploymentBuilder> {
-        public DeploymentBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
+        DeploymentBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
             super(resourceConfig, enricher);
         }
 
@@ -224,13 +217,12 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(DeploymentBuilder item) {
-            ObjectMeta ret = item.getMetadata();
-            return ret == null ? item.withNewMetadata().endMetadata().getMetadata() : ret;
+            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
         }
     }
 
     public static class DaemonSetBuilderVisitor extends MetadataVisitor<DaemonSetBuilder> {
-        public DaemonSetBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
+        DaemonSetBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
             super(resourceConfig, enricher);
         }
 
@@ -241,25 +233,23 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(DaemonSetBuilder item) {
-            ObjectMeta ret = item.getMetadata();
-            return ret == null ? item.withNewMetadata().endMetadata().getMetadata() : ret;
+            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
         }
     }
 
-    public static class PetSetBuilderVisitor extends MetadataVisitor<PetSetBuilder> {
-        public PetSetBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
+    public static class StatefulSetBuilderVisitor extends MetadataVisitor<StatefulSetBuilder> {
+        StatefulSetBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
             super(resourceConfig, enricher);
         }
 
         @Override
         protected Kind getKind() {
-            return Kind.PET_SET;
+            return Kind.STATEFUL_SET;
         }
 
         @Override
-        protected ObjectMeta getOrCreateMetadata(PetSetBuilder item) {
-            ObjectMeta ret = item.getMetadata();
-            return ret == null ? item.withNewMetadata().endMetadata().getMetadata() : ret;
+        protected ObjectMeta getOrCreateMetadata(StatefulSetBuilder item) {
+            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
         }
     }
 }

@@ -53,12 +53,12 @@ import io.fabric8.utils.Lists;
  */
 public class DefaultControllerEnricher extends BaseEnricher {
     protected static final String[] POD_CONTROLLER_KINDS =
-        { "ReplicationController", "ReplicaSet", "Deployment", "DeploymentConfig", "PetSet", "DaemonSet" };
+        { "ReplicationController", "ReplicaSet", "Deployment", "DeploymentConfig", "StatefulSet", "DaemonSet" };
 
     private final DeploymentHandler deployHandler;
     private final ReplicationControllerHandler rcHandler;
     private final ReplicaSetHandler rsHandler;
-    private final PetSetHandler petSetHandler;
+    private final StatefulSetHandler statefulSetHandler;
     private final DaemonSetHandler daemonSetHandler;
 
     // Available configuration keys
@@ -77,7 +77,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
         rcHandler = handlers.getReplicationControllerHandler();
         rsHandler = handlers.getReplicaSetHandler();
         deployHandler = handlers.getDeploymentHandler();
-        petSetHandler = handlers.getPetSetHandler();
+        statefulSetHandler = handlers.getStatefulSetHandler();
         daemonSetHandler = handlers.getDaemonSetHandler();
     }
 
@@ -102,9 +102,9 @@ public class DefaultControllerEnricher extends BaseEnricher {
                 if (type.equalsIgnoreCase("deployment")) {
                     log.info("Adding a default Deployment");
                     builder.addToDeploymentItems(defaultDeployment);
-                } else if (type.equalsIgnoreCase("petSet")) {
-                    log.info("Adding a default PetSet");
-                    builder.addToPetSetItems(petSetHandler.getPetSet(config, images));
+                } else if (type.equalsIgnoreCase("statefulSet")) {
+                    log.info("Adding a default StatefulSet");
+                    builder.addToStatefulSetItems(statefulSetHandler.getStatefulSet(config, images));
                 } else if (type.equalsIgnoreCase("daemonSet")) {
                     log.info("Adding a default DaemonSet");
                     builder.addToDaemonSetItems(daemonSetHandler.getDaemonSet(config, images));

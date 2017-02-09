@@ -3,45 +3,43 @@ package io.fabric8.maven.core.handler;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.extensions.PetSet;
-import io.fabric8.kubernetes.api.model.extensions.PetSetBuilder;
-import io.fabric8.kubernetes.api.model.extensions.PetSetSpec;
-import io.fabric8.kubernetes.api.model.extensions.PetSetSpecBuilder;
+import io.fabric8.kubernetes.api.model.extensions.*;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 
 import java.util.List;
 
 /**
- * Created by matthew on 26/10/16.
+ * Handler for StatefulSets
+ *
+ * @author matthew on 26/10/16.
  */
-public class PetSetHandler {
+public class StatefulSetHandler {
     private final PodTemplateHandler podTemplateHandler;
 
-    PetSetHandler(PodTemplateHandler podTemplateHandler) {
+    StatefulSetHandler(PodTemplateHandler podTemplateHandler) {
         this.podTemplateHandler = podTemplateHandler;
     }
 
-    public PetSet getPetSet(ResourceConfig config,
-                                    List<ImageConfiguration> images) {
-        PetSet petSet = new PetSetBuilder()
-                .withMetadata(createPetSetMetaData(config))
-                .withSpec(createPetSetSpec(config, images))
-                .build();
+    public StatefulSet getStatefulSet(ResourceConfig config,
+                                      List<ImageConfiguration> images) {
 
-        return petSet;
+        return new StatefulSetBuilder()
+                .withMetadata(createStatefulSetMetaData(config))
+                .withSpec(createStatefulSetSpec(config, images))
+                .build();
     }
 
     // ===========================================================
 
-    private ObjectMeta createPetSetMetaData(ResourceConfig config) {
+    private ObjectMeta createStatefulSetMetaData(ResourceConfig config) {
         return new ObjectMetaBuilder()
                 .withName(KubernetesHelper.validateKubernetesId(config.getControllerName(), "controller name"))
                 .build();
     }
 
-    private PetSetSpec createPetSetSpec(ResourceConfig config, List<ImageConfiguration> images) {
-        return new PetSetSpecBuilder()
+    private StatefulSetSpec createStatefulSetSpec(ResourceConfig config, List<ImageConfiguration> images) {
+        return new StatefulSetSpecBuilder()
                 .withReplicas(config.getReplicas())
                 .withServiceName(config.getControllerName())
                 .withTemplate(podTemplateHandler.getPodTemplate(config,images))

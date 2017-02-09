@@ -13,6 +13,7 @@ import java.util.List;
  * Created by matthew on 26/10/16.
  */
 public class DaemonSetHandler {
+
     private final PodTemplateHandler podTemplateHandler;
 
     DaemonSetHandler(PodTemplateHandler podTemplateHandler) {
@@ -20,13 +21,11 @@ public class DaemonSetHandler {
     }
 
     public DaemonSet getDaemonSet(ResourceConfig config,
-                            List<ImageConfiguration> images) {
-        DaemonSet daemonSet = new DaemonSetBuilder()
+                                  List<ImageConfiguration> images) {
+        return new DaemonSetBuilder()
                 .withMetadata(createDaemonSetMetaData(config))
                 .withSpec(createDaemonSetSpec(config, images))
                 .build();
-
-        return daemonSet;
     }
 
     // ===========================================================

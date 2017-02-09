@@ -87,7 +87,7 @@ public class EnricherManager {
             new MetadataVisitor.ServiceBuilderVisitor(resourceConfig, this),
             new MetadataVisitor.PodTemplateSpecBuilderVisitor(resourceConfig, this),
             new MetadataVisitor.DaemonSetBuilderVisitor(resourceConfig, this),
-            new MetadataVisitor.PetSetBuilderVisitor(resourceConfig, this)
+            new MetadataVisitor.StatefulSetBuilderVisitor(resourceConfig, this)
         };
 
         selectorVisitorCreators = new SelectorVisitor[] {
@@ -96,7 +96,7 @@ public class EnricherManager {
             new SelectorVisitor.ReplicationControllerSpecBuilderVisitor(this),
             new SelectorVisitor.ServiceSpecBuilderVisitor(this),
             new SelectorVisitor.DaemonSetSpecBuilderVisitor(this),
-            new SelectorVisitor.PetSetSpecBuilderVisitor(this)
+            new SelectorVisitor.StatefulSetSpecBuilderVisitor(this)
         };
     }
 

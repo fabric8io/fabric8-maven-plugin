@@ -28,7 +28,7 @@ public class HandlerHub {
     private final ReplicaSetHandler replicaSetHandler;
     private final ReplicationControllerHandler replicationControllerHandler;
     private final DeploymentHandler deploymentHandler;
-    private final PetSetHandler petSetHandler;
+    private final StatefulSetHandler statefulSetHandler;
     private final DaemonSetHandler daemonSetHandler;
 
     public HandlerHub(MavenProject project) {
@@ -41,7 +41,7 @@ public class HandlerHub {
         replicaSetHandler = new ReplicaSetHandler(podTemplateHandler);
         replicationControllerHandler = new ReplicationControllerHandler(podTemplateHandler);
         serviceHandler = new ServiceHandler();
-        petSetHandler = new PetSetHandler(podTemplateHandler);
+        statefulSetHandler = new StatefulSetHandler(podTemplateHandler);
         daemonSetHandler = new DaemonSetHandler(podTemplateHandler);
     }
 
@@ -61,7 +61,11 @@ public class HandlerHub {
         return replicationControllerHandler;
     }
 
-    public PetSetHandler getPetSetHandler() { return petSetHandler; }
+    public StatefulSetHandler getStatefulSetHandler() {
+        return statefulSetHandler;
+    }
 
-    public DaemonSetHandler getDaemonSetHandler() { return daemonSetHandler; }
+    public DaemonSetHandler getDaemonSetHandler() {
+        return daemonSetHandler;
+    }
 }

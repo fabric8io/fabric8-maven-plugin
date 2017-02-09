@@ -28,33 +28,15 @@ public enum Kind {
     DEPLOYMENT,
     DEPLOYMENT_CONFIG,
     DAEMON_SET,
-    PET_SET,
+    STATEFUL_SET,
     POD_SPEC;
 
     /**
-     * Returns true if the kind is a Deployment/DeploymentConfig or ReplicaSet/ReplicationController
+     * Returns true if the kind is a controller
      */
-    public boolean isDeployOrReplicaKind() {
+    public boolean isController() {
         return this == Kind.REPLICA_SET || this == Kind.REPLICATION_CONTROLLER ||
                this == Kind.DEPLOYMENT || this == Kind.DEPLOYMENT_CONFIG ||
-               this == Kind.DAEMON_SET || this == Kind.PET_SET;
-    }
-
-    /**
-     * Check whether kinds is a Service
-     *
-     * @param kind kind to check
-     * @return true if the given kind is a service
-     */
-    public boolean isService() {
-        return this == Kind.SERVICE;
-    }
-
-    public boolean isDaemonSet() {
-        return this == Kind.DAEMON_SET;
-    }
-
-    public boolean isPetSet() {
-        return this == Kind.PET_SET;
+               this == Kind.DAEMON_SET || this == Kind.STATEFUL_SET;
     }
 }

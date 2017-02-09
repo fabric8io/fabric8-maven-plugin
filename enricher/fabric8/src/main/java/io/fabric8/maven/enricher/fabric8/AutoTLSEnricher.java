@@ -67,7 +67,7 @@ public class AutoTLSEnricher extends BaseEnricher {
 
     @Override
     public Map<String, String> getAnnotations(Kind kind) {
-        if (!isOpenShiftMode() || !kind.isService()) {
+        if (!isOpenShiftMode() || kind != Kind.SERVICE) {
             return null;
         }
         return Collections.singletonMap(AUTOTLS_ANNOTATION_KEY, this.secretName);

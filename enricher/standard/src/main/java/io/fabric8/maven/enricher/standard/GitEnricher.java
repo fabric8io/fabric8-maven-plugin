@@ -47,7 +47,7 @@ public class GitEnricher extends BaseEnricher {
         Map<String, String> annotations = new HashMap<>();
         Repository repository = null;
         try {
-            if (kind.isDeployOrReplicaKind() || kind.isService()) {
+            if (kind.isController() || kind == Kind.SERVICE) {
                 // Git annotations (if git is used as SCM)
                 repository = GitUtil.getGitRepository(getProject());
                 if (repository != null) {
