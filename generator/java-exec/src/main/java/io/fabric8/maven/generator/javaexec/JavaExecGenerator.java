@@ -150,6 +150,7 @@ public class JavaExecGenerator extends BaseGenerator {
                 }
             }
             if (mainClass != null) {
+                log.verbose("Detected main class %s", mainClass);
                 ret.put(JAVA_MAIN_CLASS_ENV_VAR, mainClass);
             }
         }

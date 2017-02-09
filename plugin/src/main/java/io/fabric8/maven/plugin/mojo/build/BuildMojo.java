@@ -416,7 +416,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
         ImageName imageName = new ImageName(imageConfig.getName());
         String buildName = getS2IBuildName(imageName);
         String imageStreamName = getImageStreamName(imageName);
-        String outputImageStreamTag = imageStreamName + ":" + imageName.getTag();
+        String outputImageStreamTag = imageStreamName + ":" + (imageName.getTag() != null ? imageName.getTag() : "latest");
 
         BuildStrategy buildStrategyResource = createBuildStrategy(imageConfig, buildStrategy);
         BuildOutput buildOutput = new BuildOutputBuilder().withNewTo()
@@ -473,9 +473,9 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
                   .withOutput(buildOutput)
                   .endSpec()
                   .done();
-            log.info("Updating BuildConfig %s for %s build", buildName, buildStrategy.getType());
+            log.info("Updating BuildConfig %s for %s strategy", buildName, buildStrategy.getType());
         } else {
-            log.info("Using BuildConfig %s for %s build", buildName, buildStrategy.getType());
+            log.info("Using BuildConfig %s for %s strategy", buildName, buildStrategy.getType());
         }
         return buildName;
     }

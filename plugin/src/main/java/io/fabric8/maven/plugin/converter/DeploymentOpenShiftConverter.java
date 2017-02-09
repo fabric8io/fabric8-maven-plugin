@@ -99,13 +99,14 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                         for (Map.Entry<String, String> entry : containerToImageMap.entrySet()) {
                             String containerName = entry.getKey();
                             ImageName image = new ImageName(entry.getValue());
+                            String tag = image.getTag() != null ? image.getTag() : "latest";
                             specBuilder.addNewTrigger()
                                     .withType("ImageChange")
                                     .withNewImageChangeParams()
                                     .withAutomatic(true)
                                     .withNewFrom()
                                     .withKind("ImageStreamTag")
-                                    .withName(image.getSimpleName() + ":" + image.getTag())
+                                    .withName(image.getSimpleName() + ":" + tag)
                                     .endFrom()
                                     .withContainerNames(containerName)
                                     .endImageChangeParams()

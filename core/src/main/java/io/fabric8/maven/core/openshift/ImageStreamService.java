@@ -78,12 +78,10 @@ public class ImageStreamService {
     /**
      * Save the images stream to a file
      * @param imageName name of the image for which the stream should be extracted
-     * @param target filel to store the image stream
+     * @param target file to store the image stream
      */
     public void saveImageStreamResource(ImageName imageName, File target) throws MojoExecutionException {
-        if (Strings.isNullOrBlank(imageName.getTag())) {
-            throw new MojoExecutionException("No ':' in image name so cannot extract the tag: " + imageName);
-        }
+        String tag = Strings.isNullOrBlank(imageName.getTag()) ? "latest" : imageName.getTag();
         try {
             ImageStream is = new ImageStreamBuilder()
                     .withNewMetadata()
@@ -92,7 +90,7 @@ public class ImageStreamService {
 
                     .withNewSpec()
                     .addNewTag()
-                      .withName(imageName.getTag())
+                      .withName(tag)
                       .withNewFrom().withKind("ImageStreamImage").endFrom()
                     .endTag()
                     .endSpec()
@@ -100,7 +98,7 @@ public class ImageStreamService {
                     .build();
             createOrUpdateImageStreamTag(client, imageName, is);
             File fullTargetFile = writeImageStreamToFile(is, target);
-            log.info("Imagestream %s written to %s", imageName.getSimpleName(), fullTargetFile);
+            log.info("ImageStream %s written to %s", imageName.getSimpleName(), fullTargetFile);
         } catch (KubernetesClientException e) {
             KubernetesResourceUtil.handleKubernetesClientException(e, this.log);
         } catch (IOException e) {
@@ -120,7 +118,7 @@ public class ImageStreamService {
             targetWithoutExt = new File(p.substring(0,p.length() - ext.length() - 1));
         } catch (IllegalArgumentException exp) {
             throw new MojoExecutionException(
-                String.format("Invalid extension '%s' for image stream target file '%s'. Allowed extensions: yml, json", ext, target.getPath()), exp);
+                String.format("Invalid extension '%s' for ImageStream target file '%s'. Allowed extensions: yml, json", ext, target.getPath()), exp);
         }
         return KubernetesResourceUtil.writeResource(entity, targetWithoutExt, type);
     }
