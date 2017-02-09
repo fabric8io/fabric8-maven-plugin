@@ -14,9 +14,7 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.plugin.watcher;
-
-import java.io.File;
+package io.fabric8.maven.watcher.api;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;

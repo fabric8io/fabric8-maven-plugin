@@ -1,4 +1,4 @@
-package io.fabric8.maven.plugin.watcher;
+package io.fabric8.maven.watcher.api;
 
 import io.fabric8.maven.core.util.PrefixedLogger;
 

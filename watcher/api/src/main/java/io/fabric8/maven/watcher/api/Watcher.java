@@ -1,4 +1,4 @@
-package io.fabric8.maven.plugin.watcher;
+package io.fabric8.maven.watcher.api;
 
 import java.util.List;
 import java.util.Set;
@@ -8,9 +8,7 @@ import io.fabric8.maven.core.config.Named;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 
-/**
- *
- */
+
 public interface Watcher extends Named {
 
     /**

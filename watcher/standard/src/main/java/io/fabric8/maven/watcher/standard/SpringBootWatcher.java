@@ -1,4 +1,4 @@
-package io.fabric8.maven.plugin.watcher;
+package io.fabric8.maven.watcher.standard;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -11,6 +11,7 @@ import java.net.URLClassLoader;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -27,6 +28,8 @@ import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.watcher.api.BaseWatcher;
+import io.fabric8.maven.watcher.api.WatcherContext;
 import io.fabric8.utils.Closeables;
 import io.fabric8.utils.Strings;
 
@@ -147,17 +150,21 @@ public class SpringBootWatcher extends BaseWatcher {
                 log.debug("Running: " + command);
                 final Process process = Runtime.getRuntime().exec(command);
 
-                Runtime.getRuntime().addShutdownHook(new Thread("mvn fabric8:watch-spring-boot shutdown hook") {
+                final AtomicBoolean outputEnabled = new AtomicBoolean(true);
+                Runtime.getRuntime().addShutdownHook(new Thread("fabric8:watch [spring-boot] shutdown hook") {
                     @Override
                     public void run() {
-                        log.info("Terminating the RemoteSpringApplication");
+                        log.info("Terminating the Spring remote client...");
+                        outputEnabled.set(false);
                         process.destroy();
                     }
                 });
                 Logger logger = new PrefixedLogger("Spring-Remote", log);
-                processOutput(logger, process.getInputStream(), false);
-                processOutput(logger, process.getErrorStream(), true);
+                Thread stdOutPrinter = startOutputProcessor(logger, process.getInputStream(), false, outputEnabled);
+                Thread stdErrPrinter = startOutputProcessor(logger, process.getErrorStream(), true, outputEnabled);
                 int status = process.waitFor();
+                stdOutPrinter.join();
+                stdErrPrinter.join();
                 if (status != 0) {
                     log.warn("Process returned status: %s", status);
                 }
@@ -170,25 +177,34 @@ public class SpringBootWatcher extends BaseWatcher {
         }
     }
 
-
-    protected void processOutput(Logger logger, InputStream inputStream, boolean error) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        try {
-            while (true) {
-                String line = reader.readLine();
-                if (line == null) break;
-
-                if (error) {
-                    logger.error("%s", line);
-                } else {
-                    logger.info("%s", line);
+    protected Thread startOutputProcessor(final Logger logger, final InputStream inputStream, final boolean error, final AtomicBoolean outputEnabled) throws IOException {
+        Thread printer = new Thread() {
+            @Override
+            public void run() {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                try {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (outputEnabled.get()) {
+                            if (error) {
+                                logger.error("%s", line);
+                            } else {
+                                logger.info("%s", line);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    if (outputEnabled.get()) {
+                        logger.error("Failed to process " + (error ? "stderr" : "stdout") + " from spring-remote process: " + e);
+                    }
+                } finally {
+                    Closeables.closeQuietly(reader);
                 }
             }
-        } catch (Exception e) {
-            logger.error("Failed to process " + (error ? "stderr" : "stdout") + ": " + e);
-            throw e;
-        } finally {
-            Closeables.closeQuietly(reader);
-        }
+        };
+
+        printer.start();
+        return printer;
     }
+
 }

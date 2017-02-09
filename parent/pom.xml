@@ -230,6 +230,18 @@
         <version>${project.version}</version>
       </dependency>
 
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-watcher-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-watcher-standard</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
       <!-- == external deps =============================== -->
 
       <dependency>

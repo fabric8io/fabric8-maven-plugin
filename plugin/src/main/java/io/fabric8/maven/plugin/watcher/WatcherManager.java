@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.plugin.watcher;
 
 import java.util.List;
@@ -27,8 +26,8 @@ import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.PluginServiceFactory;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
-
-import org.apache.maven.plugin.MojoExecutionException;
+import io.fabric8.maven.watcher.api.Watcher;
+import io.fabric8.maven.watcher.api.WatcherContext;
 
 /**
  * Manager responsible for finding and calling watchers
@@ -53,6 +52,7 @@ public class WatcherManager {
                                                "META-INF/fabric8/fabric8-watcher-default",
                                                "META-INF/fabric8/watcher",
                                                "META-INF/fabric8-watcher");
+
         ProcessorConfig config = watcherCtx.getConfig();
         Logger log = watcherCtx.getLogger();
         List<Watcher> usableWatchers  = config.prepareProcessors(watchers, "watcher");

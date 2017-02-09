@@ -45,8 +45,8 @@ import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
-import io.fabric8.maven.plugin.watcher.WatcherContext;
 import io.fabric8.maven.plugin.watcher.WatcherManager;
+import io.fabric8.maven.watcher.api.WatcherContext;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;

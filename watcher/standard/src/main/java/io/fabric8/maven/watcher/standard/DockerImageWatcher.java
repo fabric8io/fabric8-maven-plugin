@@ -1,4 +1,4 @@
-package io.fabric8.maven.plugin.watcher;
+package io.fabric8.maven.watcher.standard;
 
 import java.util.Date;
 import java.util.List;
@@ -28,6 +28,8 @@ import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.WatchService;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.Task;
+import io.fabric8.maven.watcher.api.BaseWatcher;
+import io.fabric8.maven.watcher.api.WatcherContext;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.client.OpenShiftClient;

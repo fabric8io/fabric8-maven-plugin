@@ -109,6 +109,16 @@
       <artifactId>fabric8-maven-generator-webapp</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>fabric8-maven-watcher-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>fabric8-maven-watcher-standard</artifactId>
+    </dependency>
+
     <!-- == Fabric8 ===================================== -->
 
     <dependency>

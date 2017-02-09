@@ -1,2 +1,0 @@
-io.fabric8.maven.plugin.watcher.SpringBootWatcher,1000
-io.fabric8.maven.plugin.watcher.DockerImageWatcher,1001
