@@ -86,7 +86,7 @@ public class PodLogService {
                     log.warn("Unknown on-exit command: `%s`", onExitOperationLower);
                 }
                 resizeApp(kubernetes, namespace, entities, 1, log);
-                Runtime.getRuntime().addShutdownHook(new Thread("mvn fabric8:run-interactive shutdown hook") {
+                Runtime.getRuntime().addShutdownHook(new Thread("pod log service shutdown hook") {
                     @Override
                     public void run() {
                         if (onExitOperationLower.equals(OPERATION_UNDEPLOY)) {

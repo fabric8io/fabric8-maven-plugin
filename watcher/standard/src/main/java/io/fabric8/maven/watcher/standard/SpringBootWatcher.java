@@ -23,6 +23,7 @@ import io.fabric8.kubernetes.client.dsl.ClientResource;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.service.PodLogService;
 import io.fabric8.maven.core.util.ClassUtil;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.core.util.SpringBootUtil;
@@ -41,7 +42,14 @@ public class SpringBootWatcher extends BaseWatcher {
 
     private static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
 
-    private long serviceUrlWaitTimeSeconds = 5;
+    // Available configuration keys
+    private enum Config implements Configs.Key {
+
+        // The time to wait for the service to be exposed (by the expose controller)
+        serviceUrlWaitTimeSeconds {{ d = "5"; }};
+
+        public String def() { return d; } protected String d;
+    }
 
     public SpringBootWatcher(WatcherContext watcherContext) {
         super(watcherContext, "spring-boot");
@@ -64,7 +72,7 @@ public class SpringBootWatcher extends BaseWatcher {
 
         new PodLogService(logContext).tailAppPodsLogs(kubernetes, getContext().getNamespace(), resources, false, null, true, null, false);
 
-        long serviceUrlWaitTimeSeconds = this.serviceUrlWaitTimeSeconds;
+        long serviceUrlWaitTimeSeconds = Configs.asInt(getConfig(Config.serviceUrlWaitTimeSeconds));
         boolean serviceFound = false;
         for (HasMetadata entity : resources) {
             if (entity instanceof Service) {
