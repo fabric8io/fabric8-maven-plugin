@@ -86,14 +86,17 @@ public class EnricherManager {
             new MetadataVisitor.ReplicationControllerBuilderVisitor(resourceConfig, this),
             new MetadataVisitor.ServiceBuilderVisitor(resourceConfig, this),
             new MetadataVisitor.PodTemplateSpecBuilderVisitor(resourceConfig, this),
-            new MetadataVisitor.DaemonSetBuilderVisitor(resourceConfig, this)
+            new MetadataVisitor.DaemonSetBuilderVisitor(resourceConfig, this),
+            new MetadataVisitor.StatefulSetBuilderVisitor(resourceConfig, this)
         };
 
         selectorVisitorCreators = new SelectorVisitor[] {
             new SelectorVisitor.DeploymentSpecBuilderVisitor(this),
             new SelectorVisitor.ReplicaSetSpecBuilderVisitor(this),
             new SelectorVisitor.ReplicationControllerSpecBuilderVisitor(this),
-            new SelectorVisitor.ServiceSpecBuilderVisitor(this)
+            new SelectorVisitor.ServiceSpecBuilderVisitor(this),
+            new SelectorVisitor.DaemonSetSpecBuilderVisitor(this),
+            new SelectorVisitor.StatefulSetSpecBuilderVisitor(this)
         };
     }
 

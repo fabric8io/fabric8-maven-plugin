@@ -219,6 +219,9 @@ public class KubernetesResourceUtil {
             "sa", "ServiceAccount",
             "rc", "ReplicationController",
             "rs", "ReplicaSet",
+            "daemonset", "DaemonSet",
+            "ds", "DaemonSet",
+            "statefulset", "StatefulSet",
 
             // OpenShift Resources:
             "route", "Route",

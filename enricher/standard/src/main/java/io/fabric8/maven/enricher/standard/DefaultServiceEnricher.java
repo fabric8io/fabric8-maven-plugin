@@ -210,7 +210,6 @@ public class DefaultServiceEnricher extends BaseEnricher {
         if (defaultService == null) {
             return;
         }
-
         // lets find a suitable service to match against
         if (Objects.equals(name, defaultServiceName)) {
             ServiceSpec matchedSpec = defaultService.getSpec();

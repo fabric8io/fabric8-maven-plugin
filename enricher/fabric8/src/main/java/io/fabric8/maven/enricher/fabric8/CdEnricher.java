@@ -79,7 +79,7 @@ public class CdEnricher extends AbstractLiveEnricher {
 
     @Override
     public Map<String, String> getAnnotations(Kind kind) {
-        if (isOnline() && (kind.isDeployOrReplicaKind() || kind.isService())) {
+        if (isOnline() && (kind.isController() || kind == Kind.SERVICE)) {
             Map<String, String> annotations = new HashMap<>();
             MavenProject rootProject = MavenUtil.getRootProject(getProject());
             String repoName = rootProject.getArtifactId();

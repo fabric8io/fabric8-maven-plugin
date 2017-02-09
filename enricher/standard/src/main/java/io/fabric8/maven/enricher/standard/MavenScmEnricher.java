@@ -16,7 +16,6 @@
 
 package io.fabric8.maven.enricher.standard;
 
-import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
@@ -53,7 +52,7 @@ public class MavenScmEnricher extends BaseEnricher {
     @Override
     public Map<String, String> getAnnotations(Kind kind) {
         Map<String, String> annotations = new HashMap<>();
-        if (kind.isDeployOrReplicaKind() || kind.isService()) {
+        if (kind.isController() || kind == Kind.SERVICE) {
             MavenProject rootProject = getProject();
             if (hasScm(rootProject)) {
                 Scm scm = rootProject.getScm();

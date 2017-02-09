@@ -45,7 +45,7 @@ public class PrometheusEnricher extends BaseEnricher {
 
     @Override
     public Map<String, String> getAnnotations(Kind kind) {
-        if (kind.isService()) {
+        if (kind == Kind.SERVICE) {
             String prometheusPort = findPrometheusPort();
             if (Strings.isNotBlank(prometheusPort)) {
                 log.verbose("Add prometheus.io annotations: %s=%s, %s=%S",

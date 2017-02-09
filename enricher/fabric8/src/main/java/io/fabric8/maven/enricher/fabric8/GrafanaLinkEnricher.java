@@ -45,7 +45,7 @@ public class GrafanaLinkEnricher extends BaseEnricher {
 
     @Override
     public Map<String, String> getAnnotations(Kind kind) {
-        if (kind.isDeployOrReplicaKind()) {
+        if (kind.isController()) {
             String url = findGrafanaLink();
             return url != null ? Collections.singletonMap(Annotations.Builds.METRICS_PATH, url) : null;
         } else {
