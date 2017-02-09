@@ -15,10 +15,29 @@
  */
 package io.fabric8.maven.plugin.mojo.build;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+import javax.validation.ConstraintViolationException;
+
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.extensions.Templates;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterAccess;
@@ -57,6 +76,7 @@ import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.ImageStreamTag;
 import io.fabric8.openshift.api.model.Template;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -67,16 +87,10 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 
-import javax.validation.ConstraintViolationException;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.util.*;
-
-import static io.fabric8.maven.core.util.Constants.*;
+import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
 import static io.fabric8.maven.core.util.KubernetesResourceUtil.isAppCatalogResource;
+import static io.fabric8.maven.core.util.KubernetesResourceUtil.loadResources;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
-import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.loadResources;
 
 
 /**
@@ -489,7 +503,7 @@ public class ResourceMojo extends AbstractResourceMojo {
             Controller controller = new Controller(client);
             Set<HasMetadata> oldEntities;
             try {
-                oldEntities = loadResources(client, controller, namespace, openshiftManifest, project, log);
+                oldEntities = loadResources(openshiftManifest);
             } catch (Exception e) {
                 throw new MojoExecutionException("Failed to load openshift manifest " + openshiftManifest + ". " + e, e);
             }

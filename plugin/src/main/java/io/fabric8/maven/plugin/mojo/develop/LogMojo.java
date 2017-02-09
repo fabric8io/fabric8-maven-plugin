@@ -19,6 +19,8 @@ package io.fabric8.maven.plugin.mojo.develop;
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.maven.core.service.PodLogService;
+
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -40,7 +42,7 @@ public class LogMojo extends AbstractTailLogMojo {
 
     @Override
     protected void applyEntities(Controller controller, final KubernetesClient kubernetes, final String namespace, String fileName, final Set<HasMetadata> entities) throws Exception {
-        tailAppPodsLogs(kubernetes, namespace, entities, false, null, followLog, null, true);
+        new PodLogService(getLogServiceContext()).tailAppPodsLogs(kubernetes, namespace, entities, false, null, followLog, null, true);
     }
 
 

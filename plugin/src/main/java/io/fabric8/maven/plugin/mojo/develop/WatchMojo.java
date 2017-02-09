@@ -20,15 +20,13 @@ package io.fabric8.maven.plugin.mojo.develop;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
+import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
@@ -43,6 +41,8 @@ import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.DockerAccessFactory;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.WatchService;
+import io.fabric8.maven.docker.util.AnsiLogger;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.maven.plugin.watcher.WatcherContext;
@@ -51,6 +51,7 @@ import io.fabric8.maven.plugin.watcher.WatcherManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -63,6 +64,7 @@ import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MAN
  * Used to automatically rebuild Docker images and restart containers in case of updates.
  */
 @Mojo(name = "watch", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE)
+@Execute(goal = "deploy")
 public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
 
     @Parameter
@@ -133,6 +135,14 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
     private File resourceDir;
 
+    // Whether to use color
+    @Parameter(property = "fabric8.useColor", defaultValue = "true")
+    protected boolean useColor;
+
+    // For verbose output
+    @Parameter(property = "fabric8.verbose", defaultValue = "false")
+    protected boolean verbose;
+
     // Used for determining which mojos are called during a run
     @Component
     protected GoalFinder goalFinder;
@@ -158,9 +168,26 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
         URL masterUrl = kubernetes.getMasterUrl();
         KubernetesResourceUtil.validateKubernetesMasterUrl(masterUrl);
 
-        WatcherContext context = getWatcherContext();
+        File manifest;
+        boolean isOpenshift = KubernetesHelper.isOpenShift(kubernetes);
+        if (isOpenshift) {
+            manifest = openshiftManifest;
+        } else {
+            manifest = kubernetesManifest;
+        }
 
-        WatcherManager.watch(getResolvedImages(), context);
+        try {
+            Set<HasMetadata> resources = KubernetesResourceUtil.loadResources(manifest);
+            WatcherContext context = getWatcherContext();
+
+            WatcherManager.watch(getResolvedImages(), resources, context);
+
+        } catch (KubernetesClientException ex) {
+            KubernetesResourceUtil.handleKubernetesClientException(ex, this.log);
+        } catch (Exception ex) {
+            throw new MojoExecutionException("An error has occurred while while trying to watch the resources", ex);
+        }
+
     }
 
     public WatcherContext getWatcherContext() throws MojoExecutionException {
@@ -175,14 +202,14 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
                 .config(extractWatcherConfig())
                 .goalName("fabric8:watch")
                 .logger(log)
+                .newPodLogger(createLogger("[[C]][NEW][[C]] "))
+                .oldPodLogger(createLogger("[[R]][OLD][[R]] "))
                 .mode(mode)
                 .project(project)
                 .session(session)
                 .strategy(buildStrategy)
                 .useProjectClasspath(useProjectClasspath)
-                .namespace(namespace)
-                .kubernetesManifest(kubernetesManifest)
-                .openshiftManifest(openshiftManifest)
+                .namespace(clusterAccess.getNamespace())
                 .kubernetesClient(kubernetes)
                 .build();
     }
@@ -196,16 +223,9 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
 
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-        if (generator == null) {
-            // TODO discover the generators - not sure how yet ;)....
-            List<String> includes = Arrays.asList("spring-boot");
-            Set<String> excludes = new HashSet<>();
-            Map<String, TreeMap> config = new HashMap<>();
-            generator = new ProcessorConfig(includes, excludes, config);
-        }
         try {
             GeneratorContext ctx = new GeneratorContext.Builder()
-                    .config(generator)
+                    .config(extractGeneratorConfig())
                     .project(project)
                     .session(session)
                     .goalFinder(goalFinder)
@@ -228,6 +248,19 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot extract watcher config: " + e, e);
         }
+    }
+
+    // Get generator config
+    private ProcessorConfig extractGeneratorConfig() {
+        try {
+            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, resourceDir, generator);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot extract generator config: " + e, e);
+        }
+    }
+
+    protected Logger createLogger(String prefix) {
+        return new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), "F8:" + prefix);
     }
 
     @Override

@@ -1,37 +1,4 @@
-/*
- * Copyright 2016 Red Hat, Inc.
- *
- * Red Hat licenses this file to you under the Apache License, version
- * 2.0 (the "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- * implied.  See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
-package io.fabric8.maven.plugin.mojo.develop;
-
-import io.fabric8.kubernetes.api.Controller;
-import io.fabric8.kubernetes.api.model.DoneableService;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.ClientResource;
-import io.fabric8.maven.core.util.ClassUtil;
-import io.fabric8.maven.core.util.SpringBootUtil;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.utils.Closeables;
-import io.fabric8.utils.Strings;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Execute;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.ResolutionScope;
+package io.fabric8.maven.plugin.watcher;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -41,31 +8,66 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+import io.fabric8.kubernetes.api.Annotations;
+import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.DoneableService;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.dsl.ClientResource;
+import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.service.PodLogService;
+import io.fabric8.maven.core.util.ClassUtil;
+import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.core.util.PrefixedLogger;
+import io.fabric8.maven.core.util.SpringBootUtil;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.utils.Closeables;
+import io.fabric8.utils.Strings;
+
+import static io.fabric8.kubernetes.api.KubernetesHelper.getLabels;
+import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateAnnotations;
 import static io.fabric8.maven.core.util.SpringBootProperties.DEV_TOOLS_REMOTE_SECRET;
 
-/**
- * Runs the remote spring boot application
- */
-@Mojo(name = "watch-spring-boot", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.VALIDATE)
-@Execute(goal = "deploy")
-public class WatchSpringBootMojo extends AbstractTailLogMojo {
+public class SpringBootWatcher extends BaseWatcher {
+
+    private static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
+
+    private long serviceUrlWaitTimeSeconds = 5;
+
+    public SpringBootWatcher(WatcherContext watcherContext) {
+        super(watcherContext, "spring-boot");
+    }
 
     @Override
-    protected void applyEntities(Controller controller, final KubernetesClient kubernetes, final String namespace, String fileName, final Set<HasMetadata> entities) throws Exception {
+    public boolean isApplicable(List<ImageConfiguration> configs, Set<HasMetadata> resources, PlatformMode mode) {
+        return MavenUtil.hasPlugin(getContext().getProject(), SPRING_BOOT_MAVEN_PLUGIN_GA);
+    }
 
-        tailAppPodsLogs(kubernetes, namespace, entities, false, null, true, null, false);
+    @Override
+    public void watch(List<ImageConfiguration> configs, Set<HasMetadata> resources, PlatformMode mode) throws Exception {
+        KubernetesClient kubernetes = getContext().getKubernetesClient();
 
-        boolean serviceFound = false;
+        PodLogService.PodLogServiceContext logContext = new PodLogService.PodLogServiceContext.Builder()
+                .log(log)
+                .newPodLog(getContext().getNewPodLogger())
+                .oldPodLog(getContext().getOldPodLogger())
+                .build();
+
+        new PodLogService(logContext).tailAppPodsLogs(kubernetes, getContext().getNamespace(), resources, false, null, true, null, false);
+
         long serviceUrlWaitTimeSeconds = this.serviceUrlWaitTimeSeconds;
-        for (HasMetadata entity : entities) {
+        boolean serviceFound = false;
+        for (HasMetadata entity : resources) {
             if (entity instanceof Service) {
                 Service service = (Service) entity;
-                String name = getName(service);
-                ClientResource<Service, DoneableService> serviceResource = kubernetes.services().inNamespace(namespace).withName(name);
+                String name = KubernetesHelper.getName(service);
+                ClientResource<Service, DoneableService> serviceResource = kubernetes.services().inNamespace(getContext().getNamespace()).withName(name);
                 String url = null;
                 // lets wait a little while until there is a service URL in case the exposecontroller is running slow
                 for (int i = 0; i < serviceUrlWaitTimeSeconds; i++) {
@@ -74,7 +76,7 @@ public class WatchSpringBootMojo extends AbstractTailLogMojo {
                     }
                     Service s = serviceResource.get();
                     if (s != null) {
-                        url = getExternalServiceURL(s);
+                        url = getOrCreateAnnotations(s).get(Annotations.Service.EXPOSE_URL);
                         if (Strings.isNotBlank(url)) {
                             break;
                         }
@@ -93,24 +95,29 @@ public class WatchSpringBootMojo extends AbstractTailLogMojo {
             }
         }
         if (!serviceFound) {
-            throw new MojoExecutionException("No external service found for this application! So cannot watch a remote container!");
+            throw new IllegalStateException("No external service found for this application! So cannot watch a remote container!");
         }
     }
 
-    private void runRemoteSpringApplication(String url) throws MojoExecutionException {
+    private boolean isExposeService(Service service) {
+        String expose = getLabels(service).get("expose");
+        return expose != null && expose.toLowerCase().equals("true");
+    }
+
+    private void runRemoteSpringApplication(String url) {
         log.info("Running RemoteSpringApplication against endpoint: " + url);
 
-        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(project);
+        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getContext().getProject());
         String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET, System.getProperty(DEV_TOOLS_REMOTE_SECRET));
         if (Strings.isNullOrBlank(remoteSecret)) {
             log.warn("There is no `%s` property defined in your src/main/resources/application.properties. Please add one!", DEV_TOOLS_REMOTE_SECRET);
-            throw new MojoExecutionException("No " + DEV_TOOLS_REMOTE_SECRET + " property defined in application.properties or system properties");
+            throw new IllegalStateException("No " + DEV_TOOLS_REMOTE_SECRET + " property defined in application.properties or system properties");
         }
 
         ClassLoader classLoader = getClass().getClassLoader();
         if (classLoader instanceof URLClassLoader) {
             URLClassLoader pluginClassLoader = (URLClassLoader) classLoader;
-            URLClassLoader projectClassLoader = ClassUtil.createProjectClassLoader(project, log);
+            URLClassLoader projectClassLoader = ClassUtil.createProjectClassLoader(getContext().getProject(), log);
             URLClassLoader[] classLoaders = {projectClassLoader, pluginClassLoader};
 
             StringBuilder buffer = new StringBuilder("java -cp ");
@@ -126,7 +133,7 @@ public class WatchSpringBootMojo extends AbstractTailLogMojo {
                         File file = new File(uri);
                         buffer.append(file.getCanonicalPath());
                     } catch (Exception e) {
-                        throw new MojoExecutionException("Failed to create classpath: " + e, e);
+                        throw new IllegalStateException("Failed to create classpath: " + e, e);
                     }
                 }
             }
@@ -147,7 +154,7 @@ public class WatchSpringBootMojo extends AbstractTailLogMojo {
                         process.destroy();
                     }
                 });
-                Logger logger = createLogger("[[G]][Spring][[G]] ");
+                Logger logger = new PrefixedLogger("Spring-Remote", log);
                 processOutput(logger, process.getInputStream(), false);
                 processOutput(logger, process.getErrorStream(), true);
                 int status = process.waitFor();
@@ -155,11 +162,11 @@ public class WatchSpringBootMojo extends AbstractTailLogMojo {
                     log.warn("Process returned status: %s", status);
                 }
             } catch (Exception e) {
-                throw new MojoExecutionException("Failed to run RemoteSpringApplication: " + e, e);
+                throw new RuntimeException("Failed to run RemoteSpringApplication: " + e, e);
             }
 
         } else {
-            throw new MojoExecutionException("ClassLoader must be a URLClassLoader but it is: " + classLoader.getClass().getName());
+            throw new IllegalStateException("ClassLoader must be a URLClassLoader but it is: " + classLoader.getClass().getName());
         }
     }
 
@@ -184,5 +191,4 @@ public class WatchSpringBootMojo extends AbstractTailLogMojo {
             Closeables.closeQuietly(reader);
         }
     }
-
 }

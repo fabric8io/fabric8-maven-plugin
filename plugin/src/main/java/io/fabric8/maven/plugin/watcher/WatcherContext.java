@@ -41,6 +41,8 @@ public class WatcherContext {
     private ProcessorConfig config;
     private String goalName;
     private Logger logger;
+    private Logger newPodLogger;
+    private Logger oldPodLogger;
     private PlatformMode mode;
     private OpenShiftBuildStrategy strategy;
     private boolean useProjectClasspath;
@@ -48,8 +50,6 @@ public class WatcherContext {
     private WatchService.WatchContext watchContext;
     private BuildService.BuildContext buildContext;
     private String namespace;
-    private File openshiftManifest;
-    private File kubernetesManifest;
     private KubernetesClient kubernetesClient;
 
     private WatcherContext() {
@@ -103,16 +103,16 @@ public class WatcherContext {
         return namespace;
     }
 
-    public File getOpenshiftManifest() {
-        return openshiftManifest;
-    }
-
-    public File getKubernetesManifest() {
-        return kubernetesManifest;
-    }
-
     public KubernetesClient getKubernetesClient() {
         return kubernetesClient;
+    }
+
+    public Logger getNewPodLogger() {
+        return newPodLogger;
+    }
+
+    public Logger getOldPodLogger() {
+        return oldPodLogger;
     }
 
     // ========================================================================
@@ -143,6 +143,16 @@ public class WatcherContext {
 
         public Builder logger(Logger logger) {
             ctx.logger = logger;
+            return this;
+        }
+
+        public Builder newPodLogger(Logger newPodLogger) {
+            ctx.newPodLogger = newPodLogger;
+            return this;
+        }
+
+        public Builder oldPodLogger(Logger oldPodLogger) {
+            ctx.oldPodLogger = oldPodLogger;
             return this;
         }
 
@@ -178,16 +188,6 @@ public class WatcherContext {
 
         public Builder namespace(String namespace) {
             ctx.namespace = namespace;
-            return this;
-        }
-
-        public Builder kubernetesManifest(File kubernetesManifest) {
-            ctx.kubernetesManifest = kubernetesManifest;
-            return this;
-        }
-
-        public Builder openshiftManifest(File openshiftManifest) {
-            ctx.openshiftManifest = openshiftManifest;
             return this;
         }
 

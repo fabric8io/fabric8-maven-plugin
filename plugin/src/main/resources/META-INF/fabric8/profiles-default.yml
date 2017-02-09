@@ -47,6 +47,7 @@
   watcher:
     includes:
     - docker-image
+    - spring-boot
 # end::default[]
 # No enrichment at all
 - name: raw

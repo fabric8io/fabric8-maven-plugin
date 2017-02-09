@@ -17,8 +17,10 @@
 package io.fabric8.maven.plugin.watcher;
 
 import java.util.List;
+import java.util.Set;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.ClassUtil;
@@ -36,7 +38,7 @@ import org.apache.maven.plugin.MojoExecutionException;
  */
 public class WatcherManager {
 
-    public static void watch(List<ImageConfiguration> ret, WatcherContext watcherCtx) throws MojoExecutionException {
+    public static void watch(List<ImageConfiguration> ret, Set<HasMetadata> resources, WatcherContext watcherCtx) throws Exception {
 
         PluginServiceFactory<WatcherContext> pluginFactory =
                 watcherCtx.isUseProjectClasspath() ?
@@ -58,7 +60,7 @@ public class WatcherManager {
         Watcher chosen = null;
         for (Watcher watcher : usableWatchers) {
             log.verbose(" - %s",watcher.getName());
-            if (watcher.isApplicable(ret, mode)) {
+            if (watcher.isApplicable(ret, resources, mode)) {
                 chosen = watcher;
                 break;
             }
@@ -70,6 +72,6 @@ public class WatcherManager {
 
 
         log.info("Running watcher %s", chosen.getName());
-        chosen.watch(ret, mode);
+        chosen.watch(ret, resources, mode);
     }
 }

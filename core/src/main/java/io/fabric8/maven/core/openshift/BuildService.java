@@ -28,6 +28,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
+import io.fabric8.maven.core.util.KubernetesClientUtil;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.openshift.api.model.*;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -78,7 +79,7 @@ public class BuildService {
 
         log.info("Waiting for build " + buildName + " to complete...");
         try (LogWatch logWatch = client.pods().withName(buildName + "-build").watchLog()) {
-            KubernetesResourceUtil.printLogsAsync(logWatch,
+            KubernetesClientUtil.printLogsAsync(logWatch,
                                                   "Failed to tail build log", logTerminateLatch, log);
             Watcher<Build> buildWatcher = getBuildWatcher(latch, buildName, buildHolder);
             try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {

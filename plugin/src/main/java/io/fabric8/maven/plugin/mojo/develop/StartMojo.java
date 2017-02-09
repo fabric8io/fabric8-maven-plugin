@@ -15,16 +15,19 @@
  */
 package io.fabric8.maven.plugin.mojo.develop;
 
+import java.util.Set;
+
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.plugin.mojo.build.ApplyMojo;
+
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
-import java.util.Set;
+import static io.fabric8.maven.core.util.KubernetesClientUtil.resizeApp;
 
 /**
  * Starts the application that was previously created via <code>fabric8:deploy</code> and then
@@ -39,7 +42,7 @@ public class StartMojo extends ApplyMojo {
     @Override
     protected void applyEntities(Controller controller, KubernetesClient kubernetes, String namespace,
                                  String fileName, Set<HasMetadata> entities) throws Exception {
-        resizeApp(kubernetes, namespace, entities, replicas);
+        resizeApp(kubernetes, namespace, entities, replicas, log);
     }
 }
 

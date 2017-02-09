@@ -1,6 +1,5 @@
 package io.fabric8.maven.plugin.watcher;
 
-import java.io.File;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -32,13 +31,11 @@ import io.fabric8.maven.docker.util.Task;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.fabric8.utils.Files;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
-import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.loadResources;
 
 /**
  *
@@ -50,12 +47,12 @@ public class DockerImageWatcher extends BaseWatcher {
     }
 
     @Override
-    public boolean isApplicable(List<ImageConfiguration> configs, PlatformMode mode) {
+    public boolean isApplicable(List<ImageConfiguration> configs, Set<HasMetadata> resources, PlatformMode mode) {
         return mode == PlatformMode.kubernetes;
     }
 
     @Override
-    public void watch(List<ImageConfiguration> configs, PlatformMode mode) {
+    public void watch(List<ImageConfiguration> configs, final Set<HasMetadata> resources, PlatformMode mode) {
 
         BuildService.BuildContext buildContext = getContext().getBuildContext();
         WatchService.WatchContext watchContext = getContext().getWatchContext();
@@ -70,7 +67,7 @@ public class DockerImageWatcher extends BaseWatcher {
                 }).containerRestarter(new Task<WatchService.ImageWatcher>() {
                     @Override
                     public void execute(WatchService.ImageWatcher imageWatcher) throws DockerAccessException, MojoExecutionException, MojoFailureException {
-                        restartContainer(imageWatcher);
+                        restartContainer(imageWatcher, resources);
                     }
                 })
                 .build();
@@ -110,29 +107,17 @@ public class DockerImageWatcher extends BaseWatcher {
         return imagePrefix;
     }
 
-    protected void restartContainer(WatchService.ImageWatcher watcher) throws DockerAccessException, MojoExecutionException, MojoFailureException {
+    protected void restartContainer(WatchService.ImageWatcher watcher, Set<HasMetadata> resources) throws MojoExecutionException {
         ImageConfiguration imageConfig = watcher.getImageConfiguration();
         String imageName = imageConfig.getName();
         try {
             ClusterAccess clusterAccess = new ClusterAccess(getContext().getNamespace());
             KubernetesClient client = clusterAccess.createDefaultClient(log);
-            Controller controller = new Controller(client);
-
-            File manifest;
-            if (KubernetesHelper.isOpenShift(client)) {
-                manifest = getContext().getOpenshiftManifest();
-            } else {
-                manifest = getContext().getKubernetesManifest();
-            }
-            if (!Files.isFile(manifest)) {
-                throw new MojoExecutionException("No such generated manifest file: " + manifest);
-            }
 
             String namespace = clusterAccess.getNamespace();
-            Set<HasMetadata> entities = loadResources(client, controller, namespace, manifest, getContext().getProject(), log);
 
             String imagePrefix = getImagePrefix(imageName);
-            for (HasMetadata entity : entities) {
+            for (HasMetadata entity : resources) {
                 updateImageName(client, namespace, entity, imagePrefix, imageName);
             }
         } catch (KubernetesClientException e) {
