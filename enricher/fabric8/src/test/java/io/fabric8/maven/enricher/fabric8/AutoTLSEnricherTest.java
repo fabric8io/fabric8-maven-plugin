@@ -24,6 +24,7 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
+import io.fabric8.maven.enricher.api.util.InitContainerHandler;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -177,7 +178,7 @@ public class AutoTLSEnricherTest {
             PodTemplate pt = (PodTemplate) klb.getItems().get(0);
 
             String initContainers = pt.getTemplate().getMetadata().getAnnotations()
-                                      .get(BaseEnricher.INIT_CONTAINER_ANNOTATION);
+                                      .get(InitContainerHandler.INIT_CONTAINER_ANNOTATION);
             assertEquals(tc.mode == PlatformMode.openshift, initContainers != null);
 
             if (tc.mode == PlatformMode.kubernetes) {

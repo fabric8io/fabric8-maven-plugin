@@ -28,6 +28,7 @@ import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.util.InitContainerHandler;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -46,6 +47,8 @@ public class VolumePermissionEnricher extends BaseEnricher {
     static final String ENRICHER_NAME = "fmp-volume-permission";
     static final String VOLUME_STORAGE_CLASS_ANNOTATION = "volume.beta.kubernetes.io/storage-class";
 
+    private final InitContainerHandler initContainerHandler;
+
     enum Config implements Configs.Key {
         permission {{ d = "777"; }};
 
@@ -54,6 +57,7 @@ public class VolumePermissionEnricher extends BaseEnricher {
 
     public VolumePermissionEnricher(EnricherContext buildContext) {
         super(buildContext, ENRICHER_NAME);
+        initContainerHandler = new InitContainerHandler(buildContext.getLog());
     }
 
     @Override
@@ -82,7 +86,9 @@ public class VolumePermissionEnricher extends BaseEnricher {
 
                 log.verbose("Adding init container for changing persistent volumes access mode to %s",
                         getConfig(Config.permission));
-                addInitContainer(builder, createPvInitContainer(podSpec));
+                if (!initContainerHandler.hasInitContainer(builder, ENRICHER_NAME)) {
+                    initContainerHandler.appendInitContainer(builder, createPvInitContainer(podSpec));
+                }
             }
 
             private boolean checkForPvc(PodSpec podSpec) {
@@ -102,7 +108,7 @@ public class VolumePermissionEnricher extends BaseEnricher {
                 Map<String, String> mountPoints = extractMountPoints(podSpec);
 
                 JSONObject entry = new JSONObject();
-                entry.put("name","init");
+                entry.put("name", ENRICHER_NAME);
                 entry.put("image","busybox");
                 entry.put("imagePullPolicy","IfNotPresent");
                 entry.put("command", createChmodCommandArray(mountPoints));

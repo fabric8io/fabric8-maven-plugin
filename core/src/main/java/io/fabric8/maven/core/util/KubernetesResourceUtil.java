@@ -197,6 +197,8 @@ public class KubernetesResourceUtil {
             // lets put the abbreviation we want to use first
             "cm", "ConfigMap",
             "configmap", "ConfigMap",
+            "cronjob", "CronJob",
+            "cj", "CronJob",
             "deployment", "Deployment",
             "is", "ImageStream",
             "istag", "ImageStreamTag",

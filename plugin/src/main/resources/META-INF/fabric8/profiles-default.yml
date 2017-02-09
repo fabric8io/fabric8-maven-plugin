@@ -16,7 +16,6 @@
     - fmp-pod-annotations
     - fmp-git
     # TODO: Documents and verify enrichers below
-    - fmp-dependency
     - fmp-openshift-s2i
     - fmp-debug
     - fmp-merge
@@ -32,6 +31,10 @@
     - spring-boot-health-check
     - karaf-health-check
     - f8-prometheus
+    - f8-maven-scm
+    - f8-maven-issue-mgmt
+    # Depenendcies shouldn't be enricher anymore, it's last in the list
+    - fmp-dependency
 
   generator:
     includes:
