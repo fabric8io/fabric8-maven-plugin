@@ -61,8 +61,8 @@ import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
-import io.fabric8.kubernetes.api.model.extensions.LabelSelector;
-import io.fabric8.kubernetes.api.model.extensions.LabelSelectorBuilder;
+import io.fabric8.kubernetes.api.model.LabelSelector;
+import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -116,7 +116,6 @@ public class KubernetesResourceUtil {
      * @param apiVersion the api version to use
      * @param apiExtensionsVersion the extension version to use
      * @param defaultName the default name to use when none is given
-     * @param appResourcesOnly if only resource with the defaultName should be returned ?
      * @param resourceFiles files to add.
      * @return the list builder
      * @throws IOException
