@@ -63,10 +63,11 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
                 Integer port = PropertiesHelper.getInteger(properties, SpringBootProperties.MANAGEMENT_PORT,
                                                            PropertiesHelper.getInteger(properties, SpringBootProperties.SERVER_PORT, DEFAULT_MANAGEMENT_PORT));
                 String scheme = Strings.isNotBlank(properties.getProperty(SpringBootProperties.SERVER_KEYSTORE)) ? SCHEME_HTTPS : SCHEME_HTTP;
-
+                String contextPath = properties.getProperty(SpringBootProperties.CONTEXT_PATH, "");
+                		
                 // lets default to adding a spring boot actuator health check
                 return new ProbeBuilder().
-                        withNewHttpGet().withNewPort(port).withPath("/health").withScheme(scheme).endHttpGet().
+                        withNewHttpGet().withNewPort(port).withPath(contextPath + "/health").withScheme(scheme).endHttpGet().
                         withInitialDelaySeconds(initialDelay).build();
             }
         } catch (Exception ex) {
