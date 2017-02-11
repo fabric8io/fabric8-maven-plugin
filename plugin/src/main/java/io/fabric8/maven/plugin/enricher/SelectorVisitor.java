@@ -17,11 +17,8 @@
 package io.fabric8.maven.plugin.enricher;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.model.ReplicationControllerSpecBuilder;
-import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.*;
-import io.fabric8.kubernetes.api.model.LabelSelector;
-import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpecBuilder;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
@@ -138,6 +135,24 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         @Override
         public void visit(ReplicationControllerSpecBuilder item) {
             item.getSelector().putAll(enricherManager.extractSelector(getConfig(), Kind.REPLICATION_CONTROLLER));
+        }
+    }
+
+    static class JobSpecBuilderVisitor extends SelectorVisitor<JobSpecBuilder> {
+        JobSpecBuilderVisitor(EnricherManager enricherManager) {
+            super(enricherManager);
+        }
+
+        @Override
+        public void visit(JobSpecBuilder item) {
+            Map<String, String> selectorMatchLabels =
+                    KubernetesResourceUtil.removeVersionSelector(enricherManager.extractSelector(getConfig(), Kind.JOB));
+            final LabelSelector selector = item.buildSelector();
+            if (selector == null) {
+                item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
+            } else {
+                selector.getMatchLabels().putAll(selectorMatchLabels);
+            }
         }
     }
 

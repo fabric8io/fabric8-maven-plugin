@@ -60,6 +60,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
     private final ReplicaSetHandler rsHandler;
     private final StatefulSetHandler statefulSetHandler;
     private final DaemonSetHandler daemonSetHandler;
+    private final JobHandler jobHandler;
 
     // Available configuration keys
     private enum Config implements Configs.Key {
@@ -79,6 +80,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
         deployHandler = handlers.getDeploymentHandler();
         statefulSetHandler = handlers.getStatefulSetHandler();
         daemonSetHandler = handlers.getDaemonSetHandler();
+        jobHandler = handlers.getJobHandler();
     }
 
     @Override
@@ -114,6 +116,9 @@ public class DefaultControllerEnricher extends BaseEnricher {
                 } else if (type.equalsIgnoreCase("replicationController")) {
                     log.info("Adding a default ReplicationController");
                     builder.addToReplicationControllerItems(rcHandler.getReplicationController(config, images));
+                } else if (type.equalsIgnoreCase("job")) {
+                    log.info("Adding a default Job");
+                    builder.addToJobItems(jobHandler.getJob(config, images));
                 }
             }
         } else {

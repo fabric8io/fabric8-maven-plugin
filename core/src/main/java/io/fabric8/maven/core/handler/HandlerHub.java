@@ -30,6 +30,7 @@ public class HandlerHub {
     private final DeploymentHandler deploymentHandler;
     private final StatefulSetHandler statefulSetHandler;
     private final DaemonSetHandler daemonSetHandler;
+    private final JobHandler jobHandler;
 
     public HandlerHub(MavenProject project) {
         ProbeHandler probeHandler = new ProbeHandler();
@@ -43,6 +44,7 @@ public class HandlerHub {
         serviceHandler = new ServiceHandler();
         statefulSetHandler = new StatefulSetHandler(podTemplateHandler);
         daemonSetHandler = new DaemonSetHandler(podTemplateHandler);
+        jobHandler = new JobHandler(podTemplateHandler);
     }
 
     public ServiceHandler getServiceHandler() {
@@ -67,5 +69,9 @@ public class HandlerHub {
 
     public DaemonSetHandler getDaemonSetHandler() {
         return daemonSetHandler;
+    }
+
+    public JobHandler getJobHandler() {
+        return jobHandler;
     }
 }

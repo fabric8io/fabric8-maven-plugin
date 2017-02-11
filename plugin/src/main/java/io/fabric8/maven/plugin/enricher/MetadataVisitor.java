@@ -252,4 +252,20 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
             return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
         }
     }
+
+    public static class JobBuilderVisitor extends MetadataVisitor<JobBuilder> {
+        JobBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
+            super(resourceConfig, enricher);
+        }
+
+        @Override
+        protected Kind getKind() {
+            return Kind.REPLICATION_CONTROLLER;
+        }
+
+        @Override
+        protected ObjectMeta getOrCreateMetadata(JobBuilder item) {
+            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+        }
+    }
 }
