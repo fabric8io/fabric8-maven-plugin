@@ -18,6 +18,7 @@
 def dummy
 mavenNode {
   checkout scm
+  readTrusted 'release.groovy'
   sh "git remote set-url origin git@github.com:fabric8io/fabric8-maven-plugin.git"
 
   def pipeline = load 'release.groovy'
@@ -35,4 +36,60 @@ mavenNode {
 
   stage 'Update downstream dependencies'
   pipeline.updateDownstreamDependencies(stagedProject)
+}
+
+deployTemplate{
+  dockerNode {
+    stage 'Deploy and run system tests'
+    deployAndRunSystemTests()
+  }
+}
+
+def deployAndRunSystemTests() {
+
+    def fabric8Quickstarts
+    def fabric8Devops
+    def fabric8Forge
+    def yaml
+
+    stage 'build snapshot fabric8-devops'
+    ws('devops') {
+        git 'https://github.com/fabric8io/fabric8-devops.git'
+        def pipeline = load 'release.groovy'
+        fabric8Devops = mavenBuildSnapshot {
+            extraImagesToStage = pipeline.externalImages()
+        }
+    }
+
+    stage 'build snapshot quickstarts'
+    ws('quickstarts') {
+        git 'https://github.com/fabric8io/ipaas-quickstarts.git'
+        fabric8Quickstarts = mavenBuildSnapshot {}
+    }
+
+    stage 'build snapshot fabric8-forge'
+    ws('forge') {
+        git 'https://github.com/fabric8io/fabric8-forge.git'
+        fabric8Forge = mavenBuildSnapshot {
+            pomVersionToUpdate = ['fabric8.devops.version': fabric8Devops, 'fabric8.archetypes.release.version': fabric8Quickstarts]
+        }
+    }
+
+    stage 'build snapshot fabric8-platform'
+    ws('platform') {
+        git 'https://github.com/fabric8io/fabric8-platform.git'
+        mavenBuildSnapshot {
+            pomVersionToUpdate = ['fabric8.devops.version': fabric8Devops, 'fabric8.forge.version': fabric8Forge]
+        }
+        yaml = readFile file: "packages/fabric8-platform/target/classes/META-INF/fabric8/kubernetes.yml"
+
+        if (yaml == null) {
+            error 'no yaml found for fabric8 platform'
+        }
+    }
+
+    stage 'starting system tests'
+    fabric8SystemTests {
+        packageYAML = yaml
+    }
 }

@@ -48,7 +48,9 @@ def updateDownstreamDependencies(stagedProject) {
             'fabric8io/fabric8-platform',
             'fabric8io/fabric8-ipaas',
             'fabric8io/ipaas-platform',
-            'funktionio/funktion-connectors'
+            'funktionio/funktion-connectors',
+            'fabric8-quickstarts/spring-boot-webmvc', // these are used in the system tests in a later stage so we 
+            'fabric8-quickstarts/spring-boot-camel-xml' // need to make sure their deps are updated before the quickstart archetypes are generated
     ]
     version = stagedProject[1]
   }
