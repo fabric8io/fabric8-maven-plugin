@@ -260,7 +260,7 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected Kind getKind() {
-            return Kind.REPLICATION_CONTROLLER;
+            return Kind.JOB;
         }
 
         @Override
