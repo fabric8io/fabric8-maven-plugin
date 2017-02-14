@@ -353,6 +353,7 @@ public class ResourceMojo extends AbstractResourceMojo {
             .session(session)
             .goalFinder(goalFinder)
             .config(extractEnricherConfig())
+            .resources(resources)
             .images(resolvedImages)
             .log(log)
             .useProjectClasspath(useProjectClasspath)
