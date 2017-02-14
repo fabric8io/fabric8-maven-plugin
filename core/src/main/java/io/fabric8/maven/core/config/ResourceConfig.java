@@ -143,6 +143,11 @@ public class ResourceConfig {
     public static class Builder {
         private ResourceConfig config = new ResourceConfig();
 
+        public Builder env(Map<String, String> env) {
+            config.env = env;
+            return this;
+        }
+
         public Builder controllerName(String name) {
             config.controllerName = name;
             return this;

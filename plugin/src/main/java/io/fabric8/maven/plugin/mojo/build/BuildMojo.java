@@ -379,6 +379,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
             .session(session)
             .goalFinder(goalFinder)
             .config(enricherConfig)
+            .resources(resources)
             .images(getResolvedImages())
             .log(log)
             .openshiftDependencyResources(openshiftDependencyResources)
