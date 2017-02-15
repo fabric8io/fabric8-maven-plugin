@@ -55,12 +55,16 @@ import org.springframework.util.FileCopyUtils;
 public class Verify {
 
     public static void verifyResourceDescriptors(File actualPath, File expectedPath) throws IOException {
+        verifyResourceDescriptors(actualPath, expectedPath, false);
+    }
+
+    public static void verifyResourceDescriptors(File actualPath, File expectedPath, boolean strict) throws IOException {
         String actualText = readFile(actualPath);
         String expectedText = readFile(expectedPath);
 
 
         JsonTextMessageValidator validator = new JsonTextMessageValidator();
-        validator.setStrict(false);
+        validator.setStrict(strict);
 
         validator.validateMessagePayload(newMessage(actualText),
                                          newMessage(expectedText),
