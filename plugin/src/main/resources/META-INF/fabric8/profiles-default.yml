@@ -32,6 +32,7 @@
     - fmp-openshift-route
     - spring-boot-health-check
     - karaf-health-check
+    - docker-health-check
     - f8-prometheus
     - f8-maven-scm
     - f8-maven-issue-mgmt

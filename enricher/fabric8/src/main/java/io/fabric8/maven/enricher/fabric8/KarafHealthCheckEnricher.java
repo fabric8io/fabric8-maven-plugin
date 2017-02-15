@@ -16,7 +16,6 @@
 
 package io.fabric8.maven.enricher.fabric8;
 
-import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
@@ -38,13 +37,13 @@ public class KarafHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
 
     @Override
-    protected Probe getReadinessProbe(Container container) {
+    protected Probe getReadinessProbe() {
         Probe probe = discoverKarafProbe("/readiness-check", 10);
         return probe;
     }
 
     @Override
-    protected Probe getLivenessProbe(Container container) {
+    protected Probe getLivenessProbe() {
         Probe probe = discoverKarafProbe("/health-check", 180);
         return probe;
     }

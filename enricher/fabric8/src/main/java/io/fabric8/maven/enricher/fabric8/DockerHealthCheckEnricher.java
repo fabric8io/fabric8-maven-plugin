@@ -1,20 +1,33 @@
+/*
+ * Copyright 2016 Red Hat, Inc.
+ *
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package io.fabric8.maven.enricher.fabric8;
 
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
-import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ExecAction;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.HealthCheckConfiguration;
 import io.fabric8.maven.docker.config.HealthCheckMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.utils.Objects;
 
 import static io.fabric8.maven.enricher.api.util.GoTimeUtil.durationSeconds;
 
@@ -28,35 +41,27 @@ public class DockerHealthCheckEnricher extends AbstractHealthCheckEnricher {
         super(buildContext, "docker-health-check");
     }
 
-    /**
-     * Try to provide a health check for any image defined in the config.
-     */
     @Override
-    protected List<Container> getCandidateContainers(Deployment deployment) {
-        if (deployment.getSpec() != null &&
-                deployment.getSpec().getTemplate() != null &&
-                deployment.getSpec().getTemplate().getSpec() != null) {
+    protected Probe getReadinessProbe(ContainerBuilder container) {
+        return getProbe(container);
+    }
 
-            List<Container> containers = deployment.getSpec().getTemplate().getSpec().getContainers();
-            if (containers != null) {
-                return containers;
-            }
+    @Override
+    protected Probe getLivenessProbe(ContainerBuilder container) {
+        return getProbe(container);
+    }
+
+
+    private Probe getProbe(ContainerBuilder container) {
+        ImageConfiguration image = getImageWithContainerName(container.getName());
+        if (image != null) {
+            return getProbe(image);
         }
 
-        return Collections.emptyList();
+        return null;
     }
 
-    @Override
-    protected Probe getReadinessProbe(Container container) {
-        return getProbe(container);
-    }
-
-    @Override
-    protected Probe getLivenessProbe(Container container) {
-        return getProbe(container);
-    }
-
-    protected Probe getProbe(ImageConfiguration image) {
+    private Probe getProbe(ImageConfiguration image) {
         if (hasHealthCheck(image)) {
             HealthCheckConfiguration health = image.getBuildConfiguration().getHealthCheck();
             return new ProbeBuilder()
@@ -70,55 +75,27 @@ public class DockerHealthCheckEnricher extends AbstractHealthCheckEnricher {
         return null;
     }
 
-    protected Probe getProbe(Container container) {
-        String imageName = container.getImage();
-        if (imageName == null) {
-            return null;
-        }
-
-        ImageConfiguration containerImage = null;
-        List<ImageConfiguration> images = getImages();
-        if (images != null) {
-            List<ImageConfiguration> candidate = new LinkedList<>();
-            for (ImageConfiguration image : images) {
-                if (imageName.equals(image.getName())) {
-                    candidate.add(image);
-                }
-            }
-
-            if (candidate.size() == 1) {
-                // Just one match, choosing it
-                containerImage = candidate.get(0);
-            } else if (candidate.size() > 1) {
-                // More than one match, matching with alias
-                for (ImageConfiguration image : images) {
-                    String cName = KubernetesResourceUtil.extractContainerName(getProject(), image);
-                    if (cName != null && cName.equals(container.getName())) {
-                        containerImage = image;
-                        break;
-                    }
-                }
-
-                if (containerImage == null) {
-                    // Or getting the first matching image with health checks
-                    for (ImageConfiguration image : images) {
-                        if (hasHealthCheck(image)) {
-                            containerImage = image;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        return getProbe(containerImage);
+    private boolean hasHealthCheck(ImageConfiguration image) {
+        return image.getBuildConfiguration() !=null &&
+                image.getBuildConfiguration().getHealthCheck() != null &&
+                image.getBuildConfiguration().getHealthCheck().getCmd() != null &&
+                image.getBuildConfiguration().getHealthCheck().getMode() == HealthCheckMode.cmd;
     }
 
-    private boolean hasHealthCheck(ImageConfiguration image) {
-        return image != null &&
-                image.getBuildConfiguration() !=null &&
-                image.getBuildConfiguration().getHealthCheck() != null &&
-                image.getBuildConfiguration().getHealthCheck().getMode() == HealthCheckMode.cmd;
+    private ImageConfiguration getImageWithContainerName(String containerName) {
+        if (containerName == null) {
+            return null;
+        }
+        List<ImageConfiguration> images = getImages();
+        if (images != null) {
+            for (ImageConfiguration image : images) {
+                String imageContainerName = KubernetesResourceUtil.extractContainerName(getProject(), image);
+                if (Objects.equal(containerName, imageContainerName)) {
+                    return image;
+                }
+            }
+        }
+        return null;
     }
 
 }

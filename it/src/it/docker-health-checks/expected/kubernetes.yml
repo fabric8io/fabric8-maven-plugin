@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: List
+items:
+- kind: Deployment
+  spec:
+    template:
+      spec:
+        containers:
+        - image: img1
+          livenessProbe:
+            exec:
+              command:
+              - echo
+              - '"hello"'
+          name: dockerhc1
+          readinessProbe:
+            exec:
+              command:
+              - echo
+              - '"hello"'
+        - image: img2
+          livenessProbe:
+            exec:
+              command:
+              - echo
+              - '"hello"'
+            failureThreshold: 5
+            periodSeconds: 45
+            timeoutSeconds: 7381
+          name: dockerhc2
+          readinessProbe:
+            exec:
+              command:
+              - echo
+              - '"hello"'
+            failureThreshold: 5
+            periodSeconds: 45
+            timeoutSeconds: 7381

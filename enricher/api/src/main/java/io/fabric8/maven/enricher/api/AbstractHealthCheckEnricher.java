@@ -16,13 +16,10 @@
 
 package io.fabric8.maven.enricher.api;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.Probe;
 
 /**
  * Enriches containers with health check probes.
@@ -39,16 +36,16 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
         builder.accept(new TypedVisitor<ContainerBuilder>() {
             @Override
             public void visit(ContainerBuilder container) {
-                if (container.getReadinessProbe() == null) {
-                    Probe probe = getReadinessProbe();
+                if (!container.hasReadinessProbe()) {
+                    Probe probe = getReadinessProbe(container);
                     if (probe != null) {
                         log.info("Adding readiness " + describe(probe));
                         container.withReadinessProbe(probe);
                     }
                 }
 
-                if (container.getLivenessProbe() == null) {
-                    Probe probe = getLivenessProbe();
+                if (!container.hasLivenessProbe()) {
+                    Probe probe = getLivenessProbe(container);
                     if (probe != null) {
                         log.info("Adding liveness " + describe(probe));
                         container.withLivenessProbe(probe);
@@ -83,8 +80,34 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
         return desc.toString();
     }
 
-    protected abstract Probe getReadinessProbe();
+    /**
+     * Override this method to create a per-container readiness probe.
+     */
+    protected Probe getReadinessProbe(ContainerBuilder containerBuilder) {
+        // return a generic probe by default
+        return getReadinessProbe();
+    }
 
-    protected abstract Probe getLivenessProbe();
+    /**
+     * Override this method to create a generic readiness probe.
+     */
+    protected Probe getReadinessProbe() {
+        return null;
+    }
+
+    /**
+     * Override this method to create a per-container liveness probe.
+     */
+    protected Probe getLivenessProbe(ContainerBuilder containerBuilder) {
+        // return a generic probe by default
+        return getLivenessProbe();
+    }
+
+    /**
+     * Override this method to create a generic liveness probe.
+     */
+    protected Probe getLivenessProbe() {
+        return null;
+    }
 
 }
