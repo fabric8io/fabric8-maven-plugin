@@ -204,7 +204,7 @@ public class EnricherManager {
 
 
     private List<Enricher> filterEnrichers(ProcessorConfig config, List<Enricher> enrichers) {
-        return defaultEnricherConfig.prepareProcessors(enrichers, "enricher");
+        return config.prepareProcessors(enrichers, "enricher");
     }
 
     private void loop(ProcessorConfig config, Function<Enricher, Void> function) {
