@@ -53,6 +53,12 @@ public class Profile implements Comparable<Profile> {
     private ProcessorConfig generatorConfig;
 
     /**
+     * Watcher configurations
+     */
+    @JsonProperty(value = "watcher")
+    private ProcessorConfig watcherConfig;
+
+    /**
      * An order in case multiple profiles are found
      * with the same name
      */
@@ -71,6 +77,7 @@ public class Profile implements Comparable<Profile> {
         this.order = profile.order;
         this.enricherConfig = ProcessorConfig.mergeProcessorConfigs(profile.enricherConfig);
         this.generatorConfig = ProcessorConfig.mergeProcessorConfigs(profile.generatorConfig);
+        this.watcherConfig = ProcessorConfig.mergeProcessorConfigs(profile.watcherConfig);
     }
 
     // Merge constructor
@@ -85,10 +92,12 @@ public class Profile implements Comparable<Profile> {
             this.order = profileA.order;
             this.enricherConfig = ProcessorConfig.mergeProcessorConfigs(profileB.enricherConfig, profileA.enricherConfig);
             this.generatorConfig = ProcessorConfig.mergeProcessorConfigs(profileB.generatorConfig, profileA.generatorConfig);
+            this.watcherConfig = ProcessorConfig.mergeProcessorConfigs(profileB.watcherConfig, profileA.watcherConfig);
         } else {
             this.order = profileB.order;
             this.enricherConfig = ProcessorConfig.mergeProcessorConfigs(profileA.enricherConfig, profileB.enricherConfig);
             this.generatorConfig = ProcessorConfig.mergeProcessorConfigs(profileA.generatorConfig, profileB.generatorConfig);
+            this.watcherConfig = ProcessorConfig.mergeProcessorConfigs(profileA.watcherConfig, profileB.watcherConfig);
         }
     }
 
@@ -102,6 +111,10 @@ public class Profile implements Comparable<Profile> {
 
     public ProcessorConfig getGeneratorConfig() {
         return generatorConfig;
+    }
+
+    public ProcessorConfig getWatcherConfig() {
+        return watcherConfig;
     }
 
     public int getOrder() {

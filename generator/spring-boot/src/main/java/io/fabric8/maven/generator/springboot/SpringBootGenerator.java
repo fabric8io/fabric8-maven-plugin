@@ -25,6 +25,8 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.javaexec.FatJarDetector;
 import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -156,13 +158,20 @@ public class SpringBootGenerator extends JavaExecGenerator {
     private void copyDevToolsJarToFatTargetJar(Path resourcePath, File target) throws IOException {
         File tmpZip = File.createTempFile(target.getName(), null);
         tmpZip.delete();
-        if (!target.renameTo(tmpZip)) {
-            throw new IOException("Could not make temp file (" + target.getName() + ")");
-        }
+
+        // Using Apache commons rename, because renameTo has issues across file systems
+        FileUtils.moveFile(target, tmpZip);
+
+        String fullPath = "/BOOT-INF/lib/" + resourcePath.getFileName().toString();
+        boolean devToolsPresent = false;
+
         byte[] buffer = new byte[8192];
         ZipInputStream zin = new ZipInputStream(new FileInputStream(tmpZip));
         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(target));
         for (ZipEntry ze = zin.getNextEntry(); ze != null; ze = zin.getNextEntry()) {
+            if (fullPath.equals(ze.getName())) {
+                devToolsPresent = true;
+            }
             out.putNextEntry(ze);
             for(int read = zin.read(buffer); read > -1; read = zin.read(buffer)){
                 out.write(buffer, 0, read);
@@ -170,20 +179,22 @@ public class SpringBootGenerator extends JavaExecGenerator {
             out.closeEntry();
         }
 
-        InputStream in = Files.newInputStream(resourcePath);
-        out.putNextEntry(createZipEntry(resourcePath, "/BOOT-INF/lib/"));
-        for(int read = in.read(buffer); read > -1; read = in.read(buffer)){
-            out.write(buffer, 0, read);
+        if (!devToolsPresent) {
+            try (InputStream in = Files.newInputStream(resourcePath)) {
+                out.putNextEntry(createZipEntry(resourcePath, fullPath));
+                for (int read = in.read(buffer); read > -1; read = in.read(buffer)) {
+                    out.write(buffer, 0, read);
+                }
+                out.closeEntry();
+            }
         }
-        out.closeEntry();
 
-        in.close();
         out.close();
         tmpZip.delete();
     }
 
-    private ZipEntry createZipEntry(Path file, String path) throws IOException {
-        ZipEntry entry = new ZipEntry(path + file.getFileName().toString());
+    private ZipEntry createZipEntry(Path file, String fullPath) throws IOException {
+        ZipEntry entry = new ZipEntry(fullPath);
 
         byte[] buffer = new byte[8192];
         int bytesRead = -1;

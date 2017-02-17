@@ -16,17 +16,18 @@
 
 package io.fabric8.maven.plugin.mojo.develop;
 
+import java.util.Date;
+import java.util.Set;
+
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
+
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-
-import java.util.Date;
-import java.util.Set;
 
 /**
  * This goal forks the install goal then applies the generated kubernetes resources to the current cluster, builds the images,
@@ -54,7 +55,7 @@ public class RunMojo extends AbstractTailLogMojo {
         Date ignorePodsOlderThan = new Date();
         super.applyEntities(controller, kubernetes, namespace, fileName, entities);
 
-        tailAppPodsLogs(kubernetes, namespace, entities, true, this.onExitOperation, true, ignorePodsOlderThan, true);
+        getLogService().tailAppPodsLogs(kubernetes, namespace, entities, true, this.onExitOperation, true, ignorePodsOlderThan, true);
     }
 
 

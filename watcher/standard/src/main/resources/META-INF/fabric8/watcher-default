@@ -1,0 +1,8 @@
+# Default watchers
+# =================
+
+# Watcher for spring-boot applications using the spring-boot dev tools
+io.fabric8.maven.watcher.standard.SpringBootWatcher,100
+
+# Standard watcher for Kubernetes using the fabric8 docker-maven-plugin
+io.fabric8.maven.watcher.standard.DockerImageWatcher,101

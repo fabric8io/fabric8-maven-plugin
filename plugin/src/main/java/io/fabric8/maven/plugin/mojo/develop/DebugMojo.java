@@ -62,6 +62,10 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.kubernetes.api.KubernetesHelper.isPodReady;
 import static io.fabric8.kubernetes.api.KubernetesHelper.isPodRunning;
+import static io.fabric8.maven.core.util.KubernetesResourceUtil.getPodLabelSelector;
+import static io.fabric8.maven.core.util.KubernetesClientUtil.getPodStatusDescription;
+import static io.fabric8.maven.core.util.KubernetesClientUtil.getPodStatusMessagePostfix;
+import static io.fabric8.maven.core.util.KubernetesClientUtil.withSelector;
 
 /**
  * Ensures that the current app has debug enabled, then opens the debug port so that you can debug the latest pod
@@ -141,7 +145,7 @@ public class DebugMojo extends ApplyMojo {
 
     private String waitForRunningPodWithEnvVar(final KubernetesClient kubernetes, final String namespace, LabelSelector selector, final String envVarName, final String envVarValue) throws MojoExecutionException {
         //  wait for the newest pod to be ready with the given env var
-        FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> pods = withSelector(kubernetes.pods().inNamespace(namespace), selector);
+        FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> pods = withSelector(kubernetes.pods().inNamespace(namespace), selector, log);
         log.info("Waiting for debug pod with selector " + selector + " and $" + envVarName + " = " + envVarValue);
         podWaitLog = createExternalProcessLogger("[[Y]][W][[Y]] ");
         PodList list = pods.list();

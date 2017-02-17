@@ -16,46 +16,9 @@
 
 package io.fabric8.maven.core.util;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.ContainerPort;
-import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
-import io.fabric8.kubernetes.api.model.ContainerStatus;
-import io.fabric8.kubernetes.api.model.EnvVar;
-import io.fabric8.kubernetes.api.model.EnvVarBuilder;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodSpec;
-import io.fabric8.kubernetes.api.model.PodSpecBuilder;
-import io.fabric8.kubernetes.api.model.PodStatus;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.dsl.LogWatch;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.util.ImageName;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.openshift.api.model.Build;
-import io.fabric8.openshift.api.model.BuildStatus;
-import io.fabric8.utils.Files;
-import io.fabric8.utils.Strings;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.utils.StringUtils;
-
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -69,13 +32,63 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.extensions.Templates;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerPort;
+import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.KubernetesResource;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodSpec;
+import io.fabric8.kubernetes.api.model.PodSpecBuilder;
+import io.fabric8.kubernetes.api.model.PodStatus;
+import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.LabelSelector;
+import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.internal.HasMetadataComparator;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.openshift.api.model.Build;
+import io.fabric8.openshift.api.model.BuildStatus;
+import io.fabric8.openshift.api.model.DeploymentConfig;
+import io.fabric8.openshift.api.model.DeploymentConfigSpec;
+import io.fabric8.openshift.api.model.Template;
+import io.fabric8.utils.Files;
+import io.fabric8.utils.Strings;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.utils.StringUtils;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.kubernetes.api.KubernetesHelper.parseDate;
@@ -103,7 +116,6 @@ public class KubernetesResourceUtil {
      * @param apiVersion the api version to use
      * @param apiExtensionsVersion the extension version to use
      * @param defaultName the default name to use when none is given
-     * @param appResourcesOnly if only resource with the defaultName should be returned ?
      * @param resourceFiles files to add.
      * @return the list builder
      * @throws IOException
@@ -507,34 +519,6 @@ public class KubernetesResourceUtil {
         return "";
     }
 
-    public static void printLogsAsync(LogWatch logWatcher, final String failureMessage, final CountDownLatch terminateLatch, final Logger log) {
-        final InputStream in = logWatcher.getOutput();
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
-                    while (true) {
-                        String line = reader.readLine();
-                        if (line == null) {
-                            return;
-                        }
-                        if (terminateLatch.getCount() <= 0L) {
-                            return;
-                        }
-                        log.info("[[s]]%s", line);
-                    }
-                } catch (IOException e) {
-                    // Check again the latch which could be already count down to zero in between
-                    // so that an IO exception occurs on read
-                    if (terminateLatch.getCount() > 0L) {
-                        log.error("%s : %s", failureMessage, e);
-                    }
-                }
-            }
-        };
-        thread.start();
-    }
-
     public static Pod getNewestPod(Collection<Pod> pods) {
         if (pods == null || pods.isEmpty()) {
             return null;
@@ -785,4 +769,65 @@ public class KubernetesResourceUtil {
         String catalogAnnotation = KubernetesHelper.getOrCreateAnnotations(templateOrConfigMap).get(RESOURCE_APP_CATALOG_ANNOTATION);
         return "true".equals(catalogAnnotation);
     }
+
+    public static Set<HasMetadata> loadResources(File manifest) throws IOException {
+        Object dto = KubernetesHelper.loadYaml(manifest, KubernetesResource.class);
+        if (dto == null) {
+            throw new IllegalStateException("Cannot load kubernetes YAML: " + manifest);
+        }
+
+        if (dto instanceof Template) {
+            Template template = (Template) dto;
+            boolean failOnMissingParameterValue = false;
+            dto = Templates.processTemplatesLocally(template, failOnMissingParameterValue);
+        }
+
+        Set<KubernetesResource<?>> resources = new LinkedHashSet<>();
+
+        Set<HasMetadata> entities = new TreeSet<>(new HasMetadataComparator());
+        for (KubernetesResource<?> resource : resources) {
+            entities.addAll(KubernetesHelper.toItemList(resource));
+        }
+
+        entities.addAll(KubernetesHelper.toItemList(dto));
+        return entities;
+    }
+
+    public static LabelSelector getPodLabelSelector(HasMetadata entity) {
+        LabelSelector selector = null;
+        if (entity instanceof Deployment) {
+            Deployment resource = (Deployment) entity;
+            DeploymentSpec spec = resource.getSpec();
+            if (spec != null) {
+                selector = spec.getSelector();
+            }
+        } else if (entity instanceof ReplicaSet) {
+            ReplicaSet resource = (ReplicaSet) entity;
+            ReplicaSetSpec spec = resource.getSpec();
+            if (spec != null) {
+                selector = spec.getSelector();
+            }
+        } else if (entity instanceof DeploymentConfig) {
+            DeploymentConfig resource = (DeploymentConfig) entity;
+            DeploymentConfigSpec spec = resource.getSpec();
+            if (spec != null) {
+                selector = toLabelSelector(spec.getSelector());
+            }
+        } else if (entity instanceof ReplicationController) {
+            ReplicationController resource = (ReplicationController) entity;
+            ReplicationControllerSpec spec = resource.getSpec();
+            if (spec != null) {
+                selector = toLabelSelector(spec.getSelector());
+            }
+        }
+        return selector;
+    }
+
+    private static LabelSelector toLabelSelector(Map<String, String> matchLabels) {
+        if (matchLabels != null && !matchLabels.isEmpty()) {
+            return new LabelSelectorBuilder().withMatchLabels(matchLabels).build();
+        }
+        return null;
+    }
+
 }

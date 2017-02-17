@@ -68,7 +68,7 @@
     <version.maven>3.3.1</version.maven>
     <version.jacoco>0.7.8</version.jacoco>
     <version.fabric8>2.2.197</version.fabric8>
-    <version.docker-maven-plugin>0.19.0</version.docker-maven-plugin>
+    <version.docker-maven-plugin>0.20.0</version.docker-maven-plugin>
 
     <!-- =======================================================  -->
     <!-- === Java base image versions for docker, s2i (istag == s2i) -->
@@ -170,6 +170,7 @@
         <version>${project.version}</version>
       </dependency>
 
+      <!-- ## Enricher -->
       <dependency>
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-enricher-api</artifactId>
@@ -188,6 +189,7 @@
         <version>${project.version}</version>
       </dependency>
 
+      <!-- ## Generator -->
       <dependency>
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-generator-api</artifactId>
@@ -227,6 +229,20 @@
       <dependency>
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-generator-webapp</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <!-- ## Watcher -->
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-watcher-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-watcher-standard</artifactId>
         <version>${project.version}</version>
       </dependency>
 

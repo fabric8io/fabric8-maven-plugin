@@ -228,7 +228,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
      * clashing with the underlying BuildConfig for the Jenkins pipeline
      */
     @Parameter(property = "fabric8.s2i.buildNameSuffix", defaultValue = "-s2i")
-    private String s2iBuildNameSuffix;
+    protected String s2iBuildNameSuffix;
 
     private ClusterAccess clusterAccess;
 
@@ -402,7 +402,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
             controller.applyNamespace(namespace);
             controller.setNamespace(namespace);
 
-            Set<HasMetadata> entities = loadResources(kubernetes, controller, namespace, manifest, getProject(), log);
+            Set<HasMetadata> entities = KubernetesResourceUtil.loadResources(manifest);
 
             if (createExternalUrls) {
                 if (controller.getOpenShiftClientOrNull() != null) {
@@ -420,30 +420,6 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         } catch (Exception e) {
             throw new MojoExecutionException(e.getMessage(), e);
         }
-    }
-
-    // TODO: Move it out into an utility class
-    public static Set<HasMetadata> loadResources(KubernetesClient kubernetes, Controller controller, String namespace, File manifest, MavenProject project, Logger log) throws Exception {
-        Object dto = KubernetesHelper.loadYaml(manifest, KubernetesResource.class);
-        if (dto == null) {
-            throw new MojoFailureException("Cannot load kubernetes YAML: " + manifest);
-        }
-
-        if (dto instanceof Template) {
-            Template template = (Template) dto;
-            boolean failOnMissingParameterValue = false;
-            dto = Templates.processTemplatesLocally(template, failOnMissingParameterValue);
-        }
-
-        Set<KubernetesResource<?>> resources = new LinkedHashSet<>();
-
-        Set<HasMetadata> entities = new TreeSet<>(new HasMetadataComparator());
-        for (KubernetesResource<?> resource : resources) {
-            entities.addAll(KubernetesHelper.toItemList(resource));
-        }
-
-        entities.addAll(KubernetesHelper.toItemList(dto));
-        return entities;
     }
 
     protected void applyEntities(Controller controller, KubernetesClient kubernetes, String namespace, String fileName, Set<HasMetadata> entities) throws Exception {
@@ -734,133 +710,6 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         return project;
     }
 
-    protected void deleteEntities(KubernetesClient kubernetes, String namespace, Set<HasMetadata> entities) {
-        List<HasMetadata> list = new ArrayList<>(entities);
-
-        // For OpenShift cluster, also delete s2i buildconfig
-        OpenShiftClient openshiftClient = new Controller(kubernetes).getOpenShiftClientOrNull();
-        if (openshiftClient != null) {
-            for (HasMetadata entity : list) {
-                if ("ImageStream".equals(getKind(entity))) {
-                    ImageName imageName = new ImageName(entity.getMetadata().getName());
-                    String buildName = getS2IBuildName(imageName);
-                    log.info("Deleting resource BuildConfig " + namespace + "/" + buildName);
-                    openshiftClient.buildConfigs().inNamespace(namespace).withName(buildName).delete();
-                }
-            }
-        }
-
-        // lets delete in reverse order
-        Collections.reverse(list);
-
-        for (HasMetadata entity : list) {
-            log.info("Deleting resource " + getKind(entity) + " " + namespace + "/" + getName(entity));
-            kubernetes.resource(entity).inNamespace(namespace).cascading(true).delete();
-        }
-    }
-
-    private String getS2IBuildName(ImageName imageName) {
-        return imageName.getSimpleName() + s2iBuildNameSuffix;
-    }
-
-    protected void resizeApp(KubernetesClient kubernetes, String namespace, Set<HasMetadata> entities, int replicas) {
-        for (HasMetadata entity : entities) {
-            String name = getName(entity);
-            Scaleable<?> scalable = null;
-            if (entity instanceof Deployment) {
-                scalable = kubernetes.extensions().deployments().inNamespace(namespace).withName(name);
-            } else if (entity instanceof ReplicaSet) {
-                scalable = kubernetes.extensions().replicaSets().inNamespace(namespace).withName(name);
-            } else if (entity instanceof ReplicationController) {
-                scalable = kubernetes.replicationControllers().inNamespace(namespace).withName(name);
-            } else if (entity instanceof DeploymentConfig) {
-                OpenShiftClient openshiftClient = new Controller(kubernetes).getOpenShiftClientOrNull();
-                if (openshiftClient == null) {
-                    log.warn("Ignoring DeploymentConfig %s as not connected to an OpenShift cluster", name);
-                    continue;
-                }
-                scalable = openshiftClient.deploymentConfigs().inNamespace(namespace).withName(name);
-            }
-            if (scalable != null) {
-                log.info("Scaling " + getKind(entity) + " " + namespace + "/" + name + " to replicas: " + replicas);
-                scalable.scale(replicas, true);
-            }
-        }
-    }
-
-    protected LabelSelector getPodLabelSelector(HasMetadata entity) {
-        LabelSelector selector = null;
-        if (entity instanceof Deployment) {
-            Deployment resource = (Deployment) entity;
-            DeploymentSpec spec = resource.getSpec();
-            if (spec != null) {
-                selector = spec.getSelector();
-            }
-        } else if (entity instanceof ReplicaSet) {
-            ReplicaSet resource = (ReplicaSet) entity;
-            ReplicaSetSpec spec = resource.getSpec();
-            if (spec != null) {
-                selector = spec.getSelector();
-            }
-        } else if (entity instanceof DeploymentConfig) {
-            DeploymentConfig resource = (DeploymentConfig) entity;
-            DeploymentConfigSpec spec = resource.getSpec();
-            if (spec != null) {
-                selector = toLabelSelector(spec.getSelector());
-            }
-        } else if (entity instanceof ReplicationController) {
-            ReplicationController resource = (ReplicationController) entity;
-            ReplicationControllerSpec spec = resource.getSpec();
-            if (spec != null) {
-                selector = toLabelSelector(spec.getSelector());
-            }
-        }
-        return selector;
-    }
-
-    private LabelSelector toLabelSelector(Map<String, String> matchLabels) {
-        if (matchLabels != null && !matchLabels.isEmpty()) {
-            return new LabelSelectorBuilder().withMatchLabels(matchLabels).build();
-        }
-        return null;
-    }
-
-    protected FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> withSelector(ClientNonNamespaceOperation<Pod, PodList, DoneablePod, ClientPodResource<Pod, DoneablePod>> pods, LabelSelector selector) {
-        FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> answer = pods;
-        Map<String, String> matchLabels = selector.getMatchLabels();
-        if (matchLabels != null && !matchLabels.isEmpty()) {
-            answer = answer.withLabels(matchLabels);
-        }
-        List<LabelSelectorRequirement> matchExpressions = selector.getMatchExpressions();
-        if (matchExpressions != null) {
-            for (LabelSelectorRequirement expression : matchExpressions) {
-                String key = expression.getKey();
-                List<String> values = expression.getValues();
-                if (Strings.isNullOrBlank(key)) {
-                    log.warn("Ignoring empty key in selector expression %s", expression);
-                    continue;
-                }
-                if (values == null || values.isEmpty()) {
-                    log.warn("Ignoring empty values in selector expression %s", expression);
-                    continue;
-                }
-                String[] valuesArray = values.toArray(new String[values.size()]);
-                String operator = expression.getOperator();
-                switch (operator) {
-                    case "In":
-                        answer = answer.withLabelIn(key, valuesArray);
-                        break;
-                    case "NotIn":
-                        answer = answer.withLabelNotIn(key, valuesArray);
-                        break;
-                    default:
-                        log.warn("Ignoring unknown operator %s in selector expression %s", operator, expression);
-                }
-            }
-        }
-        return answer;
-    }
-
     protected File getKubeCtlExecutable(Controller controller) throws MojoExecutionException {
         OpenShiftClient openShiftClient = controller.getOpenShiftClientOrNull();
         String command = openShiftClient != null ? "oc" : "kubectl";
@@ -880,47 +729,4 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         return file;
     }
 
-    protected String getPodCondition(Pod pod) {
-        PodStatus podStatus = pod.getStatus();
-        if (podStatus == null) {
-            return "";
-        }
-        List<PodCondition> conditions = podStatus.getConditions();
-        if (conditions == null || conditions.isEmpty()) {
-            return "";
-        }
-
-
-        for (PodCondition condition : conditions) {
-            String type = condition.getType();
-            if (Strings.isNotBlank(type)) {
-                if ("ready".equalsIgnoreCase(type)) {
-                    String statusText = condition.getStatus();
-                    if (Strings.isNotBlank(statusText)) {
-                        if (Boolean.parseBoolean(statusText)) {
-                            return type;
-                        }
-                    }
-                }
-            }
-        }
-        return "";
-    }
-
-    protected String getPodStatusDescription(Pod pod) {
-        return KubernetesHelper.getPodStatusText(pod) + " " + getPodCondition(pod);
-    }
-
-    protected String getPodStatusMessagePostfix(Watcher.Action action) {
-        String message = "";
-        switch (action) {
-            case DELETED:
-                message = ": Pod Deleted";
-                break;
-            case ERROR:
-                message = ": Error";
-                break;
-        }
-        return message;
-    }
 }

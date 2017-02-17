@@ -49,6 +49,8 @@
     <module>generator/karaf</module>
     <module>generator/webapp</module>
     <module>generator/vertx</module>
+    <module>watcher/api</module>
+    <module>watcher/standard</module>
     <module>it</module>
   </modules>
 

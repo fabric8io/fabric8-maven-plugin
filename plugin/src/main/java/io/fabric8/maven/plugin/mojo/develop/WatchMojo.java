@@ -17,18 +17,14 @@
 package io.fabric8.maven.plugin.mojo.develop;
 
 
-import io.fabric8.kubernetes.api.Controller;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.List;
+import java.util.Set;
+
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.PodSpec;
-import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.maven.core.access.ClusterAccess;
@@ -36,46 +32,39 @@ import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.GoalFinder;
+import io.fabric8.maven.core.util.Gofabric8Util;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.service.BuildService;
+import io.fabric8.maven.docker.service.DockerAccessFactory;
 import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.docker.util.ImageNameFormatter;
+import io.fabric8.maven.docker.service.WatchService;
+import io.fabric8.maven.docker.util.AnsiLogger;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
-import io.fabric8.openshift.api.model.DeploymentConfig;
-import io.fabric8.openshift.api.model.DeploymentConfigSpec;
-import io.fabric8.openshift.client.OpenShiftClient;
-import io.fabric8.utils.Files;
+import io.fabric8.maven.plugin.watcher.WatcherManager;
+import io.fabric8.maven.watcher.api.WatcherContext;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
-import java.io.File;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-
-import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
-import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_KUBERNETES_MANIFEST;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
-import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.loadResources;
 
 /**
  * Used to automatically rebuild Docker images and restart containers in case of updates.
  */
 @Mojo(name = "watch", defaultPhase = LifecyclePhase.PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE)
+@Execute(goal = "deploy")
 public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
 
     @Parameter
@@ -116,17 +105,55 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     @Parameter(property = "fabric8.namespace")
     private String namespace;
 
+    /**
+     * Watcher specific options. This is a generic prefix where the keys have the form
+     * <code>&lt;watcher-prefix&gt;-&lt;option&gt;</code>.
+     */
+    @Parameter
+    private ProcessorConfig watcher;
+
+    /**
+     * Should we use the project's compile-time classpath to scan for additional enrichers/generators?
+     */
+    @Parameter(property = "fabric8.useProjectClasspath", defaultValue = "false")
+    private boolean useProjectClasspath = false;
+
+    /**
+     * Profile to use. A profile contains the enrichers and generators to
+     * use as well as their configuration. Profiles are looked up
+     * in the classpath and can be provided as yaml files.
+     *
+     * However, any given enricher and or generator configuration overrides
+     * the information provided by a profile.
+     */
+    @Parameter(property = "fabric8.profile")
+    private String profile;
+
+    /**
+     * Folder where to find project specific files, e.g a custom profile
+     */
+    @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
+    private File resourceDir;
+
+    // Whether to use color
+    @Parameter(property = "fabric8.useColor", defaultValue = "true")
+    protected boolean useColor;
+
+    // For verbose output
+    @Parameter(property = "fabric8.verbose", defaultValue = "false")
+    protected boolean verbose;
+
     // Used for determining which mojos are called during a run
     @Component
     protected GoalFinder goalFinder;
 
     private ClusterAccess clusterAccess;
     private KubernetesClient kubernetes;
-    private Controller controller;
+    private ServiceHub hub;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        if( skip ) {
+        if (skip) {
             return;
         }
         super.execute();
@@ -136,159 +163,104 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     protected synchronized void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
         clusterAccess = new ClusterAccess(namespace);
         kubernetes = clusterAccess.createDefaultClient(log);
-        controller = new Controller(kubernetes);
+        this.hub = hub;
 
         URL masterUrl = kubernetes.getMasterUrl();
         KubernetesResourceUtil.validateKubernetesMasterUrl(masterUrl);
 
-        super.executeInternal(hub);
+        File manifest;
+        boolean isOpenshift = KubernetesHelper.isOpenShift(kubernetes);
+        if (isOpenshift) {
+            manifest = openshiftManifest;
+        } else {
+            manifest = kubernetesManifest;
+        }
+
+        try {
+            Set<HasMetadata> resources = KubernetesResourceUtil.loadResources(manifest);
+            WatcherContext context = getWatcherContext();
+
+            WatcherManager.watch(getResolvedImages(), resources, context);
+
+        } catch (KubernetesClientException ex) {
+            KubernetesResourceUtil.handleKubernetesClientException(ex, this.log);
+        } catch (Exception ex) {
+            throw new MojoExecutionException("An error has occurred while while trying to watch the resources", ex);
+        }
+
+    }
+
+    public WatcherContext getWatcherContext() throws MojoExecutionException {
+        BuildService.BuildContext buildContext = getBuildContext();
+        WatchService.WatchContext watchContext = getWatchContext();
+
+
+        return new WatcherContext.Builder()
+                .serviceHub(hub)
+                .buildContext(buildContext)
+                .watchContext(watchContext)
+                .config(extractWatcherConfig())
+                .goalName("fabric8:watch")
+                .logger(log)
+                .newPodLogger(createLogger("[[C]][NEW][[C]] "))
+                .oldPodLogger(createLogger("[[R]][OLD][[R]] "))
+                .mode(mode)
+                .project(project)
+                .session(session)
+                .strategy(buildStrategy)
+                .useProjectClasspath(useProjectClasspath)
+                .namespace(clusterAccess.getNamespace())
+                .kubernetesClient(kubernetes)
+                .build();
+    }
+
+    @Override
+    protected DockerAccessFactory.DockerAccessContext getDockerAccessContext() {
+        return new DockerAccessFactory.DockerAccessContext.Builder(super.getDockerAccessContext())
+                .dockerHostProviders(Gofabric8Util.extractDockerHostProvider(log))
+                .build();
     }
 
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-        if (generator == null) {
-            // TODO discover the generators - not sure how yet ;)....
-            List<String> includes = Arrays.asList("spring-boot");
-            Set<String> excludes = new HashSet<>();
-            Map<String, TreeMap> config = new HashMap<>();
-            generator = new ProcessorConfig(includes, excludes, config);
-        }
         try {
             GeneratorContext ctx = new GeneratorContext.Builder()
-                .config(generator)
-                .project(project)
-                .session(session)
-                .goalFinder(goalFinder)
-                .goalName("fabric8:watch")
-                .logger(log)
-                .mode(mode)
-                .strategy(buildStrategy)
-                .useProjectClasspath(false)
-                .build();
+                    .config(extractGeneratorConfig())
+                    .project(project)
+                    .session(session)
+                    .goalFinder(goalFinder)
+                    .goalName("fabric8:watch")
+                    .logger(log)
+                    .mode(mode)
+                    .strategy(buildStrategy)
+                    .useProjectClasspath(useProjectClasspath)
+                    .build();
             return GeneratorManager.generate(configs, ctx, false);
         } catch (MojoExecutionException e) {
             throw new IllegalArgumentException("Cannot extract generator config: " + e, e);
         }
     }
 
-    @Override
-    protected void buildImage(ServiceHub hub, ImageConfiguration imageConfig) throws DockerAccessException, MojoExecutionException {
-        String imageName = imageConfig.getName();
-        // lets regenerate the label
+    // Get watcher config
+    private ProcessorConfig extractWatcherConfig() {
         try {
-            String imagePrefix = getImagePrefix(imageName);
-                imageName = imagePrefix + "%t";
-                ImageNameFormatter formatter = new ImageNameFormatter(project, new Date());
-                imageName = formatter.format(imageName);
-            imageConfig.setName(imageName);
-            log.info("build new image: " + imageConfig.getName());
-        } catch (Exception e) {
-            log.error("Caught: " + e, e);
+            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.WATCHER_CONFIG, profile, resourceDir, watcher);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot extract watcher config: " + e, e);
         }
-        super.buildImage(hub, imageConfig);
-
     }
 
-    private String getImagePrefix(String imageName) throws MojoExecutionException {
-        String imagePrefix = null;
-        int idx = imageName.lastIndexOf(':');
-        if (idx < 0) {
-            throw new MojoExecutionException("No ':' in the image name:  " + imageName);
-        } else {
-            imagePrefix = imageName.substring(0, idx + 1);
-        }
-        return imagePrefix;
-    }
-
-    @Override
-    protected void restartContainer(ServiceHub hub, ImageWatcher watcher) throws DockerAccessException, MojoExecutionException, MojoFailureException {
-        ImageConfiguration imageConfig = watcher.getImageConfiguration();
-        String imageName = imageConfig.getName();
+    // Get generator config
+    private ProcessorConfig extractGeneratorConfig() {
         try {
-            File manifest;
-            if (KubernetesHelper.isOpenShift(kubernetes)) {
-                manifest = openshiftManifest;
-            } else {
-                manifest = kubernetesManifest;
-            }
-            if (!Files.isFile(manifest)) {
-                throw new MojoFailureException("No such generated manifest file: " + manifest);
-            }
-
-            String namespace = clusterAccess.getNamespace();
-            Set<HasMetadata> entities = loadResources(kubernetes, controller, namespace, manifest, project, log);
-
-            String imagePrefix = getImagePrefix(imageName);
-            for (HasMetadata entity : entities) {
-                updateImageName(kubernetes, namespace, entity, imagePrefix, imageName);
-           }
-        } catch (KubernetesClientException e) {
-            KubernetesResourceUtil.handleKubernetesClientException(e, this.log);
-        } catch (MojoExecutionException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new MojoExecutionException(e.getMessage(), e);
+            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, resourceDir, generator);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot extract generator config: " + e, e);
         }
     }
 
-    private void updateImageName(KubernetesClient kubernetes, String namespace, HasMetadata entity, String imagePrefix, String imageName) {
-        String name = getName(entity);
-        if (entity instanceof Deployment) {
-            Deployment resource = (Deployment) entity;
-            DeploymentSpec spec = resource.getSpec();
-            if (spec != null) {
-                if (updateImageName(entity, spec.getTemplate(), imagePrefix, imageName)) {
-                    kubernetes.extensions().deployments().inNamespace(namespace).withName(name).replace(resource);
-                }
-            }
-        } else if (entity instanceof ReplicaSet) {
-            ReplicaSet resource = (ReplicaSet) entity;
-            ReplicaSetSpec spec = resource.getSpec();
-            if (spec != null) {
-                if (updateImageName(entity, spec.getTemplate(), imagePrefix, imageName)) {
-                    kubernetes.extensions().replicaSets().inNamespace(namespace).withName(name).replace(resource);
-                }
-            }
-        } else if (entity instanceof ReplicationController) {
-            ReplicationController resource = (ReplicationController) entity;
-            ReplicationControllerSpec spec = resource.getSpec();
-            if (spec != null) {
-                if (updateImageName(entity, spec.getTemplate(), imagePrefix, imageName)) {
-                    kubernetes.replicationControllers().inNamespace(namespace).withName(name).replace(resource);
-                }
-            }
-        } else if (entity instanceof DeploymentConfig) {
-            DeploymentConfig resource = (DeploymentConfig) entity;
-            DeploymentConfigSpec spec = resource.getSpec();
-            if (spec != null) {
-                if (updateImageName(entity, spec.getTemplate(), imagePrefix, imageName)) {
-                    OpenShiftClient openshiftClient = new Controller(kubernetes).getOpenShiftClientOrNull();
-                    if (openshiftClient == null) {
-                        log.warn("Ignoring DeploymentConfig %s as not connected to an OpenShift cluster", name);
-                    }
-                    openshiftClient.deploymentConfigs().inNamespace(namespace).withName(name).replace(resource);
-                }
-            }
-        }
-    }
-
-    private boolean updateImageName(HasMetadata entity, PodTemplateSpec template, String imagePrefix, String imageName) {
-        boolean answer = false;
-        PodSpec spec = template.getSpec();
-        if (spec != null) {
-            List<Container> containers = spec.getContainers();
-            if (containers != null) {
-                for (Container container : containers) {
-                    String image = container.getImage();
-                    if (image != null && image.startsWith(imagePrefix)) {
-                        container.setImage(imageName);
-                        log.info("Updating " + getKind(entity) + " " + getName(entity) + " to use image: " + imageName);
-                        answer = true;
-                    }
-                }
-            }
-        }
-        return answer;
+    protected Logger createLogger(String prefix) {
+        return new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), "F8:" + prefix);
     }
 
     @Override
