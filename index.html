@@ -2113,12 +2113,6 @@ linking images together or for specifying it with the global <strong>image</stro
 </div>
 </div>
 <div class="paragraph">
-<p>Please note that <code>docker:build</code> fork the Maven lifecycle and calls all phases up to and including <code>package</code>. The reason for this is that for the assembly to be able to reference an artifact which is part of the build it needs to be included with this <code>package</code> phase. This is a general restriction of the Maven lifecycle which applies also to the <code>maven-assembly-plugin</code> itself.</p>
-</div>
-<div class="paragraph">
-<p>When you want to bind the build to an <code>&lt;execution&gt;</code> in the plugin configuration to bind it to a phase, please use the goal <code>build-nofork</code> which does not fork the lifecycle and avoids calling goals twice.</p>
-</div>
-<div class="paragraph">
 <p>All build relevant configuration is contained in the <code>&lt;build&gt;</code> section
 of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
 <code>&lt;dockerFile&gt;</code> the following configuration options are available:</p>
@@ -2493,10 +2487,45 @@ used for <code>descriptorRef</code>:</p>
 <p>All declared files end up in the configured <code>targetDir</code> (or <code>/maven</code> by default) in the created image.</p>
 </div>
 <div class="paragraph">
-<p>If the assembly references the artifact to build with this pom, it is required that the <code>package</code> phase is included in the run. This happens either automatically when the <code>fabric8:build</code> target is called, or when <code>fabric8:build-nofork</code> is bound to an execution phase in the plugin configuration. By default <code>fabric8:build-nofork</code> is bound to the <code>install</code>
-phase).</p>
+<div class="title">Maven peculiarities when including the artifact</div>
+<p>If the assembly references the artifact to build with this pom, it is required that the <code>package</code> phase is included in the run. Otherwise the artifact file can&#8217;t be found by <code>docker:build</code>. This is an old <a href="https://issues.apache.org/jira/browse/MASSEMBLY-94">outstanding issue</a> of the assembly plugin which probably can&#8217;t be fixed because of the way how Maven works. We tried hard to workaround this issue and in 90% of all cases you won&#8217;t experience any problem. However, when the following warning happens which might lead to the given error:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code>[WARNING] Cannot include project artifact: io.fabric8:helloworld:jar:0.20.0; it doesn't have an associated file or directory.
+[WARNING] The following patterns were never triggered in this artifact inclusion filter:
+o  'io.fabric8:helloworld'
+
+[ERROR] DOCKER&gt; Failed to create assembly for docker image  (with mode 'dir'): Error creating assembly archive docker: You must set at least one file.</code></pre>
+</div>
 </div>
 <div class="paragraph">
+<p>then you have two options to fix this:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Call <code>mvn package fabric8:build</code> to explicitly run "package" and "docker:build" in a chain.</p>
+</li>
+<li>
+<p>Bind <code>build</code> to an to an execution phase in the plugin&#8217;s definition. By default <code>fabric8:build</code> will bind to the <code>install</code> phase is set in an execution. Then you can use a plain <code>mvn install</code> for building the artifact and creating the image.</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;executions&gt;</span>
+  <span class="tag">&lt;execution&gt;</span>
+    <span class="tag">&lt;id&gt;</span>docker-build<span class="tag">&lt;/id&gt;</span>
+    <span class="tag">&lt;goals&gt;</span>
+       <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
+    <span class="tag">&lt;/goals&gt;</span>
+  <span class="tag">&lt;/execution&gt;</span>
+<span class="tag">&lt;executions&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<div class="title">Example</div>
 <p>In the following example a dependency from the pom.xml is included and
 mapped to the name <code>jolokia.war</code>. With this configuration you will end
 up with an image, based on <code>busybox</code> which has a directory <code>/maven</code>
@@ -2504,7 +2533,6 @@ containing a single file <code>jolokia.war</code>. This volume is also exported
 automatically.</p>
 </div>
 <div class="listingblock">
-<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;assembly&gt;</span>
   <span class="tag">&lt;dependencySets&gt;</span>
@@ -5693,7 +5721,11 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
     - <span class="string"><span class="content">karaf</span></span>
     - <span class="string"><span class="content">vertx</span></span>
     - <span class="string"><span class="content">java-exec</span></span>
-    - <span class="string"><span class="content">webapp</span></span></code></pre>
+    - <span class="string"><span class="content">webapp</span></span>
+  <span class="key">watcher</span>:
+    <span class="key">includes</span>:
+    - <span class="string"><span class="content">spring-boot</span></span>
+    - <span class="string"><span class="content">docker-image</span></span></code></pre>
 </div>
 </div>
 </div>
@@ -6234,7 +6266,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.18<br>
-Last updated 2017-02-17 07:17:51 UTC
+Last updated 2017-02-17 13:57:59 UTC
 </div>
 </div>
 </body>
