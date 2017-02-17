@@ -396,6 +396,33 @@ public class KubernetesResourceUtil {
         return true;
     }
 
+    /**
+     * Try to set an environment variable in the list or return the old value
+     * if present and different from the current one.
+     *
+     * Environment variables will not be overridden.
+     *
+     * @param envVarList the list of environment variables
+     * @param name the environment variable
+     * @param value the value to set
+     * @return the old value, if present, or null
+     */
+    public static EnvVar setEnvVarNoOverride(List<EnvVar> envVarList, String name, String value) {
+        for (EnvVar envVar : envVarList) {
+            String envVarName = envVar.getName();
+            if (io.fabric8.utils.Objects.equal(name, envVarName)) {
+                String oldValue = envVar.getValue();
+                if (io.fabric8.utils.Objects.equal(value, oldValue)) {
+                    return null; // identical values
+                }
+                return envVar;
+            }
+        }
+        EnvVar env = new EnvVarBuilder().withName(name).withValue(value).build();
+        envVarList.add(env);
+        return null;
+    }
+
     public static boolean setEnvVar(List<EnvVar> envVarList, String name, String value) {
         for (EnvVar envVar : envVarList) {
             String envVarName = envVar.getName();

@@ -86,6 +86,12 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 
 | <<fmp-service>>
 | Create a default service if missing and extrac ports from the Docker image configuration.
+
+| <<f8-maven-scm-enricher>>
+| Add Maven SCM information as annotations to the kubernetes/openshift resources
+
+| <<fmp-maven-issue-mgmt-enricher>>
+| Add Maven Issue Management information as annotations to the kubernetes/openshift resources
 |===
 
 [[enrichers-standard]]
@@ -126,7 +132,7 @@ Default enrichers are used for adding missing resources or adding metadata to gi
 [[fmp-volume-permission]]
 ==== fmp-volume-permission
 
-Enricher which fixes the permission of persisten volume mount with the help of an init container.
+Enricher which fixes the permission of persistent volume mount with the help of an init container.
 
 [[fmp-autotls]]
 ==== fmp-autotls
@@ -463,6 +469,108 @@ By playing with the `vertx.health.path` and ``vertx.health.readiness.path` prope
 disabled, the liveness check uses `GET localhost:8080/ping`
 *  `vertx.health.path` set to "/ping" and `vertx.health.readiness.path` set to "/ready"  => the readiness check uses
 `GET localhost:8080/ready` , the liveness check uses the `GET localhost:8080/ping`
+
+[[f8-maven-scm-enricher]]
+==== f8-maven-scm-enricher
+
+This enricher adds additional https://maven.apache.org/pom.html#SCM[SCM] related metadata to all objects supporting annotations.
+These metadata will be added only if https://maven.apache.org/pom.html#SCM[SCM] information is present in the maven `pom.xml` of the project.
+
+The following annotations will be added to the objects that supports annotations,
+
+.Maven SCM Enrichers Annotation Mapping
+[cols="2,2,3"]
+|===
+| Maven SCM Info | Annotation | Description
+
+| scm/connection
+| fabric8.io/scm-con-url
+| The SCM connection that will be used to connect to the project's SCM
+
+| scm/developerConnection
+| fabric8.io/scm-devcon-url
+| The SCM Developer Connection that will be used to connect to the project's developer SCM
+
+| scm/tag
+| fabric8.io/scm-tag
+| The SCM tag that will be used to checkout the sources, like HEAD dev-branch etc.,
+
+| scm/url
+| fabric8.io/scm-url
+| The SCM web url that can be used to browse the SCM over web browser
+
+|===
+
+Lets say you have a maven pom.xml with the following scm information,
+[source,xml]
+----
+<scm>
+    <connection>scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git</connection>
+    <developerConnection>scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git</developerConnection>
+    <url>git://github.com/fabric8io/fabric8-maven-plugin.git</url>
+</scm>
+
+----
+This infomation will be enriched as annotations in the generated manifest like,
+
+[source,yaml]
+----
+...
+  kind: Service
+  metadata:
+    annotations
+      fabric8.io/scm-con-url: "scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git"
+      fabric8.io/scm-devcon-url: "scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git"
+      fabric8.io/scm-tag: "HEAD"
+      fabric8.io/scm-url: "git://github.com/fabric8io/fabric8-maven-plugin.git"
+...
+----
+
+[[fmp-maven-issue-mgmt-enricher]]
+==== f8-maven-issue-mgmt
+
+This enricher adds additional https://maven.apache.org/pom.html#Issue_Management[Issue Management] related metadata to all objects supporting annotations.
+These metadata will be added only if the https://maven.apache.org/pom.html#Issue_Management[Issue Management] information in available in maven `pom.xml` of the project.
+
+The following annotations will be added to the objects that supports annotations,
+
+.Maven Issue Tracker Enrichers Annotation Mapping
+[cols="2,2,3"]
+|===
+| Maven Issue Tracker Info | Annotation | Description
+
+| issueManagement/system
+| fabric8.io/issue-system
+| The Issue Management system like Bugzilla, JIRA, GitHub etc.,
+
+| issueManagement/url
+| fabric8.io/issue-tracker-url
+| The Issue Management url e.g. GitHub Issues Url
+
+|===
+
+Lets say you have a maven pom.xml with the following issue management information,
+
+[source,xml]
+----
+<issueManagement>
+   <system>GitHub</system>
+   <url>https://github.com/fabric8io/vertx-maven-plugin/issues/</url>
+</issueManagement>
+----
+
+This information will be enriched as annotations in the generated manifest like,
+
+[source,yaml]
+----
+...
+  kind: Service
+  metadata:
+    annotations:
+      fabric8.io/issue-system: "GitHub"
+      fabric8.io/issue-tracker-url: "https://github.com/fabric8io/vertx-maven-plugin/issues/"
+...
+----
 
 == Enricher API
 

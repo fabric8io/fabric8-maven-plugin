@@ -19,6 +19,7 @@ package io.fabric8.maven.enricher.api;
 import java.util.List;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -43,6 +44,8 @@ public class EnricherContext {
 
     private ProcessorConfig config = ProcessorConfig.EMPTY;
 
+    private ResourceConfig resources;
+
     private boolean useProjectClasspath;
     private OpenShiftDependencyResources openshiftDependencyResources;
     private MavenSession session;
@@ -64,6 +67,10 @@ public class EnricherContext {
 
     public ProcessorConfig getConfig() {
         return config;
+    }
+
+    public ResourceConfig getResources() {
+        return resources;
     }
 
     public String getNamespace() {
@@ -117,6 +124,11 @@ public class EnricherContext {
 
         public Builder config(ProcessorConfig config) {
             ctx.config = config;
+            return this;
+        }
+
+        public Builder resources(ResourceConfig resources) {
+            ctx.resources = resources;
             return this;
         }
 

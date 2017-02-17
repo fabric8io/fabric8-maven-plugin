@@ -6,9 +6,9 @@
   enricher:
     includes:
     - fmp-name
-    - fmp-image
     - fmp-controller
     - fmp-service
+    - fmp-image
     - fmp-portname
     - fmp-ianaservice
     - fmp-project
@@ -65,9 +65,9 @@
   enricher:
     includes:
     - fmp-name
-    - fmp-image
     - fmp-controller
     - fmp-service
+    - fmp-image
 # Only dependencies, no build, use other resources raw
 - name: aggregate
   generator:
