@@ -502,9 +502,8 @@ The following annotations will be added to the objects that supports annotations
 |===
 
 Lets say you have a maven pom.xml with the following scm information,
-----
 [source,xml]
-
+----
 <scm>
     <connection>scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git</connection>
     <developerConnection>scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git</developerConnection>
@@ -513,12 +512,10 @@ Lets say you have a maven pom.xml with the following scm information,
 
 ----
 This infomation will be enriched as annotations in the generated manifest like,
-----
+
 [source,yaml]
-apiVersion: v1
-kind: List
-items:
-- apiVersion: v1
+----
+...
   kind: Service
   metadata:
     annotations
@@ -563,12 +560,10 @@ Lets say you have a maven pom.xml with the following issue management informatio
 ----
 
 This information will be enriched as annotations in the generated manifest like,
-----
+
 [source,yaml]
-apiVersion: v1
-kind: List
-items:
-- apiVersion: v1
+----
+...
   kind: Service
   metadata:
     annotations:
