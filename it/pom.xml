@@ -100,6 +100,7 @@ for running a single test.
           <skipInvocation>${skipTests}</skipInvocation>
           <streamLogs>true</streamLogs>
           <invokerPropertiesFile>invoker.properties</invokerPropertiesFile>
+          <!--<invokerTest>*</invokerTest>-->
           <scriptVariables>
             <version>${project.version}</version>
             <artifactId>${project.artifactId}</artifactId>
