@@ -76,7 +76,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
  * @since 16/03/16
  */
 @Mojo(name = "build", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST, requiresDependencyResolution = ResolutionScope.COMPILE)
-public class BuildMojo extends io.fabric8.maven.docker.BuildMojoNoFork {
+public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     /**
      * Generator specific options. This is a generic prefix where the keys have the form

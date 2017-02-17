@@ -170,6 +170,7 @@
         <version>${project.version}</version>
       </dependency>
 
+      <!-- ## Enricher -->
       <dependency>
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-enricher-api</artifactId>
@@ -188,6 +189,7 @@
         <version>${project.version}</version>
       </dependency>
 
+      <!-- ## Generator -->
       <dependency>
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-generator-api</artifactId>
@@ -227,6 +229,20 @@
       <dependency>
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-generator-webapp</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <!-- ## Watcher -->
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-watcher-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-watcher-standard</artifactId>
         <version>${project.version}</version>
       </dependency>
 
