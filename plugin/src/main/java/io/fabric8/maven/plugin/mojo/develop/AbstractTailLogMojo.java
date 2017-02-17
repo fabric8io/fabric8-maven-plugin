@@ -30,6 +30,10 @@ public class AbstractTailLogMojo extends ApplyMojo {
     @Parameter(property = "fabric8.log.pod")
     private String podName;
 
+    protected PodLogService getLogService() {
+        return new PodLogService(getLogServiceContext());
+    }
+
     protected PodLogService.PodLogServiceContext getLogServiceContext() {
         return new PodLogService.PodLogServiceContext.Builder()
                 .log(log)

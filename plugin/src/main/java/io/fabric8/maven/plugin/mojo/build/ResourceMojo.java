@@ -29,7 +29,6 @@ import java.util.Properties;
 import java.util.Set;
 import javax.validation.ConstraintViolationException;
 
-import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.extensions.Templates;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -88,8 +87,6 @@ import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
-import static io.fabric8.maven.core.util.KubernetesResourceUtil.isAppCatalogResource;
-import static io.fabric8.maven.core.util.KubernetesResourceUtil.loadResources;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
 
 
@@ -499,12 +496,10 @@ public class ResourceMojo extends AbstractResourceMojo {
         if (openshiftManifest != null && openshiftManifest.isFile() && openshiftManifest.exists()) {
             // lets add any ImageStream / ImageStreamTag objects which are already on disk
             // from a previous `BuildMojo` execution
-            String namespace = clusterAccess.getNamespace();
             KubernetesClient client = clusterAccess.createDefaultClient(log);
-            Controller controller = new Controller(client);
             Set<HasMetadata> oldEntities;
             try {
-                oldEntities = loadResources(openshiftManifest);
+                oldEntities = KubernetesResourceUtil.loadResources(openshiftManifest);
             } catch (Exception e) {
                 throw new MojoExecutionException("Failed to load openshift manifest " + openshiftManifest + ". " + e, e);
             }
@@ -535,7 +530,7 @@ public class ResourceMojo extends AbstractResourceMojo {
     private Template extractAndRemoveTemplates(List<HasMetadata> items) {
         Template extractedTemplate = null;
         for (HasMetadata item : new ArrayList<>(items)) {
-            if (item instanceof Template && !isAppCatalogResource(item)) {
+            if (item instanceof Template && !KubernetesResourceUtil.isAppCatalogResource(item)) {
                 Template template = (Template) item;
                 if (extractedTemplate == null) {
                     extractedTemplate = template;

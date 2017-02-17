@@ -54,9 +54,9 @@ public class GeneratorManager {
         ProcessorConfig config = genCtx.getConfig();
         Logger log = genCtx.getLogger();
         List<Generator> usableGenerators = config.prepareProcessors(generators, "generator");
-        log.verbose("Generators:");
+        log.debug("Generators:");
         for (Generator generator : usableGenerators) {
-            log.verbose(" - %s",generator.getName());
+            log.debug(" - %s",generator.getName());
             if (generator.isApplicable(ret)) {
                 log.info("Running generator %s", generator.getName());
                 ret = generator.customize(ret, prePackagePhase);

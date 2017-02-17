@@ -29,18 +29,6 @@
 
   <name>Fabric8 Maven :: Plugin</name>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-dependencies</artifactId>
-        <version>${spring-boot.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
   <dependencies>
 
     <!-- == docker-maven-plugin ========================= -->
@@ -174,30 +162,6 @@
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-interactivity-api</artifactId>
-    </dependency>
-
-    <!-- == Remote Spring Boot ============================ -->
-    <!-- TODO: Spring boot must not be refrenced in fabric8-maven-plugin and fabric8-maven-core
-               Instead they should be mover into the spring-boot specific generators and enrichers -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-devtools</artifactId>
-    </dependency>
-    <dependency>
-
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-web</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-validator</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.fasterxml</groupId>
-      <artifactId>classmate</artifactId>
-      <version>1.1.0</version>
     </dependency>
 
     <!-- == Test =============================================== -->

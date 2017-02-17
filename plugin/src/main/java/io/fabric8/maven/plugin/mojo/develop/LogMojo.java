@@ -16,17 +16,16 @@
 
 package io.fabric8.maven.plugin.mojo.develop;
 
+import java.util.Set;
+
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.maven.core.service.PodLogService;
 
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-
-import java.util.Set;
 
 /**
  * This goal tails the log of the most recent pod for the app that was deployed via <code>fabric8:deploy</code>
@@ -42,7 +41,7 @@ public class LogMojo extends AbstractTailLogMojo {
 
     @Override
     protected void applyEntities(Controller controller, final KubernetesClient kubernetes, final String namespace, String fileName, final Set<HasMetadata> entities) throws Exception {
-        new PodLogService(getLogServiceContext()).tailAppPodsLogs(kubernetes, namespace, entities, false, null, followLog, null, true);
+        getLogService().tailAppPodsLogs(kubernetes, namespace, entities, false, null, followLog, null, true);
     }
 
 

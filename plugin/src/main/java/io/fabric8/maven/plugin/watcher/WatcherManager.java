@@ -56,13 +56,18 @@ public class WatcherManager {
         ProcessorConfig config = watcherCtx.getConfig();
         Logger log = watcherCtx.getLogger();
         List<Watcher> usableWatchers  = config.prepareProcessors(watchers, "watcher");
-        log.verbose("Watchers:");
+        log.debug("Watchers:");
         Watcher chosen = null;
         for (Watcher watcher : usableWatchers) {
-            log.verbose(" - %s",watcher.getName());
             if (watcher.isApplicable(ret, resources, mode)) {
-                chosen = watcher;
-                break;
+                if (chosen == null) {
+                    log.debug(" - %s [selected]", watcher.getName());
+                    chosen = watcher;
+                } else {
+                    log.debug(" - %s", watcher.getName());
+                }
+            } else {
+                log.debug(" - %s [not applicable]", watcher.getName());
             }
         }
 

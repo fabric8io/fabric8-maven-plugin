@@ -135,9 +135,9 @@ public class EnricherManager {
 
 
     private void logEnrichers(List<Enricher> enrichers) {
-        log.verbose("Enrichers:");
+        log.debug("Enrichers:");
         for (Enricher enricher : enrichers) {
-            log.verbose("- %s", enricher.getName());
+            log.debug("- %s", enricher.getName());
         }
     }
 

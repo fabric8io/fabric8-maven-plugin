@@ -34,8 +34,6 @@ import io.fabric8.maven.watcher.api.WatcherContext;
 import io.fabric8.utils.Closeables;
 import io.fabric8.utils.Strings;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.getLabels;
-import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateAnnotations;
 import static io.fabric8.maven.core.util.SpringBootProperties.DEV_TOOLS_REMOTE_SECRET;
 
 public class SpringBootWatcher extends BaseWatcher {
@@ -87,7 +85,7 @@ public class SpringBootWatcher extends BaseWatcher {
                     }
                     Service s = serviceResource.get();
                     if (s != null) {
-                        url = getOrCreateAnnotations(s).get(Annotations.Service.EXPOSE_URL);
+                        url = KubernetesHelper.getOrCreateAnnotations(s).get(Annotations.Service.EXPOSE_URL);
                         if (Strings.isNotBlank(url)) {
                             break;
                         }
@@ -111,7 +109,7 @@ public class SpringBootWatcher extends BaseWatcher {
     }
 
     private boolean isExposeService(Service service) {
-        String expose = getLabels(service).get("expose");
+        String expose = KubernetesHelper.getLabels(service).get("expose");
         return expose != null && expose.toLowerCase().equals("true");
     }
 

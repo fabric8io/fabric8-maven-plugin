@@ -46,8 +46,8 @@
     - webapp
   watcher:
     includes:
-    - docker-image
     - spring-boot
+    - docker-image
 # end::default[]
 # No enrichment at all
 - name: raw
