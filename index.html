@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.2.18,</span>
-<span id="revdate">2017-02-14</span>
+<span id="revdate">2017-02-17</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -4693,6 +4693,14 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-service">fmp-service</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Create a default service if missing and extrac ports from the Docker image configuration.</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#f8-maven-scm-enricher">f8-maven-scm-enricher</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add Maven SCM information as annotations to the kubernetes/openshift resources</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-maven-issue-mgmt-enricher">f8-maven-issue-mgmt</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add Maven Issue Management information as annotations to the kubernetes/openshift resources</p></td>
+</tr>
 </tbody>
 </table>
 <div class="sect3">
@@ -4743,7 +4751,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <div class="sect4">
 <h5 id="fmp-volume-permission">fmp-volume-permission</h5>
 <div class="paragraph">
-<p>Enricher which fixes the permission of persisten volume mount with the help of an init container.</p>
+<p>Enricher which fixes the permission of persistent volume mount with the help of an init container.</p>
 </div>
 </div>
 <div class="sect4">
@@ -5196,6 +5204,143 @@ disabled, the liveness check uses <code>GET localhost:8080/ping</code></p>
 </ul>
 </div>
 </div>
+<div class="sect4">
+<h5 id="f8-maven-scm-enricher">f8-maven-scm-enricher</h5>
+<div class="paragraph">
+<p>This enricher adds additional <a href="https://maven.apache.org/pom.html#SCM">SCM</a> related metadata to all objects supporting annotations.
+These metadata will be added only if <a href="https://maven.apache.org/pom.html#SCM">SCM</a> information is present in the maven <code>pom.xml</code> of the project.</p>
+</div>
+<div class="paragraph">
+<p>The following annotations will be added to the objects that supports annotations,</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 33. Maven SCM Enrichers Annotation Mapping</caption>
+<colgroup>
+<col style="width: 28.5714%;">
+<col style="width: 28.5714%;">
+<col style="width: 42.8572%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Maven SCM Info</th>
+<th class="tableblock halign-left valign-top">Annotation</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">scm/connection</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fabric8.io/scm-con-url</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The SCM connection that will be used to connect to the project&#8217;s SCM</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">scm/developerConnection</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fabric8.io/scm-devcon-url</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The SCM Developer Connection that will be used to connect to the project&#8217;s developer SCM</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">scm/tag</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fabric8.io/scm-tag</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The SCM tag that will be used to checkout the sources, like HEAD dev-branch etc.,</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">scm/url</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fabric8.io/scm-url</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The SCM web url that can be used to browse the SCM over web browser</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Lets say you have a maven pom.xml with the following scm information,</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;scm&gt;</span>
+    <span class="tag">&lt;connection&gt;</span>scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git<span class="tag">&lt;/connection&gt;</span>
+    <span class="tag">&lt;developerConnection&gt;</span>scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git<span class="tag">&lt;/developerConnection&gt;</span>
+    <span class="tag">&lt;url&gt;</span>git://github.com/fabric8io/fabric8-maven-plugin.git<span class="tag">&lt;/url&gt;</span>
+<span class="tag">&lt;/scm&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This infomation will be enriched as annotations in the generated manifest like,</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="head"><span class="head">...</span></span>
+  <span class="key">kind</span>: <span class="string"><span class="content">Service</span></span>
+  <span class="key">metadata</span>:
+    <span class="error">annotations</span>
+      <span class="key">fabric8.io/scm-con-url</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git</span><span class="delimiter">&quot;</span></span>
+      <span class="key">fabric8.io/scm-devcon-url</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git</span><span class="delimiter">&quot;</span></span>
+      <span class="key">fabric8.io/scm-tag</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">HEAD</span><span class="delimiter">&quot;</span></span>
+      <span class="key">fabric8.io/scm-url</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">git://github.com/fabric8io/fabric8-maven-plugin.git</span><span class="delimiter">&quot;</span></span>
+<span class="head"><span class="head">...</span></span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="fmp-maven-issue-mgmt-enricher">f8-maven-issue-mgmt</h5>
+<div class="paragraph">
+<p>This enricher adds additional <a href="https://maven.apache.org/pom.html#Issue_Management">Issue Management</a> related metadata to all objects supporting annotations.
+These metadata will be added only if the <a href="https://maven.apache.org/pom.html#Issue_Management">Issue Management</a> information in available in maven <code>pom.xml</code> of the project.</p>
+</div>
+<div class="paragraph">
+<p>The following annotations will be added to the objects that supports annotations,</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 34. Maven Issue Tracker Enrichers Annotation Mapping</caption>
+<colgroup>
+<col style="width: 28.5714%;">
+<col style="width: 28.5714%;">
+<col style="width: 42.8572%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Maven Issue Tracker Info</th>
+<th class="tableblock halign-left valign-top">Annotation</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">issueManagement/system</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fabric8.io/issue-system</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The Issue Management system like Bugzilla, JIRA, GitHub etc.,</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">issueManagement/url</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fabric8.io/issue-tracker-url</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The Issue Management url e.g. GitHub Issues Url</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Lets say you have a maven pom.xml with the following issue management information,</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;issueManagement&gt;</span>
+   <span class="tag">&lt;system&gt;</span>GitHub<span class="tag">&lt;/system&gt;</span>
+   <span class="tag">&lt;url&gt;</span>https://github.com/fabric8io/vertx-maven-plugin/issues/<span class="tag">&lt;/url&gt;</span>
+<span class="tag">&lt;/issueManagement&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This information will be enriched as annotations in the generated manifest like,</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="head"><span class="head">...</span></span>
+  <span class="key">kind</span>: <span class="string"><span class="content">Service</span></span>
+  <span class="key">metadata</span>:
+    <span class="key">annotations</span>:
+      <span class="key">fabric8.io/issue-system</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">GitHub</span><span class="delimiter">&quot;</span></span>
+      <span class="key">fabric8.io/issue-tracker-url</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">https://github.com/fabric8io/vertx-maven-plugin/issues/</span><span class="delimiter">&quot;</span></span>
+<span class="head"><span class="head">...</span></span></code></pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -5275,7 +5420,7 @@ disabled, the liveness check uses <code>GET localhost:8080/ping</code></p>
 <p>Each <code>profiles.yml</code> has a list of profiles which are defined with these elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 33. Profile elements</caption>
+<caption class="title">Table 35. Profile elements</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -5311,7 +5456,7 @@ disabled, the liveness check uses <code>GET localhost:8080/ping</code></p>
 <p>The definition of generators and enrichers in the profile follow the same format:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 34. Generator and Enericher definition</caption>
+<caption class="title">Table 36. Generator and Enericher definition</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -5469,7 +5614,7 @@ disabled, the liveness check uses <code>GET localhost:8080/ping</code></p>
 <p>This plugin comes with a list of the following predefined profiles:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 35. Predefined Profiles</caption>
+<caption class="title">Table 37. Predefined Profiles</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -6089,7 +6234,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.18<br>
-Last updated 2017-02-14 19:47:32 UTC
+Last updated 2017-02-17 07:17:51 UTC
 </div>
 </div>
 </body>
