@@ -17,6 +17,5 @@ after_success:
   # Also look into .codecov.yml for configuraton of codecov
   - bash <(curl -s https://codecov.io/bash)
 after_script:
-  # Update our sonar instalation at https://sonarqube.com/dashboard?id=io.fabric8%3Afabric8-maven-plugin-build
-  - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then mvn -Pjacoco package sonar:sonar -Dsonar.host.url=https://sonarqube.com -Dsonar.login=${SONARQUBE_TOKEN}; else true; fi
-
+  # Update our sonar installation at https://sonarqube.com/dashboard?id=io.fabric8%3Afabric8-maven-plugin-build
+  - bash doc/sonarqube.sh
