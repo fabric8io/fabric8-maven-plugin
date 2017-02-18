@@ -1,8 +1,8 @@
 ## fabric8-maven-plugin
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.fabric8/fabric8-maven-plugin/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/io.fabric8/fabric8-maven-plugin/)
-[![Coverage](https://img.shields.io/sonar/https/nemo.sonarqube.org/io.fabric8:fabric8-maven-plugin-build/coverage.svg?style=flat-square)](https://sonarqube.com/overview?id=io.fabric8%3Afabric8-maven-plugin-build)
-[![Technical Debt](https://img.shields.io/sonar/https/nemo.sonarqube.org/io.fabric8:fabric8-maven-plugin-build/tech_debt.svg?style=flat-square)](https://sonarqube.com/overview?id=io.fabric8%3Afabric8-maven-plugin-build)
+[![Coverage](https://img.shields.io/sonar/https/sonarqube.com/io.fabric8:fabric8-maven-plugin-build/coverage.svg?style=flat-square)](https://sonarqube.com/overview?id=io.fabric8%3Afabric8-maven-plugin-build)
+[![Technical Debt](https://img.shields.io/sonar/https/sonarqube.com/io.fabric8:fabric8-maven-plugin-build/tech_debt.svg?style=flat-square)](https://sonarqube.com/overview?id=io.fabric8%3Afabric8-maven-plugin-build)
 [![Dependency Status](https://dependencyci.com/github/fabric8io/fabric8-maven-plugin/badge)](https://dependencyci.com/github/fabric8io/fabric8-maven-plugin)
 
 <p align="center">
