@@ -94,7 +94,6 @@ for running a single test.
           <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
           <cloneClean>true</cloneClean>
           <!--<localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>-->
-          <settingsFile>src/it/settings.xml</settingsFile>
           <postBuildHookScript>verify</postBuildHookScript>
           <addTestClassPath>true</addTestClassPath>
           <streamLogs>true</streamLogs>
