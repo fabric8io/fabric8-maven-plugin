@@ -30,13 +30,9 @@ import java.util.Set;
 import javax.validation.ConstraintViolationException;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.extensions.Templates;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterAccess;
@@ -63,6 +59,8 @@ import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.util.InitContainerHandler;
+import io.fabric8.maven.enricher.standard.VolumePermissionEnricher;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.converter.DeploymentConfigOpenShiftConverter;
 import io.fabric8.maven.plugin.converter.DeploymentOpenShiftConverter;
@@ -492,27 +490,23 @@ public class ResourceMojo extends AbstractResourceMojo {
         }
 
         openshiftDependencyResources.addMissingResources(objects);
-
-        if (openshiftManifest != null && openshiftManifest.isFile() && openshiftManifest.exists()) {
-            // lets add any ImageStream / ImageStreamTag objects which are already on disk
-            // from a previous `BuildMojo` execution
-            KubernetesClient client = clusterAccess.createDefaultClient(log);
-            Set<HasMetadata> oldEntities;
-            try {
-                oldEntities = KubernetesResourceUtil.loadResources(openshiftManifest);
-            } catch (Exception e) {
-                throw new MojoExecutionException("Failed to load openshift manifest " + openshiftManifest + ". " + e, e);
-            }
-            for (HasMetadata entity : oldEntities) {
-                if (entity instanceof ImageStream || entity instanceof ImageStreamTag) {
-                    if (KubernetesResourceUtil.findResourceByName(objects, entity.getClass(), KubernetesHelper.getName(entity)) == null) {
-                        objects.add(entity);
-                    }
-                }
-            }
-        }
         moveTemplatesToTopLevel(builder, objects);
+        // TODO: Remove this ASAP when https://github.com/fabric8io/fabric8-maven-plugin/issues/678 is fixed
+        removeInitContainers(builder, VolumePermissionEnricher.ENRICHER_NAME);
         return builder.build();
+    }
+
+    private void removeInitContainers(KubernetesListBuilder builder, final String enricherName) {
+         builder.accept(new TypedVisitor<PodTemplateSpecBuilder>() {
+             @Override
+             public void visit(PodTemplateSpecBuilder builder) {
+                 InitContainerHandler initContainerHandler = new InitContainerHandler(log);
+                 if (initContainerHandler.hasInitContainer(builder, enricherName)) {
+                     log.verbose("Removing init container from openshift.yml for %s",enricherName);
+                     initContainerHandler.removeInitContainer(builder, enricherName);
+                 }
+             }
+         });
     }
 
     private void moveTemplatesToTopLevel(KubernetesListBuilder builder, List<HasMetadata> objects) {

@@ -16,6 +16,8 @@
 
 package io.fabric8.maven.enricher.api.util;
 
+import java.util.Map;
+
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.maven.core.util.JSONUtil;
 import io.fabric8.maven.docker.util.Logger;
@@ -57,6 +59,31 @@ public class InitContainerHandler {
             }
         }
         return null;
+    }
+
+    public void removeInitContainer(PodTemplateSpecBuilder builder, String initContainerName) {
+        if (builder.hasMetadata()) {
+            Map<String, String> annotations = builder.buildMetadata().getAnnotations();
+            String initContainerAnnotation = annotations.get(INIT_CONTAINER_ANNOTATION);
+            if (Strings.isNotBlank(initContainerAnnotation)) {
+                JSONArray newInitContainers = new JSONArray();
+                JSONArray initContainers = new JSONArray(initContainerAnnotation);
+
+                for (int i = 0; i < initContainers.length(); i++) {
+                    JSONObject obj = initContainers.getJSONObject(i);
+                    String existingName = obj.getString("name");
+                    if (!initContainerName.equals(existingName)) {
+                        newInitContainers.put(obj);
+                    }
+                }
+                if (newInitContainers.length() > 0) {
+                    annotations.put(INIT_CONTAINER_ANNOTATION, newInitContainers.toString());
+                } else {
+                    annotations.remove(INIT_CONTAINER_ANNOTATION);
+                }
+                builder.buildMetadata().setAnnotations(annotations);
+            }
+        }
     }
 
     public void appendInitContainer(PodTemplateSpecBuilder builder, JSONObject initContainer) {

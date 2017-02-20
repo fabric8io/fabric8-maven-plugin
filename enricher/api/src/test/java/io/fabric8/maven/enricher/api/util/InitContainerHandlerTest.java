@@ -73,6 +73,26 @@ public class InitContainerHandlerTest {
     }
 
     @Test
+    public void removeAll() {
+        PodTemplateSpecBuilder builder = getPodTemplateBuilder("bla", "foo/bla");
+        assertTrue(handler.hasInitContainer(builder, "bla"));
+        handler.removeInitContainer(builder, "bla");
+        assertFalse(handler.hasInitContainer(builder, "bla"));
+        verifyBuilder(builder);
+    }
+
+    @Test
+    public void removeOne() {
+        PodTemplateSpecBuilder builder = getPodTemplateBuilder("bla", "foo/bla", "blub", "foo/blub");
+        assertTrue(handler.hasInitContainer(builder, "bla"));
+        assertTrue(handler.hasInitContainer(builder, "blub"));
+        handler.removeInitContainer(builder, "bla");
+        assertFalse(handler.hasInitContainer(builder, "bla"));
+        assertTrue(handler.hasInitContainer(builder, "blub"));
+        verifyBuilder(builder, createInitContainer("blub", "foo/blub"));
+    }
+
+    @Test
     public void existingSame() {
         new Expectations() {{
             log.warn(anyString, withSubstring("blub"));
@@ -102,10 +122,14 @@ public class InitContainerHandlerTest {
     private void verifyBuilder(PodTemplateSpecBuilder builder, JSONObject ... initContainers) {
         PodTemplateSpec spec = builder.build();
         String containers = spec.getMetadata().getAnnotations().get(InitContainerHandler.INIT_CONTAINER_ANNOTATION);
-        JSONArray got = new JSONArray(containers);
-        assertEquals(got.length(), initContainers.length);
-        for (int i = 0; i < initContainers.length; i++) {
-            assertTrue(JSONUtil.equals(got.getJSONObject(i), initContainers[i]));
+        if (initContainers.length == 0) {
+            assertNull(containers);
+        } else {
+            JSONArray got = new JSONArray(containers);
+            assertEquals(got.length(), initContainers.length);
+            for (int i = 0; i < initContainers.length; i++) {
+                assertTrue(JSONUtil.equals(got.getJSONObject(i), initContainers[i]));
+            }
         }
     }
 
