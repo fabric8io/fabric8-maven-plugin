@@ -16,15 +16,13 @@
 
 package io.fabric8.maven.plugin.enricher;
 
+import java.util.Map;
+
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.*;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpecBuilder;
 import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.enricher.api.Kind;
-
-import java.util.Map;
 
 /**
  * @author roland

@@ -22,7 +22,6 @@ import java.util.Map;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
@@ -52,8 +51,11 @@ public class ProjectEnricher extends BaseEnricher {
 
     @Override
     public Map<String, String> getSelector(Kind kind) {
-        return createLabels(kind == Kind.SERVICE || kind == Kind.DEPLOYMENT || kind == Kind.DEPLOYMENT_CONFIG ||
-                            kind == Kind.DAEMON_SET || kind == Kind.JOB || kind == Kind.STATEFUL_SET);
+        return createLabels(kind == Kind.SERVICE || (kind.isController() && !kind.isPodController()));
+    }
+
+    private boolean isServiceOrDeployment(Kind kind) {
+        return kind == Kind.SERVICE || kind == Kind.DEPLOYMENT || kind == Kind.DEPLOYMENT_CONFIG;
     }
 
     @Override
