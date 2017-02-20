@@ -29,7 +29,7 @@
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-plugin</artifactId>
-        <version>3.2-SNAPSHOT</version>
+        <version>@fmp.version@</version>
         <executions>
           <execution>
             <goals>
