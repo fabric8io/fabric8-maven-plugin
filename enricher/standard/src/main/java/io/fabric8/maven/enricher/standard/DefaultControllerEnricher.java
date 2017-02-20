@@ -53,13 +53,14 @@ import io.fabric8.utils.Lists;
  */
 public class DefaultControllerEnricher extends BaseEnricher {
     protected static final String[] POD_CONTROLLER_KINDS =
-        { "ReplicationController", "ReplicaSet", "Deployment", "DeploymentConfig", "StatefulSet", "DaemonSet" };
+        { "ReplicationController", "ReplicaSet", "Deployment", "DeploymentConfig", "StatefulSet", "DaemonSet", "Job" };
 
     private final DeploymentHandler deployHandler;
     private final ReplicationControllerHandler rcHandler;
     private final ReplicaSetHandler rsHandler;
     private final StatefulSetHandler statefulSetHandler;
     private final DaemonSetHandler daemonSetHandler;
+    private final JobHandler jobHandler;
 
     // Available configuration keys
     private enum Config implements Configs.Key {
@@ -79,6 +80,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
         deployHandler = handlers.getDeploymentHandler();
         statefulSetHandler = handlers.getStatefulSetHandler();
         daemonSetHandler = handlers.getDaemonSetHandler();
+        jobHandler = handlers.getJobHandler();
     }
 
     @Override
@@ -99,21 +101,24 @@ public class DefaultControllerEnricher extends BaseEnricher {
             // At least one image must be present, otherwise the resulting config will be invalid
             if (!Lists.isNullOrEmpty(images)) {
                 String type = getConfig(Config.type);
-                if (type.equalsIgnoreCase("deployment")) {
+                if ("deployment".equalsIgnoreCase(type)) {
                     log.info("Adding a default Deployment");
                     builder.addToDeploymentItems(defaultDeployment);
-                } else if (type.equalsIgnoreCase("statefulSet")) {
+                } else if ("statefulSet".equalsIgnoreCase(type)) {
                     log.info("Adding a default StatefulSet");
                     builder.addToStatefulSetItems(statefulSetHandler.getStatefulSet(config, images));
-                } else if (type.equalsIgnoreCase("daemonSet")) {
+                } else if ("daemonSet".equalsIgnoreCase(type)) {
                     log.info("Adding a default DaemonSet");
                     builder.addToDaemonSetItems(daemonSetHandler.getDaemonSet(config, images));
-                } else if (type.equalsIgnoreCase("replicaSet")) {
+                } else if ("replicaSet".equalsIgnoreCase(type)) {
                     log.info("Adding a default ReplicaSet");
                     builder.addToReplicaSetItems(rsHandler.getReplicaSet(config, images));
-                } else if (type.equalsIgnoreCase("replicationController")) {
+                } else if ("replicationController".equalsIgnoreCase(type)) {
                     log.info("Adding a default ReplicationController");
                     builder.addToReplicationControllerItems(rcHandler.getReplicationController(config, images));
+                } else if ("job".equalsIgnoreCase(type)) {
+                    log.info("Adding a default Job");
+                    builder.addToJobItems(jobHandler.getJob(config, images));
                 }
             }
         } else {

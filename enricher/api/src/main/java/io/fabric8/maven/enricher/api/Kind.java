@@ -29,14 +29,23 @@ public enum Kind {
     DEPLOYMENT_CONFIG,
     DAEMON_SET,
     STATEFUL_SET,
+    JOB,
     POD_SPEC;
 
     /**
      * Returns true if the kind is a controller
      */
     public boolean isController() {
-        return this == Kind.REPLICA_SET || this == Kind.REPLICATION_CONTROLLER ||
-               this == Kind.DEPLOYMENT || this == Kind.DEPLOYMENT_CONFIG ||
-               this == Kind.DAEMON_SET || this == Kind.STATEFUL_SET;
+        return isPodController() ||
+               isDeployment() ||
+               this == Kind.DAEMON_SET || this == Kind.STATEFUL_SET || this == Kind.JOB;
+    }
+
+    public boolean isPodController() {
+        return this == Kind.REPLICA_SET || this == REPLICATION_CONTROLLER;
+    }
+
+    public boolean isDeployment() {
+        return this == Kind.DEPLOYMENT || this == DEPLOYMENT_CONFIG;
     }
 }

@@ -16,18 +16,13 @@
 
 package io.fabric8.maven.plugin.enricher;
 
-import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.model.ReplicationControllerSpecBuilder;
-import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
-import io.fabric8.kubernetes.api.model.extensions.*;
-import io.fabric8.kubernetes.api.model.LabelSelector;
-import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpecBuilder;
-import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
-import io.fabric8.maven.enricher.api.Kind;
-
 import java.util.Map;
+
+import io.fabric8.kubernetes.api.builder.TypedVisitor;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.extensions.*;
+import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.enricher.api.Kind;
 
 /**
  * @author roland
@@ -73,6 +68,19 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         }
     }
 
+    static class ReplicationControllerSpecBuilderVisitor extends SelectorVisitor<ReplicationControllerSpecBuilder> {
+        ReplicationControllerSpecBuilderVisitor(EnricherManager enricherManager) {
+            super(enricherManager);
+        }
+
+        @Override
+        public void visit(ReplicationControllerSpecBuilder item) {
+            item.getSelector().putAll(enricherManager.extractSelector(getConfig(), Kind.REPLICATION_CONTROLLER));
+        }
+    }
+
+    // ============================================================================
+
     static class DeploymentSpecBuilderVisitor extends SelectorVisitor<DeploymentSpecBuilder> {
 
         DeploymentSpecBuilderVisitor(EnricherManager enricherManager) {
@@ -81,9 +89,8 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
 
         @Override
         public void visit(DeploymentSpecBuilder item) {
-            Map<String, String> selectorMatchLabels =
-                KubernetesResourceUtil.removeVersionSelector(enricherManager.extractSelector(getConfig(), Kind.REPLICATION_CONTROLLER));
-            LabelSelector selector = item.getSelector();
+            Map<String, String> selectorMatchLabels = enricherManager.extractSelector(getConfig(), Kind.REPLICATION_CONTROLLER);
+            LabelSelector selector = item.buildSelector();
             if (selector == null) {
                 item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
             } else {
@@ -100,9 +107,8 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
 
         @Override
         public void visit(StatefulSetSpecBuilder item) {
-            Map<String, String> selectorMatchLabels =
-                    KubernetesResourceUtil.removeVersionSelector(enricherManager.extractSelector(getConfig(), Kind.STATEFUL_SET));
-            final io.fabric8.kubernetes.api.model.LabelSelector selector = item.buildSelector();
+            Map<String, String> selectorMatchLabels = enricherManager.extractSelector(getConfig(), Kind.STATEFUL_SET);
+            LabelSelector selector = item.buildSelector();
             if (selector == null) {
                 item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
             } else {
@@ -119,8 +125,7 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
 
         @Override
         public void visit(DaemonSetSpecBuilder item) {
-            Map<String, String> selectorMatchLabels =
-                    KubernetesResourceUtil.removeVersionSelector(enricherManager.extractSelector(getConfig(), Kind.DAEMON_SET));
+            Map<String, String> selectorMatchLabels = enricherManager.extractSelector(getConfig(), Kind.DAEMON_SET);
             final LabelSelector selector = item.buildSelector();
             if (selector == null) {
                 item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
@@ -130,14 +135,20 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    static class ReplicationControllerSpecBuilderVisitor extends SelectorVisitor<ReplicationControllerSpecBuilder> {
-        ReplicationControllerSpecBuilderVisitor(EnricherManager enricherManager) {
+    static class JobSpecBuilderVisitor extends SelectorVisitor<JobSpecBuilder> {
+        JobSpecBuilderVisitor(EnricherManager enricherManager) {
             super(enricherManager);
         }
 
         @Override
-        public void visit(ReplicationControllerSpecBuilder item) {
-            item.getSelector().putAll(enricherManager.extractSelector(getConfig(), Kind.REPLICATION_CONTROLLER));
+        public void visit(JobSpecBuilder item) {
+            Map<String, String> selectorMatchLabels = enricherManager.extractSelector(getConfig(), Kind.JOB);
+            final LabelSelector selector = item.buildSelector();
+            if (selector == null) {
+                item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
+            } else {
+                selector.getMatchLabels().putAll(selectorMatchLabels);
+            }
         }
     }
 
@@ -149,12 +160,13 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
 
         @Override
         public void visit(ReplicaSetSpecBuilder item) {
-            item.withSelector(createLabelSelector(enricherManager.extractSelector(getConfig(), Kind.REPLICA_SET)));
-        }
-
-        private LabelSelector createLabelSelector(Map<String, String> labelSelector) {
-            return new LabelSelectorBuilder().withMatchLabels(labelSelector).build();
+            Map<String, String> selectorMatchLabels = enricherManager.extractSelector(getConfig(), Kind.REPLICA_SET);
+            final LabelSelector selector = item.buildSelector();
+            if (selector == null) {
+                item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
+            } else {
+                selector.getMatchLabels().putAll(selectorMatchLabels);
+            }
         }
     }
-
 }
