@@ -586,8 +586,12 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#speeding-up-debugging">5.7.1. Speeding up debugging</a></li>
 </ul>
 </li>
-<li><a href="#fabric8:watch">5.8. <strong>fabric8:watch</strong></a></li>
-<li><a href="#fabric8:watch-spring-boot">5.9. <strong>fabric8:watch-spring-boot</strong></a></li>
+<li><a href="#fabric8:watch">5.8. <strong>fabric8:watch</strong></a>
+<ul class="sectlevel3">
+<li><a href="#watcher-spring-boot">5.8.1. Spring Boot</a></li>
+<li><a href="#watcher-docker-image">5.8.2. Docker Image</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#goals-overview-setup">6. Infrastructure Goals</a>
@@ -1308,7 +1312,7 @@ available goals are described below.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Watch for doing rebuilds and redeployments</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:watch-spring-boot"><strong>fabric8:watch-spring-boot</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:watch-spring-boot">[fabric8:watch-spring-boot]</a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Watch for local code changes in Spring Boot apps and restart the container on the fly</p></td>
 </tr>
 <tr>
@@ -3319,250 +3323,30 @@ mvn fabric8:stop</code></pre>
 </div>
 <div class="sect2">
 <h3 id="fabric8:watch">5.8. <strong>fabric8:watch</strong></h3>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-Section needs review and rearrangments
-</td>
-</tr>
-</table>
+<div class="paragraph">
+<p>This goal is used to monitor the project workspace for changes and automatically trigger a redeploy of the application
+running on Kubernetes.</p>
 </div>
 <div class="paragraph">
-<p>When developing and testing applications you will often have to rebuild Docker images and restart containers. Typing <code>fabric8:build</code> and <code>fabric8:start</code> all the time is cumbersome. With <code>fabric8:watch</code> you can enable automatic rebuilding of images and restarting of containers in case of updates.</p>
-</div>
-<div class="paragraph">
-<p><code>fabric8:watch</code> is the top-level goal which perform these tasks. There are two watch modes, which can be specified in multiple ways:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>build</code> : Automatically rebuild one or more Docker images when one of the files selected by an assembly changes. This works for all files included directly in <code>assembly.xml</code> but also for arbitrary dependencies.</p>
-</li>
-</ul>
+<p>Before entering the watch mode, this goal generates the docker image and the Kubernetes resources
+(optionally including some development libraries/configuration),
+and deploys the app on Kubernetes.</p>
 </div>
 <div class="listingblock">
-<div class="title">Example</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">$ mvn package fabric8:build fabric8:watch -Ddocker.watchMode=build</code></pre>
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:watch</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>This mode works only when there is a <code>&lt;build&gt;</code> section in an image configuration. Otherwise no automatically build will be triggered for an image with only a <code>&lt;run&gt;</code> section. Note that you need the <code>package</code> phase to be executed before otherwise any artifact created by this build can not be included into the assembly. As described in the section about <code>fabric8:start</code> this is a Maven limitation.
-* <code>run</code> : Automatically restart container when their associated images changes. This is useful if you pull a new version of an image externally or especially in combination with the <code>build</code> mode to restart containers when their image has been automatically rebuilt. This mode works reliably only when used together with <code>fabric8:start</code>.</p>
-</div>
-<div class="listingblock">
-<div class="title">Example</div>
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">$ mvn fabric8:start fabric8:watch -Ddocker.watchMode=run</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>both</code> : Enables both <code>build</code> and <code>run</code>. This is the default.</p>
-</li>
-<li>
-<p><code>none</code> : Image is completely ignored for watching.</p>
-</li>
-<li>
-<p><code>copy</code> : Copy changed files into the running container. This is the fast way to update a container, however the target container must support hot deploy, too so that it makes sense. Most application servers like Tomcat supports this.</p>
-</li>
-</ul>
+<p>This plugin supports different watcher providers, enabled automatically if the project satisfies certain conditions.</p>
 </div>
 <div class="paragraph">
-<p>The mode can also be <code>both</code> or <code>none</code> to select both or none of these variants, respectively. The default is <code>both</code>.</p>
+<p>Watcher providers can also be configured manually. The <a href="#generator-example">Generator example</a> is a good blueprint, simply replace <code>&lt;generator&gt;</code> with <code>&lt;watcher&gt;</code>. The configuration is structurally identical.</p>
 </div>
+<div class="sect3">
+<h4 id="watcher-spring-boot">5.8.1. Spring Boot</h4>
 <div class="paragraph">
-<p><code>fabric8:watch</code> will run forever until it is interrupted with <code>CTRL-C</code> after which it will stop all containers. Depending on the configuration parameters <code>keepContainer</code> and <code>removeVolumes</code> the stopped containers with their volumes will be removed, too.</p>
-</div>
-<div class="paragraph">
-<p>When an image is removed while watching it, error messages will be printed out periodically.  So don&#8217;t do that ;-)</p>
-</div>
-<div class="paragraph">
-<p>Dynamically assigned ports stay stable in that they won&#8217;t change after a container has been stopped and a new container is created and started. The new container will try to allocate the same ports as the previous container.</p>
-</div>
-<div class="paragraph">
-<p>If containers are linked together network or volume wise, and you update a container which other containers dependent on, the dependant containers are not restarted for now. E.g. when you have a "service" container accessing a "db" container and the "db" container is updated, then you "service" container will fail until it is restarted, too.</p>
-</div>
-<div class="sidebarblock">
-<div class="content">
-<div class="paragraph">
-<p>A future version of this plugin will take care of restarting
-these containers, too (in the right order), but for now you would have
-to do this manually.</p>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>This maven goal can be configured with the following top-level parameters:</p>
-</div>
-<table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 18. Watch configuration</caption>
-<colgroup>
-<col style="width: 14.2857%;">
-<col style="width: 71.4285%;">
-<col style="width: 14.2858%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Element</th>
-<th class="tableblock halign-left valign-top">Description</th>
-<th class="tableblock halign-left valign-top">Property</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchMode</strong></p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p>Watch mode specifies what should be watched</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>build</code> : Watch changes in the assembly and rebuild the image in
-case</p>
-</li>
-<li>
-<p><code>run</code> : Watch a container&#8217;s image whether it changes and restart
-the container in case</p>
-</li>
-<li>
-<p><code>copy</code> : Changed files are copied into the container. The container can be either running or might be already exited (when used as a <em>data container</em> linked into a <em>platform container</em>). Requires Docker &gt;= 1.8.</p>
-</li>
-<li>
-<p><code>both</code> : <code>build</code> and <code>run</code> combined</p>
-</li>
-<li>
-<p><code>none</code> : Neither watching for builds nor images. This is useful if
-you use prefactored images which won&#8217;t be changed and hence don&#8217;t
-need any watching. <code>none</code> is best used on an per image level, see
-below how this can be specified.</p>
-</li>
-</ul>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.watchMode</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchInterval</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Interval in milliseconds how  often to check for changes, which must be larger than 100ms. The default is 5 seconds.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.watchInterval</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchPostGoal</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A maven goal which should be called if a rebuild or a restart has been performed. This goal must have the format <code>&lt;pluginGroupId&gt;:&lt;pluginArtifactId&gt;:&lt;goal&gt;</code> and the plugin must be configured in the <code>pom.xml</code>. For example a post-goal <code>io.fabric8:fabric8:delete-pods</code> will trigger the deletion of PODs in Kubernetes which in turn triggers are new start of a POD within the Kubernetes cluster. The value specified here is the the default post goal which can be overridden by <code>&lt;postGoal&gt;</code> in a <code>&lt;watch&gt;</code> configuration.</p></td>
-<td class="tableblock halign-left valign-top"></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchPostExec</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A command which is executed within the container after files are copied into this container when <code>watchMode</code> is <code>copy</code>. Note that this container must be running.</p></td>
-<td class="tableblock halign-left valign-top"></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keepRunning</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> all container will be kept running after <code>fabric8:watch</code> has been stopped. By default this is set to <code>false</code>.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.keepRunning</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keepContainer</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">As for <code>fabric8:stop</code>, if this is set to <code>true</code> (and <code>keepRunning</code> is disabled) then all container will be removed after they have been stopped. The default is <code>true</code>.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.keepContainer</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>removeVolumes</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">if set to <code>true</code> will remove any volumes associated to the container as well. This option will be ignored if either <code>keepContainer</code> or <code>keepRunning</code> are <code>true</code>.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.removeVolumes</code></p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>Image specific watch configuration goes into an extra image-level <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). The following parameters are recognized:</p>
-</div>
-<table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 19. Watch configuration for a single image</caption>
-<colgroup>
-<col style="width: 16.6666%;">
-<col style="width: 83.3334%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Element</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>mode</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Each image can be configured for having individual watch mode. These take precedence of the global watch mode. The mode specified in this configuration takes precedence over the globally specified mode.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>interval</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Watch interval can be specified in milliseconds on image level. If given this will override the global watch interval.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>postGoal</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Post Maven plugin goal after a rebuild or restart. The value here must have the format <code>&lt;pluginGroupId&gt;:&lt;pluginArtifactId&gt;:&lt;goal&gt;</code> (e.g. <code>io.fabric8:fabric8:delete-pods</code>)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>postExec</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Command to execute after files are copied into a
-running container when <code>mode</code> is <code>copy</code>.</p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>Here is an example how the watch mode can be tuned:</p>
-</div>
-<div class="listingblock">
-<div class="title">Example</div>
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
-   <span class="comment">&lt;!-- Check every 10 seconds by default --&gt;</span>
-   <span class="tag">&lt;watchInterval&gt;</span>10000<span class="tag">&lt;/watchInterval&gt;</span>
-   <span class="comment">&lt;!-- Watch for doing rebuilds and restarts --&gt;</span>
-   <span class="tag">&lt;watchMode&gt;</span>both<span class="tag">&lt;/watch&gt;</span>
-   <span class="tag">&lt;images&gt;</span>
-      <span class="tag">&lt;image&gt;</span>
-         <span class="comment">&lt;!-- Service checks every 5 seconds --&gt;</span>
-         <span class="tag">&lt;alias&gt;</span>service<span class="tag">&lt;/alias&gt;</span>
-         ....
-         <span class="tag">&lt;watch&gt;</span>
-            <span class="tag">&lt;interval&gt;</span>5000<span class="tag">&lt;/interval&gt;</span>
-         <span class="tag">&lt;/watch&gt;</span>
-      <span class="tag">&lt;/image&gt;</span>
-      <span class="tag">&lt;image&gt;</span>
-         <span class="comment">&lt;!-- Database needs no watching --&gt;</span>
-         <span class="tag">&lt;alias&gt;</span>db<span class="tag">&lt;alias&gt;</span>
-         ....
-         <span class="tag">&lt;watch&gt;</span>
-            <span class="tag">&lt;mode&gt;</span>none<span class="tag">&lt;/mode&gt;</span>
-         <span class="tag">&lt;/watch&gt;</span>
-      <span class="tag">&lt;/image&gt;</span>
-      ....
-   <span class="tag">&lt;/images&gt;</span>
-<span class="tag">&lt;/configuration&gt;</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Given this configuration</p>
-</div>
-<div class="listingblock">
-<div class="title">Example</div>
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn package fabric8:build fabric8:start fabric8:watch</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>You can build the service image, start up all containers and go into a watch loop. Again, you need the <code>package</code> phase in order that the assembly can find the artifact build by this project. This is a Maven limitation. The <code>db</code> image will never be watch since it assumed to not change while watching.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="fabric8:watch-spring-boot">5.9. <strong>fabric8:watch-spring-boot</strong></h3>
-<div class="paragraph">
-<p>This goal performs the following actions:</p>
+<p>This watcher is enabled by default for all Spring Boot projects. It performs the following actions:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -3582,7 +3366,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:watch-spring-boot</code></pre>
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:watch</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3597,10 +3381,33 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 </div>
 </div>
 <div class="paragraph">
-<p>You should see your app reload on the fly in the shell running the <a href="#fabric8:watch-spring-boot"><strong>fabric8:watch-spring-boot</strong></a> goal!</p>
+<p>You should see your app reload on the fly in the shell running the <a href="#fabric8:watch"><strong>fabric8:watch</strong></a> goal!</p>
 </div>
 <div class="paragraph">
 <p>There is also support for LiveReload as well.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="watcher-docker-image">5.8.2. Docker Image</h4>
+<div class="paragraph">
+<p>This is a generic watcher that can be used in Kubernetes mode only. Once activated, it listens for changes in the project workspace
+ in order to trigger a redeploy of the application.</p>
+</div>
+<div class="paragraph">
+<p>The watcher can be activated e.g. by running this command in another shell:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn package</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The watcher will detect that the binary artifact has changed and will first rebuild the docker image,
+then start a redeploy of the Kubernetes pod.</p>
+</div>
+<div class="paragraph">
+<p>It uses the watch feature of the <a href="https://dmp.fabric8.io/#docker:watch">docker-maven-plugin</a> under the hood.</p>
+</div>
 </div>
 </div>
 </div>
@@ -3683,7 +3490,7 @@ This plugin definition includes the configuration to generate the Docker image.
 <p>The setup can be influenced with the following configuration options:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 20. Setup configuration</caption>
+<caption class="title">Table 18. Setup configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -4000,7 +3807,7 @@ This plugin definition includes the configuration to generate the Docker image.
 <p>The following sub-elements are supported:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 21. Generator configuration</caption>
+<caption class="title">Table 19. Generator configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -4070,7 +3877,7 @@ This plugin definition includes the configuration to generate the Docker image.
 <p>All default generators examine the build information for certain aspects and generate a Docker build configuration on the fly. They can be configured to a certain degree, where the configuration is generator specific.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 22. Default Generators</caption>
+<caption class="title">Table 20. Default Generators</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 16.6666%;">
@@ -4120,7 +3927,7 @@ This plugin definition includes the configuration to generate the Docker image.
 <p>There are some configuration options which are shared by all generators:</p>
 </div>
 <table id="generator-options-common" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 23. Common generator options</caption>
+<caption class="title">Table 21. Common generator options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4185,7 +3992,7 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 <p>It will use the following base image by default, but as explained <a href="#generator-options-common">above</a> and can be changed with the <code>from</code> configuration.</p>
 </div>
 <table id="generator-java-exec-from" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 24. Java Base Images</caption>
+<caption class="title">Table 22. Java Base Images</caption>
 <colgroup>
 <col style="width: 7.6923%;">
 <col style="width: 30.7692%;">
@@ -4225,7 +4032,7 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 <p>Beside the common configuration parameters described in the table <a href="#generator-options-common">common generator options</a> the following additional configuration options are recognized:</p>
 </div>
 <table id="generator-java-exec-options" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 25. Java Application configuration options</caption>
+<caption class="title">Table 23. Java Application configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4290,7 +4097,7 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 <p>Beside the  <a href="#generator-options-common">common generator options</a> and the <a href="#generator-java-exec-options">java-exec options</a> the following additional configuration is recognized:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 26. Spring-Boot configuration options</caption>
+<caption class="title">Table 24. Spring-Boot configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4372,7 +4179,7 @@ fat jar.</p>
 <p>This generator named <code>karaf</code> kicks in when the build uses a <code>karaf-maven-plugin</code>. By default the following base images are used:</p>
 </div>
 <table id="generator-karaf-from" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 27. Karaf Base Images</caption>
+<caption class="title">Table 25. Karaf Base Images</caption>
 <colgroup>
 <col style="width: 11.1111%;">
 <col style="width: 44.4444%;">
@@ -4405,7 +4212,7 @@ fat jar.</p>
 <p>In addition to the  <a href="#generator-options-common">common generator options</a> this generator can be configured with the following options:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 28. Karaf configuration options</caption>
+<caption class="title">Table 26. Karaf configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4469,7 +4276,7 @@ fat jar.</p>
 <p>The base images chosen are:</p>
 </div>
 <table id="generator-webapp-from" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 29. Webapp Base Images</caption>
+<caption class="title">Table 27. Webapp Base Images</caption>
 <colgroup>
 <col style="width: 11.1111%;">
 <col style="width: 44.4444%;">
@@ -4518,7 +4325,7 @@ fat jar.</p>
 <p>In addition to the  <a href="#generator-options-common">common generator options</a> this generator can be configured with the following options:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 30. Webapp configuration options</caption>
+<caption class="title">Table 28. Webapp configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4604,7 +4411,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <p>The <a href="#generator-example">Generator example</a> is a good bluebprint, simply replace <code>&lt;generator&gt;</code> with <code>&lt;enricher&gt;</code>. The configuration is structural identical:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 31. Enricher configuration</caption>
+<caption class="title">Table 29. Enricher configuration</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -4649,7 +4456,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </ul>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 32. Default Enrichers Overview</caption>
+<caption class="title">Table 30. Default Enrichers Overview</caption>
 <colgroup>
 <col style="width: 22.2222%;">
 <col style="width: 77.7778%;">
@@ -5242,7 +5049,7 @@ These metadata will be added only if <a href="https://maven.apache.org/pom.html#
 <p>The following annotations will be added to the objects that supports annotations,</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 33. Maven SCM Enrichers Annotation Mapping</caption>
+<caption class="title">Table 31. Maven SCM Enrichers Annotation Mapping</caption>
 <colgroup>
 <col style="width: 28.5714%;">
 <col style="width: 28.5714%;">
@@ -5317,7 +5124,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
 <p>The following annotations will be added to the objects that supports annotations,</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 34. Maven Issue Tracker Enrichers Annotation Mapping</caption>
+<caption class="title">Table 32. Maven Issue Tracker Enrichers Annotation Mapping</caption>
 <colgroup>
 <col style="width: 28.5714%;">
 <col style="width: 28.5714%;">
@@ -5448,7 +5255,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
 <p>Each <code>profiles.yml</code> has a list of profiles which are defined with these elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 35. Profile elements</caption>
+<caption class="title">Table 33. Profile elements</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -5484,7 +5291,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
 <p>The definition of generators and enrichers in the profile follow the same format:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 36. Generator and Enericher definition</caption>
+<caption class="title">Table 34. Generator and Enericher definition</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -5642,7 +5449,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
 <p>This plugin comes with a list of the following predefined profiles:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 37. Predefined Profiles</caption>
+<caption class="title">Table 35. Predefined Profiles</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -6266,7 +6073,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.18<br>
-Last updated 2017-02-20 12:00:40 UTC
+Last updated 2017-02-20 12:02:52 UTC
 </div>
 </div>
 </body>
