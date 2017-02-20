@@ -42,6 +42,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.ReadContext;
 import com.jayway.jsonpath.internal.JsonReader;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
@@ -72,6 +73,11 @@ public class Verify {
                                new JsonMessageValidationContext(),
                                createTestContext(),
                                actualContext);
+    }
+
+    public static Object readWithPath(File file, String path) throws IOException {
+        String json = asJson(readFile(file));
+        return JsonPath.parse(json).read(path);
     }
 
     private static String readFile(File path) throws IOException {

@@ -14,11 +14,3 @@ items:
     resources:
       requests:
         storage: 5Gi
-- apiVersion: v1
-  kind: DeploymentConfig
-# Enable when merged with init-container fix:
-#  spec:
-#    template:
-#      metadata:
-#        annotations:
-#         pod.alpha.kubernetes.io/init-containers: "@assertThat(nullValue())@"
