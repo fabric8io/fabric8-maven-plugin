@@ -52,18 +52,14 @@ public class ProjectEnricher extends BaseEnricher {
 
     @Override
     public Map<String, String> getSelector(Kind kind) {
-        Map ret = createLabels();
-        if (kind == Kind.SERVICE || kind == Kind.DEPLOYMENT || kind == Kind.DEPLOYMENT_CONFIG) {
-            return KubernetesResourceUtil.removeVersionSelector(ret);
-        }
-        return ret;
+        return createLabels(kind == Kind.SERVICE || kind == Kind.DEPLOYMENT || kind == Kind.DEPLOYMENT_CONFIG ||
+                            kind == Kind.DAEMON_SET || kind == Kind.JOB || kind == Kind.STATEFUL_SET);
     }
 
     @Override
     public void adapt(KubernetesListBuilder builder) {
-        // A to all objects in the builder
+        // Add to all objects in the builder
         builder.accept(new TypedVisitor<ObjectMetaBuilder>() {
-
             @Override
             public void visit(ObjectMetaBuilder element) {
                 Map<String, String> labels = element.getLabels();
@@ -72,13 +68,19 @@ public class ProjectEnricher extends BaseEnricher {
         });
     }
 
-    Map<String, String> createLabels() {
+    private Map<String, String> createLabels() {
+        return createLabels(false);
+    }
+
+    private Map<String, String> createLabels(boolean withoutVersion) {
         MavenProject project = getProject();
         Map<String, String> ret = new HashMap<>();
-        ret.put("version", project.getVersion());
         ret.put("project", project.getArtifactId());
         ret.put("group", project.getGroupId());
         ret.put("provider", "fabric8");
+        if (!withoutVersion) {
+            ret.put("version", project.getVersion());
+        }
         return ret;
     }
 }

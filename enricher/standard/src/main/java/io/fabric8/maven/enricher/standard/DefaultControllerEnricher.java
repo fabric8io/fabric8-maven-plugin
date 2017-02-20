@@ -53,7 +53,7 @@ import io.fabric8.utils.Lists;
  */
 public class DefaultControllerEnricher extends BaseEnricher {
     protected static final String[] POD_CONTROLLER_KINDS =
-        { "ReplicationController", "ReplicaSet", "Deployment", "DeploymentConfig", "StatefulSet", "DaemonSet" };
+        { "ReplicationController", "ReplicaSet", "Deployment", "DeploymentConfig", "StatefulSet", "DaemonSet", "Job" };
 
     private final DeploymentHandler deployHandler;
     private final ReplicationControllerHandler rcHandler;
