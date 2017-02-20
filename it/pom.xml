@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
+Use
+
+mvn clean install -Dinvoker.test=<directory of single test>
+
+for running a single test.
+-->
+
+
+<!--
   ~ Copyright 2016 Red Hat, Inc.
   ~
   ~ Red Hat licenses this file to you under the Apache License, version

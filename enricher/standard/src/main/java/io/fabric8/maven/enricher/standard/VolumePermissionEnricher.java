@@ -170,13 +170,13 @@ public class VolumePermissionEnricher extends BaseEnricher {
 
         builder.accept(new TypedVisitor<PersistentVolumeClaimBuilder>() {
             @Override
-            public void visit(PersistentVolumeClaimBuilder builder) {
+            public void visit(PersistentVolumeClaimBuilder pvcBuilder) {
                 // lets ensure we have a default storage class so that PVs will get dynamically created OOTB
-                if (builder.buildMetadata() == null) {
-                    builder.withNewMetadata().endMetadata();
+                if (pvcBuilder.buildMetadata() == null) {
+                    pvcBuilder.withNewMetadata().endMetadata();
                 }
-                if (!builder.buildMetadata().getAnnotations().containsKey(VOLUME_STORAGE_CLASS_ANNOTATION)) {
-                    builder.editMetadata().addToAnnotations(VOLUME_STORAGE_CLASS_ANNOTATION, "standard");
+                if (!pvcBuilder.buildMetadata().getAnnotations().containsKey(VOLUME_STORAGE_CLASS_ANNOTATION)) {
+                    pvcBuilder.editMetadata().addToAnnotations(VOLUME_STORAGE_CLASS_ANNOTATION, "standard").endMetadata();
                 }
             }
         });

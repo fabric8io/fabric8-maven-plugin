@@ -1,0 +1,22 @@
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  annotations:
+    fabric8.io/iconUrl: "https://cdn.rawgit.com/fabric8io/fabric8-devops/master/fabric8-docker-registry/src/main/fabric8/icon.png"
+  labels:
+    provider: "fabric8"
+    project: "${project.artifactId}"
+    version: "${project.version}"
+    group: "io.fabric8.devops.apps"
+    expose: "true"
+  name: "fabric8-docker-registry"
+spec:
+  ports:
+  - port: 80
+    protocol: "TCP"
+    targetPort: 5000
+  selector:
+    project: "fabric8-docker-registry"
+    provider: "fabric8"
+    group: "io.fabric8.devops.apps"

@@ -34,18 +34,18 @@ package io.fabric8.maven.it;/*
 import java.io.*;
 import java.nio.charset.Charset;
 
-import com.consol.citrus.Citrus;
 import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.ValidationException;
-import com.consol.citrus.message.DefaultMessage;
-import com.consol.citrus.message.Message;
-import com.consol.citrus.util.FileUtils;
 import com.consol.citrus.validation.json.JsonMessageValidationContext;
 import com.consol.citrus.validation.json.JsonTextMessageValidator;
 import com.consol.citrus.validation.matcher.ValidationMatcherConfig;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.internal.JsonReader;
+import net.minidev.json.JSONObject;
+import net.minidev.json.parser.JSONParser;
+import net.minidev.json.parser.ParseException;
 import org.springframework.util.FileCopyUtils;
 
 /**
@@ -54,11 +54,11 @@ import org.springframework.util.FileCopyUtils;
  */
 public class Verify {
 
-    public static void verifyResourceDescriptors(File actualPath, File expectedPath) throws IOException {
+    public static void verifyResourceDescriptors(File actualPath, File expectedPath) throws IOException, ParseException {
         verifyResourceDescriptors(actualPath, expectedPath, false);
     }
 
-    public static void verifyResourceDescriptors(File actualPath, File expectedPath, boolean strict) throws IOException {
+    public static void verifyResourceDescriptors(File actualPath, File expectedPath, boolean strict) throws IOException, ParseException {
         String actualText = readFile(actualPath);
         String expectedText = readFile(expectedPath);
 
@@ -66,10 +66,12 @@ public class Verify {
         JsonTextMessageValidator validator = new JsonTextMessageValidator();
         validator.setStrict(strict);
 
-        validator.validateMessagePayload(newMessage(actualText),
-                                         newMessage(expectedText),
-                                         new JsonMessageValidationContext(),
-                                         createTestContext());
+        DocumentContext actualContext = JsonPath.parse(actualText);
+        validator.validateJson(newMessage(actualText),
+                               newMessage(expectedText),
+                               new JsonMessageValidationContext(),
+                               createTestContext(),
+                               actualContext);
     }
 
     private static String readFile(File path) throws IOException {
@@ -85,8 +87,8 @@ public class Verify {
         return context;
     }
 
-    public static Message newMessage(String txt) throws IOException {
-        return new DefaultMessage(asJson(txt));
+    public static JSONObject newMessage(String txt) throws ParseException, IOException {
+        return (JSONObject) new JSONParser(JSONParser.DEFAULT_PERMISSIVE_MODE).parse(asJson(txt));
     }
 
     public static String asJson(String txt) throws IOException {
