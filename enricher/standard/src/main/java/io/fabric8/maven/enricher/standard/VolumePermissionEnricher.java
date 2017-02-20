@@ -62,11 +62,7 @@ public class VolumePermissionEnricher extends BaseEnricher {
 
     @Override
     public void adapt(KubernetesListBuilder builder) {
-        // Don't build for OpenShift.
-        // But please be aware of https://github.com/fabric8io/fabric8-maven-plugin/pull/698/files#r98304204
-        if (isOpenShiftMode()) {
-            return;
-        }
+
         builder.accept(new TypedVisitor<PodTemplateSpecBuilder>() {
             @Override
             public void visit(PodTemplateSpecBuilder builder) {

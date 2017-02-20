@@ -18,10 +18,10 @@ package io.fabric8.maven.enricher.api.util;
 
 import java.util.Map;
 
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.maven.core.util.JSONUtil;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -62,28 +62,31 @@ public class InitContainerHandler {
     }
 
     public void removeInitContainer(PodTemplateSpecBuilder builder, String initContainerName) {
-        if (builder.hasMetadata()) {
-            Map<String, String> annotations = builder.buildMetadata().getAnnotations();
-            String initContainerAnnotation = annotations.get(INIT_CONTAINER_ANNOTATION);
-            if (Strings.isNotBlank(initContainerAnnotation)) {
-                JSONArray newInitContainers = new JSONArray();
-                JSONArray initContainers = new JSONArray(initContainerAnnotation);
+        if (hasInitContainer(builder, initContainerName)) {
+            ObjectMeta meta = builder.buildMetadata();
+            Map<String, String> annos = meta.getAnnotations();
+            JSONArray newInitContainers = removeFromInitContainersJson(annos.get(INIT_CONTAINER_ANNOTATION), initContainerName);
+            if (newInitContainers.length() > 0) {
+                annos.put(INIT_CONTAINER_ANNOTATION, newInitContainers.toString());
+            } else {
+                annos.remove(INIT_CONTAINER_ANNOTATION);
+            }
+            meta.setAnnotations(annos);
+        }
+    }
 
-                for (int i = 0; i < initContainers.length(); i++) {
-                    JSONObject obj = initContainers.getJSONObject(i);
-                    String existingName = obj.getString("name");
-                    if (!initContainerName.equals(existingName)) {
-                        newInitContainers.put(obj);
-                    }
-                }
-                if (newInitContainers.length() > 0) {
-                    annotations.put(INIT_CONTAINER_ANNOTATION, newInitContainers.toString());
-                } else {
-                    annotations.remove(INIT_CONTAINER_ANNOTATION);
-                }
-                builder.buildMetadata().setAnnotations(annotations);
+    private JSONArray removeFromInitContainersJson(String initContainersJson, String initContainerName) {
+        JSONArray newInitContainers = new JSONArray();
+        JSONArray initContainers = new JSONArray(initContainersJson);
+
+        for (int i = 0; i < initContainers.length(); i++) {
+            JSONObject obj = initContainers.getJSONObject(i);
+            String existingName = obj.getString("name");
+            if (!initContainerName.equals(existingName)) {
+                newInitContainers.put(obj);
             }
         }
+        return newInitContainers;
     }
 
     public void appendInitContainer(PodTemplateSpecBuilder builder, JSONObject initContainer) {
