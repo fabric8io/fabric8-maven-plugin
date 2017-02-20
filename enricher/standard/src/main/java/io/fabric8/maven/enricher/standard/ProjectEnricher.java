@@ -54,10 +54,6 @@ public class ProjectEnricher extends BaseEnricher {
         return createLabels(kind == Kind.SERVICE || (kind.isController() && !kind.isPodController()));
     }
 
-    private boolean isServiceOrDeployment(Kind kind) {
-        return kind == Kind.SERVICE || kind == Kind.DEPLOYMENT || kind == Kind.DEPLOYMENT_CONFIG;
-    }
-
     @Override
     public void adapt(KubernetesListBuilder builder) {
         // Add to all objects in the builder
