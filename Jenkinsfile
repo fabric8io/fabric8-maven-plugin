@@ -16,26 +16,28 @@
  */
 @Library('github.com/fabric8io/fabric8-pipeline-library@master')
 def dummy
-mavenNode {
-  checkout scm
-  readTrusted 'release.groovy'
-  sh "git remote set-url origin git@github.com:fabric8io/fabric8-maven-plugin.git"
+clientsTemplate{
+    mavenNode {
+    checkout scm
+    readTrusted 'release.groovy'
+    sh "git remote set-url origin git@github.com:fabric8io/fabric8-maven-plugin.git"
 
-  def pipeline = load 'release.groovy'
+    def pipeline = load 'release.groovy'
 
-  stage 'Stage'
-  def stagedProject = pipeline.stage()
+    stage 'Stage'
+    def stagedProject = pipeline.stage()
 
-  stage 'Promote'
-  pipeline.release(stagedProject)
+    stage 'Promote'
+    pipeline.release(stagedProject)
 
-  // Disabled for now as it probably doesn't work because of the different directory structure
-  // with a dedicated doc-module
-  //stage 'Website'
-  //pipeline.website(stagedProject)
+    // Disabled for now as it probably doesn't work because of the different directory structure
+    // with a dedicated doc-module
+    //stage 'Website'
+    //pipeline.website(stagedProject)
 
-  stage 'Update downstream dependencies'
-  pipeline.updateDownstreamDependencies(stagedProject)
+    stage 'Update downstream dependencies'
+    pipeline.updateDownstreamDependencies(stagedProject)
+    }
 }
 
 deployTemplate{
