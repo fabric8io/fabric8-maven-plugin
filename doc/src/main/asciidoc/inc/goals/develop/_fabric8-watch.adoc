@@ -16,7 +16,7 @@ mvn fabric8:watch
 
 This plugin supports different watcher providers, enabled automatically if the project satisfies certain conditions.
 
-Watcher providers can also be configured manually. The <<generator-example,Generator example>> is a good bluebprint, simply replace `<generator>` with `<watcher>`. The configuration is structurally identical.
+Watcher providers can also be configured manually. The <<generator-example,Generator example>> is a good blueprint, simply replace `<generator>` with `<watcher>`. The configuration is structurally identical.
 
 [[watcher-spring-boot]]
 === Spring Boot
