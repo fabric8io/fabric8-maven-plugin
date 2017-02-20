@@ -1,5 +1,5 @@
 import io.fabric8.maven.it.Verify
-
+import static org.junit.Assert.*;
 /*
  * Copyright 2016 Red Hat, Inc.
  *
@@ -22,5 +22,13 @@ import io.fabric8.maven.it.Verify
           new File(basedir, sprintf("/target/classes/META-INF/fabric8/%s.yml",it)),
           new File(basedir, sprintf("/expected/%s.yml",it)))
 }
+
+// Ensure that there is no init container for openshift.yml included
+List<Map<String, String>> annos = Verify.readWithPath(
+        new File(basedir, "/target/classes/META-INF/fabric8/openshift.yml"),
+        "\$.items[?(@.kind == 'DeploymentConfig')].spec.template.metadata.annotations")
+
+assertEquals(1,annos.size());
+assertFalse(annos.get(0).containsKey("pod.alpha.kubernetes.io/init-containers"))
 
 true
