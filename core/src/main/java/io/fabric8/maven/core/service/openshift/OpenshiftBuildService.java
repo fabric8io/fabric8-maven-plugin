@@ -57,8 +57,8 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
- * @author roland
- * @since 16/01/17
+ * @author nicola
+ * @since 21/02/17
  */
 public class OpenshiftBuildService implements BuildService {
 
@@ -101,41 +101,6 @@ public class OpenshiftBuildService implements BuildService {
         }
     }
 
-    private void applyResourceObjects(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder) throws Exception {
-        config.getEnricherTask().execute(builder);
-        if (builder.getItems().size() > 0) {
-            KubernetesList k8sList = builder.build();
-            client.lists().create(k8sList);
-        }
-    }
-
-    private void saveImageStreamToFile(BuildServiceConfig config, ImageName imageName, OpenShiftClient client) throws MojoExecutionException {
-        File imageStreamFile = ResourceFileType.yaml.addExtension(new File(config.getBuildDirectory(),
-                imageName.getSimpleName() + "-is"));
-        ImageStreamService imageStreamHandler = new ImageStreamService(client, log);
-        imageStreamHandler.saveImageStreamResource(imageName, imageStreamFile);
-    }
-
-    public Build startBuild(OpenShiftClient client, File dockerTar, String buildName) {
-        log.info("Starting Build %s", buildName);
-        try {
-            return client.buildConfigs().withName(buildName)
-                    .instantiateBinary()
-                    .fromFile(dockerTar);
-        } catch (KubernetesClientException exp) {
-            Status status = exp.getStatus();
-            if (status != null) {
-                log.error("OpenShift Error: [%d %s] [%s] %s", status.getCode(), status.getStatus(), status.getReason(), status.getMessage());
-            }
-            if (exp.getCause() instanceof IOException && exp.getCause().getMessage().contains("Stream Closed")) {
-                log.error("Build for %s failed: %s", buildName, exp.getCause().getMessage());
-                logBuildBuildFailedDetails(client, buildName);
-            }
-            throw exp;
-        }
-    }
-
-
     private String updateOrCreateBuildConfig(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder, ImageConfiguration imageConfig) {
         ImageName imageName = new ImageName(imageConfig.getName());
         String buildName = getS2IBuildName(config, imageName);
@@ -169,22 +134,23 @@ public class OpenshiftBuildService implements BuildService {
         }
     }
 
-    private void checkOrCreateImageStream(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder, String imageStreamName) {
-        boolean hasImageStream = client.imageStreams().withName(imageStreamName).get() != null;
-        if (hasImageStream && config.getBuildRecreateMode().isImageStream()) {
-            client.imageStreams().withName(imageStreamName).delete();
-            hasImageStream = false;
+    private void validateSourceType(String buildName, BuildConfigSpec spec) {
+        BuildSource source = spec.getSource();
+        if (source != null) {
+            String sourceType = source.getType();
+            if (!Objects.equals("Binary", sourceType)) {
+                log.warn("BuildServiceConfig %s is not of type: 'Binary' but is '%s' !", buildName, sourceType);
+            }
         }
-        if (!hasImageStream) {
-            log.info("Creating ImageStream %s", imageStreamName);
-            builder.addNewImageStreamItem()
-                    .withNewMetadata()
-                    .withName(imageStreamName)
-                    .endMetadata()
-                    .endImageStreamItem();
-        } else {
-            log.info("Adding to ImageStream %s", imageStreamName);
+    }
+
+    private BuildConfigSpec getBuildConfigSpec(BuildConfig buildConfig) {
+        BuildConfigSpec spec = buildConfig.getSpec();
+        if (spec == null) {
+            spec = new BuildConfigSpec();
+            buildConfig.setSpec(spec);
         }
+        return spec;
     }
 
     private String createBuildConfig(KubernetesListBuilder builder, String buildName, BuildStrategy buildStrategyResource, BuildOutput buildOutput) {
@@ -222,25 +188,6 @@ public class OpenshiftBuildService implements BuildService {
         return buildName;
     }
 
-    private BuildConfigSpec getBuildConfigSpec(BuildConfig buildConfig) {
-        BuildConfigSpec spec = buildConfig.getSpec();
-        if (spec == null) {
-            spec = new BuildConfigSpec();
-            buildConfig.setSpec(spec);
-        }
-        return spec;
-    }
-
-    private void validateSourceType(String buildName, BuildConfigSpec spec) {
-        BuildSource source = spec.getSource();
-        if (source != null) {
-            String sourceType = source.getType();
-            if (!Objects.equals("Binary", sourceType)) {
-                log.warn("BuildServiceConfig %s is not of type: 'Binary' but is '%s' !", buildName, sourceType);
-            }
-        }
-    }
-
     private BuildStrategy createBuildStrategy(ImageConfiguration imageConfig, OpenShiftBuildStrategy osBuildStrategy) {
         if (osBuildStrategy == OpenShiftBuildStrategy.docker) {
             return new BuildStrategyBuilder().withType("Docker").build();
@@ -274,28 +221,52 @@ public class OpenshiftBuildService implements BuildService {
         }
     }
 
-    private String getS2IBuildName(BuildServiceConfig config, ImageName imageName) {
-        return imageName.getSimpleName() + config.getS2iBuildNameSuffix();
-    }
-
-    private String getImageStreamName(ImageName name) {
-        return name.getSimpleName();
-    }
-
-    private String getMapValueWithDefault(Map<String, String> map, OpenShiftBuildStrategy.SourceStrategy strategy, String defaultValue) {
-        return getMapValueWithDefault(map, strategy.key(), defaultValue);
-    }
-
-    private String getMapValueWithDefault(Map<String, String> map, String field, String defaultValue) {
-        if (map == null) {
-            return defaultValue;
+    private void checkOrCreateImageStream(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder, String imageStreamName) {
+        boolean hasImageStream = client.imageStreams().withName(imageStreamName).get() != null;
+        if (hasImageStream && config.getBuildRecreateMode().isImageStream()) {
+            client.imageStreams().withName(imageStreamName).delete();
+            hasImageStream = false;
         }
-        String value = map.get(field);
-        return value != null ? value : defaultValue;
+        if (!hasImageStream) {
+            log.info("Creating ImageStream %s", imageStreamName);
+            builder.addNewImageStreamItem()
+                    .withNewMetadata()
+                    .withName(imageStreamName)
+                    .endMetadata()
+                    .endImageStreamItem();
+        } else {
+            log.info("Adding to ImageStream %s", imageStreamName);
+        }
     }
 
+    private void applyResourceObjects(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder) throws Exception {
+        config.getEnricherTask().execute(builder);
+        if (builder.getItems().size() > 0) {
+            KubernetesList k8sList = builder.build();
+            client.lists().create(k8sList);
+        }
+    }
 
-    public void waitForOpenShiftBuildToComplete(OpenShiftClient client, Build build) throws MojoExecutionException {
+    private Build startBuild(OpenShiftClient client, File dockerTar, String buildName) {
+        log.info("Starting Build %s", buildName);
+        try {
+            return client.buildConfigs().withName(buildName)
+                    .instantiateBinary()
+                    .fromFile(dockerTar);
+        } catch (KubernetesClientException exp) {
+            Status status = exp.getStatus();
+            if (status != null) {
+                log.error("OpenShift Error: [%d %s] [%s] %s", status.getCode(), status.getStatus(), status.getReason(), status.getMessage());
+            }
+            if (exp.getCause() instanceof IOException && exp.getCause().getMessage().contains("Stream Closed")) {
+                log.error("Build for %s failed: %s", buildName, exp.getCause().getMessage());
+                logBuildBuildFailedDetails(client, buildName);
+            }
+            throw exp;
+        }
+    }
+
+    private void waitForOpenShiftBuildToComplete(OpenShiftClient client, Build build) throws MojoExecutionException {
         final CountDownLatch latch = new CountDownLatch(1);
         final CountDownLatch logTerminateLatch = new CountDownLatch(1);
         final String buildName = KubernetesHelper.getName(build);
@@ -320,7 +291,7 @@ public class OpenshiftBuildService implements BuildService {
         }
     }
 
-    public void waitUntilBuildFinished(CountDownLatch latch) {
+    private void waitUntilBuildFinished(CountDownLatch latch) {
         while (latch.getCount() > 0L) {
             try {
                 latch.await();
@@ -330,7 +301,7 @@ public class OpenshiftBuildService implements BuildService {
         }
     }
 
-    public Watcher<Build> getBuildWatcher(final CountDownLatch latch, final String buildName, final AtomicReference<Build> buildHolder) {
+    private Watcher<Build> getBuildWatcher(final CountDownLatch latch, final String buildName, final AtomicReference<Build> buildHolder) {
         return new Watcher<Build>() {
 
             String lastStatus = "";
@@ -387,6 +358,35 @@ public class OpenshiftBuildService implements BuildService {
         } catch (Exception ex) {
             log.error("Unable to get detailed information from the BuildServiceConfig: " + ex.getMessage());
         }
+    }
+
+    private void saveImageStreamToFile(BuildServiceConfig config, ImageName imageName, OpenShiftClient client) throws MojoExecutionException {
+        File imageStreamFile = ResourceFileType.yaml.addExtension(new File(config.getBuildDirectory(),
+                imageName.getSimpleName() + "-is"));
+        ImageStreamService imageStreamHandler = new ImageStreamService(client, log);
+        imageStreamHandler.saveImageStreamResource(imageName, imageStreamFile);
+    }
+
+    // == Utility methods ==========================
+
+    private String getS2IBuildName(BuildServiceConfig config, ImageName imageName) {
+        return imageName.getSimpleName() + config.getS2iBuildNameSuffix();
+    }
+
+    private String getImageStreamName(ImageName name) {
+        return name.getSimpleName();
+    }
+
+    private String getMapValueWithDefault(Map<String, String> map, OpenShiftBuildStrategy.SourceStrategy strategy, String defaultValue) {
+        return getMapValueWithDefault(map, strategy.key(), defaultValue);
+    }
+
+    private String getMapValueWithDefault(Map<String, String> map, String field, String defaultValue) {
+        if (map == null) {
+            return defaultValue;
+        }
+        String value = map.get(field);
+        return value != null ? value : defaultValue;
     }
 
 }
