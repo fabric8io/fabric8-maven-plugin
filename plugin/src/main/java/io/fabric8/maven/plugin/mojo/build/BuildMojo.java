@@ -189,7 +189,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        if (skip) {
+        if (skip || skipBuild) {
             return;
         }
         clusterAccess = new ClusterAccess(namespace);
