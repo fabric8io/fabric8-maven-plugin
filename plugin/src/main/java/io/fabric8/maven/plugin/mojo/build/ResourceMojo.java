@@ -331,12 +331,7 @@ public class ResourceMojo extends AbstractResourceMojo {
     private boolean isTargetPlatformOpenShift(HasMetadata item) {
         // Simple package name based heuristic
         String targetPlatform = KubernetesHelper.getOrCreateAnnotations(item).get(TARGET_PLATFORM_ANNOTATION);
-        if (targetPlatform != null) {
-            if (!targetPlatform.toLowerCase().equals("openshift")) {
-                return false;
-            }
-        }
-        return true;
+        return targetPlatform == null || "openshift".equalsIgnoreCase(targetPlatform);
     }
 
 
@@ -461,9 +456,6 @@ public class ResourceMojo extends AbstractResourceMojo {
         List<HasMetadata> objects = new ArrayList<>();
         if (items != null) {
             for (HasMetadata item : items) {
-                if (!isTargetPlatformOpenShift(item)) {
-                    continue;
-                }
                 if (item instanceof Deployment) {
                     // if we have a Deployment and a DeploymentConfig of the same name
                     // since we have a different manifest for OpenShift then lets filter out
@@ -474,7 +466,7 @@ public class ResourceMojo extends AbstractResourceMojo {
                     }
                 }
                 HasMetadata converted = convertKubernetesItemToOpenShift(item);
-                if (converted != null) {
+                if (converted != null && isTargetPlatformOpenShift(item)) {
                     objects.add(converted);
                 }
             }
