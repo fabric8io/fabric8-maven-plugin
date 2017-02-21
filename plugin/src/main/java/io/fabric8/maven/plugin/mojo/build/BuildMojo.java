@@ -312,6 +312,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .goalFinder(goalFinder)
                 .config(extractEnricherConfig())
                 .images(getResolvedImages())
+                .resources(resources)
                 .namespace(resources != null && resources.getNamespace() != null ? resources.getNamespace() : namespace)
                 .log(log)
                 .openshiftDependencyResources(new OpenShiftDependencyResources(log))
