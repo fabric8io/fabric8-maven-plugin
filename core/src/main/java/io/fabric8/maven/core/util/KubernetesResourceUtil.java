@@ -236,9 +236,10 @@ public class KubernetesResourceUtil {
             "statefulset", "StatefulSet",
 
             // OpenShift Resources:
-            "route", "Route",
+            "bc", "BuildConfig",
             "dc", "DeploymentConfig",
             "deploymentconfig", "DeploymentConfig",
+            "route", "Route",
             "template", "Template",
         };
 

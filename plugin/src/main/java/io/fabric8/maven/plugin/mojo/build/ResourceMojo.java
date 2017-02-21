@@ -65,6 +65,10 @@ import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MAN
  */
 @Mojo(name = "resource", defaultPhase = LifecyclePhase.PROCESS_RESOURCES, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class ResourceMojo extends AbstractResourceMojo {
+    /**
+     * Used to annotate a resource as being for a specific platform only such as "kubernetes" or "openshift"
+     */
+    public static final String TARGET_PLATFORM_ANNOTATION = "fabric8.io/target-platform";
 
     // THe key how we got the the docker maven plugin
     private static final String DOCKER_MAVEN_PLUGIN_KEY = "io.fabric8:docker-maven-plugin";
@@ -317,9 +321,17 @@ public class ResourceMojo extends AbstractResourceMojo {
         return ret.build();
     }
 
-   private boolean isOpenshiftItem(HasMetadata item) {
-        // Simple package name based heuristic
+    private boolean isOpenshiftItem(HasMetadata item) {
+        if (!isTargetPlatformOpenShift(item)) {
+            return false;
+        }
         return item.getClass().getPackage().getName().contains("openshift");
+    }
+
+    private boolean isTargetPlatformOpenShift(HasMetadata item) {
+        // Simple package name based heuristic
+        String targetPlatform = KubernetesHelper.getOrCreateAnnotations(item).get(TARGET_PLATFORM_ANNOTATION);
+        return targetPlatform == null || "openshift".equalsIgnoreCase(targetPlatform);
     }
 
 
@@ -454,7 +466,7 @@ public class ResourceMojo extends AbstractResourceMojo {
                     }
                 }
                 HasMetadata converted = convertKubernetesItemToOpenShift(item);
-                if (converted != null) {
+                if (converted != null && isTargetPlatformOpenShift(item)) {
                     objects.add(converted);
                 }
             }
