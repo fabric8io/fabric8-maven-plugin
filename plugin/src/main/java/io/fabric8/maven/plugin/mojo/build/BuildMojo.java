@@ -235,7 +235,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .openshiftBuildStrategy(buildStrategy)
                 .s2iBuildNameSuffix(s2iBuildNameSuffix)
                 .buildDirectory(project.getBuild().getDirectory())
-                .ericherTask(new Task<KubernetesListBuilder>() {
+                .enricherTask(new Task<KubernetesListBuilder>() {
                     @Override
                     public void execute(KubernetesListBuilder builder) throws Exception {
                         new EnricherManager(resources, getEnricherContext()).enrich(builder);

@@ -15,26 +15,20 @@
  */
 package io.fabric8.maven.core.service.kubernetes;
 
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.docker.util.Logger;
 
 /**
  * @author nicola
  * @since 17/02/2017
  */
-public class KubernetesBuildService implements BuildService {
+public class DockerBuildService implements BuildService {
 
-    private final KubernetesClient client;
-    private final Logger log;
     private ServiceHub dockerServiceHub;
 
-    public KubernetesBuildService(KubernetesClient client, Logger log, ServiceHub dockerServiceHub) {
-        this.client = client;
-        this.log = log;
+    public DockerBuildService(ServiceHub dockerServiceHub) {
         this.dockerServiceHub = dockerServiceHub;
     }
 

@@ -18,11 +18,10 @@ package io.fabric8.maven.core.service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.PlatformMode;
-import io.fabric8.maven.core.service.kubernetes.KubernetesBuildService;
+import io.fabric8.maven.core.service.kubernetes.DockerBuildService;
 import io.fabric8.maven.core.service.openshift.OpenshiftBuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.client.OpenShiftClient;
 
 /**
@@ -40,7 +39,7 @@ public class Fabric8ServiceHub {
         // Creating platform-dependent services
         if (resolvedMode == PlatformMode.kubernetes) {
             // Kubernetes services
-            this.buildService = new KubernetesBuildService(client, log, dockerServiceHub);
+            this.buildService = new DockerBuildService(dockerServiceHub);
 
         } else if(resolvedMode == PlatformMode.openshift) {
             // Openshift services

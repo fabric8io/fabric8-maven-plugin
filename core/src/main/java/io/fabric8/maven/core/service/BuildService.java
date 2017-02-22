@@ -15,16 +15,12 @@
  */
 package io.fabric8.maven.core.service;
 
-import java.io.File;
-
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.BuildRecreateMode;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.Task;
-
-import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author nicola
@@ -127,7 +123,7 @@ public interface BuildService {
                 return this;
             }
 
-            public Builder ericherTask(Task<KubernetesListBuilder> enricherTask) {
+            public Builder enricherTask(Task<KubernetesListBuilder> enricherTask) {
                 config.enricherTask = enricherTask;
                 return this;
             }
