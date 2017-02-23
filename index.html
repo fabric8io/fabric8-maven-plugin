@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.2.27,</span>
-<span id="revdate">2017-02-22</span>
+<span id="revdate">2017-02-23</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -5489,6 +5489,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
 <pre class="CodeRay highlight"><code data-lang="yaml"><span class="comment"># Default profile which is always activated</span>
 - <span class="string"><span class="content">name: default</span></span>
   <span class="key">enricher</span>:
+    <span class="comment"># The order given in &quot;includes&quot; is the order in which enrichers are called</span>
     <span class="key">includes</span>:
     - <span class="string"><span class="content">fmp-name</span></span>
     - <span class="string"><span class="content">fmp-controller</span></span>
@@ -5513,6 +5514,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
     - <span class="string"><span class="content">f8-icon</span></span>
     <span class="comment"># TODO: Document and verify enrichers below</span>
     - <span class="string"><span class="content">f8-expose</span></span>
+    - <span class="string"><span class="content">fmp-openshift-route</span></span>
     - <span class="string"><span class="content">spring-boot-health-check</span></span>
     - <span class="string"><span class="content">karaf-health-check</span></span>
     - <span class="string"><span class="content">f8-prometheus</span></span>
@@ -5522,6 +5524,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
     - <span class="string"><span class="content">fmp-dependency</span></span>
 
   <span class="key">generator</span>:
+    <span class="comment"># The order given in &quot;includes&quot; is the order in which generators are called</span>
     <span class="key">includes</span>:
     - <span class="string"><span class="content">spring-boot</span></span>
     - <span class="string"><span class="content">wildfly-swarm</span></span>
@@ -6073,7 +6076,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.27<br>
-Last updated 2017-02-22 10:49:09 UTC
+Last updated 2017-02-23 12:16:11 UTC
 </div>
 </div>
 </body>
