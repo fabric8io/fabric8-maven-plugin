@@ -67,23 +67,9 @@ public class OpenShiftRouteEnricher extends BaseEnricher {
         if (metadata != null && isExposedService(serviceBuilder)) {
             String name = metadata.getName();
             if (!hasRoute(listBuilder, name)) {
-                RoutePort routePort = null;
-                ServiceSpec spec = serviceBuilder.getSpec();
-                if (spec != null) {
-                    List<ServicePort> ports = spec.getPorts();
-                    if (ports != null && ports.size() > 0) {
-                        // TODO one day lets support multiple ports on a Route when the model supports it
-                        ServicePort servicePort = ports.get(0);
-                        if (servicePort != null) {
-                            IntOrString targetPort = servicePort.getTargetPort();
-                            if (targetPort != null) {
-                                routePort = new RoutePort();
-                                routePort.setTargetPort(targetPort);
-                            }
-                        }
-                    }
-                }
+                RoutePort routePort = createRoutePort(serviceBuilder);
                 if (routePort != null) {
+                    // TODO one day lets support multiple ports on a Route when the model supports it
                     routes.add(new RouteBuilder().
                             withMetadata(serviceBuilder.getMetadata()).
                             withNewSpec().
@@ -96,6 +82,25 @@ public class OpenShiftRouteEnricher extends BaseEnricher {
         }
     }
 
+    private RoutePort createRoutePort(ServiceBuilder serviceBuilder) {
+        RoutePort routePort = null;
+        ServiceSpec spec = serviceBuilder.getSpec();
+        if (spec != null) {
+            List<ServicePort> ports = spec.getPorts();
+            if (ports != null && ports.size() > 0) {
+                ServicePort servicePort = ports.get(0);
+                if (servicePort != null) {
+                    IntOrString targetPort = servicePort.getTargetPort();
+                    if (targetPort != null) {
+                        routePort = new RoutePort();
+                        routePort.setTargetPort(targetPort);
+                    }
+                }
+            }
+        }
+        return routePort;
+    }
+
     /**
      * Returns true if we already have a route created for the given name
      */
@@ -106,10 +111,8 @@ public class OpenShiftRouteEnricher extends BaseEnricher {
             @Override
             public void visit(RouteBuilder builder) {
                 ObjectMeta metadata = builder.getMetadata();
-                if (metadata != null) {
-                    if (name.equals(metadata.getName())) {
-                        answer.set(true);
-                    }
+                if (metadata != null && name.equals(metadata.getName())) {
+                    answer.set(true);
                 }
             }
         });
