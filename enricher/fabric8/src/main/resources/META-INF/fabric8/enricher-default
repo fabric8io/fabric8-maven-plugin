@@ -18,3 +18,4 @@ io.fabric8.maven.enricher.fabric8.VertxHealthCheckEnricher
 io.fabric8.maven.enricher.fabric8.PrometheusEnricher
 io.fabric8.maven.enricher.fabric8.AutoTLSEnricher
 io.fabric8.maven.enricher.fabric8.ExposeEnricher
+io.fabric8.maven.enricher.fabric8.OpenShiftRouteEnricher

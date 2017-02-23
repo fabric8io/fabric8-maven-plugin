@@ -322,17 +322,22 @@ public class ResourceMojo extends AbstractResourceMojo {
     }
 
     private boolean isOpenshiftItem(HasMetadata item) {
-        if (!isTargetPlatformOpenShift(item)) {
-            return false;
+        if (isTargetPlatformOpenShift(item)) {
+            return true;
         }
         return item.getClass().getPackage().getName().contains("openshift");
     }
 
     private boolean isTargetPlatformOpenShift(HasMetadata item) {
-        // Simple package name based heuristic
         String targetPlatform = KubernetesHelper.getOrCreateAnnotations(item).get(TARGET_PLATFORM_ANNOTATION);
-        return targetPlatform == null || "openshift".equalsIgnoreCase(targetPlatform);
+        return targetPlatform != null && "openshift".equalsIgnoreCase(targetPlatform);
     }
+
+    private boolean isTargetPlatformKubernetes(HasMetadata item) {
+        String targetPlatform = KubernetesHelper.getOrCreateAnnotations(item).get(TARGET_PLATFORM_ANNOTATION);
+        return targetPlatform != null && "kubernetes".equalsIgnoreCase(targetPlatform);
+    }
+
 
 
     private KubernetesList generateResources(List<ImageConfiguration> images)
@@ -466,7 +471,7 @@ public class ResourceMojo extends AbstractResourceMojo {
                     }
                 }
                 HasMetadata converted = convertKubernetesItemToOpenShift(item);
-                if (converted != null && isTargetPlatformOpenShift(item)) {
+                if (converted != null && !isTargetPlatformKubernetes(item)) {
                     objects.add(converted);
                 }
             }

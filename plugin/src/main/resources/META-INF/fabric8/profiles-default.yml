@@ -29,6 +29,7 @@
     - f8-icon
     # TODO: Document and verify enrichers below
     - f8-expose
+    - fmp-openshift-route
     - spring-boot-health-check
     - karaf-health-check
     - f8-prometheus
