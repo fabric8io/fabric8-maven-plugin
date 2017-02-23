@@ -1,11 +1,20 @@
-io.fabric8.maven.enricher.fabric8.CdEnricher,500
-io.fabric8.maven.enricher.fabric8.DocLinkEnricher,501
-io.fabric8.maven.enricher.fabric8.GrafanaLinkEnricher,502
-io.fabric8.maven.enricher.fabric8.IconEnricher,503
-io.fabric8.maven.enricher.fabric8.SpringBootHealthCheckEnricher,504
-io.fabric8.maven.enricher.fabric8.WildFlySwarmHealthCheckEnricher,505
-io.fabric8.maven.enricher.fabric8.KarafHealthCheckEnricher,506
-io.fabric8.maven.enricher.fabric8.VertxHealthCheckEnricher,507
-io.fabric8.maven.enricher.fabric8.PrometheusEnricher,508
-io.fabric8.maven.enricher.fabric8.AutoTLSEnricher,509
-io.fabric8.maven.enricher.fabric8.ExposeEnricher,1000
+# Fabric8 specific enrichers
+# ==========================
+
+# The order of the enrichers is defined in the active profile
+# (which is the profile "default" by default)
+# You can find the default profiles in "profiles-default.yml"
+
+# ----------------------------------------------------------------
+
+io.fabric8.maven.enricher.fabric8.CdEnricher
+io.fabric8.maven.enricher.fabric8.DocLinkEnricher
+io.fabric8.maven.enricher.fabric8.GrafanaLinkEnricher
+io.fabric8.maven.enricher.fabric8.IconEnricher
+io.fabric8.maven.enricher.fabric8.SpringBootHealthCheckEnricher
+io.fabric8.maven.enricher.fabric8.WildFlySwarmHealthCheckEnricher
+io.fabric8.maven.enricher.fabric8.KarafHealthCheckEnricher
+io.fabric8.maven.enricher.fabric8.VertxHealthCheckEnricher
+io.fabric8.maven.enricher.fabric8.PrometheusEnricher
+io.fabric8.maven.enricher.fabric8.AutoTLSEnricher
+io.fabric8.maven.enricher.fabric8.ExposeEnricher

@@ -116,7 +116,6 @@ public class DefaultServiceEnricher extends BaseEnricher {
 
         if (ports.size() > 0) {
             ret.ports(ports);
-
         } else {
             if (Configs.asBoolean(getConfig(Config.headless))) {
                 ret.headless(true);

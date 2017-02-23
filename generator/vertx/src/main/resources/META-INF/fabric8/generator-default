@@ -1,1 +1,5 @@
-io.fabric8.maven.generator.vertx.VertxGenerator,1000
+# The order of the generators used ise defined in the active profile
+# (which is the profile "default" by default)
+# You can find the default profiles in "profiles-default.yml"
+
+io.fabric8.maven.generator.vertx.VertxGenerator
