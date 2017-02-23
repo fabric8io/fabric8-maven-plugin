@@ -4,6 +4,7 @@
 # Default profile which is always activated
 - name: default
   enricher:
+    # The order given in "includes" is the order in which enrichers are called
     includes:
     - fmp-name
     - fmp-controller
@@ -37,6 +38,7 @@
     - fmp-dependency
 
   generator:
+    # The order given in "includes" is the order in which generators are called
     includes:
     - spring-boot
     - wildfly-swarm
