@@ -29,6 +29,7 @@
     - f8-icon
     # TODO: Document and verify enrichers below
     - f8-expose
+    # Health checks
     - fmp-openshift-route
     - spring-boot-health-check
     - karaf-health-check
@@ -36,7 +37,7 @@
     - f8-prometheus
     - f8-maven-scm
     - f8-maven-issue-mgmt
-    # Depenendcies shouldn't be enricher anymore, it's last in the list
+    # Dependencies shouldn't be enriched anymore, therefor it's last in the list
     - fmp-dependency
 
   generator:

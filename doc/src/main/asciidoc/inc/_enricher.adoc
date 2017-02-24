@@ -37,7 +37,7 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 * *Standard Enrichers* are used to add default resource object when they are missing or add common metadata extracted from the given build information
 * *Fabric8 Enrichers* are specific to the https://fabric8.io[fabric8 Microservice's platform]. It adds icon annotations which are visible in the fabric8 console or connections to the Continous Deliverys systems like Jenkins or Gogs.
 
-.Default Enrichers Overview
+. Default Enrichers Overview
 [cols="2,7"]
 |===
 | Enricher | Description
@@ -56,6 +56,9 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 
 | <<f8-prometheus>>
 | Add Prometheus annotations.
+
+| <<f8-maven-scm-enricher>>
+| Add Maven SCM information as annotations to the kubernetes/openshift resources
 
 | <<fmp-controller>>
 | Create default controller (replication controller, replica set or deployment) if missing.
@@ -86,9 +89,6 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 
 | <<fmp-service>>
 | Create a default service if missing and extrac ports from the Docker image configuration.
-
-| <<f8-maven-scm-enricher>>
-| Add Maven SCM information as annotations to the kubernetes/openshift resources
 
 | <<fmp-maven-issue-mgmt-enricher>>
 | Add Maven Issue Management information as annotations to the kubernetes/openshift resources

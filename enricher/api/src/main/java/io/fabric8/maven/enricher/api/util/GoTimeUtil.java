@@ -7,6 +7,8 @@ import java.math.BigDecimal;
  */
 public class GoTimeUtil {
 
+    private GoTimeUtil() {}
+
     private static final String[] TIME_UNITS = {"ns", "us", "µs", "ms", "s", "m", "h"};
 
     private static final long[] UNIT_MULTIPLIERS = {1, 1000, 1_000, 1_000_000, 1_000_000_000, 60L * 1_000_000_000, 3600L * 1_000_000_000};
@@ -21,7 +23,7 @@ public class GoTimeUtil {
         }
 
         BigDecimal sec = ns.divide(new BigDecimal(1_000_000_000));
-        if(sec.compareTo(new BigDecimal(Integer.MAX_VALUE)) > 0) {
+        if (sec.compareTo(new BigDecimal(Integer.MAX_VALUE)) > 0) {
             throw new IllegalArgumentException("Integer Overflow");
         }
         return sec.intValue();
