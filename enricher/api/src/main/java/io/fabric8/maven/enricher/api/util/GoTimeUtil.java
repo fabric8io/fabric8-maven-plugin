@@ -7,11 +7,11 @@ import java.math.BigDecimal;
  */
 public class GoTimeUtil {
 
-    private GoTimeUtil() {}
 
     private static final String[] TIME_UNITS = {"ns", "us", "µs", "ms", "s", "m", "h"};
-
     private static final long[] UNIT_MULTIPLIERS = {1, 1000, 1_000, 1_000_000, 1_000_000_000, 60L * 1_000_000_000, 3600L * 1_000_000_000};
+
+    private GoTimeUtil() {}
 
     /**
      * Parses a duration string anr returns its value in seconds.
@@ -32,11 +32,14 @@ public class GoTimeUtil {
     /**
      * Parses a duration string anr returns its value in nanoseconds.
      */
-    public static BigDecimal durationNs(String duration) {
-        if (duration == null || duration.trim().length() == 0) {
+    public static BigDecimal durationNs(String durationP) {
+        if (durationP == null) {
             return null;
         }
-        duration = duration.trim();
+        String duration = durationP.trim();
+        if (duration.length() == 0) {
+            return null;
+        }
 
         int unitPos = 1;
         while (unitPos < duration.length() && (Character.isDigit(duration.charAt(unitPos)) || duration.charAt(unitPos) == '.')) {
