@@ -18,7 +18,7 @@ items:
       project: fabric8-maven-sample-zero-config
       version: "@ignore@"
       group: io.fabric8
-    name: fabric8-maven-sample-zer
+    name: fabric8-maven-sample-zero-config
   spec:
     ports:
     - name: http
@@ -41,7 +41,7 @@ items:
       project: fabric8-maven-sample-zero-config
       version: "@ignore@"
       group: io.fabric8
-    name: fabric8-maven-sample-zer
+    name: fabric8-maven-sample-zero-config
   spec:
     replicas: 1
     selector:

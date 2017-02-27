@@ -101,8 +101,8 @@ public class MavenUtil {
     public static String createDefaultResourceName(MavenProject project, String ... suffixes) {
         String suffix = StringUtils.join(suffixes, "-");
         String ret = project.getArtifactId() + (suffix.length() > 0 ? "-" + suffix : "");
-        if (ret.length() > 24) {
-            ret = ret.substring(0,24);
+        if (ret.length() > 63) {
+            ret = ret.substring(0,63);
         }
         return ret.toLowerCase();
     }

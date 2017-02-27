@@ -16,7 +16,7 @@ items:
       project: fabric8-maven-sample-env-metadata
       version: "@ignore@"
       group: io.fabric8
-    name: fabric8-maven-sample-env
+    name: fabric8-maven-sample-env-metadata
   spec:
     ports:
     - name: http
@@ -39,7 +39,7 @@ items:
       project: fabric8-maven-sample-env-metadata
       version: "@ignore@"
       group: io.fabric8
-    name: fabric8-maven-sample-env
+    name: fabric8-maven-sample-env-metadata
   spec:
     replicas: 1
     selector:

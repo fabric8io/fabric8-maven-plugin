@@ -5,7 +5,7 @@ items:
 - apiVersion: v1
   kind: Service
   metadata:
-    name: fabric8-maven-sample-spr
+    name: fabric8-maven-sample-spring-boot
   spec:
     ports:
     - name: http
@@ -26,7 +26,7 @@ items:
       project: fabric8-maven-sample-spring-boot
       version: "@ignore@"
       group: io.fabric8
-    name: fabric8-maven-sample-spr
+    name: fabric8-maven-sample-spring-boot
   spec:
     replicas: 1
     selector:
