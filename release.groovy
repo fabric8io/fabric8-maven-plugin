@@ -40,6 +40,8 @@ def updateDependencies(source){
 }
 
 def updateDownstreamDependencies(stagedProject) {
+  def newVersion = stagedProject[1]
+
   pushPomPropertyChangePR {
     propertyName = 'fabric8.maven.plugin.version'
     projects = [
@@ -49,10 +51,18 @@ def updateDownstreamDependencies(stagedProject) {
             'fabric8io/fabric8-ipaas',
             'fabric8io/ipaas-platform',
             'funktionio/funktion-connectors',
-            'fabric8-quickstarts/spring-boot-webmvc', // these are used in the system tests in a later stage so we 
-            'fabric8-quickstarts/spring-boot-camel-xml' // need to make sure their deps are updated before the quickstart archetypes are generated
+            'fabric8-quickstarts/spring-boot-webmvc', // these are used in the system tests in a later stage so we
+            'fabric8-quickstarts/spring-boot-camel-xml', // need to make sure their deps are updated before the quickstart archetypes are generated
+            'obsidian-toaster/generator-backend'
     ]
-    version = stagedProject[1]
+    version = newVersion
+  }
+  pushPomPropertyChangePR {
+    propertyName = 'version.fabric8-maven-plugin'
+    projects = [
+            'obsidian-toaster/obsidian-addon'
+    ]
+    version = newVersion
   }
 
   pushPomPropertyChangePR {
@@ -62,7 +72,7 @@ def updateDownstreamDependencies(stagedProject) {
             // this is for the docs!
             'fabric8io/fabric8-maven-plugin'
     ]
-    version = stagedProject[1]
+    version = newVersion
   }
 }
 
