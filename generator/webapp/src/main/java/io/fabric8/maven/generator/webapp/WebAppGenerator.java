@@ -26,11 +26,16 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
 import io.fabric8.maven.generator.webapp.handler.CustomAppServerHandler;
+import io.fabric8.utils.Objects;
+import org.apache.maven.project.MavenProject;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static io.fabric8.maven.core.util.Constants.SPRING_BOOT_MAVEN_PLUGIN_GA;
+import static io.fabric8.maven.core.util.Constants.WILDFLY_SWARM_PLUGIN;
 
 
 /**
@@ -68,7 +73,30 @@ public class WebAppGenerator extends BaseGenerator {
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
         return shouldAddImageConfiguration(configs) &&
-               MavenUtil.hasPlugin(getProject(), "org.apache.maven.plugins:maven-war-plugin");
+               MavenUtil.hasPlugin(getProject(), "org.apache.maven.plugins:maven-war-plugin") && !isWarUsedWithFatJar(configs);
+    }
+
+    /**
+     * If we are using spring boot or wildfly swarm with a fat jar then we should not use the web app generator
+     * and should stick with the fat jar generators instead
+     */
+    protected boolean isWarUsedWithFatJar(List<ImageConfiguration> configs) {
+        MavenProject project = getContext().getProject();
+        String finalName = project.getBuild().getFinalName();
+        String artifactId = project.getArtifactId();
+        if (!Objects.equal(artifactId, finalName)) {
+            String plugin = null;
+            if (MavenUtil.hasPlugin(project, SPRING_BOOT_MAVEN_PLUGIN_GA)) {
+                plugin = "spring boot";
+            } else if (MavenUtil.hasPlugin(project, WILDFLY_SWARM_PLUGIN)) {
+                plugin = "wildfly swarm";
+            }
+            if (plugin != null) {
+                log.debug("Disabling webapp generator as build.finalName is specified as different to project.artifactId and the %s plugin is enabled", plugin);
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
