@@ -144,9 +144,7 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         public void visit(JobSpecBuilder item) {
             Map<String, String> selectorMatchLabels = enricherManager.extractSelector(getConfig(), Kind.JOB);
             final LabelSelector selector = item.buildSelector();
-            if (selector == null) {
-                item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
-            } else {
+            if (selector != null) {
                 selector.getMatchLabels().putAll(selectorMatchLabels);
             }
         }
