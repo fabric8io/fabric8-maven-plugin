@@ -16,7 +16,6 @@
  */
 package io.fabric8.maven.generator.wildflyswarm;
 
-import io.fabric8.maven.core.util.Constants;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
@@ -38,7 +37,7 @@ public class WildFlySwarmGenerator extends JavaExecGenerator {
 
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
-        return shouldAddImageConfiguration(configs) && MavenUtil.hasPlugin(getProject(), Constants.WILDFLY_SWARM_PLUGIN);
+        return shouldAddImageConfiguration(configs) && MavenUtil.hasPlugin(getProject(), "org.wildfly.swarm:wildfly-swarm-plugin");
     }
 
     @Override
