@@ -20,9 +20,9 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.ClientPodResource;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
+import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.maven.core.util.KubernetesClientUtil;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.docker.util.Logger;
@@ -217,7 +217,7 @@ public class PodLogService {
                 log.info("Closing log watcher for %s as now watching %s", watchingPodName, name);
                 closeLogWatcher();
             }
-            ClientPodResource<Pod, DoneablePod> podResource = kubernetes.pods().inNamespace(namespace).withName(name);
+            PodResource<Pod, DoneablePod> podResource = kubernetes.pods().inNamespace(namespace).withName(name);
             List<Container> containers = KubernetesHelper.getContainers(pod);
             String containerName = null;
             if (followLog) {

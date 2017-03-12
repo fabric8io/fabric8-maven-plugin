@@ -19,7 +19,7 @@ import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.ClientResource;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.service.PodLogService;
 import io.fabric8.maven.core.util.ClassUtil;
@@ -76,7 +76,7 @@ public class SpringBootWatcher extends BaseWatcher {
             if (entity instanceof Service) {
                 Service service = (Service) entity;
                 String name = KubernetesHelper.getName(service);
-                ClientResource<Service, DoneableService> serviceResource = kubernetes.services().inNamespace(getContext().getNamespace()).withName(name);
+                Resource<Service, DoneableService> serviceResource = kubernetes.services().inNamespace(getContext().getNamespace()).withName(name);
                 String url = null;
                 // lets wait a little while until there is a service URL in case the exposecontroller is running slow
                 for (int i = 0; i < serviceUrlWaitTimeSeconds; i++) {
