@@ -48,7 +48,7 @@ public class ImageStreamServiceTest {
     BaseOperation imageStreamsOp;
 
     @Mocked
-    ClientResource resource;
+    Resource resource;
 
     @Mocked
     Logger log;

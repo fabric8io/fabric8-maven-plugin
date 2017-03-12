@@ -54,10 +54,8 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.ClientNonNamespaceOperation;
-import io.fabric8.kubernetes.client.dsl.ClientPodResource;
-import io.fabric8.kubernetes.client.dsl.ClientResource;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.Scaleable;
 import io.fabric8.kubernetes.internal.HasMetadataComparator;
 import io.fabric8.maven.core.access.ClusterAccess;
@@ -455,7 +453,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
             if (entity instanceof Service) {
                 Service service = (Service) entity;
                 String name = getName(service);
-                ClientResource<Service, DoneableService> serviceResource = kubernetes.services().inNamespace(namespace).withName(name);
+                Resource<Service, DoneableService> serviceResource = kubernetes.services().inNamespace(namespace).withName(name);
                 String url = null;
                 // lets wait a little while until there is a service URL in case the exposecontroller is running slow
                 for (int i = 0; i < serviceUrlWaitTimeSeconds; i++) {
