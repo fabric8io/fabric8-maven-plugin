@@ -18,13 +18,13 @@ The <<generator-example,Generator example>> is a good bluebprint, simply replace
 | Element | Description
 
 | `<includes>`
-| Contains one ore more `<include>` elements with enricher names which should be included. If given, only this list of enrichers are included in this order.
+| Contains one ore more `<include>` elements with enricher names which should be included. If given, only this list of enrichers are included in this order. The enrichers from every active profile are included, too. However the enrichers listed here are moved to the front of the list, so that they are called first. Use the profile `raw` if you want to explicitly set the complete list of enrichers.
 
 | `<excludes>`
 | Holds one or more `<exclude>` elements with enricher names to exclude. This means all the detected enrichers are used except the ones mentioned in this section.
 
 | `<config>`
-| Configuration for all enrichers. Each enricher supports a specific set of configuration values as described in its documentation. The subelements of this section are enricher names. E.g. for enricher `f8-service`, the sub-element is called `<f8-service>`. This element then holds the specific enricher configuration like `<name>` for the service name.
+| Configuration for all enrichers. Each enricher supports a specific set of configuration values as described in its documentation. The subelements of this section are enricher names. E.g. for enricher `f8-service`, the sub-element is called `<f8-service>`. This element then holds the specific enricher configuration like `<name>` for the service name. Configuration coming from profiles are merged into this config, but not overriding the configuration specified here.
 |===
 
 This plugin comes with a set of default enrichers. In addition custom enrichers can be easily added by providing implementation of the <<enricher-api, Enricher API>> and adding these as a dependency to the build.

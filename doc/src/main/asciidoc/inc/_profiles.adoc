@@ -90,7 +90,7 @@ If a profile is <<profiles-using, used>> then it is looked up from various place
 
 When multiple profiles of the same name are found, then these profiles are merged. If profile have an order number, then the _higher_ order takes precedences when merging profiles.
 
-For _includes_ of the same processors, the processor is moved to the latest position. E.g consider the following two profiles with the name `my-profile`
+For _includes_ of the same processors, the processor is moved to the earliest position. E.g consider the following two profiles with the name `my-profile`
 
 .Profile A
 [source, yaml]
@@ -116,7 +116,7 @@ then when merged results in the following profile (when no order is given, it de
 ----
 name: my-profile
 enricher:
-  includes: [ e2, e3, e1 ]
+  includes: [ e1, e2, e3 ]
 order: 10
 ----
 
