@@ -3821,7 +3821,7 @@ This plugin definition includes the configuration to generate the Docker image.
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>&lt;includes&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Contains one ore more <code>&lt;include&gt;</code> elements with generator names which should be included. If given only this list of generators are included in this given order. The order is important because by default only the first matching generator kicks in.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Contains one ore more <code>&lt;include&gt;</code> elements with generator names which should be included. If given only this list of generators are included in this given order. The order is important because by default only the first matching generator kicks in. The generators from every active profile are included, too. However the generators listed here are moved to the front of the list, so that they are called first. Use the profile <code>raw</code> if you want to explicitly set the complete list of generators.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>&lt;excludes&gt;</code></p></td>
@@ -3829,12 +3829,12 @@ This plugin definition includes the configuration to generate the Docker image.
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>&lt;config&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Configuration for all generators. Each generator support a specific set of configuration values as described in the documentation. The subelements of this section are generator names to configure. E.g. for generator <code>spring-boot</code>, the sub-element is called <code>&lt;spring-boot&gt;</code>. This element then holds the specific generator configuration like <code>&lt;name&gt;</code> for specifying the final image name. See above for an example.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configuration for all generators. Each generator support a specific set of configuration values as described in the documentation. The subelements of this section are generator names to configure. E.g. for generator <code>spring-boot</code>, the sub-element is called <code>&lt;spring-boot&gt;</code>. This element then holds the specific generator configuration like <code>&lt;name&gt;</code> for specifying the final image name. See above for an example. Configuration coming from profiles are merged into this config, but not overriding the configuration specified here.</p></td>
 </tr>
 </tbody>
 </table>
 <div class="paragraph">
-<p>Beside ny specifying generator configuration in the plugin&#8217;s configuration it can be set directly with properties, too:</p>
+<p>Beside specifying generator configuration in the plugin&#8217;s configuration it can be set directly with properties, too:</p>
 </div>
 <div class="listingblock">
 <div class="title">Example generator property config</div>
@@ -3846,7 +3846,7 @@ This plugin definition includes the configuration to generate the Docker image.
 <p>The general scheme is a prefix <code>fabric8.generator.</code> followed by the unique generator name and then the generator specific key.</p>
 </div>
 <div class="paragraph">
-<p>In addition to the provided default <em>Generators</em> described in the next secion <a href="#generators-default">Default Generators</a>, custom generators can be easily added. There are two ways to include generators:</p>
+<p>In addition to the provided default <em>Generators</em> described in the next section <a href="#generators-default">Default Generators</a>, custom generators can be easily added. There are two ways to include generators:</p>
 </div>
 <div class="paragraph">
 <div class="title">Plugin dependency</div>
@@ -4425,7 +4425,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>&lt;includes&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Contains one ore more <code>&lt;include&gt;</code> elements with enricher names which should be included. If given, only this list of enrichers are included in this order.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Contains one ore more <code>&lt;include&gt;</code> elements with enricher names which should be included. If given, only this list of enrichers are included in this order. The enrichers from every active profile are included, too. However the enrichers listed here are moved to the front of the list, so that they are called first. Use the profile <code>raw</code> if you want to explicitly set the complete list of enrichers.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>&lt;excludes&gt;</code></p></td>
@@ -4433,7 +4433,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>&lt;config&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Configuration for all enrichers. Each enricher supports a specific set of configuration values as described in its documentation. The subelements of this section are enricher names. E.g. for enricher <code>f8-service</code>, the sub-element is called <code>&lt;f8-service&gt;</code>. This element then holds the specific enricher configuration like <code>&lt;name&gt;</code> for the service name.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configuration for all enrichers. Each enricher supports a specific set of configuration values as described in its documentation. The subelements of this section are enricher names. E.g. for enricher <code>f8-service</code>, the sub-element is called <code>&lt;f8-service&gt;</code>. This element then holds the specific enricher configuration like <code>&lt;name&gt;</code> for the service name. Configuration coming from profiles are merged into this config, but not overriding the configuration specified here.</p></td>
 </tr>
 </tbody>
 </table>
@@ -5349,7 +5349,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
 <p>When multiple profiles of the same name are found, then these profiles are merged. If profile have an order number, then the <em>higher</em> order takes precedences when merging profiles.</p>
 </div>
 <div class="paragraph">
-<p>For <em>includes</em> of the same processors, the processor is moved to the latest position. E.g consider the following two profiles with the name <code>my-profile</code></p>
+<p>For <em>includes</em> of the same processors, the processor is moved to the earliest position. E.g consider the following two profiles with the name <code>my-profile</code></p>
 </div>
 <div class="listingblock">
 <div class="title">Profile A</div>
@@ -5376,7 +5376,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="yaml"><span class="key">name</span>: <span class="string"><span class="content">my-profile</span></span>
 <span class="key">enricher</span>:
-  <span class="key">includes</span>: <span class="string"><span class="content">[ e2, e3, e1 ]</span></span>
+  <span class="key">includes</span>: <span class="string"><span class="content">[ e1, e2, e3 ]</span></span>
 <span class="key">order</span>: <span class="string"><span class="content">10</span></span></code></pre>
 </div>
 </div>
@@ -6084,7 +6084,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.28<br>
-Last updated 2017-03-13 15:05:35 UTC
+Last updated 2017-03-13 15:19:33 UTC
 </div>
 </div>
 </body>
