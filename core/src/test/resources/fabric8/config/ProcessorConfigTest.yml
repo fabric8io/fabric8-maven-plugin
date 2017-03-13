@@ -25,7 +25,7 @@
     excludes: [ e1, e2 ]
     config:
       k1:
-        i1: v3
+        i1: v1
         i2: v2
         i3: v4
       k2:
@@ -38,7 +38,16 @@
     excludes: [ e1 ]
   - includes: [ i2, i1, i5 ]
   - includes: [ i1 ]
-    excludes: [ e1, e3 ]
+    excludes: [ e3, e1 ]
   merged:
-    includes: [ i3, i4, i2, i5, i1 ]
+    includes: [ i1, i2, i3, i4, i5 ]
+    excludes: [ e1, e3 ]
+- input:
+  - includes: [ i2, i1, i5 ]
+  - includes: [ i1 ]
+    excludes: [ e3, e1 ]
+  - includes: [ i1, i2, i3, i4 ]
+    excludes: [ e1 ]
+  merged:
+    includes: [ i2, i1, i5, i3, i4 ]
     excludes: [ e3, e1 ]

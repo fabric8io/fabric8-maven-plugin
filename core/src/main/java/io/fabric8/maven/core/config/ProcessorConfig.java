@@ -112,11 +112,26 @@ public class ProcessorConfig {
     }
 
     /**
-     * Merge in another processor configuration, with an higher priority. This operation mutates
-     * the current config.
+     * Clone a processorConfig, resulting in a copy of the given config
      *
-     * @param config config to merge in
-     * @return this merged configuration for convenience of chaining and returning.
+     * @param processorConfig config to clone
+     * @return the cloned config
+     */
+    public static ProcessorConfig cloneProcessorConfig(ProcessorConfig processorConfig) {
+        return mergeProcessorConfigs(processorConfig);
+    }
+
+    /**
+     * Merge in another processor configuration, with a lower priority. I.e. the latter a config is
+     * in the argument list, the less priority it has. This means:
+     *
+     * <ul>
+     *     <li>A configuration earlier in the list overrides configuration later</li>
+     *     <li>Includes and exclude earlier in the list take precedence of the includes/excludes later in the list</li>
+     * </ul>
+     *
+     * @param processorConfigs configs to merge into the current config
+     * @return a merged configuration for convenience of chaining and returning. This is a new object and can e.g.
      */
     public static ProcessorConfig mergeProcessorConfigs(ProcessorConfig ... processorConfigs) {
         // Merge the configuration
@@ -157,35 +172,37 @@ public class ProcessorConfig {
         return removeDups(ret);
     }
 
-    // Remove duplicates such that the later element remains
-    // Only good for small list (thats what we expect for enrichers and generators)
+    // Remove duplicates such that the earlier element remains and the latter is removed
+    // Only good for small list (that's what we expect for enrichers and generators)
     private static List<String> removeDups(List<String> list) {
         List<String> ret = new ArrayList<>();
-        for (int i = list.size() - 1; i >= 0; i--) {
-            String el = list.get(i);
+        for (String el : list) {
             if (!ret.contains(el)) {
                 ret.add(el);
             }
         }
-        Collections.reverse(ret);
         return ret;
     }
 
     private static Map<String, TreeMap> mergeConfig(ProcessorConfig ... processorConfigs) {
         Map<String, TreeMap> ret = new HashMap<>();
-        for (ProcessorConfig processorConfig : processorConfigs) {
-            if (processorConfig != null) {
-                Map<String, TreeMap> config = processorConfig.config;
-                if (config != null) {
-                    for (Map.Entry<String, TreeMap> entry : config.entrySet()) {
-                        TreeMap newValues = entry.getValue();
-                        if (newValues != null) {
-                            TreeMap existing = ret.get(entry.getKey());
-                            if (existing == null) {
-                                ret.put(entry.getKey(), new TreeMap(newValues));
-                            } else {
-                                for (Map.Entry newValue : (Set<Map.Entry>) newValues.entrySet()) {
-                                    existing.put(newValue.getKey(), newValue.getValue());
+        if (processorConfigs.length > 0) {
+            // Reverse iteration order so that earlier entries have a higher precedence
+            for (int i = processorConfigs.length - 1; i >= 0; i--) {
+                ProcessorConfig processorConfig = processorConfigs[i];
+                if (processorConfig != null) {
+                    Map<String, TreeMap> config = processorConfig.config;
+                    if (config != null) {
+                        for (Map.Entry<String, TreeMap> entry : config.entrySet()) {
+                            TreeMap newValues = entry.getValue();
+                            if (newValues != null) {
+                                TreeMap existing = ret.get(entry.getKey());
+                                if (existing == null) {
+                                    ret.put(entry.getKey(), new TreeMap(newValues));
+                                } else {
+                                    for (Map.Entry newValue : (Set<Map.Entry>) newValues.entrySet()) {
+                                        existing.put(newValue.getKey(), newValue.getValue());
+                                    }
                                 }
                             }
                         }

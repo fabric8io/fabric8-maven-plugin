@@ -42,16 +42,16 @@ The following sub-elements are supported:
 | Element | Description
 
 | `<includes>`
-| Contains one ore more `<include>` elements with generator names which should be included. If given only this list of generators are included in this given order. The order is important because by default only the first matching generator kicks in.
+| Contains one ore more `<include>` elements with generator names which should be included. If given only this list of generators are included in this given order. The order is important because by default only the first matching generator kicks in. The generators from every active profile are included, too. However the generators listed here are moved to the front of the list, so that they are called first. Use the profile `raw` if you want to explicitly set the complete list of generators.
 
 | `<excludes>`
 | Holds one or more `<exclude>` elements with generator names to exclude. If set then all detected generators are used except the ones mentioned in this section.
 
 | `<config>`
-| Configuration for all generators. Each generator support a specific set of configuration values as described in the documentation. The subelements of this section are generator names to configure. E.g. for generator `spring-boot`, the sub-element is called `<spring-boot>`. This element then holds the specific generator configuration like `<name>` for specifying the final image name. See above for an example.
+| Configuration for all generators. Each generator support a specific set of configuration values as described in the documentation. The subelements of this section are generator names to configure. E.g. for generator `spring-boot`, the sub-element is called `<spring-boot>`. This element then holds the specific generator configuration like `<name>` for specifying the final image name. See above for an example. Configuration coming from profiles are merged into this config, but not overriding the configuration specified here.
 |===
 
-Beside ny specifying generator configuration in the plugin's configuration it can be set directly with properties, too:
+Beside specifying generator configuration in the plugin's configuration it can be set directly with properties, too:
 
 .Example generator property config
 [source, sh]
@@ -61,7 +61,7 @@ mvn -Dfabric8.generator.spring-boot.alias="myapp"
 
 The general scheme is a prefix `fabric8.generator.` followed by the unique generator name and then the generator specific key.
 
-In addition to the provided default _Generators_ described in the next secion <<generators-default, Default Generators>>, custom generators can be easily added. There are two ways to include generators:
+In addition to the provided default _Generators_ described in the next section <<generators-default, Default Generators>>, custom generators can be easily added. There are two ways to include generators:
 
 .Plugin dependency
 

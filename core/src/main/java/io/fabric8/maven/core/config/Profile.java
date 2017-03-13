@@ -75,9 +75,9 @@ public class Profile implements Comparable<Profile> {
         this();
         this.name = profile.name;
         this.order = profile.order;
-        this.enricherConfig = ProcessorConfig.mergeProcessorConfigs(profile.enricherConfig);
-        this.generatorConfig = ProcessorConfig.mergeProcessorConfigs(profile.generatorConfig);
-        this.watcherConfig = ProcessorConfig.mergeProcessorConfigs(profile.watcherConfig);
+        this.enricherConfig = ProcessorConfig.cloneProcessorConfig(profile.enricherConfig);
+        this.generatorConfig = ProcessorConfig.cloneProcessorConfig(profile.generatorConfig);
+        this.watcherConfig = ProcessorConfig.cloneProcessorConfig(profile.watcherConfig);
     }
 
     // Merge constructor
@@ -88,16 +88,16 @@ public class Profile implements Comparable<Profile> {
             throw new IllegalArgumentException(String.format("Cannot merge to profiles with different names (%s vs. %s)", profileA.getName(), profileB.getName()));
         }
         // Respect order: The higher order overrides the smaller order. If equal, use the argument order given.
-        if (profileA.order > profileB.order) {
+        if (profileA.order >= profileB.order) {
             this.order = profileA.order;
-            this.enricherConfig = ProcessorConfig.mergeProcessorConfigs(profileB.enricherConfig, profileA.enricherConfig);
-            this.generatorConfig = ProcessorConfig.mergeProcessorConfigs(profileB.generatorConfig, profileA.generatorConfig);
-            this.watcherConfig = ProcessorConfig.mergeProcessorConfigs(profileB.watcherConfig, profileA.watcherConfig);
-        } else {
-            this.order = profileB.order;
             this.enricherConfig = ProcessorConfig.mergeProcessorConfigs(profileA.enricherConfig, profileB.enricherConfig);
             this.generatorConfig = ProcessorConfig.mergeProcessorConfigs(profileA.generatorConfig, profileB.generatorConfig);
             this.watcherConfig = ProcessorConfig.mergeProcessorConfigs(profileA.watcherConfig, profileB.watcherConfig);
+        } else {
+            this.order = profileB.order;
+            this.enricherConfig = ProcessorConfig.mergeProcessorConfigs(profileB.enricherConfig, profileA.enricherConfig);
+            this.generatorConfig = ProcessorConfig.mergeProcessorConfigs(profileB.generatorConfig, profileA.generatorConfig);
+            this.watcherConfig = ProcessorConfig.mergeProcessorConfigs(profileB.watcherConfig, profileA.watcherConfig);
         }
     }
 
@@ -122,12 +122,14 @@ public class Profile implements Comparable<Profile> {
     }
 
     @Override
+    // Higher order means "larger"
     public int compareTo(Profile o) {
         int orderDiff = order - o.order;
         if (orderDiff != 0) {
             return orderDiff;
         } else {
-            return id - o.id;
+            // A later generated profile has a higher priority/order
+            return this.id - o.id;
         }
     }
 }

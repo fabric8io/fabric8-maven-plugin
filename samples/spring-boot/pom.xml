@@ -77,11 +77,14 @@
           </resources>
 
           <generator>
-             <config>
-               <spring-boot>
-                 <color>always</color>
-               </spring-boot>
-             </config>
+            <includes>
+              <include>spring-boot</include>
+            </includes>
+            <config>
+              <spring-boot>
+                <color>always</color>
+              </spring-boot>
+            </config>
           </generator>
           <enricher>
             <excludes>

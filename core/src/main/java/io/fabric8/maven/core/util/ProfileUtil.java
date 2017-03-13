@@ -74,12 +74,12 @@ public class ProfileUtil {
     /**
      * Find an enricher or generator config, possibly via a profile and merge it with a given configuration.
      *
-     * @param extractor how to extract the config from a profile when found
+     * @param configExtractor how to extract the config from a profile when found
      * @param profile the profile name (can be null, then no profile is used)
      * @param resourceDir resource directory where to lookup the profile (in addition to a classpath lookup)
      * @return the merged configuration which can be empty if no profile is given
      * @param config the provided configuration
-     * @throws MojoExecutionException
+     * @throws IOException
      */
     public static ProcessorConfig blendProfileWithConfiguration(ProcessorConfigurationExtractor configExtractor,
                                                                 String profile,
@@ -88,7 +88,7 @@ public class ProfileUtil {
         // Get specified profile or the default profile
         ProcessorConfig profileConfig = extractProcesssorConfiguration(configExtractor, profile, resourceDir);
 
-        return ProcessorConfig.mergeProcessorConfigs(profileConfig, config);
+        return ProcessorConfig.mergeProcessorConfigs(config, profileConfig);
     }
 
 
@@ -115,7 +115,8 @@ public class ProfileUtil {
                 }
             }
         }
-        Collections.sort(profiles);
+        // "larger" orders are "earlier" in the list
+        Collections.sort(profiles, Collections.<Profile>reverseOrder());
         return mergeProfiles(profiles);
     }
 
