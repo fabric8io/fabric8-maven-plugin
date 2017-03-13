@@ -22,6 +22,4 @@ package io.fabric8.maven.core.util;
 public class Constants {
     public static final String RESOURCE_SOURCE_URL_ANNOTATION = "maven.fabric8.io/source-url";
     public static final String RESOURCE_APP_CATALOG_ANNOTATION = "maven.fabric8.io/app-catalog";
-    public static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
-    public static final String WILDFLY_SWARM_PLUGIN = "org.wildfly.swarm:wildfly-swarm-plugin";
 }
