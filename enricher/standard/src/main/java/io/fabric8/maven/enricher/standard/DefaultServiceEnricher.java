@@ -349,7 +349,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
                 // Temporary warning with hint what todo
                 log.warn("Implicit service port mapping to port 80 has been disabled for the used port %d. " +
                          "To get back the old behaviour either use set the config port = 80 or use legacyPortMapping = true. " +
-                         "See file:///Users/roland/Development/fabric8/fabric8-maven-plugin/doc/target/generated-docs/index.html#fmp-service for details.", podPort);
+                         "See https://maven.fabric8.io/#fmp-service for details.", podPort);
             }
         }
 
