@@ -140,8 +140,8 @@ The following configuration parameters can be used to influence the behaviour of
 | `tcp`
 
 | *legacyPortMapping*
-| If this mapping options is set to `true` then a pod exports ports 8080 or 9090 is mapped to a service port 80. This is deprecated, but switched on for now for backwards compatibility. In a future version of f-m-p this automatich portmapping will be switched off
-| `true`
+| If this mapping options is set to `true` then a pod exports ports 8080 or 9090 is mapped to a service port 80. This is deprecated and switched off. You can switch on to get back the old behaviour or, even better, use `port` for setting the service port directly.
+| `false`
 |===
 
 [[fmp-image]]

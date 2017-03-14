@@ -79,7 +79,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
         port,
 
         // Legacy mapping from port 8080 / 9090 to 80
-        legacyPortMapping {{ d = "true"; }},
+        legacyPortMapping {{ d = "false"; }},
 
         // protocol to use
         protocol {{ d = "tcp"; }};
@@ -341,11 +341,16 @@ public class DefaultServiceEnricher extends BaseEnricher {
         }
 
         // The legacy mapping maps 8080 -> 80 and 9090 -> 90 which will vanish
-        if ("true".equals(getConfig(Config.legacyPortMapping)) &&
-            !portNumbers.contains("80") &&
-            !portNumbers.contains("80/tcp") &&
+        if (!(portNumbers.contains("80") || portNumbers.contains("80/tcp")) &&
             (podPort == 8080 || podPort == 9090)) {
-            return 80;
+            if ("true".equals(getConfig(Config.legacyPortMapping))) {
+                return 80;
+            } else {
+                // Temporary warning with hint what todo
+                log.warn("Implicit service port mapping to port 80 has been disabled for the used port %d. " +
+                         "To get back the old behaviour either use set the config port = 80 or use legacyPortMapping = true. " +
+                         "See file:///Users/roland/Development/fabric8/fabric8-maven-plugin/doc/target/generated-docs/index.html#fmp-service for details.", podPort);
+            }
         }
 
         // service port == pod port
