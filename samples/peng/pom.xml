@@ -37,7 +37,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>1.8</java.version>
     <version.spring-boot>1.3.3.RELEASE</version.spring-boot>
-    <dmp.from>java:8-jre-alpine</dmp.from>
+    <dmp.from>java:8-jre-centos</dmp.from>
   </properties>
 
   <dependencies>

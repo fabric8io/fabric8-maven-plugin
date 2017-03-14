@@ -120,7 +120,7 @@ This minimal but full working example `pom.xml` shows how a simple spring boot a
 
 This setup make some opinionated decisions for you:
 
-* As base image https://github.com/fabric8io-images/java/tree/master/images/alpine/openjdk8/jdk[fabric8/java-alpine-openjdk8-jdk] is chosen which enables https://www.jolokia.org[Jolokia] and https://github.com/prometheus/jmx_exporter[jmx_exporter]. It also comes with a sophisticated https://github.com/fabric8io-images/run-java-sh[startup script].
+* As base image https://github.com/fabric8io-images/java/tree/master/images/centos/openjdk8/jdk[fabric8/java-centos-openjdk8-jdk] is chosen which enables https://www.jolokia.org[Jolokia] and https://github.com/prometheus/jmx_exporter[jmx_exporter]. It also comes with a sophisticated https://github.com/fabric8io-images/run-java-sh[startup script].
 * It will create a Kubernetes http://kubernetes.io/docs/user-guide/deployments/[Deployment] and a http://kubernetes.io/docs/user-guide/services/[Service] as resource objects
 * It exports port 8080 as the application service port (and 8778 and 9779 for Jolokia and jmx_exporter access, respectively)
 

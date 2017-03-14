@@ -22,7 +22,7 @@ It will use the following base image by default, but as explained <<generator-op
 | | Docker Build | S2I Build | ImageStream
 
 | *Community*
-| `fabric8/java-alpine-openjdk8-jdk`
+| `fabric8/java-centos-openjdk8-jdk`
 | `fabric8/s2i-java`
 | `fabric8-java`
 
