@@ -10,6 +10,10 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
+### 3.3.0
+
+* The base image for Docker based builds (fabric8.mode == Kubernetes) has changed from fabric8/java-alpine-opendjdk8-jdk to fabric8/java-jboss-openjdk8-jdk which is CentOS based. Reason for this were issues with DNS lookups on Alpine. As before you always can change the base image with `-Dfabric8.from`. 
+
 ### 3.2.1 (2016-11-17)
 
 * Changed the base generator configuration `<enabled>` to `<add>` as it means to add this generator's image when it applies in contrast to only run when there is no other image configuration yet.
