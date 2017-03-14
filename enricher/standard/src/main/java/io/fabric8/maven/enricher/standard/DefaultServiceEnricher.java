@@ -54,7 +54,11 @@ import io.fabric8.ianaservicehelper.Helper;
  */
 public class DefaultServiceEnricher extends BaseEnricher {
 
-    ServiceHandler serviceHandler;
+    private ServiceHandler serviceHandler;
+
+    private static final Pattern PORT_PROTOCOL_PATTERN =
+        Pattern.compile("^(\\d+)(/(?:tcp|udp))?$", Pattern.CASE_INSENSITIVE);
+
 
     // Available configuration keys
     private enum Config implements Configs.Key {
@@ -243,7 +247,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
 
     private List<ServicePort> ensureAtLeastOnePort(List<ServicePort> ports, Service defaultService) {
         List<ServicePort> defaultPorts = defaultService.getSpec().getPorts();
-        if (!ports.isEmpty() || defaultPorts == null || defaultPorts.size() == 0) {
+        if (!ports.isEmpty() || defaultPorts == null || defaultPorts.isEmpty()) {
             return ports;
         }
         return Collections.singletonList(defaultPorts.get(0));
@@ -265,9 +269,6 @@ public class DefaultServiceEnricher extends BaseEnricher {
     }
 
     // Examine images for build configuration and extract all ports
-    private static final Pattern PORT_PROTOCOL_PATTERN =
-        Pattern.compile("^(\\d+)(/(?:tcp|udp))?$", Pattern.CASE_INSENSITIVE);
-
     private List<ServiceConfig.Port> extractPortsFromImageConfigurations(List<ImageConfiguration> images) {
         List<ServiceConfig.Port> ret = new ArrayList<>();
         boolean firstPort = true;
@@ -315,7 +316,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
                        );
             }
         }
-        return ret.size() > 0 ? ret : null;
+        return ret.isEmpty()? null : ret;
     }
 
     private ServiceProtocol getProtocol(String imageProtocol) {
@@ -340,12 +341,11 @@ public class DefaultServiceEnricher extends BaseEnricher {
         }
 
         // The legacy mapping maps 8080 -> 80 and 9090 -> 90 which will vanish
-        if ("true".equals(getConfig(Config.legacyPortMapping))) {
-            if (!portNumbers.contains("80") && !portNumbers.contains("80/tcp")) {
-                if (podPort == 8080 || podPort == 9090) {
-                    return 80;
-                }
-            }
+        if ("true".equals(getConfig(Config.legacyPortMapping)) &&
+            !portNumbers.contains("80") &&
+            !portNumbers.contains("80/tcp") &&
+            (podPort == 8080 || podPort == 9090)) {
+            return 80;
         }
 
         // service port == pod port
@@ -392,12 +392,13 @@ public class DefaultServiceEnricher extends BaseEnricher {
 
         try {
             Set<String> serviceNames = Helper.serviceNames(port, serviceProtocol.toString().toLowerCase());
-            if (serviceNames != null && serviceNames.size() > 0) {
+            if (serviceNames != null && !serviceNames.isEmpty()) {
                 return serviceNames.iterator().next();
             } else {
                 return null;
             }
         } catch (IOException e) {
+            log.warn("Cannot lookup port %d/%s in IANA database: %s", port, serviceProtocol.toString().toLowerCase(), e.getMessage());
             return null;
         }
     }
