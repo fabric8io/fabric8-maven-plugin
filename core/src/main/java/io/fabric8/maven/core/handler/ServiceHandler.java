@@ -39,8 +39,7 @@ import io.fabric8.utils.Strings;
 public class ServiceHandler {
 
     public Service getService(ServiceConfig service) {
-        List<Service> ret = getServices(Collections.singletonList(service));
-        return ret.size() > 0 ? ret.get(0) : null;
+        return getServices(Collections.singletonList(service)).get(0);
     }
 
     public List<Service> getServices(List<ServiceConfig> services) {
@@ -56,8 +55,7 @@ public class ServiceHandler {
                   .withLabels(getLabels(service))
                 .endMetadata();
 
-            ServiceFluent.SpecNested<ServiceBuilder> serviceSpecBuilder =
-                serviceBuilder.withNewSpec();
+            ServiceFluent.SpecNested<ServiceBuilder> serviceSpecBuilder = serviceBuilder.withNewSpec();
 
             List<ServicePort> servicePorts = new ArrayList<>();
 
