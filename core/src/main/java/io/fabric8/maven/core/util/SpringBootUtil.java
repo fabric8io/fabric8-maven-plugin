@@ -43,13 +43,23 @@ public class SpringBootUtil {
      * Returns the spring boot configuration (supports `application.properties` and `application.yml`)
      * or an empty properties object if not found
      */
-    public static Properties getSpringBootApplicationProperties(MavenProject project) {
+    public static Properties getApplicationProperties(MavenProject project,String...activeProfiles) {
         URLClassLoader compileClassLoader = MavenUtil.getCompileClassLoader(project);
         URL ymlResource = compileClassLoader.findResource("application.yml");
         URL propertiesResource = compileClassLoader.findResource("application.properties");
 
         Properties props = getPropertiesFromYamlResource(ymlResource);
         props.putAll(getPropertiesResource(propertiesResource));
+
+        if(activeProfiles!=null){
+            for (String profile: activeProfiles){
+                ymlResource = compileClassLoader.findResource("application-"+profile+".yml");
+                Properties props2 = getPropertiesFromYamlResource(ymlResource);
+                propertiesResource = compileClassLoader.findResource("application-"+profile+".properties");
+                props2.putAll(getPropertiesResource(propertiesResource));
+                props.putAll(props2);
+            }
+        }
         return props;
     }
 
@@ -157,5 +167,6 @@ public class SpringBootUtil {
             }
         }
     }
+
 
 }
