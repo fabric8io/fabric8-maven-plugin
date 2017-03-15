@@ -134,13 +134,11 @@ public class SpringBootGenerator extends JavaExecGenerator {
     protected List<String> extractPorts() {
         List<String> answer = new ArrayList<>();
 
-        String[] activeBootProfiles = new String[0];
+        String strActiveProfiles = getConfig(activeProfiles);
 
-        if(getConfig(activeProfiles)!= null) {
-            activeBootProfiles = StringUtils.split(getConfig(activeProfiles), ",");
-        }
+        Properties properties = SpringBootUtil.getApplicationProperties(getContext().getProject(),
+                SpringBootUtil.getActiveProfiles(strActiveProfiles));
 
-        Properties properties = SpringBootUtil.getApplicationProperties(this.getProject(),activeBootProfiles);
         //TODO SK - do we need to handle the parsin of port properties like ${PORT:1234}
         String port = properties.getProperty(SpringBootProperties.SERVER_PORT, DEFAULT_SERVER_PORT);
 
@@ -153,7 +151,10 @@ public class SpringBootGenerator extends JavaExecGenerator {
     // =============================================================================
 
     private void ensureSpringDevToolSecretToken() throws MojoExecutionException {
-        Properties properties = SpringBootUtil.getApplicationProperties(getProject());
+        String strActiveProfiles = getConfig(activeProfiles);
+
+        Properties properties = SpringBootUtil.getApplicationProperties(getContext().getProject(),
+                SpringBootUtil.getActiveProfiles(strActiveProfiles));
         String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET);
         if (Strings.isNullOrEmpty(remoteSecret)) {
             addSecretTokenToApplicationProperties();

@@ -1,0 +1,29 @@
+spring:
+  profiles:
+    active: dev,qa
+
+---
+
+spring:
+  profiles: dev
+server:
+  port: 8080
+my:
+  name: "Hello"
+
+---
+
+spring:
+  profiles: qa
+server:
+  port: 9090
+their:
+  name: "Hola!"
+
+
+---
+
+spring:
+  profiles: prod
+server:
+  port: 9080
