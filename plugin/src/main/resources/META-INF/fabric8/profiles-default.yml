@@ -39,6 +39,8 @@
     - f8-maven-issue-mgmt
     # Dependencies shouldn't be enriched anymore, therefor it's last in the list
     - fmp-dependency
+    # lets allow namespaces to be defaulted on dependencies
+    - f8-namespace
 
   generator:
     # The order given in "includes" is the order in which generators are called

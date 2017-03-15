@@ -42,6 +42,7 @@ import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.util.InitContainerHandler;
+import io.fabric8.maven.enricher.fabric8.NamespaceEnricher;
 import io.fabric8.maven.enricher.standard.VolumePermissionEnricher;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.converter.*;
@@ -345,6 +346,20 @@ public class ResourceMojo extends AbstractResourceMojo {
 
         // Manager for calling enrichers.
         openshiftDependencyResources = new OpenShiftDependencyResources(log);
+        EnricherContext.Builder ctxBuilder = createEnricherContextBuilder();
+        EnricherManager enricherManager = new EnricherManager(resources, ctxBuilder.build());
+
+        // Generate all resources from the main resource diretory, configuration and enrich them accordingly
+        KubernetesListBuilder builder = generateAppResources(images, enricherManager);
+
+        // Add resources found in subdirectories of resourceDir, with a certain profile
+        // applied
+        addProfiledResourcesFromSubirectories(builder, resourceDir, enricherManager);
+
+        return builder.build();
+    }
+
+    private EnricherContext.Builder createEnricherContextBuilder() throws IOException {
         EnricherContext.Builder ctxBuilder = new EnricherContext.Builder()
             .project(project)
             .session(session)
@@ -358,16 +373,7 @@ public class ResourceMojo extends AbstractResourceMojo {
         if (resources != null) {
             ctxBuilder.namespace(resources.getNamespace());
         }
-        EnricherManager enricherManager = new EnricherManager(resources, ctxBuilder.build());
-
-        // Generate all resources from the main resource diretory, configuration and enrich them accordingly
-        KubernetesListBuilder builder = generateAppResources(images, enricherManager);
-
-        // Add resources found in subdirectories of resourceDir, with a certain profile
-        // applied
-        addProfiledResourcesFromSubirectories(builder, resourceDir, enricherManager);
-
-        return builder.build();
+        return ctxBuilder;
     }
 
     private void addProfiledResourcesFromSubirectories(KubernetesListBuilder builder, File resourceDir, EnricherManager enricherManager) throws IOException, MojoExecutionException {
@@ -559,6 +565,26 @@ public class ResourceMojo extends AbstractResourceMojo {
         // lets check if there's an OpenShift resource of this name already from a dependency...
         HasMetadata dependencyResource = openshiftDependencyResources.convertKubernetesItemToOpenShift(item);
         if (dependencyResource != null) {
+            // this resource won't have been processed by the NamespaceEnricher yet so lets enrich it
+            try {
+                EnricherContext.Builder ctxBuilder = createEnricherContextBuilder();
+                EnricherContext enricherContext = ctxBuilder.build();
+
+                // TODO should we could replace this with a custom profile for namespace enricher?
+                NamespaceEnricher enricher = new NamespaceEnricher(enricherContext);
+
+                KubernetesList list = new KubernetesList();
+                list.setItems(new ArrayList<>(Arrays.asList(dependencyResource)));
+                KubernetesListBuilder builder = new KubernetesListBuilder(list);
+                enricher.adapt(builder);
+                KubernetesList enrichedList = builder.build();
+                List<HasMetadata> items = enrichedList.getItems();
+                if (!items.isEmpty()) {
+                    return items.get(0);
+                }
+            } catch (IOException e) {
+                log.warn("Failed to enrich " + KubernetesHelper.getKind(item) + " " + KubernetesHelper.getName(item) + ". " + e, e);
+            }
             return dependencyResource;
         }
         // TODO-F8SPEC: ^^^^^ (end)
