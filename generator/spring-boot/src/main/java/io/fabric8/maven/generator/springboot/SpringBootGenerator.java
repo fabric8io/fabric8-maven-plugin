@@ -162,7 +162,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
         // Using Apache commons rename, because renameTo has issues across file systems
         FileUtils.moveFile(target, tmpZip);
 
-        String fullPath = "/BOOT-INF/lib/" + resourcePath.getFileName().toString();
+        String fullPath = "BOOT-INF/lib/" + resourcePath.getFileName().toString();
         boolean devToolsPresent = false;
 
         byte[] buffer = new byte[8192];
