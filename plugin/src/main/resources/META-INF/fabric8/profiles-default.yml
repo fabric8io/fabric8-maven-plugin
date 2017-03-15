@@ -67,13 +67,24 @@
     - fmp-service
 # Only deployment & service
 - name: minimal
+  generator:
+    # The order given in "includes" is the order in which generators are called
+    includes:
+    - spring-boot
+    - wildfly-swarm
+    - karaf
+    - vertx
+    - java-exec
+    - webapp
   enricher:
     includes:
     - fmp-name
     - fmp-controller
     - fmp-service
     - fmp-image
-# Only dependencies, no build, use other resources raw
+    - fmp-project
+    - fmp-debug
+  # Only dependencies, no build, use other resources raw
 - name: aggregate
   generator:
     includes: []
