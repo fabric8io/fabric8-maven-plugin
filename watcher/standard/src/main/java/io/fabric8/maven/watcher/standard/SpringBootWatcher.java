@@ -39,7 +39,6 @@ import io.fabric8.maven.watcher.api.WatcherContext;
 import io.fabric8.utils.Closeables;
 import io.fabric8.utils.PropertiesHelper;
 import io.fabric8.utils.Strings;
-
 import org.apache.maven.project.MavenProject;
 
 import static io.fabric8.maven.core.util.SpringBootConfigurationHelper.DEV_TOOLS_REMOTE_SECRET;
@@ -54,9 +53,15 @@ public class SpringBootWatcher extends BaseWatcher {
     private enum Config implements Configs.Key {
 
         // The time to wait for the service to be exposed (by the expose controller)
-        serviceUrlWaitTimeSeconds {{ d = "5"; }};
+        serviceUrlWaitTimeSeconds {{
+            d = "5";
+        }};
 
-        public String def() { return d; } protected String d;
+        public String def() {
+            return d;
+        }
+
+        protected String d;
     }
 
     public SpringBootWatcher(WatcherContext watcherContext) {
@@ -99,7 +104,8 @@ public class SpringBootWatcher extends BaseWatcher {
             return null;
         }
 
-        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getContext().getProject());
+        String strActiveProfiles = getContext().getConfig().getConfig("spring-boot", "activeProfiles");
+        Properties properties = SpringBootUtil.getApplicationProperties(getContext().getProject(), strActiveProfiles);
         SpringBootConfigurationHelper propertyHelper = new SpringBootConfigurationHelper(SpringBootUtil.getSpringBootVersion(getContext().getProject()));
 
         PortForwardService portForwardService = getContext().getFabric8ServiceHub().getPortForwardService();
@@ -165,7 +171,9 @@ public class SpringBootWatcher extends BaseWatcher {
     private void runRemoteSpringApplication(String url) {
         log.info("Running RemoteSpringApplication against endpoint: " + url);
 
-        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getContext().getProject());
+        String strActiveProfiles = getContext().getConfig().getConfig("spring-boot", "activeProfiles");
+        Properties properties = SpringBootUtil.getApplicationProperties(getContext().getProject(), strActiveProfiles);
+
         String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET, System.getProperty(DEV_TOOLS_REMOTE_SECRET));
         if (Strings.isNullOrBlank(remoteSecret)) {
             log.warn("There is no `%s` property defined in your src/main/resources/application.properties. Please add one!", DEV_TOOLS_REMOTE_SECRET);

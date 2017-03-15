@@ -16,8 +16,6 @@
 
 package io.fabric8.maven.enricher.fabric8;
 
-import java.util.Properties;
-
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.maven.core.util.Configs;
@@ -29,6 +27,7 @@ import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.utils.PropertiesHelper;
 import io.fabric8.utils.Strings;
 
+import java.util.Properties;
 
 /**
  * Enriches spring-boot containers with health checks if the actuator module is present.
@@ -79,7 +78,11 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
     protected Probe discoverSpringBootHealthCheck(Integer initialDelay, Integer period, Integer timeout) {
         try {
             if (MavenUtil.hasAllClasses(this.getProject(), REQUIRED_CLASSES)) {
-                Properties properties = SpringBootUtil.getSpringBootApplicationProperties(this.getProject());
+                String strActiveProfiles = getContext().getConfig().getConfig("spring-boot", "activeProfiles");
+
+                Properties properties = SpringBootUtil.getApplicationProperties(getProject(),
+                        strActiveProfiles);
+
                 return buildProbe(properties, initialDelay, period, timeout);
             }
         } catch (Exception ex) {
