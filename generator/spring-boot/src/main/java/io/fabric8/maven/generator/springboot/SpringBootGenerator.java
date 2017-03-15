@@ -117,7 +117,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
         //Spring boot active profiles
         String strActiveProfiles  = getConfig(activeProfiles);
         if(strActiveProfiles!=null) {
-            opts.add("-Dspring.profiles.active=\""+strActiveProfiles+"\"");
+            opts.add("-Dspring.profiles.active="+strActiveProfiles);
         }
         return opts;
     }

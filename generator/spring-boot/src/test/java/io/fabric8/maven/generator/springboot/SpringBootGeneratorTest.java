@@ -99,7 +99,7 @@ public class SpringBootGeneratorTest {
         Map<String, String> env = configs.get(0).getBuildConfiguration().getEnv();
         String javaOptions = env.get("JAVA_OPTIONS");
         assertNotNull(javaOptions);
-        assertTrue(javaOptions.equals("-Dspring.profiles.active=\"dev,qa\""));
+        assertTrue(javaOptions.equals("-Dspring.profiles.active=dev,qa"));
     }
 
 
