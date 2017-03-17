@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.2.28,</span>
-<span id="revdate">2017-03-15</span>
+<span id="revdate">2017-03-17</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -870,7 +870,7 @@ This allows for type safe configuration with IDE support, but only a subset of p
 <div class="ulist">
 <ul>
 <li>
-<p>As base image <a href="https://github.com/fabric8io-images/java/tree/master/images/alpine/openjdk8/jdk">fabric8/java-alpine-openjdk8-jdk</a> is chosen which enables <a href="https://www.jolokia.org">Jolokia</a> and <a href="https://github.com/prometheus/jmx_exporter">jmx_exporter</a>. It also comes with a sophisticated <a href="https://github.com/fabric8io-images/run-java-sh">startup script</a>.</p>
+<p>As base image <a href="https://github.com/fabric8io-images/java/tree/master/images/jboss/openjdk8/jdk">fabric8/java-jboss-openjdk8-jdk</a> is chosen which enables <a href="https://www.jolokia.org">Jolokia</a> and <a href="https://github.com/prometheus/jmx_exporter">jmx_exporter</a>. It also comes with a sophisticated <a href="https://github.com/fabric8io-images/run-java-sh">startup script</a>.</p>
 </li>
 <li>
 <p>It will create a Kubernetes <a href="http://kubernetes.io/docs/user-guide/deployments/">Deployment</a> and a <a href="http://kubernetes.io/docs/user-guide/services/">Service</a> as resource objects</p>
@@ -4010,7 +4010,7 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Community</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8/java-alpine-openjdk8-jdk</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8/java-jboss-openjdk8-jdk</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8/s2i-java</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8-java</code></p></td>
 </tr>
@@ -5962,7 +5962,7 @@ mvn fabric8:migrate
 <p>The above will generate an environment variable <code>$FOO</code> of value `bar</p>
 </div>
 <div class="paragraph">
-<p>For a full list of the environments used in java base images <a href="https://hub.docker.com/r/fabric8/java-alpine-openjdk8-jdk">see this list</a></p>
+<p>For a full list of the environments used in java base images <a href="https://hub.docker.com/r/fabric8/java-jboss-openjdk8-jdk">see this list</a></p>
 </div>
 </div>
 <div class="sect3">
@@ -5971,7 +5971,7 @@ mvn fabric8:migrate
 <p>The simplest way is to add system properties to the <code>JAVA_OPTIONS</code> environment variable.</p>
 </div>
 <div class="paragraph">
-<p>For a full list of the environments used in java base images <a href="https://hub.docker.com/r/fabric8/java-alpine-openjdk8-jdk">see this list</a></p>
+<p>For a full list of the environments used in java base images <a href="https://hub.docker.com/r/fabric8/java-jboss-openjdk8-jdk">see this list</a></p>
 </div>
 <div class="paragraph">
 <p>e.g. add a <code>src/main/fabric8/deployment.yml</code> file to your project containing something like:</p>
@@ -6084,7 +6084,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.28<br>
-Last updated 2017-03-15 19:37:35 UTC
+Last updated 2017-03-17 09:45:43 UTC
 </div>
 </div>
 </body>
