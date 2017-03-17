@@ -210,6 +210,7 @@ public class KubernetesResourceUtil {
             "cm", "ConfigMap",
             "configmap", "ConfigMap",
             "cronjob", "CronJob",
+            "cr", "ClusterRole",
             "crole", "ClusterRole",
             "clusterrole", "ClusterRole",
             "crb", "ClusterRoleBinding",
