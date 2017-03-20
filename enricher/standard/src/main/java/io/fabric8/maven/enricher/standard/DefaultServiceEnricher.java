@@ -346,7 +346,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
             if ("true".equals(getConfig(Config.legacyPortMapping))) {
                 return 80;
             } else {
-                // Temporary warning with hint what todo
+                // Temporary warning with hint what to do
                 log.warn("Implicit service port mapping to port 80 has been disabled for the used port %d. " +
                          "To get back the old behaviour either use set the config port = 80 or use legacyPortMapping = true. " +
                          "See https://maven.fabric8.io/#fmp-service for details.", podPort);
@@ -360,14 +360,19 @@ public class DefaultServiceEnricher extends BaseEnricher {
     private String formatPortsAsList(List<ServicePort> ports)  {
         List<String> p = new ArrayList<>();
         for (ServicePort port : ports) {
-            IntOrString targetPort = port.getTargetPort();
-            String val = targetPort.getStrVal();
-            if (val == null) {
-                val = Integer.toString(targetPort.getIntVal());
-            }
-            p.add(val);
+            String targetPort = getPortValue(port.getTargetPort());
+            String servicePort= port.getPort() != null ? Integer.toString(port.getPort()) : targetPort;
+            p.add(targetPort.equals(servicePort) ? targetPort : servicePort + ":" + targetPort);
         }
         return StringUtils.join(p.iterator(), ",");
+    }
+
+    private String getPortValue(IntOrString port) {
+        String val = port.getStrVal();
+        if (val == null) {
+            val = Integer.toString(port.getIntVal());
+        }
+        return val;
     }
 
     private String getDefaultServiceName(Service defaultService) {
