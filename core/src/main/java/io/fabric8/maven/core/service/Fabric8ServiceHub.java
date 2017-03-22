@@ -34,7 +34,7 @@ public class Fabric8ServiceHub {
 
     public Fabric8ServiceHub(ClusterAccess clusterAccess, PlatformMode mode, Logger log, ServiceHub dockerServiceHub) {
         PlatformMode resolvedMode = clusterAccess.resolvePlatformMode(mode, log);
-        KubernetesClient client = clusterAccess.createDefaultClient(log);
+        KubernetesClient client = clusterAccess.createDefaultClient(log, resolvedMode);
 
         // Creating platform-dependent services
         if (resolvedMode == PlatformMode.kubernetes) {
