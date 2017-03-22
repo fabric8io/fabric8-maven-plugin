@@ -22,7 +22,7 @@
     <!-- copy war archive -->
     <file>
       <source>${project.build.directory}/${project.artifactId}.war</source>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory>.</outputDirectory>
       <fileMode>0644</fileMode>
     </file>
   </files>
