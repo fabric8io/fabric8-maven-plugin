@@ -29,6 +29,7 @@ import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.util.InitContainerHandler;
+import io.fabric8.utils.Strings;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -50,7 +51,8 @@ public class VolumePermissionEnricher extends BaseEnricher {
     private final InitContainerHandler initContainerHandler;
 
     enum Config implements Configs.Key {
-        permission {{ d = "777"; }};
+        permission {{ d = "777"; }},
+        storageClass {{ d = ""; }};
 
         public String def() { return d; } protected String d;
     }
@@ -175,8 +177,9 @@ public class VolumePermissionEnricher extends BaseEnricher {
                 if (pvcBuilder.buildMetadata() == null) {
                     pvcBuilder.withNewMetadata().endMetadata();
                 }
-                if (!pvcBuilder.buildMetadata().getAnnotations().containsKey(VOLUME_STORAGE_CLASS_ANNOTATION)) {
-                    pvcBuilder.editMetadata().addToAnnotations(VOLUME_STORAGE_CLASS_ANNOTATION, "standard").endMetadata();
+                String storageClass = getConfig(Config.storageClass);
+                if (Strings.isNotBlank(storageClass) && !pvcBuilder.buildMetadata().getAnnotations().containsKey(VOLUME_STORAGE_CLASS_ANNOTATION)) {
+                    pvcBuilder.editMetadata().addToAnnotations(VOLUME_STORAGE_CLASS_ANNOTATION, storageClass).endMetadata();
                 }
             }
         });
