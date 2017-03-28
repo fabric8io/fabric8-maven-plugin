@@ -240,7 +240,10 @@ public class OpenshiftBuildService implements BuildService {
     }
 
     private void applyResourceObjects(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder) throws Exception {
-        config.getEnricherTask().execute(builder);
+        if (config.getEnricherTask() != null) {
+            config.getEnricherTask().execute(builder);
+        }
+
         if (builder.hasItems()) {
             KubernetesList k8sList = builder.build();
             client.lists().create(k8sList);
