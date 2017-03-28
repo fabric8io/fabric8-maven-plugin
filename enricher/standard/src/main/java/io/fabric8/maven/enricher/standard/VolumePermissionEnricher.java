@@ -52,7 +52,7 @@ public class VolumePermissionEnricher extends BaseEnricher {
 
     enum Config implements Configs.Key {
         permission {{ d = "777"; }},
-        defaultStorageClass {{ d = ""; }};
+        defaultStorageClass {{ d = null; }};
 
         public String def() { return d; } protected String d;
     }
