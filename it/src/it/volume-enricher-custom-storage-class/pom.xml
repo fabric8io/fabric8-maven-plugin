@@ -36,7 +36,7 @@
             <enricher>
              <config>
                <fmp-volume-permission>
-                 <storageClass>cheese</storageClass>
+                 <defaultStorageClass>cheese</defaultStorageClass>
                </fmp-volume-permission>
              </config>
             </enricher>

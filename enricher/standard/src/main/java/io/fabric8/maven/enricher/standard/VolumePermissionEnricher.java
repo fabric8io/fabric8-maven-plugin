@@ -52,7 +52,7 @@ public class VolumePermissionEnricher extends BaseEnricher {
 
     enum Config implements Configs.Key {
         permission {{ d = "777"; }},
-        storageClass {{ d = ""; }};
+        defaultStorageClass {{ d = ""; }};
 
         public String def() { return d; } protected String d;
     }
@@ -177,7 +177,7 @@ public class VolumePermissionEnricher extends BaseEnricher {
                 if (pvcBuilder.buildMetadata() == null) {
                     pvcBuilder.withNewMetadata().endMetadata();
                 }
-                String storageClass = getConfig(Config.storageClass);
+                String storageClass = getConfig(Config.defaultStorageClass);
                 if (Strings.isNotBlank(storageClass) && !pvcBuilder.buildMetadata().getAnnotations().containsKey(VOLUME_STORAGE_CLASS_ANNOTATION)) {
                     pvcBuilder.editMetadata().addToAnnotations(VOLUME_STORAGE_CLASS_ANNOTATION, storageClass).endMetadata();
                 }
