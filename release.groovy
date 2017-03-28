@@ -46,6 +46,7 @@ def updateDownstreamDependencies(stagedProject) {
     propertyName = 'fabric8.maven.plugin.version'
     projects = [
             'fabric8io/fabric8-maven-dependencies',
+            'fabric8io/fabric8-team-components',
             'fabric8io/fabric8-devops',
             'fabric8io/fabric8-platform',
             'fabric8io/fabric8-ipaas',
