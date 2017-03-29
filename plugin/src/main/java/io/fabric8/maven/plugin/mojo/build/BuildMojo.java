@@ -200,7 +200,13 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         }
 
         // Build the fabric8 service hub
-        fabric8ServiceHub = new Fabric8ServiceHub(clusterAccess, mode, log, hub);
+        fabric8ServiceHub = new Fabric8ServiceHub.Builder()
+                .log(log)
+                .clusterAccess(clusterAccess)
+                .platformMode(mode)
+                .dockerServiceHub(hub)
+                .buildServiceConfig(getBuildServiceConfig())
+                .build();
 
         super.executeInternal(hub);
     }
@@ -220,7 +226,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             // TODO need to refactor d-m-p to avoid this call
             EnvUtil.storeTimestamp(this.getBuildTimestampFile(), this.getBuildTimestamp());
 
-            fabric8ServiceHub.getBuildService().build(getBuildServiceConfig(), imageConfig);
+            fabric8ServiceHub.getBuildService().build(imageConfig);
 
         } catch (Exception ex) {
             throw new MojoExecutionException("Failed to execute the build", ex);

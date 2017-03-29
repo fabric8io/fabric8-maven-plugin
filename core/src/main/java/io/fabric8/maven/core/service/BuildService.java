@@ -31,10 +31,9 @@ public interface BuildService {
     /**
      * Builds the given image using the specified configuration.
      *
-     * @param config the build configuration
      * @param imageConfig the image to build
      */
-    void build(BuildServiceConfig config, ImageConfiguration imageConfig) throws Fabric8ServiceException;
+    void build(ImageConfiguration imageConfig) throws Fabric8ServiceException;
 
 
     /**
