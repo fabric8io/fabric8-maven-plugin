@@ -60,7 +60,7 @@ public class Fabric8ServiceHub {
     private Fabric8ServiceHub() {
     }
 
-    private void build() {
+    private void init() {
         Objects.requireNonNull(clusterAccess, "clusterAccess");
         Objects.requireNonNull(log, "log");
 
@@ -146,7 +146,7 @@ public class Fabric8ServiceHub {
         }
 
         public Fabric8ServiceHub build() {
-            hub.build();
+            hub.init();
             return hub;
         }
     }
