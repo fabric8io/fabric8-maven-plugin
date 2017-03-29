@@ -60,8 +60,8 @@ public class DockerBuildServiceTest {
                         .build()
                 ).build();
 
-        DockerBuildService service = new DockerBuildService(hub);
-        service.build(config, image);
+        DockerBuildService service = new DockerBuildService(hub, config);
+        service.build(image);
 
         new FullVerificationsInOrder() {{
             buildService.buildImage(image, context);

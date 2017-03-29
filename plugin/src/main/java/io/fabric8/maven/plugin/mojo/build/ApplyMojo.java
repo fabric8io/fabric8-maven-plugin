@@ -16,26 +16,26 @@
 package io.fabric8.maven.plugin.mojo.build;
 
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import java.io.File;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
+
 import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.extensions.Templates;
-import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodCondition;
-import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPath;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPathBuilder;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressRuleValue;
@@ -45,27 +45,14 @@ import io.fabric8.kubernetes.api.model.extensions.IngressBuilder;
 import io.fabric8.kubernetes.api.model.extensions.IngressList;
 import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import io.fabric8.kubernetes.api.model.extensions.IngressSpec;
-import io.fabric8.kubernetes.api.model.LabelSelector;
-import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
-import io.fabric8.kubernetes.api.model.LabelSelectorRequirement;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.kubernetes.client.dsl.Scaleable;
-import io.fabric8.kubernetes.internal.HasMetadataComparator;
 import io.fabric8.maven.core.access.ClusterAccess;
+import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
-import io.fabric8.maven.core.util.ProcessUtil;
-import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
-import io.fabric8.openshift.api.model.DeploymentConfig;
-import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteList;
 import io.fabric8.openshift.api.model.RouteSpec;
@@ -76,27 +63,18 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Strings;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
-import java.io.File;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
-
 import static io.fabric8.kubernetes.api.KubernetesHelper.createIntOrString;
-import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getLabels;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateAnnotations;
@@ -439,8 +417,9 @@ public class ApplyMojo extends AbstractFabric8Mojo {
 
         File file = null;
         try {
-            file = getKubeCtlExecutable(controller);
-        } catch (MojoExecutionException e) {
+            Fabric8ServiceHub hub = getFabric8ServiceHub();
+            file = hub.getClientToolsService().getKubeCtlExecutable(controller);
+        } catch (Exception e) {
             log.warn("%s", e.getMessage());
         }
         if (file != null) {
@@ -479,6 +458,14 @@ public class ApplyMojo extends AbstractFabric8Mojo {
                 }
             }
         }
+    }
+
+    protected Fabric8ServiceHub.Builder getFabric8ServiceHubBuilder() {
+        return new Fabric8ServiceHub.Builder().log(log).clusterAccess(clusterAccess);
+    }
+
+    protected Fabric8ServiceHub getFabric8ServiceHub() {
+        return getFabric8ServiceHubBuilder().build();
     }
 
     protected String getExternalServiceURL(Service service) {
@@ -706,25 +693,6 @@ public class ApplyMojo extends AbstractFabric8Mojo {
             project = parent;
         }
         return project;
-    }
-
-    protected File getKubeCtlExecutable(Controller controller) throws MojoExecutionException {
-        OpenShiftClient openShiftClient = controller.getOpenShiftClientOrNull();
-        String command = openShiftClient != null ? "oc" : "kubectl";
-
-        String missingCommandMessage;
-        File file = ProcessUtil.findExecutable(log, command);
-        if (file == null && command.equals("oc")) {
-            file = ProcessUtil.findExecutable(log, command);
-            missingCommandMessage = "commands oc or kubectl";
-        } else {
-            missingCommandMessage = "command " + command;
-        }
-        if (file == null) {
-            throw new MojoExecutionException("Could not find " + missingCommandMessage +
-                    ". Please try running `mvn fabric8:install` to install the necessary binaries and ensure they get added to your $PATH");
-        }
-        return file;
     }
 
 }
