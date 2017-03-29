@@ -65,15 +65,22 @@ public class OpenshiftBuildService implements BuildService {
     private final OpenShiftClient client;
     private final Logger log;
     private ServiceHub dockerServiceHub;
+    private BuildServiceConfig config;
 
-    public OpenshiftBuildService(OpenShiftClient client, Logger log, ServiceHub dockerServiceHub) {
+    public OpenshiftBuildService(OpenShiftClient client, Logger log, ServiceHub dockerServiceHub, BuildServiceConfig config) {
+        Objects.requireNonNull(client, "client");
+        Objects.requireNonNull(log, "log");
+        Objects.requireNonNull(dockerServiceHub, "dockerServiceHub");
+        Objects.requireNonNull(config, "config");
+
         this.client = client;
         this.log = log;
         this.dockerServiceHub = dockerServiceHub;
+        this.config = config;
     }
 
     @Override
-    public void build(BuildServiceConfig config, ImageConfiguration imageConfig) throws Fabric8ServiceException {
+    public void build(ImageConfiguration imageConfig) throws Fabric8ServiceException {
 
         try {
             ImageName imageName = new ImageName(imageConfig.getName());

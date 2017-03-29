@@ -36,6 +36,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
+import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.core.util.DebugConstants;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.ProcessUtil;
@@ -214,24 +215,16 @@ public class DebugMojo extends ApplyMojo {
 
 
     private void portForward(Controller controller, String podName) throws MojoExecutionException {
-        File command = getKubeCtlExecutable(controller);
-        log.info("Port forwarding to port " + remoteDebugPort + " on pod " + podName + " using command " + command);
-
-        List<String> args = new ArrayList<>();
-        args.add("port-forward");
-        args.add(podName);
-        args.add(localDebugPort + ":" + remoteDebugPort);
-
-        String commandLine = command + " " + Strings.join(args, " ");
-        log.verbose("Executing command " + commandLine);
         try {
+            getFabric8ServiceHub().getPortForwardService()
+                    .forwardPort(controller, createExternalProcessLogger("[[B]]port-forward[[B]] "), podName, portToInt(remoteDebugPort, "remoteDebugPort"), portToInt(localDebugPort, "localDebugPort"));
+
             log.info("");
             log.info("Now you can start a Remote debug execution in your IDE by using localhost and the debug port " + localDebugPort);
             log.info("");
 
-            ProcessUtil.runCommand(createExternalProcessLogger("[[B]]" + command.getName() + "[[B]] "), command, args, true);
-        } catch (Exception e) {
-            throw new MojoExecutionException("Failed to start port forwarding with " + commandLine + ": " + e, e);
+        } catch (Fabric8ServiceException e) {
+            throw new MojoExecutionException("Failed to start port forwarding" + e, e);
         }
     }
 
@@ -268,6 +261,15 @@ public class DebugMojo extends ApplyMojo {
             }
         }
         return false;
+    }
+
+    private int portToInt(String port, String name) throws MojoExecutionException {
+        try {
+            int portInt = Integer.parseInt(port);
+            return portInt;
+        } catch (Exception e) {
+            throw new MojoExecutionException("Invalid port value: " + name +"=" + port);
+        }
     }
 
 }

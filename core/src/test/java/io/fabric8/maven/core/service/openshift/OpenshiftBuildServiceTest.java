@@ -108,8 +108,8 @@ public class OpenshiftBuildServiceTest {
         OpenShiftMockServer mockServer = collector.getMockServer();
 
         OpenShiftClient client = mockServer.createOpenShiftClient();
-        OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub);
-        service.build(config, image);
+        OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
+        service.build(image);
 
         // we should add a better way to assert that a certain call has been made
         assertTrue(mockServer.getRequestCount() > 8);
@@ -125,8 +125,8 @@ public class OpenshiftBuildServiceTest {
         OpenShiftMockServer mockServer = collector.getMockServer();
 
         OpenShiftClient client = mockServer.createOpenShiftClient();
-        OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub);
-        service.build(config, image);
+        OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
+        service.build(image);
     }
 
     @Test
@@ -136,8 +136,8 @@ public class OpenshiftBuildServiceTest {
         OpenShiftMockServer mockServer = collector.getMockServer();
 
         OpenShiftClient client = mockServer.createOpenShiftClient();
-        OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub);
-        service.build(config, image);
+        OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
+        service.build(image);
 
         assertTrue(mockServer.getRequestCount() > 8);
         collector.assertEventsRecordedInOrder("build-config-check", "patch-build-config", "pushed");

@@ -15,11 +15,15 @@
  */
 package io.fabric8.maven.core.service;
 
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.service.kubernetes.DockerBuildService;
 import io.fabric8.maven.core.service.openshift.OpenshiftBuildService;
+import io.fabric8.maven.core.util.LazyBuilder;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -30,29 +34,120 @@ import io.fabric8.openshift.client.OpenShiftClient;
  */
 public class Fabric8ServiceHub {
 
-    private BuildService buildService;
+    /*
+     * Configured resources
+     */
+    private ClusterAccess clusterAccess;
 
-    public Fabric8ServiceHub(ClusterAccess clusterAccess, PlatformMode mode, Logger log, ServiceHub dockerServiceHub) {
-        PlatformMode resolvedMode = clusterAccess.resolvePlatformMode(mode, log);
-        KubernetesClient client = clusterAccess.createDefaultClient(log);
+    private PlatformMode platformMode;
 
-        // Creating platform-dependent services
-        if (resolvedMode == PlatformMode.kubernetes) {
-            // Kubernetes services
-            this.buildService = new DockerBuildService(dockerServiceHub);
+    private Logger log;
 
-        } else if(resolvedMode == PlatformMode.openshift) {
-            // Openshift services
-            this.buildService = new OpenshiftBuildService((OpenShiftClient) client, log, dockerServiceHub);
+    private ServiceHub dockerServiceHub;
 
-        } else {
-            throw new IllegalArgumentException("Unknown platform mode " + mode + " resolved as "+ resolvedMode);
+    private BuildService.BuildServiceConfig buildServiceConfig;
+
+    /*
+     * Computed resources
+     */
+
+    private PlatformMode resolvedMode;
+
+    private KubernetesClient client;
+
+    private ConcurrentHashMap<Class<?>, LazyBuilder<?>> services = new ConcurrentHashMap<>();
+
+    private Fabric8ServiceHub() {
+    }
+
+    private void build() {
+        Objects.requireNonNull(clusterAccess, "clusterAccess");
+        Objects.requireNonNull(log, "log");
+
+        this.resolvedMode = clusterAccess.resolvePlatformMode(platformMode, log);
+        if (resolvedMode != PlatformMode.kubernetes && resolvedMode != PlatformMode.openshift) {
+            throw new IllegalArgumentException("Unknown platform mode " + platformMode + " resolved as "+ resolvedMode);
         }
+        this.client = clusterAccess.createDefaultClient(log);
+    }
 
+    public ClientToolsService getClientToolsService() {
+        this.services.putIfAbsent(ClientToolsService.class, new LazyBuilder<ClientToolsService>() {
+            @Override
+            protected ClientToolsService build() {
+                return new ClientToolsService(log);
+            }
+        });
+        return (ClientToolsService) this.services.get(ClientToolsService.class).get();
+    }
+
+    public PortForwardService getPortForwardService() {
+        this.services.putIfAbsent(PortForwardService.class, new LazyBuilder<PortForwardService>() {
+            @Override
+            protected PortForwardService build() {
+                return new PortForwardService(getClientToolsService(), log);
+            }
+        });
+        return (PortForwardService) this.services.get(PortForwardService.class).get();
     }
 
     public BuildService getBuildService() {
-        return buildService;
+        this.services.putIfAbsent(BuildService.class, new LazyBuilder<BuildService>() {
+            @Override
+            protected BuildService build() {
+                BuildService buildService;
+                // Creating platform-dependent services
+                if (resolvedMode == PlatformMode.openshift) {
+                    // Openshift services
+                    buildService = new OpenshiftBuildService((OpenShiftClient) client, log, dockerServiceHub, buildServiceConfig);
+                } else {
+                    // Kubernetes services
+                    buildService = new DockerBuildService(dockerServiceHub, buildServiceConfig);
+                }
+                return buildService;
+            }
+        });
+        return (BuildService) this.services.get(BuildService.class).get();
     }
 
+    // =================================================
+
+    public static class Builder {
+
+        private Fabric8ServiceHub hub;
+
+        public Builder() {
+            this.hub = new Fabric8ServiceHub();
+        }
+
+        public Builder clusterAccess(ClusterAccess clusterAccess) {
+            hub.clusterAccess = clusterAccess;
+            return this;
+        }
+
+        public Builder platformMode(PlatformMode platformMode) {
+            hub.platformMode = platformMode;
+            return this;
+        }
+
+        public Builder log(Logger log) {
+            hub.log = log;
+            return this;
+        }
+
+        public Builder dockerServiceHub(ServiceHub dockerServiceHub) {
+            hub.dockerServiceHub = dockerServiceHub;
+            return this;
+        }
+
+        public Builder buildServiceConfig(BuildService.BuildServiceConfig buildServiceConfig) {
+            hub.buildServiceConfig = buildServiceConfig;
+            return this;
+        }
+
+        public Fabric8ServiceHub build() {
+            hub.build();
+            return hub;
+        }
+    }
 }
