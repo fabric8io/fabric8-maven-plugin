@@ -62,9 +62,6 @@
     <!-- latest release version of this plugin. Used in the docs.-->
     <fabric8.maven.plugin.version>3.2.28</fabric8.maven.plugin.version>
 
-    <spring-boot.version>1.4.4.RELEASE</spring-boot.version>
-    <spring.version>4.3.3.RELEASE</spring.version>
-
     <version.maven>3.3.1</version.maven>
     <version.jacoco>0.7.8</version.jacoco>
     <version.fabric8>2.2.210</version.fabric8>
