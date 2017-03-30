@@ -417,8 +417,8 @@ public class ApplyMojo extends AbstractFabric8Mojo {
 
         File file = null;
         try {
-            Fabric8ServiceHub hub = getFabric8ServiceHub();
-            file = hub.getClientToolsService().getKubeCtlExecutable(controller);
+            Fabric8ServiceHub hub = getFabric8ServiceHub(controller);
+            file = hub.getClientToolsService().getKubeCtlExecutable();
         } catch (Exception e) {
             log.warn("%s", e.getMessage());
         }
@@ -460,12 +460,15 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         }
     }
 
-    protected Fabric8ServiceHub.Builder getFabric8ServiceHubBuilder() {
-        return new Fabric8ServiceHub.Builder().log(log).clusterAccess(clusterAccess);
+    protected Fabric8ServiceHub.Builder getFabric8ServiceHubBuilder(Controller controller) {
+        return new Fabric8ServiceHub.Builder()
+                .log(log)
+                .clusterAccess(clusterAccess)
+                .controller(controller);
     }
 
-    protected Fabric8ServiceHub getFabric8ServiceHub() {
-        return getFabric8ServiceHubBuilder().build();
+    protected Fabric8ServiceHub getFabric8ServiceHub(Controller controller) {
+        return getFabric8ServiceHubBuilder(controller).build();
     }
 
     protected String getExternalServiceURL(Service service) {

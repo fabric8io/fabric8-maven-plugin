@@ -30,11 +30,14 @@ public class ClientToolsService {
 
     private Logger log;
 
-    public ClientToolsService(Logger log) {
+    private Controller controller;
+
+    public ClientToolsService(Controller controller, Logger log) {
+        this.controller = controller;
         this.log = log;
     }
 
-    public File getKubeCtlExecutable(Controller controller) {
+    public File getKubeCtlExecutable() {
         OpenShiftClient openShiftClient = controller.getOpenShiftClientOrNull();
         String command = openShiftClient != null ? "oc" : "kubectl";
 

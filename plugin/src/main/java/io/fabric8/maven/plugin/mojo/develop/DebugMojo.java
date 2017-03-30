@@ -214,8 +214,8 @@ public class DebugMojo extends ApplyMojo {
 
     private void portForward(Controller controller, String podName) throws MojoExecutionException {
         try {
-            getFabric8ServiceHub().getPortForwardService()
-                    .forwardPort(controller, createExternalProcessLogger("[[B]]port-forward[[B]] "), podName, portToInt(remoteDebugPort, "remoteDebugPort"), portToInt(localDebugPort, "localDebugPort"));
+            getFabric8ServiceHub(controller).getPortForwardService()
+                    .forwardPort(createExternalProcessLogger("[[B]]port-forward[[B]] "), podName, portToInt(remoteDebugPort, "remoteDebugPort"), portToInt(localDebugPort, "localDebugPort"));
 
             log.info("");
             log.info("Now you can start a Remote debug execution in your IDE by using localhost and the debug port " + localDebugPort);

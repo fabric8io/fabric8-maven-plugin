@@ -17,13 +17,16 @@ import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.service.PodLogService;
+import io.fabric8.maven.core.service.PortForwardService;
 import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.core.util.SpringBootUtil;
@@ -70,8 +73,33 @@ public class SpringBootWatcher extends BaseWatcher {
 
         new PodLogService(logContext).tailAppPodsLogs(kubernetes, getContext().getNamespace(), resources, false, null, true, null, false);
 
+        String url = getServiceExposeUrl(kubernetes, resources);
+        if (url == null) {
+            url = getPortForwardUrl(resources);
+        }
+
+        if (url != null) {
+            runRemoteSpringApplication(url);
+        } else {
+            throw new IllegalStateException("Unable to open a channel to the remote pod.");
+        }
+    }
+
+    private String getPortForwardUrl(final Set<HasMetadata> resources) throws Exception {
+        LabelSelector selector = KubernetesResourceUtil.getPodLabelSelector(resources);
+        if (selector == null) {
+            log.warn("Unable to determine a selector for application pods");
+            return null;
+        }
+
+        PortForwardService portForwardService = getContext().getFabric8ServiceHub().getPortForwardService();
+        // TODO choose the right ports
+        portForwardService.forwardPortAsync(getContext().getLogger(), selector, 8080, 20000);
+        return "http://localhost:20000";
+    }
+
+    private String getServiceExposeUrl(KubernetesClient kubernetes, Set<HasMetadata> resources) throws InterruptedException {
         long serviceUrlWaitTimeSeconds = Configs.asInt(getConfig(Config.serviceUrlWaitTimeSeconds));
-        boolean serviceFound = false;
         for (HasMetadata entity : resources) {
             if (entity instanceof Service) {
                 Service service = (Service) entity;
@@ -98,14 +126,13 @@ public class SpringBootWatcher extends BaseWatcher {
                 // lets not wait for other services
                 serviceUrlWaitTimeSeconds = 1;
                 if (Strings.isNotBlank(url) && url.startsWith("http")) {
-                    serviceFound = true;
-                    runRemoteSpringApplication(url);
+                    return url;
                 }
             }
         }
-        if (!serviceFound) {
-            throw new IllegalStateException("No external service found for this application! So cannot watch a remote container!");
-        }
+
+        log.info("No exposed service found for connecting the dev tools");
+        return null;
     }
 
     private boolean isExposeService(Service service) {

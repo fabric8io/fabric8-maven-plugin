@@ -31,6 +31,7 @@ import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.Gofabric8Util;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
@@ -211,6 +212,16 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
                 .useProjectClasspath(useProjectClasspath)
                 .namespace(clusterAccess.getNamespace())
                 .kubernetesClient(kubernetes)
+                .fabric8ServiceHub(getFabric8ServiceHub())
+                .build();
+    }
+
+    protected Fabric8ServiceHub getFabric8ServiceHub() {
+        return new Fabric8ServiceHub.Builder()
+                .log(log)
+                .clusterAccess(clusterAccess)
+                .dockerServiceHub(hub)
+                .platformMode(mode)
                 .build();
     }
 

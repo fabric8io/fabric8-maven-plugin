@@ -20,6 +20,7 @@ import io.fabric8.utils.Function;
 import io.fabric8.utils.Strings;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,19 +41,17 @@ public class ProcessUtil {
     }
 
     public static int runCommand(final Logger log, File command, List<String> args, boolean withShutdownHook) throws IOException {
+        return runAsyncCommand(log, command, args, withShutdownHook).await();
+    }
+
+    public static ProcessExecutionContext runAsyncCommand(final Logger log, File command, List<String> args, boolean withShutdownHook) throws IOException {
         String[] commandWithArgs = prepareCommandArray(command.getAbsolutePath(), args);
         Process process = Runtime.getRuntime().exec(commandWithArgs);
         if (withShutdownHook) {
             addShutdownHook(log, process, command);
         }
         List<Thread> threads = startLoggingThreads(process, log, command.getName() + " " + Strings.join(args, " "));
-        try {
-            int answer = process.waitFor();
-            joinThreads(threads, log);
-            return answer;
-        } catch (InterruptedException e) {
-            return process.exitValue();
-        }
+        return new ProcessExecutionContext(process, threads, log);
     }
 
     private static void joinThreads(List<Thread> threads, Logger log) {
@@ -235,5 +234,41 @@ public class ProcessUtil {
                 return null;
             }
         };
+    }
+
+    // =====================================================================================
+
+    /**
+     * Closeable class for holding a reference to a subprocess.
+     */
+    public static class ProcessExecutionContext implements Closeable {
+
+        private Process process;
+
+        private List<Thread> loggingThreads;
+
+        private Logger log;
+
+        public ProcessExecutionContext(Process process, List<Thread> loggingThreads, Logger log) {
+            this.process = process;
+            this.loggingThreads = loggingThreads;
+            this.log = log;
+        }
+
+        public int await() {
+            try {
+                int answer = process.waitFor();
+                joinThreads(loggingThreads, log);
+                return answer;
+            } catch (InterruptedException e) {
+                return process.exitValue();
+            }
+        }
+
+        @Override
+        public void close() throws IOException {
+            process.destroy();
+            await();
+        }
     }
 }
