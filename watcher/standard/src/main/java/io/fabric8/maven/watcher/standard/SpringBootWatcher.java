@@ -26,6 +26,7 @@ import io.fabric8.maven.core.service.PodLogService;
 import io.fabric8.maven.core.service.PortForwardService;
 import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.IoUtil;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.PrefixedLogger;
@@ -93,9 +94,9 @@ public class SpringBootWatcher extends BaseWatcher {
         }
 
         PortForwardService portForwardService = getContext().getFabric8ServiceHub().getPortForwardService();
-        // TODO choose the right ports
-        portForwardService.forwardPortAsync(getContext().getLogger(), selector, 8080, 20000);
-        return "http://localhost:20000";
+        int port = IoUtil.getFreeRandomPort();
+        portForwardService.forwardPortAsync(getContext().getLogger(), selector, 8080, port);
+        return "http://localhost:" + port;
     }
 
     private String getServiceExposeUrl(KubernetesClient kubernetes, Set<HasMetadata> resources) throws InterruptedException {
