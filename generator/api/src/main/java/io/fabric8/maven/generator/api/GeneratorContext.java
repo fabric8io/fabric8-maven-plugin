@@ -19,6 +19,7 @@ package io.fabric8.maven.generator.api;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.execution.MavenSession;
@@ -40,6 +41,7 @@ public class GeneratorContext {
     private OpenShiftBuildStrategy strategy;
     private boolean useProjectClasspath;
     private boolean prePackagePhase;
+    private Fabric8ServiceHub fabric8ServiceHub;
 
     private GeneratorContext() {
     }
@@ -76,6 +78,9 @@ public class GeneratorContext {
         return strategy;
     }
 
+    public Fabric8ServiceHub getFabric8ServiceHub() {
+        return fabric8ServiceHub;
+    }
 
     /**
      * Returns true if we are in watch mode
@@ -157,6 +162,11 @@ public class GeneratorContext {
 
         public Builder prePackagePhase(boolean prePackagePhase) {
             ctx.prePackagePhase = prePackagePhase;
+            return this;
+        }
+
+        public Builder fabric8ServiceHub(Fabric8ServiceHub fabric8ServiceHub) {
+            ctx.fabric8ServiceHub = fabric8ServiceHub;
             return this;
         }
 

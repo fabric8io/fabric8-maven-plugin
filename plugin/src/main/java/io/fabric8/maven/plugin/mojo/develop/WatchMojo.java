@@ -57,6 +57,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.repository.RepositorySystem;
 
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_KUBERNETES_MANIFEST;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
@@ -148,6 +149,9 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     @Component
     protected GoalFinder goalFinder;
 
+    @Component
+    protected RepositorySystem repositorySystem;
+
     private ClusterAccess clusterAccess;
     private KubernetesClient kubernetes;
     private ServiceHub hub;
@@ -157,13 +161,15 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
         if (skip) {
             return;
         }
+
+        clusterAccess = new ClusterAccess(namespace);
+        kubernetes = clusterAccess.createDefaultClient(log);
+
         super.execute();
     }
 
     @Override
     protected synchronized void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-        clusterAccess = new ClusterAccess(namespace);
-        kubernetes = clusterAccess.createDefaultClient(log);
         this.hub = hub;
 
         URL masterUrl = kubernetes.getMasterUrl();
@@ -222,6 +228,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
                 .clusterAccess(clusterAccess)
                 .dockerServiceHub(hub)
                 .platformMode(mode)
+                .repositorySystem(repositorySystem)
                 .build();
     }
 
@@ -245,6 +252,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
                     .mode(mode)
                     .strategy(buildStrategy)
                     .useProjectClasspath(useProjectClasspath)
+                    .fabric8ServiceHub(getFabric8ServiceHub())
                     .build();
             return GeneratorManager.generate(configs, ctx, false);
         } catch (MojoExecutionException e) {

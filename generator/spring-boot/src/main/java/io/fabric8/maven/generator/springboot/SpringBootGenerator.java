@@ -16,7 +16,22 @@
 
 package io.fabric8.maven.generator.springboot;
 
-import com.google.common.base.Strings;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
+import java.util.zip.CRC32;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
+
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootProperties;
@@ -26,19 +41,13 @@ import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.javaexec.FatJarDetector;
 import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
 
+import com.google.common.base.Strings;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-
-import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.*;
-import java.util.*;
-import java.util.zip.*;
 
 import static io.fabric8.maven.core.util.SpringBootProperties.DEV_TOOLS_REMOTE_SECRET;
 import static io.fabric8.maven.generator.springboot.SpringBootGenerator.Config.color;
@@ -50,7 +59,8 @@ import static io.fabric8.maven.generator.springboot.SpringBootGenerator.Config.c
 public class SpringBootGenerator extends JavaExecGenerator {
 
     private static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
-    private static final String SPRING_BOOT_DEVTOOLS_ENTRY = "fabric8-spring-devtools/spring-boot-devtools.jar";
+    private static final String SPRING_BOOT_DEVTOOLS_GA = "org.springframework.boot:spring-boot-devtools";
+    private static final String SPRING_BOOT_GA = "org.springframework.boot:spring-boot";
     private static final String DEFAULT_SERVER_PORT = "8080";
 
     public enum Config implements Configs.Key {
@@ -119,13 +129,11 @@ public class SpringBootGenerator extends JavaExecGenerator {
     private void addDevToolsToFatJar(List<ImageConfiguration> configs) throws MojoExecutionException {
         if (isFatJar()) {
             File target = getFatJarFile();
-            String devToolsFile = getDevToolsJarContainingJarFile();
-            try (FileSystem devToolsJarFs = FileSystems.newFileSystem(new URI("jar:" + devToolsFile),
-                                                                      Collections.<String,String>emptyMap())) {
-                Path resourcePath = devToolsJarFs.getPath(SPRING_BOOT_DEVTOOLS_ENTRY);
-                copyDevToolsJarToFatTargetJar(resourcePath, target);
-            } catch (URISyntaxException | IOException e) {
-                throw new MojoExecutionException("Failed to add " + SPRING_BOOT_DEVTOOLS_ENTRY + " to temp file " + target + ". " + e, e);
+            try {
+                File devToolsFile = getSpringBootDevToolsJar();
+                copyDevToolsJarToFatTargetJar(devToolsFile, target);
+            } catch (Exception e) {
+                throw new MojoExecutionException("Failed to add " + SPRING_BOOT_DEVTOOLS_GA + " dependency to temp file " + target + ". " + e, e);
             }
         }
     }
@@ -138,39 +146,21 @@ public class SpringBootGenerator extends JavaExecGenerator {
         return fatJarDetectResult.getArchiveFile();
     }
 
-    private String getDevToolsJarContainingJarFile() throws MojoExecutionException {
-        URL resource = getClass().getClassLoader().getResource(SPRING_BOOT_DEVTOOLS_ENTRY);
-        if (resource == null) {
-            throw new MojoExecutionException("Could not find resource " + SPRING_BOOT_DEVTOOLS_ENTRY + " on the classpath!");
-        }
-        try {
-            String all = resource.toURI().getRawSchemeSpecificPart();
-            int idx = all.indexOf("!/");
-            if(idx == -1) {
-                throw new MojoExecutionException("Internal error: Cannot extract tools jar from internal jar");
-            }
-            return all.substring(0,idx);
-        } catch (URISyntaxException e) {
-            throw new MojoExecutionException("Invalid URI syntax of " + resource, e);
-        }
-    }
-
-    private void copyDevToolsJarToFatTargetJar(Path resourcePath, File target) throws IOException {
+    private void copyDevToolsJarToFatTargetJar(File resourcePath, File target) throws IOException {
         File tmpZip = File.createTempFile(target.getName(), null);
         tmpZip.delete();
 
         // Using Apache commons rename, because renameTo has issues across file systems
         FileUtils.moveFile(target, tmpZip);
 
-        String fullPath = "BOOT-INF/lib/" + resourcePath.getFileName().toString();
-        boolean devToolsPresent = false;
+        String fullPath = "BOOT-INF/lib/" + resourcePath.getName();
 
         byte[] buffer = new byte[8192];
         ZipInputStream zin = new ZipInputStream(new FileInputStream(tmpZip));
         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(target));
         for (ZipEntry ze = zin.getNextEntry(); ze != null; ze = zin.getNextEntry()) {
             if (fullPath.equals(ze.getName())) {
-                devToolsPresent = true;
+                continue;
             }
             out.putNextEntry(ze);
             for(int read = zin.read(buffer); read > -1; read = zin.read(buffer)){
@@ -179,37 +169,37 @@ public class SpringBootGenerator extends JavaExecGenerator {
             out.closeEntry();
         }
 
-        if (!devToolsPresent) {
-            try (InputStream in = Files.newInputStream(resourcePath)) {
-                out.putNextEntry(createZipEntry(resourcePath, fullPath));
-                for (int read = in.read(buffer); read > -1; read = in.read(buffer)) {
-                    out.write(buffer, 0, read);
-                }
-                out.closeEntry();
+
+        try (InputStream in = new FileInputStream(resourcePath)) {
+            out.putNextEntry(createZipEntry(resourcePath, fullPath));
+            for (int read = in.read(buffer); read > -1; read = in.read(buffer)) {
+                out.write(buffer, 0, read);
             }
+            out.closeEntry();
         }
 
         out.close();
         tmpZip.delete();
     }
 
-    private ZipEntry createZipEntry(Path file, String fullPath) throws IOException {
+    private ZipEntry createZipEntry(File file, String fullPath) throws IOException {
         ZipEntry entry = new ZipEntry(fullPath);
 
         byte[] buffer = new byte[8192];
         int bytesRead = -1;
-        InputStream is = Files.newInputStream(file);
-        CRC32 crc = new CRC32();
-        int size = 0;
-        while ((bytesRead = is.read(buffer)) != -1) {
-            crc.update(buffer, 0, bytesRead);
-            size += bytesRead;
+        try (InputStream is = new FileInputStream(file)) {
+            CRC32 crc = new CRC32();
+            int size = 0;
+            while ((bytesRead = is.read(buffer)) != -1) {
+                crc.update(buffer, 0, bytesRead);
+                size += bytesRead;
+            }
+            entry.setSize(size);
+            entry.setCompressedSize(size);
+            entry.setCrc(crc.getValue());
+            entry.setMethod(ZipEntry.STORED);
+            return entry;
         }
-        entry.setSize(size);
-        entry.setCompressedSize(size);
-        entry.setCrc(crc.getValue());
-        entry.setMethod(ZipEntry.STORED);
-        return entry;
     }
 
     private void addSecretTokenToApplicationProperties() throws MojoExecutionException {
@@ -249,4 +239,15 @@ public class SpringBootGenerator extends JavaExecGenerator {
         }
         return false;
     }
+
+    private File getSpringBootDevToolsJar() throws IOException {
+        String[] devGa = SPRING_BOOT_DEVTOOLS_GA.split(":");
+        String[] ga = SPRING_BOOT_GA.split(":");
+        String version = MavenUtil.getDependencyVersion(getProject(), ga[0], ga[1]);
+        if (version == null) {
+            throw new IllegalStateException("Unable to find the spring-boot version");
+        }
+        return getContext().getFabric8ServiceHub().getArtifactResolverService().resolveArtifact(devGa[0], devGa[1], version, "jar");
+    }
+
 }

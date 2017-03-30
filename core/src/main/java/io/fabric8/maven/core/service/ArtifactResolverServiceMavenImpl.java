@@ -1,0 +1,68 @@
+/*
+ * Copyright 2016 Red Hat, Inc.
+ *
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+package io.fabric8.maven.core.service;
+
+import java.io.File;
+import java.util.Objects;
+
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
+import org.apache.maven.artifact.resolver.ArtifactResolutionResult;
+import org.apache.maven.repository.RepositorySystem;
+
+/**
+ * Allows retrieving artifacts using Maven.
+ */
+class ArtifactResolverServiceMavenImpl implements ArtifactResolverService {
+
+    private RepositorySystem repositorySystem;
+
+    ArtifactResolverServiceMavenImpl(RepositorySystem repositorySystem) {
+        Objects.requireNonNull(repositorySystem, "repositorySystem");
+        this.repositorySystem = repositorySystem;
+    }
+
+    @Override
+    public File resolveArtifact(String groupId, String artifactId, String version, String type) {
+        String canonicalString = groupId + ":" + artifactId + ":" + type + ":" + version;
+        Artifact art = repositorySystem.createArtifact(groupId, artifactId, version, type);
+        ArtifactResolutionRequest request = new ArtifactResolutionRequest()
+                .setArtifact(art)
+                .setResolveRoot(true)
+                .setResolveTransitively(false);
+
+        ArtifactResolutionResult res = repositorySystem.resolve(request);
+
+        if (!res.isSuccess()) {
+            throw new IllegalStateException("Cannot resolve artifact " + canonicalString);
+        }
+
+        Artifact resolved = null;
+        for (Artifact artifact : res.getArtifacts()) {
+            if (artifact.getGroupId().equals(groupId) && artifact.getArtifactId().equals(artifactId) && artifact.getVersion().equals(version) && artifact.getType().equals(type)) {
+                resolved = artifact;
+                break;
+            }
+        }
+
+        if (resolved == null) {
+            throw new IllegalStateException("Cannot find artifact " + canonicalString + " within the resolved resources");
+        }
+
+        return resolved.getFile();
+    }
+
+}
