@@ -37,12 +37,6 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class SpringBootUtil {
 
-    public static final String SPRING_BOOT_GROUP_ID = "org.springframework.boot";
-
-    public static final String SPRING_BOOT_ARTIFACT_ID = "spring-boot";
-
-    public static final String SPRING_BOOT_DEVTOOLS_ARTIFACT_ID = "spring-boot-devtools";
-
     private static final transient Logger LOG = LoggerFactory.getLogger(SpringBootUtil.class);
 
     /**
@@ -117,7 +111,7 @@ public class SpringBootUtil {
      * Determine the spring-boot version for the current project
      */
     public static String getSpringBootVersion(MavenProject mavenProject) {
-        return MavenUtil.getDependencyVersion(mavenProject, SPRING_BOOT_GROUP_ID, SPRING_BOOT_ARTIFACT_ID);
+        return MavenUtil.getDependencyVersion(mavenProject, SpringBootProperties.SPRING_BOOT_GROUP_ID, SpringBootProperties.SPRING_BOOT_ARTIFACT_ID);
     }
 
     /**

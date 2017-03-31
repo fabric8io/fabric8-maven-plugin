@@ -23,6 +23,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -79,11 +80,26 @@ public class SpringBootGenerator extends JavaExecGenerator {
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean isPrePackagePhase) throws MojoExecutionException {
-        if (!isPrePackagePhase && getContext().isWatchMode()) {
+        if (getContext().isWatchMode()) {
             ensureSpringDevToolSecretToken();
-            addDevToolsToFatJar(configs);
+            if (!isPrePackagePhase ) {
+                addDevToolsFilesToFatJar(configs);
+            }
         }
         return super.customize(configs, isPrePackagePhase);
+    }
+
+    @Override
+    protected Map<String, String> getEnv(boolean prePackagePhase) throws MojoExecutionException {
+        Map<String, String> res = super.getEnv(prePackagePhase);
+        if (getContext().isWatchMode()) {
+            // adding dev tools token to env variables to prevent override during recompile
+            String secret = SpringBootUtil.getSpringBootApplicationProperties(getProject()).getProperty(SpringBootProperties.DEV_TOOLS_REMOTE_SECRET);
+            if (secret != null) {
+                res.put(SpringBootProperties.DEV_TOOLS_REMOTE_SECRET_ENV, secret);
+            }
+        }
+        return res;
     }
 
     @Override
@@ -124,14 +140,15 @@ public class SpringBootGenerator extends JavaExecGenerator {
         }
     }
 
-    private void addDevToolsToFatJar(List<ImageConfiguration> configs) throws MojoExecutionException {
+    private void addDevToolsFilesToFatJar(List<ImageConfiguration> configs) throws MojoExecutionException {
         if (isFatJar()) {
             File target = getFatJarFile();
             try {
                 File devToolsFile = getSpringBootDevToolsJar();
-                copyDevToolsJarToFatTargetJar(devToolsFile, target);
+                File applicationPropertiesFile = new File(getProject().getBasedir(), "target/classes/application.properties");
+                copyFilesToFatJar(Collections.singletonList(devToolsFile), Collections.singletonList(applicationPropertiesFile), target);
             } catch (Exception e) {
-                throw new MojoExecutionException("Failed to add spring-boot-devtools dependency to temp file " + target + ". " + e, e);
+                throw new MojoExecutionException("Failed to add devtools files to fat jar " + target + ". " + e, e);
             }
         }
     }
@@ -144,20 +161,18 @@ public class SpringBootGenerator extends JavaExecGenerator {
         return fatJarDetectResult.getArchiveFile();
     }
 
-    private void copyDevToolsJarToFatTargetJar(File resourcePath, File target) throws IOException {
+    private void copyFilesToFatJar(List<File> libs, List<File> classes, File target) throws IOException {
         File tmpZip = File.createTempFile(target.getName(), null);
         tmpZip.delete();
 
         // Using Apache commons rename, because renameTo has issues across file systems
         FileUtils.moveFile(target, tmpZip);
 
-        String fullPath = "BOOT-INF/lib/" + resourcePath.getName();
-
         byte[] buffer = new byte[8192];
         ZipInputStream zin = new ZipInputStream(new FileInputStream(tmpZip));
         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(target));
         for (ZipEntry ze = zin.getNextEntry(); ze != null; ze = zin.getNextEntry()) {
-            if (fullPath.equals(ze.getName())) {
+            if (matchesFatJarEntry(libs, ze.getName(), true) || matchesFatJarEntry(classes, ze.getName(), false)) {
                 continue;
             }
             out.putNextEntry(ze);
@@ -167,17 +182,45 @@ public class SpringBootGenerator extends JavaExecGenerator {
             out.closeEntry();
         }
 
-
-        try (InputStream in = new FileInputStream(resourcePath)) {
-            out.putNextEntry(createZipEntry(resourcePath, fullPath));
-            for (int read = in.read(buffer); read > -1; read = in.read(buffer)) {
-                out.write(buffer, 0, read);
+        for (File lib : libs) {
+            try (InputStream in = new FileInputStream(lib)) {
+                out.putNextEntry(createZipEntry(lib, getFatJarFullPath(lib, true)));
+                for (int read = in.read(buffer); read > -1; read = in.read(buffer)) {
+                    out.write(buffer, 0, read);
+                }
+                out.closeEntry();
             }
-            out.closeEntry();
+        }
+
+        for (File cls : classes) {
+            try (InputStream in = new FileInputStream(cls)) {
+                out.putNextEntry(createZipEntry(cls, getFatJarFullPath(cls, false)));
+                for (int read = in.read(buffer); read > -1; read = in.read(buffer)) {
+                    out.write(buffer, 0, read);
+                }
+                out.closeEntry();
+            }
         }
 
         out.close();
         tmpZip.delete();
+    }
+
+    private boolean matchesFatJarEntry(List<File> fatJarEntries, String path, boolean lib) {
+        for (File e : fatJarEntries) {
+            String fullPath = getFatJarFullPath(e, lib);
+            if (fullPath.equals(path)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String getFatJarFullPath(File file, boolean lib) {
+        if (lib) {
+            return "BOOT-INF/lib/" + file.getName();
+        }
+        return "BOOT-INF/classes/" + file.getName();
     }
 
     private ZipEntry createZipEntry(File file, String fullPath) throws IOException {
@@ -243,7 +286,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
         if (version == null) {
             throw new IllegalStateException("Unable to find the spring-boot version");
         }
-        return getContext().getFabric8ServiceHub().getArtifactResolverService().resolveArtifact(SpringBootUtil.SPRING_BOOT_GROUP_ID, SpringBootUtil.SPRING_BOOT_DEVTOOLS_ARTIFACT_ID, version, "jar");
+        return getContext().getFabric8ServiceHub().getArtifactResolverService().resolveArtifact(SpringBootProperties.SPRING_BOOT_GROUP_ID, SpringBootProperties.SPRING_BOOT_DEVTOOLS_ARTIFACT_ID, version, "jar");
     }
 
 }

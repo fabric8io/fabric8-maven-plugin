@@ -30,6 +30,7 @@ import io.fabric8.maven.core.util.IoUtil;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.PrefixedLogger;
+import io.fabric8.maven.core.util.SpringBootProperties;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
@@ -257,7 +258,7 @@ public class SpringBootWatcher extends BaseWatcher {
         if (version == null) {
             throw new IllegalStateException("Unable to find the spring-boot version");
         }
-        return getContext().getFabric8ServiceHub().getArtifactResolverService().resolveArtifact(SpringBootUtil.SPRING_BOOT_GROUP_ID, SpringBootUtil.SPRING_BOOT_DEVTOOLS_ARTIFACT_ID, version, "jar");
+        return getContext().getFabric8ServiceHub().getArtifactResolverService().resolveArtifact(SpringBootProperties.SPRING_BOOT_GROUP_ID, SpringBootProperties.SPRING_BOOT_DEVTOOLS_ARTIFACT_ID, version, "jar");
     }
 
 }
