@@ -230,7 +230,7 @@ public class PortForwardService {
         String commandLine = command + " " + Strings.join(args, " ");
         log.verbose("Executing command " + commandLine);
         try {
-            return ProcessUtil.runAsyncCommand(externalProcessLogger, command, args, true);
+            return ProcessUtil.runAsyncCommand(externalProcessLogger, command, args, true, false);
         } catch (IOException e) {
             throw new Fabric8ServiceException("Error while executing the port-forward command", e);
         }

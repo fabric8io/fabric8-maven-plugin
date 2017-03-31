@@ -41,16 +41,16 @@ public class ProcessUtil {
     }
 
     public static int runCommand(final Logger log, File command, List<String> args, boolean withShutdownHook) throws IOException {
-        return runAsyncCommand(log, command, args, withShutdownHook).await();
+        return runAsyncCommand(log, command, args, withShutdownHook, true).await();
     }
 
-    public static ProcessExecutionContext runAsyncCommand(final Logger log, File command, List<String> args, boolean withShutdownHook) throws IOException {
+    public static ProcessExecutionContext runAsyncCommand(final Logger log, File command, List<String> args, boolean withShutdownHook, boolean logInfo) throws IOException {
         String[] commandWithArgs = prepareCommandArray(command.getAbsolutePath(), args);
         Process process = Runtime.getRuntime().exec(commandWithArgs);
         if (withShutdownHook) {
             addShutdownHook(log, process, command);
         }
-        List<Thread> threads = startLoggingThreads(process, log, command.getName() + " " + Strings.join(args, " "));
+        List<Thread> threads = startLoggingThreads(process, log, command.getName() + " " + Strings.join(args, " "), logInfo);
         return new ProcessExecutionContext(process, threads, log);
     }
 
@@ -104,21 +104,31 @@ public class ProcessUtil {
             @Override
             public void run() {
                 if (process != null) {
-                    log.info("Terminating process %s", command);
+                    // Trying to determine if the process is alive
+                    boolean alive = false;
                     try {
-                        process.destroy();
-                    } catch (Exception e) {
-                        log.error("Failed to terminate process %s", command);
+                        process.exitValue();
+                    } catch (IllegalThreadStateException e) {
+                        alive = true;
                     }
-                    /* Only available in Java 8: So disabled for now until we switch to Java 8
-                    try {
-                        if (process != null && process.isAlive()) {
-                            process.destroyForcibly();
+
+                    if (alive) {
+                        log.info("Terminating process %s", command);
+                        try {
+                            process.destroy();
+                        } catch (Exception e) {
+                            log.error("Failed to terminate process %s", command);
                         }
-                    } catch (Exception e) {
-                        log.error("Failed to forcibly terminate process %s", command);
+                        /* Only available in Java 8: So disabled for now until we switch to Java 8
+                        try {
+                            if (process != null && process.isAlive()) {
+                                process.destroyForcibly();
+                            }
+                        } catch (Exception e) {
+                            log.error("Failed to forcibly terminate process %s", command);
+                        }
+                        */
                     }
-                    */
                 }
             }
         });
@@ -177,9 +187,9 @@ public class ProcessUtil {
         return pathDirectories;
     }
 
-    private static List<Thread> startLoggingThreads(final Process process, final Logger log, final String commandDesc) {
+    private static List<Thread> startLoggingThreads(final Process process, final Logger log, final String commandDesc, boolean logInfo) {
         List<Thread> threads = new ArrayList<>();
-        threads.add(startOutputLoggingThread(process, log, commandDesc));
+        threads.add(startOutputLoggingThread(process, log, commandDesc, logInfo));
         threads.add(startErrorLoggingThread(process, log, commandDesc));
         return threads;
     }
@@ -200,12 +210,12 @@ public class ProcessUtil {
         return logThread;
     }
 
-    private static Thread startOutputLoggingThread(final Process process, final Logger log, final String commandDesc) {
+    private static Thread startOutputLoggingThread(final Process process, final Logger log, final String commandDesc, final boolean logInfo) {
         Thread logThread = new Thread("[OUT] " + commandDesc) {
             @Override
             public void run() {
                 try {
-                    processOutput(process.getInputStream(), createOutputHandler(log));
+                    processOutput(process.getInputStream(), createOutputHandler(log, logInfo));
                 } catch (IOException e) {
                     log.error("Failed to read output stream from %s : %s", commandDesc, e.getMessage());
                 }
@@ -216,11 +226,15 @@ public class ProcessUtil {
         return logThread;
     }
 
-    private static Function<String, Void> createOutputHandler(final Logger log) {
+    private static Function<String, Void> createOutputHandler(final Logger log, final boolean logInfo) {
         return new Function<String, Void>() {
             @Override
             public Void apply(String outputLine) {
-                log.info("%s", outputLine);
+                if (logInfo) {
+                    log.info("%s", outputLine);
+                } else {
+                    log.debug("%s", outputLine);
+                }
                 return null;
             }
         };
