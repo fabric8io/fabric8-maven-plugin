@@ -59,8 +59,6 @@ import static io.fabric8.maven.generator.springboot.SpringBootGenerator.Config.c
 public class SpringBootGenerator extends JavaExecGenerator {
 
     private static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
-    private static final String SPRING_BOOT_DEVTOOLS_GA = "org.springframework.boot:spring-boot-devtools";
-    private static final String SPRING_BOOT_GA = "org.springframework.boot:spring-boot";
     private static final String DEFAULT_SERVER_PORT = "8080";
 
     public enum Config implements Configs.Key {
@@ -133,7 +131,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
                 File devToolsFile = getSpringBootDevToolsJar();
                 copyDevToolsJarToFatTargetJar(devToolsFile, target);
             } catch (Exception e) {
-                throw new MojoExecutionException("Failed to add " + SPRING_BOOT_DEVTOOLS_GA + " dependency to temp file " + target + ". " + e, e);
+                throw new MojoExecutionException("Failed to add spring-boot-devtools dependency to temp file " + target + ". " + e, e);
             }
         }
     }
@@ -241,13 +239,11 @@ public class SpringBootGenerator extends JavaExecGenerator {
     }
 
     private File getSpringBootDevToolsJar() throws IOException {
-        String[] devGa = SPRING_BOOT_DEVTOOLS_GA.split(":");
-        String[] ga = SPRING_BOOT_GA.split(":");
-        String version = MavenUtil.getDependencyVersion(getProject(), ga[0], ga[1]);
+        String version = SpringBootUtil.getSpringBootVersion(getProject());
         if (version == null) {
             throw new IllegalStateException("Unable to find the spring-boot version");
         }
-        return getContext().getFabric8ServiceHub().getArtifactResolverService().resolveArtifact(devGa[0], devGa[1], version, "jar");
+        return getContext().getFabric8ServiceHub().getArtifactResolverService().resolveArtifact(SpringBootUtil.SPRING_BOOT_GROUP_ID, SpringBootUtil.SPRING_BOOT_DEVTOOLS_ARTIFACT_ID, version, "jar");
     }
 
 }

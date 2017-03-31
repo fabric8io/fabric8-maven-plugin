@@ -229,6 +229,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
                 .dockerServiceHub(hub)
                 .platformMode(mode)
                 .repositorySystem(repositorySystem)
+                .mavenProject(project)
                 .build();
     }
 

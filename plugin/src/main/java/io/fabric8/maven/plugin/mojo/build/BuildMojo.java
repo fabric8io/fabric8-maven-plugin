@@ -216,6 +216,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .dockerServiceHub(hub)
                 .buildServiceConfig(getBuildServiceConfig())
                 .repositorySystem(repositorySystem)
+                .mavenProject(project)
                 .build();
 
         super.executeInternal(hub);
@@ -321,6 +322,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                         .clusterAccess(clusterAccess)
                         .platformMode(mode)
                         .repositorySystem(repositorySystem)
+                        .mavenProject(project)
                         .build()
                 )
                 .build();

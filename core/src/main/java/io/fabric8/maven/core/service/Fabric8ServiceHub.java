@@ -29,6 +29,7 @@ import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.OpenShiftClient;
 
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.repository.RepositorySystem;
 
 /**
@@ -51,6 +52,8 @@ public class Fabric8ServiceHub {
     private BuildService.BuildServiceConfig buildServiceConfig;
 
     private RepositorySystem repositorySystem;
+
+    private MavenProject mavenProject;
 
     /**
      * Configurable with default
@@ -129,7 +132,7 @@ public class Fabric8ServiceHub {
         this.services.putIfAbsent(ArtifactResolverService.class, new LazyBuilder<ArtifactResolverService>() {
             @Override
             protected ArtifactResolverService build() {
-                return new ArtifactResolverServiceMavenImpl(repositorySystem);
+                return new ArtifactResolverServiceMavenImpl(repositorySystem, mavenProject);
             }
         });
         return (ArtifactResolverService) this.services.get(ArtifactResolverService.class).get();
@@ -177,6 +180,11 @@ public class Fabric8ServiceHub {
 
         public Builder repositorySystem(RepositorySystem repositorySystem) {
             hub.repositorySystem = repositorySystem;
+            return this;
+        }
+
+        public Builder mavenProject(MavenProject mavenProject) {
+            hub.mavenProject = mavenProject;
             return this;
         }
 

@@ -21,6 +21,7 @@ import java.util.Objects;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
 import org.apache.maven.artifact.resolver.ArtifactResolutionResult;
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.repository.RepositorySystem;
 
 /**
@@ -28,11 +29,15 @@ import org.apache.maven.repository.RepositorySystem;
  */
 class ArtifactResolverServiceMavenImpl implements ArtifactResolverService {
 
+    private MavenProject project;
+
     private RepositorySystem repositorySystem;
 
-    ArtifactResolverServiceMavenImpl(RepositorySystem repositorySystem) {
+    ArtifactResolverServiceMavenImpl(RepositorySystem repositorySystem, MavenProject project) {
         Objects.requireNonNull(repositorySystem, "repositorySystem");
+        Objects.requireNonNull(project, "project");
         this.repositorySystem = repositorySystem;
+        this.project = project;
     }
 
     @Override
@@ -42,6 +47,8 @@ class ArtifactResolverServiceMavenImpl implements ArtifactResolverService {
         ArtifactResolutionRequest request = new ArtifactResolutionRequest()
                 .setArtifact(art)
                 .setResolveRoot(true)
+                .setOffline(false)
+                .setRemoteRepositories(project.getRemoteArtifactRepositories())
                 .setResolveTransitively(false);
 
         ArtifactResolutionResult res = repositorySystem.resolve(request);

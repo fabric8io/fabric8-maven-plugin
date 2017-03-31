@@ -38,6 +38,8 @@ import io.fabric8.maven.watcher.api.WatcherContext;
 import io.fabric8.utils.Closeables;
 import io.fabric8.utils.Strings;
 
+import org.apache.maven.project.MavenProject;
+
 import static io.fabric8.maven.core.util.SpringBootProperties.DEV_TOOLS_REMOTE_SECRET;
 
 public class SpringBootWatcher extends BaseWatcher {
@@ -174,6 +176,15 @@ public class SpringBootWatcher extends BaseWatcher {
                     }
                 }
             }
+            // Add dev tools to the classpath (the main class is not read from BOOT-INF/lib)
+            try {
+                File devtools = getSpringBootDevToolsJar(getContext().getProject());
+                buffer.append(File.pathSeparator);
+                buffer.append(devtools.getCanonicalPath());
+            } catch (Exception e) {
+                throw new IllegalStateException("Failed to include devtools in the classpath: " + e, e);
+            }
+
             buffer.append(" -Dspring.devtools.remote.secret=");
             buffer.append(remoteSecret);
             buffer.append(" org.springframework.boot.devtools.RemoteSpringApplication ");
@@ -239,6 +250,14 @@ public class SpringBootWatcher extends BaseWatcher {
 
         printer.start();
         return printer;
+    }
+
+    private File getSpringBootDevToolsJar(MavenProject project) throws IOException {
+        String version = SpringBootUtil.getSpringBootVersion(project);
+        if (version == null) {
+            throw new IllegalStateException("Unable to find the spring-boot version");
+        }
+        return getContext().getFabric8ServiceHub().getArtifactResolverService().resolveArtifact(SpringBootUtil.SPRING_BOOT_GROUP_ID, SpringBootUtil.SPRING_BOOT_DEVTOOLS_ARTIFACT_ID, version, "jar");
     }
 
 }
