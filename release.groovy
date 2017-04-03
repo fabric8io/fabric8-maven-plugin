@@ -49,11 +49,10 @@ def updateDownstreamDependencies(stagedProject) {
             'fabric8io/fabric8-devops',
             'fabric8io/fabric8-platform',
             'fabric8io/fabric8-ipaas',
-            'fabric8io/ipaas-platform',
             'funktionio/funktion-connectors',
             'fabric8-quickstarts/spring-boot-webmvc', // these are used in the system tests in a later stage so we
-            'fabric8-quickstarts/spring-boot-camel-xml', // need to make sure their deps are updated before the quickstart archetypes are generated
-            'obsidian-toaster/generator-backend'
+            'fabric8-quickstarts/spring-boot-camel-xml' // need to make sure their deps are updated before the quickstart archetypes are generated
+            // 'obsidian-toaster/generator-backend' currently we can only create PRs on repos where fabric8cd has karma to creater a branch and make the PR from
     ]
     version = newVersion
   }
