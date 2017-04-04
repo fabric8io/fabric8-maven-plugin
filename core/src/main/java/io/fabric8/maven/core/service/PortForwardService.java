@@ -109,6 +109,7 @@ public class PortForwardService {
 
                 } catch (InterruptedException e) {
                     log.debug("Port-forwarding thread interrupted", e);
+                    Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     log.warn("Error while port-forwarding to pod", e);
                 } finally {
@@ -146,6 +147,7 @@ public class PortForwardService {
 
             @Override
             public void onClose(KubernetesClientException e) {
+                // don't care
             }
         });
 
@@ -168,7 +170,9 @@ public class PortForwardService {
             public void run() {
                 try {
                     handle.close();
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                    // suppress
+                }
             }
         });
 

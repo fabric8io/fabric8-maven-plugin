@@ -115,10 +115,6 @@ public class IoUtil {
         throw new IllegalStateException("Cannot find a free random port in the range [" + min + ", " + max + "] after " + attempts + " attempts");
     }
 
-    public static void main(String[] args) {
-        System.out.println(getFreeRandomPort());
-    }
-
     // ========================================================================================
 
     private static int PROGRESS_LENGTH = 50;
