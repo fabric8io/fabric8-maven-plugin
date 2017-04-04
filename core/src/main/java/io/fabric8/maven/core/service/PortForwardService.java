@@ -108,7 +108,7 @@ public class PortForwardService {
                     }
 
                 } catch (InterruptedException e) {
-                    // end
+                    log.debug("Port-forwarding thread interrupted", e);
                 } catch (Exception e) {
                     log.warn("Error while port-forwarding to pod", e);
                 } finally {
