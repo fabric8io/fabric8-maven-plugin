@@ -196,12 +196,8 @@ public class OpenshiftBuildService implements BuildService {
             Map<String, String> fromExt = buildConfig.getFromExt();
 
             String fromName = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.name, buildConfig.getFrom());
-            String fromNamespace = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.namespace, "");
             String fromKind = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.kind, "DockerImage");
-
-            if ("ImageStreamTag".equals(fromKind) && fromNamespace == null) {
-                fromNamespace = "openshift";
-            }
+            String fromNamespace = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.namespace, "ImageStreamTag".equals(fromKind) ? "openshift" : null);
             if (fromNamespace.isEmpty()) {
                 fromNamespace = null;
             }
