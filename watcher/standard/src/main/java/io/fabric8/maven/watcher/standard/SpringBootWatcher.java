@@ -37,6 +37,7 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.watcher.api.BaseWatcher;
 import io.fabric8.maven.watcher.api.WatcherContext;
 import io.fabric8.utils.Closeables;
+import io.fabric8.utils.PropertiesHelper;
 import io.fabric8.utils.Strings;
 
 import org.apache.maven.project.MavenProject;
@@ -46,6 +47,8 @@ import static io.fabric8.maven.core.util.SpringBootProperties.DEV_TOOLS_REMOTE_S
 public class SpringBootWatcher extends BaseWatcher {
 
     private static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
+
+    private static final int DEFAULT_SERVER_PORT = 8080;
 
     // Available configuration keys
     private enum Config implements Configs.Key {
@@ -96,10 +99,23 @@ public class SpringBootWatcher extends BaseWatcher {
             return null;
         }
 
+        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getContext().getProject());
+
         PortForwardService portForwardService = getContext().getFabric8ServiceHub().getPortForwardService();
         int port = IoUtil.getFreeRandomPort();
-        portForwardService.forwardPortAsync(getContext().getLogger(), selector, 8080, port);
-        return "http://localhost:" + port;
+        int containerPort = findSpringBootWebPort(properties);
+        portForwardService.forwardPortAsync(getContext().getLogger(), selector, containerPort, port);
+        return createForwardUrl(properties, port);
+    }
+
+    private int findSpringBootWebPort(Properties properties) {
+        return PropertiesHelper.getInteger(properties, SpringBootProperties.SERVER_PORT, DEFAULT_SERVER_PORT);
+    }
+
+    private String createForwardUrl(Properties properties, int localPort) {
+        String scheme = Strings.isNotBlank(properties.getProperty(SpringBootProperties.SERVER_KEYSTORE)) ? "https://" : "http://";
+        String contextPath = properties.getProperty(SpringBootProperties.CONTEXT_PATH, "");
+        return scheme + "localhost:" + localPort + contextPath;
     }
 
     private String getServiceExposeUrl(KubernetesClient kubernetes, Set<HasMetadata> resources) throws InterruptedException {
