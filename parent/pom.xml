@@ -19,7 +19,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>fabric8-maven-parent</artifactId>
-  <version>3.1.80.redhat-SNAPSHOT</version>
+  <version>3.1.80.fuse-R2-000001</version>
   <packaging>pom</packaging>
 
   <prerequisites>
@@ -58,13 +58,13 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <assertj.core.version>2.4.1</assertj.core.version>
-    <fabric8.maven.plugin.version>3.1.79</fabric8.maven.plugin.version>
+    <fabric8.maven.plugin.version>3.1.80.fuse-R2-000001</fabric8.maven.plugin.version>
     <spring-boot.version>1.4.1.RELEASE</spring-boot.version>
     <spring.version>4.3.3.RELEASE</spring.version>
 
     <version.maven>3.3.1</version.maven>
-    <version.fabric8>2.2.170</version.fabric8>
-    <version.docker-maven-plugin>0.16.9</version.docker-maven-plugin>
+    <version.fabric8>2.2.170.fuse-R2-000001</version.fabric8>
+    <version.docker-maven-plugin>0.16.9.fuse-R2-000001</version.docker-maven-plugin>
 
     <!-- =======================================================  -->
     <!-- === Java base image versions for docker, s2i (istag == s2i) -->
