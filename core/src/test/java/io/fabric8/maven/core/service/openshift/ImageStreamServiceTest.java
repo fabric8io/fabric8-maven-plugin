@@ -18,6 +18,7 @@ package io.fabric8.maven.core.service.openshift;
 import java.io.*;
 import java.util.*;
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.dsl.*;
 import io.fabric8.kubernetes.client.dsl.base.BaseOperation;
 import io.fabric8.maven.docker.util.ImageName;
@@ -58,27 +59,18 @@ public class ImageStreamServiceTest {
         ImageStreamService service = new ImageStreamService(client, log);
 
         final ImageStream lookedUpIs = lookupImageStream("ab12cd");
-        new Expectations() {{
-            client.imageStreams(); result = imageStreamsOp;
-            imageStreamsOp.withName("test"); result = resource;
-            resource.get(); result = lookedUpIs;
-
-            client.getNamespace(); result = "default";
-        }};
+        setupClientMock(lookedUpIs,"test");
         ImageName name = new ImageName("test:1.0");
         File target = File.createTempFile("ImageStreamServiceTest",".yml");
-        service.saveImageStreamResource(name, target);
+        service.appendImageStreamResource(name, target);
 
         assertTrue(target.exists());
 
-        Yaml yaml = new Yaml();
-        InputStream ios = new FileInputStream(target);
-        // Parse the YAML file and return the output as a series of Maps and Lists
-        Map result = (Map<String,Object>) yaml.load(ios);
+        Map result = readImageStreamDescriptor(target);
+        Yaml yaml;
         System.out.println(result.toString());
         assertNotNull(result);
-        List items = (List) result.get("items");
-        assertNotNull(items);
+        List<Map> items = getItemsList(result);
         assertEquals(1, items.size());
         Map isRead = (Map<String, Object>) items.get(0);
         assertNotNull(isRead);
@@ -93,6 +85,45 @@ public class ImageStreamServiceTest {
         assertEquals("ImageStreamImage", from.get("kind"));
         assertEquals("test@ab12cd", from.get("name"));
         assertEquals("default", from.get("namespace"));
+
+        // Add a second image stream
+        ImageStream secondIs = lookupImageStream("secondIS");
+        setupClientMock(secondIs, "second-test");
+        ImageName name2 = new ImageName("second-test:1.0");
+        service.appendImageStreamResource(name2, target);
+
+        result = readImageStreamDescriptor(target);
+        System.out.println(result.toString());
+        items = getItemsList(result);
+        assertEquals(2,items.size());
+        Set<String> names = new HashSet<>(Arrays.asList("second-test", "test"));
+        for (Map item : items) {
+            assertTrue(names.remove( ((Map) item.get("metadata")).get("name")));
+        }
+        assertTrue(names.isEmpty());
+    }
+
+    private List<Map> getItemsList(Map result) {
+        List items = (List) result.get("items");
+        assertNotNull(items);
+        return items;
+    }
+
+    private Map readImageStreamDescriptor(File target) throws FileNotFoundException {
+        Yaml yaml = new Yaml();
+        InputStream ios = new FileInputStream(target);
+        // Parse the YAML file and return the output as a series of Maps and Lists
+        return (Map<String,Object>) yaml.load(ios);
+    }
+
+    private void setupClientMock(final ImageStream lookedUpIs, final String name) {
+        new Expectations() {{
+            client.imageStreams(); result = imageStreamsOp;
+            imageStreamsOp.withName(name); result = resource;
+            resource.get(); result = lookedUpIs;
+
+            client.getNamespace(); result = "default";
+        }};
     }
 
     private ImageStream lookupImageStream(String sha) {

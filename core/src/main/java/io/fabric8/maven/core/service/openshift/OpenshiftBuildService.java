@@ -55,6 +55,8 @@ import io.fabric8.openshift.api.model.BuildStrategyBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.MavenProjectHelper;
 
 /**
  * @author nicola
@@ -95,10 +97,19 @@ public class OpenshiftBuildService implements BuildService {
             waitForOpenShiftBuildToComplete(client, build);
 
             // Create a file with generated image streams
-            saveImageStreamToFile(config, imageName, client);
+            addImageStreamToFile(getImageStreamFile(config), imageName, client);
         } catch (Exception ex) {
-            throw new Fabric8ServiceException("Unable to build the image using the Openshift build service", ex);
+            throw new Fabric8ServiceException("Unable to build the image using the OpenShift build service", ex);
         }
+    }
+
+    private File getImageStreamFile(BuildServiceConfig config) {
+        return ResourceFileType.yaml.addExtension(new File(config.getBuildDirectory(), String.format("%s-is", config.getArtifactId())));
+    }
+
+    @Override
+    public void postProcess(BuildServiceConfig config) {
+        config.attachArtifact("is", getImageStreamFile(config));
     }
 
     private String updateOrCreateBuildConfig(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder, ImageConfiguration imageConfig) {
@@ -360,11 +371,9 @@ public class OpenshiftBuildService implements BuildService {
         }
     }
 
-    private void saveImageStreamToFile(BuildServiceConfig config, ImageName imageName, OpenShiftClient client) throws MojoExecutionException {
-        File imageStreamFile = ResourceFileType.yaml.addExtension(new File(config.getBuildDirectory(),
-                imageName.getSimpleName() + "-is"));
+    private void addImageStreamToFile(File imageStreamFile, ImageName imageName, OpenShiftClient client) throws MojoExecutionException {
         ImageStreamService imageStreamHandler = new ImageStreamService(client, log);
-        imageStreamHandler.saveImageStreamResource(imageName, imageStreamFile);
+        imageStreamHandler.appendImageStreamResource(imageName, imageStreamFile);
     }
 
     // == Utility methods ==========================
