@@ -19,7 +19,6 @@ import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
-import org.apache.maven.project.MavenProjectHelper;
 
 /**
  * @author nicola
@@ -50,7 +49,7 @@ public class DockerBuildService implements BuildService {
 
     @Override
     public void postProcess(BuildServiceConfig config) {
-
+        // No post processing required
     }
 
 }

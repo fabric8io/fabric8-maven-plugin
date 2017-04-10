@@ -23,7 +23,6 @@ import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.Task;
-import org.apache.maven.project.MavenProjectHelper;
 
 /**
  * @author nicola

@@ -23,7 +23,6 @@ import java.util.*;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.maven.core.util.KubernetesClientUtil;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.ResourceFileType;
 import io.fabric8.maven.docker.util.ImageName;
