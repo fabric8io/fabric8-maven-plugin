@@ -30,6 +30,7 @@ import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.Gofabric8Util;
@@ -53,6 +54,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProjectHelper;
 
 /**
  * Builds the docker images configured for this project via a Docker or S2I binary build.
@@ -164,6 +166,9 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Component
     protected GoalFinder goalFinder;
 
+    @Component
+    private MavenProjectHelper projectHelper;
+
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
 
@@ -203,6 +208,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         fabric8ServiceHub = new Fabric8ServiceHub(clusterAccess, mode, log, hub);
 
         super.executeInternal(hub);
+
+        fabric8ServiceHub.getBuildService().postProcess(getBuildServiceConfig());
     }
 
     @Override
@@ -235,6 +242,12 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .openshiftBuildStrategy(buildStrategy)
                 .s2iBuildNameSuffix(s2iBuildNameSuffix)
                 .buildDirectory(project.getBuild().getDirectory())
+                .attacher(new BuildService.BuildServiceConfig.Attacher() {
+                    @Override
+                    public void attach(String classifier, File destFile) {
+                        projectHelper.attachArtifact(project, "yml", classifier, destFile);
+                    }
+                })
                 .enricherTask(new Task<KubernetesListBuilder>() {
                     @Override
                     public void execute(KubernetesListBuilder builder) throws Exception {

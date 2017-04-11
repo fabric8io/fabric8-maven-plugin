@@ -47,4 +47,9 @@ public class DockerBuildService implements BuildService {
         }
     }
 
+    @Override
+    public void postProcess(BuildServiceConfig config) {
+        // No post processing required
+    }
+
 }

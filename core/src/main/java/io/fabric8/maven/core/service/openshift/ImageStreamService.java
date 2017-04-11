@@ -18,13 +18,10 @@ package io.fabric8.maven.core.service.openshift;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectReference;
+import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.ResourceFileType;
@@ -65,7 +62,7 @@ public class ImageStreamService {
      * @param imageName name of the image for which the stream should be extracted
      * @param target file to store the image stream
      */
-    public void saveImageStreamResource(ImageName imageName, File target) throws MojoExecutionException {
+    public void appendImageStreamResource(ImageName imageName, File target) throws MojoExecutionException {
         String tag = Strings.isNullOrBlank(imageName.getTag()) ? "latest" : imageName.getTag();
         try {
             ImageStream is = new ImageStreamBuilder()
@@ -82,17 +79,28 @@ public class ImageStreamService {
 
                     .build();
             createOrUpdateImageStreamTag(client, imageName, is);
-            File fullTargetFile = writeImageStreamToFile(is, target);
+            File fullTargetFile = appendImageStreamToFile(is, target);
             log.info("ImageStream %s written to %s", imageName.getSimpleName(), fullTargetFile);
         } catch (KubernetesClientException e) {
             KubernetesResourceUtil.handleKubernetesClientException(e, this.log);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new MojoExecutionException(String.format("Cannot write ImageStream descriptor for %s to %s : %s",
+                                                           imageName.getFullName(), target.getAbsoluteFile(), e.getMessage()),e);
         }
     }
 
-    private File writeImageStreamToFile(ImageStream is, File target) throws MojoExecutionException, IOException {
-        KubernetesList entity = new KubernetesListBuilder().withItems(is).build();
+    private File appendImageStreamToFile(ImageStream is, File target) throws MojoExecutionException, IOException {
+
+        Map<String, ImageStream> imageStreams = readAlreadyExtractedImageStreams(target);
+        // Override with given image stream
+        imageStreams.put(is.getMetadata().getName(),is);
+
+        KubernetesList isList =
+            new KubernetesListBuilder().withItems(new ArrayList<HasMetadata>(imageStreams.values())).build();
+        return writeImageStreams(target, isList);
+    }
+
+    private File writeImageStreams(File target, KubernetesList entity) throws MojoExecutionException, IOException {
         final File targetWithoutExt;
         final ResourceFileType type;
         String ext = "";
@@ -106,6 +114,20 @@ public class ImageStreamService {
                 String.format("Invalid extension '%s' for ImageStream target file '%s'. Allowed extensions: yml, json", ext, target.getPath()), exp);
         }
         return KubernetesResourceUtil.writeResource(entity, targetWithoutExt, type);
+    }
+
+    private Map<String, ImageStream> readAlreadyExtractedImageStreams(File target) throws IOException {
+        // If it already exists, read in the file and use it for update
+        Map<String, ImageStream> imageStreams = new HashMap<>();
+        if (target.length() > 0) {
+            for (HasMetadata entity : KubernetesResourceUtil.loadResources(target)) {
+                if ("ImageStream".equals(KubernetesHelper.getKind(entity))) {
+                    imageStreams.put(entity.getMetadata().getName(), (ImageStream) entity);
+                }
+                // Ignore all other kind of entities. There shouldn't be any included anyway
+            }
+        }
+        return imageStreams;
     }
 
     private void createOrUpdateImageStreamTag(OpenShiftClient client, ImageName image, ImageStream is) throws MojoExecutionException {
