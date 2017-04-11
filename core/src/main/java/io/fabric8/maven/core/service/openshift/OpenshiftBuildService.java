@@ -43,6 +43,7 @@ import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.*;
 import io.fabric8.openshift.client.OpenShiftClient;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
@@ -194,15 +195,8 @@ public class OpenshiftBuildService implements BuildService {
             Map<String, String> fromExt = buildConfig.getFromExt();
 
             String fromName = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.name, buildConfig.getFrom());
-            String fromNamespace = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.namespace, "");
             String fromKind = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.kind, "DockerImage");
-
-            if ("ImageStreamTag".equals(fromKind) && fromNamespace == null) {
-                fromNamespace = "openshift";
-            }
-            if (fromNamespace.isEmpty()) {
-                fromNamespace = null;
-            }
+            String fromNamespace = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.namespace, "ImageStreamTag".equals(fromKind) ? "openshift" : null);
 
             return new BuildStrategyBuilder()
                     .withType("Source")
@@ -210,7 +204,7 @@ public class OpenshiftBuildService implements BuildService {
                     .withNewFrom()
                     .withKind(fromKind)
                     .withName(fromName)
-                    .withNamespace(fromNamespace)
+                    .withNamespace(StringUtils.isEmpty(fromNamespace) ? null : fromNamespace)
                     .endFrom()
                     .endSourceStrategy()
                     .build();
