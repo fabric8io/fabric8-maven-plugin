@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2016 Red Hat, Inc.
+  ~
+  ~ Red Hat licenses this file to you under the Apache License, version
+  ~ 2.0 (the "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+  ~ implied.  See the License for the specific language governing
+  ~ permissions and limitations under the License.
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>fabric8-maven-sample-custom-enricher-app</artifactId>
+  <version>3.3-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <parent>
+    <groupId>io.fabric8.samples.custom-enricher</groupId>
+    <artifactId>fabric8-maven-sample-custom-enricher-parent</artifactId>
+    <version>3.3-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <name>Fabric8 Maven :: Sample :: Custom Enricher :: App</name>
+  <description>Spring Boot example with a custom enricher</description>
+
+  <dependencies>
+
+    <!-- Boot generator  -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-plugin</artifactId>
+        <version>${fmp.version}</version>
+
+        <configuration>
+          <enricher>
+            <includes>
+              <!-- Include to standard profile -->
+              <include>secret-enricher</include>
+            </includes>
+            <config>
+              <secret-enricher>
+                <!-- Name of the secret is referenced in deployment.yml-->
+                <name>my-secret</name>
+                <!-- Use an URL to load a file -->
+                <mySecretFileData>file:///${project.basedir}/src/main/secret_data.txt</mySecretFileData>
+                <!-- Or a non-URL to include value literally -->
+                <mySecretProperty>my secret property from pom.xml for ${project.artifactId}</mySecretProperty>
+              </secret-enricher>
+            </config>
+          </enricher>
+        </configuration>
+
+        <executions>
+          <execution>
+            <goals>
+              <goal>resource</goal>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+
+        <dependencies>
+          <!-- Custom enricher as plugin dependency -->
+          <dependency>
+            <groupId>io.fabric8.samples.custom-enricher</groupId>
+            <artifactId>fabric8-maven-sample-custom-enricher-secret</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+
+    </plugins>
+  </build>
+
+</project>

@@ -1,0 +1,19 @@
+spec:
+  template:
+    spec:
+      volumes:
+      # Mount a secret volume below "/data/" in the pod. Name of secret is defined in pom.xml
+      - name: secret-volume
+        secret:
+          secretName: my-secret
+      containers:
+      - env:
+        # Secret can also be injected as environment variable
+        - name: SECRET_PROPERTY
+          valueFrom:
+             secretKeyRef:
+               name: my-secret
+               key: mySecretProperty
+        volumeMounts:
+        - name: secret-volume
+          mountPath: /data

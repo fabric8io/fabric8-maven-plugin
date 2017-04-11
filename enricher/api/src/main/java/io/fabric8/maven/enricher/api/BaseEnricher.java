@@ -103,6 +103,10 @@ public abstract class BaseEnricher implements Enricher {
         return config.get(key, defaultVal);
     }
 
+    protected Map<String, String> getRawConfig() {
+        return config.getRawConfig();
+    }
+
     protected EnricherContext getContext() {
         return buildContext;
     }
