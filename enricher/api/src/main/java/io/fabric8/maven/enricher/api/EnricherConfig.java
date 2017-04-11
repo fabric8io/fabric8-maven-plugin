@@ -16,6 +16,7 @@
 
 package io.fabric8.maven.enricher.api;
 
+import java.util.Map;
 import java.util.Properties;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
@@ -42,11 +43,19 @@ public class EnricherConfig {
     /**
      * Get a configuration value
      *
-     * @param key key to lookup. If it implements also {@link DefaultValueProvider} then use this for a default value
-     * @return the defa
+     * @param key key to lookup.
+     * @return the configuration value
      */
     public String get(Configs.Key key) {
         return get(key, key.def());
+    }
+
+    /**
+     * Get the raw, untyped configuration or an empty map
+     * @return raw configuration.
+     */
+    public Map<String, String> getRawConfig() {
+        return config.getConfigMap(name);
     }
 
     /**
