@@ -40,6 +40,7 @@ import io.fabric8.openshift.api.model.NamedTagEventListBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.server.mock.OpenShiftMockServer;
 
+import org.apache.maven.project.MavenProject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -70,6 +71,12 @@ public class OpenshiftBuildServiceTest {
     @Mocked
     private io.fabric8.maven.docker.util.Logger logger;
 
+    @Mocked
+    private MojoParameters dockerMojoParameters;
+
+    @Mocked
+    private MavenProject project;
+
     private ImageConfiguration image;
 
     private BuildService.BuildServiceConfig.Builder defaultConfig;
@@ -85,6 +92,14 @@ public class OpenshiftBuildServiceTest {
         new Expectations() {{
             dockerServiceHub.getArchiveService().createDockerBuildArchive(withAny(ImageConfiguration.class.cast(null)), withAny(MojoParameters.class.cast(null)));
             result = dockerFile;
+
+            project.getArtifact();
+            result = "myapp";
+            minTimes = 0;
+
+            dockerMojoParameters.getProject();
+            result = project;
+            minTimes = 0;
         }};
 
         image = new ImageConfiguration.Builder()
@@ -94,11 +109,13 @@ public class OpenshiftBuildServiceTest {
                         .build()
                 ).build();
 
+
         defaultConfig = new BuildService.BuildServiceConfig.Builder()
                 .buildDirectory(baseDir)
                 .buildRecreateMode(BuildRecreateMode.none)
                 .s2iBuildNameSuffix("-s2i-suffix2")
-                .openshiftBuildStrategy(OpenShiftBuildStrategy.s2i);
+                .openshiftBuildStrategy(OpenShiftBuildStrategy.s2i)
+                .dockerMojoParameters(dockerMojoParameters);
     }
 
     @Test
@@ -115,7 +132,6 @@ public class OpenshiftBuildServiceTest {
         assertTrue(mockServer.getRequestCount() > 8);
         collector.assertEventsRecordedInOrder("build-config-check", "new-build-config", "pushed");
         collector.assertEventsNotRecorded("patch-build-config");
-        assertTrue(new File(baseDir, projectName + "-is.yml").exists());
     }
 
     @Test(expected = Fabric8ServiceException.class)
@@ -142,7 +158,6 @@ public class OpenshiftBuildServiceTest {
         assertTrue(mockServer.getRequestCount() > 8);
         collector.assertEventsRecordedInOrder("build-config-check", "patch-build-config", "pushed");
         collector.assertEventsNotRecorded("new-build-config");
-        assertTrue(new File(baseDir, projectName + "-is.yml").exists());
     }
 
     protected WebServerEventCollector<OpenShiftMockServer> createMockServer(BuildService.BuildServiceConfig config, boolean success, long buildDelay, boolean buildConfigExists, boolean
