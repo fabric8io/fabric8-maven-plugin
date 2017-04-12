@@ -87,29 +87,23 @@ public class Fabric8ServiceHub {
             this.controller = new Controller(this.client);
             this.controller.setThrowExceptionOnError(true);
         }
-    }
 
-    public ClientToolsService getClientToolsService() {
+        // Lazily building services
+
         this.services.putIfAbsent(ClientToolsService.class, new LazyBuilder<ClientToolsService>() {
             @Override
             protected ClientToolsService build() {
                 return new ClientToolsService(controller, log);
             }
         });
-        return (ClientToolsService) this.services.get(ClientToolsService.class).get();
-    }
 
-    public PortForwardService getPortForwardService() {
         this.services.putIfAbsent(PortForwardService.class, new LazyBuilder<PortForwardService>() {
             @Override
             protected PortForwardService build() {
                 return new PortForwardService(getClientToolsService(), log, client);
             }
         });
-        return (PortForwardService) this.services.get(PortForwardService.class).get();
-    }
 
-    public BuildService getBuildService() {
         this.services.putIfAbsent(BuildService.class, new LazyBuilder<BuildService>() {
             @Override
             protected BuildService build() {
@@ -125,16 +119,28 @@ public class Fabric8ServiceHub {
                 return buildService;
             }
         });
-        return (BuildService) this.services.get(BuildService.class).get();
-    }
 
-    public ArtifactResolverService getArtifactResolverService() {
         this.services.putIfAbsent(ArtifactResolverService.class, new LazyBuilder<ArtifactResolverService>() {
             @Override
             protected ArtifactResolverService build() {
                 return new ArtifactResolverServiceMavenImpl(repositorySystem, mavenProject);
             }
         });
+    }
+
+    public ClientToolsService getClientToolsService() {
+        return (ClientToolsService) this.services.get(ClientToolsService.class).get();
+    }
+
+    public PortForwardService getPortForwardService() {
+        return (PortForwardService) this.services.get(PortForwardService.class).get();
+    }
+
+    public BuildService getBuildService() {
+        return (BuildService) this.services.get(BuildService.class).get();
+    }
+
+    public ArtifactResolverService getArtifactResolverService() {
         return (ArtifactResolverService) this.services.get(ArtifactResolverService.class).get();
     }
 

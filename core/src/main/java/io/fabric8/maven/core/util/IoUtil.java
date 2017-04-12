@@ -21,10 +21,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.ConnectException;
-import java.net.Socket;
+import java.net.ServerSocket;
 import java.net.URL;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import io.fabric8.maven.docker.util.Logger;
@@ -89,30 +87,16 @@ public class IoUtil {
     }
 
     /**
-     * Find a free (on localhost) random port in the range [49152, 65535] after 100 attempts.
+     * Find a free random port (on localhost).
      *
      * @return a random port where a server socket can be bound to
      */
     public static int getFreeRandomPort() {
-        // 100 attempts should be enough
-        return getFreeRandomPort(49152, 65535, 100);
-    }
-
-    /**
-     * Find a free (on localhost) random port in the specified range after the given number of attempts.
-     */
-    public static int getFreeRandomPort(int min, int max, int attempts) {
-        Random random = new Random();
-        for (int i=0; i < attempts; i++) {
-            int port = min + random.nextInt(max - min + 1);
-            try (Socket socket = new Socket("localhost", port)) {
-            } catch (ConnectException e) {
-                return port;
-            } catch (IOException e) {
-                throw new IllegalStateException("Error while trying to check open ports", e);
-            }
+        try (ServerSocket ss = new ServerSocket(0)) {
+            return ss.getLocalPort();
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot find a free port", e);
         }
-        throw new IllegalStateException("Cannot find a free random port in the range [" + min + ", " + max + "] after " + attempts + " attempts");
     }
 
     // ========================================================================================

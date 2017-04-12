@@ -812,14 +812,17 @@ public class KubernetesResourceUtil {
     }
 
     public static LabelSelector getPodLabelSelector(Set<HasMetadata> entities) {
-        LabelSelector selector = null;
+        LabelSelector chosenSelector = null;
         for (HasMetadata entity : entities) {
-            selector = getPodLabelSelector(entity);
+            LabelSelector selector = getPodLabelSelector(entity);
             if (selector != null) {
-                break;
+                if (chosenSelector != null && !chosenSelector.equals(selector)) {
+                    throw new IllegalArgumentException("Multiple selectors found for the given entities: " + chosenSelector + " - " + selector);
+                }
+                chosenSelector = selector;
             }
         }
-        return selector;
+        return chosenSelector;
     }
 
     public static LabelSelector getPodLabelSelector(HasMetadata entity) {

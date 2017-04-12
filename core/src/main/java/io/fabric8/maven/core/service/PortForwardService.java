@@ -19,8 +19,10 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -56,9 +58,9 @@ public class PortForwardService {
     private KubernetesClient kubernetes;
 
     public PortForwardService(ClientToolsService clientToolsService, Logger log, KubernetesClient kubernetes) {
-        this.clientToolsService = clientToolsService;
-        this.log = log;
-        this.kubernetes = kubernetes;
+        this.clientToolsService = Objects.requireNonNull(clientToolsService, "clientToolsService");
+        this.log = Objects.requireNonNull(log, "log");
+        this.kubernetes = Objects.requireNonNull(kubernetes, "kubernetes");
     }
 
     /**
@@ -69,7 +71,7 @@ public class PortForwardService {
 
         final Lock monitor = new ReentrantLock(true);
         final Condition podChanged = monitor.newCondition();
-        final LinkedList<Pod> forwardedPods = new LinkedList<>();
+        final Pod[] nextForwardedPod = new Pod[1];
 
         final Thread forwarderThread = new Thread() {
             @Override
@@ -82,10 +84,10 @@ public class PortForwardService {
                     monitor.lock();
 
                     while (true) {
-                        if (forwardedPods.isEmpty() || podEquals(currentPod, forwardedPods.getLast())) {
+                        if (podEquals(currentPod, nextForwardedPod[0])) {
                             podChanged.await();
                         } else {
-                            Pod nextPod = forwardedPods.getLast(); // may be null
+                            Pod nextPod = nextForwardedPod[0]; // may be null
                             monitor.unlock();
 
                             if (currentPortForward != null) {
@@ -124,12 +126,9 @@ public class PortForwardService {
             }
         };
 
-        // Adding the current pod if present to the list
+        // Switching forward to the current pod if present
         Pod newPod = getNewestPod(podSelector);
-        if (newPod != null) {
-            forwardedPods.add(newPod);
-        }
-
+        nextForwardedPod[0] = newPod;
 
         final Watch watch = kubernetes.pods().watch(new Watcher<Pod>() {
 
@@ -137,9 +136,19 @@ public class PortForwardService {
             public void eventReceived(Action action, Pod pod) {
                 monitor.lock();
                 try {
-                    Pod newPod = getNewestPod(podSelector); // may be null
-                    forwardedPods.add(newPod);
-                    podChanged.signal();
+                    List<Pod> candidatePods;
+                    if (nextForwardedPod[0] != null) {
+                        candidatePods = new LinkedList<Pod>();
+                        candidatePods.add(nextForwardedPod[0]);
+                        candidatePods.add(pod);
+                    } else {
+                        candidatePods = Collections.singletonList(pod);
+                    }
+                    Pod newPod = getNewestPod(candidatePods); // may be null
+                    if (!podEquals(nextForwardedPod[0], newPod)) {
+                        nextForwardedPod[0] = newPod;
+                        podChanged.signal();
+                    }
                 } finally {
                     monitor.unlock();
                 }
@@ -193,25 +202,30 @@ public class PortForwardService {
         FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> pods =
                 KubernetesClientUtil.withSelector(kubernetes.pods(), selector, log);
 
-        Pod targetPod = null;
         PodList list = pods.list();
         if (list != null) {
             List<Pod> items = list.getItems();
-            if (items != null) {
-                for (Pod pod : items) {
-                    PodStatusType status = KubernetesHelper.getPodStatus(pod);
-                    switch (status) {
-                    case WAIT:
-                    case OK:
-                        if (targetPod == null || (KubernetesHelper.isPodReady(pod) && KubernetesResourceUtil.isNewerResource(pod, targetPod))) {
-                            targetPod = pod;
-                        }
-                        break;
+            return getNewestPod(items);
+        }
+        return null;
+    }
 
-                    case ERROR:
-                    default:
-                        continue;
+    private Pod getNewestPod(List<Pod> items) {
+        Pod targetPod = null;
+        if (items != null) {
+            for (Pod pod : items) {
+                PodStatusType status = KubernetesHelper.getPodStatus(pod);
+                switch (status) {
+                case WAIT:
+                case OK:
+                    if (targetPod == null || (KubernetesHelper.isPodReady(pod) && KubernetesResourceUtil.isNewerResource(pod, targetPod))) {
+                        targetPod = pod;
                     }
+                    break;
+
+                case ERROR:
+                default:
+                    continue;
                 }
             }
         }

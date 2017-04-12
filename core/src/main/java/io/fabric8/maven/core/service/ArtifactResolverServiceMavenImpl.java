@@ -34,10 +34,8 @@ class ArtifactResolverServiceMavenImpl implements ArtifactResolverService {
     private RepositorySystem repositorySystem;
 
     ArtifactResolverServiceMavenImpl(RepositorySystem repositorySystem, MavenProject project) {
-        Objects.requireNonNull(repositorySystem, "repositorySystem");
-        Objects.requireNonNull(project, "project");
-        this.repositorySystem = repositorySystem;
-        this.project = project;
+        this.repositorySystem = Objects.requireNonNull(repositorySystem, "repositorySystem");
+        this.project = Objects.requireNonNull(project, "project");
     }
 
     @Override
@@ -57,19 +55,13 @@ class ArtifactResolverServiceMavenImpl implements ArtifactResolverService {
             throw new IllegalStateException("Cannot resolve artifact " + canonicalString);
         }
 
-        Artifact resolved = null;
         for (Artifact artifact : res.getArtifacts()) {
             if (artifact.getGroupId().equals(groupId) && artifact.getArtifactId().equals(artifactId) && artifact.getVersion().equals(version) && artifact.getType().equals(type)) {
-                resolved = artifact;
-                break;
+                return artifact.getFile();
             }
         }
 
-        if (resolved == null) {
-            throw new IllegalStateException("Cannot find artifact " + canonicalString + " within the resolved resources");
-        }
-
-        return resolved.getFile();
+        throw new IllegalStateException("Cannot find artifact " + canonicalString + " within the resolved resources");
     }
 
 }
