@@ -138,7 +138,7 @@ public class PortForwardService {
                 try {
                     List<Pod> candidatePods;
                     if (nextForwardedPod[0] != null) {
-                        candidatePods = new LinkedList<Pod>();
+                        candidatePods = new LinkedList<>();
                         candidatePods.add(nextForwardedPod[0]);
                         candidatePods.add(pod);
                     } else {
