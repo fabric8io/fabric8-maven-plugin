@@ -234,6 +234,8 @@ public class KubernetesResourceUtil {
             "role", "Role",
             "rb", "RoleBinding",
             "rolebinding", "RoleBinding",
+            "rbr", "RoleBindingRestriction",
+            "rolebindingrestriction", "RoleBindingRestriction",
             "secret", "Secret",
             "service", "Service",
             "svc", "Service",
