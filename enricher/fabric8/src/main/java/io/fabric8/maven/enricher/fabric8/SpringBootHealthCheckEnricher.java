@@ -20,6 +20,7 @@ import java.util.Properties;
 
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootProperties;
 import io.fabric8.maven.core.util.SpringBootUtil;
@@ -27,6 +28,7 @@ import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.utils.PropertiesHelper;
 import io.fabric8.utils.Strings;
+
 
 /**
  * Enriches spring-boot containers with health checks if the actuator module is present.
@@ -41,6 +43,12 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
     private static final int DEFAULT_MANAGEMENT_PORT = 8080;
     private static final String SCHEME_HTTPS = "HTTPS";
     private static final String SCHEME_HTTP = "HTTP";
+
+    private enum Config implements Configs.Key {
+        timeoutSeconds {{ d = "1"; }};
+
+        public String def() { return d; } protected String d;
+    }
 
     public SpringBootHealthCheckEnricher(EnricherContext buildContext) {
         super(buildContext, "spring-boot-health-check");
@@ -64,11 +72,16 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
                                                            PropertiesHelper.getInteger(properties, SpringBootProperties.SERVER_PORT, DEFAULT_MANAGEMENT_PORT));
                 String scheme = Strings.isNotBlank(properties.getProperty(SpringBootProperties.SERVER_KEYSTORE)) ? SCHEME_HTTPS : SCHEME_HTTP;
                 String contextPath = properties.getProperty(SpringBootProperties.CONTEXT_PATH, "");
-                		
+
                 // lets default to adding a spring boot actuator health check
-                return new ProbeBuilder().
-                        withNewHttpGet().withNewPort(port).withPath(contextPath + "/health").withScheme(scheme).endHttpGet().
-                        withInitialDelaySeconds(initialDelay).build();
+                return new ProbeBuilder()
+                        .withNewHttpGet()
+                        .withNewPort(port)
+                        .withPath(contextPath + "/health")
+                        .withScheme(scheme)
+                        .endHttpGet()
+                        .withTimeoutSeconds(Integer.valueOf(getConfig(Config.timeoutSeconds)))
+                        .withInitialDelaySeconds(initialDelay).build();
             }
         } catch (Exception ex) {
             log.error("Error while reading the spring-boot configuration", ex);

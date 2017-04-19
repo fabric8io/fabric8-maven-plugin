@@ -349,6 +349,7 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
             <config>
               <spring-boot-health-check>
                 <port>4444</port>
+                <timeoutSeconds>5</timeoutSeconds>
               </spring-boot-health-check>
             </config>
           </enricher>
