@@ -317,14 +317,17 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .mode(platformMode)
                 .strategy(buildStrategy)
                 .useProjectClasspath(useProjectClasspath)
-                .fabric8ServiceHub(new Fabric8ServiceHub.Builder()
-                        .log(log)
-                        .clusterAccess(clusterAccess)
-                        .platformMode(mode)
-                        .repositorySystem(repositorySystem)
-                        .mavenProject(project)
-                        .build()
-                )
+                .artifactResolver(getFabric8ServiceHub().getArtifactResolverService())
+                .build();
+    }
+
+    private Fabric8ServiceHub getFabric8ServiceHub() {
+        return new Fabric8ServiceHub.Builder()
+                .log(log)
+                .clusterAccess(clusterAccess)
+                .platformMode(mode)
+                .repositorySystem(repositorySystem)
+                .mavenProject(project)
                 .build();
     }
 

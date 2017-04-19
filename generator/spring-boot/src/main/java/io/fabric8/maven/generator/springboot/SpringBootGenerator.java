@@ -282,11 +282,11 @@ public class SpringBootGenerator extends JavaExecGenerator {
     }
 
     private File getSpringBootDevToolsJar() throws IOException {
-        String version = SpringBootUtil.getSpringBootVersion(getProject());
+        String version = SpringBootUtil.getSpringBootDevToolsVersion(getProject());
         if (version == null) {
             throw new IllegalStateException("Unable to find the spring-boot version");
         }
-        return getContext().getFabric8ServiceHub().getArtifactResolverService().resolveArtifact(SpringBootProperties.SPRING_BOOT_GROUP_ID, SpringBootProperties.SPRING_BOOT_DEVTOOLS_ARTIFACT_ID, version, "jar");
+        return getContext().getArtifactResolver().resolveArtifact(SpringBootProperties.SPRING_BOOT_GROUP_ID, SpringBootProperties.SPRING_BOOT_DEVTOOLS_ARTIFACT_ID, version, "jar");
     }
 
 }

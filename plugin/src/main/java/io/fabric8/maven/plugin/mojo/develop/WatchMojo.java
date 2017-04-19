@@ -243,6 +243,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
         try {
+            Fabric8ServiceHub serviceHub = getFabric8ServiceHub();
             GeneratorContext ctx = new GeneratorContext.Builder()
                     .config(extractGeneratorConfig())
                     .project(project)
@@ -253,7 +254,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
                     .mode(mode)
                     .strategy(buildStrategy)
                     .useProjectClasspath(useProjectClasspath)
-                    .fabric8ServiceHub(getFabric8ServiceHub())
+                    .artifactResolver(serviceHub.getArtifactResolverService())
                     .build();
             return GeneratorManager.generate(configs, ctx, false);
         } catch (MojoExecutionException e) {

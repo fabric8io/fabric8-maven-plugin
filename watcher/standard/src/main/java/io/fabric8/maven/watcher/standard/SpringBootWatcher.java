@@ -270,7 +270,7 @@ public class SpringBootWatcher extends BaseWatcher {
     }
 
     private File getSpringBootDevToolsJar(MavenProject project) throws IOException {
-        String version = SpringBootUtil.getSpringBootVersion(project);
+        String version = SpringBootUtil.getSpringBootDevToolsVersion(project);
         if (version == null) {
             throw new IllegalStateException("Unable to find the spring-boot version");
         }

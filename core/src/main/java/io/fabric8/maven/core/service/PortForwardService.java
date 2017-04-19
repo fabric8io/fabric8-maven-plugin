@@ -130,7 +130,7 @@ public class PortForwardService {
         Pod newPod = getNewestPod(podSelector);
         nextForwardedPod[0] = newPod;
 
-        final Watch watch = kubernetes.pods().watch(new Watcher<Pod>() {
+        final Watch watch = KubernetesClientUtil.withSelector(kubernetes.pods(), podSelector, log).watch(new Watcher<Pod>() {
 
             @Override
             public void eventReceived(Action action, Pod pod) {

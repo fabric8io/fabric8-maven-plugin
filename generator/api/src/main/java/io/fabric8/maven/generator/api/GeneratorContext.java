@@ -19,7 +19,7 @@ package io.fabric8.maven.generator.api;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.core.service.Fabric8ServiceHub;
+import io.fabric8.maven.core.service.ArtifactResolverService;
 import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.execution.MavenSession;
@@ -41,7 +41,7 @@ public class GeneratorContext {
     private OpenShiftBuildStrategy strategy;
     private boolean useProjectClasspath;
     private boolean prePackagePhase;
-    private Fabric8ServiceHub fabric8ServiceHub;
+    private ArtifactResolverService artifactResolver;
 
     private GeneratorContext() {
     }
@@ -78,8 +78,8 @@ public class GeneratorContext {
         return strategy;
     }
 
-    public Fabric8ServiceHub getFabric8ServiceHub() {
-        return fabric8ServiceHub;
+    public ArtifactResolverService getArtifactResolver() {
+        return artifactResolver;
     }
 
     /**
@@ -165,8 +165,8 @@ public class GeneratorContext {
             return this;
         }
 
-        public Builder fabric8ServiceHub(Fabric8ServiceHub fabric8ServiceHub) {
-            ctx.fabric8ServiceHub = fabric8ServiceHub;
+        public Builder artifactResolver(ArtifactResolverService artifactResolver) {
+            ctx.artifactResolver = artifactResolver;
             return this;
         }
 

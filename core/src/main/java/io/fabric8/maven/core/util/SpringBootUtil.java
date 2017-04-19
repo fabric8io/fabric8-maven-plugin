@@ -108,9 +108,9 @@ public class SpringBootUtil {
     }
 
     /**
-     * Determine the spring-boot version for the current project
+     * Determine the spring-boot devtools version for the current project
      */
-    public static String getSpringBootVersion(MavenProject mavenProject) {
+    public static String getSpringBootDevToolsVersion(MavenProject mavenProject) {
         return MavenUtil.getDependencyVersion(mavenProject, SpringBootProperties.SPRING_BOOT_GROUP_ID, SpringBootProperties.SPRING_BOOT_ARTIFACT_ID);
     }
 
