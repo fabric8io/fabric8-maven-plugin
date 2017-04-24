@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      fabric8.io/iconUrl: https://cdn.rawgit.com/fabric8io/fabric8-devops/master/fabric8-docker-registry/src/main/fabric8/icon.png
+      fabric8.io/git-commit: 992c52cc2279879bb46fc47a6a27b3ad6c1ca53a
+      fabric8.io/git-branch: stuff
+      fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=deployment-strategy-type-919&var-version=3.2-SNAPSHOT
+    labels:
+      provider: fabric8
+      project: deployment-strategy-type-919
+      version: 3.2-SNAPSHOT
+      group: io.fabric8.devops.apps
+    name: fabric8-docker-registry
+  spec:
+    replicas: 1
+    strategy:
+      type: Recreate
+    selector:
+      provider: fabric8
+      project: deployment-strategy-type-919
+      group: io.fabric8
+      version: 3.2-SNAPSHOT
+    triggers:
+    - type: ConfigChange
