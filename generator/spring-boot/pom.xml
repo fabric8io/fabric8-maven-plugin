@@ -31,18 +31,6 @@
 
   <name>Fabric8 Maven :: Generator :: Spring Boot</name>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-dependencies</artifactId>
-        <version>${spring-boot.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
   <dependencies>
 
     <dependency>
@@ -56,48 +44,9 @@
     </dependency>
 
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-devtools</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.jmockit</groupId>
       <artifactId>jmockit</artifactId>
     </dependency>
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.10</version>
-        <executions>
-          <execution>
-            <id>copy</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <includeGroupIds>org.springframework</includeGroupIds>
-              <includeArtifactIds>spring-boot-devtools</includeArtifactIds>
-              <outputDirectory>${project.build.directory}/classes/fabric8-spring-devtools</outputDirectory>
-              <stripVersion>true</stripVersion>
-<!--
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.springframework</groupId>
-                  <artifactId>spring-boot-devtools</artifactId>
-                  <version>[ version ]</version>
-                  <outputDirectory>${basedir}/classes/fabric8-spring-devtools</outputDirectory>
-                </artifactItem>
-              </artifactItems>
--->
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
 </project>

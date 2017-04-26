@@ -19,6 +19,7 @@ import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.utils.Objects;
 
 /**
  * @author nicola
@@ -28,12 +29,18 @@ public class DockerBuildService implements BuildService {
 
     private ServiceHub dockerServiceHub;
 
-    public DockerBuildService(ServiceHub dockerServiceHub) {
+    private BuildServiceConfig config;
+
+    public DockerBuildService(ServiceHub dockerServiceHub, BuildServiceConfig config) {
+        Objects.notNull(dockerServiceHub, "dockerServiceHub");
+        Objects.notNull(config, "config");
+
         this.dockerServiceHub = dockerServiceHub;
+        this.config = config;
     }
 
     @Override
-    public void build(BuildServiceConfig config, ImageConfiguration imageConfig) throws Fabric8ServiceException {
+    public void build(ImageConfiguration imageConfig) throws Fabric8ServiceException {
 
         io.fabric8.maven.docker.service.BuildService dockerBuildService = dockerServiceHub.getBuildService();
         io.fabric8.maven.docker.service.BuildService.BuildContext dockerBuildContext = config.getDockerBuildContext();

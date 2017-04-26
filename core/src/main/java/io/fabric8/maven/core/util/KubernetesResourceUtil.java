@@ -50,6 +50,8 @@ import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.Job;
+import io.fabric8.kubernetes.api.model.JobSpec;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -59,12 +61,16 @@ import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
+import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
+import io.fabric8.kubernetes.api.model.extensions.DaemonSetSpec;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
+import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
+import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.internal.HasMetadataComparator;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -805,6 +811,20 @@ public class KubernetesResourceUtil {
         return entities;
     }
 
+    public static LabelSelector getPodLabelSelector(Set<HasMetadata> entities) {
+        LabelSelector chosenSelector = null;
+        for (HasMetadata entity : entities) {
+            LabelSelector selector = getPodLabelSelector(entity);
+            if (selector != null) {
+                if (chosenSelector != null && !chosenSelector.equals(selector)) {
+                    throw new IllegalArgumentException("Multiple selectors found for the given entities: " + chosenSelector + " - " + selector);
+                }
+                chosenSelector = selector;
+            }
+        }
+        return chosenSelector;
+    }
+
     public static LabelSelector getPodLabelSelector(HasMetadata entity) {
         LabelSelector selector = null;
         if (entity instanceof Deployment) {
@@ -830,6 +850,24 @@ public class KubernetesResourceUtil {
             ReplicationControllerSpec spec = resource.getSpec();
             if (spec != null) {
                 selector = toLabelSelector(spec.getSelector());
+            }
+        } else if (entity instanceof DaemonSet) {
+            DaemonSet resource = (DaemonSet) entity;
+            DaemonSetSpec spec = resource.getSpec();
+            if (spec != null) {
+                selector = spec.getSelector();
+            }
+        } else if (entity instanceof StatefulSet) {
+            StatefulSet resource = (StatefulSet) entity;
+            StatefulSetSpec spec = resource.getSpec();
+            if (spec != null) {
+                selector = spec.getSelector();
+            }
+        } else if (entity instanceof Job) {
+            Job resource = (Job) entity;
+            JobSpec spec = resource.getSpec();
+            if (spec != null) {
+                selector = spec.getSelector();
             }
         }
         return selector;
