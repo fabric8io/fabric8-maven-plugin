@@ -88,23 +88,26 @@ public class PortForwardService {
                             podChanged.await();
                         } else {
                             Pod nextPod = nextForwardedPod[0]; // may be null
-                            monitor.unlock();
+                            try {
+                                monitor.unlock();
+                                // out of critical section
 
-                            if (currentPortForward != null) {
-                                log.info("Closing port-forward from pod %s", KubernetesHelper.getName(currentPod));
-                                currentPortForward.close();
-                                currentPortForward = null;
+                                if (currentPortForward != null) {
+                                    log.info("Closing port-forward from pod %s", KubernetesHelper.getName(currentPod));
+                                    currentPortForward.close();
+                                    currentPortForward = null;
+                                }
+
+                                if (nextPod != null) {
+                                    log.info("Starting port-forward to pod %s", KubernetesHelper.getName(nextPod));
+                                    currentPortForward = forwardPortAsync(externalProcessLogger, KubernetesHelper.getName(nextPod), remotePort, localPort);
+                                } else {
+                                    log.info("Waiting for a pod to become ready before starting port-forward");
+                                }
+                                currentPod = nextPod;
+                            } finally {
+                                monitor.lock();
                             }
-
-                            if (nextPod != null) {
-                                log.info("Starting port-forward to pod %s", KubernetesHelper.getName(nextPod));
-                                currentPortForward = forwardPortAsync(externalProcessLogger, KubernetesHelper.getName(nextPod), remotePort, localPort);
-                            } else {
-                                log.info("Waiting for a pod to become ready before starting port-forward");
-                            }
-                            currentPod = nextPod;
-
-                            monitor.lock();
                         }
 
                     }
@@ -215,17 +218,10 @@ public class PortForwardService {
         if (items != null) {
             for (Pod pod : items) {
                 PodStatusType status = KubernetesHelper.getPodStatus(pod);
-                switch (status) {
-                case WAIT:
-                case OK:
+                if (status == PodStatusType.WAIT || status == PodStatusType.OK) {
                     if (targetPod == null || (KubernetesHelper.isPodReady(pod) && KubernetesResourceUtil.isNewerResource(pod, targetPod))) {
                         targetPod = pod;
                     }
-                    break;
-
-                case ERROR:
-                default:
-                    continue;
                 }
             }
         }
