@@ -4,5 +4,4 @@ io.fabric8.maven.enricher.fabric8.GrafanaLinkEnricher,502
 io.fabric8.maven.enricher.fabric8.IconEnricher,503
 io.fabric8.maven.enricher.fabric8.SpringBootHealthCheckEnricher,504
 io.fabric8.maven.enricher.fabric8.KarafHealthCheckEnricher,506
-io.fabric8.maven.enricher.fabric8.PrometheusEnricher,508
 io.fabric8.maven.enricher.fabric8.ExposeEnricher,1000
