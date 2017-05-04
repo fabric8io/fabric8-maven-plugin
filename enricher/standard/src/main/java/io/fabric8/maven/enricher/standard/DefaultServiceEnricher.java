@@ -208,7 +208,6 @@ public class DefaultServiceEnricher extends BaseEnricher {
                     addPortIfNotNull(ret, extractPortsFromImageSpec(image.getName(), port, shiftOrNull(configuredPorts)));
                 }
             }
-
         }
 
         // If there are still ports configured add them directly
@@ -372,21 +371,21 @@ public class DefaultServiceEnricher extends BaseEnricher {
         }
 
         try {
-            Set<String> serviceNames = Helper.serviceNames(port, serviceProtocol.toString().toLowerCase());
+            Set<String> serviceNames = Helper.serviceNames(port, serviceProtocol.toLowerCase());
             if (serviceNames != null && !serviceNames.isEmpty()) {
                 return serviceNames.iterator().next();
             } else {
                 return null;
             }
         } catch (IOException e) {
-            log.warn("Cannot lookup port %d/%s in IANA database: %s", port, serviceProtocol.toString().toLowerCase(), e.getMessage());
+            log.warn("Cannot lookup port %d/%s in IANA database: %s", port, serviceProtocol.toLowerCase(), e.getMessage());
             return null;
         }
     }
 
     // remove first element of list or null if list is empty
     private ServicePort shiftOrNull(List<ServicePort> ports) {
-        if (ports.size() > 0) {
+        if (!ports.isEmpty()) {
             return ports.remove(0);
         }
         return null;

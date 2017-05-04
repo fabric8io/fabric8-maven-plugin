@@ -16,18 +16,9 @@
 
 package io.fabric8.maven.core.handler;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import io.fabric8.kubernetes.api.model.IntOrString;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.ServiceFluent;
-import io.fabric8.kubernetes.api.model.ServicePort;
-import io.fabric8.kubernetes.api.model.ServicePortBuilder;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.config.ServiceConfig;
 import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.utils.Strings;
