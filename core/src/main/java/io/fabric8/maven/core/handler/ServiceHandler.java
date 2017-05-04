@@ -39,7 +39,8 @@ import io.fabric8.utils.Strings;
 public class ServiceHandler {
 
     public Service getService(ServiceConfig service) {
-        return getServices(Collections.singletonList(service)).get(0);
+        List<Service> ret = getServices(Collections.singletonList(service));
+        return ret.size() > 0 ? ret.get(0) : null;
     }
 
     public List<Service> getServices(List<ServiceConfig> services) {
@@ -59,10 +60,6 @@ public class ServiceHandler {
 
             List<ServicePort> servicePorts = new ArrayList<>();
 
-            // lets default to only adding the first port as usually its the web port only
-            // TODO we could add better filters maybe?
-            // worst case folks can be specific of what ports to expose?
-            int count = 0;
             for (ServiceConfig.Port port : service.getPorts()) {
                 ServicePort servicePort = new ServicePortBuilder()
                     .withName(port.getName())
@@ -72,9 +69,6 @@ public class ServiceHandler {
                     .withNodePort(port.getNodePort())
                     .build();
                 servicePorts.add(servicePort);
-                if (++count >= 1) {
-                    break;
-                }
             }
 
             if (!servicePorts.isEmpty()) {

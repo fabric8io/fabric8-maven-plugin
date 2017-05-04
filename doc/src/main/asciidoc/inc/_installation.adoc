@@ -7,7 +7,7 @@ pre- and post-integration phase as seen below. The configuration and
 available goals are described below.
 
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
-----
+---- 
 <plugin>
   <groupId>io.fabric8</groupId>
   <artifactId>fabric8-maven-plugin</artifactId>

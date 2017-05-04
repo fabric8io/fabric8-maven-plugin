@@ -1,0 +1,86 @@
+
+[[fmp-service]]
+==== fmp-service
+
+This enricher is used to ensure that a service is present. 
+This can be either directly configured with fragments or with the XML configuration, but it can be also automatically inferred by looking at the ports exposed by an image configuration. 
+An explicit configuration always takes precedence over auto detection. For enriching an existing service this enricher actually works only on a configured service which matches with the configured (or inferred) service name.
+
+The following configuration parameters can be used to influence the behaviour of this enricher:
+
+[[enricher-fmp-service]]
+.Default service enricher
+[cols="1,6,1"]
+|===
+| Element | Description | Default
+
+| *name*
+| Service name to enrich by default. If not given here or configured elsewhere, the artifactId is used
+|
+
+| *headless*
+| whether a headless service without a port should be configured. A headless service has the `ClusterIP` set to `None` and will be only used if no ports are exposed by the image configuration or by the configuration `port`.
+
+| `false`
+
+| *expose*
+| If set to true, a label `expose` with value `true` is added which can be picked up by the fabric8 https://github.com/fabric8io/exposecontroller[expose-controller] to expose the service to the outside by various means. See the documentation of expose-controller for more details.
+| `false`
+
+| *type*
+| Kubernetes / OpenShift service type to set like _LoadBalancer_, _NodePort_ or _ClusterIP_.
+|
+
+| *port*
+| The service port to use. By default the same port as the ports exposed in the image configuration is used, but can be changed with this parameter. See <<fmp-service-ports,below>> for a detailed description of the format which can be put into this variable.
+|
+
+| *multiPort*
+| Set this to `true` if you want all ports to be exposed from an image configuration. Otherwise only the first port is used as a service port.
+| `false`
+
+| *protocol*
+| Default protocol to use for the services. Must be `tcp` or `udp`
+| `tcp`
+
+| *legacyPortMapping*
+| If this mapping options is set to `true` then a pod exports ports 8080 or 9090 is mapped to a service port 80. This is deprecated and switched off by default. You can switch it on to get back the old behaviour or, even better, use `port` for setting the service port directly.
+| `false`
+|===
+
+
+[fmp-service-ports]
+.Port specification
+
+With the option `port` you can influence the mapping how ports are mapped from the pod to the service. 
+By default and if this option is not given the ports exposed are dictated by the ports exposed from the Docker images contained in the pods. 
+Remember, each image configured can be part of the pod. 
+However you can expose also completely different ports as the images meta data declare.
+
+The property `port` can contain a comma separated list of mappings of the following format:
+
+[source,text,subs="verbatim,quotes,attributes"]
+-----
+<servicePort1>:<targetPort1>/<protocol>,<servicePort2>:<targetPort2>/<protocol>,....
+-----
+
+where the `targetPort` and `<protocol>` specification is optional. These ports are overlayed over the ports exposed by the images, in the given order.
+
+This is best explained by an example: 
+Consider a Docker image configuration which where images expose the ports `8080` and `8778` (this can be one or more images). 
+When you now provide a `port` configuration of `80,9779:9779/udp,443` then the following service port mappings will be performed:
+
+* Pod port 8080 is mapped to service port 80
+* Pod port 9779 is mapped to service port 9779 with protocol UDP. Note how this second entry overrides the pod exposed port 8778
+* Pod port 443 is mapped to service port 443
+
+What you can easily from this example is:
+
+* Port specification in `port` always override the port meta data of the contained Docker images
+* You can always provide a complete mapping with `port` on your own
+* The ports exposed by the images serve as _default values_ which are used if not specified by this configuration option.
+* You can map ports which are _not_ exposed by the images by specifying them as target ports.
+
+Multiple ports are **only** mapped when _multiPort_ mode is enabled (which is switched off by default). If _multiPort_ mode is disabled, only the first port from the list of mapped ports as calculated like above is taken. 
+
+When you set `legacyPortMapping` to true than ports 8080 to 9090 are mapped to port 80 automatically if not explicitly mapped via `_port_`. I.e. when an image exposes port 8080 with a legacy mapping this mapped to a service port 80, not 8080. You _should not_ switch this on for any good reason. In fact it might be that this option can vanish anytime.
