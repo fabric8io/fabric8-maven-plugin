@@ -38,11 +38,6 @@ import io.fabric8.utils.Strings;
  */
 public class ServiceHandler {
 
-    public Service getService(ServiceConfig service) {
-        List<Service> ret = getServices(Collections.singletonList(service));
-        return ret.size() > 0 ? ret.get(0) : null;
-    }
-
     public List<Service> getServices(List<ServiceConfig> services) {
 
         ArrayList<Service> ret = new ArrayList<>();
@@ -92,8 +87,7 @@ public class ServiceHandler {
     }
 
     private Map<String, String> getAnnotations(ServiceConfig service) {
-        Map<String, String> serviceAnnotations = new HashMap<>();
-        return serviceAnnotations;
+        return new HashMap<>();
     }
 
     private Map<String, String> getLabels(ServiceConfig service) {

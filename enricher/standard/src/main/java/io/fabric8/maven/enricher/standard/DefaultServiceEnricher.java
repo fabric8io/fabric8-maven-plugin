@@ -45,7 +45,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
 
     private static final Pattern PORT_PROTOCOL_PATTERN =
         Pattern.compile("^(\\d+)(?:/(tcp|udp))?$", Pattern.CASE_INSENSITIVE);
-    private static Pattern PORT_MAPPING_PATTERN =
+    private static final Pattern PORT_MAPPING_PATTERN =
         Pattern.compile("^\\s*(?<port>\\d+)(\\s*:\\s*(?<targetPort>\\d+))?(\\s*/\\s*(?<protocol>(tcp|udp)))?\\s*$",
                         Pattern.CASE_INSENSITIVE);
 
@@ -113,7 +113,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
               .withLabels(extractLabels())
             .endMetadata();
         ServiceFluent.SpecNested<ServiceBuilder> specBuilder = builder.withNewSpec();
-        if (ports.size() > 0) {
+        if (!ports.isEmpty()) {
             specBuilder.withPorts(ports);
         } else if (Configs.asBoolean(getConfig(Config.headless))) {
             specBuilder.withClusterIP("None");
@@ -195,7 +195,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
 
         for (ImageConfiguration image : images) {
             List<String> podPorts = getPortsFromBuildConfiguration(image);
-            if (podPorts == null || podPorts.size() == 0) {
+            if (podPorts.isEmpty()) {
                 continue;
             }
 
@@ -214,7 +214,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
         // If there are still ports configured add them directly
         if (isMultiPort) {
             ret.addAll(mirrorMissingTargetPorts(configuredPorts));
-        } else if (ret.size() == 0 && configuredPorts.size() > 0) {
+        } else if (ret.isEmpty() && !configuredPorts.isEmpty()) {
             ret.addAll(mirrorMissingTargetPorts(Collections.singletonList(configuredPorts.get(0))));
         }
 
@@ -234,10 +234,10 @@ public class DefaultServiceEnricher extends BaseEnricher {
         // No build, no default service (doesn't make much sense to have no build config, though)
         BuildImageConfiguration buildConfig = image.getBuildConfiguration();
         if (buildConfig == null) {
-            return null;
+            return Collections.emptyList();
         }
 
-        return buildConfig.getPorts() != null ? new LinkedList<>(buildConfig.getPorts()) : null;
+        return buildConfig.getPorts() != null ? new LinkedList<>(buildConfig.getPorts()) : Collections.<String>emptyList();
     }
 
     // Config can override ports
