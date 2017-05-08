@@ -93,7 +93,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
         ResourceConfig config = new ResourceConfig.Builder()
                     .controllerName(name)
                     .imagePullPolicy(getConfig(Config.pullPolicy))
-                    .withReplicas(Integer.parseInt(getConfig(Config.replicaCount)))
+                    .withReplicas(Configs.asInt(getConfig(Config.replicaCount)))
                     .build();
 
         final List<ImageConfiguration> images = getImages();

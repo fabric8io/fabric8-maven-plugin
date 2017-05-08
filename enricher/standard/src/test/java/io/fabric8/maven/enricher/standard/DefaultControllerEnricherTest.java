@@ -58,36 +58,15 @@ public class DefaultControllerEnricherTest {
 
     @Test
     public void checkReplicaCount() throws Exception {
-
-        // Setup a sample docker build configuration
-        final BuildImageConfiguration buildConfig =
-                new BuildImageConfiguration.Builder()
-                        .ports(Arrays.asList("8080"))
-                        .build();
-
-        final TreeMap controllerConfig = new TreeMap();
-        controllerConfig.put("replicaCount", "3");
-
-        // Setup mock behaviour
-        setupExpectations(buildConfig, controllerConfig);
-
-        // Enrich
-        DefaultControllerEnricher controllerEnricher = new DefaultControllerEnricher(context);
-        KubernetesListBuilder builder = new KubernetesListBuilder();
-        controllerEnricher.addMissingResources(builder);
-
-        // Validate that the generated resource contains
-        KubernetesList list = builder.build();
-        assertEquals(1, list.getItems().size());
-
-        String json = KubernetesResourceUtil.toJson(list.getItems().get(0));
-        assertThat(json, JsonPathMatchers.isJson());
-        assertThat(json, JsonPathMatchers.hasJsonPath("$.spec.replicas", Matchers.equalTo(3)));
+        enrichAndAssert(1, 3);
     }
 
     @Test
     public void checkDefaultReplicaCount() throws Exception {
+        enrichAndAssert(1, 1);
+    }
 
+    protected void enrichAndAssert(int sizeOfObjects, int replicaCount) throws com.fasterxml.jackson.core.JsonProcessingException {
         // Setup a sample docker build configuration
         final BuildImageConfiguration buildConfig =
                 new BuildImageConfiguration.Builder()
@@ -95,10 +74,9 @@ public class DefaultControllerEnricherTest {
                         .build();
 
         final TreeMap controllerConfig = new TreeMap();
+        controllerConfig.put("replicaCount", String.valueOf(replicaCount));
 
-        // Setup mock behaviour
         setupExpectations(buildConfig, controllerConfig);
-
         // Enrich
         DefaultControllerEnricher controllerEnricher = new DefaultControllerEnricher(context);
         KubernetesListBuilder builder = new KubernetesListBuilder();
@@ -106,14 +84,14 @@ public class DefaultControllerEnricherTest {
 
         // Validate that the generated resource contains
         KubernetesList list = builder.build();
-        assertEquals(1, list.getItems().size());
+        assertEquals(sizeOfObjects, list.getItems().size());
 
         String json = KubernetesResourceUtil.toJson(list.getItems().get(0));
         assertThat(json, JsonPathMatchers.isJson());
-        assertThat(json, JsonPathMatchers.hasJsonPath("$.spec.replicas", Matchers.equalTo(1)));
+        assertThat(json, JsonPathMatchers.hasJsonPath("$.spec.replicas", Matchers.equalTo(replicaCount)));
     }
 
-    private void setupExpectations(final BuildImageConfiguration buildConfig, final TreeMap controllerConfig) {
+    protected void setupExpectations(final BuildImageConfiguration buildConfig, final TreeMap controllerConfig) {
         new Expectations() {{
 
             project.getArtifactId();
@@ -133,7 +111,7 @@ public class DefaultControllerEnricherTest {
             result = buildConfig;
 
             imageConfiguration.getName();
-            result  = "helloworld";
+            result = "helloworld";
 
             context.getImages();
             result = Arrays.asList(imageConfiguration);
