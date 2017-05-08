@@ -64,13 +64,13 @@ public class DefaultControllerEnricher extends BaseEnricher {
     private final StatefulSetHandler statefulSetHandler;
     private final DaemonSetHandler daemonSetHandler;
     private final JobHandler jobHandler;
-    private ResourceConfig resourceConfig;
 
     // Available configuration keys
     private enum Config implements Configs.Key {
         name,
         pullPolicy           {{ d = "IfNotPresent"; }},
-        type                 {{ d = "deployment"; }};
+        type                 {{ d = "deployment"; }},
+        replicaCount         {{ d = "1"; }};
 
         public String def() { return d; } protected String d;
     }
@@ -85,7 +85,6 @@ public class DefaultControllerEnricher extends BaseEnricher {
         statefulSetHandler = handlers.getStatefulSetHandler();
         daemonSetHandler = handlers.getDaemonSetHandler();
         jobHandler = handlers.getJobHandler();
-        resourceConfig = buildContext.getResources();
     }
 
     @Override
@@ -94,7 +93,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
         ResourceConfig config = new ResourceConfig.Builder()
                     .controllerName(name)
                     .imagePullPolicy(getConfig(Config.pullPolicy))
-                    .withReplicas(resourceConfig != null ?resourceConfig.getReplicas():1)
+                    .withReplicas(Integer.parseInt(getConfig(Config.replicaCount)))
                     .build();
 
         final List<ImageConfiguration> images = getImages();
