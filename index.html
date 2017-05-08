@@ -4556,7 +4556,9 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <div class="sect4">
 <h5 id="fmp-service">fmp-service</h5>
 <div class="paragraph">
-<p>This enricher is used to ensure that a service is present. This can be either directly configured with fragments or with the XML configuration, but also automatically inferred by looking at the ports exposed by an image. An explicit configuration always takes precedence over auto detection. For enriching an existing service this enricher actually works only on a configured service which matches with the configured (or inferred) service name of this enricher.</p>
+<p>This enricher is used to ensure that a service is present.
+This can be either directly configured with fragments or with the XML configuration, but it can be also automatically inferred by looking at the ports exposed by an image configuration.
+An explicit configuration always takes precedence over auto detection. For enriching an existing service this enricher actually works only on a configured service which matches with the configured (or inferred) service name.</p>
 </div>
 <div class="paragraph">
 <p>The following configuration parameters can be used to influence the behaviour of this enricher:</p>
@@ -4583,23 +4585,28 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>headless</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">whether a headless service without a port should be configured</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">whether a headless service without a port should be configured. A headless service has the <code>ClusterIP</code> set to <code>None</code> and will be only used if no ports are exposed by the image configuration or by the configuration <code>port</code>.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>expose</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">If set to true, a label <code>expose</code> with value <code>true</code> is added which is picked up by the fabric8 <a href="https://github.com/fabric8io/exposecontroller">expose-controller</a> to expose the service to the outside by various means</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to true, a label <code>expose</code> with value <code>true</code> is added which can be picked up by the fabric8 <a href="https://github.com/fabric8io/exposecontroller">expose-controller</a> to expose the service to the outside by various means. See the documentation of expose-controller for more details.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>type</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Kubernetes / OpenShift service type to set like <em>LoadBalancer</em>, <em>NodePort</em>, <em>ClusterIP</em>, &#8230;&#8203;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kubernetes / OpenShift service type to set like <em>LoadBalancer</em>, <em>NodePort</em> or <em>ClusterIP</em>.</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>port</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The service port to use for the first service. By default the same port as the pod specification is used (except when <em>legacyPortMapping</em> is switched on in which case 8080 and 9090 are mapped to port 80). This mapping applies only to the <em>first</em> configured port. I.e. if you have multiple images configured to be contained in a pod, from the ports exposed only the <em>first port from the first image</em> is mapped to the port configured with this option.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The service port to use. By default the same port as the ports exposed in the image configuration is used, but can be changed with this parameter. See <a href="#fmp-service-ports">below</a> for a detailed description of the format which can be put into this variable.</p></td>
 <td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>multiPort</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set this to <code>true</code> if you want all ports to be exposed from an image configuration. Otherwise only the first port is used as a service port.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>protocol</strong></p></td>
@@ -4608,11 +4615,129 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>legacyPortMapping</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">If this mapping options is set to <code>true</code> then a pod exports ports 8080 or 9090 is mapped to a service port 80. This is deprecated and switched off. You can switch on to get back the old behaviour or, even better, use <code>port</code> for setting the service port directly.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If this mapping options is set to <code>true</code> then a pod exports ports 8080 or 9090 is mapped to a service port 80. This is deprecated and switched off by default. You can switch it on to get back the old behaviour or, even better, use <code>port</code> for setting the service port directly.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
 </tr>
 </tbody>
 </table>
+<div class="paragraph">
+<p>You specify the properties like for any enricher within the enrichers configuration like in</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
+  ..
+  <span class="tag">&lt;enricher&gt;</span>
+    <span class="tag">&lt;config&gt;</span>
+      <span class="tag">&lt;fmp-service&gt;</span>
+        <span class="tag">&lt;name&gt;</span>my-service<span class="tag">&lt;/name&gt;</span>
+        <span class="tag">&lt;type&gt;</span>NodePort<span class="tag">&lt;/type&gt;</span>
+        <span class="tag">&lt;multiPort&gt;</span>true<span class="tag">&lt;/multiPort&gt;</span>
+      <span class="tag">&lt;/fmp-service&gt;</span>
+    <span class="tag">&lt;/config&gt;</span>
+  <span class="tag">&lt;/enricher&gt;</span>
+<span class="tag">&lt;/configuration&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<div class="title">Port specification</div>
+<p>With the option <code>port</code> you can influence the mapping how ports are mapped from the pod to the service.
+By default and if this option is not given the ports exposed are dictated by the ports exposed from the Docker images contained in the pods.
+Remember, each image configured can be part of the pod.
+However you can expose also completely different ports as the images meta data declare.</p>
+</div>
+<div class="paragraph">
+<p>The property <code>port</code> can contain a comma separated list of mappings of the following format:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="text">&lt;servicePort1&gt;:&lt;targetPort1&gt;/&lt;protocol&gt;,&lt;servicePort2&gt;:&lt;targetPort2&gt;/&lt;protocol&gt;,....</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>where the <code>targetPort</code> and <code>&lt;protocol&gt;</code> specification is optional. These ports are overlayed over the ports exposed by the images, in the given order.</p>
+</div>
+<div class="paragraph">
+<p>This is best explained by some examples.</p>
+</div>
+<div class="paragraph">
+<p>For example if you have a pod which exposes a Microservice on port 8080 and you want to expose it as a service on port 80 (so that it can be accessed with <code><a href="http://myservice" class="bare">http://myservice</a></code>)  you can simply use the following enricher configuration:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
+  <span class="tag">&lt;enricher&gt;</span>
+    <span class="tag">&lt;config&gt;</span>
+      <span class="tag">&lt;fmp-service&gt;</span>
+        <span class="tag">&lt;name&gt;</span>myservice<span class="tag">&lt;/name&gt;</span>
+        <span class="tag">&lt;port&gt;</span>80:8080<span class="tag">&lt;/port&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
+      <span class="tag">&lt;/fmp-service&gt;</span>
+    <span class="tag">&lt;/config&gt;</span>
+  <span class="tag">&lt;/enricher&gt;</span>
+<span class="tag">&lt;/configuration&gt;</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>80 is the service port, 8080 the port opened in from the pod&#8217;s images</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>If your pod <em>exposes</em> their ports (which e.g. all generator do), then you can even omit the 8080 here (i.e. <code>&lt;port&gt;80&lt;/port&gt;</code>).
+In this case the <em>first</em> port exposed will be mapped to port 80, all other exposed ports will be omitted.</p>
+</div>
+<div class="paragraph">
+<p>By default an automatically generated service only exposes the first port, even when more ports are exposed.
+When you want to map multiple ports you need to set the config option <code>&lt;multiPort&gt;true&lt;/multiPort&gt;</code>.
+In this case you can also provide multiple mappings as a comma separated list in the <code>&lt;port&gt;</code> specification where each element of the list are the mapping for the first, second, &#8230;&#8203; port.</p>
+</div>
+<div class="paragraph">
+<p>A more (and bit artificially constructed) specification could be <code>&lt;port&gt;80,9779:9779/udp,443&lt;/port&gt;</code>.
+Assuming that the image exposes ports <code>8080</code> and <code>8778</code> (either directly or via <a href="#generators">generators</a>) and we have switched on multiport mode, then the following service port mappings will be performed for the automatically generated service:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Pod port 8080 is mapped to service port 80.</p>
+</li>
+<li>
+<p>Pod port 9779 is mapped to service port 9779 with protocol UDP. Note how this second entry overrides the pod exposed port 8778.</p>
+</li>
+<li>
+<p>Pod port 443 is mapped to service port 443.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This example show also the mapping rules:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Port specification in <code>port</code> always override the port meta data of the contained Docker images (i.e. the ports exposed)</p>
+</li>
+<li>
+<p>You can always provide a complete mapping with <code>port</code> on your own</p>
+</li>
+<li>
+<p>The ports exposed by the images serve as <em>default values</em> which are used if not specified by this configuration option.</p>
+</li>
+<li>
+<p>You can map ports which are <em>not</em> exposed by the images by specifying them as target ports.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Multiple ports are <strong>only</strong> mapped when <em>multiPort</em> mode is enabled (which is switched off by default). If <em>multiPort</em> mode is disabled, only the first port from the list of mapped ports as calculated like above is taken.</p>
+</div>
+<div class="paragraph">
+<p>When you set <code>legacyPortMapping</code> to true than ports 8080 to 9090 are mapped to port 80 automatically if not explicitly mapped via <code><em>port</em></code>. I.e. when an image exposes port 8080 with a legacy mapping this mapped to a service port 80, not 8080. You <em>should not</em> switch this on for any good reason. In fact it might be that this option can vanish anytime.</p>
+</div>
 </div>
 <div class="sect4">
 <h5 id="fmp-image">fmp-image</h5>
@@ -6142,7 +6267,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.28<br>
-Last updated 2017-05-08 15:46:14 UTC
+Last updated 2017-05-08 15:49:27 UTC
 </div>
 </div>
 </body>
