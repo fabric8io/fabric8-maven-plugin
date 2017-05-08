@@ -16,18 +16,9 @@
 
 package io.fabric8.maven.core.handler;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import io.fabric8.kubernetes.api.model.IntOrString;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.ServiceFluent;
-import io.fabric8.kubernetes.api.model.ServicePort;
-import io.fabric8.kubernetes.api.model.ServicePortBuilder;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.config.ServiceConfig;
 import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.utils.Strings;
@@ -37,10 +28,6 @@ import io.fabric8.utils.Strings;
  * @since 08/04/16
  */
 public class ServiceHandler {
-
-    public Service getService(ServiceConfig service) {
-        return getServices(Collections.singletonList(service)).get(0);
-    }
 
     public List<Service> getServices(List<ServiceConfig> services) {
 
@@ -59,10 +46,6 @@ public class ServiceHandler {
 
             List<ServicePort> servicePorts = new ArrayList<>();
 
-            // lets default to only adding the first port as usually its the web port only
-            // TODO we could add better filters maybe?
-            // worst case folks can be specific of what ports to expose?
-            int count = 0;
             for (ServiceConfig.Port port : service.getPorts()) {
                 ServicePort servicePort = new ServicePortBuilder()
                     .withName(port.getName())
@@ -72,9 +55,6 @@ public class ServiceHandler {
                     .withNodePort(port.getNodePort())
                     .build();
                 servicePorts.add(servicePort);
-                if (++count >= 1) {
-                    break;
-                }
             }
 
             if (!servicePorts.isEmpty()) {
@@ -98,8 +78,7 @@ public class ServiceHandler {
     }
 
     private Map<String, String> getAnnotations(ServiceConfig service) {
-        Map<String, String> serviceAnnotations = new HashMap<>();
-        return serviceAnnotations;
+        return new HashMap<>();
     }
 
     private Map<String, String> getLabels(ServiceConfig service) {
