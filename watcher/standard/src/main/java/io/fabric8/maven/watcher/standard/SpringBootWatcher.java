@@ -17,28 +17,38 @@ import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.service.PodLogService;
+import io.fabric8.maven.core.service.PortForwardService;
 import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.IoUtil;
+import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.PrefixedLogger;
+import io.fabric8.maven.core.util.SpringBootProperties;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.watcher.api.BaseWatcher;
 import io.fabric8.maven.watcher.api.WatcherContext;
 import io.fabric8.utils.Closeables;
+import io.fabric8.utils.PropertiesHelper;
 import io.fabric8.utils.Strings;
+
+import org.apache.maven.project.MavenProject;
 
 import static io.fabric8.maven.core.util.SpringBootProperties.DEV_TOOLS_REMOTE_SECRET;
 
 public class SpringBootWatcher extends BaseWatcher {
 
     private static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
+
+    private static final int DEFAULT_SERVER_PORT = 8080;
 
     // Available configuration keys
     private enum Config implements Configs.Key {
@@ -70,8 +80,46 @@ public class SpringBootWatcher extends BaseWatcher {
 
         new PodLogService(logContext).tailAppPodsLogs(kubernetes, getContext().getNamespace(), resources, false, null, true, null, false);
 
+        String url = getServiceExposeUrl(kubernetes, resources);
+        if (url == null) {
+            url = getPortForwardUrl(resources);
+        }
+
+        if (url != null) {
+            runRemoteSpringApplication(url);
+        } else {
+            throw new IllegalStateException("Unable to open a channel to the remote pod.");
+        }
+    }
+
+    private String getPortForwardUrl(final Set<HasMetadata> resources) throws Exception {
+        LabelSelector selector = KubernetesResourceUtil.getPodLabelSelector(resources);
+        if (selector == null) {
+            log.warn("Unable to determine a selector for application pods");
+            return null;
+        }
+
+        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getContext().getProject());
+
+        PortForwardService portForwardService = getContext().getFabric8ServiceHub().getPortForwardService();
+        int port = IoUtil.getFreeRandomPort();
+        int containerPort = findSpringBootWebPort(properties);
+        portForwardService.forwardPortAsync(getContext().getLogger(), selector, containerPort, port);
+        return createForwardUrl(properties, port);
+    }
+
+    private int findSpringBootWebPort(Properties properties) {
+        return PropertiesHelper.getInteger(properties, SpringBootProperties.SERVER_PORT, DEFAULT_SERVER_PORT);
+    }
+
+    private String createForwardUrl(Properties properties, int localPort) {
+        String scheme = Strings.isNotBlank(properties.getProperty(SpringBootProperties.SERVER_KEYSTORE)) ? "https://" : "http://";
+        String contextPath = properties.getProperty(SpringBootProperties.CONTEXT_PATH, "");
+        return scheme + "localhost:" + localPort + contextPath;
+    }
+
+    private String getServiceExposeUrl(KubernetesClient kubernetes, Set<HasMetadata> resources) throws InterruptedException {
         long serviceUrlWaitTimeSeconds = Configs.asInt(getConfig(Config.serviceUrlWaitTimeSeconds));
-        boolean serviceFound = false;
         for (HasMetadata entity : resources) {
             if (entity instanceof Service) {
                 Service service = (Service) entity;
@@ -98,14 +146,13 @@ public class SpringBootWatcher extends BaseWatcher {
                 // lets not wait for other services
                 serviceUrlWaitTimeSeconds = 1;
                 if (Strings.isNotBlank(url) && url.startsWith("http")) {
-                    serviceFound = true;
-                    runRemoteSpringApplication(url);
+                    return url;
                 }
             }
         }
-        if (!serviceFound) {
-            throw new IllegalStateException("No external service found for this application! So cannot watch a remote container!");
-        }
+
+        log.info("No exposed service found for connecting the dev tools");
+        return null;
     }
 
     private boolean isExposeService(Service service) {
@@ -146,6 +193,15 @@ public class SpringBootWatcher extends BaseWatcher {
                     }
                 }
             }
+            // Add dev tools to the classpath (the main class is not read from BOOT-INF/lib)
+            try {
+                File devtools = getSpringBootDevToolsJar(getContext().getProject());
+                buffer.append(File.pathSeparator);
+                buffer.append(devtools.getCanonicalPath());
+            } catch (Exception e) {
+                throw new IllegalStateException("Failed to include devtools in the classpath: " + e, e);
+            }
+
             buffer.append(" -Dspring.devtools.remote.secret=");
             buffer.append(remoteSecret);
             buffer.append(" org.springframework.boot.devtools.RemoteSpringApplication ");
@@ -211,6 +267,14 @@ public class SpringBootWatcher extends BaseWatcher {
 
         printer.start();
         return printer;
+    }
+
+    private File getSpringBootDevToolsJar(MavenProject project) throws IOException {
+        String version = SpringBootUtil.getSpringBootDevToolsVersion(project);
+        if (version == null) {
+            throw new IllegalStateException("Unable to find the spring-boot version");
+        }
+        return getContext().getFabric8ServiceHub().getArtifactResolverService().resolveArtifact(SpringBootProperties.SPRING_BOOT_GROUP_ID, SpringBootProperties.SPRING_BOOT_DEVTOOLS_ARTIFACT_ID, version, "jar");
     }
 
 }

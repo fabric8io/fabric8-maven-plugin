@@ -102,47 +102,7 @@ Default enrichers are used for adding missing resources or adding metadata to gi
 [[fmp-controller]]
 ==== fmp-controller
 
-[[fmp-service]]
-==== fmp-service
-
-This enricher is used to ensure that a service is present. This can be either directly configured with fragments or with the XML configuration, but also automatically inferred by looking at the ports exposed by an image. An explicit configuration always takes precedence over auto detection. For enriching an existing service this enricher actually works only on a configured service which matches with the configured (or inferred) service name of this enricher.
-
-The following configuration parameters can be used to influence the behaviour of this enricher:
-
-[[enricher-fmp-service]]
-.Default service enricher
-[cols="1,6,1"]
-|===
-| Element | Description | Default
-
-| *name*
-| Service name to enrich by default. If not given here or configured elsewhere, the artifactId is used
-|
-
-| *headless*
-| whether a headless service without a port should be configured
-| `false`
-
-| *expose*
-| If set to true, a label `expose` with value `true` is added which is picked up by the fabric8 https://github.com/fabric8io/exposecontroller[expose-controller] to expose the service to the outside by various means
-| `false`
-
-| *type*
-| Kubernetes / OpenShift service type to set like _LoadBalancer_, _NodePort_, _ClusterIP_, ...
-|
-
-| *port*
-| The service port to use for the first service. By default the same port as the pod specification is used (except when _legacyPortMapping_ is switched on in which case 8080 and 9090 are mapped to port 80). This mapping applies only to the _first_ configured port. I.e. if you have multiple images configured to be contained in a pod, from the ports exposed only the _first port from the first image_ is mapped to the port configured with this option.
-|
-
-| *protocol*
-| Default protocol to use for the services. Must be `tcp` or `udp`
-| `tcp`
-
-| *legacyPortMapping*
-| If this mapping options is set to `true` then a pod exports ports 8080 or 9090 is mapped to a service port 80. This is deprecated and switched off. You can switch on to get back the old behaviour or, even better, use `port` for setting the service port directly.
-| `false`
-|===
+include::enricher/_fmp_service.adoc[]
 
 [[fmp-image]]
 ==== fmp-image

@@ -15,6 +15,8 @@
  */
 package io.fabric8.maven.core.service;
 
+import java.io.File;
+
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.BuildRecreateMode;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
@@ -31,11 +33,15 @@ public interface BuildService {
     /**
      * Builds the given image using the specified configuration.
      *
-     * @param config the build configuration
      * @param imageConfig the image to build
      */
-    void build(BuildServiceConfig config, ImageConfiguration imageConfig) throws Fabric8ServiceException;
+    void build(ImageConfiguration imageConfig) throws Fabric8ServiceException;
 
+    /**
+     * Post processing step called after all images has been build
+     * @param config build configuration
+     */
+    void postProcess(BuildServiceConfig config);
 
     /**
      * Class to hold configuration parameters for the building service.
@@ -55,6 +61,8 @@ public interface BuildService {
         private Task<KubernetesListBuilder> enricherTask;
 
         private String buildDirectory;
+
+        private Attacher attacher;
 
         public BuildServiceConfig() {
         }
@@ -85,6 +93,16 @@ public interface BuildService {
 
         public String getBuildDirectory() {
             return buildDirectory;
+        }
+
+        public Object getArtifactId() {
+            return dockerMojoParameters.getProject().getArtifactId();
+        }
+
+        public void attachArtifact(String classifier, File destFile) {
+            if (attacher != null) {
+                attacher.attach(classifier, destFile);
+            }
         }
 
         public static class Builder {
@@ -133,13 +151,21 @@ public interface BuildService {
                 return this;
             }
 
+            public Builder attacher(Attacher attacher) {
+                config.attacher = attacher;
+                return this;
+            }
+
             public BuildServiceConfig build() {
                 return config;
             }
 
         }
 
+        // Delegate for attaching stuff
+        public interface Attacher {
+            void attach(String classifier, File destFile);
+        }
     }
-
 
 }

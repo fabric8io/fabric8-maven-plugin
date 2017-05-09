@@ -62,12 +62,11 @@
     <!-- latest release version of this plugin. Used in the docs.-->
     <fabric8.maven.plugin.version>3.2.28</fabric8.maven.plugin.version>
 
-    <spring-boot.version>1.4.4.RELEASE</spring-boot.version>
-    <spring.version>4.3.3.RELEASE</spring.version>
-
     <version.maven>3.3.1</version.maven>
     <version.jacoco>0.7.8</version.jacoco>
-    <version.fabric8>2.2.205</version.fabric8>
+    <version.fabric8>2.2.210</version.fabric8>
+    <version.kubernetes-client>2.2.14</version.kubernetes-client>
+    <version.mockwebserver>0.0.13</version.mockwebserver>
     <version.docker-maven-plugin>0.20.0</version.docker-maven-plugin>
 
     <!-- =======================================================  -->
@@ -378,6 +377,29 @@
         <groupId>com.jayway.jsonpath</groupId>
         <artifactId>json-path-assert</artifactId>
         <version>2.2.0</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>kubernetes-client</artifactId>
+        <version>${version.kubernetes-client}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>openshift-client</artifactId>
+        <version>${version.kubernetes-client}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>mockwebserver</artifactId>
+        <version>${version.mockwebserver}</version>
         <scope>test</scope>
       </dependency>
 

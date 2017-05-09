@@ -70,6 +70,18 @@ public class ProcessorConfig {
     }
 
     /**
+     * Return full configuration as raw string-string values
+     *
+     * @param name name of the enricher / generator
+     * @return unmodifiable map of the original config
+     */
+    public Map<String, String> getConfigMap(String name) {
+        return config.containsKey(name) ?
+            Collections.unmodifiableMap(config.get(name)) :
+            Collections.<String, String>emptyMap();
+    }
+
+    /**
      * Order elements according to the order provided by the include statements.
      * If no includes has been configured, return the given list unaltered.
      * Otherwise arrange the elements from the list in to the include order and return a new

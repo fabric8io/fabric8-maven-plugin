@@ -25,10 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.builds.Builds;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectReference;
-import io.fabric8.kubernetes.api.model.Status;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
@@ -44,16 +41,9 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.openshift.api.model.Build;
-import io.fabric8.openshift.api.model.BuildConfig;
-import io.fabric8.openshift.api.model.BuildConfigSpec;
-import io.fabric8.openshift.api.model.BuildOutput;
-import io.fabric8.openshift.api.model.BuildOutputBuilder;
-import io.fabric8.openshift.api.model.BuildSource;
-import io.fabric8.openshift.api.model.BuildStrategy;
-import io.fabric8.openshift.api.model.BuildStrategyBuilder;
+import io.fabric8.openshift.api.model.*;
 import io.fabric8.openshift.client.OpenShiftClient;
-
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
@@ -65,15 +55,22 @@ public class OpenshiftBuildService implements BuildService {
     private final OpenShiftClient client;
     private final Logger log;
     private ServiceHub dockerServiceHub;
+    private BuildServiceConfig config;
 
-    public OpenshiftBuildService(OpenShiftClient client, Logger log, ServiceHub dockerServiceHub) {
+    public OpenshiftBuildService(OpenShiftClient client, Logger log, ServiceHub dockerServiceHub, BuildServiceConfig config) {
+        Objects.requireNonNull(client, "client");
+        Objects.requireNonNull(log, "log");
+        Objects.requireNonNull(dockerServiceHub, "dockerServiceHub");
+        Objects.requireNonNull(config, "config");
+
         this.client = client;
         this.log = log;
         this.dockerServiceHub = dockerServiceHub;
+        this.config = config;
     }
 
     @Override
-    public void build(BuildServiceConfig config, ImageConfiguration imageConfig) throws Fabric8ServiceException {
+    public void build(ImageConfiguration imageConfig) throws Fabric8ServiceException {
 
         try {
             ImageName imageName = new ImageName(imageConfig.getName());
@@ -95,10 +92,19 @@ public class OpenshiftBuildService implements BuildService {
             waitForOpenShiftBuildToComplete(client, build);
 
             // Create a file with generated image streams
-            saveImageStreamToFile(config, imageName, client);
+            addImageStreamToFile(getImageStreamFile(config), imageName, client);
         } catch (Exception ex) {
-            throw new Fabric8ServiceException("Unable to build the image using the Openshift build service", ex);
+            throw new Fabric8ServiceException("Unable to build the image using the OpenShift build service", ex);
         }
+    }
+
+    private File getImageStreamFile(BuildServiceConfig config) {
+        return ResourceFileType.yaml.addExtension(new File(config.getBuildDirectory(), String.format("%s-is", config.getArtifactId())));
+    }
+
+    @Override
+    public void postProcess(BuildServiceConfig config) {
+        config.attachArtifact("is", getImageStreamFile(config));
     }
 
     private String updateOrCreateBuildConfig(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder, ImageConfiguration imageConfig) {
@@ -196,15 +202,8 @@ public class OpenshiftBuildService implements BuildService {
             Map<String, String> fromExt = buildConfig.getFromExt();
 
             String fromName = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.name, buildConfig.getFrom());
-            String fromNamespace = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.namespace, "");
             String fromKind = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.kind, "DockerImage");
-
-            if ("ImageStreamTag".equals(fromKind) && fromNamespace == null) {
-                fromNamespace = "openshift";
-            }
-            if (fromNamespace.isEmpty()) {
-                fromNamespace = null;
-            }
+            String fromNamespace = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.namespace, "ImageStreamTag".equals(fromKind) ? "openshift" : null);
 
             return new BuildStrategyBuilder()
                     .withType("Source")
@@ -212,7 +211,7 @@ public class OpenshiftBuildService implements BuildService {
                     .withNewFrom()
                     .withKind(fromKind)
                     .withName(fromName)
-                    .withNamespace(fromNamespace)
+                    .withNamespace(StringUtils.isEmpty(fromNamespace) ? null : fromNamespace)
                     .endFrom()
                     .endSourceStrategy()
                     .build();
@@ -240,7 +239,10 @@ public class OpenshiftBuildService implements BuildService {
     }
 
     private void applyResourceObjects(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder) throws Exception {
-        config.getEnricherTask().execute(builder);
+        if (config.getEnricherTask() != null) {
+            config.getEnricherTask().execute(builder);
+        }
+
         if (builder.hasItems()) {
             KubernetesList k8sList = builder.build();
             client.lists().create(k8sList);
@@ -360,11 +362,9 @@ public class OpenshiftBuildService implements BuildService {
         }
     }
 
-    private void saveImageStreamToFile(BuildServiceConfig config, ImageName imageName, OpenShiftClient client) throws MojoExecutionException {
-        File imageStreamFile = ResourceFileType.yaml.addExtension(new File(config.getBuildDirectory(),
-                imageName.getSimpleName() + "-is"));
+    private void addImageStreamToFile(File imageStreamFile, ImageName imageName, OpenShiftClient client) throws MojoExecutionException {
         ImageStreamService imageStreamHandler = new ImageStreamService(client, log);
-        imageStreamHandler.saveImageStreamResource(imageName, imageStreamFile);
+        imageStreamHandler.appendImageStreamResource(imageName, imageStreamFile);
     }
 
     // == Utility methods ==========================

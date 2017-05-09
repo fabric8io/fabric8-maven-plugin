@@ -99,8 +99,16 @@ public abstract class BaseEnricher implements Enricher {
         return config.get(key);
     }
 
+    protected boolean hasConfig(Configs.Key key) {
+        return config.get(key) != null;
+    }
+
     protected String getConfig(Configs.Key key, String defaultVal) {
         return config.get(key, defaultVal);
+    }
+
+    protected Map<String, String> getRawConfig() {
+        return config.getRawConfig();
     }
 
     protected EnricherContext getContext() {

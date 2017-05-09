@@ -31,6 +31,7 @@ import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.Gofabric8Util;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
@@ -56,6 +57,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.repository.RepositorySystem;
 
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_KUBERNETES_MANIFEST;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
@@ -147,6 +149,9 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     @Component
     protected GoalFinder goalFinder;
 
+    @Component
+    protected RepositorySystem repositorySystem;
+
     private ClusterAccess clusterAccess;
     private KubernetesClient kubernetes;
     private ServiceHub hub;
@@ -156,13 +161,15 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
         if (skip) {
             return;
         }
+
+        clusterAccess = new ClusterAccess(namespace);
+        kubernetes = clusterAccess.createDefaultClient(log);
+
         super.execute();
     }
 
     @Override
     protected synchronized void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-        clusterAccess = new ClusterAccess(namespace);
-        kubernetes = clusterAccess.createDefaultClient(log);
         this.hub = hub;
 
         URL masterUrl = kubernetes.getMasterUrl();
@@ -211,6 +218,18 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
                 .useProjectClasspath(useProjectClasspath)
                 .namespace(clusterAccess.getNamespace())
                 .kubernetesClient(kubernetes)
+                .fabric8ServiceHub(getFabric8ServiceHub())
+                .build();
+    }
+
+    protected Fabric8ServiceHub getFabric8ServiceHub() {
+        return new Fabric8ServiceHub.Builder()
+                .log(log)
+                .clusterAccess(clusterAccess)
+                .dockerServiceHub(hub)
+                .platformMode(mode)
+                .repositorySystem(repositorySystem)
+                .mavenProject(project)
                 .build();
     }
 
@@ -224,6 +243,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
         try {
+            Fabric8ServiceHub serviceHub = getFabric8ServiceHub();
             GeneratorContext ctx = new GeneratorContext.Builder()
                     .config(extractGeneratorConfig())
                     .project(project)
@@ -234,6 +254,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
                     .mode(mode)
                     .strategy(buildStrategy)
                     .useProjectClasspath(useProjectClasspath)
+                    .artifactResolver(serviceHub.getArtifactResolverService())
                     .build();
             return GeneratorManager.generate(configs, ctx, false);
         } catch (MojoExecutionException e) {

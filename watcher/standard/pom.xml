@@ -29,18 +29,6 @@
 
   <name>Fabric8 Maven :: Watcher :: Standard</name>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-dependencies</artifactId>
-        <version>${spring-boot.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
   <dependencies>
     <dependency>
       <groupId>io.fabric8</groupId>
@@ -52,16 +40,6 @@
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-core</artifactId>
     </dependency>
-
-    <!-- == Remote Spring Boot ============================ -->
-    <!-- TODO: Spring boot must not be refrenced in fabric8-maven-plugin and fabric8-maven-core
-               Instead they should be mover into the spring-boot specific generators and enrichers -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-devtools</artifactId>
-    </dependency>
-
-    <!-- == Test =============================================== -->
 
     <dependency>
       <groupId>junit</groupId>

@@ -150,7 +150,14 @@ public class ServiceConfig {
         // =====================================================================================
 
         public static class Builder {
+
             Port config = new Port();
+
+            public static Builder from(Port port) {
+                Builder ret = new Builder();
+                ret.config = port;
+                return ret;
+            }
 
             public Builder name(String name) {
                 config.name = name;

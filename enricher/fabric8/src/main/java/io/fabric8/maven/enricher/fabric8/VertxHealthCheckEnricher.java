@@ -92,7 +92,7 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
     private boolean isApplicable() {
         return MavenUtil.hasPlugin(getProject(), VERTX_MAVEN_PLUGIN_GA)
-                || MavenUtil.hasDependencyOnAnyArtifactOfGroup(getProject(), VERTX_GROUPID);
+               || MavenUtil.hasDependencyOnAnyArtifactOfGroup(getProject(), VERTX_GROUPID);
     }
 
     private Probe discoverVertxHealthCheck(int initialDelay, boolean readiness) {

@@ -96,13 +96,22 @@ public class SpringBootUtil {
                 @SuppressWarnings("unchecked")
                 SortedMap<String, Object> source = yaml.loadAs(yamlStream, SortedMap.class);
                 Properties properties = new Properties();
-                properties.putAll(getFlattenedMap(source));
+                if (source != null) {
+                    properties.putAll(getFlattenedMap(source));
+                }
                 return properties;
             } catch (IOException e) {
                 throw new IllegalStateException("Error while reading Yaml resource from URL " + resource, e);
             }
         }
         return new Properties();
+    }
+
+    /**
+     * Determine the spring-boot devtools version for the current project
+     */
+    public static String getSpringBootDevToolsVersion(MavenProject mavenProject) {
+        return MavenUtil.getDependencyVersion(mavenProject, SpringBootProperties.SPRING_BOOT_GROUP_ID, SpringBootProperties.SPRING_BOOT_ARTIFACT_ID);
     }
 
     /**
