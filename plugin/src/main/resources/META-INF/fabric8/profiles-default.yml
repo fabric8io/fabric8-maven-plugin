@@ -32,6 +32,7 @@
     # Health checks
     - fmp-openshift-route
     - spring-boot-health-check
+    - wildfly-swarm-health-check
     - karaf-health-check
     - vertx-health-check
     - docker-health-check
