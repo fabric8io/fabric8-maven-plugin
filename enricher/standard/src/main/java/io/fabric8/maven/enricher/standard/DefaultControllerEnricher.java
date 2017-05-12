@@ -16,16 +16,17 @@
 
 package io.fabric8.maven.enricher.standard;
 
-import java.util.List;
-
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.extensions.*;
-import io.fabric8.maven.core.handler.*;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentFluent;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
 import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.handler.*;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
@@ -33,6 +34,8 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.utils.Lists;
+
+import java.util.List;
 
 /**
  * Enrich with controller if not already present.
@@ -66,7 +69,8 @@ public class DefaultControllerEnricher extends BaseEnricher {
     private enum Config implements Configs.Key {
         name,
         pullPolicy           {{ d = "IfNotPresent"; }},
-        type                 {{ d = "deployment"; }};
+        type                 {{ d = "deployment"; }},
+        replicaCount         {{ d = "1"; }};
 
         public String def() { return d; } protected String d;
     }
@@ -86,11 +90,11 @@ public class DefaultControllerEnricher extends BaseEnricher {
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
         final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject()));
-        ResourceConfig config =
-            new ResourceConfig.Builder()
-                .controllerName(name)
-                .imagePullPolicy(getConfig(Config.pullPolicy))
-                .build();
+        ResourceConfig config = new ResourceConfig.Builder()
+                    .controllerName(name)
+                    .imagePullPolicy(getConfig(Config.pullPolicy))
+                    .withReplicas(Configs.asInt(getConfig(Config.replicaCount)))
+                    .build();
 
         final List<ImageConfiguration> images = getImages();
 
