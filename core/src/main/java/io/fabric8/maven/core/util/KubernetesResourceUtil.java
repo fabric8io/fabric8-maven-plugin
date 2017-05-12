@@ -336,12 +336,17 @@ public class KubernetesResourceUtil {
     // ===============================================================================================
 
     private static Map<String, Object> getMetadata(Map<String, Object> fragment) {
-        Map<String, Object> meta = (Map<String, Object>) fragment.get("metadata");
-        if (meta == null) {
+        Object mo = fragment.get("metadata");
+        Map<String, Object> meta;
+        if (mo == null) {
             meta = new HashMap<>();
             fragment.put("metadata", meta);
+            return meta;
+        } else if (mo instanceof Map) {
+            return (Map<String, Object>) mo;
+        } else {
+            throw new IllegalArgumentException("Metadata is expected to be a Map, not a " + mo.getClass());
         }
-        return meta;
     }
 
     private static void addIfNotExistent(Map<String, Object> fragment, String key, String value) {
@@ -354,7 +359,8 @@ public class KubernetesResourceUtil {
         ObjectMapper mapper = new ObjectMapper("json".equals(ext) ? new JsonFactory() : new YAMLFactory());
         TypeReference<HashMap<String,Object>> typeRef = new TypeReference<HashMap<String,Object>>() {};
         try {
-            return mapper.readValue(file, typeRef);
+            Map<String, Object> ret = mapper.readValue(file, typeRef);
+            return ret != null ? ret : new HashMap<String, Object>();
         } catch (JsonProcessingException e) {
             throw new JsonMappingException(String.format("[%s] %s", file, e.getMessage()), e.getLocation(), e);
         }
