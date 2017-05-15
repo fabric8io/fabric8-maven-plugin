@@ -38,8 +38,8 @@ import io.fabric8.openshift.api.model.ImageStreamBuilder;
 import io.fabric8.openshift.api.model.ImageStreamStatusBuilder;
 import io.fabric8.openshift.api.model.NamedTagEventListBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.fabric8.openshift.server.mock.OpenShiftMockServer;
 
+import io.fabric8.openshift.client.server.mock.OpenShiftMockServer;
 import org.apache.maven.project.MavenProject;
 import org.junit.Before;
 import org.junit.Test;
@@ -128,7 +128,7 @@ public class OpenshiftBuildServiceTest {
         OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
         service.build(image);
 
-        // we should add a better way to assert that a certain call has been made
+        // we should Foadd a better way to assert that a certain call has been made
         assertTrue(mockServer.getRequestCount() > 8);
         collector.assertEventsRecordedInOrder("build-config-check", "new-build-config", "pushed");
         collector.assertEventsNotRecorded("patch-build-config");

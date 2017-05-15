@@ -27,8 +27,8 @@ import io.fabric8.kubernetes.api.model.WatchEvent;
 import io.fabric8.maven.core.util.ProcessUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.fabric8.openshift.server.mock.OpenShiftMockServer;
 
+import io.fabric8.openshift.client.server.mock.OpenShiftMockServer;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;

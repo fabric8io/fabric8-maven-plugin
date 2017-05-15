@@ -20,7 +20,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import io.fabric8.kubernetes.server.mock.KubernetesMockServer;
+import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
 import io.fabric8.mockwebserver.utils.ResponseProvider;
 
 import org.junit.Assert;
