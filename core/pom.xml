@@ -70,14 +70,13 @@
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>kubernetes-client</artifactId>
-      <type>test-jar</type>
+      <artifactId>kubernetes-server-mock</artifactId>
     </dependency>
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>openshift-client</artifactId>
-      <type>test-jar</type>
+      <artifactId>openshift-server-mock</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
