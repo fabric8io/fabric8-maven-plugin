@@ -5,11 +5,35 @@
 This goal is used to monitor the project workspace for changes and automatically trigger a redeploy of the application
 running on Kubernetes.
 
-Before entering the watch mode, this goal generates the docker image and the Kubernetes resources
+Before entering the watch mode, this goal must generate the docker image and the Kubernetes resources
 (optionally including some development libraries/configuration),
-and deploys the app on Kubernetes.
+and deploy the app on Kubernetes. Lifecycle bindings should be configured as follows to allow
+the generation of such resources.
 
-[source, sh]
+.Lifecycle bindings for fabric8:watch
+[source, xml, indent=0]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>fabric8-maven-plugin</artifactId>
+
+  <!-- ... -->
+
+  <executions>
+    <execution>
+      <goals>
+        <goal>resource</goal>
+        <goal>build</goal>
+      </goals>
+    </execution>
+  </executions>
+</plugin>
+----
+
+For any application having `resource` and `build` goals bound to the lifecycle, the following
+command can be used to run the watch task.
+
+[source, bash]
 ----
 mvn fabric8:watch
 ----
