@@ -43,10 +43,12 @@ import static io.fabric8.utils.Objects.notNull;
 public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConverter {
     private final PlatformMode mode;
     private final Long openshiftDeployTimeoutSeconds;
+    private final boolean useImageStreamTriggers;
 
-    public DeploymentOpenShiftConverter(PlatformMode mode, Long openshiftDeployTimeoutSeconds) {
+    public DeploymentOpenShiftConverter(PlatformMode mode, Long openshiftDeployTimeoutSeconds, boolean useImageStreamTriggers) {
         this.mode = mode;
         this.openshiftDeployTimeoutSeconds = openshiftDeployTimeoutSeconds;
+        this.useImageStreamTriggers = useImageStreamTriggers;
     }
 
     @Override
@@ -99,7 +101,7 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                 specBuilder.addNewTrigger().withType("ConfigChange").endTrigger();
 
                 // add a new image change trigger for the build stream
-                if (containerToImageMap.size() != 0) {
+                if (containerToImageMap.size() != 0 && useImageStreamTriggers) {
                     if (mode.equals(PlatformMode.openshift)) {
                         for (Map.Entry<String, String> entry : containerToImageMap.entrySet()) {
                             String containerName = entry.getKey();

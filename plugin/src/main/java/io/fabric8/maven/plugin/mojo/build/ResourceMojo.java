@@ -178,6 +178,9 @@ public class ResourceMojo extends AbstractResourceMojo {
     @Parameter(property = "fabric8.openshift.deployTimeoutSeconds")
     private Long openshiftDeployTimeoutSeconds;
 
+    @Parameter(property = "fabric8.openshift.useImageStreamTriggers")
+    private boolean useImageStreamTriggers;
+
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
 
@@ -236,7 +239,7 @@ public class ResourceMojo extends AbstractResourceMojo {
 
         openShiftConverters = new HashMap<>();
         openShiftConverters.put("ReplicaSet", new ReplicSetOpenShiftConverter());
-        openShiftConverters.put("Deployment", new DeploymentOpenShiftConverter(platformMode, getOpenshiftDeployTimeoutSeconds()));
+        openShiftConverters.put("Deployment", new DeploymentOpenShiftConverter(platformMode, getOpenshiftDeployTimeoutSeconds(), useImageStreamTriggers));
         // TODO : This converter shouldn't be here. See its javadoc.
         openShiftConverters.put("DeploymentConfig", new DeploymentConfigOpenShiftConverter(getOpenshiftDeployTimeoutSeconds()));
         openShiftConverters.put("Namespace", new NamespaceOpenShiftConverter());
