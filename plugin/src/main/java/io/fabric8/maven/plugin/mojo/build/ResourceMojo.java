@@ -174,8 +174,11 @@ public class ResourceMojo extends AbstractResourceMojo {
      * The OpenShift deploy timeout in seconds:
      * See this issue for background of why for end users on slow wifi on their laptops
      * DeploymentConfigs usually barf: https://github.com/openshift/origin/issues/10531
+     *
+     * Lets default to 2 hours which should be plenty of time on a slow connection to download
+     * all the images for a YAML/JSON manifest (which can contain many separate images)
      */
-    @Parameter(property = "fabric8.openshift.deployTimeoutSeconds")
+    @Parameter(property = "fabric8.openshift.deployTimeoutSeconds", defaultValue = "7200")
     private Long openshiftDeployTimeoutSeconds;
 
     @Parameter(property = "fabric8.openshift.useImageStreamTriggers")
