@@ -19,20 +19,21 @@ package io.fabric8.maven.plugin.converter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.LabelSelector;
-import io.fabric8.kubernetes.api.model.extensions.*;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfigFluent;
-import io.fabric8.utils.Strings;
-
-import static io.fabric8.utils.Objects.notNull;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Convert a Kubernetes <code>Deployment</code> to an OpenShift <code>DeploymentConfig</code>
@@ -78,9 +79,9 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                 if (template != null) {
                     specBuilder.withTemplate(template);
                     PodSpec podSpec = template.getSpec();
-                    notNull(podSpec, "No PodSpec for PodTemplate:" + template);
+                    Objects.requireNonNull(podSpec, "No PodSpec for PodTemplate:" + template);
                     List<Container> containers = podSpec.getContainers();
-                    notNull(podSpec, "No containers for PodTemplate.spec: " + template);
+                    Objects.requireNonNull(podSpec, "No containers for PodTemplate.spec: " + template);
                     for (Container container : containers) {
                         validateContainer(container);
                         containerToImageMap.put(container.getName(), container.getImage());
@@ -92,7 +93,7 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                     strategyType = strategy.getType();
                 }
                 if (openshiftDeployTimeoutSeconds != null && openshiftDeployTimeoutSeconds > 0) {
-                    if (Strings.isNullOrBlank(strategyType) || "Rolling".equals(strategyType)) {
+                    if (StringUtils.isBlank(strategyType) || "Rolling".equals(strategyType)) {
                         specBuilder.withNewStrategy().withType("Rolling").
                                 withNewRollingParams().withTimeoutSeconds(openshiftDeployTimeoutSeconds).endRollingParams().endStrategy();
                     } else if ("Recreate".equals(strategyType)) {
@@ -101,7 +102,7 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                     } else {
                         specBuilder.withNewStrategy().withType(strategyType).endStrategy();
                     }
-                } else if (Strings.isNotBlank(strategyType)) {
+                } else if (StringUtils.isNotBlank(strategyType)) {
                     // TODO is there any values we can copy across?
                     specBuilder.withNewStrategy().withType(strategyType).endStrategy();
                 }

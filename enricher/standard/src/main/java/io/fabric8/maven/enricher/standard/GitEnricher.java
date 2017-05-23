@@ -16,15 +16,17 @@
 
 package io.fabric8.maven.enricher.standard;
 
-import io.fabric8.kubernetes.api.Annotations;
-import io.fabric8.maven.enricher.api.util.GitUtil;
-import io.fabric8.maven.enricher.api.*;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Repository;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import io.fabric8.maven.core.util.GitUtil;
+import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
+import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.Kind;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Repository;
 
 /**
  * Enricher for adding build metadata:
@@ -51,14 +53,13 @@ public class GitEnricher extends BaseEnricher {
                 // Git annotations (if git is used as SCM)
                 repository = GitUtil.getGitRepository(getProject());
                 if (repository != null) {
-                    String result;
                     String branch = repository.getBranch();
                     if (branch != null) {
-                        annotations.put(Annotations.Builds.GIT_BRANCH, branch);
+                        annotations.put(Fabric8Annotations.GIT_BRANCH.value(), branch);
                     }
                     String id = GitUtil.getGitCommitId(repository);
                     if (id != null) {
-                        annotations.put(Annotations.Builds.GIT_COMMIT, id);
+                        annotations.put(Fabric8Annotations.GIT_COMMIT.value(), id);
                     }
                 }
             }

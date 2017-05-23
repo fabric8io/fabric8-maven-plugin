@@ -1,5 +1,9 @@
 package io.fabric8.maven.enricher.fabric8;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.util.Configs;

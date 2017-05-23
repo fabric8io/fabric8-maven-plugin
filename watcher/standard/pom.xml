@@ -33,7 +33,12 @@
     <dependency>
       <groupId>io.fabric8</groupId>
       <artifactId>fabric8-maven-watcher-api</artifactId>
-      <version>3.5-SNAPSHOT</version>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
     </dependency>
 
     <dependency>

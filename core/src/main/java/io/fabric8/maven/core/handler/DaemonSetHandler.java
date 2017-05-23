@@ -1,13 +1,16 @@
 package io.fabric8.maven.core.handler;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
+import java.util.List;
+
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.extensions.*;
+import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
+import io.fabric8.kubernetes.api.model.extensions.DaemonSetBuilder;
+import io.fabric8.kubernetes.api.model.extensions.DaemonSetSpec;
+import io.fabric8.kubernetes.api.model.extensions.DaemonSetSpecBuilder;
 import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-
-import java.util.List;
 
 /**
  * Created by matthew on 26/10/16.

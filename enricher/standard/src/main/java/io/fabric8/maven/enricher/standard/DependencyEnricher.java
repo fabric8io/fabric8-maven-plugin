@@ -16,32 +16,36 @@
 
 package io.fabric8.maven.enricher.standard;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.KindAndName;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
-import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
-import io.fabric8.openshift.api.model.Template;
-import io.fabric8.utils.Function;
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.plugin.MojoExecutionException;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
-import static io.fabric8.utils.Lists.notNullList;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.base.Function;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.KindAndName;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.openshift.api.model.Template;
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  * Enricher for embedding dependency descriptors to single package.
@@ -212,7 +216,7 @@ public class DependencyEnricher extends BaseEnricher {
                     log.debug("Processing Kubernetes YAML in at: %s", url);
 
                     KubernetesList resources = new ObjectMapper(new YAMLFactory()).readValue(is, KubernetesList.class);
-                    List<HasMetadata> items = notNullList(resources.getItems());
+                    List<HasMetadata> items = resources.getItems();
                     if (items.size() == 0 && Objects.equals("Template", resources.getKind())) {
                         is = url.openStream();
                         Template template = new ObjectMapper(new YAMLFactory()).readValue(is, Template.class);
@@ -222,7 +226,7 @@ public class DependencyEnricher extends BaseEnricher {
                     }
                     for (HasMetadata item : items) {
                         KubernetesResourceUtil.setSourceUrlAnnotationIfNotSet(item, url.toString());
-                        log.debug("  found %s  %s", getKind(item), KubernetesHelper.getName(item));
+                        log.debug("  found %s  %s", KubernetesHelper.getKind(item), KubernetesHelper.getName(item));
                     }
                     function.apply(items);
                 }

@@ -14,7 +14,7 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.core.util;
+package io.fabric8.maven.core.util.kubernetes;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -27,18 +27,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
-import io.fabric8.kubernetes.api.Controller;
-import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.LabelSelector;
+import io.fabric8.kubernetes.api.model.LabelSelectorRequirement;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.LabelSelector;
-import io.fabric8.kubernetes.api.model.LabelSelectorRequirement;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
@@ -52,10 +50,7 @@ import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.fabric8.utils.Strings;
-
-import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
-import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Utility class for executing common tasks using the Kubernetes client
@@ -65,10 +60,9 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
  */
 public class KubernetesClientUtil {
 
-
     public static void resizeApp(KubernetesClient kubernetes, String namespace, Set<HasMetadata> entities, int replicas, Logger log) {
         for (HasMetadata entity : entities) {
-            String name = getName(entity);
+            String name = KubernetesHelper.getName(entity);
             Scaleable<?> scalable = null;
             if (entity instanceof Deployment) {
                 scalable = kubernetes.extensions().deployments().inNamespace(namespace).withName(name);
@@ -77,7 +71,7 @@ public class KubernetesClientUtil {
             } else if (entity instanceof ReplicationController) {
                 scalable = kubernetes.replicationControllers().inNamespace(namespace).withName(name);
             } else if (entity instanceof DeploymentConfig) {
-                OpenShiftClient openshiftClient = new Controller(kubernetes).getOpenShiftClientOrNull();
+                OpenShiftClient openshiftClient = OpenshiftHelper.asOpenShiftClient(kubernetes);
                 if (openshiftClient == null) {
                     log.warn("Ignoring DeploymentConfig %s as not connected to an OpenShift cluster", name);
                     continue;
@@ -85,7 +79,7 @@ public class KubernetesClientUtil {
                 scalable = openshiftClient.deploymentConfigs().inNamespace(namespace).withName(name);
             }
             if (scalable != null) {
-                log.info("Scaling " + getKind(entity) + " " + namespace + "/" + name + " to replicas: " + replicas);
+                log.info("Scaling " + KubernetesHelper.getKind(entity) + " " + namespace + "/" + name + " to replicas: " + replicas);
                 scalable.scale(replicas, true);
             }
         }
@@ -97,10 +91,9 @@ public class KubernetesClientUtil {
         List<HasMetadata> list = new ArrayList<>(entities);
 
         // For OpenShift cluster, also delete s2i buildconfig
-        OpenShiftClient openshiftClient = new Controller(kubernetes).getOpenShiftClientOrNull();
-        if (openshiftClient != null) {
+        OpenShiftClient openshiftClient = OpenshiftHelper.asOpenShiftClient(kubernetes);        if (openshiftClient != null) {
             for (HasMetadata entity : list) {
-                if ("ImageStream".equals(getKind(entity))) {
+                if ("ImageStream".equals(KubernetesHelper.getKind(entity))) {
                     ImageName imageName = new ImageName(entity.getMetadata().getName());
                     String buildName = getS2IBuildName(imageName, s2iBuildNameSuffix);
                     log.info("Deleting resource BuildConfig " + namespace + "/" + buildName);
@@ -113,7 +106,7 @@ public class KubernetesClientUtil {
         Collections.reverse(list);
 
         for (HasMetadata entity : list) {
-            log.info("Deleting resource " + getKind(entity) + " " + namespace + "/" + getName(entity));
+            log.info("Deleting resource " + KubernetesHelper.getKind(entity) + " " + namespace + "/" + KubernetesHelper.getName(entity));
             kubernetes.resource(entity).inNamespace(namespace).cascading(true).delete();
         }
     }
@@ -134,7 +127,7 @@ public class KubernetesClientUtil {
             for (LabelSelectorRequirement expression : matchExpressions) {
                 String key = expression.getKey();
                 List<String> values = expression.getValues();
-                if (Strings.isNullOrBlank(key)) {
+                if (StringUtils.isBlank(key)) {
                     log.warn("Ignoring empty key in selector expression %s", expression);
                     continue;
                 }
@@ -188,7 +181,7 @@ public class KubernetesClientUtil {
     }
 
     public static String getPodStatusDescription(Pod pod) {
-        return KubernetesHelper.getPodStatusText(pod) + " " + getPodCondition(pod);
+        return KubernetesHelper.getPodPhase(pod) + " " + getPodCondition(pod);
     }
 
     public static String getPodStatusMessagePostfix(Watcher.Action action) {
@@ -217,10 +210,10 @@ public class KubernetesClientUtil {
 
         for (PodCondition condition : conditions) {
             String type = condition.getType();
-            if (Strings.isNotBlank(type)) {
+            if (StringUtils.isNotBlank(type)) {
                 if ("ready".equalsIgnoreCase(type)) {
                     String statusText = condition.getStatus();
-                    if (Strings.isNotBlank(statusText)) {
+                    if (StringUtils.isNotBlank(statusText)) {
                         if (Boolean.parseBoolean(statusText)) {
                             return type;
                         }

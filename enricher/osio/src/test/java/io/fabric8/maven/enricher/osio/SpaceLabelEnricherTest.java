@@ -16,29 +16,26 @@
 
 package io.fabric8.maven.enricher.osio;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import com.google.common.collect.ImmutableMap;
-
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
-import io.fabric8.maven.enricher.osio.SpaceLabelEnricher;
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 @RunWith(JMockit.class)
 public class SpaceLabelEnricherTest {

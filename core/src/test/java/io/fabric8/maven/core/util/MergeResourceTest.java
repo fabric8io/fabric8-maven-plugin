@@ -16,7 +16,10 @@
 
 package io.fabric8.maven.core.util;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
@@ -24,14 +27,12 @@ import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.junit.Test;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
@@ -73,7 +74,7 @@ public class MergeResourceTest {
         assertThat(answer).describedAs("mergeResult").isInstanceOf(Deployment.class);
         Deployment result = (Deployment) answer;
 
-        log.info("Override metadata on Deployment generated: " + KubernetesHelper.toYaml(answer));
+        log.info("Override metadata on Deployment generated: " + ResourceUtil.toYaml(answer));
         Map<String, String> annotations = answer.getMetadata().getAnnotations();
 
         assertDataModified(annotations, "Deployment.metadata.annotations");
@@ -106,7 +107,7 @@ public class MergeResourceTest {
         HasMetadata answer = KubernetesResourceUtil.mergeResources(resource, override, log, false);
         assertNotNull(answer);
 
-        log.info("Override metadata on Deployment with no spec generated: " + KubernetesHelper.toYaml(answer));
+        log.info("Override metadata on Deployment with no spec generated: " + ResourceUtil.toYaml(answer));
         Map<String, String> annotations = answer.getMetadata().getAnnotations();
 
         assertDataModified(annotations, "Deployment.metadata.annotations");
@@ -142,7 +143,7 @@ public class MergeResourceTest {
         HasMetadata answer = KubernetesResourceUtil.mergeResources(resource, override, log, false);
         assertNotNull(answer);
 
-        log.info("Override metadata on Deployment generated: " + KubernetesHelper.toYaml(answer));
+        log.info("Override metadata on Deployment generated: " + ResourceUtil.toYaml(answer));
 
         assertThat(answer).describedAs("mergeResult").isInstanceOf(Deployment.class);
 
@@ -172,13 +173,13 @@ public class MergeResourceTest {
 
         HasMetadata answer = KubernetesResourceUtil.mergeResources(resource, override, log, false);
 
-        log.info("Override ConfigMap generated: " + KubernetesHelper.toYaml(answer));
+        log.info("Override ConfigMap generated: " + ResourceUtil.toYaml(answer));
 
         assertThat(answer).describedAs("mergeResult").isInstanceOf(ConfigMap.class);
 
         ConfigMap cm = (ConfigMap) answer;
         Map<String, String> data = cm.getData();
-        
+
         assertDataModified(data, "ConfigMap.data");
         assertDataNotModified(resource.getData(), "Original ConfigMap.data");
     }

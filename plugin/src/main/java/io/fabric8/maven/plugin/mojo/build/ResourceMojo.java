@@ -15,19 +15,62 @@
  */
 package io.fabric8.maven.plugin.mojo.build;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+
+import javax.validation.ConstraintViolationException;
+
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.extensions.Templates;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.maven.core.access.ClusterAccess;
-import io.fabric8.maven.core.config.*;
+import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
+import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.config.Profile;
+import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.config.SecretConfig;
+import io.fabric8.maven.core.config.ServiceConfig;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
 import io.fabric8.maven.core.service.ComposeService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
-import io.fabric8.maven.core.util.*;
+import io.fabric8.maven.core.util.Base64Util;
+import io.fabric8.maven.core.util.DockerServerUtil;
+import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.core.util.OpenShiftDependencyResources;
+import io.fabric8.maven.core.util.OpenShiftOverrideResources;
+import io.fabric8.maven.core.util.ProfileUtil;
+import io.fabric8.maven.core.util.ResourceClassifier;
+import io.fabric8.maven.core.util.ResourceFileType;
+import io.fabric8.maven.core.util.ResourceUtil;
+import io.fabric8.maven.core.util.SecretConstants;
+import io.fabric8.maven.core.util.ValidationUtil;
+import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.core.util.validator.ResourceValidator;
 import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
@@ -50,9 +93,8 @@ import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.Template;
-import io.fabric8.utils.Lists;
-import io.fabric8.utils.Strings;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -63,21 +105,6 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
-
-import javax.validation.ConstraintViolationException;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
 
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
 import static io.fabric8.maven.core.util.ResourceFileType.json;
@@ -94,7 +121,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     /**
      * Used to annotate a resource as being for a specific platform only such as "kubernetes" or "openshift"
      */
-    public static final String TARGET_PLATFORM_ANNOTATION = "fabric8.io/target-platform";
 
     // THe key how we got the the docker maven plugin
     private static final String DOCKER_MAVEN_PLUGIN_KEY = "io.fabric8:docker-maven-plugin";
@@ -349,7 +375,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     private static void writeIndividualResources(KubernetesList resources, File targetDir, ResourceFileType resourceFileType, Logger log, Boolean generateRoute) throws MojoExecutionException {
         for (HasMetadata item : resources.getItems()) {
             String name = KubernetesHelper.getName(item);
-            if (Strings.isNullOrBlank(name)) {
+            if (StringUtils.isBlank(name)) {
                 log.error("No name for generated item %s", item);
                 continue;
             }
@@ -367,7 +393,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     private static File writeResource(File resourceFileBase, Object entity, ResourceFileType resourceFileType) throws MojoExecutionException {
         try {
-            return KubernetesResourceUtil.writeResource(entity, resourceFileBase, resourceFileType);
+            return ResourceUtil.save(resourceFileBase, entity, resourceFileType);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to write resource to " + resourceFileBase + ". " + e, e);
         }
@@ -490,7 +516,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         Template customTemplate = createTemplateWithObjects(kubernetesResources, template);
         if (customTemplate != null) {
             try {
-                return Templates.processTemplatesLocally(customTemplate, false);
+                return OpenshiftHelper.processTemplatesLocally(customTemplate, false);
             } catch (IOException e) {
                 throw new MojoExecutionException("Failed to replace template expressions in kubernetes manifest: " + e, e);
             }
@@ -541,12 +567,12 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     }
 
     private boolean isTargetPlatformOpenShift(HasMetadata item) {
-        String targetPlatform = KubernetesHelper.getOrCreateAnnotations(item).get(TARGET_PLATFORM_ANNOTATION);
+        String targetPlatform = KubernetesHelper.getOrCreateAnnotations(item).get(Fabric8Annotations.TARGET_PLATFORM.value());
         return targetPlatform != null && "openshift".equalsIgnoreCase(targetPlatform);
     }
 
     private boolean isTargetPlatformKubernetes(HasMetadata item) {
-        String targetPlatform = KubernetesHelper.getOrCreateAnnotations(item).get(TARGET_PLATFORM_ANNOTATION);
+        String targetPlatform = KubernetesHelper.getOrCreateAnnotations(item).get(Fabric8Annotations.TARGET_PLATFORM.value());
         return targetPlatform != null && "kubernetes".equalsIgnoreCase(targetPlatform);
     }
 
@@ -814,7 +840,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                 if (extractedTemplate == null) {
                     extractedTemplate = template;
                 } else {
-                    extractedTemplate = Templates.combineTemplates(extractedTemplate, template);
+                    extractedTemplate = OpenshiftHelper.combineTemplates(extractedTemplate, template);
                 }
                 items.remove(item);
             }
@@ -960,10 +986,12 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     private void addSecrets(KubernetesListBuilder builder) {
         log.verbose("Adding secrets resources from plugin configuration");
         List<SecretConfig> secrets = resources.getSecrets();
-        if (Lists.isNullOrEmpty(secrets)) { return; }
+        if (secrets == null || secrets.isEmpty()) {
+            return;
+        }
         for (int i = 0; i < secrets.size(); i++) {
             SecretConfig secretConfig = secrets.get(i);
-            if (Strings.isNullOrBlank(secretConfig.getName())) {
+            if (StringUtils.isBlank(secretConfig.getName())) {
                 log.warn("Secret name is empty. You should provide a proper name for the secret");
                 continue;
             }
@@ -978,7 +1006,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             // docker-registry
             if (secretConfig.getDockerServerId() != null) {
                 String dockerSecret = DockerServerUtil.getDockerJsonConfigString(settings, secretConfig.getDockerServerId());
-                if (Strings.isNullOrBlank(dockerSecret)) {
+                if (StringUtils.isBlank(dockerSecret)) {
                     log.warn("Docker secret with id " + secretConfig.getDockerServerId() + " cannot be found in maven settings");
                     continue;
                 }
@@ -987,7 +1015,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             }
             // TODO: generic secret (not supported for now)
 
-            if (Strings.isNullOrBlank(type) || data.isEmpty()) {
+            if (StringUtils.isBlank(type) || data.isEmpty()) {
                 log.warn("No data can be found for docker secret with id " + secretConfig.getDockerServerId());
                 continue;
             }

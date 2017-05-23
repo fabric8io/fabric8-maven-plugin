@@ -16,19 +16,17 @@
 
 package io.fabric8.maven.rt;
 
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
 import io.fabric8.openshift.api.model.Route;
 import okhttp3.Response;
 import org.apache.http.HttpStatus;
 import org.eclipse.jgit.lib.Repository;
 import org.json.JSONObject;
 import org.junit.After;
-import org.junit.Test;
-
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
 import org.junit.Before;
-
+import org.junit.Test;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 

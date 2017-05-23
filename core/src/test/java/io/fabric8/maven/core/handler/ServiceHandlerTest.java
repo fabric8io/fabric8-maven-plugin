@@ -15,14 +15,18 @@
  */
 package io.fabric8.maven.core.handler;
 
-import static org.junit.Assert.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.maven.core.config.ServiceConfig;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class ServiceHandlerTest {
 

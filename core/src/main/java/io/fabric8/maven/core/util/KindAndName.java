@@ -15,8 +15,9 @@
  */
 package io.fabric8.maven.core.util;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+
 
 /**
  * Represents a key for a resource so we can look up resources by key and name
@@ -31,7 +32,7 @@ public class KindAndName {
     }
 
     public KindAndName(HasMetadata item) {
-        this(KubernetesHelper.getKind(item), KubernetesHelper.getName(item));
+        this(io.fabric8.maven.core.util.kubernetes.KubernetesHelper.getKind(item), KubernetesHelper.getName(item));
     }
 
     public String getKind() {

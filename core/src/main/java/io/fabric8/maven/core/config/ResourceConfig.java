@@ -16,11 +16,11 @@
 
 package io.fabric8.maven.core.config;
 
-import org.apache.maven.plugins.annotations.Parameter;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland

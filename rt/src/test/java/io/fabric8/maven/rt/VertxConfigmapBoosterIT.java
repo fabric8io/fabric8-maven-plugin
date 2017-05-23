@@ -16,6 +16,12 @@
 
 package io.fabric8.maven.rt;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import io.fabric8.openshift.api.model.Route;
 import okhttp3.Response;
 import org.apache.commons.io.FileUtils;
@@ -24,12 +30,6 @@ import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 

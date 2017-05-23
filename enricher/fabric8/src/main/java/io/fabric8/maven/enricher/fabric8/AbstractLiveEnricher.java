@@ -14,19 +14,20 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.enricher.api;
+package io.fabric8.maven.enricher.fabric8;
 
 import java.net.ConnectException;
 import java.util.Stack;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.utils.Strings;
-
-import static io.fabric8.kubernetes.api.KubernetesHelper.DEFAULT_NAMESPACE;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.ServiceUrlUtil;
+import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.EnricherContext;
+import org.apache.commons.lang3.StringUtils;
 
 abstract public class AbstractLiveEnricher extends BaseEnricher {
 
@@ -79,12 +80,12 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
             try {
                 KubernetesClient kubernetes = getKubernetes();
                 String ns = kubernetes.getNamespace();
-                if (Strings.isNullOrBlank(ns)) {
+                if (StringUtils.isBlank(ns)) {
                     ns = getNamespace();
                 }
                 Service service = kubernetes.services().inNamespace(ns).withName(serviceName).get();
                 return service != null ?
-                    KubernetesHelper.getServiceURL(kubernetes, serviceName, ns, protocol, true) :
+                    ServiceUrlUtil.getServiceURL(kubernetes, serviceName, ns, protocol, true) :
                     null;
             } catch (Throwable e) {
                 Throwable cause = e;
@@ -155,10 +156,9 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
     // - "default"
     private String getNamespace() {
         String namespace = getContext().getNamespace();
-        if (Strings.isNullOrBlank(namespace)) {
-            namespace = KubernetesHelper.defaultNamespace();
+        if (StringUtils.isNotBlank(namespace)){
+            return namespace;
         }
-        return Strings.isNullOrBlank(namespace) ? DEFAULT_NAMESPACE : namespace;
+        return KubernetesHelper.getDefaultNamespace();
     }
-
 }

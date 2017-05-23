@@ -2,8 +2,9 @@ package io.fabric8.maven.enricher.api.util;
 
 import org.junit.Test;
 
-import static io.fabric8.maven.enricher.api.util.GoTimeUtil.*;
-import static org.junit.Assert.*;
+import static io.fabric8.maven.enricher.api.util.GoTimeUtil.durationSeconds;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class GoTimeUtilTest {
 

@@ -1,5 +1,9 @@
 package io.fabric8.maven.enricher.fabric8;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.Properties;
+
 import io.fabric8.kubernetes.api.model.HTTPHeader;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.maven.enricher.api.EnricherContext;
@@ -16,12 +20,11 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.Properties;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * @author <a href="http://escoffier.me">Clement Escoffier</a>

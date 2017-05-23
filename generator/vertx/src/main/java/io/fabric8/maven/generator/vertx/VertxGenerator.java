@@ -16,6 +16,10 @@
 
 package io.fabric8.maven.generator.vertx;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
@@ -24,11 +28,12 @@ import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import static io.fabric8.maven.generator.vertx.Constants.*;
+import static io.fabric8.maven.generator.vertx.Constants.CLUSTER_MANAGER_SPI;
+import static io.fabric8.maven.generator.vertx.Constants.SHADE_PLUGIN_GA;
+import static io.fabric8.maven.generator.vertx.Constants.VERTX_DROPWIZARD;
+import static io.fabric8.maven.generator.vertx.Constants.VERTX_GROUPID;
+import static io.fabric8.maven.generator.vertx.Constants.VERTX_INFINIPAN;
+import static io.fabric8.maven.generator.vertx.Constants.VERTX_MAVEN_PLUGIN_GA;
 
 /**
  * Vert.x Generator.
@@ -48,7 +53,7 @@ import static io.fabric8.maven.generator.vertx.Constants.*;
  * If vertx-dropwizard-metrics is in the classpath, the metrics are enabled and the JMX export is also enabled.
  */
 public class VertxGenerator extends JavaExecGenerator {
-  
+
   public VertxGenerator(GeneratorContext context) {
     super(context, "vertx");
   }
@@ -68,7 +73,7 @@ public class VertxGenerator extends JavaExecGenerator {
     if (! contains("-Dvertx.disableDnsResolver=", opts)) {
       opts.add("-Dvertx.disableDnsResolver=true");
     }
-    
+
     if (MavenUtil.hasDependency(getProject(), VERTX_GROUPID, VERTX_DROPWIZARD)) {
       opts.add("-Dvertx.metrics.options.enabled=true");
       opts.add("-Dvertx.metrics.options.jmxEnabled=true");

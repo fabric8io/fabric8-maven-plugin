@@ -44,16 +44,16 @@ import io.fabric8.kubernetes.api.model.extensions.StatefulSetFluent;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpecFluent;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfigFluent;
 import io.fabric8.openshift.api.model.DeploymentConfigSpecFluent;
-import io.fabric8.utils.Strings;
+import org.apache.commons.lang3.StringUtils;
 
-import static io.fabric8.maven.core.util.KubernetesResourceUtil.extractContainerName;
+import static io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil.extractContainerName;
 
 /**
  * Merge in image configuration like the image name into ReplicaSet and ReplicationController's
@@ -237,7 +237,7 @@ public class ImageEnricher extends BaseEnricher {
     }
 
     private void mergeContainerName(ImageConfiguration imageConfiguration, Container container) {
-        if (Strings.isNullOrBlank(container.getName())) {
+        if (StringUtils.isBlank(container.getName())) {
             String containerName = extractContainerName(getProject(), imageConfiguration);
             log.verbose("Setting container name %s",containerName);
             container.setName(containerName);
@@ -245,9 +245,9 @@ public class ImageEnricher extends BaseEnricher {
     }
 
     private void mergeImage(ImageConfiguration imageConfiguration, Container container) {
-        if (Strings.isNullOrBlank(container.getImage())) {
+        if (StringUtils.isBlank(container.getImage())) {
             String prefix = "";
-            if (Strings.isNotBlank(imageConfiguration.getRegistry())) {
+            if (StringUtils.isNotBlank(imageConfiguration.getRegistry())) {
                 log.verbose("Using registry %s for the image", imageConfiguration.getRegistry());
                 prefix = imageConfiguration.getRegistry() + "/";
             }
@@ -258,12 +258,12 @@ public class ImageEnricher extends BaseEnricher {
     }
 
     private void mergeImagePullPolicy(ImageConfiguration imageConfiguration, Container container) {
-        if (Strings.isNullOrBlank(container.getImagePullPolicy())) {
+        if (StringUtils.isBlank(container.getImagePullPolicy())) {
             String policy = getConfig(Config.pullPolicy);
             if (policy == null) {
                 policy = "IfNotPresent";
                 String imageName = imageConfiguration.getName();
-                if (Strings.isNotBlank(imageName) && imageName.endsWith(":latest")) {
+                if (StringUtils.isNotBlank(imageName) && imageName.endsWith(":latest")) {
                     policy = "Always";
                 }
             }

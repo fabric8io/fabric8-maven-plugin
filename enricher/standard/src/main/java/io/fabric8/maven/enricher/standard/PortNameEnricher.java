@@ -16,15 +16,15 @@
 
 package io.fabric8.maven.enricher.standard;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Enrich container ports with names with names of IANA registered services, if not already present.

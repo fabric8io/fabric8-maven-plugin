@@ -37,12 +37,11 @@ import io.fabric8.maven.core.handler.ReplicaSetHandler;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.StatefulSetHandler;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.utils.Lists;
 
 /**
  * Enrich with controller if not already present.
@@ -108,7 +107,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
         // Check if at least a replica set is added. If not add a default one
         if (!KubernetesResourceUtil.checkForKind(builder, POD_CONTROLLER_KINDS)) {
             // At least one image must be present, otherwise the resulting config will be invalid
-            if (!Lists.isNullOrEmpty(images)) {
+            if (images != null && !images.isEmpty()) {
                 String type = getConfig(Config.type);
                 if ("deployment".equalsIgnoreCase(type)) {
                     log.info("Adding a default Deployment");

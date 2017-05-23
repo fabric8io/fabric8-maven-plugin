@@ -27,8 +27,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.PodStatusType;
 import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
@@ -37,11 +35,13 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
-import io.fabric8.maven.core.util.KubernetesClientUtil;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.ProcessUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.utils.Strings;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * A service for forwarding connections to remote pods.
@@ -57,8 +57,8 @@ public class PortForwardService {
 
     private KubernetesClient kubernetes;
 
-    public PortForwardService(ClientToolsService clientToolsService, Logger log, KubernetesClient kubernetes) {
-        this.clientToolsService = Objects.requireNonNull(clientToolsService, "clientToolsService");
+    public PortForwardService(KubernetesClient kubernetes, Logger log) {
+        this.clientToolsService = new ClientToolsService(log);
         this.log = Objects.requireNonNull(log, "log");
         this.kubernetes = Objects.requireNonNull(kubernetes, "kubernetes");
     }
@@ -217,8 +217,7 @@ public class PortForwardService {
         Pod targetPod = null;
         if (items != null) {
             for (Pod pod : items) {
-                PodStatusType status = KubernetesHelper.getPodStatus(pod);
-                if (status == PodStatusType.WAIT || status == PodStatusType.OK) {
+                if (KubernetesHelper.isPodWaiting(pod) || KubernetesHelper.isPodRunning(pod)) {
                     if (targetPod == null || (KubernetesHelper.isPodReady(pod) && KubernetesResourceUtil.isNewerResource(pod, targetPod))) {
                         targetPod = pod;
                     }
@@ -233,7 +232,7 @@ public class PortForwardService {
     }
 
     public ProcessUtil.ProcessExecutionContext forwardPortAsync(Logger externalProcessLogger, String pod, int remotePort, int localPort) throws Fabric8ServiceException {
-        File command = clientToolsService.getKubeCtlExecutable();
+        File command = clientToolsService.getKubeCtlExecutable(OpenshiftHelper.isOpenShiftClient(kubernetes));
         log.info("Port forwarding to port " + remotePort + " on pod " + pod + " using command " + command);
 
         List<String> args = new ArrayList<>();
@@ -241,7 +240,7 @@ public class PortForwardService {
         args.add(pod);
         args.add(localPort + ":" + remotePort);
 
-        String commandLine = command + " " + Strings.join(args, " ");
+        String commandLine = command + " " + StringUtils.join(args, " ");
         log.verbose("Executing command " + commandLine);
         try {
             return ProcessUtil.runAsyncCommand(externalProcessLogger, command, args, true, false);

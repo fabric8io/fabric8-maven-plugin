@@ -15,11 +15,12 @@
  */
 package io.fabric8.maven.core.service.kubernetes;
 
+import java.util.Objects;
+
 import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.utils.Objects;
 
 /**
  * @author nicola
@@ -32,8 +33,8 @@ public class DockerBuildService implements BuildService {
     private BuildServiceConfig config;
 
     public DockerBuildService(ServiceHub dockerServiceHub, BuildServiceConfig config) {
-        Objects.notNull(dockerServiceHub, "dockerServiceHub");
-        Objects.notNull(config, "config");
+        Objects.requireNonNull(dockerServiceHub, "dockerServiceHub");
+        Objects.requireNonNull(config, "config");
 
         this.dockerServiceHub = dockerServiceHub;
         this.config = config;

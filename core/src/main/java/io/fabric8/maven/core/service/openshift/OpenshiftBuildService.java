@@ -16,7 +16,11 @@
 
 package io.fabric8.maven.core.service.openshift;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,9 +29,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.builds.Builds;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.LocalObjectReferenceBuilder;
+import io.fabric8.kubernetes.api.model.ObjectReference;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Status;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
@@ -36,9 +43,11 @@ import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.core.util.IoUtil;
-import io.fabric8.maven.core.util.KubernetesClientUtil;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.ResourceFileType;
+import io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.assembly.ArchiverCustomizer;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
@@ -47,15 +56,24 @@ import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.docker.util.*;
-import io.fabric8.openshift.api.model.*;
+import io.fabric8.maven.docker.util.AuthConfigFactory;
+import io.fabric8.maven.docker.util.DockerFileUtil;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.openshift.api.model.Build;
+import io.fabric8.openshift.api.model.BuildConfig;
+import io.fabric8.openshift.api.model.BuildConfigSpec;
+import io.fabric8.openshift.api.model.BuildOutput;
+import io.fabric8.openshift.api.model.BuildOutputBuilder;
+import io.fabric8.openshift.api.model.BuildSource;
+import io.fabric8.openshift.api.model.BuildStrategy;
+import io.fabric8.openshift.api.model.BuildStrategyBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.archiver.tar.TarArchiver;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -173,7 +191,7 @@ public class OpenshiftBuildService implements BuildService {
     }
 
     private File getImageStreamFile(BuildServiceConfig config) {
-        return ResourceFileType.yaml.addExtension(new File(config.getBuildDirectory(), String.format("%s-is", config.getArtifactId())));
+        return ResourceFileType.yaml.addExtensionIfMissing(new File(config.getBuildDirectory(), String.format("%s-is", config.getArtifactId())));
     }
 
     @Override
@@ -486,7 +504,7 @@ public class OpenshiftBuildService implements BuildService {
             try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {
                 // Check if the build is already finished to avoid waiting indefinitely
                 Build lastBuild = client.builds().withName(buildName).get();
-                if (Builds.isFinished(KubernetesResourceUtil.getBuildStatusPhase(lastBuild))) {
+                if (OpenshiftHelper.isFinished(KubernetesResourceUtil.getBuildStatusPhase(lastBuild))) {
                     log.debug("Build %s is already finished", buildName);
                     buildHolder.set(lastBuild);
                     latch.countDown();
@@ -501,11 +519,11 @@ public class OpenshiftBuildService implements BuildService {
                     build = client.builds().withName(buildName).get();
                 }
                 String status = KubernetesResourceUtil.getBuildStatusPhase(build);
-                if (Builds.isFailed(status) || Builds.isCancelled(status)) {
-                    throw new MojoExecutionException("OpenShift Build " + buildName + " error: " + KubernetesResourceUtil.getBuildStatusReason(build));
+                if (OpenshiftHelper.isFailed(status) || OpenshiftHelper.isCancelled(status)) {
+                    throw new MojoExecutionException("OpenShift Build " + buildName + " failed: " + KubernetesResourceUtil.getBuildStatusReason(build));
                 }
 
-                if (!Builds.isFinished(status)) {
+                if (!OpenshiftHelper.isFinished(status)) {
                     log.warn("Could not wait for the completion of build %s. It may be  may be still running (status=%s)", buildName, status);
                 } else {
                     log.info("Build %s in status %s", buildName, status);
@@ -567,7 +585,7 @@ public class OpenshiftBuildService implements BuildService {
                     lastStatus = status;
                     log.verbose("Build %s status: %s", buildName, status);
                 }
-                if (Builds.isFinished(status)) {
+                if (OpenshiftHelper.isFinished(status)) {
                     latch.countDown();
                 }
             }

@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
-import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -76,8 +75,8 @@ public class PrometheusEnricherTest {
         Map<String, String> annotations = enricher.getAnnotations(Kind.SERVICE);
 
         assertEquals(2, annotations.size());
-        assertEquals("1234", annotations.get(Annotations.Management.PROMETHEUS_PORT));
-        assertEquals("true", annotations.get(Annotations.Management.PROMETHEUS_SCRAPE));
+        assertEquals("1234", annotations.get(PrometheusEnricher.ANNOTATION_PROMETHEUS_PORT));
+        assertEquals("true", annotations.get(PrometheusEnricher.ANNOTATION_PROMETHEUS_SCRAPE));
     }
 
     @Test
@@ -107,8 +106,8 @@ public class PrometheusEnricherTest {
         Map<String, String> annotations = enricher.getAnnotations(Kind.SERVICE);
 
         assertEquals(2, annotations.size());
-        assertEquals("9779", annotations.get(Annotations.Management.PROMETHEUS_PORT));
-        assertEquals("true", annotations.get(Annotations.Management.PROMETHEUS_SCRAPE));
+        assertEquals("9779", annotations.get(PrometheusEnricher.ANNOTATION_PROMETHEUS_PORT));
+        assertEquals("true", annotations.get(PrometheusEnricher.ANNOTATION_PROMETHEUS_SCRAPE));
     }
 
     @Test

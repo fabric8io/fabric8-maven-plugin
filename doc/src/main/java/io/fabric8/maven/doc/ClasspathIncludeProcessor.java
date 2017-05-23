@@ -16,7 +16,6 @@
 
 package io.fabric8.maven.doc;
 
-import java.io.*;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;

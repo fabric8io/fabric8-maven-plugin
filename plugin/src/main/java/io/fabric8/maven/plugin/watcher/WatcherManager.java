@@ -18,12 +18,12 @@ package io.fabric8.maven.plugin.watcher;
 import java.util.List;
 import java.util.Set;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.PluginServiceFactory;
+import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.watcher.api.Watcher;
@@ -44,7 +44,7 @@ public class WatcherManager {
             new PluginServiceFactory<>(watcherCtx, ClassUtil.createProjectClassLoader(watcherCtx.getProject(), watcherCtx.getLogger())) :
             new PluginServiceFactory<>(watcherCtx);
 
-        boolean isOpenshift = KubernetesHelper.isOpenShift(watcherCtx.getKubernetesClient());
+        boolean isOpenshift = OpenshiftHelper.isOpenShift(watcherCtx.getKubernetesClient());
         PlatformMode mode = isOpenshift ? PlatformMode.openshift : PlatformMode.kubernetes;
 
         List<Watcher> watchers =

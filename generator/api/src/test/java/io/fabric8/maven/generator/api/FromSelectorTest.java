@@ -30,8 +30,10 @@ import org.apache.maven.project.MavenProject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.*;
-import static io.fabric8.maven.core.config.PlatformMode.*;
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy;
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.docker;
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.s2i;
+import static io.fabric8.maven.core.config.PlatformMode.openshift;
 import static org.junit.Assert.assertEquals;
 
 /**

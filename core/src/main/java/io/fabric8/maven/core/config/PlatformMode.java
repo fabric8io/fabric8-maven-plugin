@@ -16,9 +16,9 @@
 
 package io.fabric8.maven.core.config;
 
-import com.google.common.base.Objects;
-
 import java.util.Properties;
+
+import com.google.common.base.Objects;
 
 /**
  * Mode how to create resouce descriptors

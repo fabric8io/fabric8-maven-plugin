@@ -16,7 +16,9 @@
 
 package io.fabric8.maven.enricher.standard;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
+import java.util.ArrayList;
+import java.util.List;
+
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.EnvVar;
@@ -30,18 +32,15 @@ import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigSpec;
-import io.fabric8.utils.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.project.MavenProject;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
 import static io.fabric8.maven.core.util.DebugConstants.ENV_VAR_JAVA_DEBUG;
 import static io.fabric8.maven.core.util.DebugConstants.ENV_VAR_JAVA_DEBUG_PORT;
 import static io.fabric8.maven.core.util.DebugConstants.ENV_VAR_JAVA_DEBUG_PORT_DEFAULT;
@@ -90,7 +89,7 @@ public class DebugEnricher extends BaseEnricher {
     }
 
     private static boolean isTrueFlag(String value) {
-        return Strings.isNotBlank(value) && value.toString().equals("true");
+        return StringUtils.isNotBlank(value) && value.equals("true");
     }
 
 
@@ -149,7 +148,7 @@ public class DebugEnricher extends BaseEnricher {
                         enabled = true;
                     }
                     if (enabled) {
-                        log.info("Enabling debug on " + getKind(entity) + " " + KubernetesHelper.getName(entity) + " due to the property: " + ENABLE_DEBUG_MAVEN_PROPERTY);
+                        log.info("Enabling debug on " + KubernetesHelper.getKind(entity) + " " + KubernetesHelper.getName(entity) + " due to the property: " + ENABLE_DEBUG_MAVEN_PROPERTY);
                         return true;
                     }
                 }

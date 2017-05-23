@@ -19,20 +19,21 @@ package io.fabric8.maven.core.util;
 import org.json.JSONObject;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author roland
  * @since 07/02/17
  */
-public class JSONUtilTest {
+public class ResourceUtilTest {
 
     @Test
     public void simple() {
         JSONObject first = new JSONObject("{first: bla, second: blub}");
         JSONObject same = new JSONObject("{second: blub, first: bla   }");
         JSONObject different = new JSONObject("{second: blub, first: bla2   }");
-        assertTrue(JSONUtil.equals(first, same));
-        assertFalse(JSONUtil.equals(first, different));
+        assertTrue(ResourceUtil.jsonEquals(first, same));
+        assertFalse(ResourceUtil.jsonEquals(first, different));
     }
 }

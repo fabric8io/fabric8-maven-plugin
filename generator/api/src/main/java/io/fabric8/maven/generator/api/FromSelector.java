@@ -25,7 +25,9 @@ import io.fabric8.maven.core.config.PlatformMode;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 
-import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.*;
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.kind;
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.name;
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.namespace;
 
 /**
  * Helper class to encapsulate the selection of a base image

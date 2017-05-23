@@ -23,7 +23,6 @@ import java.net.URL;
 import java.util.List;
 import java.util.Set;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -34,8 +33,9 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.Gofabric8Util;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.ProfileUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.BuildService;
@@ -48,7 +48,6 @@ import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.maven.plugin.watcher.WatcherManager;
 import io.fabric8.maven.watcher.api.WatcherContext;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -176,7 +175,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
         KubernetesResourceUtil.validateKubernetesMasterUrl(masterUrl);
 
         File manifest;
-        boolean isOpenshift = KubernetesHelper.isOpenShift(kubernetes);
+        boolean isOpenshift = OpenshiftHelper.isOpenShift(kubernetes);
         if (isOpenshift) {
             manifest = openshiftManifest;
         } else {

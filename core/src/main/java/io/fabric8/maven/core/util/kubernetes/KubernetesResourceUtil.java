@@ -14,7 +14,7 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.core.util;
+package io.fabric8.maven.core.util.kubernetes;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -23,7 +23,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -35,7 +34,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -44,8 +42,12 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.extensions.Templates;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.Container;
@@ -80,36 +82,23 @@ import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.internal.HasMetadataComparator;
+import io.fabric8.maven.core.util.MapUtil;
+import io.fabric8.maven.core.util.ResourceUtil;
+import io.fabric8.maven.core.util.ResourceVersioning;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.Build;
-import io.fabric8.openshift.api.model.BuildStatus;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.api.model.Template;
-import io.fabric8.utils.Files;
-import io.fabric8.utils.Strings;
-
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.utils.StringUtils;
 import org.slf4j.LoggerFactory;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
-import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
 import static io.fabric8.maven.core.util.Constants.RESOURCE_SOURCE_URL_ANNOTATION;
-import static io.fabric8.utils.Lists.notNullList;
-import static io.fabric8.utils.Strings.isNullOrBlank;
 
 /**
  * Utility class for handling Kubernetes resource descriptors
@@ -185,33 +174,6 @@ public class KubernetesResourceUtil {
         } catch (ClassCastException exp) {
             throw new IllegalArgumentException(String.format("Resource fragment %s has an invalid syntax (%s)", file.getPath(), exp.getMessage()));
         }
-    }
-
-    public static String toYaml(Object resource) throws JsonProcessingException {
-        return serializeAsString(resource, ResourceFileType.yaml);
-    }
-
-    public static String toJson(Object resource) throws JsonProcessingException {
-        return serializeAsString(resource, ResourceFileType.json);
-    }
-
-    public static File writeResource(Object resource, File target, ResourceFileType resourceFileType) throws IOException {
-        File outputFile = resourceFileType.addExtension(target);
-        return writeResourceFile(resource, outputFile, resourceFileType);
-    }
-
-    public static File writeResourceFile(Object resource, File outputFile, ResourceFileType resourceFileType) throws IOException {
-        String serialized = serializeAsString(resource, resourceFileType);
-        Files.writeToFile(outputFile, serialized, Charset.defaultCharset());
-        return outputFile;
-    }
-
-    private static String serializeAsString(Object resource, ResourceFileType resourceFileType) throws JsonProcessingException {
-        ObjectMapper mapper = resourceFileType.getObjectMapper()
-                                              .enable(SerializationFeature.INDENT_OUTPUT)
-                                              .disable(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS)
-                                              .disable(SerializationFeature.WRITE_NULL_MAP_VALUES);
-        return mapper.writeValueAsString(resource);
     }
 
     public static File[] listResourceFragments(File resourceDir) {
@@ -434,7 +396,7 @@ public class KubernetesResourceUtil {
     }
 
     public static boolean addPort(List<ContainerPort> ports, String portNumberText, String portName, Logger log) {
-        if (Strings.isNullOrBlank(portNumberText)) {
+        if (StringUtils.isBlank(portNumberText)) {
             return false;
         }
         int portValue;
@@ -469,9 +431,9 @@ public class KubernetesResourceUtil {
     public static EnvVar setEnvVarNoOverride(List<EnvVar> envVarList, String name, String value) {
         for (EnvVar envVar : envVarList) {
             String envVarName = envVar.getName();
-            if (io.fabric8.utils.Objects.equal(name, envVarName)) {
+            if (Objects.equals(name, envVarName)) {
                 String oldValue = envVar.getValue();
-                if (io.fabric8.utils.Objects.equal(value, oldValue)) {
+                if (Objects.equals(value, oldValue)) {
                     return null; // identical values
                 }
                 return envVar;
@@ -485,9 +447,9 @@ public class KubernetesResourceUtil {
     public static boolean setEnvVar(List<EnvVar> envVarList, String name, String value) {
         for (EnvVar envVar : envVarList) {
             String envVarName = envVar.getName();
-            if (io.fabric8.utils.Objects.equal(name, envVarName)) {
+            if (Objects.equals(name, envVarName)) {
                 String oldValue = envVar.getValue();
-                if (io.fabric8.utils.Objects.equal(value, oldValue)) {
+                if (Objects.equals(value, oldValue)) {
                     return false;
                 } else {
                     envVar.setValue(value);
@@ -505,9 +467,9 @@ public class KubernetesResourceUtil {
         if (envVarList != null) {
             for (EnvVar envVar : envVarList) {
                 String envVarName = envVar.getName();
-                if (io.fabric8.utils.Objects.equal(name, envVarName)) {
+                if (Objects.equals(name, envVarName)) {
                     String value = envVar.getValue();
-                    if (Strings.isNotBlank(value)) {
+                    if (StringUtils.isNotBlank(value)) {
                         return value;
                     }
                 }
@@ -521,7 +483,7 @@ public class KubernetesResourceUtil {
         for (Iterator<EnvVar> it = envVarList.iterator(); it.hasNext(); ) {
             EnvVar envVar = it.next();
             String envVarName = envVar.getName();
-            if (io.fabric8.utils.Objects.equal(name, envVarName)) {
+            if (name.equals(envVarName)) {
                 it.remove();
                 removed = true;
             }
@@ -530,7 +492,7 @@ public class KubernetesResourceUtil {
     }
 
     public static void validateKubernetesMasterUrl(URL masterUrl) throws MojoExecutionException {
-        if (masterUrl == null || Strings.isNullOrBlank(masterUrl.toString())) {
+        if (masterUrl == null || StringUtils.isBlank(masterUrl.toString())) {
             throw new MojoExecutionException("Cannot find Kubernetes master URL. Have you started a cluster via `mvn fabric8:cluster-start` or connected to a remote cluster via `kubectl`?");
         }
     }
@@ -550,20 +512,6 @@ public class KubernetesResourceUtil {
         }
     }
 
-    /**
-     * Returns the resource of the given kind and name from the collection or null
-     */
-    public static <T> T findResourceByName(Iterable<HasMetadata> entities, Class<T> clazz, String name) {
-        if (entities != null) {
-            for (HasMetadata entity : entities) {
-                if (clazz.isInstance(entity) && Objects.equals(name, getName(entity))) {
-                    return clazz.cast(entity);
-                }
-            }
-        }
-        return null;
-    }
-
     public static String getBuildStatusPhase(Build build) {
         if (build != null && build.getStatus() != null) {
             return build.getStatus().getPhase();
@@ -575,14 +523,14 @@ public class KubernetesResourceUtil {
         if (build != null && build.getStatus() != null) {
             String reason = build.getStatus().getReason();
             String phase = build.getStatus().getPhase();
-            if (Strings.isNotBlank(phase)) {
-                if (Strings.isNotBlank(reason)) {
+            if (StringUtils.isNotBlank(phase)) {
+                if (StringUtils.isNotBlank(reason)) {
                     return phase + ": " + reason;
                 } else {
                     return phase;
                 }
             } else {
-                return Strings.defaultIfEmpty(reason, "");
+                return StringUtils.defaultIfEmpty(reason, "");
             }
         }
         return "";
@@ -622,7 +570,7 @@ public class KubernetesResourceUtil {
     }
 
     private static Date parseTimestamp(String text) {
-        if (Strings.isNullOrBlank(text)) {
+        if (StringUtils.isBlank(text)) {
             return null;
         }
         return parseDate(text);
@@ -644,7 +592,7 @@ public class KubernetesResourceUtil {
                 List<Container> containers = spec.getContainers();
                 if (containers != null) {
                     for (Container container : containers) {
-                        if (io.fabric8.utils.Objects.equal(imageName, container.getImage())) {
+                        if (Objects.equals(imageName, container.getImage())) {
                             return true;
                         }
                     }
@@ -661,7 +609,7 @@ public class KubernetesResourceUtil {
             if (containerStatuses != null) {
                 for (ContainerStatus containerStatus : containerStatuses) {
                     String containerID = containerStatus.getContainerID();
-                    if (Strings.isNotBlank(containerID)) {
+                    if (StringUtils.isNotBlank(containerID)) {
                         String prefix = "://";
                         int idx = containerID.indexOf(prefix);
                         if (idx > 0) {
@@ -678,10 +626,7 @@ public class KubernetesResourceUtil {
     public static boolean isNewerResource(HasMetadata newer, HasMetadata older) {
         Date t1 = getCreationTimestamp(newer);
         Date t2 = getCreationTimestamp(older);
-        if (t1 != null) {
-            return t2 == null || t1.compareTo(t2) > 0;
-        }
-        return false;
+        return t1 != null && (t2 == null || t1.compareTo(t2) > 0);
     }
 
     /**
@@ -789,7 +734,7 @@ public class KubernetesResourceUtil {
         } else if (!containers.isEmpty()) {
             // lets default the container name if there's none specified in the custom yaml file
             Container container = containers.get(0);
-            if (isNullOrBlank(container.getName())) {
+            if (StringUtils.isBlank(container.getName())) {
                 container.setName(defaultName);
             }
             builder.withContainers(containers);
@@ -852,24 +797,17 @@ public class KubernetesResourceUtil {
     }
 
     public static Set<HasMetadata> loadResources(File manifest) throws IOException {
-        Object dto = KubernetesHelper.loadYaml(manifest, KubernetesResource.class);
+        Object dto = ResourceUtil.load(manifest, KubernetesResource.class);
         if (dto == null) {
-            throw new IllegalStateException("Cannot load kubernetes YAML: " + manifest);
+            throw new IllegalStateException("Cannot load kubernetes manifest " + manifest);
         }
 
         if (dto instanceof Template) {
             Template template = (Template) dto;
-            boolean failOnMissingParameterValue = false;
-            dto = Templates.processTemplatesLocally(template, failOnMissingParameterValue);
+            dto = OpenshiftHelper.processTemplatesLocally(template, false);
         }
-
-        Set<KubernetesResource<?>> resources = new LinkedHashSet<>();
 
         Set<HasMetadata> entities = new TreeSet<>(new HasMetadataComparator());
-        for (KubernetesResource<?> resource : resources) {
-            entities.addAll(KubernetesHelper.toItemList(resource));
-        }
-
         entities.addAll(KubernetesHelper.toItemList(dto));
         return entities;
     }
@@ -970,7 +908,7 @@ public class KubernetesResourceUtil {
             cm1OrCopy = new ConfigMapBuilder(cm1OrCopy).build();
         }
 
-        log.info("Merging 2 resources for " + getKind(cm1OrCopy) + " " + getName(cm1OrCopy) + " from " + getSourceUrlAnnotation(cm1OrCopy) + " and " + getSourceUrlAnnotation(cm2) +
+        log.info("Merging 2 resources for " + KubernetesHelper.getKind(cm1OrCopy) + " " + KubernetesHelper.getName(cm1OrCopy) + " from " + getSourceUrlAnnotation(cm1OrCopy) + " and " + getSourceUrlAnnotation(cm2) +
 " and removing " + getSourceUrlAnnotation(cm1OrCopy));
         cm1OrCopy.setData(mergeMapsAndRemoveEmptyStrings(cm2.getData(), cm1OrCopy.getData()));
         mergeMetadata(cm1OrCopy, cm2);
@@ -1038,7 +976,7 @@ public class KubernetesResourceUtil {
                 }
             }
         }
-        log.info("Merging 2 resources for " + getKind(resource1OrCopy) + " " + getName(resource1OrCopy) + " from " + getSourceUrlAnnotation(resource1OrCopy) + " and " + getSourceUrlAnnotation(resource2) + " and removing " + getSourceUrlAnnotation(resource1OrCopy));
+        log.info("Merging 2 resources for " + KubernetesHelper.getKind(resource1OrCopy) + " " + KubernetesHelper.getName(resource1OrCopy) + " from " + getSourceUrlAnnotation(resource1OrCopy) + " and " + getSourceUrlAnnotation(resource2) + " and removing " + getSourceUrlAnnotation(resource1OrCopy));
         return resource1OrCopy;
     }
 
@@ -1089,9 +1027,9 @@ public class KubernetesResourceUtil {
     // rather than a full complete manifest
     // we could also use an annotation?
     private static boolean isLocalCustomisation(PodSpec podSpec) {
-        List<Container> containers = notNullList(podSpec.getContainers());
+        List<Container> containers = podSpec.getContainers() != null ? podSpec.getContainers() : Collections.<Container>emptyList();
         for (Container container : containers) {
-            if (Strings.isNotBlank(container.getImage())) {
+            if (StringUtils.isNotBlank(container.getImage())) {
                 return false;
             }
         }
