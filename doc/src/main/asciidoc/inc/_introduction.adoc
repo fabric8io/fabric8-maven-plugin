@@ -230,7 +230,9 @@ A working example can be found in the  https://github.com/fabric8io/fabric8-mave
 
   <resources> <!--2-->
     <labels> <!--3-->
-      <group>quickstarts</group>
+      <all>
+        <group>quickstarts</group>
+      </all>
     </labels>
 
     <deployment> <!--4-->
