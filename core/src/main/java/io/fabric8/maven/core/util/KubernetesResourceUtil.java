@@ -54,6 +54,8 @@ import io.fabric8.kubernetes.api.model.Job;
 import io.fabric8.kubernetes.api.model.JobSpec;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
+import io.fabric8.kubernetes.api.model.LabelSelector;
+import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodSpec;
@@ -65,8 +67,6 @@ import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSetSpec;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
-import io.fabric8.kubernetes.api.model.LabelSelector;
-import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
@@ -112,6 +112,12 @@ public class KubernetesResourceUtil {
 
     public static final String API_VERSION = "v1";
     public static final String API_EXTENSIONS_VERSION = "extensions/v1beta1";
+    public static final String API_APPS_VERSION = "apps/v1beta1";
+    public static final ResourceVersioning DEFAULT_RESOURCE_VERSIONING = new ResourceVersioning()
+            .withCoreVersion(API_VERSION)
+            .withExtensionsVersion(API_EXTENSIONS_VERSION)
+            .withAppsVersion(API_APPS_VERSION);
+
     public static final HashSet<Class<?>> SIMPLE_FIELD_TYPES = new HashSet<>();
 
 
@@ -119,21 +125,19 @@ public class KubernetesResourceUtil {
      * Read all Kubernetes resource fragments from a directory and create a {@link KubernetesListBuilder} which
      * can be adapted later.
      *
-     * @param apiVersion the api version to use
-     * @param apiExtensionsVersion the extension version to use
+     * @param apiVersions the api versions to use
      * @param defaultName the default name to use when none is given
      * @param resourceFiles files to add.
      * @return the list builder
      * @throws IOException
      */
-    public static KubernetesListBuilder readResourceFragmentsFrom(String apiVersion,
-                                                                  String apiExtensionsVersion,
+    public static KubernetesListBuilder readResourceFragmentsFrom(ResourceVersioning apiVersions,
                                                                   String defaultName,
                                                                   File[] resourceFiles) throws IOException {
         KubernetesListBuilder builder = new KubernetesListBuilder();
         if (resourceFiles != null) {
             for (File file : resourceFiles) {
-                HasMetadata resource = getResource(apiVersion, apiExtensionsVersion, file, defaultName);
+                HasMetadata resource = getResource(apiVersions, file, defaultName);
                 builder.addToItems(resource);
             }
         }
@@ -151,14 +155,13 @@ public class KubernetesResourceUtil {
      * </ul>
      *
      *
-     * @param defaultApiVersion the API version to add if not given.
-     * @param apiExtensionsVersion the API version for extensions
+     * @param apiVersions the API versions to add if not given.
      * @param file file to read, whose name must match {@link #FILENAME_PATTERN}.  @return map holding the fragment
      * @param appName resource name specifying resources belonging to this application
      */
-    public static HasMetadata getResource(String defaultApiVersion, String apiExtensionsVersion,
+    public static HasMetadata getResource(ResourceVersioning apiVersions,
                                           File file, String appName) throws IOException {
-        Map<String,Object> fragment = readAndEnrichFragment(defaultApiVersion, apiExtensionsVersion, file, appName);
+        Map<String,Object> fragment = readAndEnrichFragment(apiVersions, file, appName);
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.convertValue(fragment, HasMetadata.class);
@@ -271,7 +274,7 @@ public class KubernetesResourceUtil {
     private static final String PROFILES_PATTERN = "^profiles?\\.ya?ml$";
 
     // Read fragment and add default values
-    private static Map<String, Object> readAndEnrichFragment(String defaultApiVersion, String apiExtensionsVersion,
+    private static Map<String, Object> readAndEnrichFragment(ResourceVersioning apiVersions,
                                                              File file, String appName) throws IOException {
         Pattern pattern = Pattern.compile(FILENAME_PATTERN, Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(file.getName());
@@ -299,9 +302,11 @@ public class KubernetesResourceUtil {
 
         addKind(fragment, kind, file.getName());
 
-        String apiVersion = defaultApiVersion;
+        String apiVersion = apiVersions.getCoreVersion();
         if (Objects.equals(kind, "Deployment") || Objects.equals(kind, "Ingress")) {
-            apiVersion = apiExtensionsVersion;
+            apiVersion = apiVersions.getExtensionsVersion();
+        } else if (Objects.equals(kind, "StatefulSet")) {
+            apiVersion = apiVersions.getAppsVersion();
         }
         addIfNotExistent(fragment, "apiVersion", apiVersion);
 
@@ -309,7 +314,6 @@ public class KubernetesResourceUtil {
         // No name means: generated app name should be taken as resource name
         addIfNotExistent(metaMap, "name", StringUtils.isNotBlank(name) ? name : appName);
 
-        addIfNotExistent(fragment, "apiVersion", defaultApiVersion);
         return fragment;
     }
 
