@@ -67,6 +67,11 @@ public class PrefixedLogger implements Logger {
     }
 
     @Override
+    public boolean isVerboseEnabled() {
+        return log.isVerboseEnabled();
+    }
+
+    @Override
     public void progressStart() {
         log.progressStart();
     }
