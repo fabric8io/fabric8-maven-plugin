@@ -444,8 +444,7 @@ public class ResourceMojo extends AbstractResourceMojo {
         KubernetesListBuilder builder;
         String defaultName = MavenUtil.createDefaultResourceName(project);
         builder = KubernetesResourceUtil.readResourceFragmentsFrom(
-            KubernetesResourceUtil.API_VERSION,
-            KubernetesResourceUtil.API_EXTENSIONS_VERSION,
+            KubernetesResourceUtil.DEFAULT_RESOURCE_VERSIONING,
             defaultName,
             mavenFilterFiles(resourceFiles));
         return builder;
