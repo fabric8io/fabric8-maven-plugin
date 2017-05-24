@@ -305,8 +305,7 @@ public class KubernetesResourceUtil {
         String apiVersion = apiVersions.getCoreVersion();
         if (Objects.equals(kind, "Deployment") || Objects.equals(kind, "Ingress")) {
             apiVersion = apiVersions.getExtensionsVersion();
-        }
-        if (Objects.equals(kind, "StatefulSet")) {
+        } else if (Objects.equals(kind, "StatefulSet")) {
             apiVersion = apiVersions.getAppsVersion();
         }
         addIfNotExistent(fragment, "apiVersion", apiVersion);
