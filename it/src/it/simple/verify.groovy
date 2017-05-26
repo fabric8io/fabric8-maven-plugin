@@ -1,4 +1,5 @@
 import io.fabric8.maven.it.Verify
+import static org.junit.Assert.*;
 
 /*
  * Copyright 2016 Red Hat, Inc.
@@ -22,5 +23,12 @@ import io.fabric8.maven.it.Verify
           new File(basedir, sprintf("/target/classes/META-INF/fabric8/%s.yml",it)),
           new File(basedir, sprintf("/expected/%s.yml",it)))
 }
+
+Map selector = Verify.readWithPath(
+        new File(basedir,"/target/classes/META-INF/fabric8/kubernetes/fabric8-maven-sample-zero-config-deployment.yml"),
+        "spec.selector.matchLabels")
+
+assertNotNull(selector)
+assertNull(selector.get("version"))
 
 true
