@@ -45,12 +45,14 @@ import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
 import com.google.common.base.Strings;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
 import static io.fabric8.maven.core.util.SpringBootProperties.DEV_TOOLS_REMOTE_SECRET;
+import static io.fabric8.maven.generator.springboot.SpringBootGenerator.Config.activeProfiles;
 import static io.fabric8.maven.generator.springboot.SpringBootGenerator.Config.color;
 
 /**
@@ -63,7 +65,10 @@ public class SpringBootGenerator extends JavaExecGenerator {
     private static final String DEFAULT_SERVER_PORT = "8080";
 
     public enum Config implements Configs.Key {
-        color {{ d = "false"; }};
+        color {{ d = "false"; }},
+
+        // comma separated list of spring boot profile(s) that would be passed set as -Dspring.profiles.active
+        activeProfiles;
 
         public String def() { return d; } protected String d;
     }
@@ -108,6 +113,12 @@ public class SpringBootGenerator extends JavaExecGenerator {
         if (Boolean.parseBoolean(getConfig(color))) {
             opts.add("-Dspring.output.ansi.enabled=" + getConfig(color));
         }
+
+        //Spring boot active profiles
+        String strActiveProfiles  = getConfig(activeProfiles);
+        if(strActiveProfiles!=null) {
+            opts.add("-Dspring.profiles.active="+strActiveProfiles);
+        }
         return opts;
     }
 
@@ -122,8 +133,15 @@ public class SpringBootGenerator extends JavaExecGenerator {
     @Override
     protected List<String> extractPorts() {
         List<String> answer = new ArrayList<>();
-        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(this.getProject());
+
+        String strActiveProfiles = getConfig(activeProfiles);
+
+        Properties properties = SpringBootUtil.getApplicationProperties(getContext().getProject(),
+                SpringBootUtil.getActiveProfiles(strActiveProfiles));
+
+        //TODO SK - do we need to handle the parsin of port properties like ${PORT:1234}
         String port = properties.getProperty(SpringBootProperties.SERVER_PORT, DEFAULT_SERVER_PORT);
+
         addPortIfValid(answer, getConfig(JavaExecGenerator.Config.webPort, port));
         addPortIfValid(answer, getConfig(JavaExecGenerator.Config.jolokiaPort));
         addPortIfValid(answer, getConfig(JavaExecGenerator.Config.prometheusPort));
@@ -133,7 +151,10 @@ public class SpringBootGenerator extends JavaExecGenerator {
     // =============================================================================
 
     private void ensureSpringDevToolSecretToken() throws MojoExecutionException {
-        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getProject());
+        String strActiveProfiles = getConfig(activeProfiles);
+
+        Properties properties = SpringBootUtil.getApplicationProperties(getContext().getProject(),
+                SpringBootUtil.getActiveProfiles(strActiveProfiles));
         String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET);
         if (Strings.isNullOrEmpty(remoteSecret)) {
             addSecretTokenToApplicationProperties();
@@ -280,7 +301,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
         }
         return false;
     }
-
+    
     private File getSpringBootDevToolsJar() throws IOException {
         String version = SpringBootUtil.getSpringBootDevToolsVersion(getProject());
         if (version == null) {

@@ -15,7 +15,7 @@
  */
 package io.fabric8.maven.core.util;
 
-import java.util.Properties;
+import java.util.*;
 
 import io.fabric8.utils.PropertiesHelper;
 
@@ -34,7 +34,8 @@ public class SpringBootUtilTest {
     @Test
     public void testYamlToPropertiesParsing() {
 
-        Properties props = SpringBootUtil.getPropertiesFromYamlResource(SpringBootUtilTest.class.getResource("/util/test-application.yml"));
+        Properties props = SpringBootUtil.getPropertiesFromYamlResource(
+                SpringBootUtilTest.class.getResource("/util/test-application.yml"), Collections.<String>emptyList());
         assertNotEquals(0, props.size());
 
         assertEquals(new Integer(8081), PropertiesHelper.getInteger(props, "management.port"));
@@ -47,9 +48,45 @@ public class SpringBootUtilTest {
     }
 
     @Test
+    public void testYamlToPropertiesParsingWithActiveProfiles() {
+
+        List<String> activeProfiles = new ArrayList<String>() {{
+            add("dev");
+            add("qa");
+        }};
+
+        Properties props = SpringBootUtil.getPropertiesFromYamlResource(
+                SpringBootUtilTest.class.getResource("/util/test-application-multi.yml"), activeProfiles);
+        assertNotEquals(0, props.size());
+
+        assertEquals(new Integer(9090), PropertiesHelper.getInteger(props, "server.port"));
+        assertEquals("Hello", props.getProperty("my.name"));
+        assertEquals("Hola!", props.getProperty("their.name"));
+    }
+
+    @Test
+    public void testYamlToPropertiesParsingWithActiveProfiles2() {
+
+        List<String> activeProfiles = new ArrayList<String>() {{
+            add("qa");
+            add("dev");
+        }};
+
+        Properties props = SpringBootUtil.getPropertiesFromYamlResource(
+                SpringBootUtilTest.class.getResource("/util/test-application-multi.yml"), activeProfiles);
+        assertNotEquals(0, props.size());
+
+        assertEquals(new Integer(8080), PropertiesHelper.getInteger(props, "server.port"));
+        assertEquals("Hello", props.getProperty("my.name"));
+        assertEquals("Hola!", props.getProperty("their.name"));
+    }
+
+    @Test
     public void testNonExistentYamlToPropertiesParsing() {
 
-        Properties props = SpringBootUtil.getPropertiesFromYamlResource(SpringBootUtilTest.class.getResource("/this-file-does-not-exist"));
+        Properties props = SpringBootUtil.getPropertiesFromYamlResource(
+                SpringBootUtilTest.class.getResource("/this-file-does-not-exist")
+                , Collections.<String>emptyList());
         assertNotNull(props);
         assertEquals(0, props.size());
 
@@ -58,7 +95,8 @@ public class SpringBootUtilTest {
     @Test
     public void testPropertiesParsing() {
 
-        Properties props = SpringBootUtil.getPropertiesResource(SpringBootUtilTest.class.getResource("/util/test-application.properties"));
+        Properties props = SpringBootUtil.getPropertiesResource(
+                SpringBootUtilTest.class.getResource("/util/test-application.properties"));
         assertNotEquals(0, props.size());
 
         assertEquals(new Integer(8081), PropertiesHelper.getInteger(props, "management.port"));

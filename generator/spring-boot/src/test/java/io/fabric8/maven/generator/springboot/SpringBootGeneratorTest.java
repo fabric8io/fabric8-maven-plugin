@@ -31,14 +31,13 @@ package io.fabric8.maven.generator.springboot;/*
  * limitations under the License.
  */
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 
+import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
-import io.fabric8.maven.generator.springboot.SpringBootGenerator;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -66,6 +65,9 @@ public class SpringBootGeneratorTest {
     @Mocked
     private Build build;
 
+    @Mocked
+    private ProcessorConfig config;
+
     @Test
     public void notApplicable() throws IOException {
         SpringBootGenerator generator = new SpringBootGenerator(createGeneratorContext());
@@ -85,6 +87,22 @@ public class SpringBootGeneratorTest {
         assertNull(env.get("JAVA_OPTIONS"));
     }
 
+    @Test
+    public void javaOptionsWithActiveProfiles() throws IOException, MojoExecutionException {
+        SpringBootGenerator generator = new SpringBootGenerator(createGeneratorWithActiveProfilesConfig());
+        List<String> extraOpts = generator.getExtraJavaOptions();
+        assertNotNull(extraOpts);
+        assertEquals(1, extraOpts.size());
+
+        List<ImageConfiguration> configs = generator.customize(new ArrayList<ImageConfiguration>(), true);
+        assertEquals(1, configs.size());
+        Map<String, String> env = configs.get(0).getBuildConfiguration().getEnv();
+        String javaOptions = env.get("JAVA_OPTIONS");
+        assertNotNull(javaOptions);
+        assertTrue(javaOptions.equals("-Dspring.profiles.active=dev,qa"));
+    }
+
+
     private GeneratorContext createGeneratorContext() throws IOException {
         new Expectations() {{
             context.getProject(); result = project;
@@ -96,6 +114,23 @@ public class SpringBootGeneratorTest {
             build.getOutputDirectory(); result = tempDir;
             project.getPlugin(anyString); result = null;
             project.getVersion(); result = "1.0.0"; minTimes = 0;
+        }};
+        return context;
+    }
+
+    private GeneratorContext createGeneratorWithActiveProfilesConfig() throws IOException {
+        new Expectations() {{
+            context.getProject(); result = project;
+            project.getBuild(); result = build;
+            String tempDir = Files.createTempDirectory("springboot-test-project").toFile().getAbsolutePath();
+
+            // TODO: Prepare more relastic test setup
+            build.getDirectory(); result = tempDir;
+            build.getOutputDirectory(); result = tempDir;
+            project.getPlugin(anyString); result = null;
+            project.getVersion(); result = "1.0.0"; minTimes = 0;
+            context.getConfig(); result = config;
+            config.getConfig("spring-boot","activeProfiles");result="dev,qa";
         }};
         return context;
     }

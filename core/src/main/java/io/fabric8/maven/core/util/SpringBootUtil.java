@@ -16,21 +16,19 @@
 
 package io.fabric8.maven.core.util;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.SortedMap;
-
-import org.apache.maven.project.MavenProject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.Yaml;
+import java.util.*;
 
 /**
  * Utility methods to access spring-boot resources.
@@ -43,13 +41,23 @@ public class SpringBootUtil {
      * Returns the spring boot configuration (supports `application.properties` and `application.yml`)
      * or an empty properties object if not found
      */
-    public static Properties getSpringBootApplicationProperties(MavenProject project) {
+    public static Properties getApplicationProperties(MavenProject project,List<String> activeProfiles) {
         URLClassLoader compileClassLoader = MavenUtil.getCompileClassLoader(project);
         URL ymlResource = compileClassLoader.findResource("application.yml");
         URL propertiesResource = compileClassLoader.findResource("application.properties");
 
-        Properties props = getPropertiesFromYamlResource(ymlResource);
+        Properties props = getPropertiesFromYamlResource(ymlResource,activeProfiles);
         props.putAll(getPropertiesResource(propertiesResource));
+
+        if(activeProfiles!=null){
+            for (String profile: activeProfiles){
+                ymlResource = compileClassLoader.findResource("application-"+profile+".yml");
+                Properties props2 = getPropertiesFromYamlResource(ymlResource,activeProfiles);
+                propertiesResource = compileClassLoader.findResource("application-"+profile+".properties");
+                props2.putAll(getPropertiesResource(propertiesResource));
+                props.putAll(props2);
+            }
+        }
         return props;
     }
 
@@ -80,25 +88,82 @@ public class SpringBootUtil {
     /**
      * Returns a {@code Properties} representation of the given Yaml file on the project classpath if found or an empty properties object if not
      */
-    public static Properties getPropertiesFromYamlFile(MavenProject project, String yamlFileName) {
+    public static Properties getPropertiesFromYamlFile(MavenProject project, String yamlFileName,
+                                                       List<String> activeProfiles) {
         URLClassLoader compileClassLoader = MavenUtil.getCompileClassLoader(project);
         URL resource = compileClassLoader.findResource(yamlFileName);
-        return getPropertiesFromYamlResource(resource);
+        return getPropertiesFromYamlResource(resource,activeProfiles);
     }
 
     /**
      * Returns a {@code Properties} representation of the given Yaml resource or an empty properties object if the resource is null
      */
-    protected static Properties getPropertiesFromYamlResource(URL resource) {
+    protected static Properties getPropertiesFromYamlResource(URL resource,List<String> activeProfiles) {
         if (resource != null) {
             try (InputStream yamlStream = resource.openStream()) {
-                Yaml yaml = new Yaml();
-                @SuppressWarnings("unchecked")
-                SortedMap<String, Object> source = yaml.loadAs(yamlStream, SortedMap.class);
+                Yaml yaml = new Yaml(new SafeConstructor());
+
+                Map<String, Map> profileDocs = new HashMap<>();
+
                 Properties properties = new Properties();
+
                 if (source != null) {
                     properties.putAll(getFlattenedMap(source));
                 }
+
+                Iterable<Object> yamlDoc = yaml.loadAll(yamlStream);
+
+                Iterator yamlDocIterator = yamlDoc.iterator();
+
+                int docCount = 0;
+                while (yamlDocIterator.hasNext()) {
+                    Map docRoot = (Map) yamlDocIterator.next();
+
+                    String profiles = null;
+
+                    if (docRoot.containsKey("spring")) {
+
+                        LinkedHashMap value = (LinkedHashMap) docRoot.get("spring");
+
+                        Object profilesValue = value.get("profiles");
+
+                        if (profilesValue instanceof LinkedHashMap) {
+                            Map porfMap = (Map) profilesValue;
+                            String[] actProfiles = StringUtils.split((String) porfMap.get("active"), ",");
+                            if (activeProfiles.isEmpty() && docCount > 0) {
+                                activeProfiles.addAll(Arrays.asList(actProfiles));
+                            }
+                        } else if (profilesValue instanceof String) {
+                            profiles = (String) profilesValue;
+                        }
+                    }
+
+                    if (profiles != null) {
+                        String[] profileSplit = profiles.split(",");
+                        if (!CollectionUtils.
+                                intersection(Arrays.asList(profileSplit), activeProfiles)
+                                .isEmpty()) {
+                            //if the profiles is in the list of active profiles we add it to our list of docs
+                            profileDocs.put(profiles, docRoot);
+                        }
+                    } else if (docCount == 0) {
+                        //the root doc
+                        profileDocs.put("default", docRoot);
+                    }
+
+                    docCount++;
+                }
+
+                LOG.debug("Spring Boot Profile docs:{}"+profileDocs);
+
+                properties.putAll(getFlattenedMap(profileDocs.get("default")));
+
+                for (String activeProfile : activeProfiles) {
+                    if (profileDocs.containsKey(activeProfile)) {
+                        properties.putAll(getFlattenedMap(profileDocs.get(activeProfile)));
+                    }
+                }
+
                 return properties;
             } catch (IOException e) {
                 throw new IllegalStateException("Error while reading Yaml resource from URL " + resource, e);
@@ -156,6 +221,14 @@ public class SpringBootUtil {
                 result.put(key, (value != null ? value : ""));
             }
         }
+    }
+
+    public static List<String> getActiveProfiles(String strActiveProfiles) {
+        List<String> activeProfiles = new ArrayList<>();
+        if (strActiveProfiles != null) {
+            activeProfiles = Arrays.asList(strActiveProfiles.split(","));
+        }
+        return activeProfiles;
     }
 
 }

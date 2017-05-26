@@ -16,6 +16,9 @@
 
 package io.fabric8.maven.enricher.fabric8;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 import io.fabric8.kubernetes.api.model.Probe;
@@ -59,7 +62,11 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
     private Probe discoverSpringBootHealthCheck(int initialDelay) {
         try {
             if (MavenUtil.hasAllClasses(this.getProject(), REQUIRED_CLASSES)) {
-                Properties properties = SpringBootUtil.getSpringBootApplicationProperties(this.getProject());
+                String strActiveProfiles = getContext().getConfig().getConfig("spring-boot","activeProfiles");
+
+                Properties properties = SpringBootUtil.getApplicationProperties(getContext().getProject(),
+                        SpringBootUtil.getActiveProfiles(strActiveProfiles));
+                
                 Integer port = PropertiesHelper.getInteger(properties, SpringBootProperties.MANAGEMENT_PORT,
                                                            PropertiesHelper.getInteger(properties, SpringBootProperties.SERVER_PORT, DEFAULT_MANAGEMENT_PORT));
                 String scheme = Strings.isNotBlank(properties.getProperty(SpringBootProperties.SERVER_KEYSTORE)) ? SCHEME_HTTPS : SCHEME_HTTP;
