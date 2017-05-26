@@ -13,6 +13,5 @@ items:
       provider: fabric8
       project: deployment-strategy-type-919
       group: io.fabric8
-      version: "@ignore@"
     triggers:
     - type: ConfigChange
