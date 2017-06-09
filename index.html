@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.2.28,</span>
-<span id="revdate">2017-05-08</span>
+<span id="revdate">2017-06-09</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -1020,7 +1020,9 @@ XML based configuration is implemented only partially and not recommended to use
 
   <span class="tag">&lt;resources&gt;</span> <i class="conum" data-value="2"></i><b>(2)</b>
     <span class="tag">&lt;labels&gt;</span> <i class="conum" data-value="3"></i><b>(3)</b>
-      <span class="tag">&lt;group&gt;</span>quickstarts<span class="tag">&lt;/group&gt;</span>
+      <span class="tag">&lt;all&gt;</span>
+        <span class="tag">&lt;group&gt;</span>quickstarts<span class="tag">&lt;/group&gt;</span>
+      <span class="tag">&lt;/all&gt;</span>
     <span class="tag">&lt;/labels&gt;</span>
 
     <span class="tag">&lt;deployment&gt;</span> <i class="conum" data-value="4"></i><b>(4)</b>
@@ -2056,8 +2058,8 @@ linking images together or for specifying it with the global <strong>image</stro
 <p>When using this mode, the Dockerfile is created on the fly with all instructions extracted from the configuration given.</p>
 </div>
 <div id="external-dockerfile" class="paragraph">
-<div class="title">External Dockerfile or docker archive</div>
-<p>Alternatively an external Dockerfile template or Docker archive can be used. This mode is switch on by using one of these three configuration options within</p>
+<div class="title">External Dockerfile or Docker archive</div>
+<p>Alternatively an external Dockerfile template or Docker archive can be used. This mode is switched on by using one of these three configuration options within</p>
 </div>
 <div class="ulist">
 <ul>
@@ -2073,10 +2075,26 @@ linking images together or for specifying it with the global <strong>image</stro
 </ul>
 </div>
 <div class="paragraph">
-<p>All paths can be either absolute or relative paths (except when both <code>dockerFileDir</code> and <code>dockerFile</code> are provided in which case <code>dockerFile</code> must not be absolute). A relative path is looked up in <code>${project.basedir}/src/main/docker</code> by default. You can make it easily an absolute path by using `${project.basedir} in your configuration.</p>
+<p>All paths can be either absolute or relative paths (except when both <code>dockerFileDir</code> and <code>dockerFile</code> are provided in which case <code>dockerFile</code> must not be absolute). A relative path is looked up in <code>${project.basedir}/src/main/docker</code> by default. You can make it easily an absolute path by using <code>${project.basedir}</code> in your configuration.</p>
 </div>
 <div class="paragraph">
-<p>Any additional files located in the <code>dockerFileDir</code> directory will also be added to the build context as well as any files specified by an assembly. However, you still need to insert <code>ADD</code> or <code>COPY</code> directives yourself into the Dockerfile.</p>
+<div class="title">Adding assemblies in Dockerfile mode</div>
+<p>Any additional files located in the <code>dockerFileDir</code> directory will also be added to the build context as well.
+You can also use an assembly if specified in an <a href="#build-assembly">assembly configuration</a>.
+However you need to add the files on your own in the Dockerfile with an <code>ADD</code> or <code>COPY</code> command.
+The files of the assembly are stored in a build context relative directory <code>maven/</code> but can be changed by changing the assembly name with the option <code>&lt;name&gt;</code> in the assembly configuration.</p>
+</div>
+<div class="paragraph">
+<p>E.g. the files can be added with</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="dockerfils">COPY maven/ /my/target/directory</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>so that the assembly files will end up in <code>/my/target/directory</code> within the container.</p>
 </div>
 <div class="paragraph">
 <p>If this directory contains a <code>.maven-dockerignore</code> (or alternatively, a <code>.maven-dockerexclude</code> file), then it is used for excluding files for the build. Each line in this file is treated as an <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>. It is similar to <code>.dockerignore</code> when using Docker but has a slightly different syntax (hence the different name).</p>
@@ -2087,19 +2105,31 @@ linking images together or for specifying it with the global <strong>image</stro
 <div class="paragraph">
 <p>Except for the <a href="#build-assembly">assembly configuration</a> all other configuration options are ignored for now.</p>
 </div>
-<div class="sidebarblock">
-<div class="content">
-<div class="paragraph">
-<p>For the future it is planned to introduce special keywords like <code>DMP_ADD_ASSEMBLY</code> which can be used in the Dockerfile template to placing the configuration resulting from the additional configuration.</p>
-</div>
-</div>
+<div id="build-filtering" class="paragraph">
+<div class="title">Filtering</div>
+<p>fabric8-maven-plugin filters given Dockerfile with Maven properties, much like the <code>maven-resource-plugin</code> does. Filtering is enabled by default and can be switched off with a build config <code>&lt;filter&gt;false&lt;/filter&gt;</code>. Properties which we want to replace are specified with the <code>${..}</code> syntax.
+Only properties which are set in the Maven build are replaced, all other remain untouched.</p>
 </div>
 <div class="paragraph">
+<p>This partial replacement means that you can easily mix it with Docker build arguments and environment variable reference, but you need to be careful.
+If you want to be more explicit about the property delimiter to clearly separate Docker properties and Maven properties you can redefine the delimiter.
+In general, the <code>filter</code> option can be specified the same way as delimiters in the resource plugin.
+In particular,  if this configuration contains a * then the parts left, and right of the asterisks are used as delimiters.</p>
+</div>
+<div class="paragraph">
+<p>For example, the default <code>&lt;filter&gt;${*}&lt;/filter&gt;</code> parse Maven properties in the format that we know.
+If you specify a single character for <code>&lt;filter&gt;</code> then this delimiter is taken for both, the start and the end.
+E.g a <code>&lt;filter&gt;@&lt;/filter&gt;</code> triggers on parameters in the format <code>@&#8230;&#8203;@</code>, much like in the <code>maven-invoker-plugin</code>.
+Use something like this if you want to clearly separate from Docker builds args.
+Property replacement works for Dockerfile only.
+For replacing other data in associated files targeted for the Docker image, please use the maven-resource-plugin to copy them over before.</p>
+</div>
+<div class="paragraph">
+<div class="title">Example</div>
 <p>The following example uses a Dockerfile in the directory
-<code>src/main/docker/demo</code>:</p>
+<code>src/main/docker/demo</code> and replaces all properties in the format <code>@property@</code> within the Dockerfile.</p>
 </div>
 <div class="listingblock">
-<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
  <span class="tag">&lt;configuration&gt;</span>
@@ -2108,6 +2138,7 @@ linking images together or for specifying it with the global <strong>image</stro
        <span class="tag">&lt;name&gt;</span>user/demo<span class="tag">&lt;/name&gt;</span>
        <span class="tag">&lt;build&gt;</span>
          <span class="tag">&lt;dockerFileDir&gt;</span>demo<span class="tag">&lt;/dockerFileDir&gt;</span>
+         <span class="tag">&lt;filter&gt;</span>@<span class="tag">&lt;/filter&gt;</span>
        <span class="tag">&lt;/build&gt;</span>
      <span class="tag">&lt;/image&gt;</span>
    <span class="tag">&lt;/images&gt;</span>
@@ -2118,8 +2149,7 @@ linking images together or for specifying it with the global <strong>image</stro
 </div>
 <div class="paragraph">
 <p>All build relevant configuration is contained in the <code>&lt;build&gt;</code> section
-of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
-<code>&lt;dockerFile&gt;</code> the following configuration options are available:</p>
+of an image configuration. The following configuration options are supported:</p>
 </div>
 <table id="config-image-build" class="tableblock frame-all grid-all spread">
 <caption class="title">Table 12. Build configuration (<a href="#config-image">&lt;image&gt;</a>)</caption>
@@ -2164,12 +2194,28 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The compression mode how the build archive is transmitted to the docker daemon (<code>fabric8:build</code>) and how docker build archives are attached to this build as sources (<code>fabric8:source</code>). The value can be <code>none</code> (default), <code>gzip</code> or <code>bzip2</code>.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to a <code>Dockerfile</code> which also triggers <em>Dockerfile mode</em>. See <a href="#external-dockerfile">External Dockerfile</a> for details.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerFileDir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to a directory holding a <code>Dockerfile</code> and switch on <em>Dockerfile mode</em>. See <a href="#external-dockerfile">External Dockerfile</a> for details.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerArchive</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to a saved image archive which is then imported. See <a href="#external-dockerfile">Docker archive</a> for details.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#misc-startup"><strong>entryPoint</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">An entrypoint allows you to configure a container that will run as an executable. See <a href="#misc-startup">Startup Arguments</a> for details.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#misc-env"><strong>env</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The environments as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>filter</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable and set the delimiters for property replacements. By default properties in the format <code>${..}</code> are replaced with Maven properties. You can switch off property replacement by setting this property to <code>false</code>. When using a single char like <code>@</code> then this is used as a delimiter (e.g <code>@&#8230;&#8203;@</code>). See <a href="#build-filtering">Filtering</a> for more details.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a id="build-config-from"></a><strong>from</strong></p></td>
@@ -2315,8 +2361,12 @@ remote API.</p>
 </thead>
 <tbody>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Assembly name, which is <code>maven</code> by default. This name is used for the archived and directories created during the build and holding the assembly files. If an <a href="#external-dockerfile">external Dockerfile</a> is used than this name is also the relative directory which contains the assembly files.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>targetDir</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Directory under which the files and artifacts contained in the assembly will be copied within the container. The default value for this is <code>/maven</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Directory under which the files and artifacts contained in the assembly will be copied within the container. The default value for this is <code>/&lt;assembly name&gt;</code>, so <code>/maven</code> if <strong>name</strong> is not set to a different value. This option has no meaning when an <a href="#external-dockerfile">external Dockerfile</a> is used.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#build-assembly-descriptor"><strong>inline</strong></a></p></td>
@@ -2539,15 +2589,17 @@ automatically.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;assembly&gt;</span>
-  <span class="tag">&lt;dependencySets&gt;</span>
-    <span class="tag">&lt;dependencySet&gt;</span>
-      <span class="tag">&lt;includes&gt;</span>
-        <span class="tag">&lt;include&gt;</span>org.jolokia:jolokia-war<span class="tag">&lt;/include&gt;</span>
-      <span class="tag">&lt;/includes&gt;</span>
-      <span class="tag">&lt;outputDirectory&gt;</span>.<span class="tag">&lt;/outputDirectory&gt;</span>
-      <span class="tag">&lt;outputFileNameMapping&gt;</span>jolokia.war<span class="tag">&lt;/outputFileNameMapping&gt;</span>
-    <span class="tag">&lt;/dependencySet&gt;</span>
-  <span class="tag">&lt;/dependencySets&gt;</span>
+  <span class="tag">&lt;inline&gt;</span>
+    <span class="tag">&lt;dependencySets&gt;</span>
+      <span class="tag">&lt;dependencySet&gt;</span>
+        <span class="tag">&lt;includes&gt;</span>
+          <span class="tag">&lt;include&gt;</span>org.jolokia:jolokia-war<span class="tag">&lt;/include&gt;</span>
+        <span class="tag">&lt;/includes&gt;</span>
+        <span class="tag">&lt;outputDirectory&gt;</span>.<span class="tag">&lt;/outputDirectory&gt;</span>
+        <span class="tag">&lt;outputFileNameMapping&gt;</span>jolokia.war<span class="tag">&lt;/outputFileNameMapping&gt;</span>
+      <span class="tag">&lt;/dependencySet&gt;</span>
+    <span class="tag">&lt;/dependencySets&gt;</span>
+  <span class="tag">&lt;/inline&gt;</span>
 <span class="tag">&lt;/assembly&gt;</span></code></pre>
 </div>
 </div>
@@ -5705,6 +5757,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
     <span class="comment"># Health checks</span>
     - <span class="string"><span class="content">fmp-openshift-route</span></span>
     - <span class="string"><span class="content">spring-boot-health-check</span></span>
+    - <span class="string"><span class="content">wildfly-swarm-health-check</span></span>
     - <span class="string"><span class="content">karaf-health-check</span></span>
     - <span class="string"><span class="content">vertx-health-check</span></span>
     - <span class="string"><span class="content">docker-health-check</span></span>
@@ -5823,7 +5876,7 @@ detecting a registry.</p>
 </div>
 <div class="paragraph">
 <p>This registry is used for pulling (i.e. for autopull the base image
-when doing a <code>fabric8:build</code>) and pushing with <code>docker.push</code>. However,
+when doing a <code>fabric8:build</code>) and pushing with <code>fabric8:push</code>. However,
 when these two goals a are combined on the command line like in <code>mvn
 -Ddocker.registry=myregistry:5000 package fabric8:build fabric8:push</code>
 the same registry is used for both operation. For a more fine grained
@@ -6091,10 +6144,13 @@ password.</p>
 <div class="sect2">
 <h3 id="extended-authentication">13.4. Extended Authentication</h3>
 <div class="paragraph">
-<p>Some docker registries require additional steps to authenticate.  <a href="https://docs.aws.amazon.com/AmazonECR/latest/userguide/ECR_GetStarted.html">Amazon ECR</a> requires using an IAM access key to obtain temporary docker login credentials. The <code>docker:push</code> and <code>docker:pull</code> goals automatically execute this exchange for any registry of the form <em>awsAccountId</em>*.dkr.ecr.<strong><em>awsRegion</em></strong>.amazonaws.com*, unless the <code>skipExtendedAuth</code> configuration (<code>docker.skip.extendedAuth</code> property) is set true.</p>
+<p>Some docker registries require additional steps to authenticate.
+<a href="https://docs.aws.amazon.com/AmazonECR/latest/userguide/ECR_GetStarted.html">Amazon ECR</a> requires using an IAM access key to obtain temporary docker login credentials.
+The <code>docker:push</code> and <code>docker:pull</code> goals automatically execute this exchange for any registry of the form <em>&lt;awsAccountId&gt;</em> <strong>.dkr.ecr.</strong> <em>&lt;awsRegion&gt;</em> <strong>.amazonaws.com</strong>, unless the <code>skipExtendedAuth</code> configuration (<code>docker.skip.extendedAuth</code> property) is set true.</p>
 </div>
 <div class="paragraph">
-<p>You can use any IAM access key with the necessary permissions in any of the locations mentioned above except <code>~/.docker/config.json</code>. Use the IAM <strong>Access key ID</strong> as the username and the <strong>Secret access key</strong> as the password.</p>
+<p>You can use any IAM access key with the necessary permissions in any of the locations mentioned above except <code>~/.docker/config.json</code>.
+Use the IAM <strong>Access key ID</strong> as the username and the <strong>Secret access key</strong> as the password.</p>
 </div>
 </div>
 </div>
@@ -6267,7 +6323,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.28<br>
-Last updated 2017-05-08 15:49:27 UTC
+Last updated 2017-06-09 16:07:54 UTC
 </div>
 </div>
 </body>
