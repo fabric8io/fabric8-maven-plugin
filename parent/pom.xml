@@ -64,7 +64,7 @@
 
     <version.maven>3.3.1</version.maven>
     <version.jacoco>0.7.8</version.jacoco>
-    <version.fabric8>2.2.213</version.fabric8>
+    <version.fabric8>2.2.215</version.fabric8>
     <version.kubernetes-client>2.3.1</version.kubernetes-client>
     <version.mockwebserver>0.0.13</version.mockwebserver>
     <version.docker-maven-plugin>0.21.0</version.docker-maven-plugin>
