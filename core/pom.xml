@@ -120,6 +120,13 @@
       <artifactId>json-path-assert</artifactId>
     </dependency>
 
+    <!-- Spring Boot Profiles handling -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot</artifactId>
+      <version>${version.spring-boot}</version>
+    </dependency>
+
   </dependencies>
 
   <build>

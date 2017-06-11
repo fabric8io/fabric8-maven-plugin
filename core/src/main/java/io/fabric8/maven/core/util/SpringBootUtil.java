@@ -17,20 +17,30 @@
 package io.fabric8.maven.core.util;
 
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.SafeConstructor;
+import org.springframework.boot.Banner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.env.PropertiesPropertySourceLoader;
+import org.springframework.boot.env.PropertySourcesLoader;
+import org.springframework.boot.env.YamlPropertySourceLoader;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.PropertySource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
 
 /**
  * Utility methods to access spring-boot resources.
+ * TODO: remove unwanted methods after Roland reviews and okays logic
  */
 public class SpringBootUtil {
 
@@ -43,135 +53,116 @@ public class SpringBootUtil {
      * @param activeProfiles - the comma separated String of profiles
      * @return properties - the merged properties of all profiles
      */
-    public static Properties getApplicationProperties(MavenProject project, String activeProfiles) {
+    public static Properties getApplicationProperties(MavenProject project, String activeProfiles) throws IOException {
         return getApplicationProperties(project, getActiveProfiles(activeProfiles));
+    }
+
+
+    /**
+     * TODO: need to check with Roland to see if we can use this approach
+     * A simple short method where we simply run a small spring boot application during build and load the environment
+     * to get the property sources, then load the properties from
+     *
+     * @param activeProfiles - the active profiles to be used if {@code null}, its not passed to spring boot application run
+     * @return Properties - the application environment properties that will be used during image building process
+     */
+    public static Properties runAndLoadPropertiesUsingEnv(List<String> activeProfiles) {
+
+        SpringApplication sbBuilder;
+
+        if (activeProfiles != null && activeProfiles.size() > 0) {
+            sbBuilder = new SpringApplicationBuilder(AnnotationConfigApplicationContext.class)
+                    .web(false)
+                    .headless(true)
+                    .bannerMode(Banner.Mode.OFF)
+                    .profiles(activeProfiles.toArray(new String[activeProfiles.size()]))
+                    .build();
+        } else {
+            sbBuilder = new SpringApplicationBuilder(AnnotationConfigApplicationContext.class)
+                    .web(false)
+                    .headless(true)
+                    .bannerMode(Banner.Mode.OFF)
+                    .build();
+        }
+
+        ConfigurableApplicationContext ctx = sbBuilder.run();
+
+        Properties applicationProperties = new Properties();
+
+        for (PropertySource propertySource : ctx.getEnvironment().getPropertySources()) {
+
+            if (propertySource != null && propertySource instanceof MapPropertySource) {
+                applicationProperties.putAll(((MapPropertySource) propertySource).getSource());
+            }
+        }
+
+        return applicationProperties;
     }
 
     /**
      * Returns the spring boot configuration (supports `application.properties` and `application.yml`)
      * or an empty properties object if not found
      */
-    public static Properties getApplicationProperties(MavenProject project, List<String> activeProfiles) {
-        URLClassLoader compileClassLoader = MavenUtil.getCompileClassLoader(project);
+    public static Properties getApplicationProperties(MavenProject project, List<String> activeProfiles)
+            throws IOException {
 
-        Properties props = new Properties();
-        addApplicationProperties(activeProfiles, compileClassLoader, props, null);
-
-        //If the profiles are available load the profile resources as well
-        if (activeProfiles != null) {
-            for (String profile : activeProfiles) {
-                addApplicationProperties(activeProfiles, compileClassLoader, props, profile);
-            }
-        }
-        return props;
+        return runAndLoadPropertiesUsingEnv(activeProfiles);
+        //Properties props = new Properties();
+//        addApplicationProperties(project, props, null);
+//
+//        //If the profiles are available load the profile resources as well
+//        if (activeProfiles != null && !activeProfiles.isEmpty()) {
+//            for (String profile : activeProfiles) {
+//                addApplicationProperties(project, props, profile);
+//            }
+//        }
+        //return props;
     }
 
     /**
      * Returns the given properties file on the project classpath if found or an empty properties object if not
      */
-    public static Properties getPropertiesFile(MavenProject project, String propertiesFileName) {
+    public static Properties getPropertiesFile(MavenProject project, String propertiesFileName) throws IOException {
         URLClassLoader compileClassLoader = MavenUtil.getCompileClassLoader(project);
         URL resource = compileClassLoader.findResource(propertiesFileName);
-        return getPropertiesResource(resource);
+        return getPropertiesResource(resource, null);
     }
 
     /**
      * Returns the given properties resource on the project classpath if found or an empty properties object if not
      */
-    protected static Properties getPropertiesResource(URL resource) {
-        Properties answer = new Properties();
+    @SuppressWarnings("unchecked")
+    protected static Properties getPropertiesResource(URL resource, String profile) throws IOException {
+        Properties properties = new Properties();
         if (resource != null) {
-            try (InputStream stream = resource.openStream()) {
-                answer.load(stream);
-            } catch (IOException e) {
-                throw new IllegalStateException("Error while reading resource from URL " + resource, e);
+            PropertiesPropertySourceLoader propertySourceLoader = new PropertiesPropertySourceLoader();
+            PropertySource<Map> propertySource = (PropertySource<Map>) propertySourceLoader.load(resource.getFile(),
+                    new UrlResource(resource), profile);
+            if (propertySource != null) {
+                properties.putAll(propertySource.getSource());
             }
         }
-        return answer;
-    }
-
-    /**
-     * Returns a {@code Properties} representation of the given Yaml file on the project classpath if found or an empty properties object if not
-     */
-    public static Properties getPropertiesFromYamlFile(MavenProject project, String yamlFileName,
-                                                       List<String> activeProfiles) {
-        URLClassLoader compileClassLoader = MavenUtil.getCompileClassLoader(project);
-        URL resource = compileClassLoader.findResource(yamlFileName);
-        return getPropertiesFromYamlResource(resource, activeProfiles);
+        return properties;
     }
 
     /**
      * Returns a {@code Properties} representation of the given Yaml resource or an empty properties object if the resource is null
      */
-    protected static Properties getPropertiesFromYamlResource(URL resource, List<String> activeProfiles) {
+    @SuppressWarnings("unchecked")
+    protected static Properties getPropertiesFromYamlResource(URL resource, String profile) throws IOException {
+        Properties properties = new Properties();
         if (resource != null) {
-            try (InputStream yamlStream = resource.openStream()) {
-                Yaml yaml = new Yaml(new SafeConstructor());
+            YamlPropertySourceLoader yamlPropertySourceLoader = new YamlPropertySourceLoader();
 
-                Map<String, Map> profileDocs = new HashMap<>();
+            PropertySource<Map> propertySource = (PropertySource<Map>)
+                    yamlPropertySourceLoader.load(resource.getFile(),
+                            new UrlResource(resource), profile);
 
-                Properties properties = new Properties();
-
-                Iterable<Object> yamlDoc = yaml.loadAll(yamlStream);
-
-                Iterator yamlDocIterator = yamlDoc.iterator();
-
-                int docCount = 0;
-                while (yamlDocIterator.hasNext()) {
-                    Map docRoot = (Map) yamlDocIterator.next();
-
-                    String profiles = null;
-
-                    if (docRoot.containsKey("spring")) {
-
-                        LinkedHashMap value = (LinkedHashMap) docRoot.get("spring");
-
-                        Object profilesValue = value.get("profiles");
-
-                        if (profilesValue instanceof Map) {
-                            Map profileMap = (Map) profilesValue;
-                            if (activeProfiles.isEmpty() && docCount > 0) {
-                                if (profileMap.containsKey("active")) {
-                                    activeProfiles.addAll(getActiveProfiles((String) profileMap.get("active")));
-                                }
-                            }
-                        } else if (profilesValue instanceof String) {
-                            profiles = (String) profilesValue;
-                        }
-                    }
-
-                    if (profiles != null) {
-                        String[] profileSplit = profiles.split("\\s*,\\s*");
-                        if (!CollectionUtils.
-                                intersection(Arrays.asList(profileSplit), activeProfiles)
-                                .isEmpty()) {
-                            //if the profiles is in the list of active profiles we add it to our list of docs
-                            profileDocs.put(profiles, docRoot);
-                        }
-                    } else if (docCount == 0) {
-                        //the root doc
-                        profileDocs.put("default", docRoot);
-                    }
-
-                    docCount++;
-                }
-
-                LOG.debug("Spring Boot Profile docs:{}" + profileDocs);
-
-                properties.putAll(getFlattenedMap(profileDocs.get("default")));
-
-                for (String activeProfile : activeProfiles) {
-                    if (profileDocs.containsKey(activeProfile)) {
-                        properties.putAll(getFlattenedMap(profileDocs.get(activeProfile)));
-                    }
-                }
-
-                return properties;
-            } catch (IOException e) {
-                throw new IllegalStateException("Error while reading Yaml resource from URL " + resource, e);
+            if (propertySource != null) {
+                properties.putAll(propertySource.getSource());
             }
         }
-        return new Properties();
+        return properties;
     }
 
     /**
@@ -184,48 +175,8 @@ public class SpringBootUtil {
     /**
      * Determine the spring-boot major version for the current project
      */
-    public static String getSpringBootVersion(MavenProject mavenProject) {
-        return MavenUtil.getDependencyVersion(mavenProject, SpringBootConfigurationHelper.SPRING_BOOT_GROUP_ID, SpringBootConfigurationHelper.SPRING_BOOT_ARTIFACT_ID);
-    }
+    public static String getSpringBootVersion(MavenProject mavenProject) {return MavenUtil.getDependencyVersion(mavenProject, SpringBootConfigurationHelper.SPRING_BOOT_GROUP_ID, SpringBootConfigurationHelper.SPRING_BOOT_ARTIFACT_ID);
 
-    /**
-     * Build a flattened representation of the Yaml tree. The conversion is compliant with the spring-boot rules.
-     */
-    private static Map<String, Object> getFlattenedMap(Map<String, Object> source) {
-        Map<String, Object> result = new LinkedHashMap<>();
-        buildFlattenedMap(result, source, null);
-        return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void buildFlattenedMap(Map<String, Object> result, Map<String, Object> source, String path) {
-        for (Map.Entry<String, Object> entry : source.entrySet()) {
-            String key = entry.getKey();
-            if (path != null && path.trim().length() > 0) {
-                if (key.startsWith("[")) {
-                    key = path + key;
-                } else {
-                    key = path + "." + key;
-                }
-            }
-            Object value = entry.getValue();
-            if (value instanceof String) {
-                result.put(key, value);
-            } else if (value instanceof Map) {
-
-                Map<String, Object> map = (Map<String, Object>) value;
-                buildFlattenedMap(result, map, key);
-            } else if (value instanceof Collection) {
-                Collection<Object> collection = (Collection<Object>) value;
-                int count = 0;
-                for (Object object : collection) {
-                    buildFlattenedMap(result,
-                            Collections.singletonMap("[" + (count++) + "]", object), key);
-                }
-            } else {
-                result.put(key, (value != null ? value : ""));
-            }
-        }
     }
 
     public static List<String> getActiveProfiles(String strActiveProfiles) {
@@ -249,32 +200,125 @@ public class SpringBootUtil {
         return urlResource;
     }
 
+    private static void runAndLoadEnv(String... profiles) {
+        SpringApplication mvnSpringApplication =
+                new SpringApplicationBuilder()
+                        .profiles(profiles)
+                        .build();
+        mvnSpringApplication.setWebEnvironment(false);
+
+    }
+
     /**
      * Method to add the application properties from spring boot profile resources and merge them as one
      *
-     * @param activeProfiles     - the active profiles list typically a comma separated string of profile names
-     * @param compileClassLoader - the classloader in which the resource will be searched
-     * @param mergedProperties              - the merged properties container
-     * @param profile            - the profile to use when searching the spring boot resources
+     * @param project          - the maven project of the build
+     * @param mergedProperties - the merged properties container
+     * @param profile          - the profile to use when searching the spring boot resources
      */
-    private static void addApplicationProperties(List<String> activeProfiles, URLClassLoader compileClassLoader,
-                                                 Properties mergedProperties, String profile) {
-        URL ymlResource;
-        URL propertiesResource;
-        Properties profileProperties;
+    private static void addApplicationProperties(MavenProject project, Properties mergedProperties,
+                                                 String profile) throws IOException {
+
+        PropertySourcesLoader propertySourcesLoader = new PropertySourcesLoader();
+
+        //Applications can override the config file name using this system property
+        //Ref: https://docs.spring.io/spring-boot/docs/current/reference/html/howto-properties-and-configuration.html
+
+        String configFileName = System.getProperty("spring.config.name", "application");
+
+        Set<Resource> includesResources = new LinkedHashSet<>();
 
         if (profile == null) {
-            ymlResource = compileClassLoader.findResource("application.yml");
-            propertiesResource = compileClassLoader.findResource("application.properties");
-            mergedProperties = getPropertiesFromYamlResource(ymlResource, activeProfiles);
-            mergedProperties.putAll(getPropertiesResource(propertiesResource));
+            scanForApplicationPropertySources(project, configFileName, includesResources, null);
+
         } else {
-            ymlResource = compileClassLoader.findResource("application-" + profile + ".yml");
-            profileProperties = getPropertiesFromYamlResource(ymlResource, activeProfiles);
-            propertiesResource = getResourceFromClasspath(compileClassLoader,
-                    "application-" + profile + ".properties");
-            profileProperties.putAll(getPropertiesResource(propertiesResource));
-            mergedProperties.putAll(profileProperties);
+            scanForApplicationPropertySources(project, configFileName, includesResources, null);
+        }
+
+
+        Properties profileProperties = new Properties();
+
+        for (Resource resource : includesResources) {
+            MapPropertySource propertySource = (MapPropertySource) propertySourcesLoader.load(resource);
+            if (propertySource != null) {
+                profileProperties.putAll(propertySource.getSource());
+            }
+        }
+
+        mergedProperties.putAll(profileProperties);
+    }
+
+    /**
+     * A utility method to scan for spring boot application sources {@code *.properties,*.yaml,*.json,*.yml}
+     *
+     * @param mavenProject      - the maven project which houses the spring boot application
+     * @param configFileName    - the configuration file name {@code spring.config.name} system property or defaults to application
+     * @param includesResources - the collection to which the scanned resources will be added
+     * @param profile           - the Spring profile
+     * @throws IOException - any exception that might occur while scanning the resource
+     */
+    private static void scanForApplicationPropertySources(MavenProject mavenProject, String configFileName,
+                                                          Set<Resource> includesResources,
+                                                          String profile) throws IOException {
+
+        URLClassLoader classLoader = MavenUtil.getCompileClassLoader(mavenProject);
+        PathMatchingResourcePatternResolver scanner = new PathMatchingResourcePatternResolver(classLoader);
+        String propertiesFilePattern;
+
+        //PROPERTIES
+        if (profile == null) {
+            propertiesFilePattern = "**/" + configFileName + ".properties";
+        } else {
+            propertiesFilePattern = "**/" + configFileName + "-" + profile + ".properties";
+        }
+
+        //PROPERTIES
+        Resource[] propertiesResources = scanner.getResources(propertiesFilePattern);
+
+        if (propertiesResources != null) {
+            includesResources.addAll(Arrays.asList(propertiesResources));
+        }
+
+        //YML
+        if (profile == null) {
+            propertiesFilePattern = "**/" + configFileName + ".yml";
+        } else {
+            propertiesFilePattern = "**/" + configFileName + "-" + profile + ".yml";
+        }
+
+        Resource[] ymlResources = scanner.getResources(propertiesFilePattern);
+        if (ymlResources != null) {
+            includesResources.addAll(Arrays.asList(ymlResources));
+        }
+
+        //YAML
+        if (profile == null) {
+            propertiesFilePattern = "**/" + configFileName + ".yaml";
+        } else {
+            propertiesFilePattern = "**/" + configFileName + "-" + profile + ".yaml";
+        }
+
+        Resource[] yamlResources =
+                scanner.getResources(propertiesFilePattern);
+        includesResources.addAll(Arrays.asList(yamlResources));
+
+        if (yamlResources != null) {
+            includesResources.addAll(Arrays.asList(ymlResources));
+        }
+
+        //JSON
+        if (profile == null) {
+            propertiesFilePattern = "**/" + configFileName + ".json";
+        } else {
+            propertiesFilePattern = "**/" + configFileName + "-" + profile + ".json";
+        }
+
+        Resource[] jsonResources =
+                scanner.getResources(propertiesFilePattern);
+        includesResources.addAll(Arrays.asList(yamlResources));
+
+        if (jsonResources != null) {
+            includesResources.addAll(Arrays.asList(jsonResources));
         }
     }
 
