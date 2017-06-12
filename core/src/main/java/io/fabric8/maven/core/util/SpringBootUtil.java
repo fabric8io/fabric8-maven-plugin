@@ -26,7 +26,6 @@ import org.springframework.boot.env.PropertiesPropertySourceLoader;
 import org.springframework.boot.env.PropertySourcesLoader;
 import org.springframework.boot.env.YamlPropertySourceLoader;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.Resource;
@@ -71,29 +70,34 @@ public class SpringBootUtil {
         SpringApplication sbBuilder;
 
         if (activeProfiles != null && activeProfiles.size() > 0) {
-            sbBuilder = new SpringApplicationBuilder(AnnotationConfigApplicationContext.class)
+            sbBuilder = new SpringApplicationBuilder(DummySpringBootApplication.class)
                     .web(false)
                     .headless(true)
                     .bannerMode(Banner.Mode.OFF)
                     .profiles(activeProfiles.toArray(new String[activeProfiles.size()]))
                     .build();
         } else {
-            sbBuilder = new SpringApplicationBuilder(AnnotationConfigApplicationContext.class)
+            sbBuilder = new SpringApplicationBuilder(DummySpringBootApplication.class)
                     .web(false)
                     .headless(true)
                     .bannerMode(Banner.Mode.OFF)
                     .build();
         }
 
-        ConfigurableApplicationContext ctx = sbBuilder.run();
-
         Properties applicationProperties = new Properties();
+        try {
+            ConfigurableApplicationContext ctx = sbBuilder.run();
 
-        for (PropertySource propertySource : ctx.getEnvironment().getPropertySources()) {
+            applicationProperties = new Properties();
 
-            if (propertySource != null && propertySource instanceof MapPropertySource) {
-                applicationProperties.putAll(((MapPropertySource) propertySource).getSource());
+            for (PropertySource propertySource : ctx.getEnvironment().getPropertySources()) {
+
+                if (propertySource != null && propertySource instanceof MapPropertySource) {
+                    applicationProperties.putAll(((MapPropertySource) propertySource).getSource());
+                }
             }
+        } catch (Exception e) {
+            //swallow it ..
         }
 
         return applicationProperties;

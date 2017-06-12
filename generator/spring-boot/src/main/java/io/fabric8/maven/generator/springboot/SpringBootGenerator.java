@@ -121,7 +121,13 @@ public class SpringBootGenerator extends JavaExecGenerator {
         //Spring boot active profiles
         String strActiveProfiles = getConfig(activeProfiles);
         if (strActiveProfiles != null) {
-            opts.add("-Dspring.profiles.active=\"" + strActiveProfiles + "\"");
+            //String[] profiles = strActiveProfiles.split(",");
+            //Quoting is having issue with spring boot considering the string with quotes as profile name
+            //if (profiles.length > 1) {
+            opts.add("-Dspring.profiles.active=" + strActiveProfiles);
+            //} else {
+            // opts.add("-Dspring.profiles.active=" + strActiveProfiles);
+            //}
         }
         return opts;
     }

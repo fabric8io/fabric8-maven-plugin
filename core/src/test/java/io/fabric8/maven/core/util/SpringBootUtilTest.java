@@ -130,6 +130,14 @@ public class SpringBootUtilTest {
         FileUtils.copyFile(ResourceUtils.getFile(testAppPropertyResource), new File("target/test-classes",
                 "application.yml"), "UTF-8", null, true);
 
+        SpringApplication sbBuilder = new SpringApplicationBuilder(AnnotationConfigApplicationContext.class)
+                .web(false)
+                .headless(true)
+                .bannerMode(Banner.Mode.OFF)
+                .build();
+
+        ConfigurableApplicationContext ctx = sbBuilder.run();
+
         Properties props = SpringBootUtil.getApplicationProperties(project,Collections.<String>emptyList());
 
         assertNotEquals(0, props.size());
