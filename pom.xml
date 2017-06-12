@@ -19,13 +19,13 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>fabric8-maven-plugin-build</artifactId>
-  <version>3.4-SNAPSHOT</version>
+  <version>3.4.0.fuse-000001</version>
   <packaging>pom</packaging>
 
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>fabric8-maven-parent</artifactId>
-    <version>3.4-SNAPSHOT</version>
+    <version>3.4.0.fuse-000001</version>
     <relativePath>parent/pom.xml</relativePath>
   </parent>
 
@@ -45,9 +45,7 @@
     <module>generator/api</module>
     <module>generator/java-exec</module>
     <module>generator/spring-boot</module>
-    <module>generator/wildfly-swarm</module>
     <module>generator/karaf</module>
-    <module>generator/webapp</module>
     <module>generator/vertx</module>
     <module>watcher/api</module>
     <module>watcher/standard</module>

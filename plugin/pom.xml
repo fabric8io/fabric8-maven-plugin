@@ -19,12 +19,12 @@
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>fabric8-maven-parent</artifactId>
-    <version>3.4-SNAPSHOT</version>
+    <version>3.4.0.fuse-000001</version>
     <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>fabric8-maven-plugin</artifactId>
-  <version>3.4-SNAPSHOT</version>
+  <version>3.4.0.fuse-000001</version>
   <packaging>maven-plugin</packaging>
 
   <name>Fabric8 Maven :: Plugin</name>
@@ -87,15 +87,9 @@
       <artifactId>fabric8-maven-generator-karaf</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-generator-wildfly-swarm</artifactId>
-    </dependency>
+    
 
-    <dependency>
-      <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-generator-webapp</artifactId>
-    </dependency>
+    
 
     <dependency>
       <groupId>io.fabric8</groupId>
