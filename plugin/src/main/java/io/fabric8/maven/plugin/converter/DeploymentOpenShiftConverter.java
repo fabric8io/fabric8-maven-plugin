@@ -91,7 +91,7 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                         specBuilder.withNewStrategy().withType("Rolling").
                             withNewRollingParams().withTimeoutSeconds(openshiftDeployTimeoutSeconds).endRollingParams().endStrategy();
                     } else if (Strings.isNotBlank(strategyType)) {
-                        if (strategyType.equals("Recreate")) {
+                        if ("Recreate".equals(strategyType)) {
                             specBuilder.withNewStrategy().withType(strategyType).
                                     withNewRecreateParams().withTimeoutSeconds(openshiftDeployTimeoutSeconds).endRecreateParams().endStrategy();
                         } else {
