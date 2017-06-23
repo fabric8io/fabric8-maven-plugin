@@ -22,9 +22,36 @@
     <!-- copy karaf assembly files -->
     <fileSet>
       <directory>${project.build.directory}/assembly/</directory>
-      <outputDirectory>/${project.artifactId}-${project.version}</outputDirectory>
+      <outputDirectory>${project.artifactId}-${project.version}</outputDirectory>
+      <excludes>
+        <exclude>bin/**</exclude>
+      </excludes>
       <useDefaultExcludes>false</useDefaultExcludes>
-      <directoryMode>0774</directoryMode>
+      <directoryMode>0775</directoryMode>
+    </fileSet>
+    <!-- mark /bin/* files as executable, except *.bat files -->
+    <fileSet>
+      <directory>${project.build.directory}/assembly/bin</directory>
+      <outputDirectory>${project.artifactId}-${project.version}/bin</outputDirectory>
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <directoryMode>0775</directoryMode>
+      <fileMode>0755</fileMode>
+      <excludes>
+        <exclude>*.bat</exclude>
+        <exclude>contrib/**</exclude>
+      </excludes>
+    </fileSet>
+    <!-- copy /bin/*.bat files as it is -->
+    <fileSet>
+      <directory>${project.build.directory}/assembly/bin</directory>
+      <outputDirectory>${project.artifactId}-${project.version}/bin</outputDirectory>
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <directoryMode>0775</directoryMode>
+      <fileMode>0644</fileMode>
+      <includes>
+        <include>*.bat</include>
+        <include>contrib/**</include>
+      </includes>
     </fileSet>
   </fileSets>
 </assembly>
