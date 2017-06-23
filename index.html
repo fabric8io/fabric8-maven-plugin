@@ -3380,13 +3380,38 @@ mvn fabric8:stop</code></pre>
 running on Kubernetes.</p>
 </div>
 <div class="paragraph">
-<p>Before entering the watch mode, this goal generates the docker image and the Kubernetes resources
+<p>Before entering the watch mode, this goal must generate the docker image and the Kubernetes resources
 (optionally including some development libraries/configuration),
-and deploys the app on Kubernetes.</p>
+and deploy the app on Kubernetes. Lifecycle bindings should be configured as follows to allow
+the generation of such resources.</p>
+</div>
+<div class="listingblock">
+<div class="title">Lifecycle bindings for fabric8:watch</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+
+  <span class="comment">&lt;!-- ... --&gt;</span>
+
+  <span class="tag">&lt;executions&gt;</span>
+    <span class="tag">&lt;execution&gt;</span>
+      <span class="tag">&lt;goals&gt;</span>
+        <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
+        <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
+      <span class="tag">&lt;/goals&gt;</span>
+    <span class="tag">&lt;/execution&gt;</span>
+  <span class="tag">&lt;/executions&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For any application having <code>resource</code> and <code>build</code> goals bound to the lifecycle, the following
+command can be used to run the watch task.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:watch</code></pre>
+<pre class="CodeRay highlight"><code data-lang="bash">mvn fabric8:watch</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5766,6 +5791,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
     - <span class="string"><span class="content">f8-maven-issue-mgmt</span></span>
     <span class="comment"># Dependencies shouldn't be enriched anymore, therefor it's last in the list</span>
     - <span class="string"><span class="content">fmp-dependency</span></span>
+    - <span class="string"><span class="content">f8-watch</span></span>
 
   <span class="key">generator</span>:
     <span class="comment"># The order given in &quot;includes&quot; is the order in which generators are called</span>
@@ -6323,7 +6349,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.2.28<br>
-Last updated 2017-06-23 17:49:13 UTC
+Last updated 2017-06-23 19:23:22 UTC
 </div>
 </div>
 </body>
