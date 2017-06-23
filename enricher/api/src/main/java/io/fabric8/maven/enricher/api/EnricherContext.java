@@ -86,6 +86,17 @@ public class EnricherContext {
     }
 
     /**
+     * Returns true if we are in watch mode
+     */
+    public boolean isWatchMode() {
+        try {
+            return runningWithGoal("fabric8:watch-spring-boot", "fabric8:watch");
+        } catch (MojoExecutionException e) {
+            throw new IllegalStateException("Cannot determine maven goals", e);
+        }
+    }
+
+    /**
      * Returns true if maven is running with any of the given goals
      */
     public boolean runningWithGoal(String... goals) throws MojoExecutionException {

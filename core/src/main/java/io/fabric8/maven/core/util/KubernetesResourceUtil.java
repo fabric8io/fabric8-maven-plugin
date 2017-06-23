@@ -24,6 +24,8 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -95,9 +97,9 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
+import org.slf4j.LoggerFactory;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
-import static io.fabric8.kubernetes.api.KubernetesHelper.parseDate;
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
 import static io.fabric8.maven.core.util.Constants.RESOURCE_SOURCE_URL_ANNOTATION;
 import static io.fabric8.utils.Strings.isNullOrBlank;
@@ -110,6 +112,8 @@ import static io.fabric8.utils.Strings.isNullOrBlank;
  */
 public class KubernetesResourceUtil {
 
+    private static final transient org.slf4j.Logger LOG = LoggerFactory.getLogger(KubernetesResourceUtil.class);
+
     public static final String API_VERSION = "v1";
     public static final String API_EXTENSIONS_VERSION = "extensions/v1beta1";
     public static final String API_APPS_VERSION = "apps/v1beta1";
@@ -119,6 +123,8 @@ public class KubernetesResourceUtil {
             .withAppsVersion(API_APPS_VERSION);
 
     public static final HashSet<Class<?>> SIMPLE_FIELD_TYPES = new HashSet<>();
+
+    protected static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX";
 
 
     /**
@@ -581,10 +587,19 @@ public class KubernetesResourceUtil {
     }
 
     private static Date parseTimestamp(String text) {
-        if (text == null) {
+        if (Strings.isNullOrBlank(text)) {
             return null;
         }
         return parseDate(text);
+    }
+
+    public static Date parseDate(String text) {
+        try {
+            return new SimpleDateFormat(DATE_TIME_FORMAT).parse(text);
+        } catch (ParseException e) {
+            LOG.warn("Unable to parse date: " + text, e);
+            return null;
+        }
     }
 
     public static boolean podHasContainerImage(Pod pod, String imageName) {
