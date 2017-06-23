@@ -86,10 +86,16 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                 if (strategy != null) {
                     strategyType = strategy.getType();
                 }
-                if (openshiftDeployTimeoutSeconds != null && openshiftDeployTimeoutSeconds > 0 &&
-                        (Strings.isNullOrBlank(strategyType) || "Rolling".equals(strategyType))) {
-                    specBuilder.withNewStrategy().withType("Rolling").
-                        withNewRollingParams().withTimeoutSeconds(openshiftDeployTimeoutSeconds).endRollingParams().endStrategy();
+                if (openshiftDeployTimeoutSeconds != null && openshiftDeployTimeoutSeconds > 0) {
+                    if (Strings.isNullOrBlank(strategyType) || "Rolling".equals(strategyType)) {
+                        specBuilder.withNewStrategy().withType("Rolling").
+                                withNewRollingParams().withTimeoutSeconds(openshiftDeployTimeoutSeconds).endRollingParams().endStrategy();
+                    } else if ("Recreate".equals(strategyType)) {
+                        specBuilder.withNewStrategy().withType("Recreate").
+                                withNewRecreateParams().withTimeoutSeconds(openshiftDeployTimeoutSeconds).endRecreateParams().endStrategy();
+                    } else {
+                        specBuilder.withNewStrategy().withType(strategyType).endStrategy();
+                    }
                 } else if (Strings.isNotBlank(strategyType)) {
                     // TODO is there any values we can copy across?
                     specBuilder.withNewStrategy().withType(strategyType).endStrategy();
