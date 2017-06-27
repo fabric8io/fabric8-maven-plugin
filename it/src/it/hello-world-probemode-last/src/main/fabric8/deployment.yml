@@ -1,0 +1,64 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+spec:
+  template:
+    metadata:
+      annotations:
+        alpha.istio.io/sidecar: injected
+        alpha.istio.io/version: ${istio.version}
+      labels: {}
+    spec:
+      containers:
+      - name: proxy
+        args:
+        - proxy
+        - sidecar
+        - -v
+        - "2"
+        - --passthrough
+        - "8080"
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        image: docker.io/istio/proxy_debug:0.1
+        imagePullPolicy: Always
+
+        resources: {}
+        securityContext:
+          runAsUser: 1337
+      initContainers:
+      - name: init
+        args:
+        - "-p"
+        - "15001"
+        - "-u"
+        - "1337"
+        image: docker.io/istio/init:0.1
+        imagePullPolicy: Always
+        securityContext:
+          capabilities:
+            add:
+            - NET_ADMIN
+      - name: enable-core-dump
+        args:
+        - "-c"
+        - "sysctl"
+        - "-w"
+        - "kernel.core_pattern=/tmp/core.%e.%p.%t \u0026\u0026 ulimit -c unlimited"
+        image: alpine
+        imagePullPolicy: Always
+        command: ["/bin/sh"]
+        securityContext:
+          privileged: true
+      - name: spring-boot

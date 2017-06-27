@@ -17,9 +17,11 @@
 package io.fabric8.maven.enricher.api;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.model.ContainerBuilder;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.Probe;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.maven.core.util.Configs;
+
+import java.util.List;
 
 /**
  * Enriches containers with health check probes.
@@ -30,25 +32,67 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
         super(buildContext, name);
     }
 
+    // Available configuration keys
+    protected enum Config implements Configs.Key {
+
+        probeMode {{ d = "all";}};
+
+        protected String d;
+
+        public String def() {
+            return d;
+        }
+    }
+
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
+
+        final List<HasMetadata> buildItems = builder.buildItems();
 
         builder.accept(new TypedVisitor<ContainerBuilder>() {
             @Override
             public void visit(ContainerBuilder container) {
-                if (!container.hasReadinessProbe()) {
-                    Probe probe = getReadinessProbe(container);
-                    if (probe != null) {
-                        log.info("Adding readiness " + describe(probe));
-                        container.withReadinessProbe(probe);
+                Container matchedContainer = null;
+                int idx = 0;
+
+                // by default true - as probeMode will be all containers
+                boolean matches = true;
+
+                //do probe mode check only for first and last probe modes
+                if ("first".equalsIgnoreCase(getConfig(Config.probeMode)) ||
+                        "last".equalsIgnoreCase(getConfig(Config.probeMode))) {
+                    for (HasMetadata buildItem : buildItems) {
+                        //TODO: SK check with ROL on whether kind to be for Replication Controllers as well??
+                        if ("Deployment".equals(buildItem.getKind())) {
+                            Deployment deployment = (Deployment) buildItem;
+                            List<Container> containers = deployment.getSpec().getTemplate().getSpec().getContainers();
+                            if ("first".equalsIgnoreCase(getConfig(Config.probeMode))) {
+                                idx = 0;
+                            } else if ("last".equalsIgnoreCase(getConfig(Config.probeMode))) {
+                                idx = containers.size() - 1;
+                            }
+                            matchedContainer = containers.get(idx);
+                        }
                     }
+                    matches = matchedContainer != null &&
+                            container.build().getImage().equals(matchedContainer.getImage());
                 }
 
-                if (!container.hasLivenessProbe()) {
-                    Probe probe = getLivenessProbe(container);
-                    if (probe != null) {
-                        log.info("Adding liveness " + describe(probe));
-                        container.withLivenessProbe(probe);
+                if (matches) {
+                    if (!container.hasReadinessProbe()) {
+                        Probe probe = getReadinessProbe(container);
+                        if (probe != null) {
+                            log.info("Adding readiness " + describe(probe));
+                            container.withReadinessProbe(probe);
+                        }
+                    }
+
+                    if (!container.hasLivenessProbe()) {
+                        Probe probe = getLivenessProbe(container);
+                        if (probe != null) {
+                            log.info("Adding liveness " + describe(probe));
+                            container.withLivenessProbe(probe);
+                        }
                     }
                 }
             }

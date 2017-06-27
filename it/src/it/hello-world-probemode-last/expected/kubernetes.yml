@@ -1,0 +1,125 @@
+---
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      fabric8.io/git-commit: "@ignore@"
+      fabric8.io/iconUrl: img/icons/spring-boot.svg
+      fabric8.io/git-branch: "@ignore@"
+      prometheus.io/scrape: "@ignore@"
+      prometheus.io/port: "@ignore@"
+    labels:
+      expose: "true"
+      provider: fabric8
+      project: hello-world
+      version: 0.0.1-SNAPSHOT
+      group: io.fabric8
+    name: hello-world
+  spec:
+    ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      project: hello-world
+      provider: fabric8
+      group: io.fabric8
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    annotations:
+      fabric8.io/git-commit: "@ignore@"
+      fabric8.io/iconUrl: img/icons/spring-boot.svg
+      fabric8.io/git-branch: "@ignore@"
+      fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=hello-world&var-version=0.0.1-SNAPSHOT
+    labels:
+      provider: fabric8
+      project: hello-world
+      version: 0.0.1-SNAPSHOT
+      group: io.fabric8
+    name: hello-world
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        project: hello-world
+        provider: fabric8
+        group: io.fabric8
+    template:
+      metadata:
+        annotations:
+          alpha.istio.io/sidecar: injected
+          alpha.istio.io/version: jenkins@ubuntu-16-04-build-12ac793f80be71-0.1.6-dab2033
+          fabric8.io/git-commit: "@ignore@"
+          fabric8.io/iconUrl: img/icons/spring-boot.svg
+          fabric8.io/git-branch: "@ignore@"
+          fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=hello-world&var-version=0.0.1-SNAPSHOT
+        labels:
+          provider: fabric8
+          project: hello-world
+          version: 0.0.1-SNAPSHOT
+          group: io.fabric8
+      spec:
+        containers:
+        - args:
+          - proxy
+          - sidecar
+          - -v
+          - "2"
+          - --passthrough
+          - "8080"
+          env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          image: docker.io/istio/proxy_debug:0.1
+          imagePullPolicy: Always
+          name: proxy
+          resources: {}
+          securityContext:
+            runAsUser: 1337
+        - env:
+          - name: KUBERNETES_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          image: "@matches('fabric8/hello-world:.*$')@"
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 180
+          name: spring-boot
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+          ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+          - containerPort: 9779
+            name: prometheus
+            protocol: TCP
+          - containerPort: 8778
+            name: jolokia
+            protocol: TCP
+          securityContext:
+            privileged: false
