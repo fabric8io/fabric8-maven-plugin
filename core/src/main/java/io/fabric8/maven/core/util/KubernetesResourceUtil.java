@@ -719,9 +719,20 @@ public class KubernetesResourceUtil {
                 int idx = 0;
                 for (Container defaultContainer : defaultContainers) {
                     Container container;
+                    boolean isNewContainerAdded = false;
                     if (idx < containers.size()) {
                         container = containers.get(idx);
                     } else {
+                        isNewContainerAdded = true;
+                        container = new Container();
+                        containers.add(container);
+                    }
+                    //TODO: SK remove it after review
+                    //Though we have more containers in the builder, but if existing one does not match
+                    // default container name then we assume it to be new one or the one to be added
+                    String containerName = container.getImage();
+                    String defaultContainerName = defaultContainer.getImage();
+                    if (!containerName.equalsIgnoreCase(defaultContainerName) && !isNewContainerAdded) {
                         container = new Container();
                         containers.add(container);
                     }
