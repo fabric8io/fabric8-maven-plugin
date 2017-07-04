@@ -21,7 +21,7 @@
 
   <artifactId>fabric8-maven-sample-custom-enricher-parent</artifactId>
   <groupId>io.fabric8.samples.custom-enricher</groupId>
-  <version>3.4-SNAPSHOT</version>
+  <version>3.5-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <parent>

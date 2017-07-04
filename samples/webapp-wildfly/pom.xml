@@ -20,7 +20,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.fabric8</groupId>
   <artifactId>fabric8-maven-sample-webapp-wildfly</artifactId>
-  <version>3.4-SNAPSHOT</version>
+  <version>3.5-SNAPSHOT</version>
   <packaging>war</packaging>
   <build>
     <finalName>fabric8-maven-sample-webapp-wildfly</finalName>

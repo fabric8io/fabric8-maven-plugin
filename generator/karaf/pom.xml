@@ -21,12 +21,12 @@
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>fabric8-maven-parent</artifactId>
-    <version>3.4-SNAPSHOT</version>
+    <version>3.5-SNAPSHOT</version>
     <relativePath>../../parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>fabric8-maven-generator-karaf</artifactId>
-  <version>3.4-SNAPSHOT</version>
+  <version>3.5-SNAPSHOT</version>
 
   <name>Fabric8 Maven :: Generator :: Karaf</name>
 
