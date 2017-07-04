@@ -20,7 +20,7 @@
 
   <artifactId>deployment-strategy-type-919</artifactId>
   <groupId>io.fabric8</groupId>
-  <version>3.4-SNAPSHOT</version>
+  <version>3.5-SNAPSHOT</version>
   <packaging>jar</packaging>
 
 

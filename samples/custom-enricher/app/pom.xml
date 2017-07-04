@@ -20,13 +20,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>fabric8-maven-sample-custom-enricher-app</artifactId>
-  <version>3.4-SNAPSHOT</version>
+  <version>3.5-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>io.fabric8.samples.custom-enricher</groupId>
     <artifactId>fabric8-maven-sample-custom-enricher-parent</artifactId>
-    <version>3.4-SNAPSHOT</version>
+    <version>3.5-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 

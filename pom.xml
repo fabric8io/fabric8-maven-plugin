@@ -19,13 +19,13 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>fabric8-maven-plugin-build</artifactId>
-  <version>3.4-SNAPSHOT</version>
+  <version>3.5-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>fabric8-maven-parent</artifactId>
-    <version>3.4-SNAPSHOT</version>
+    <version>3.5-SNAPSHOT</version>
     <relativePath>parent/pom.xml</relativePath>
   </parent>
 
