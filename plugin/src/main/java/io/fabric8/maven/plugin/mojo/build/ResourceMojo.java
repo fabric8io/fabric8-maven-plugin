@@ -419,29 +419,7 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     private KubernetesListBuilder generateAppResources(List<ImageConfiguration> images, EnricherManager enricherManager) throws IOException, MojoExecutionException {
         try {
-            // compose config
-            Path resourcePath = Paths.get(resourceDir.toURI());
-            if(composeFile != null) {
-                log.info("converting docker compose to kubernetes");
-                ProcessBuilder pb = new ProcessBuilder();
-                if(Files.notExists(resourcePath)) {
-                    Files.createDirectory(resourcePath);
-                } else {
-                    FileUtils.cleanDirectory(resourcePath.toFile());
-                }
-
-                Process process = Runtime.getRuntime().exec("kompose convert -o "+ resourceDir +" -f "+ composeFile);
-                waitForConversion(process);
-                StringWriter stringWriter = new StringWriter();
-                if(process.exitValue() != 0) {
-                    IOUtil.copy(process.getErrorStream(), stringWriter);
-                    log.error("kompose error : " + stringWriter.toString());
-                    throw new MojoExecutionException(stringWriter.toString());
-                } else {
-                    IOUtil.copy(process.getInputStream(), stringWriter);
-                    log.info("kompose result : ");
-                }
-            }
+            processDockerComposeFiles(Paths.get(resourceDir.toURI()));
 
             File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
             KubernetesListBuilder builder;
@@ -471,6 +449,41 @@ public class ResourceMojo extends AbstractResourceMojo {
             String message = ValidationUtil.createValidationMessage(e.getConstraintViolations());
             log.error("ConstraintViolationException: %s", message);
             throw new MojoExecutionException(message, e);
+        }
+    }
+
+    private void processDockerComposeFiles(Path resourcePath) throws IOException, MojoExecutionException {
+        if(composeFile != null) {
+            log.info("converting docker compose to kubernetes : "+ composeFile);
+            createOrCleanResourceDirectory(resourcePath);
+            Process process = invokeKompose(resourcePath);
+            handelKomposeResult(process);
+        }
+    }
+
+    private void handelKomposeResult(Process process) throws IOException, MojoExecutionException {
+        StringWriter stringWriter = new StringWriter();
+        if(process.exitValue() != 0) {
+            IOUtil.copy(process.getErrorStream(), stringWriter);
+            log.error("kompose error : " + stringWriter.toString());
+            throw new MojoExecutionException(stringWriter.toString());
+        } else {
+            IOUtil.copy(process.getInputStream(), stringWriter);
+            log.info("kompose result : ");
+        }
+    }
+
+    private Process invokeKompose(Path composeResourcesPath) throws IOException {
+        Process process = Runtime.getRuntime().exec("kompose convert -o "+ composeResourcesPath +" -f "+ composeFile);
+        waitForConversion(process);
+        return process;
+    }
+
+    private void createOrCleanResourceDirectory(Path resourcePath) throws IOException {
+        if(Files.notExists(resourcePath)) {
+            Files.createDirectory(resourcePath);
+        } else {
+            FileUtils.cleanDirectory(resourcePath.toFile());
         }
     }
 
