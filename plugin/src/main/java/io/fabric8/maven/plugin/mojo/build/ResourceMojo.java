@@ -18,6 +18,10 @@ package io.fabric8.maven.plugin.mojo.build;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import javax.validation.ConstraintViolationException;
@@ -54,6 +58,8 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
+import org.apache.maven.shared.utils.io.FileUtils;
+import org.apache.maven.shared.utils.io.IOUtil;
 
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
@@ -97,6 +103,10 @@ public class ResourceMojo extends AbstractResourceMojo {
      */
     @Parameter(property = "fabric8.workDir", defaultValue = "${project.build.directory}/fabric8")
     private File workDir;
+
+    // Resource  specific configuration for this plugin
+    @Parameter
+    private String composeFile;
 
     // Resource  specific configuration for this plugin
     @Parameter
@@ -409,6 +419,30 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     private KubernetesListBuilder generateAppResources(List<ImageConfiguration> images, EnricherManager enricherManager) throws IOException, MojoExecutionException {
         try {
+            // compose config
+            Path resourcePath = Paths.get(resourceDir.toURI());
+            if(composeFile != null) {
+                log.info("converting docker compose to kubernetes");
+                ProcessBuilder pb = new ProcessBuilder();
+                if(Files.notExists(resourcePath)) {
+                    Files.createDirectory(resourcePath);
+                } else {
+                    FileUtils.cleanDirectory(resourcePath.toFile());
+                }
+
+                Process process = Runtime.getRuntime().exec("kompose convert -o "+ resourceDir +" -f "+ composeFile);
+                waitForConversion(process);
+                StringWriter stringWriter = new StringWriter();
+                if(process.exitValue() != 0) {
+                    IOUtil.copy(process.getErrorStream(), stringWriter);
+                    log.error("kompose error : " + stringWriter.toString());
+                    throw new MojoExecutionException(stringWriter.toString());
+                } else {
+                    IOUtil.copy(process.getInputStream(), stringWriter);
+                    log.info("kompose result : ");
+                }
+            }
+
             File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
             KubernetesListBuilder builder;
 
@@ -437,6 +471,14 @@ public class ResourceMojo extends AbstractResourceMojo {
             String message = ValidationUtil.createValidationMessage(e.getConstraintViolations());
             log.error("ConstraintViolationException: %s", message);
             throw new MojoExecutionException(message, e);
+        }
+    }
+
+    private void waitForConversion(Process process) {
+        try {
+            process.waitFor();
+        } catch (InterruptedException e) {
+            log.error("Kompose :" + e.getMessage());
         }
     }
 
