@@ -474,7 +474,7 @@ public class ResourceMojo extends AbstractResourceMojo {
     }
 
     private Process invokeKompose(Path composeResourcesPath) throws IOException {
-        Process process = Runtime.getRuntime().exec("kompose convert -o "+ composeResourcesPath +" -f "+ composeFile);
+        Process process = Runtime.getRuntime().exec("kompose convert -o "+ composeResourcesPath +" -f "+ project.getBasedir() + "/"+ composeFile);
         waitForConversion(process);
         return process;
     }
