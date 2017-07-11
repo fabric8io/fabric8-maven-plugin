@@ -36,11 +36,13 @@ import io.fabric8.maven.core.config.*;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
+import io.fabric8.maven.core.service.kubernetes.DockerBuildService;
 import io.fabric8.maven.core.util.*;
 import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
+import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.Logger;
@@ -454,7 +456,7 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     private void processDockerComposeFiles(Path resourcePath) throws IOException, MojoExecutionException {
         if(composeFile != null) {
-            log.info("converting docker compose to kubernetes : "+ composeFile);
+            log.info("converting docker compose file "+composeFile+" to kubernetes resources");
             createOrCleanResourceDirectory(resourcePath);
             Process process = invokeKompose(resourcePath);
             handelKomposeResult(process);
@@ -465,11 +467,11 @@ public class ResourceMojo extends AbstractResourceMojo {
         StringWriter stringWriter = new StringWriter();
         if(process.exitValue() != 0) {
             IOUtil.copy(process.getErrorStream(), stringWriter);
-            log.error("kompose error : " + stringWriter.toString());
+            log.error("conversion failed : " + stringWriter.toString());
             throw new MojoExecutionException(stringWriter.toString());
         } else {
             IOUtil.copy(process.getInputStream(), stringWriter);
-            log.info("kompose result : ");
+            log.info("conversion completed");
         }
     }
 
