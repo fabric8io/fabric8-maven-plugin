@@ -15,17 +15,6 @@
  */
 package io.fabric8.maven.plugin.mojo.build;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-
-import javax.validation.ConstraintViolationException;
-
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.extensions.Templates;
@@ -36,13 +25,11 @@ import io.fabric8.maven.core.config.*;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
-import io.fabric8.maven.core.service.kubernetes.DockerBuildService;
 import io.fabric8.maven.core.util.*;
 import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
-import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.Logger;
@@ -62,6 +49,16 @@ import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.apache.maven.shared.utils.io.FileUtils;
 import org.apache.maven.shared.utils.io.IOUtil;
+
+import javax.validation.ConstraintViolationException;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
