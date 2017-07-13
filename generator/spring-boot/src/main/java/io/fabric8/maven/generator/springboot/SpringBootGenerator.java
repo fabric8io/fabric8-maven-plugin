@@ -22,12 +22,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -45,6 +40,8 @@ import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
 import com.google.common.base.Strings;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.text.StrMatcher;
+import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -61,6 +58,9 @@ public class SpringBootGenerator extends JavaExecGenerator {
 
     private static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
     private static final String DEFAULT_SERVER_PORT = "8080";
+    private static final StrMatcher DEFAULT_PREFIX = StrMatcher.stringMatcher("${");
+    private static final StrMatcher DEFAULT_SUFFIX = StrMatcher.stringMatcher("}");
+    private static final StrMatcher DEFAULT_VALUE_DELIMITER = StrMatcher.stringMatcher(":");
 
     public enum Config implements Configs.Key {
         color {{ d = "false"; }};
@@ -124,10 +124,34 @@ public class SpringBootGenerator extends JavaExecGenerator {
         List<String> answer = new ArrayList<>();
         Properties properties = SpringBootUtil.getSpringBootApplicationProperties(this.getProject());
         String port = properties.getProperty(SpringBootProperties.SERVER_PORT, DEFAULT_SERVER_PORT);
-        addPortIfValid(answer, getConfig(JavaExecGenerator.Config.webPort, port));
+        addPortIfValid(answer, getConfig(JavaExecGenerator.Config.webPort, replaceKeyWithSystemPropertyValue(port)));
         addPortIfValid(answer, getConfig(JavaExecGenerator.Config.jolokiaPort));
         addPortIfValid(answer, getConfig(JavaExecGenerator.Config.prometheusPort));
         return answer;
+    }
+
+    /**
+     *  Look within all the System Properties if there is a property which corresponds to the key passed
+     *  If a match exists, then replace the value otherwise use the default value defined within ${key:default-value}
+     *  Example
+     *  my.server.port=7777 is a system property that we will search in order to replace its value within the key passed to the method.
+     *  If the key is "server.port: ${my.server.port:6666}", then "my.server.port" value will be substituted, otherwise the default value is used
+     *  "6666"
+     *
+     *  @param key The string containing the key to search
+     *  @return String The modified key
+     */
+    protected static String replaceKeyWithSystemPropertyValue(String key) {
+        HashMap values = new HashMap();
+        Properties systemProperties = System.getProperties();
+        for(Map.Entry<Object, Object> x : systemProperties.entrySet()) {
+            values.put(x.getKey(),x.getValue());
+        }
+        StrSubstitutor sub = new StrSubstitutor(values);
+        sub.setValueDelimiterMatcher(DEFAULT_VALUE_DELIMITER);
+        sub.setVariablePrefixMatcher(DEFAULT_PREFIX);
+        sub.setVariableSuffixMatcher(DEFAULT_SUFFIX);
+        return sub.replace(key);
     }
 
     // =============================================================================
