@@ -81,6 +81,15 @@ public class BuildService {
                                                   "Failed to tail build log", logTerminateLatch, log);
             Watcher<Build> buildWatcher = getBuildWatcher(latch, buildName, buildHolder);
             try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {
+                // Check if the build is already finished to avoid waiting indefinitely
+                Build lastBuild = client.builds().withName(buildName).get();
+                String lastStatus = KubernetesResourceUtil.getBuildStatusPhase(lastBuild);
+                if (Builds.isFinished(lastStatus)) {
+                    log.debug("Build %s is already finished", buildName);
+                    buildHolder.set(lastBuild);
+                    latch.countDown();
+                }
+
                 waitUntilBuildFinished(latch);
                 logTerminateLatch.countDown();
                 build = buildHolder.get();
