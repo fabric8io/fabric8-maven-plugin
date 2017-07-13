@@ -11,10 +11,6 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/**
- * Created by hshinde on 7/13/17.
- */
-
 public class ComposeToKubeConverter {
 
     public static final String KOMPOSE_RESOURCES_DIRECTORY = "kompose_resources";
