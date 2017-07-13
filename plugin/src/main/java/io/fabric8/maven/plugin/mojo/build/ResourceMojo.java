@@ -426,13 +426,13 @@ public class ResourceMojo extends AbstractResourceMojo {
             // Add resource files found in the fabric8 directory
             if (allResources != null && allResources.length > 0) {
                 if(resourceFiles != null && resourceFiles.length > 0) {
-                    log.info("Using resource templates from %s", resourceDir);
+                    log.info("using resource templates from %s", resourceDir);
                 }
 
-                if(composeResourceFiles != null && composeResourceFiles.length >0) {
-                    log.info("Using resource templates from %s", compsoeToKuneUtil.getPath());
+                if(composeResourceFiles != null && composeResourceFiles.length > 0) {
+                    log.info("using resource templates from %s", compsoeToKuneUtil.getPath());
                 }
-                builder = readResourceFragments(resourceFiles);
+                builder = readResourceFragments(allResources);
             } else {
                 builder = new KubernetesListBuilder();
             }
