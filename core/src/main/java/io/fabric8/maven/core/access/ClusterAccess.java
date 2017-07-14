@@ -23,6 +23,7 @@ import io.fabric8.kubernetes.client.*;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
+import io.fabric8.openshift.client.OpenShiftAPIGroups;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.utils.Strings;
 
@@ -83,6 +84,18 @@ public class ClusterAccess {
         return namespace;
     }
 
+    /**
+     * Returns true if this cluster is a traditional OpenShift cluster with the <code>/oapi</code> REST API
+     * or supports the new <code>/apis/image.openshift.io</code> API Group
+     */
+    public boolean isOpenShiftImageStream(Logger log) {
+        if (isOpenShift(log)) {
+            OpenShiftClient openShiftClient = createOpenShiftClient();
+            return openShiftClient.supportsOpenShiftAPIGroup(OpenShiftAPIGroups.IMAGE);
+        }
+        return false;
+    }
+
     public boolean isOpenShift(Logger log) {
         try {
             return KubernetesHelper.isOpenShift(createKubernetesClient());
@@ -102,7 +115,7 @@ public class ClusterAccess {
             mode = PlatformMode.DEFAULT;
         }
         if (mode.isAuto()) {
-            resolvedMode = isOpenShift(log) ? PlatformMode.openshift : PlatformMode.kubernetes;
+            resolvedMode = isOpenShiftImageStream(log) ? PlatformMode.openshift : PlatformMode.kubernetes;
         } else {
             resolvedMode = mode;
         }

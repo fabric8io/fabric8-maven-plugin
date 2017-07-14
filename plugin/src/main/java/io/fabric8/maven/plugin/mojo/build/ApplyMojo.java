@@ -415,7 +415,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
             }
         }
 
-        String command = clusterAccess.isOpenShift(log) ? "oc" : "kubectl";
+        String command = clusterAccess.isOpenShiftImageStream(log) ? "oc" : "kubectl";
         log.info("[[B]]HINT:[[B]] Use the command `%s get pods -w` to watch your pods start up", command);
 
         Logger serviceLogger = createExternalProcessLogger("[[G]][SVC][[G]] ");

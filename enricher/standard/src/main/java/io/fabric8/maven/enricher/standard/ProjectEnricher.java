@@ -51,7 +51,7 @@ public class ProjectEnricher extends BaseEnricher {
 
     @Override
     public Map<String, String> getSelector(Kind kind) {
-        return createLabels(kind == Kind.SERVICE || (kind.isController() && !kind.isPodController()));
+        return createLabels(kind.hasNoVersionInSelector());
     }
 
     @Override

@@ -22,12 +22,12 @@
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>fabric8-maven-parent</artifactId>
-    <version>3.3-SNAPSHOT</version>
+    <version>3.5-SNAPSHOT</version>
     <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>fabric8-maven-core</artifactId>
-  <version>3.3-SNAPSHOT</version>
+  <version>3.5-SNAPSHOT</version>
 
   <name>Fabric8 Maven :: Core</name>
 
@@ -70,14 +70,13 @@
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>kubernetes-client</artifactId>
-      <type>test-jar</type>
+      <artifactId>kubernetes-server-mock</artifactId>
     </dependency>
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>openshift-client</artifactId>
-      <type>test-jar</type>
+      <artifactId>openshift-server-mock</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <dependency>

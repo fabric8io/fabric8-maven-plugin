@@ -95,9 +95,11 @@ public class IconEnricher extends BaseEnricher {
     // ====================================================================================================
 
     private String extractIconRef() {
-        return Strings.isNullOrBlank(getConfig(Config.ref)) ?
-            getConfig(Config.ref) :
-            getDefaultIconRef();
+        String iconRef = getConfig(Config.ref);
+        if (Strings.isNullOrBlank(iconRef)) {
+            iconRef = getDefaultIconRef();
+        }
+        return iconRef;
     }
 
     protected String getIconUrl(String iconRef) {
@@ -138,7 +140,6 @@ public class IconEnricher extends BaseEnricher {
                 }
             }
         }
-
         return answer;
     }
 
