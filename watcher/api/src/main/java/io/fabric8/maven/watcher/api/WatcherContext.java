@@ -20,6 +20,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.WatchService;
@@ -49,6 +50,7 @@ public class WatcherContext {
     private BuildService.BuildContext buildContext;
     private String namespace;
     private KubernetesClient kubernetesClient;
+    private Fabric8ServiceHub fabric8ServiceHub;
 
     private WatcherContext() {
     }
@@ -111,6 +113,10 @@ public class WatcherContext {
 
     public Logger getOldPodLogger() {
         return oldPodLogger;
+    }
+
+    public Fabric8ServiceHub getFabric8ServiceHub() {
+        return fabric8ServiceHub;
     }
 
     // ========================================================================
@@ -191,6 +197,11 @@ public class WatcherContext {
 
         public Builder kubernetesClient(KubernetesClient kubernetesClient) {
             ctx.kubernetesClient = kubernetesClient;
+            return this;
+        }
+
+        public Builder fabric8ServiceHub(Fabric8ServiceHub fabric8ServiceHub) {
+            ctx.fabric8ServiceHub = fabric8ServiceHub;
             return this;
         }
 

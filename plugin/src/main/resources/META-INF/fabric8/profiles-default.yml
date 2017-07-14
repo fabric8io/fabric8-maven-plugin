@@ -32,13 +32,16 @@
     # Health checks
     - fmp-openshift-route
     - spring-boot-health-check
+    - wildfly-swarm-health-check
     - karaf-health-check
+    - vertx-health-check
     - docker-health-check
     - f8-prometheus
     - f8-maven-scm
     - f8-maven-issue-mgmt
     # Dependencies shouldn't be enriched anymore, therefor it's last in the list
     - fmp-dependency
+    - f8-watch
 
   generator:
     # The order given in "includes" is the order in which generators are called

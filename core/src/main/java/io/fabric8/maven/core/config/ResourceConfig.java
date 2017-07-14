@@ -16,11 +16,11 @@
 
 package io.fabric8.maven.core.config;
 
+import org.apache.maven.plugins.annotations.Parameter;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland
@@ -29,13 +29,14 @@ import org.apache.maven.plugins.annotations.Parameter;
 public class ResourceConfig {
 
     @Parameter
-    private Map<String,String> env;
+    private Map<String, String> env;
 
     @Parameter
     private MetaDataConfig labels = new MetaDataConfig();
 
     @Parameter
-    private MetaDataConfig annotations = new MetaDataConfig();;
+    private MetaDataConfig annotations = new MetaDataConfig();
+    ;
 
     @Parameter
     private List<VolumeConfig> volumes;
@@ -65,7 +66,7 @@ public class ResourceConfig {
 
     // Mapping of port to names
     @Parameter
-    private Map<String,Integer> ports;
+    private Map<String, Integer> ports;
 
     // Number of replicas to create
     @Parameter
@@ -158,9 +159,16 @@ public class ResourceConfig {
             return this;
         }
 
+        public Builder withReplicas(int replicas) {
+            config.replicas = replicas;
+            return this;
+        }
+
         public ResourceConfig build() {
             return config;
         }
+
+
     }
 
     // TODO: SCC

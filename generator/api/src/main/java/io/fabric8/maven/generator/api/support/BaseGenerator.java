@@ -106,22 +106,21 @@ abstract public class BaseGenerator implements Generator {
     }
 
     /**
-     * Get base image either from configuration or from a given selector
+     * Add the base image either from configuration or from a given selector
      *
-     * @return the base image or <code>null</code> when none could be detected.
-     * @param buildBuilder
+     * @param builder for the build image configuration to add the from to.
      */
     protected void addFrom(BuildImageConfiguration.Builder builder) {
         String fromMode = getConfigWithSystemFallbackAndDefault(Config.fromMode, "fabric8.generator.fromMode", getFromModeDefault(context.getMode()));
         String from = getConfigWithSystemFallbackAndDefault(Config.from, "fabric8.generator.from", null);
-        if (fromMode.equalsIgnoreCase("docker")) {
+        if ("docker".equalsIgnoreCase(fromMode)) {
             String fromImage = from;
             if (fromImage == null) {
                 fromImage = fromSelector != null ? fromSelector.getFrom() : null;
             }
             builder.from(fromImage);
             log.info("Using Docker image %s as base / builder", fromImage);
-        } else if (fromMode.equalsIgnoreCase("istag")) {
+        } else if ("istag".equalsIgnoreCase(fromMode)) {
             Map<String, String> fromExt = new HashMap<>();
             if (from != null) {
                 ImageName iName = new ImageName(from);

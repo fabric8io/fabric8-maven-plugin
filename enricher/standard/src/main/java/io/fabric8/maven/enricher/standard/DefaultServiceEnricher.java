@@ -16,19 +16,16 @@
 
 package io.fabric8.maven.enricher.standard;
 
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import io.fabric8.ianaservicehelper.Helper;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.model.IntOrString;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.ServicePort;
-import io.fabric8.kubernetes.api.model.ServiceSpec;
-import io.fabric8.maven.core.config.ServiceConfig;
-import io.fabric8.maven.core.config.ServiceProtocol;
-import io.fabric8.maven.core.handler.HandlerHub;
-import io.fabric8.maven.core.handler.ServiceHandler;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -38,14 +35,6 @@ import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.utils.Strings;
 import org.apache.maven.shared.utils.StringUtils;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import io.fabric8.ianaservicehelper.Helper;
-
 /**
  * An enricher for creating default services when not present.
  *
@@ -54,10 +43,11 @@ import io.fabric8.ianaservicehelper.Helper;
  */
 public class DefaultServiceEnricher extends BaseEnricher {
 
-    private ServiceHandler serviceHandler;
-
     private static final Pattern PORT_PROTOCOL_PATTERN =
-        Pattern.compile("^(\\d+)(/(?:tcp|udp))?$", Pattern.CASE_INSENSITIVE);
+        Pattern.compile("^(\\d+)(?:/(tcp|udp))?$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PORT_MAPPING_PATTERN =
+        Pattern.compile("^\\s*(?<port>\\d+)(\\s*:\\s*(?<targetPort>\\d+))?(\\s*/\\s*(?<protocol>(tcp|udp)))?\\s*$",
+                        Pattern.CASE_INSENSITIVE);
 
 
     // Available configuration keys
@@ -81,6 +71,9 @@ public class DefaultServiceEnricher extends BaseEnricher {
         // Legacy mapping from port 8080 / 9090 to 80
         legacyPortMapping {{ d = "false"; }},
 
+        // Whether to expose multiple ports or only the first one
+        multiPort {{ d = "false"; }},
+
         // protocol to use
         protocol {{ d = "tcp"; }};
 
@@ -89,8 +82,6 @@ public class DefaultServiceEnricher extends BaseEnricher {
 
     public DefaultServiceEnricher(EnricherContext buildContext) {
         super(buildContext, "fmp-service");
-        HandlerHub handlers = new HandlerHub(buildContext.getProject());
-        serviceHandler = handlers.getServiceHandler();
     }
 
     @Override
@@ -99,7 +90,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
 
         if (hasServices(builder)) {
             mergeInDefaultServiceParameters(builder, defaultService);
-        } else if (defaultService != null) {
+        } else {
             addDefaultService(builder, defaultService);
         }
     }
@@ -107,8 +98,35 @@ public class DefaultServiceEnricher extends BaseEnricher {
     // =======================================================================================================
 
     private Service getDefaultService() {
-        ServiceConfig serviceConfig = extractDefaultServiceConfig();
-        return serviceConfig != null ? serviceHandler.getService(serviceConfig) : null;
+
+        // No image config, no service
+        if (!hasImageConfiguration()) {
+            return null;
+        }
+
+        // Create service only for all images which are supposed to live in a single pod
+        List<ServicePort> ports = extractPorts(getImages());
+
+        ServiceBuilder builder = new ServiceBuilder()
+            .withNewMetadata()
+              .withName(getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject())))
+              .withLabels(extractLabels())
+            .endMetadata();
+        ServiceFluent.SpecNested<ServiceBuilder> specBuilder = builder.withNewSpec();
+        if (!ports.isEmpty()) {
+            specBuilder.withPorts(ports);
+        } else if (Configs.asBoolean(getConfig(Config.headless))) {
+            specBuilder.withClusterIP("None");
+        } else {
+            // No ports, no headless --> no service
+            return null;
+        }
+        if (hasConfig(Config.type)) {
+            specBuilder.withType(getConfig(Config.type));
+        }
+        specBuilder.endSpec();
+
+        return builder.build();
     }
 
     private boolean hasServices(KubernetesListBuilder builder) {
@@ -127,8 +145,8 @@ public class DefaultServiceEnricher extends BaseEnricher {
             @Override
             public void visit(ServiceBuilder service) {
                 // Only update single service matching the default service's name
-
                 String defaultServiceName = getDefaultServiceName(defaultService);
+
                 ObjectMeta serviceMetadata = ensureServiceMetadata(service, defaultService);
                 String serviceName = ensureServiceName(serviceMetadata, service, defaultServiceName);
 
@@ -140,51 +158,249 @@ public class DefaultServiceEnricher extends BaseEnricher {
     }
 
     private void addDefaultService(KubernetesListBuilder builder, Service defaultService) {
-        ServiceSpec spec = defaultService.getSpec();
-        if (spec != null) {
-            List<ServicePort> ports = spec.getPorts();
-            if (ports != null) {
-                log.info("Adding a default service '%s' with ports [%s]",
-                             defaultService.getMetadata().getName(),
-                         formatPortsAsList(ports));
-                builder.addToServiceItems(defaultService);
-            }
+        if (defaultService == null) {
+            return;
         }
+        ServiceSpec spec = defaultService.getSpec();
+        List<ServicePort> ports = spec.getPorts();
+        if (ports.size() > 0) {
+            log.info("Adding a default service '%s' with ports [%s]",
+                     defaultService.getMetadata().getName(), formatPortsAsList(ports));
+        } else {
+            log.info("Adding headless default service '%s'",
+                     defaultService.getMetadata().getName());
+        }
+        builder.addToServiceItems(defaultService);
     }
 
     // ....................................................................................
 
-    // Check for all build configs, extract the exposed ports and create a single service for all of them
-    private ServiceConfig extractDefaultServiceConfig() {
-
-        // No image config, no service
-        if (!hasImageConfiguration()) {
-            return null;
+    private Map<String, String> extractLabels() {
+        Map<String, String> labels = new HashMap<>();
+        if (Configs.asBoolean(getConfig(Config.expose))) {
+            labels.put("expose", "true");
         }
+        return labels;
+    }
 
-        // Create service only for all images which are supposed to live in a single pod
-        List<ServiceConfig.Port> ports = extractPortsFromImageConfigurations(getImages());
-        if (ports == null) {
-            return null;
-        }
-        ServiceConfig.Builder ret = new ServiceConfig.Builder();
-        ret.name(getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject())));
+    // ========================================================================================================
+    // Port handling
 
-        if (ports.size() > 0) {
-            ret.ports(ports);
-        } else {
-            if (Configs.asBoolean(getConfig(Config.headless))) {
-                ret.headless(true);
+
+    private List<ServicePort> extractPorts(List<ImageConfiguration> images) {
+        List<ServicePort> ret = new ArrayList<>();
+        boolean isMultiPort = Boolean.parseBoolean(getConfig(Config.multiPort));
+
+        List<ServicePort> configuredPorts = extractPortsFromConfig();
+
+        for (ImageConfiguration image : images) {
+            List<String> podPorts = getPortsFromBuildConfiguration(image);
+            if (podPorts.isEmpty()) {
+                continue;
+            }
+
+            // Extract first port and remove first element
+            addPortIfNotNull(ret, extractPortsFromImageSpec(image.getName(), podPorts.remove(0), shiftOrNull(configuredPorts)));
+
+            // Remaining port specs if multi-port is selected
+            if (isMultiPort) {
+                for (String port : podPorts) {
+                    addPortIfNotNull(ret, extractPortsFromImageSpec(image.getName(), port, shiftOrNull(configuredPorts)));
+                }
             }
         }
 
-        // Expose the service if desired
-        ret.expose(Configs.asBoolean(getConfig(Config.expose)));
+        // If there are still ports configured add them directly
+        if (isMultiPort) {
+            ret.addAll(mirrorMissingTargetPorts(configuredPorts));
+        } else if (ret.isEmpty() && !configuredPorts.isEmpty()) {
+            ret.addAll(mirrorMissingTargetPorts(Collections.singletonList(configuredPorts.get(0))));
+        }
 
-        // Add a default type if configured
-        ret.type(getConfig(Config.type));
+        return ret;
+    }
 
-        return ret.build();
+    private List<ServicePort> mirrorMissingTargetPorts(List<ServicePort> ports) {
+        List<ServicePort> ret = new ArrayList<>();
+        for (ServicePort port : ports) {
+            ret.add(updateMissingTargetPort(port, port.getPort()));
+        }
+        return ret;
+    }
+
+    // Examine images for build configuration and extract all ports
+    private List<String> getPortsFromBuildConfiguration(ImageConfiguration image) {
+        // No build, no default service (doesn't make much sense to have no build config, though)
+        BuildImageConfiguration buildConfig = image.getBuildConfiguration();
+        if (buildConfig == null) {
+            return Collections.emptyList();
+        }
+
+        return buildConfig.getPorts() != null ? new LinkedList<>(buildConfig.getPorts()) : Collections.<String>emptyList();
+    }
+
+    // Config can override ports
+    private List<ServicePort> extractPortsFromConfig() {
+        List<ServicePort> ret = new LinkedList<>();
+        String ports = getConfig(Config.port);
+        if (ports != null) {
+            for (String port : StringUtils.split(ports, ",")) {
+                ret.add(parsePortMapping(port));
+            }
+        }
+        return ret;
+    }
+
+    // parse config specified ports
+    private ServicePort parsePortMapping(String port) {
+        Matcher matcher = PORT_MAPPING_PATTERN.matcher(port);
+        if (!matcher.matches()) {
+            log.error("Invalid 'port' configuration '%s'. Must match <port>(:<targetPort>)?,<port2>?,...", port);
+            throw new IllegalArgumentException("Invalid port mapping specification " + port);
+        }
+
+        int servicePort = Integer.parseInt(matcher.group("port"));
+        String optionalTargetPort = matcher.group("targetPort");
+        String protocol = getProtocol(matcher.group("protocol"));
+
+        ServicePortBuilder builder = new ServicePortBuilder()
+            .withPort(servicePort)
+            .withProtocol(protocol)
+            .withName(getDefaultPortName(servicePort, protocol));
+
+        // leave empty if not set. will be filled up with the port from the image config
+        if (optionalTargetPort != null) {
+            builder.withNewTargetPort(Integer.parseInt(optionalTargetPort));
+        }
+        return builder.build();
+    }
+
+    // null ports can happen for ignored mappings
+    private void addPortIfNotNull(List<ServicePort> ret, ServicePort port) {
+        if (port != null) {
+            ret.add(port);
+        }
+    }
+
+    private ServicePort extractPortsFromImageSpec(String imageName, String portSpec, ServicePort portOverride) {
+
+        Matcher portMatcher = PORT_PROTOCOL_PATTERN.matcher(portSpec);
+            if (!portMatcher.matches()) {
+                log.warn("Invalid port specification '%s' for image %s. Must match \\d+(/(tcp|udp))?. Ignoring for now for service generation",
+                         portSpec, imageName);
+                return null;
+            }
+
+        Integer targetPort = Integer.parseInt(portMatcher.group(1));
+        String protocol = getProtocol(portMatcher.group(2));
+        Integer port = checkForLegacyMapping(targetPort);
+
+        // With a port override you can override the detected ports
+        if (portOverride != null) {
+            return updateMissingTargetPort(portOverride, targetPort);
+        }
+
+        return new ServicePortBuilder()
+            .withPort(port)
+            .withNewTargetPort(targetPort)
+            .withProtocol(protocol)
+            .withName(getDefaultPortName(port, protocol))
+            .build();
+    }
+
+    private ServicePort updateMissingTargetPort(ServicePort port, Integer targetPort) {
+        if (port.getTargetPort() == null) {
+            return new ServicePortBuilder(port).withNewTargetPort(targetPort).build();
+        }
+        return port;
+    }
+
+    private int checkForLegacyMapping(int port) {
+        // The legacy mapping maps 8080 -> 80 and 9090 -> 90 which needs to be enabled explicitly
+        if (Configs.asBoolean(getConfig(Config.legacyPortMapping)) && (port == 8080 || port == 9090)) {
+            return 80;
+        }
+        return port;
+    }
+
+
+    private String getProtocol(String imageProtocol) {
+        String protocol = imageProtocol != null ? imageProtocol : getConfig(Config.protocol);
+        if ("tcp".equalsIgnoreCase(protocol) || "udp".equalsIgnoreCase(protocol)) {
+            return protocol.toUpperCase();
+        } else {
+            throw new IllegalArgumentException(
+                String.format("Invalid service protocol %s specified for enricher '%s'. Must be 'tcp' or 'udp'",
+                              protocol, getName()));
+        }
+    }
+
+    private String formatPortsAsList(List<ServicePort> ports)  {
+        List<String> p = new ArrayList<>();
+        for (ServicePort port : ports) {
+            String targetPort = getPortValue(port.getTargetPort());
+            String servicePort= port.getPort() != null ? Integer.toString(port.getPort()) : targetPort;
+            p.add(targetPort.equals(servicePort) ? targetPort : servicePort + ":" + targetPort);
+        }
+        return StringUtils.join(p.iterator(), ",");
+    }
+
+    private String getPortValue(IntOrString port) {
+        String val = port.getStrVal();
+        if (val == null) {
+            val = Integer.toString(port.getIntVal());
+        }
+        return val;
+    }
+
+    private String getDefaultPortName(int port, String serviceProtocol) {
+        if ("TCP".equals(serviceProtocol)) {
+            switch (port) {
+                case 80:
+                case 8080:
+                case 9090:
+                    return "http";
+                case 443:
+                case 8443:
+                    return "https";
+                case 8778:
+                    return "jolokia";
+                case 9779:
+                    return "prometheus";
+            }
+        }
+
+        try {
+            Set<String> serviceNames = Helper.serviceNames(port, serviceProtocol.toLowerCase());
+            if (serviceNames != null && !serviceNames.isEmpty()) {
+                return serviceNames.iterator().next();
+            } else {
+                return null;
+            }
+        } catch (IOException e) {
+            log.warn("Cannot lookup port %d/%s in IANA database: %s", port, serviceProtocol.toLowerCase(), e.getMessage());
+            return null;
+        }
+    }
+
+    // remove first element of list or null if list is empty
+    private ServicePort shiftOrNull(List<ServicePort> ports) {
+        if (!ports.isEmpty()) {
+            return ports.remove(0);
+        }
+        return null;
+    }
+
+    // ==============================================================================================================
+    // Enhance existing services
+    // -------------------------
+
+    private String getDefaultServiceName(Service defaultService) {
+        String defaultServiceName = KubernetesHelper.getName(defaultService);
+        if (Strings.isNullOrBlank(defaultServiceName)) {
+            defaultServiceName = getProject().getArtifactId();
+        }
+        return defaultServiceName;
     }
 
 
@@ -206,8 +422,8 @@ public class DefaultServiceEnricher extends BaseEnricher {
 
         // Complete missing parts:
         service.editSpec()
-                    .withPorts(addMissingDefaultPorts(ports, defaultService))
-                    .endSpec();
+               .withPorts(addMissingDefaultPorts(ports, defaultService))
+               .endSpec();
     }
 
     private String ensureServiceName(ObjectMeta serviceMetadata, ServiceBuilder service, String defaultServiceName) {
@@ -226,16 +442,14 @@ public class DefaultServiceEnricher extends BaseEnricher {
         return service.buildMetadata();
     }
 
-    // ========================================================================================================
-    // Port handling
 
     private List<ServicePort> addMissingDefaultPorts(List<ServicePort> ports, Service defaultService) {
 
-        // Ensure protocol and port names on the given ports
+        // Ensure protocol and port names are set on the given ports
         ensurePortProtocolAndName(ports);
 
         // lets add at least one default port
-        return ensureAtLeastOnePort(ports, defaultService);
+        return tryToFindAtLeastOnePort(ports, defaultService);
     }
 
     private void ensurePortProtocolAndName(List<ServicePort> ports) {
@@ -245,7 +459,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
         }
     }
 
-    private List<ServicePort> ensureAtLeastOnePort(List<ServicePort> ports, Service defaultService) {
+    private List<ServicePort> tryToFindAtLeastOnePort(List<ServicePort> ports, Service defaultService) {
         List<ServicePort> defaultPorts = defaultService.getSpec().getPorts();
         if (!ports.isEmpty() || defaultPorts == null || defaultPorts.isEmpty()) {
             return ports;
@@ -267,150 +481,4 @@ public class DefaultServiceEnricher extends BaseEnricher {
         }
         return protocol;
     }
-
-    // Examine images for build configuration and extract all ports
-    private List<ServiceConfig.Port> extractPortsFromImageConfigurations(List<ImageConfiguration> images) {
-        List<ServiceConfig.Port> ret = new ArrayList<>();
-        boolean firstPort = true;
-        for (ImageConfiguration image : images) {
-            // No build, no defaul service (doesn't make much sense to have no build config, though)
-            BuildImageConfiguration buildConfig = image.getBuildConfiguration();
-            if (buildConfig == null) {
-                continue;
-            }
-
-            // No exposed ports, no default service
-            List<String> podPorts = buildConfig.getPorts();
-            if (podPorts == null) {
-                continue;
-            }
-
-            Set<String> portNames = new HashSet<>();
-
-            for (String port : podPorts) {
-                Matcher portMatcher = PORT_PROTOCOL_PATTERN.matcher(port);
-                if (!portMatcher.matches()) {
-                    log.warn("Invalid port specification '%s' for image %s. Must match \\d+(/(tcp|udp))?. Ignoring for now for service generation",
-                             port, image.getName());
-                    continue;
-                }
-                int podPort = Integer.parseInt(portMatcher.group(1));
-                ServiceProtocol serviceProtocol = getProtocol(portMatcher.group(2));
-
-                int servicePort = extractServicePort(podPort, podPorts, firstPort);
-                firstPort = false;
-
-                String portName = getDefaultPortName(servicePort, serviceProtocol);
-
-                if (!portNames.add(portName)) {
-                    // Don't reuse service names
-                    portName = null;
-                }
-                ret.add(
-                    new ServiceConfig.Port.Builder()
-                        .protocol(serviceProtocol)
-                        .port(servicePort)
-                        .targetPort(podPort)
-                        .name(portName)
-                        .build()
-                       );
-            }
-        }
-        return ret.isEmpty()? null : ret;
-    }
-
-    private ServiceProtocol getProtocol(String imageProtocol) {
-        String protocol = imageProtocol != null ? imageProtocol : getConfig(Config.protocol);
-        if ("tcp".equalsIgnoreCase(protocol)) {
-            return ServiceProtocol.TCP;
-        } else if ("udp".equalsIgnoreCase(protocol)) {
-            return ServiceProtocol.UDP;
-        } else {
-            throw new IllegalArgumentException(
-                String.format("Invalid service protocol %s specified for enricher '%s'. Must be 'tcp' or 'udp'",
-                              protocol, getName()));
-        }
-    }
-
-    private int extractServicePort(Integer podPort, List<String> portNumbers, boolean firstPort) {
-
-        // Configured port takes precedence, but only if not already mapped
-        String port = getConfig(Config.port);
-        if (port != null && firstPort) {
-            return Integer.parseInt(port);
-        }
-
-        // The legacy mapping maps 8080 -> 80 and 9090 -> 90 which will vanish
-        if (!(portNumbers.contains("80") || portNumbers.contains("80/tcp")) &&
-            (podPort == 8080 || podPort == 9090)) {
-            if ("true".equals(getConfig(Config.legacyPortMapping))) {
-                return 80;
-            } else {
-                // Temporary warning with hint what to do
-                log.warn("Implicit service port mapping to port 80 has been disabled for the used port %d. " +
-                         "To get back the old behaviour either use set the config port = 80 or use legacyPortMapping = true. " +
-                         "See https://maven.fabric8.io/#fmp-service for details.", podPort);
-            }
-        }
-
-        // service port == pod port
-        return podPort;
-    }
-
-    private String formatPortsAsList(List<ServicePort> ports)  {
-        List<String> p = new ArrayList<>();
-        for (ServicePort port : ports) {
-            String targetPort = getPortValue(port.getTargetPort());
-            String servicePort= port.getPort() != null ? Integer.toString(port.getPort()) : targetPort;
-            p.add(targetPort.equals(servicePort) ? targetPort : servicePort + ":" + targetPort);
-        }
-        return StringUtils.join(p.iterator(), ",");
-    }
-
-    private String getPortValue(IntOrString port) {
-        String val = port.getStrVal();
-        if (val == null) {
-            val = Integer.toString(port.getIntVal());
-        }
-        return val;
-    }
-
-    private String getDefaultServiceName(Service defaultService) {
-        String defaultServiceName = KubernetesHelper.getName(defaultService);
-        if (Strings.isNullOrBlank(defaultServiceName)) {
-            defaultServiceName = getProject().getArtifactId();
-        }
-        return defaultServiceName;
-    }
-
-    private String getDefaultPortName(int port, ServiceProtocol serviceProtocol) {
-        if (serviceProtocol == ServiceProtocol.TCP) {
-            switch (port) {
-                case 80:
-                case 8080:
-                case 9090:
-                    return "http";
-                case 443:
-                case 8443:
-                    return "https";
-                case 8778:
-                    return "jolokia";
-                case 9779:
-                    return "prometheus";
-            }
-        }
-
-        try {
-            Set<String> serviceNames = Helper.serviceNames(port, serviceProtocol.toString().toLowerCase());
-            if (serviceNames != null && !serviceNames.isEmpty()) {
-                return serviceNames.iterator().next();
-            } else {
-                return null;
-            }
-        } catch (IOException e) {
-            log.warn("Cannot lookup port %d/%s in IANA database: %s", port, serviceProtocol.toString().toLowerCase(), e.getMessage());
-            return null;
-        }
-    }
-
 }

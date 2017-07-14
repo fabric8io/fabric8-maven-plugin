@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    name: fabric8-docker-registry
+  spec:
+    replicas: 1
+    strategy:
+      type: Recreate
+    selector:
+      provider: fabric8
+      project: deployment-strategy-type-919
+      group: io.fabric8
+    triggers:
+    - type: ConfigChange

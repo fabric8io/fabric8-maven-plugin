@@ -15,11 +15,17 @@
  */
 package io.fabric8.maven.plugin.mojo.develop;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodSpec;
@@ -28,7 +34,6 @@ import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
-import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -36,36 +41,30 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
+import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.core.util.DebugConstants;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
-import io.fabric8.maven.core.util.ProcessUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.plugin.mojo.build.ApplyMojo;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.utils.Objects;
-import io.fabric8.utils.Strings;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-
 import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.kubernetes.api.KubernetesHelper.isPodReady;
 import static io.fabric8.kubernetes.api.KubernetesHelper.isPodRunning;
-import static io.fabric8.maven.core.util.KubernetesResourceUtil.getPodLabelSelector;
 import static io.fabric8.maven.core.util.KubernetesClientUtil.getPodStatusDescription;
 import static io.fabric8.maven.core.util.KubernetesClientUtil.getPodStatusMessagePostfix;
 import static io.fabric8.maven.core.util.KubernetesClientUtil.withSelector;
+import static io.fabric8.maven.core.util.KubernetesResourceUtil.getPodLabelSelector;
 
 /**
  * Ensures that the current app has debug enabled, then opens the debug port so that you can debug the latest pod
@@ -214,24 +213,16 @@ public class DebugMojo extends ApplyMojo {
 
 
     private void portForward(Controller controller, String podName) throws MojoExecutionException {
-        File command = getKubeCtlExecutable(controller);
-        log.info("Port forwarding to port " + remoteDebugPort + " on pod " + podName + " using command " + command);
-
-        List<String> args = new ArrayList<>();
-        args.add("port-forward");
-        args.add(podName);
-        args.add(localDebugPort + ":" + remoteDebugPort);
-
-        String commandLine = command + " " + Strings.join(args, " ");
-        log.verbose("Executing command " + commandLine);
         try {
+            getFabric8ServiceHub(controller).getPortForwardService()
+                    .forwardPort(createExternalProcessLogger("[[B]]port-forward[[B]] "), podName, portToInt(remoteDebugPort, "remoteDebugPort"), portToInt(localDebugPort, "localDebugPort"));
+
             log.info("");
             log.info("Now you can start a Remote debug execution in your IDE by using localhost and the debug port " + localDebugPort);
             log.info("");
 
-            ProcessUtil.runCommand(createExternalProcessLogger("[[B]]" + command.getName() + "[[B]] "), command, args, true);
-        } catch (Exception e) {
-            throw new MojoExecutionException("Failed to start port forwarding with " + commandLine + ": " + e, e);
+        } catch (Fabric8ServiceException e) {
+            throw new MojoExecutionException("Failed to start port forwarding" + e, e);
         }
     }
 
@@ -268,6 +259,15 @@ public class DebugMojo extends ApplyMojo {
             }
         }
         return false;
+    }
+
+    private int portToInt(String port, String name) throws MojoExecutionException {
+        try {
+            int portInt = Integer.parseInt(port);
+            return portInt;
+        } catch (Exception e) {
+            throw new MojoExecutionException("Invalid port value: " + name +"=" + port);
+        }
     }
 
 }
