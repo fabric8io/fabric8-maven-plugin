@@ -43,9 +43,22 @@ public class ComposeToKubeConverter {
         komposeResourcesPath = Files.createTempDirectory(KOMPOSE_RESOURCES_DIRECTORY);
     }
 
-    private void invokeKompose() throws IOException {
-        process = Runtime.getRuntime().exec("kompose convert -o "+ komposeResourcesPath +" -f "+ composeFilePath);
+    private void invokeKompose() throws MojoExecutionException {
+        try {
+            process = Runtime.getRuntime().exec("kompose convert -o "+ komposeResourcesPath +" -f "+ composeFilePath);
+        } catch (IOException exp) {
+            checkIfKomposeIsMissing(exp);
+            throw new MojoExecutionException(exp.getMessage(), exp);
+        }
         waitForConversion();
+    }
+
+    private void checkIfKomposeIsMissing(IOException exp) {
+        if(exp.getMessage().contains("error=2")) {
+            log.error("[[B]]kompose[[B]] utility doesn't exist, please execute [[B]]mvn fabric8:install[[B]] command to make it work");
+            log.error("or");
+            log.error("to install it manually, please log on to [[B]]http://kompose.io/installation/[[B]]");
+        }
     }
 
     private File[] handelKomposeResult() throws IOException, MojoExecutionException {
@@ -56,6 +69,7 @@ public class ComposeToKubeConverter {
             throw new MojoExecutionException(stringWriter.toString());
         }
 
+        process = null;
         return komposeResourcesPath.toFile().listFiles();
     }
 

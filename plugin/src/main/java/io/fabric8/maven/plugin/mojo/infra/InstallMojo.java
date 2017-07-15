@@ -32,9 +32,11 @@ public class InstallMojo extends AbstractInstallMojo {
         File file = installGofabric8IfNotAvailable();
 
         if (isMinishift()) {
-            runGofabric8(file, "install",  "--minishift");
+            executeCommand(file, GOFABRIC8, "install",  "--minishift");
         } else {
-            runGofabric8(file, "install");
+            executeCommand(file, GOFABRIC8, "install");
         }
+
+        installKomposeNotAvailable();
     }
 }
