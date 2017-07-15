@@ -104,7 +104,7 @@ public class ResourceMojo extends AbstractResourceMojo {
     @Parameter
     private String composeFile;
 
-    // Resource  specific configuration for this plugin
+    // Resource specific configuration for this plugin
     @Parameter
     private ResourceConfig resources;
 
@@ -415,11 +415,11 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     private KubernetesListBuilder generateAppResources(List<ImageConfiguration> images, EnricherManager enricherManager) throws IOException, MojoExecutionException {
         Path composeFilePath = checkComposeConfig();
-        ComposeToKubeConverter compsoeToKuneUtil = new ComposeToKubeConverter(composeFilePath, log);
+        ComposeToKubeConverter compsoeToKubeUtil = new ComposeToKubeConverter(composeFilePath, log);
 
         try {
             File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
-            File[] composeResourceFiles = compsoeToKuneUtil.listComposeConvertedFragments();
+            File[] composeResourceFiles = compsoeToKubeUtil.listComposeConvertedFragments();
             File[] allResources = ArrayUtils.addAll(resourceFiles, composeResourceFiles);
             KubernetesListBuilder builder;
 
@@ -430,7 +430,7 @@ public class ResourceMojo extends AbstractResourceMojo {
                 }
 
                 if(composeResourceFiles != null && composeResourceFiles.length > 0) {
-                    log.info("using resource templates from %s", compsoeToKuneUtil.getPath());
+                    log.info("using resource templates generated from compose file");
                 }
                 builder = readResourceFragments(allResources);
             } else {
@@ -455,7 +455,7 @@ public class ResourceMojo extends AbstractResourceMojo {
             log.error("ConstraintViolationException: %s", message);
             throw new MojoExecutionException(message, e);
         } finally {
-            compsoeToKuneUtil.cleanComposeRresources();
+            compsoeToKubeUtil.cleanComposeRresources();
         }
     }
 
