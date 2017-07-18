@@ -11,6 +11,9 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/*
+* Docker compose services for converting docker compose artifacts to kubernetes artifacts
+*/
 public class ComposeService {
 
     public static final String KOMPOSE_RESOURCES_DIRECTORY = "kompose_resources";
@@ -20,11 +23,25 @@ public class ComposeService {
     private Logger log;
     private Process process;
 
+    /**
+     * Create instance of compose service
+     *
+     * @param composeFilePath
+     * @param log
+     */
     public ComposeService(Path composeFilePath, Logger log) {
         this.composeFilePath = composeFilePath;
         this.log = log;
     }
 
+    /**
+     * Returns array of kubernetes resource descriptor files generated from docker compose files
+     * using 'kompose' (http://kompose.io) utility
+     *
+     * @return array of files if any resources exist. The array will be empty of no resource descriptors found.
+     * @throws IOException
+     * @throws MojoExecutionException
+     */
     public File[] convertToKubeFragments() throws IOException, MojoExecutionException {
         File[] komposeResourceFiles = {};
 

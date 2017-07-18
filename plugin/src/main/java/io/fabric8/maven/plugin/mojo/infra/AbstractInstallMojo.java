@@ -101,7 +101,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     /**
      * Check for kompose and install it to ~/.kompose/bin if not available on the path
      *
-     * @return the path to kompose
+     * @return the path to kompose file
      * @throws MojoExecutionException
      */
     protected File installKomposeNotAvailable() throws MojoExecutionException {
