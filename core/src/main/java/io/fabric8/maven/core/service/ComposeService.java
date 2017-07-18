@@ -1,4 +1,4 @@
-package io.fabric8.maven.plugin.converter;
+package io.fabric8.maven.core.service;
 
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -11,7 +11,7 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class ComposeToKubeConverter {
+public class ComposeService {
 
     public static final String KOMPOSE_RESOURCES_DIRECTORY = "kompose_resources";
 
@@ -20,12 +20,12 @@ public class ComposeToKubeConverter {
     private Logger log;
     private Process process;
 
-    public ComposeToKubeConverter(Path composeFilePath, Logger log) {
+    public ComposeService(Path composeFilePath, Logger log) {
         this.composeFilePath = composeFilePath;
         this.log = log;
     }
 
-    public File[] listComposeConvertedFragments() throws IOException, MojoExecutionException {
+    public File[] convertToKubeFragments() throws IOException, MojoExecutionException {
         File[] komposeResourceFiles = {};
 
         if(composeFilePath != null) {

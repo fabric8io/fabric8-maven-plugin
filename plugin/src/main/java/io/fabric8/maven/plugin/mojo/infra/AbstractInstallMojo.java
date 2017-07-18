@@ -47,7 +47,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
 
     // Download parameters
     private static final String GOFABRIC8_VERSION_URL = "https://raw.githubusercontent.com/fabric8io/gofabric8/master/version/VERSION";
-    private static final String KOMPOSE_VERSION_URL = "https://gist.githubusercontent.com/hrishin/e63206f09fe31c1ef4d26426d1aad3a6/raw/212d5b8da82ba2cf75f165242f0ca7940343299e/kompose_version";
+    private static final String KOMPOSE_VERSION_URL = "https://raw.githubusercontent.com/kubernetes/kompose/master/build/VERSION";
     private static String GOFABRIC_DOWNLOAD_URL_FORMAT = "https://github.com/fabric8io/gofabric8/releases/download/v%s/gofabric8-%s-%s"; // version, platform, arch
     private static String KOMPOSE_DOWNLOAD_URL_FORMAT = "https://github.com/kubernetes/kompose/releases/download/v%s/kompose-%s-%s"; // version, platform, arch
 

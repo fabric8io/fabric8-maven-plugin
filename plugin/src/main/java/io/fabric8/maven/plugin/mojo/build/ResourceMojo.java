@@ -25,6 +25,7 @@ import io.fabric8.maven.core.config.*;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
+import io.fabric8.maven.core.service.ComposeService;
 import io.fabric8.maven.core.util.*;
 import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
@@ -100,7 +101,13 @@ public class ResourceMojo extends AbstractResourceMojo {
     @Parameter(property = "fabric8.workDir", defaultValue = "${project.build.directory}/fabric8")
     private File workDir;
 
-    // Resource  specific configuration for this plugin
+    /**
+     * Directory to lookup for docker compose files
+     */
+    @Parameter(property = "compose.resourceDir", defaultValue = "${basedir}/src/main/fabric8-compose")
+    private File composeResourceDir;
+
+    // Docker compose resource specific configuration for this plugin
     @Parameter
     private String composeFile;
 
@@ -415,11 +422,11 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     private KubernetesListBuilder generateAppResources(List<ImageConfiguration> images, EnricherManager enricherManager) throws IOException, MojoExecutionException {
         Path composeFilePath = checkComposeConfig();
-        ComposeToKubeConverter compsoeToKubeUtil = new ComposeToKubeConverter(composeFilePath, log);
+        ComposeService composeUtil = new ComposeService(composeFilePath, log);
 
         try {
             File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
-            File[] composeResourceFiles = compsoeToKubeUtil.listComposeConvertedFragments();
+            File[] composeResourceFiles = composeUtil.convertToKubeFragments();
             File[] allResources = ArrayUtils.addAll(resourceFiles, composeResourceFiles);
             KubernetesListBuilder builder;
 
@@ -455,12 +462,22 @@ public class ResourceMojo extends AbstractResourceMojo {
             log.error("ConstraintViolationException: %s", message);
             throw new MojoExecutionException(message, e);
         } finally {
-            compsoeToKubeUtil.cleanComposeRresources();
+            composeUtil.cleanComposeRresources();
         }
     }
 
     private Path checkComposeConfig() {
-        return ifComposeConfigPresent() ? buildComposeFilePath() : null;
+        return ifComposeConfigPresent() ? buildComposeFilePath() : lookDefaultComposeConfig();
+    }
+
+    private Path lookDefaultComposeConfig() {
+        File[] composeFiles = null;
+
+        if(composeResourceDir != null && composeResourceDir.exists()) {
+            composeFiles = composeResourceDir.listFiles();
+        }
+
+        return composeFiles != null && composeFiles.length > 0 ? composeFiles[0].toPath() : null;
     }
 
     private boolean ifComposeConfigPresent() {
