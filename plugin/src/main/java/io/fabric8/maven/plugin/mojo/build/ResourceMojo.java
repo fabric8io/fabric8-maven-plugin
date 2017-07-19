@@ -291,7 +291,7 @@ public class ResourceMojo extends AbstractResourceMojo {
         return resourceMode.equals("helm");
     }
 
-    private File initHelmResources() throws MojoExecutionException, MojoFailureException {
+    private File initHelmResources() throws MojoExecutionException {
         if (helmresourceDir.isDirectory()) {
             String chartName = getProperty("fabric8.helm.chart");
             if (chartName == null) {
@@ -312,45 +312,7 @@ public class ResourceMojo extends AbstractResourceMojo {
             File tempHelmDir = new File(helmWorkDir, "helm/" + chartName);
             tempHelmDir.mkdirs();
 
-            File[] files = helmresourceDir.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    if (Files.isDirectory(file)) {
-                        File tempHelmSubDir = new File(tempHelmDir, file.getName());
-                        tempHelmSubDir.mkdirs();
-
-                        File[] subfiles = file.listFiles();
-
-                        for (File subfile : subfiles) {
-                            String name = subfile.getName();
-                            if (name.endsWith(".yml")) {
-                                name = Strings.stripSuffix(name, ".yml") + ".yaml";
-                            }
-                            File targetFile = new File(tempHelmSubDir, name);
-                            try {
-                                mavenFileFilter.copyFile(subfile, targetFile, true,
-                                        project, null, false, "utf8", session);
-                            } catch (MavenFilteringException exp) {
-                                throw new MojoExecutionException(
-                                        String.format("Cannot filter %s to %s", subfile, targetFile), exp);
-                            }
-                        }
-                    } else {
-                        String name = file.getName();
-                        if (name.endsWith(".yml")) {
-                            name = Strings.stripSuffix(name, ".yml") + ".yaml";
-                        }
-                        File targetFile = new File(tempHelmDir, name);
-                        try {
-                            mavenFileFilter.copyFile(file, targetFile, true,
-                                    project, null, false, "utf8", session);
-                        } catch (MavenFilteringException exp) {
-                            throw new MojoExecutionException(
-                                    String.format("Cannot filter %s to %s", file, targetFile), exp);
-                        }
-                    }
-                }
-            }
+            copyTemplates(helmresourceDir, tempHelmDir);
 
             try {
 
@@ -363,47 +325,14 @@ public class ResourceMojo extends AbstractResourceMojo {
                 BufferedReader buferror = new BufferedReader(new InputStreamReader(pr.getErrorStream()));
                 String line = "";
 
-                int flag = 0;
-
-                while ((line = buf.readLine()) != null) {
-                    log.debug(line);
-                    if (line.startsWith("MANIFEST:")) {
-                        flag = 1;
-                    }
-
-                    if (flag == 1 ) {
-                        if (line.startsWith("# Source:")) {
-                            String[] tempStr = line.split("/");
-                            File fileName = new File(tempHelmOutDir, tempStr[tempStr.length - 1]);
-                            String innerline = "";
-                            String fileContent = "";
-                            while ((innerline = buf.readLine()) != null) {
-
-                                if  (innerline.startsWith("---") ) {
-                                    break;
-                                }
-
-                                if (innerline != "") {
-                                    fileContent = fileContent + "\n" + innerline;
-                                }
-                            }
-
-                            IOHelpers.writeFully(fileName, fileContent);
-                        }
-                    }
-                }
+                parseOutput(buf, tempHelmOutDir);
 
                 while ((line = buferror.readLine()) != null) {
                     log.debug(line);
                     throw new MojoExecutionException("There was some problem running Helm.");
                 }
 
-                try {
-                    pr.waitFor();
-                    exitCode = pr.exitValue();
-                } catch (InterruptedException e) {
-                    throw new MojoExecutionException("Failed to run Helm command: ", e);
-                }
+                exitCode = waitForProcess(pr);
 
                 if (exitCode != 0) {
                     throw new MojoExecutionException("Helm command returned a non-zero exit code.");
@@ -418,6 +347,94 @@ public class ResourceMojo extends AbstractResourceMojo {
 
         return null;
 
+    }
+
+    public void copyTemplates (File source, File target) throws MojoExecutionException {
+        File[] files = source.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (Files.isDirectory(file)) {
+                    File tempHelmSubDir = new File(target, file.getName());
+                    tempHelmSubDir.mkdirs();
+
+                    File[] subfiles = file.listFiles();
+
+                    for (File subfile : subfiles) {
+                        String name = subfile.getName();
+                        if (name.endsWith(".yml")) {
+                            name = Strings.stripSuffix(name, ".yml") + ".yaml";
+                        }
+                        File targetFile = new File(tempHelmSubDir, name);
+                        try {
+                            mavenFileFilter.copyFile(subfile, targetFile, true,
+                                    project, null, false, "utf8", session);
+                        } catch (MavenFilteringException exp) {
+                            throw new MojoExecutionException(
+                                    String.format("Cannot filter %s to %s", subfile, targetFile), exp);
+                        }
+                    }
+                } else {
+                    String name = file.getName();
+                    if (name.endsWith(".yml")) {
+                        name = Strings.stripSuffix(name, ".yml") + ".yaml";
+                    }
+                    File targetFile = new File(target, name);
+                    try {
+                        mavenFileFilter.copyFile(file, targetFile, true,
+                                project, null, false, "utf8", session);
+                    } catch (MavenFilteringException exp) {
+                        throw new MojoExecutionException(
+                                String.format("Cannot filter %s to %s", file, targetFile), exp);
+                    }
+                }
+            }
+        }
+    }
+
+    public void parseOutput (BufferedReader buf, File targetDir) throws MojoExecutionException{
+        String line = "";
+        int flag = 0;
+        try {
+            while ((line = buf.readLine()) != null) {
+                if (line.startsWith("MANIFEST:")) {
+                    flag = 1;
+                }
+
+                if (flag == 1 && line.startsWith("# Source:")) {
+
+                    String[] tempStr = line.split("/");
+                    File fileName = new File(targetDir, tempStr[tempStr.length - 1]);
+                    String innerline = "";
+                    StringBuilder fileContent = new StringBuilder();
+                    while ((innerline = buf.readLine()) != null) {
+
+                        if (innerline.startsWith("---")) {
+                            break;
+                        }
+
+                        if (innerline != "") {
+                            fileContent = fileContent.append("\n" + innerline);
+                        }
+                    }
+
+                    IOHelpers.writeFully(fileName, fileContent.toString());
+                }
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to run parse Output: ", e);
+        }
+    }
+
+    private int waitForProcess (Process pr) throws MojoExecutionException {
+        int exitCode = 0;
+        try {
+            pr.waitFor();
+            exitCode = pr.exitValue();
+        } catch (InterruptedException e) {
+            throw new MojoExecutionException("Failed to run Helm command: ", e);
+        }
+
+        return exitCode;
     }
 
     private KubernetesList convertToKubernetesResources(KubernetesList resources, KubernetesList openShiftResources) throws MojoExecutionException {

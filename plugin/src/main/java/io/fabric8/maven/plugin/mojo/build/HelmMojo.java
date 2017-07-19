@@ -72,6 +72,9 @@ public class HelmMojo extends AbstractFabric8Mojo {
     @Component(role = Archiver.class, hint = "tar")
     private TarArchiver archiver;
 
+    @Parameter(property = "fabric8.resource.mode", defaultValue = "yaml")
+    private String resourceMode;
+
     @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         String chartName = getChartName();
@@ -91,7 +94,6 @@ public class HelmMojo extends AbstractFabric8Mojo {
         log.verbose("SourceDir: %s", sourceDir);
         log.verbose("OutputDir: %s", outputDir);
 
-        String resourceMode = getProperty("fabric8.resource.mode");
         if (resourceMode == null || ! resourceMode.equals("helm")) {
             // Copy over all resource descriptors into the helm templates dir
             copyResourceFilesToTemplatesDir(outputDir, sourceDir);
@@ -143,7 +145,6 @@ public class HelmMojo extends AbstractFabric8Mojo {
 
     private File checkSourceDir(String chartName, HelmConfig.HelmType type) {
         // If resource mode is helm
-        String resourceMode = getProperty("fabric8.resource.mode");
         if (resourceMode != null && resourceMode.equals("helm")) {
             String helmWorkdir = getProperty("fabric8.helm.workDir");
             if (helmWorkdir == null) {
@@ -195,8 +196,8 @@ public class HelmMojo extends AbstractFabric8Mojo {
 
     private void createChartYaml(String chartName, File outputDir) throws MojoExecutionException {
         Chart chart = null;
-        File chartYaml = new File(outputDir, "/Chart.yaml");
-        String resourceMode = getProperty("fabric8.resource.mode");
+        File chartYaml = new File(outputDir, "Chart.yaml");
+
         if (resourceMode != null && resourceMode.equals("helm") && chartYaml.isFile()) {
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
             try {
