@@ -48,6 +48,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     // Download parameters
     private static final String GOFABRIC8_VERSION_URL = "https://raw.githubusercontent.com/fabric8io/gofabric8/master/version/VERSION";
     private static final String KOMPOSE_VERSION_URL = "https://raw.githubusercontent.com/kubernetes/kompose/master/build/VERSION";
+    public static final String VERSION_ARGUMENT = "version";
     private static String GOFABRIC_DOWNLOAD_URL_FORMAT = "https://github.com/fabric8io/gofabric8/releases/download/v%s/gofabric8-%s-%s"; // version, platform, arch
     private static String KOMPOSE_DOWNLOAD_URL_FORMAT = "https://github.com/kubernetes/kompose/releases/download/v%s/kompose-%s-%s"; // version, platform, arch
 
@@ -90,11 +91,11 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     protected File installGofabric8IfNotAvailable() throws MojoExecutionException {
         File gofabric8 = ProcessUtil.findExecutable(log, GOFABRIC8);
         if (gofabric8 == null) {
-            gofabric8 = installAndConfigureBin(fabric8BinDir, GOFABRIC8, GOFABRIC8_VERSION_URL, GOFABRIC_DOWNLOAD_URL_FORMAT);
+            gofabric8 = installAndConfigureBinary(fabric8BinDir, GOFABRIC8, GOFABRIC8_VERSION_URL, GOFABRIC_DOWNLOAD_URL_FORMAT);
         } else {
             log.info("Found %s", gofabric8);
-            executeCommand(gofabric8, GOFABRIC8,"version", "--batch");
         }
+        executeCommand(gofabric8, GOFABRIC8, VERSION_ARGUMENT, "--batch");
         return gofabric8;
     }
 
@@ -107,15 +108,15 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     protected File installKomposeNotAvailable() throws MojoExecutionException {
         File kompose = ProcessUtil.findExecutable(log, KOMPOSE);
         if (kompose == null) {
-            kompose = installAndConfigureBin(komposeBinDir, KOMPOSE, KOMPOSE_VERSION_URL, KOMPOSE_DOWNLOAD_URL_FORMAT);
+            kompose = installAndConfigureBinary(komposeBinDir, KOMPOSE, KOMPOSE_VERSION_URL, KOMPOSE_DOWNLOAD_URL_FORMAT);
         } else {
             log.info("Found %s", kompose);
-            executeCommand(kompose, KOMPOSE, "version");
         }
+        executeCommand(kompose, KOMPOSE, VERSION_ARGUMENT);
         return kompose;
     }
 
-    private File installAndConfigureBin(File binDirectory, String binName, String binVersionUrl, String binDownloadUrlFormat) throws MojoExecutionException {
+    private File installAndConfigureBinary(File binDirectory, String binName, String binVersionUrl, String binDownloadUrlFormat) throws MojoExecutionException {
         File binaryFile = null;
 
         validateDir(binDirectory);
@@ -127,7 +128,6 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         binaryFile = new File(binDirectory, fileName);
         if (!binaryFile.exists() || !binaryFile.isFile() || !binaryFile.canExecute()) {
             downloadExecutable(binVersionUrl, binDownloadUrlFormat, binDirectory, binaryFile, binName);
-            executeCommand(binaryFile, binName, "version");
         }
 
         // lets check if the binary directory is on the path
@@ -243,7 +243,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
 
     // Create download URL + log
     private URL getDownloadUrl(String versionUrl, String downloadUrl, String fileName) throws MojoExecutionException {
-        String version = getBindaryFileVersion(versionUrl);
+        String version = getBinaryFileVersion(versionUrl);
 
         String platform = getPlatform().name();
         String arch = getArchitecture().name();
@@ -280,7 +280,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     }
 
     // Download version for gofabric8
-    private String getBindaryFileVersion(String versionUrl) throws MojoExecutionException {
+    private String getBinaryFileVersion(String versionUrl) throws MojoExecutionException {
         try {
             String version = IOHelpers.readFully(new URL(versionUrl));
             return version;
@@ -312,7 +312,6 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     protected void executeCommand(File command, String binName, String ... args) throws MojoExecutionException {
         // Be sure to run in batch mode
         List<String> argList = new ArrayList<>(Arrays.asList(args));
-        //argList.add("--batch");
         String argLine = Strings.join(argList, " ");
         log.info("Running %s %s", command, argLine);
 
