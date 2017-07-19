@@ -228,6 +228,7 @@ public class OpenshiftBuildServiceTest {
         mockServer.expect().get().withPath("/oapi/v1/namespaces/test/builds?labelSelector=openshift.io/build-config.name%3D" + projectName + config.getS2iBuildNameSuffix()).andReturn(200, builds)
                 .always();
 
+        mockServer.expect().withPath("/oapi/v1/namespaces/test/builds/" + projectName).andReturn(200, build).always();
         mockServer.expect().withPath("/oapi/v1/namespaces/test/builds?fieldSelector=metadata.name%3D" + projectName + "&resourceVersion=1&watch=true")
                 .andUpgradeToWebSocket().open()
                 .waitFor(buildDelay)
