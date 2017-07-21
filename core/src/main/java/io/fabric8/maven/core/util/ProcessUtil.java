@@ -15,11 +15,8 @@
  */
 package io.fabric8.maven.core.util;
 
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.utils.Function;
-import io.fabric8.utils.Strings;
-
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +24,10 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.utils.Function;
+import io.fabric8.utils.Strings;
 
 import static io.fabric8.maven.docker.util.EnvUtil.isWindows;
 
@@ -40,19 +41,17 @@ public class ProcessUtil {
     }
 
     public static int runCommand(final Logger log, File command, List<String> args, boolean withShutdownHook) throws IOException {
+        return runAsyncCommand(log, command, args, withShutdownHook, true).await();
+    }
+
+    public static ProcessExecutionContext runAsyncCommand(final Logger log, File command, List<String> args, boolean withShutdownHook, boolean useStandardLoggingLevel) throws IOException {
         String[] commandWithArgs = prepareCommandArray(command.getAbsolutePath(), args);
         Process process = Runtime.getRuntime().exec(commandWithArgs);
         if (withShutdownHook) {
             addShutdownHook(log, process, command);
         }
-        List<Thread> threads = startLoggingThreads(process, log, command.getName() + " " + Strings.join(args, " "));
-        try {
-            int answer = process.waitFor();
-            joinThreads(threads, log);
-            return answer;
-        } catch (InterruptedException e) {
-            return process.exitValue();
-        }
+        List<Thread> threads = startLoggingThreads(process, log, command.getName() + " " + Strings.join(args, " "), useStandardLoggingLevel);
+        return new ProcessExecutionContext(process, threads, log);
     }
 
     private static void joinThreads(List<Thread> threads, Logger log) {
@@ -105,21 +104,31 @@ public class ProcessUtil {
             @Override
             public void run() {
                 if (process != null) {
-                    log.info("Terminating process %s", command);
+                    // Trying to determine if the process is alive
+                    boolean alive = false;
                     try {
-                        process.destroy();
-                    } catch (Exception e) {
-                        log.error("Failed to terminate process %s", command);
+                        process.exitValue();
+                    } catch (IllegalThreadStateException e) {
+                        alive = true;
                     }
-                    /* Only available in Java 8: So disabled for now until we switch to Java 8
-                    try {
-                        if (process != null && process.isAlive()) {
-                            process.destroyForcibly();
+
+                    if (alive) {
+                        log.info("Terminating process %s", command);
+                        try {
+                            process.destroy();
+                        } catch (Exception e) {
+                            log.error("Failed to terminate process %s", command);
                         }
-                    } catch (Exception e) {
-                        log.error("Failed to forcibly terminate process %s", command);
+                        /* Only available in Java 8: So disabled for now until we switch to Java 8
+                        try {
+                            if (process != null && process.isAlive()) {
+                                process.destroyForcibly();
+                            }
+                        } catch (Exception e) {
+                            log.error("Failed to forcibly terminate process %s", command);
+                        }
+                        */
                     }
-                    */
                 }
             }
         });
@@ -178,19 +187,19 @@ public class ProcessUtil {
         return pathDirectories;
     }
 
-    private static List<Thread> startLoggingThreads(final Process process, final Logger log, final String commandDesc) {
+    private static List<Thread> startLoggingThreads(final Process process, final Logger log, final String commandDesc, boolean useStandardLoggingLevel) {
         List<Thread> threads = new ArrayList<>();
-        threads.add(startOutputLoggingThread(process, log, commandDesc));
-        threads.add(startErrorLoggingThread(process, log, commandDesc));
+        threads.add(startOutputLoggingThread(process, log, commandDesc, useStandardLoggingLevel));
+        threads.add(startErrorLoggingThread(process, log, commandDesc, useStandardLoggingLevel));
         return threads;
     }
 
-    private static Thread startErrorLoggingThread(final Process process, final Logger log, final String commandDesc) {
+    private static Thread startErrorLoggingThread(final Process process, final Logger log, final String commandDesc, final boolean useStandardLoggingLevel) {
         Thread logThread = new Thread("[ERR] " + commandDesc) {
             @Override
             public void run() {
                 try {
-                    processOutput(process.getErrorStream(), createErrorHandler(log));
+                    processOutput(process.getErrorStream(), createErrorHandler(log, useStandardLoggingLevel));
                 } catch (IOException e) {
                     log.error("Failed to read error stream from %s : %s", commandDesc, e.getMessage());
                 }
@@ -201,12 +210,12 @@ public class ProcessUtil {
         return logThread;
     }
 
-    private static Thread startOutputLoggingThread(final Process process, final Logger log, final String commandDesc) {
+    private static Thread startOutputLoggingThread(final Process process, final Logger log, final String commandDesc, final boolean useStandardLoggingLevel) {
         Thread logThread = new Thread("[OUT] " + commandDesc) {
             @Override
             public void run() {
                 try {
-                    processOutput(process.getInputStream(), createOutputHandler(log));
+                    processOutput(process.getInputStream(), createOutputHandler(log, useStandardLoggingLevel));
                 } catch (IOException e) {
                     log.error("Failed to read output stream from %s : %s", commandDesc, e.getMessage());
                 }
@@ -217,23 +226,67 @@ public class ProcessUtil {
         return logThread;
     }
 
-    private static Function<String, Void> createOutputHandler(final Logger log) {
+    private static Function<String, Void> createOutputHandler(final Logger log, final boolean useStandardLoggingLevel) {
         return new Function<String, Void>() {
             @Override
             public Void apply(String outputLine) {
-                log.info("%s", outputLine);
+                if (useStandardLoggingLevel) {
+                    log.info("%s", outputLine);
+                } else {
+                    log.debug("%s", outputLine);
+                }
                 return null;
             }
         };
     }
 
-    private static Function<String, Void> createErrorHandler(final Logger log) {
+    private static Function<String, Void> createErrorHandler(final Logger log,  final boolean useStandardLoggingLevel) {
         return new Function<String, Void>() {
             @Override
             public Void apply(String outputLine) {
-                log.error("%s", outputLine);
+                if (useStandardLoggingLevel) {
+                    log.error("%s", outputLine);
+                } else {
+                    log.warn("%s", outputLine);
+                }
                 return null;
             }
         };
+    }
+
+    // =====================================================================================
+
+    /**
+     * Closeable class for holding a reference to a subprocess.
+     */
+    public static class ProcessExecutionContext implements Closeable {
+
+        private Process process;
+
+        private List<Thread> loggingThreads;
+
+        private Logger log;
+
+        public ProcessExecutionContext(Process process, List<Thread> loggingThreads, Logger log) {
+            this.process = process;
+            this.loggingThreads = loggingThreads;
+            this.log = log;
+        }
+
+        public int await() {
+            try {
+                int answer = process.waitFor();
+                joinThreads(loggingThreads, log);
+                return answer;
+            } catch (InterruptedException e) {
+                return process.exitValue();
+            }
+        }
+
+        @Override
+        public void close() throws IOException {
+            process.destroy();
+            await();
+        }
     }
 }

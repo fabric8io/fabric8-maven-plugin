@@ -30,6 +30,7 @@ import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfigFluent;
+import io.fabric8.utils.Strings;
 
 import static io.fabric8.utils.Objects.notNull;
 
@@ -81,13 +82,23 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                     }
                 }
                 DeploymentStrategy strategy = spec.getStrategy();
+                String strategyType = null;
                 if (strategy != null) {
-                    // TODO is there any values we can copy across?
-                    //specBuilder.withStrategy(strategy);
+                    strategyType = strategy.getType();
                 }
                 if (openshiftDeployTimeoutSeconds != null && openshiftDeployTimeoutSeconds > 0) {
-                    specBuilder.withNewStrategy().withType("Rolling").
-                        withNewRollingParams().withTimeoutSeconds(openshiftDeployTimeoutSeconds).endRollingParams().endStrategy();
+                    if (Strings.isNullOrBlank(strategyType) || "Rolling".equals(strategyType)) {
+                        specBuilder.withNewStrategy().withType("Rolling").
+                                withNewRollingParams().withTimeoutSeconds(openshiftDeployTimeoutSeconds).endRollingParams().endStrategy();
+                    } else if ("Recreate".equals(strategyType)) {
+                        specBuilder.withNewStrategy().withType("Recreate").
+                                withNewRecreateParams().withTimeoutSeconds(openshiftDeployTimeoutSeconds).endRecreateParams().endStrategy();
+                    } else {
+                        specBuilder.withNewStrategy().withType(strategyType).endStrategy();
+                    }
+                } else if (Strings.isNotBlank(strategyType)) {
+                    // TODO is there any values we can copy across?
+                    specBuilder.withNewStrategy().withType(strategyType).endStrategy();
                 }
 
                 // lets add a default trigger so that its triggered when we change its config

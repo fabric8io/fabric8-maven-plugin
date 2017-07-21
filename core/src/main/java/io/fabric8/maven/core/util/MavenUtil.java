@@ -150,6 +150,13 @@ public class MavenUtil {
      * Returns true if the maven project has a dependency with the given groupId and artifactId (if not null)
      */
     public static boolean hasDependency(MavenProject project, String groupId, String artifactId) {
+        return getDependencyVersion(project, groupId, artifactId) != null;
+    }
+
+    /**
+     * Returns the version associated to the dependency dependency with the given groupId and artifactId (if present)
+     */
+    public static String getDependencyVersion(MavenProject project, String groupId, String artifactId) {
         Set<Artifact> artifacts = project.getArtifacts();
         if (artifacts != null) {
             for (Artifact artifact : artifacts) {
@@ -161,11 +168,11 @@ public class MavenUtil {
                     continue;
                 }
                 if (Objects.equal(groupId, artifact.getGroupId())) {
-                    return true;
+                    return artifact.getVersion();
                 }
             }
         }
-        return false;
+        return null;
     }
 
     public static boolean hasPlugin(MavenProject project, String plugin) {

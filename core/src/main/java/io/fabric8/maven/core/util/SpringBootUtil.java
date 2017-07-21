@@ -108,6 +108,13 @@ public class SpringBootUtil {
     }
 
     /**
+     * Determine the spring-boot devtools version for the current project
+     */
+    public static String getSpringBootDevToolsVersion(MavenProject mavenProject) {
+        return MavenUtil.getDependencyVersion(mavenProject, SpringBootProperties.SPRING_BOOT_GROUP_ID, SpringBootProperties.SPRING_BOOT_ARTIFACT_ID);
+    }
+
+    /**
      * Build a flattened representation of the Yaml tree. The conversion is compliant with the spring-boot rules.
      */
     private static Map<String, Object> getFlattenedMap(Map<String, Object> source) {

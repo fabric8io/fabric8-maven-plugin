@@ -55,15 +55,22 @@ public class OpenshiftBuildService implements BuildService {
     private final OpenShiftClient client;
     private final Logger log;
     private ServiceHub dockerServiceHub;
+    private BuildServiceConfig config;
 
-    public OpenshiftBuildService(OpenShiftClient client, Logger log, ServiceHub dockerServiceHub) {
+    public OpenshiftBuildService(OpenShiftClient client, Logger log, ServiceHub dockerServiceHub, BuildServiceConfig config) {
+        Objects.requireNonNull(client, "client");
+        Objects.requireNonNull(log, "log");
+        Objects.requireNonNull(dockerServiceHub, "dockerServiceHub");
+        Objects.requireNonNull(config, "config");
+
         this.client = client;
         this.log = log;
         this.dockerServiceHub = dockerServiceHub;
+        this.config = config;
     }
 
     @Override
-    public void build(BuildServiceConfig config, ImageConfiguration imageConfig) throws Fabric8ServiceException {
+    public void build(ImageConfiguration imageConfig) throws Fabric8ServiceException {
 
         try {
             ImageName imageName = new ImageName(imageConfig.getName());
@@ -232,7 +239,10 @@ public class OpenshiftBuildService implements BuildService {
     }
 
     private void applyResourceObjects(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder) throws Exception {
-        config.getEnricherTask().execute(builder);
+        if (config.getEnricherTask() != null) {
+            config.getEnricherTask().execute(builder);
+        }
+
         if (builder.hasItems()) {
             KubernetesList k8sList = builder.build();
             client.lists().create(k8sList);
@@ -271,6 +281,15 @@ public class OpenshiftBuildService implements BuildService {
                     "Failed to tail build log", logTerminateLatch, log);
             Watcher<Build> buildWatcher = getBuildWatcher(latch, buildName, buildHolder);
             try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {
+                // Check if the build is already finished to avoid waiting indefinitely
+                Build lastBuild = client.builds().withName(buildName).get();
+                String lastStatus = KubernetesResourceUtil.getBuildStatusPhase(lastBuild);
+                if (Builds.isFinished(lastStatus)) {
+                    log.debug("Build %s is already finished", buildName);
+                    buildHolder.set(lastBuild);
+                    latch.countDown();
+                }
+
                 waitUntilBuildFinished(latch);
                 logTerminateLatch.countDown();
                 build = buildHolder.get();

@@ -55,6 +55,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProjectHelper;
+import org.apache.maven.repository.RepositorySystem;
 
 /**
  * Builds the docker images configured for this project via a Docker or S2I binary build.
@@ -169,6 +170,9 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Component
     private MavenProjectHelper projectHelper;
 
+    @Component
+    protected RepositorySystem repositorySystem;
+
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
 
@@ -205,7 +209,15 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         }
 
         // Build the fabric8 service hub
-        fabric8ServiceHub = new Fabric8ServiceHub(clusterAccess, mode, log, hub);
+        fabric8ServiceHub = new Fabric8ServiceHub.Builder()
+                .log(log)
+                .clusterAccess(clusterAccess)
+                .platformMode(mode)
+                .dockerServiceHub(hub)
+                .buildServiceConfig(getBuildServiceConfig())
+                .repositorySystem(repositorySystem)
+                .mavenProject(project)
+                .build();
 
         super.executeInternal(hub);
 
@@ -227,7 +239,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             // TODO need to refactor d-m-p to avoid this call
             EnvUtil.storeTimestamp(this.getBuildTimestampFile(), this.getBuildTimestamp());
 
-            fabric8ServiceHub.getBuildService().build(getBuildServiceConfig(), imageConfig);
+            fabric8ServiceHub.getBuildService().build(imageConfig);
 
         } catch (Exception ex) {
             throw new MojoExecutionException("Failed to execute the build", ex);
@@ -305,6 +317,17 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .mode(platformMode)
                 .strategy(buildStrategy)
                 .useProjectClasspath(useProjectClasspath)
+                .artifactResolver(getFabric8ServiceHub().getArtifactResolverService())
+                .build();
+    }
+
+    private Fabric8ServiceHub getFabric8ServiceHub() {
+        return new Fabric8ServiceHub.Builder()
+                .log(log)
+                .clusterAccess(clusterAccess)
+                .platformMode(mode)
+                .repositorySystem(repositorySystem)
+                .mavenProject(project)
                 .build();
     }
 

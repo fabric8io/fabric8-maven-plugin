@@ -66,13 +66,8 @@ public class PodLogService {
     public void tailAppPodsLogs(final KubernetesClient kubernetes, final String namespace, final Set<HasMetadata> entities,
                                 boolean watchAddedPodsOnly, String onExitOperation, boolean followLog,
                                 Date ignorePodsOlderThan, boolean waitInCurrentThread) {
-        LabelSelector selector = null;
-        for (HasMetadata entity : entities) {
-            selector = getPodLabelSelector(entity);
-            if (selector != null) {
-                break;
-            }
-        }
+
+        LabelSelector selector = KubernetesResourceUtil.getPodLabelSelector(entities);
 
         if (selector != null) {
             String ctrlCMessage = "stop tailing the log";
