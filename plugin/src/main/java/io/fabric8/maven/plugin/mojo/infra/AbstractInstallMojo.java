@@ -21,6 +21,7 @@ import io.fabric8.maven.core.util.ProcessUtil;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
 import io.fabric8.utils.IOHelpers;
 import io.fabric8.utils.Strings;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -49,6 +50,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     private static final String GOFABRIC8_VERSION_URL = "https://raw.githubusercontent.com/fabric8io/gofabric8/master/version/VERSION";
     private static final String KOMPOSE_VERSION_URL = "https://raw.githubusercontent.com/kubernetes/kompose/master/build/VERSION";
     public static final String VERSION_ARGUMENT = "version";
+    public static final String BATCH_ARGUMENT = "--batch";
     private static String GOFABRIC_DOWNLOAD_URL_FORMAT = "https://github.com/fabric8io/gofabric8/releases/download/v%s/gofabric8-%s-%s"; // version, platform, arch
     private static String KOMPOSE_DOWNLOAD_URL_FORMAT = "https://github.com/kubernetes/kompose/releases/download/v%s/kompose-%s-%s"; // version, platform, arch
 
@@ -95,7 +97,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         } else {
             log.info("Found %s", gofabric8);
         }
-        executeCommand(gofabric8, GOFABRIC8, VERSION_ARGUMENT, "--batch");
+        executeGoFabric8Command(gofabric8, GOFABRIC8, VERSION_ARGUMENT);
         return gofabric8;
     }
 
@@ -309,7 +311,12 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         }
     }
 
-    protected void executeCommand(File command, String binName, String ... args) throws MojoExecutionException {
+    protected void executeGoFabric8Command(File command, String binName, String ... args) throws MojoExecutionException {
+        executeCommand(command, binName, ArrayUtils.addAll(args, BATCH_ARGUMENT));
+
+    }
+
+    protected void executeCommand(File command, String binName, String... args) throws MojoExecutionException {
         // Be sure to run in batch mode
         List<String> argList = new ArrayList<>(Arrays.asList(args));
         String argLine = Strings.join(argList, " ");
