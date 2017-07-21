@@ -174,8 +174,17 @@ public class ResourceMojo extends AbstractResourceMojo {
      * The OpenShift deploy timeout in seconds:
      * See this issue for background of why for end users on slow wifi on their laptops
      * DeploymentConfigs usually barf: https://github.com/openshift/origin/issues/10531
+     *
+     * Please follow also the discussion at
+     * <ul>
+     *     <li>https://github.com/fabric8io/fabric8-maven-plugin/pull/944#discussion_r116962969</li>
+     *     <li>https://github.com/fabric8io/fabric8-maven-plugin/pull/794</li>
+     * </ul>
+     * and the references within it for the reason of this ridiculous long default timeout
+     * (in short: Its because Docker image download times are added to the deployment time, making
+     * the default of 10 minutes quite unusable if multiple images are included in the deployment).
      */
-    @Parameter(property = "fabric8.openshift.deployTimeoutSeconds")
+    @Parameter(property = "fabric8.openshift.deployTimeoutSeconds", defaultValue = "3600")
     private Long openshiftDeployTimeoutSeconds;
 
     // Access for creating OpenShift binary builds
@@ -184,9 +193,6 @@ public class ResourceMojo extends AbstractResourceMojo {
     private PlatformMode platformMode;
 
     private OpenShiftDependencyResources openshiftDependencyResources;
-
-    public ResourceMojo() {
-    }
 
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         clusterAccess = new ClusterAccess(namespace);
@@ -438,8 +444,7 @@ public class ResourceMojo extends AbstractResourceMojo {
         KubernetesListBuilder builder;
         String defaultName = MavenUtil.createDefaultResourceName(project);
         builder = KubernetesResourceUtil.readResourceFragmentsFrom(
-            KubernetesResourceUtil.API_VERSION,
-            KubernetesResourceUtil.API_EXTENSIONS_VERSION,
+            KubernetesResourceUtil.DEFAULT_RESOURCE_VERSIONING,
             defaultName,
             mavenFilterFiles(resourceFiles));
         return builder;

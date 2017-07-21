@@ -22,5 +22,4 @@ import io.fabric8.maven.it.Verify
           new File(basedir, sprintf("/target/classes/META-INF/fabric8/%s.yml",it)),
           new File(basedir, sprintf("/expected/%s.yml",it)))
 }
-
 true

@@ -89,7 +89,7 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
 
         @Override
         public void visit(DeploymentSpecBuilder item) {
-            Map<String, String> selectorMatchLabels = enricherManager.extractSelector(getConfig(), Kind.REPLICATION_CONTROLLER);
+            Map<String, String> selectorMatchLabels = enricherManager.extractSelector(getConfig(), Kind.DEPLOYMENT);
             LabelSelector selector = item.buildSelector();
             if (selector == null) {
                 item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();

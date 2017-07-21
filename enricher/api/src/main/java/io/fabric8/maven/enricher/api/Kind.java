@@ -48,4 +48,9 @@ public enum Kind {
     public boolean isDeployment() {
         return this == Kind.DEPLOYMENT || this == DEPLOYMENT_CONFIG;
     }
+
+    public boolean hasNoVersionInSelector() {
+        return this == Kind.SERVICE || this == Kind.DEPLOYMENT || this == Kind.DEPLOYMENT_CONFIG ||
+               this == Kind.DAEMON_SET || this == Kind.JOB || this == Kind.STATEFUL_SET;
+    }
 }

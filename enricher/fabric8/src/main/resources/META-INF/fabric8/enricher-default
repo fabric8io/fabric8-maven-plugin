@@ -20,3 +20,4 @@ io.fabric8.maven.enricher.fabric8.AutoTLSEnricher
 io.fabric8.maven.enricher.fabric8.ExposeEnricher
 io.fabric8.maven.enricher.fabric8.DockerHealthCheckEnricher,510
 io.fabric8.maven.enricher.fabric8.OpenShiftRouteEnricher
+io.fabric8.maven.enricher.fabric8.WatchEnricher

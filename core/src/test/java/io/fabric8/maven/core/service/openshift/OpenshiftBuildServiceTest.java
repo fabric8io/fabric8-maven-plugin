@@ -38,8 +38,8 @@ import io.fabric8.openshift.api.model.ImageStreamBuilder;
 import io.fabric8.openshift.api.model.ImageStreamStatusBuilder;
 import io.fabric8.openshift.api.model.NamedTagEventListBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.fabric8.openshift.server.mock.OpenShiftMockServer;
 
+import io.fabric8.openshift.client.server.mock.OpenShiftMockServer;
 import org.apache.maven.project.MavenProject;
 import org.junit.Before;
 import org.junit.Test;
@@ -128,7 +128,7 @@ public class OpenshiftBuildServiceTest {
         OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
         service.build(image);
 
-        // we should add a better way to assert that a certain call has been made
+        // we should Foadd a better way to assert that a certain call has been made
         assertTrue(mockServer.getRequestCount() > 8);
         collector.assertEventsRecordedInOrder("build-config-check", "new-build-config", "pushed");
         collector.assertEventsNotRecorded("patch-build-config");
@@ -228,6 +228,7 @@ public class OpenshiftBuildServiceTest {
         mockServer.expect().get().withPath("/oapi/v1/namespaces/test/builds?labelSelector=openshift.io/build-config.name%3D" + projectName + config.getS2iBuildNameSuffix()).andReturn(200, builds)
                 .always();
 
+        mockServer.expect().withPath("/oapi/v1/namespaces/test/builds/" + projectName).andReturn(200, build).always();
         mockServer.expect().withPath("/oapi/v1/namespaces/test/builds?fieldSelector=metadata.name%3D" + projectName + "&resourceVersion=1&watch=true")
                 .andUpgradeToWebSocket().open()
                 .waitFor(buildDelay)
