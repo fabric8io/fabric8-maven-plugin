@@ -97,7 +97,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         } else {
             log.info("Found %s", gofabric8);
         }
-        executeGoFabric8Command(gofabric8, GOFABRIC8, VERSION_ARGUMENT);
+        executeGoFabric8Command(gofabric8, VERSION_ARGUMENT);
         return gofabric8;
     }
 
@@ -311,8 +311,8 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         }
     }
 
-    protected void executeGoFabric8Command(File command, String binName, String ... args) throws MojoExecutionException {
-        executeCommand(command, binName, ArrayUtils.addAll(args, BATCH_ARGUMENT));
+    protected void executeGoFabric8Command(File command, String... args) throws MojoExecutionException {
+        executeCommand(command, GOFABRIC8, ArrayUtils.addAll(args, BATCH_ARGUMENT));
 
     }
 
