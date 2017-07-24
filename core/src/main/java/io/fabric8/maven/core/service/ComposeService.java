@@ -29,6 +29,7 @@ import java.nio.file.Path;
 /*
 * Docker compose services for converting docker compose artifacts to kubernetes artifacts
 */
+
 public class ComposeService {
 
     public static final String KOMPOSE_RESOURCES_DIRECTORY = "kompose_resources";
@@ -85,6 +86,7 @@ public class ComposeService {
             process = Runtime.getRuntime().exec("kompose convert -o "+ komposeResourcesPath +" -f "+ composeFilePath);
         } catch (IOException exp) {
             checkIfKomposeIsMissing(exp);
+            cleanComposeResources();
             throw new Fabric8ServiceException(exp.getMessage(), exp);
         }
         waitForConversion();
