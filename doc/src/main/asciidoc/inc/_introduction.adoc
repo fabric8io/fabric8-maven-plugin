@@ -322,12 +322,11 @@ As you can see, there is no `metadata` section as expected for each Kubernetes r
 
 Here also the reference to the image is missing. In this case it will be automatically connected to the image you are building with this plugin (And you already know, that the image definition comes either from a generator or by a dedicated image plugin configuration).
 
-
 === Docker Compose
 
 The fourth configuration option is to provide an external docker compose file. Following are either ways to specify docker-compose files.
 
-1. Keep docker compose file into `src/main/fabric8-kompose` directory with in project directory.
+1. Keep docker compose file into `src/main/fabric8-compose` directory in project space.
 
 2. Locate docker compose file with in project directory with following `pom.xml` example.
 
@@ -345,8 +344,6 @@ The fourth configuration option is to provide an external docker compose file. F
     <composeFile>docker-compose.yaml</composeFile>
   </configuration>
 
-  <!-- ... -->
-
   <executions>
     <execution>
       <goals>
@@ -358,9 +355,12 @@ The fourth configuration option is to provide an external docker compose file. F
 </plugin>
 ----
 
-As you can see, there is `composeFile` section in plugin configuration in `pom.xml` which locates docker-compsoe file is and location should be relative path from `pom.xml`.
+As you can see, there is `composeFile` section under plugin `configuration` in `pom.xml` to provie docker-compsoe file location and location should be relative path from `pom.xml`.
 
-Next is `execution` goals config which requires `resource` goal at least, so that docker-compose file can get process.
+Next step is `execution` goals config which requires `resource` goal at least, so that docker-compose file can get process.
+
+A working example can be found in the  https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/docker-compose[samples/docker-compose]
+
 
 NOTE: For building images there is also an alternative mode using external Dockerfiles, in addition to the XML based configuration. Refer to <<build-overview, fabric8:build>> for details.
 
