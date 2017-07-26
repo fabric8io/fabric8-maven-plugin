@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.19,</span>
-<span id="revdate">2017-07-25</span>
+<span id="revdate">2017-07-26</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -4838,7 +4838,33 @@ Assuming that the image exposes ports <code>8080</code> and <code>8778</code> (e
 </div>
 <div class="sect4">
 <h5 id="fmp-project">fmp-project</h5>
-
+<div class="paragraph">
+<p>Enricher that adds standard labels and selectors to generated resources (e.g. <code>app</code>, <code>group</code>, <code>provider</code>, <code>version</code>).</p>
+</div>
+<div class="paragraph">
+<p>The <code>fmp-project</code> enricher supports the following configuration options:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 18.1818%;">
+<col style="width: 54.5454%;">
+<col style="width: 27.2728%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>useProjectLabel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable this flag to turn on the generation of the old <code>project</code> label in Kubernetes resources. The <code>project</code> label has been replaced by the <code>app</code> label in newer versions of the plugin.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="sect4">
 <h5 id="fmp-git">fmp-git</h5>
@@ -6349,7 +6375,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.19<br>
-Last updated 2017-07-25 15:18:27 UTC
+Last updated 2017-07-26 22:58:22 UTC
 </div>
 </div>
 </body>
