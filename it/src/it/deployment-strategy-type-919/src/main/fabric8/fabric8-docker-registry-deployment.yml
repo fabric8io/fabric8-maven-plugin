@@ -6,7 +6,7 @@ metadata:
     fabric8.io/iconUrl: "https://cdn.rawgit.com/fabric8io/fabric8-devops/master/fabric8-docker-registry/src/main/fabric8/icon.png"
   labels:
     provider: "fabric8"
-    project: "${project.artifactId}"
+    app: "${project.artifactId}"
     version: "${project.version}"
     group: "io.fabric8.devops.apps"
   name: "fabric8-docker-registry"
@@ -17,13 +17,13 @@ spec:
   selector:
     matchLabels:
       provider: "fabric8"
-      project: "${project.artifactId}"
+      app: "${project.artifactId}"
       group: "io.fabric8.devops.apps"
   template:
     metadata:
       labels:
         provider: "fabric8"
-        project: "${project.artifactId}"
+        app: "${project.artifactId}"
         version: "${project.version}"
         group: "io.fabric8.devops.apps"
     spec:

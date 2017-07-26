@@ -11,7 +11,7 @@ items:
       type: Recreate
     selector:
       provider: fabric8
-      project: deployment-strategy-type-919
+      app: deployment-strategy-type-919
       group: io.fabric8
     triggers:
     - type: ConfigChange

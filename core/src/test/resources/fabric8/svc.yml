@@ -1,12 +1,12 @@
 metadata:
   labels:
     name: pong
-    project: ping-pong-peng
+    app: ping-pong-peng
     version: "1"
 spec:
   selector:
     name: pong
-    project: ping-pong-peng
+    app: ping-pong-peng
   ports:
   - port: 8080
     targetPort: 8080

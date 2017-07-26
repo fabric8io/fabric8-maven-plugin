@@ -13,7 +13,7 @@ items:
     labels:
       expose: "true"
       provider: fabric8
-      project: fabric8-maven-sample-env-metadata
+      app: fabric8-maven-sample-env-metadata
       version: "@ignore@"
       group: io.fabric8
     name: fabric8-maven-sample-env-metadata
@@ -24,7 +24,7 @@ items:
       protocol: TCP
       targetPort: 8080
     selector:
-      project: fabric8-maven-sample-env-metadata
+      app: fabric8-maven-sample-env-metadata
       provider: fabric8
       group: io.fabric8
 - apiVersion: extensions/v1beta1
@@ -36,7 +36,7 @@ items:
       fabric8.io/git-branch: "@ignore@"
     labels:
       provider: fabric8
-      project: fabric8-maven-sample-env-metadata
+      app: fabric8-maven-sample-env-metadata
       version: "@ignore@"
       group: io.fabric8
     name: fabric8-maven-sample-env-metadata
@@ -44,7 +44,7 @@ items:
     replicas: 1
     selector:
       matchLabels:
-        project: fabric8-maven-sample-env-metadata
+        app: fabric8-maven-sample-env-metadata
         provider: fabric8
         group: io.fabric8
     template:
@@ -55,7 +55,7 @@ items:
           fabric8.io/git-branch: "@ignore@"
         labels:
           provider: fabric8
-          project: fabric8-maven-sample-env-metadata
+          app: fabric8-maven-sample-env-metadata
           version: "@ignore@"
           group: io.fabric8
       spec:
