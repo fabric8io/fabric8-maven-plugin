@@ -9,7 +9,7 @@ items:
       expose: "true"
       testProject: spring-boot-sample
       provider: fabric8
-      project: fabric8-maven-sample-spring-boot
+      app: fabric8-maven-sample-spring-boot
       version: "@ignore@"
       group: io.fabric8
     name: fabric8-maven-sample-spring-boot
@@ -20,7 +20,7 @@ items:
       protocol: TCP
       targetPort: 8080
     selector:
-      project: fabric8-maven-sample-spring-boot
+      app: fabric8-maven-sample-spring-boot
       provider: fabric8
       group: io.fabric8
     type: NodePort
@@ -30,14 +30,14 @@ items:
     labels:
       testProject: spring-boot-sample
       provider: fabric8
-      project: fabric8-maven-sample-spring-boot
+      app: fabric8-maven-sample-spring-boot
       version: "@ignore@"
       group: io.fabric8
     name: fabric8-maven-sample-spring-boot
   spec:
     replicas: 1
     selector:
-      project: fabric8-maven-sample-spring-boot
+      app: fabric8-maven-sample-spring-boot
       provider: fabric8
       group: io.fabric8
     template:
@@ -45,7 +45,7 @@ items:
         labels:
           testProject: spring-boot-sample
           provider: fabric8
-          project: fabric8-maven-sample-spring-boot
+          app: fabric8-maven-sample-spring-boot
           version: "@ignore@"
           group: io.fabric8
       spec:

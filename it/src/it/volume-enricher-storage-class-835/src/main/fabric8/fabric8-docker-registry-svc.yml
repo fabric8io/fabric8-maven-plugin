@@ -6,7 +6,7 @@ metadata:
     fabric8.io/iconUrl: "https://cdn.rawgit.com/fabric8io/fabric8-devops/master/fabric8-docker-registry/src/main/fabric8/icon.png"
   labels:
     provider: "fabric8"
-    project: "${project.artifactId}"
+    app: "${project.artifactId}"
     version: "${project.version}"
     group: "io.fabric8.devops.apps"
     expose: "true"
@@ -17,6 +17,6 @@ spec:
     protocol: "TCP"
     targetPort: 5000
   selector:
-    project: "fabric8-docker-registry"
+    app: "fabric8-docker-registry"
     provider: "fabric8"
     group: "io.fabric8.devops.apps"

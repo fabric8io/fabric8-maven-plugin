@@ -15,7 +15,7 @@ items:
     labels:
       expose: "true"
       provider: fabric8
-      project: fabric8-maven-sample-zero-config
+      app: fabric8-maven-sample-zero-config
       version: "@ignore@"
       group: io.fabric8
     name: fabric8-maven-sample-zero-config
@@ -26,7 +26,7 @@ items:
       protocol: TCP
       targetPort: 8080
     selector:
-      project: fabric8-maven-sample-zero-config
+      app: fabric8-maven-sample-zero-config
       provider: fabric8
       group: io.fabric8
 - apiVersion: v1
@@ -38,14 +38,14 @@ items:
       fabric8.io/git-branch: "@ignore@"
     labels:
       provider: fabric8
-      project: fabric8-maven-sample-zero-config
+      app: fabric8-maven-sample-zero-config
       version: "@ignore@"
       group: io.fabric8
     name: fabric8-maven-sample-zero-config
   spec:
     replicas: 1
     selector:
-      project: fabric8-maven-sample-zero-config
+      app: fabric8-maven-sample-zero-config
       provider: fabric8
       group: io.fabric8
     template:
@@ -56,7 +56,7 @@ items:
           fabric8.io/git-branch: "@ignore@"
         labels:
           provider: fabric8
-          project: fabric8-maven-sample-zero-config
+          app: fabric8-maven-sample-zero-config
           version: "@ignore@"
           group: io.fabric8
       spec:
