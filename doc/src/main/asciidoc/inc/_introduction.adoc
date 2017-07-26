@@ -26,7 +26,7 @@ These image related features are inherited from the https://github.com/fabric8io
 [[resource-descriptors]]
 == Kubernetes and OpenShift Resources
 
-Kubernetes and OpenShift resource descriptors can be created  with <<fabric8:resource>>.
+Kubernetes and OpenShift resource descriptors can be created or generated from existing docker compose with <<fabric8:resource>>.
 These files are packaged within the Maven artifacts and can be deployed to a running orchestration platform with <<fabric8:apply>>.
 
 Typically you only specify a small part of the real resource descriptors which will be enriched by this plugin with various extra informations taken from the `pom.xml`.
@@ -45,7 +45,7 @@ This allows for type safe configuration with IDE support, but only a subset of p
 * *Kubernetes &amp; OpenShift resource fragments* are user provided YAML files that can be _enriched_ by the plugin. This allows expert users to use plain configuration file with all their capabilities, but also to add project specific build information and avoid boilerplate code.
 
 
-* *Docker compose* are user provided docker compose YAML files. This feature can bring up the docker compose based deployments on Kubernetes &amp; Openshift cluster with minimum or no knowledge of Kubernetes/Openshift deployment process.
+* *Docker compose* are user provided docker compose YAML files. This feature can bring up the docker compose deployments on Kubernetes &amp; Openshift cluster with minimum or no knowledge of Kubernetes/Openshift deployment process.
 
 The following table gives an overview of the different models
 
@@ -84,7 +84,7 @@ This minimal but full working example `pom.xml` shows how a simple spring boot a
 .Example
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
-< project>
+<project>
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.fabric8</groupId>
@@ -328,7 +328,7 @@ The fourth configuration option is to provide an external docker compose file. F
 
 1. Keep docker compose file into `src/main/fabric8-compose` directory in project space.
 
-2. Locate docker compose file with in project directory with following `pom.xml` example.
+2. Locate docker compose file with in project directory as shown in following `pom.xml` example.
 
 
 .Example fragment "pom.xml"
@@ -355,9 +355,10 @@ The fourth configuration option is to provide an external docker compose file. F
 </plugin>
 ----
 
-As you can see, there is `composeFile` section under plugin `configuration` in `pom.xml` to provie docker-compsoe file location and location should be relative path from `pom.xml`.
+As you can see, `composeFile` section under plugin `configuration` has used to provide docker compose file location and location should be relative path from `pom.xml`.
 
-Next step is `execution` goals config which requires `resource` goal at least, so that docker-compose file can get process.
+Next step is `execution` goals config which requires `resource` goal at least, so that plugin can process docker compose file and generate Kubernetes, Openshift resource descriptors using <<fabric8:resource>> goal.
+Thanks to http://kompose.io[kompose] tool for building this feature.
 
 A working example can be found in the  https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/docker-compose[samples/docker-compose]
 
