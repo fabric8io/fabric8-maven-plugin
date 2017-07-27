@@ -27,13 +27,16 @@ public class ResourceVersioning {
 
     private String appsVersion;
 
+    private String jobVersion;
+
     public ResourceVersioning() {
     }
 
-    public ResourceVersioning(String coreVersion, String extensionsVersion, String appsVersion) {
+    public ResourceVersioning(String coreVersion, String extensionsVersion, String appsVersion, String jobVersion) {
         this.coreVersion = coreVersion;
         this.extensionsVersion = extensionsVersion;
         this.appsVersion = appsVersion;
+        this.jobVersion = jobVersion;
     }
 
     public String getCoreVersion() {
@@ -60,6 +63,14 @@ public class ResourceVersioning {
         this.appsVersion = appsVersion;
     }
 
+    public String getJobVersion() {
+        return jobVersion;
+    }
+
+    public void setJobVersion(String jobVersion) {
+        this.jobVersion = jobVersion;
+    }
+
     public ResourceVersioning withCoreVersion(String coreVersion) {
         ResourceVersioning c = copy();
         c.setCoreVersion(coreVersion);
@@ -78,17 +89,24 @@ public class ResourceVersioning {
         return c;
     }
 
+    public ResourceVersioning withJobVersion(String jobVersion) {
+        ResourceVersioning c = copy();
+        c.setJobVersion(jobVersion);
+        return c;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("ResourceVersioning{");
         sb.append("coreVersion='").append(coreVersion).append('\'');
         sb.append(", extensionsVersion='").append(extensionsVersion).append('\'');
         sb.append(", appsVersion='").append(appsVersion).append('\'');
+        sb.append(", jobVersion='").append(jobVersion).append('\'');
         sb.append('}');
         return sb.toString();
     }
 
     protected ResourceVersioning copy() {
-        return new ResourceVersioning(coreVersion, extensionsVersion, appsVersion);
+        return new ResourceVersioning(coreVersion, extensionsVersion, appsVersion, jobVersion);
     }
 }

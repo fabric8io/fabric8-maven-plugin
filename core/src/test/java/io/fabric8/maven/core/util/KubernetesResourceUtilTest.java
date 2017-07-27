@@ -31,6 +31,7 @@ import org.junit.Test;
 
 import static io.fabric8.maven.core.util.KubernetesResourceUtil.API_VERSION;
 import static io.fabric8.maven.core.util.KubernetesResourceUtil.DEFAULT_RESOURCE_VERSIONING;
+import static io.fabric8.maven.core.util.KubernetesResourceUtil.JOB_VERSION;
 import static io.fabric8.maven.core.util.KubernetesResourceUtil.getResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -84,6 +85,14 @@ public class KubernetesResourceUtilTest {
     public void containsKind() throws Exception {
         HasMetadata ret = getResource(DEFAULT_RESOURCE_VERSIONING, new File(fabric8Dir, "contains_kind.yml"), "app");
         assertEquals("ReplicationController", ret.getKind());
+    }
+
+
+    @Test
+    public void job() throws Exception {
+        HasMetadata ret = getResource(DEFAULT_RESOURCE_VERSIONING, new File(fabric8Dir, "job.yml"), "app");
+        assertEquals("Job", ret.getKind());
+        assertEquals(JOB_VERSION, ret.getApiVersion());
     }
 
     @Test
