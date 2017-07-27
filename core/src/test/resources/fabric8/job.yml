@@ -1,0 +1,11 @@
+spec:
+  template:
+    spec:
+      containers:
+      - name: main
+        image: foo
+        env:
+        - name: "KUBERNETES_NAMESPACE"
+          valueFrom:
+            fieldRef:
+              fieldPath: "metadata.namespace"
