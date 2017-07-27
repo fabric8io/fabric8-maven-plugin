@@ -6,8 +6,8 @@ The *fabric8-maven-plugin* (f8-m-p) brings your Java applications on to http://k
 It provides a tight integration into http://maven.apache.org[Maven] and benefits from the build configration already provided.
 This plugin focus on two tasks: _Building Docker images_ and _creating Kubernetes and OpenShift resource descriptors_.
 It can be configured very flexibly and supports multiple configuration models for creating : A _Zero-Config_ setup allows for a quick ramp-up with some opinionated defaults.
-For more advanced requirementes an _XML configuration_ provides additional configuration options which can be added to the `pom.xml`.
-For the full power in order to tune all facets of the creation external _resource fragments_ and _Dockerfiles_ can be used.
+For more advanced requirement's an _XML configuration_ provides additional configuration options which can be added to the `pom.xml`.
+For the full power in order to tune all facets of the creation external _resource fragments_ and _Dockerfiles_ can be used. The docker compose configuration can be used to bring up the docker compose deployments on Kubernetes/OpenShift cluster.
 
 [[building-images]]
 == Building Images
@@ -34,7 +34,7 @@ This drastically reduces boilerplate code for common scenarios.
 
 == Configuration
 
-As mentioned already there are three levels of configuration:
+As mentioned already there are four levels of configuration:
 
 * *Zero-Config* mode makes some very opinionated decisions based on what is present in the pom.xml like what base image to use or which ports to expose.
 This is great for starting up things and for keeping quickstart applications small and tidy.
@@ -45,7 +45,7 @@ This allows for type safe configuration with IDE support, but only a subset of p
 * *Kubernetes &amp; OpenShift resource fragments* are user provided YAML files that can be _enriched_ by the plugin. This allows expert users to use plain configuration file with all their capabilities, but also to add project specific build information and avoid boilerplate code.
 
 
-* *Docker compose* are user provided docker compose YAML files. This feature can bring up the docker compose deployments on Kubernetes &amp; Openshift cluster with minimum or no knowledge of Kubernetes/Openshift deployment process.
+* *Docker Compose* configuration can bring up the docker compose deployments on Kubernetes/OpenShift cluster. This requires minimum to no knowledge of Kubernetes/OpenShift deployment process.
 
 The following table gives an overview of the different models
 
@@ -68,7 +68,7 @@ The following table gives an overview of the different models
 
 | *Docker Compose*
 | All above methods can works with docker compose configuration. As `dokcercompose.yml` can have `:build` key that specifies how to build docker image but at present this feature is not supported.
-| Plugin converts docker compose descriptors of application definitions into more detailed Kubernetes &amp; Openshift deployment resources. These resource descriptors or externally YAML files can be used to specify application skeleton. This skeleton is then filled by Enrichers which add labels and more. Maven properties within these files are resolved to thier values. With this model you can use every Kubernetes / OpenShift resource object with all their flexibility, but still get the benefit of adding build informations.
+| Plugin converts docker compose descriptors of application definitions into more detailed Kubernetes/OpenShift deployment resources. These resource descriptors or externally YAML files can be used to specify application skeleton. This skeleton is then filled by Enrichers which add labels and more. Maven properties within these files are resolved to thier values. With this model you can use every Kubernetes / OpenShift resource object with all their flexibility, but still get the benefit of adding build informations.
 |===
 
 
@@ -324,11 +324,11 @@ Here also the reference to the image is missing. In this case it will be automat
 
 === Docker Compose
 
-The fourth configuration option is to provide an external docker compose file. Following are either ways to specify docker-compose files.
+The fourth configuration option is to provide an external Docker Compose file. Following are either ways to specify docker-compose files.
 
-1. Keep docker compose file into `src/main/fabric8-compose` directory in project space.
+1. Keep Docker Compose file into `src/main/fabric8-compose` directory in project space.
 
-2. Locate docker compose file with in project directory as shown in following `pom.xml` example.
+2. Locate Docker Compose file path with in the project directory as shown in following `pom.xml` example.
 
 
 .Example fragment "pom.xml"
@@ -355,10 +355,10 @@ The fourth configuration option is to provide an external docker compose file. F
 </plugin>
 ----
 
-As you can see, `composeFile` section under plugin `configuration` has used to provide docker compose file location and location should be relative path from `pom.xml`.
+As you can see in `pom.xml`, `composeFile` section under plugin `configuration` is used to provide the Docker Compose file path. It should be relative path from `pom.xml`.
 
-Next step is `execution` goals config which requires `resource` goal at least, so that plugin can process docker compose file and generate Kubernetes, Openshift resource descriptors using <<fabric8:resource>> goal.
-Thanks to http://kompose.io[kompose] tool for building this feature.
+Next step is `execution` goals configuration. It has to has `resource` goal so that plugin can process Docker Compose file and generate Kubernetes, OpenShift resource descriptors using <<fabric8:resource>> goal.
+The Docker Compose option is implemented using http://kompose.io[kompose] project.
 
 A working example can be found in the  https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/docker-compose[samples/docker-compose]
 
