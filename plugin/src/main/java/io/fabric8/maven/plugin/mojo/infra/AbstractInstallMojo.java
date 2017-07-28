@@ -107,7 +107,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
      * @return the path to kompose file
      * @throws MojoExecutionException
      */
-    protected File installKomposeNotAvailable() throws MojoExecutionException {
+    protected File installKomposeIfNotAvailable() throws MojoExecutionException {
         File kompose = ProcessUtil.findExecutable(log, KOMPOSE);
         if (kompose == null) {
             kompose = installAndConfigureBinary(komposeBinDir, KOMPOSE, KOMPOSE_VERSION_URL, KOMPOSE_DOWNLOAD_URL_FORMAT);

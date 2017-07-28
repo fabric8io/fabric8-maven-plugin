@@ -37,6 +37,6 @@ public class InstallMojo extends AbstractInstallMojo {
             executeGoFabric8Command(file, "install");
         }
 
-        installKomposeNotAvailable();
+        installKomposeIfNotAvailable();
     }
 }

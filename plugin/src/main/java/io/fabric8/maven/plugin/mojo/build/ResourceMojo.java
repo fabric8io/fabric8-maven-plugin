@@ -470,10 +470,10 @@ public class ResourceMojo extends AbstractResourceMojo {
     }
 
     private Path checkComposeConfig() {
-        return ifComposeConfigPresent() ? buildComposeFilePath() : lookDefaultComposeConfig();
+        return composeConfigPresent() ? buildComposeFilePath() : lookDefaultComposeConfig();
     }
 
-    private boolean ifComposeConfigPresent() {
+    private boolean composeConfigPresent() {
         return composeFile != null && composeFile.trim().length() > 0;
     }
 
@@ -483,7 +483,7 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     private Path lookDefaultComposeConfig() {
         File[] composeFiles = listDefaultComposeFile();
-        return ifDefaultCompsoeFilePresent(composeFiles) ? getFirstComposeFile(composeFiles) : null;
+        return defaultComposeFilePresent(composeFiles) ? getFirstComposeFile(composeFiles) : null;
     }
 
     private File[] listDefaultComposeFile() {
@@ -494,7 +494,7 @@ public class ResourceMojo extends AbstractResourceMojo {
         return composeFiles;
     }
 
-    private boolean ifDefaultCompsoeFilePresent(File[] composeFiles) {
+    private boolean defaultComposeFilePresent(File[] composeFiles) {
         return composeFiles != null && composeFiles.length > 0;
     }
 
