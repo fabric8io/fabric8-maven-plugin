@@ -84,6 +84,9 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     @Component
     private Prompter prompter;
 
+    @Parameter(property = "fabric8.install.batch.mode", defaultValue = "false")
+    private boolean installBatchMode;
+
     /**
      * Check for gofabric8 and install it to ~/.fabric8/bin if not available on the path
      *
@@ -163,15 +166,19 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
 
     // Ask user whether to update startup script and do it if requested.
     private void updateStartupScript(File rcFile, String setPathCmd) throws MojoExecutionException {
-        try {
-            String answer = prompter.prompt("Would you like to add the path setting to your ~/" + rcFile.getName() + " now? (Y/n)");
-            if (answer != null && answer.trim().isEmpty() || answer.trim().toUpperCase().startsWith("Y")) {
-                addToStartupScript(rcFile, setPathCmd);
-                log.info("Updated %s. Please type the following command to update your current shell:", rcFile);
-                log.info("     [[C]]source ~/%s[[C]]", rcFile.getName());
+        if (!installBatchMode) {
+            try {
+                String answer = prompter.prompt("Would you like to add the path setting to your ~/" + rcFile.getName() + " now? (Y/n)");
+                if (answer != null && answer.trim().isEmpty() || answer.trim().toUpperCase().startsWith("Y")) {
+                    addToStartupScript(rcFile, setPathCmd);
+                    log.info("Updated %s. Please type the following command to update your current shell:", rcFile);
+                    log.info("     [[C]]source ~/%s[[C]]", rcFile.getName());
+                }
+            } catch (PrompterException e) {
+                log.warn("Failed to ask user prompt: %s", e);
             }
-        } catch (PrompterException e) {
-            log.warn("Failed to ask user prompt: %s", e);
+        } else {
+            log.warn("Cannot update startup script when running in batch mode");
         }
     }
 

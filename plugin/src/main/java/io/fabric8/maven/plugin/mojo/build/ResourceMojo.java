@@ -201,6 +201,9 @@ public class ResourceMojo extends AbstractResourceMojo {
     @Parameter(property = "fabric8.openshift.deployTimeoutSeconds", defaultValue = "3600")
     private Long openshiftDeployTimeoutSeconds;
 
+    @Parameter(property = "kompose.dir", defaultValue = "${user.home}/.kompose/bin")
+    private File komposeBinDir;
+
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
 
@@ -423,7 +426,7 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     private KubernetesListBuilder generateAppResources(List<ImageConfiguration> images, EnricherManager enricherManager) throws IOException, MojoExecutionException {
         Path composeFilePath = checkComposeConfig();
-        ComposeService composeUtil = new ComposeService(composeFilePath, log);
+        ComposeService composeUtil = new ComposeService(komposeBinDir, composeFilePath, log);
 
         try {
             File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);

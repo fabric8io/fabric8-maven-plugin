@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.core.service;
 
+import io.fabric8.maven.core.util.ProcessUtil;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.shared.utils.io.FileUtils;
@@ -25,6 +26,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 
 /*
 * Docker compose services for converting docker compose artifacts to kubernetes artifacts
@@ -34,6 +36,7 @@ public class ComposeService {
 
     public static final String KOMPOSE_RESOURCES_DIRECTORY = "kompose_resources";
 
+    private File defaultKomposeBinDir;
     private Path komposeResourcesPath;
     private Path composeFilePath;
     private Logger log;
@@ -42,10 +45,12 @@ public class ComposeService {
     /**
      * Create instance of compose service
      *
+     * @param defaultKomposeBinDir
      * @param composeFilePath
      * @param log
      */
-    public ComposeService(Path composeFilePath, Logger log) {
+    public ComposeService(File defaultKomposeBinDir, Path composeFilePath, Logger log) {
+        this.defaultKomposeBinDir = defaultKomposeBinDir;
         this.composeFilePath = composeFilePath;
         this.log = log;
     }
@@ -83,21 +88,26 @@ public class ComposeService {
 
     private void invokeKompose() throws Fabric8ServiceException {
         try {
-            process = Runtime.getRuntime().exec("kompose convert -o "+ komposeResourcesPath +" -f "+ composeFilePath);
+            String executableName = "kompose";
+            File komposeBinaryFile = ProcessUtil.findExecutable(log, executableName);
+            if (komposeBinaryFile == null && this.defaultKomposeBinDir != null) {
+                // Looking at the default location for Kompose
+                komposeBinaryFile = ProcessUtil.findExecutable(log, executableName, Collections.singletonList(this.defaultKomposeBinDir));
+            }
+            if (komposeBinaryFile == null) {
+                log.error("[[B]]kompose[[B]] utility doesn't exist, please execute [[B]]mvn fabric8:install[[B]] command to make it work");
+                log.error("or");
+                log.error("to install it manually, please log on to [[B]]http://kompose.io/installation/[[B]]");
+                cleanComposeResources();
+                throw new Fabric8ServiceException("Cannot find the kompose binary in PATH or default install location");
+            }
+
+            process = Runtime.getRuntime().exec(new String[] {komposeBinaryFile.getAbsolutePath(), "convert", "-o", komposeResourcesPath.toString(), "-f", composeFilePath.toString()});
         } catch (IOException exp) {
-            checkIfKomposeIsMissing(exp);
             cleanComposeResources();
             throw new Fabric8ServiceException(exp.getMessage(), exp);
         }
         waitForConversion();
-    }
-
-    private void checkIfKomposeIsMissing(IOException exp) {
-        if(exp.getMessage().contains("error=2")) {
-            log.error("[[B]]kompose[[B]] utility doesn't exist, please execute [[B]]mvn fabric8:install[[B]] command to make it work");
-            log.error("or");
-            log.error("to install it manually, please log on to [[B]]http://kompose.io/installation/[[B]]");
-        }
     }
 
     private File[] handelKomposeResult() throws IOException, Fabric8ServiceException {
