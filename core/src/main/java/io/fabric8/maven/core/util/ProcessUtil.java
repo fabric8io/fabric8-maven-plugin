@@ -65,8 +65,11 @@ public class ProcessUtil {
     }
 
     public static File findExecutable(Logger log, String name) {
-        List<File> pathDirectories = getPathDirectories();
-        for (File directory : pathDirectories) {
+        return findExecutable(log, name, getPathDirectories());
+    }
+
+    public static File findExecutable(Logger log, String name, List<File> directories) {
+        for (File directory : directories) {
             for (String extension : isWindows() ? new String[]{ ".exe", ".bat", ".cmd", "" } : new String[] { "" }) {
                 File file = new File(directory, name + extension);
                 if (file.exists() && file.isFile()) {

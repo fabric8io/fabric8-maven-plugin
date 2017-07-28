@@ -45,7 +45,7 @@ public class ClusterStopMojo extends AbstractInstallMojo {
         if (!gofabric8.isFile() || !gofabric8.exists() || !gofabric8.canExecute()) {
             throw new MojoFailureException("File " + gofabric8.getAbsolutePath() + " is not an executable file. Did you create the cluster via `mvn fabric8:cluster-start`?");
         }
-        runGofabric8(gofabric8, (deleteCluster ? "delete" : "stop"));
+        executeGoFabric8Command(gofabric8, (deleteCluster ? "delete" : "stop"));
     }
 
 }

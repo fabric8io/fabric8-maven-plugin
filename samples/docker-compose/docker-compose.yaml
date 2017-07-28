@@ -1,0 +1,9 @@
+version: "2"
+
+services:
+  springboot-service:
+    image: springboot-docker-compose:latest
+    labels:
+     - "springboot-app"
+    ports:
+      - "8080:8080"
