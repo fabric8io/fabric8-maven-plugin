@@ -34,6 +34,8 @@ import io.fabric8.maven.core.config.*;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
+import io.fabric8.maven.core.service.ComposeService;
+import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.core.util.*;
 import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
@@ -52,6 +54,7 @@ import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.Template;
 import io.fabric8.utils.Strings;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
@@ -59,6 +62,14 @@ import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 import io.fabric8.utils.IOHelpers;
 import io.fabric8.utils.Files;
+
+import javax.validation.ConstraintViolationException;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
@@ -109,6 +120,17 @@ public class ResourceMojo extends AbstractResourceMojo {
     @Parameter(property = "fabric8.workDir", defaultValue = "${project.build.directory}/fabric8")
     private File workDir;
 
+    /**
+     * Directory to lookup for docker compose files
+     */
+    @Parameter(property = "compose.resourceDir", defaultValue = "${basedir}/src/main/fabric8-compose")
+    private File composeResourceDir;
+
+    // Docker compose resource specific configuration for this plugin
+    @Parameter
+    private String composeFile;
+
+    // Resource specific configuration for this plugin
     /**
      * The helm working directory
      */
@@ -209,6 +231,9 @@ public class ResourceMojo extends AbstractResourceMojo {
      */
     @Parameter(property = "fabric8.openshift.deployTimeoutSeconds", defaultValue = "3600")
     private Long openshiftDeployTimeoutSeconds;
+
+    @Parameter(property = "kompose.dir", defaultValue = "${user.home}/.kompose/bin")
+    private File komposeBinDir;
 
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
@@ -504,7 +529,7 @@ public class ResourceMojo extends AbstractResourceMojo {
                 ret.addToItems(item);
             } else {
                 log.verbose("kubernetes.yml: Removed OpenShift specific resource '%s' of type %s",
-                        KubernetesHelper.getName(item), KubernetesHelper.getKind(item));
+                            KubernetesHelper.getName(item), KubernetesHelper.getKind(item));
             }
         }
         return ret.build();
@@ -591,14 +616,25 @@ public class ResourceMojo extends AbstractResourceMojo {
     }
 
     private KubernetesListBuilder generateAppResources(List<ImageConfiguration> images, EnricherManager enricherManager) throws IOException, MojoExecutionException {
+        Path composeFilePath = checkComposeConfig();
+        ComposeService composeUtil = new ComposeService(komposeBinDir, composeFilePath, log);
+
         try {
             File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
+            File[] composeResourceFiles = composeUtil.convertToKubeFragments();
+            File[] allResources = ArrayUtils.addAll(resourceFiles, composeResourceFiles);
             KubernetesListBuilder builder;
 
             // Add resource files found in the fabric8 directory
-            if (resourceFiles != null && resourceFiles.length > 0) {
-                log.info("Using resource templates from %s", resourceDir);
-                builder = readResourceFragments(resourceFiles);
+            if (allResources != null && allResources.length > 0) {
+                if (resourceFiles != null && resourceFiles.length > 0) {
+                    log.info("using resource templates from %s", resourceDir);
+                }
+
+                if (composeResourceFiles != null && composeResourceFiles.length > 0) {
+                    log.info("using resource templates generated from compose file");
+                }
+                builder = readResourceFragments(allResources);
             } else {
                 builder = new KubernetesListBuilder();
             }
@@ -620,7 +656,44 @@ public class ResourceMojo extends AbstractResourceMojo {
             String message = ValidationUtil.createValidationMessage(e.getConstraintViolations());
             log.error("ConstraintViolationException: %s", message);
             throw new MojoExecutionException(message, e);
+        } catch (Fabric8ServiceException e) {
+            throw new MojoExecutionException(e.getMessage(), e);
+        } finally {
+            composeUtil.cleanComposeResources();
         }
+    }
+
+    private Path checkComposeConfig() {
+        return composeConfigPresent() ? buildComposeFilePath() : lookDefaultComposeConfig();
+    }
+
+    private boolean composeConfigPresent() {
+        return composeFile != null && composeFile.trim().length() > 0;
+    }
+
+    private Path buildComposeFilePath() {
+        return Paths.get(project.getBasedir() + "/" + composeFile);
+    }
+
+    private Path lookDefaultComposeConfig() {
+        File[] composeFiles = listDefaultComposeFile();
+        return defaultComposeFilePresent(composeFiles) ? getFirstComposeFile(composeFiles) : null;
+    }
+
+    private File[] listDefaultComposeFile() {
+        File[] composeFiles = null;
+        if(composeResourceDir != null && composeResourceDir.exists()) {
+            composeFiles = composeResourceDir.listFiles();
+        }
+        return composeFiles;
+    }
+
+    private boolean defaultComposeFilePresent(File[] composeFiles) {
+        return composeFiles != null && composeFiles.length > 0;
+    }
+
+    private Path getFirstComposeFile(File[] composeFile) {
+        return composeFile[0].toPath();
     }
 
     private KubernetesListBuilder readResourceFragments(File[] resourceFiles) throws IOException, MojoExecutionException {

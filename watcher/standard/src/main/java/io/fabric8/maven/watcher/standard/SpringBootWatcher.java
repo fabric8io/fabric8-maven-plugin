@@ -114,7 +114,7 @@ public class SpringBootWatcher extends BaseWatcher {
 
     private String createForwardUrl(Properties properties, int localPort) {
         String scheme = Strings.isNotBlank(properties.getProperty(SpringBootProperties.SERVER_KEYSTORE)) ? "https://" : "http://";
-        String contextPath = properties.getProperty(SpringBootProperties.CONTEXT_PATH, "");
+        String contextPath = properties.getProperty(SpringBootProperties.SERVER_CONTEXT_PATH, "");
         return scheme + "localhost:" + localPort + contextPath;
     }
 

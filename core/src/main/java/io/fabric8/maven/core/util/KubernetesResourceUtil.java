@@ -117,10 +117,12 @@ public class KubernetesResourceUtil {
     public static final String API_VERSION = "v1";
     public static final String API_EXTENSIONS_VERSION = "extensions/v1beta1";
     public static final String API_APPS_VERSION = "apps/v1beta1";
+    public static final String JOB_VERSION = "batch/v1";
     public static final ResourceVersioning DEFAULT_RESOURCE_VERSIONING = new ResourceVersioning()
             .withCoreVersion(API_VERSION)
             .withExtensionsVersion(API_EXTENSIONS_VERSION)
-            .withAppsVersion(API_APPS_VERSION);
+            .withAppsVersion(API_APPS_VERSION)
+            .withJobVersion(JOB_VERSION);
 
     public static final HashSet<Class<?>> SIMPLE_FIELD_TYPES = new HashSet<>();
 
@@ -235,6 +237,7 @@ public class KubernetesResourceUtil {
             "deployment", "Deployment",
             "is", "ImageStream",
             "istag", "ImageStreamTag",
+            "job", "Job",
             "lr", "LimitRange",
             "limitrange", "LimitRange",
             "ns", "Namespace",
@@ -314,6 +317,8 @@ public class KubernetesResourceUtil {
             apiVersion = apiVersions.getExtensionsVersion();
         } else if (Objects.equals(kind, "StatefulSet")) {
             apiVersion = apiVersions.getAppsVersion();
+        } else if (Objects.equals(kind, "Job")) {
+            apiVersion = apiVersions.getJobVersion();
         }
         addIfNotExistent(fragment, "apiVersion", apiVersion);
 

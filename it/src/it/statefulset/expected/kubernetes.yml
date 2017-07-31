@@ -8,7 +8,7 @@ items:
     labels:
       expose: "true"
       provider: fabric8
-      project: fabric8-maven-sample-statefulset
+      app: fabric8-maven-sample-statefulset
       version: "@ignore@"
       group: io.fabric8
     name: fabric8-maven-sample-statefulset
@@ -19,7 +19,7 @@ items:
       protocol: TCP
       targetPort: 8080
     selector:
-      project: fabric8-maven-sample-statefulset
+      app: fabric8-maven-sample-statefulset
       provider: fabric8
       group: io.fabric8
 - apiVersion: apps/v1beta1
@@ -27,7 +27,7 @@ items:
   metadata:
     labels:
       provider: fabric8
-      project: fabric8-maven-sample-statefulset
+      app: fabric8-maven-sample-statefulset
       version: "@ignore@"
       group: io.fabric8
     name: fabric8-maven-sample-statefulset
@@ -35,7 +35,7 @@ items:
     replicas: 2
     selector:
       matchLabels:
-        project: fabric8-maven-sample-statefulset
+        app: fabric8-maven-sample-statefulset
         provider: fabric8
         group: io.fabric8
     serviceName: fabric8-maven-sample-statefulset
@@ -43,7 +43,7 @@ items:
       metadata:
         labels:
           provider: fabric8
-          project: fabric8-maven-sample-statefulset
+          app: fabric8-maven-sample-statefulset
           version: "@ignore@"
           group: io.fabric8
       spec:

@@ -15,28 +15,41 @@
  * permissions and limitations under the License.
  */
 @Library('github.com/fabric8io/fabric8-pipeline-library@master')
-def dummy
+def utils = new io.fabric8.Utils()
 clientsTemplate{
     mavenNode {
-    checkout scm
-    readTrusted 'release.groovy'
-    sh "git remote set-url origin git@github.com:fabric8io/fabric8-maven-plugin.git"
+        checkout scm
+        readTrusted 'release.groovy'
+        sh "git remote set-url origin git@github.com:fabric8io/fabric8-maven-plugin.git"
 
-    def pipeline = load 'release.groovy'
+        def pipeline = load 'release.groovy'
+        if (utils.isCI()) {
 
-    stage 'Stage'
-    def stagedProject = pipeline.stage()
+            echo 'CI pipeline'
 
-    stage 'Promote'
-    pipeline.release(stagedProject)
+            sh "mvn clean install"
 
-    // Disabled for now as it probably doesn't work because of the different directory structure
-    // with a dedicated doc-module
-    //stage 'Website'
-    //pipeline.website(stagedProject)
+        } else if (utils.isCD()) {
 
-    stage 'Update downstream dependencies'
-    pipeline.updateDownstreamDependencies(stagedProject)
+            def stagedProject
+
+            stage('Stage') {
+                stagedProject = pipeline.stage()
+            }
+
+            stage('Promote') {
+                pipeline.release(stagedProject)
+            }
+
+            // Disabled for now as it probably doesn't work because of the different directory structure
+            // with a dedicated doc-module
+            //stage 'Website'
+            //pipeline.website(stagedProject)
+
+            stage('Update downstream dependencies') {
+                pipeline.updateDownstreamDependencies(stagedProject)
+            }
+        }
     }
 }
 

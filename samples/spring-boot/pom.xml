@@ -14,115 +14,115 @@
   ~ implied.  See the License for the specific language governing
   ~ permissions and limitations under the License.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-  <modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>fabric8-maven-sample-spring-boot</artifactId>
-  <groupId>io.fabric8</groupId>
-  <version>3.5-SNAPSHOT</version>
-  <packaging>jar</packaging>
+    <artifactId>fabric8-maven-sample-spring-boot</artifactId>
+    <groupId>io.fabric8</groupId>
+    <version>3.5-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
-  <parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>1.4.1.RELEASE</version>
-  </parent>
-
-  <name>Fabric8 Maven :: Sample :: Spring Boot Web</name>
-  <description>Minimal Example with Spring Boot</description>
-
-  <distributionManagement>
-    <snapshotRepository>
-      <id>sonatype-nexus-snapshots</id>
-      <name>Sonatype Nexus Snapshots</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-    </snapshotRepository>
-    <repository>
-      <id>sonatype-nexus-staging</id>
-      <name>Nexus Release Repository</name>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-    </repository>
-  </distributionManagement>
-
-  <dependencies>
-
-    <!-- Boot generator  -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-actuator</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jolokia</groupId>
-      <artifactId>jolokia-core</artifactId>
-    </dependency>
-
-  </dependencies>
-
-  <build>
-    <plugins>
-
-      <plugin>
+    <parent>
         <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-      </plugin>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>1.4.1.RELEASE</version>
+    </parent>
 
-      <plugin>
-        <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-plugin</artifactId>
-        <version>3.5-SNAPSHOT</version>
+    <name>Fabric8 Maven :: Sample :: Spring Boot Web</name>
+    <description>Minimal Example with Spring Boot</description>
 
-        <configuration>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Sonatype Nexus Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>sonatype-nexus-staging</id>
+            <name>Nexus Release Repository</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
-          <resources>
-            <labels>
-              <all>
-                <testProject>spring-boot-sample</testProject>
-              </all>
-            </labels>
-          </resources>
+    <dependencies>
 
-          <generator>
-            <includes>
-              <include>spring-boot</include>
-            </includes>
-            <config>
-              <spring-boot>
-                <color>always</color>
-              </spring-boot>
-            </config>
-          </generator>
-          <enricher>
-            <excludes>
-              <exclude>f8-expose</exclude>
-            </excludes>
-            <config>
-              <fmp-service>
-                <type>NodePort</type>
-              </fmp-service>
-            </config>
-          </enricher>
-        </configuration>
+        <!-- Boot generator  -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
 
-        <executions>
-          <execution>
-            <goals>
-              <goal>resource</goal>
-              <goal>build</goal>
-              <goal>helm</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
 
-    </plugins>
-  </build>
+        <dependency>
+            <groupId>org.jolokia</groupId>
+            <artifactId>jolokia-core</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>fabric8-maven-plugin</artifactId>
+                <version>3.5-SNAPSHOT</version>
+
+                <configuration>
+
+                    <resources>
+                        <labels>
+                            <all>
+                                <testProject>spring-boot-sample</testProject>
+                            </all>
+                        </labels>
+                    </resources>
+
+                    <generator>
+                        <includes>
+                            <include>spring-boot</include>
+                        </includes>
+                        <config>
+                            <spring-boot>
+                                <color>always</color>
+                            </spring-boot>
+                        </config>
+                    </generator>
+                    <enricher>
+                        <excludes>
+                            <exclude>f8-expose</exclude>
+                        </excludes>
+                        <config>
+                            <fmp-service>
+                                <type>NodePort</type>
+                            </fmp-service>
+                        </config>
+                    </enricher>
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>resource</goal>
+                            <goal>build</goal>
+                            <goal>helm</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
 
 </project>

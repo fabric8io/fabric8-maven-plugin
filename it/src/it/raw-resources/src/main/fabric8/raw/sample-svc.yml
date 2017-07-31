@@ -10,7 +10,7 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    project: project
+    app: project
     provider: provider
     group: group
   type: NodePort

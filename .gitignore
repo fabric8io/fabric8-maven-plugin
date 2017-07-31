@@ -7,4 +7,5 @@ notes.md
 .project
 .classpath
 .settings
+.vscode
 velocity.log

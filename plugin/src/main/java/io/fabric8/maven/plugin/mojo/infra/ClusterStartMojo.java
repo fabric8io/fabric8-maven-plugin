@@ -89,7 +89,7 @@ public class ClusterStartMojo extends AbstractInstallMojo {
             arguments.add("--memory");
             arguments.add(clusterMemory);
         }
-        runGofabric8(gofabric8, arguments.toArray(new String[arguments.size()]));
+        executeGoFabric8Command(gofabric8, arguments.toArray(new String[arguments.size()]));
     }
 
 }
