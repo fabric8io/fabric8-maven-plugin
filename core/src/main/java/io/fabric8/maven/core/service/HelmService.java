@@ -16,16 +16,13 @@
 
 package io.fabric8.maven.core.service;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.Collections;
 
 import io.fabric8.maven.core.util.ProcessUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.IOHelpers;
-
+import org.apache.maven.shared.utils.io.IOUtil;
 
 
 /**
@@ -56,8 +53,7 @@ public class HelmService {
             File kubeFragments = invokeHelm(chartName);
             return kubeFragments.listFiles();
         }
-
-        return null;
+        return new File[0];
 
     }
 
@@ -80,25 +76,20 @@ public class HelmService {
             }
 
             String helmInstallCmd = executableName + " install --dry-run --debug " + helmEvalFileDir;
-            Runtime run = Runtime.getRuntime();
-            Process pr = run.exec(helmInstallCmd);
+            process = Runtime.getRuntime().exec(new String[] {helmBinaryFile.getAbsolutePath(), "install", "--dry-run", "--debug", helmEvalFileDir.toString()});
             log.info("Using helm templates from %s", helmEvalFileDir);
-            int exitCode = 0;
-            BufferedReader buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-            BufferedReader buferror = new BufferedReader(new InputStreamReader(pr.getErrorStream()));
-            String line = "";
 
+            int exitCode = 0;
+            BufferedReader buf = new BufferedReader(new InputStreamReader(process.getInputStream()));
             parseOutput(buf, tempHelmDir);
 
-            while ((line = buferror.readLine()) != null) {
-                log.debug(line);
-                throw new Fabric8ServiceException("There was some problem running Helm.");
-            }
-
-            exitCode = waitForProcess(pr);
+            exitCode = waitForProcess(process);
 
             if (exitCode != 0) {
-                throw new Fabric8ServiceException("Helm command returned a non-zero exit code.");
+                StringWriter stringWriter = new StringWriter();
+                IOUtil.copy(process.getErrorStream(), stringWriter);
+                log.error("Helm command returned a non-zero exit code : " + stringWriter.toString());
+                throw new Fabric8ServiceException(stringWriter.toString());
             }
 
         } catch (IOException e) {
@@ -150,6 +141,7 @@ public class HelmService {
             pr.waitFor();
             exitCode = pr.exitValue();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new Fabric8ServiceException("Failed to run Helm command: ", e);
         }
 

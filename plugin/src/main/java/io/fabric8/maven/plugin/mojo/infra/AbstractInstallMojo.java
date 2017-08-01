@@ -275,8 +275,12 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         URL downloadUrl = getDownloadUrl(version, versionUrl, downloadUrlFormat, downloadFileName);
         IoUtil.download(log, downloadUrl, destFile);
         if (destFile.getName().endsWith("zip") || destFile.getName().endsWith("tar.gz")) {
-            File extractedFile = extractPackage(destFile, fileName);
-            return extractedFile.exists() ? extractedFile : null;
+            try {
+                File extractedFile = extractPackage(destFile, fileName);
+                return extractedFile.exists() ? extractedFile : null;
+            } catch (NullPointerException e) {
+                throw new MojoExecutionException("Failed to extract package file from " + destFile.toString() + ": " + e, e);
+            }
         }
         return destFile;
     }
@@ -305,11 +309,15 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
 
         File binaryFile = new File(tempFile.getParent(), fileName).toPath().toFile();
         binaryFile.deleteOnExit();
-        File extFile = findFile(fileName, unpackDir);
-        if (extFile.exists()) {
-            moveFile(extFile, binaryFile, fileName);
-        } else {
-            throw new MojoExecutionException("Unable to find binary " + fileName + "in dir: " + unpackDir.toString());
+        try {
+            File extFile = findFile(fileName, unpackDir);
+            if (extFile.exists()) {
+                moveFile(extFile, binaryFile, fileName);
+            } else {
+                throw new MojoExecutionException("Unable to find binary " + fileName + "in dir: " + unpackDir.toString());
+            }
+        } catch (NullPointerException e) {
+            throw new MojoExecutionException("Unable to find binary " + fileName + "in dir: " + unpackDir.toString(), e);
         }
         io.fabric8.utils.Files.recursiveDelete(unpackDir);
 
@@ -392,16 +400,12 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
             throw new MojoExecutionException("Failed to extract to " + source.toString() + ": " + e, e);
         }
         finally {
-            try {
-                fin.close();
-                in.close();
-                gzIn.close();
-                tarIn.close();
-                fos.close();
-                dest.close();
-            } catch (IOException e) {
-                throw new MojoExecutionException("Failed to extract to " + source.toString() + ": " + e, e);
-            }
+                if (fin != null) Closeables.closeQuietly(fin);
+                if (in != null) Closeables.closeQuietly(in);
+                if (gzIn != null) Closeables.closeQuietly(gzIn);
+                if (tarIn != null) Closeables.closeQuietly(tarIn);
+                if (fos != null) Closeables.closeQuietly(fos);
+                if (dest != null) Closeables.closeQuietly(dest);
         }
     }
 
