@@ -519,7 +519,6 @@ public class ResourceMojo extends AbstractResourceMojo {
     public File copyTemplates (File sourceDir, File target, String chartName) throws MojoExecutionException {
         if (sourceDir.exists() && sourceDir.isDirectory()) {
             target.mkdirs();
-            log.info("Source is :" + sourceDir + " target is: " + target);
             File[] files = sourceDir.listFiles();
             if (files != null) {
                 for (File file : files) {
