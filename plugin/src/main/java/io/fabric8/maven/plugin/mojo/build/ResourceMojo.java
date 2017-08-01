@@ -452,7 +452,14 @@ public class ResourceMojo extends AbstractResourceMojo {
         if (chartName == null) {
             chartName = project.getArtifactId();
         }
-        File helmEvalFileDir = copyTemplates(helmresourceDir, helmWorkDir, chartName);
+
+        File helmEvalFileDir = null;
+        if (helmresourceDir.exists() && helmresourceDir.isDirectory()) {
+            File helmTarget = new File(helmWorkDir, "helm/" + chartName);
+            helmTarget.mkdirs();
+            helmEvalFileDir = copyTemplates(helmresourceDir, helmTarget, chartName);
+        }
+
         HelmService helmUtil = new HelmService(helmEvalFileDir, helmWorkDir, helmBinDir, log);
 
         try {
@@ -509,34 +516,16 @@ public class ResourceMojo extends AbstractResourceMojo {
         }
     }
 
-    public File copyTemplates (File sourceDir, File workDir, String chartName) throws MojoExecutionException {
+    public File copyTemplates (File sourceDir, File target, String chartName) throws MojoExecutionException {
         if (sourceDir.exists() && sourceDir.isDirectory()) {
-            File target = new File(workDir, "helm/" + chartName);
             target.mkdirs();
+            log.info("Source is :" + sourceDir + " target is: " + target);
             File[] files = sourceDir.listFiles();
-
             if (files != null) {
                 for (File file : files) {
                     if (Files.isDirectory(file)) {
-                        File subDir = new File(target, file.getName());
-                        subDir.mkdirs();
-
-                        File[] subfiles = file.listFiles();
-
-                        for (File subfile : subfiles) {
-                            String name = subfile.getName();
-                            if (name.endsWith(".yml")) {
-                                name = Strings.stripSuffix(name, ".yml") + ".yaml";
-                            }
-                            File targetFile = new File(subDir, name);
-                            try {
-                                mavenFileFilter.copyFile(subfile, targetFile, true,
-                                        project, null, false, "utf8", session);
-                            } catch (MavenFilteringException exp) {
-                                throw new MojoExecutionException(
-                                        String.format("Cannot filter %s to %s", subfile, targetFile), exp);
-                            }
-                        }
+                        File newTarget = new File(target, file.getName());
+                        copyTemplates(file, newTarget, chartName);
                     } else {
                         String name = file.getName();
                         if (name.endsWith(".yml")) {

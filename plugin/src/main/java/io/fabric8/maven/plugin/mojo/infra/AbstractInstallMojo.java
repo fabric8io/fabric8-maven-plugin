@@ -306,13 +306,17 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         File binaryFile = new File(tempFile.getParent(), fileName).toPath().toFile();
         binaryFile.deleteOnExit();
         File extFile = findFile(fileName, unpackDir);
-        moveFile(extFile, binaryFile, fileName);
+        if (extFile.exists()) {
+            moveFile(extFile, binaryFile, fileName);
+        } else {
+            throw new MojoExecutionException("Unable to find binary " + fileName + "in dir: " + unpackDir.toString());
+        }
         io.fabric8.utils.Files.recursiveDelete(unpackDir);
 
         return binaryFile.exists() ? binaryFile : null;
     }
 
-    private File findFile(String name,File source) {
+    private File findFile(String name,File source) throws MojoExecutionException{
         List<Path> files = listAllFiles(source);
 
         for (Path file  : files) {
@@ -323,7 +327,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         return null;
     }
 
-    private List<Path> listAllFiles(File source) {
+    private List<Path> listAllFiles(File source) throws MojoExecutionException{
         Path path= Paths.get(source.toPath().toString());
         final List<Path> files=new ArrayList<>();
         try {
@@ -337,7 +341,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
                 }
             });
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new MojoExecutionException("Failed to list files in to " + source.toString() + ": " + e, e);
         }
 
         return files;
@@ -345,14 +349,21 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
 
 
     private static void untargz(File source, File toDir) throws MojoExecutionException {
+        FileInputStream fin = null;
+        BufferedInputStream in = null;
+        GZIPInputStream gzIn = null;
+        TarArchiveInputStream tarIn = null;
+        FileOutputStream fos = null;
+        BufferedOutputStream dest = null;
+
         try {
             final int BUFFER = 2048;
 
-            FileInputStream fin = new FileInputStream(source);
-            BufferedInputStream in = new BufferedInputStream(fin);
+            fin = new FileInputStream(source);
+            in = new BufferedInputStream(fin);
 
-            GZIPInputStream gzIn = new GZIPInputStream(in);
-            TarArchiveInputStream tarIn = new TarArchiveInputStream(gzIn);
+            gzIn = new GZIPInputStream(in);
+            tarIn = new TarArchiveInputStream(gzIn);
             TarArchiveEntry entry = null;
 
             while ((entry = (TarArchiveEntry) tarIn.getNextEntry()) != null) {
@@ -368,8 +379,8 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
                     int count;
                     byte data[] = new byte[BUFFER];
                     File newFile = new File(toDir, entry.getName());
-                    FileOutputStream fos = new FileOutputStream(newFile.toString());
-                    BufferedOutputStream dest = new BufferedOutputStream(fos, BUFFER);
+                    fos = new FileOutputStream(newFile.toString());
+                    dest = new BufferedOutputStream(fos, BUFFER);
                     while ((count = tarIn.read(data, 0, BUFFER)) != -1) {
                         dest.write(data, 0, count);
                     }
@@ -379,6 +390,18 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
             tarIn.close();
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to extract to " + source.toString() + ": " + e, e);
+        }
+        finally {
+            try {
+                fin.close();
+                in.close();
+                gzIn.close();
+                tarIn.close();
+                fos.close();
+                dest.close();
+            } catch (IOException e) {
+                throw new MojoExecutionException("Failed to extract to " + source.toString() + ": " + e, e);
+            }
         }
     }
 
