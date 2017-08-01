@@ -66,14 +66,16 @@ public class HelmMojo extends AbstractFabric8Mojo {
     @Parameter(property = "fabric8.kubernetesManifest", defaultValue = "${basedir}/target/classes/META-INF/fabric8/kubernetes.yml")
     private File kubernetesManifest;
 
+    @Parameter(property = "fabric8.helm.workDir", defaultValue = "${project.build.directory}/helm")
+    private File helmWorkDir;
+
     @Component
     private MavenProjectHelper projectHelper;
 
     @Component(role = Archiver.class, hint = "tar")
     private TarArchiver archiver;
 
-    @Parameter(property = "fabric8.resource.mode", defaultValue = "yaml")
-    private String resourceMode;
+    private String resourceMode = null;
 
     @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
@@ -145,13 +147,12 @@ public class HelmMojo extends AbstractFabric8Mojo {
 
     private File checkSourceDir(String chartName, HelmConfig.HelmType type) {
         // If resource mode is helm
-        if (resourceMode != null && resourceMode.equals("helm")) {
-            String helmWorkdir = getProperty("fabric8.helm.workDir");
-            if (helmWorkdir == null) {
-                helmWorkdir = String.format("%s/helm/helm/%s",
+        if (helmWorkDir != null && helmWorkDir.exists()) {
+            String helmWorkdir = String.format("%s/helm/helm/%s",
                         project.getBuild().getDirectory(),
                         getChartName());
-            }
+
+            resourceMode = "helm";
 
             return new File(helmWorkdir);
         } else {

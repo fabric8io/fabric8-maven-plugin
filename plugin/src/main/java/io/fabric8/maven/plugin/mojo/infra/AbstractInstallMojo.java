@@ -147,8 +147,10 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         } else {
             log.info("Found %s", helm);
         }
-        log.info("Running helm init");
-        executeCommand(helm, HELM, "init");
+
+        //TODO: install helm tiller in K8s cluster. Now failing in CI flow, so commented.
+        //log.info("Running helm init");
+        //executeCommand(helm, HELM, "init");
         return helm;
     }
 
