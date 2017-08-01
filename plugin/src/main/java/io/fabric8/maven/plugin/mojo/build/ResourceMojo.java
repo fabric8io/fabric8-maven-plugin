@@ -15,11 +15,9 @@
  */
 package io.fabric8.maven.plugin.mojo.build;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.*;
 
 import javax.validation.ConstraintViolationException;
@@ -36,6 +34,7 @@ import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
 import io.fabric8.maven.core.service.ComposeService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
+import io.fabric8.maven.core.service.HelmService;
 import io.fabric8.maven.core.util.*;
 import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
@@ -53,6 +52,7 @@ import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.Template;
+import io.fabric8.utils.Files;
 import io.fabric8.utils.Strings;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -60,16 +60,8 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
-import io.fabric8.utils.IOHelpers;
-import io.fabric8.utils.Files;
-
-import javax.validation.ConstraintViolationException;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
 
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
@@ -210,12 +202,6 @@ public class ResourceMojo extends AbstractResourceMojo {
     private String namespace;
 
     /**
-     *
-     */
-    @Parameter(property = "fabric8.resource.mode", defaultValue = "yaml")
-    private String resourceMode;
-
-    /**
      * The OpenShift deploy timeout in seconds:
      * See this issue for background of why for end users on slow wifi on their laptops
      * DeploymentConfigs usually barf: https://github.com/openshift/origin/issues/10531
@@ -235,6 +221,9 @@ public class ResourceMojo extends AbstractResourceMojo {
     @Parameter(property = "kompose.dir", defaultValue = "${user.home}/.kompose/bin")
     private File komposeBinDir;
 
+    @Parameter(property = "helm.dir", defaultValue = "${user.home}/.helm/bin")
+    private File helmBinDir;
+
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
 
@@ -245,16 +234,6 @@ public class ResourceMojo extends AbstractResourceMojo {
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         clusterAccess = new ClusterAccess(namespace);
         try {
-
-            if (isHelmMode()){
-                File dir = initHelmResources();
-                if (dir != null) {
-                    resourceDir = dir;
-                } else {
-                    log.info("Helm mode was enabled but no Helm resource files were found, continuing with default mode.");
-                }
-            }
-
             lateInit();
 
             // Resolve the Docker image build configuration
@@ -310,156 +289,6 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     private boolean isOpenShiftMode() {
         return platformMode.equals(PlatformMode.openshift);
-    }
-
-    private boolean isHelmMode() {
-        return resourceMode.equals("helm");
-    }
-
-    private File initHelmResources() throws MojoExecutionException {
-        if (helmresourceDir.isDirectory()) {
-            String chartName = getProperty("fabric8.helm.chart");
-            if (chartName == null) {
-                chartName = project.getArtifactId();
-            }
-
-            String helmTypeProp = getProperty("fabric8.helm.type");
-            if (helmTypeProp == null) {
-                helmTypeProp = "kubernetes";
-            }
-            String dir = getProperty("fabric8.helm.workDir");
-            if (dir == null) {
-                dir = helmWorkDir + "/" + helmTypeProp + "/" + chartName;
-            }
-
-            File tempHelmOutDir = new File(dir);
-            tempHelmOutDir.mkdirs();
-            File tempHelmDir = new File(helmWorkDir, "helm/" + chartName);
-            tempHelmDir.mkdirs();
-
-            copyTemplates(helmresourceDir, tempHelmDir);
-
-            try {
-
-                String helmInstallCmd = "helm install --dry-run --debug " + tempHelmDir;
-                Runtime run = Runtime.getRuntime();
-                Process pr = run.exec(helmInstallCmd);
-                log.info("Using helm templates from %s", helmresourceDir);
-                int exitCode = 0;
-                BufferedReader buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-                BufferedReader buferror = new BufferedReader(new InputStreamReader(pr.getErrorStream()));
-                String line = "";
-
-                parseOutput(buf, tempHelmOutDir);
-
-                while ((line = buferror.readLine()) != null) {
-                    log.debug(line);
-                    throw new MojoExecutionException("There was some problem running Helm.");
-                }
-
-                exitCode = waitForProcess(pr);
-
-                if (exitCode != 0) {
-                    throw new MojoExecutionException("Helm command returned a non-zero exit code.");
-                }
-
-            } catch (IOException e) {
-                throw new MojoExecutionException("Failed to run Helm command: ", e);
-            }
-
-            return tempHelmOutDir;
-        }
-
-        return null;
-
-    }
-
-    public void copyTemplates (File source, File target) throws MojoExecutionException {
-        File[] files = source.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (Files.isDirectory(file)) {
-                    File tempHelmSubDir = new File(target, file.getName());
-                    tempHelmSubDir.mkdirs();
-
-                    File[] subfiles = file.listFiles();
-
-                    for (File subfile : subfiles) {
-                        String name = subfile.getName();
-                        if (name.endsWith(".yml")) {
-                            name = Strings.stripSuffix(name, ".yml") + ".yaml";
-                        }
-                        File targetFile = new File(tempHelmSubDir, name);
-                        try {
-                            mavenFileFilter.copyFile(subfile, targetFile, true,
-                                    project, null, false, "utf8", session);
-                        } catch (MavenFilteringException exp) {
-                            throw new MojoExecutionException(
-                                    String.format("Cannot filter %s to %s", subfile, targetFile), exp);
-                        }
-                    }
-                } else {
-                    String name = file.getName();
-                    if (name.endsWith(".yml")) {
-                        name = Strings.stripSuffix(name, ".yml") + ".yaml";
-                    }
-                    File targetFile = new File(target, name);
-                    try {
-                        mavenFileFilter.copyFile(file, targetFile, true,
-                                project, null, false, "utf8", session);
-                    } catch (MavenFilteringException exp) {
-                        throw new MojoExecutionException(
-                                String.format("Cannot filter %s to %s", file, targetFile), exp);
-                    }
-                }
-            }
-        }
-    }
-
-    public void parseOutput (BufferedReader buf, File targetDir) throws MojoExecutionException{
-        String line = "";
-        int flag = 0;
-        try {
-            while ((line = buf.readLine()) != null) {
-                if (line.startsWith("MANIFEST:")) {
-                    flag = 1;
-                }
-
-                if (flag == 1 && line.startsWith("# Source:")) {
-
-                    String[] tempStr = line.split("/");
-                    File fileName = new File(targetDir, tempStr[tempStr.length - 1]);
-                    String innerline = "";
-                    StringBuilder fileContent = new StringBuilder();
-                    while ((innerline = buf.readLine()) != null) {
-
-                        if (innerline.startsWith("---")) {
-                            break;
-                        }
-
-                        if (innerline != "") {
-                            fileContent = fileContent.append("\n" + innerline);
-                        }
-                    }
-
-                    IOHelpers.writeFully(fileName, fileContent.toString());
-                }
-            }
-        } catch (IOException e) {
-            throw new MojoExecutionException("Failed to run parse Output: ", e);
-        }
-    }
-
-    private int waitForProcess (Process pr) throws MojoExecutionException {
-        int exitCode = 0;
-        try {
-            pr.waitFor();
-            exitCode = pr.exitValue();
-        } catch (InterruptedException e) {
-            throw new MojoExecutionException("Failed to run Helm command: ", e);
-        }
-
-        return exitCode;
     }
 
     private KubernetesList convertToKubernetesResources(KubernetesList resources, KubernetesList openShiftResources) throws MojoExecutionException {
@@ -619,10 +448,22 @@ public class ResourceMojo extends AbstractResourceMojo {
         Path composeFilePath = checkComposeConfig();
         ComposeService composeUtil = new ComposeService(komposeBinDir, composeFilePath, log);
 
+        String chartName = getProperty("fabric8.helm.chart");
+        if (chartName == null) {
+            chartName = project.getArtifactId();
+        }
+        File helmEvalFileDir = copyTemplates(helmresourceDir, helmWorkDir, chartName);
+        HelmService helmUtil = new HelmService(helmEvalFileDir, helmWorkDir, helmBinDir, log);
+
         try {
             File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
             File[] composeResourceFiles = composeUtil.convertToKubeFragments();
+
+            File[] helmResourceFiles = helmUtil.initHelmResources(chartName);
+
             File[] allResources = ArrayUtils.addAll(resourceFiles, composeResourceFiles);
+            allResources = ArrayUtils.addAll(allResources, helmResourceFiles);
+
             KubernetesListBuilder builder;
 
             // Add resource files found in the fabric8 directory
@@ -634,6 +475,11 @@ public class ResourceMojo extends AbstractResourceMojo {
                 if (composeResourceFiles != null && composeResourceFiles.length > 0) {
                     log.info("using resource templates generated from compose file");
                 }
+
+                if (helmResourceFiles != null && helmResourceFiles.length > 0) {
+                    log.info("using resource templates generated from helm templates");
+                }
+
                 builder = readResourceFragments(allResources);
             } else {
                 builder = new KubernetesListBuilder();
@@ -661,6 +507,55 @@ public class ResourceMojo extends AbstractResourceMojo {
         } finally {
             composeUtil.cleanComposeResources();
         }
+    }
+
+    public File copyTemplates (File sourceDir, File workDir, String chartName) throws MojoExecutionException {
+        if (sourceDir.exists() && sourceDir.isDirectory()) {
+            File target = new File(workDir, "helm/" + chartName);
+            target.mkdirs();
+            File[] files = sourceDir.listFiles();
+
+            if (files != null) {
+                for (File file : files) {
+                    if (Files.isDirectory(file)) {
+                        File subDir = new File(target, file.getName());
+                        subDir.mkdirs();
+
+                        File[] subfiles = file.listFiles();
+
+                        for (File subfile : subfiles) {
+                            String name = subfile.getName();
+                            if (name.endsWith(".yml")) {
+                                name = Strings.stripSuffix(name, ".yml") + ".yaml";
+                            }
+                            File targetFile = new File(subDir, name);
+                            try {
+                                mavenFileFilter.copyFile(subfile, targetFile, true,
+                                        project, null, false, "utf8", session);
+                            } catch (MavenFilteringException exp) {
+                                throw new MojoExecutionException(
+                                        String.format("Cannot filter %s to %s", subfile, targetFile), exp);
+                            }
+                        }
+                    } else {
+                        String name = file.getName();
+                        if (name.endsWith(".yml")) {
+                            name = Strings.stripSuffix(name, ".yml") + ".yaml";
+                        }
+                        File targetFile = new File(target, name);
+                        try {
+                            mavenFileFilter.copyFile(file, targetFile, true,
+                                    project, null, false, "utf8", session);
+                        } catch (MavenFilteringException exp) {
+                            throw new MojoExecutionException(
+                                    String.format("Cannot filter %s to %s", file, targetFile), exp);
+                        }
+                    }
+                }
+            }
+            return target;
+        }
+        return null;
     }
 
     private Path checkComposeConfig() {
