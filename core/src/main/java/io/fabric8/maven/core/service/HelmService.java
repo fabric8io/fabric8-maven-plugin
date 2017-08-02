@@ -1,7 +1,7 @@
 /*
- * Copyright 2017 Amdocs, Inc.
+ * Copyright 2016 Red Hat, Inc.
  *
- * Amdocs licenses this file to you under the Apache License, version
+ * Red Hat licenses this file to you under the Apache License, version
  * 2.0 (the "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
@@ -39,7 +39,6 @@ public class HelmService {
     private File defaultHelmBinDir;
 
     private Logger log;
-    private Process process;
 
     public HelmService(File helmEvalFiles, File helmWorkDir, File defaultHelmBinDir, Logger log) {
         this.helmEvalFileDir = helmEvalFiles;
@@ -63,20 +62,9 @@ public class HelmService {
 
         try {
             String executableName = "helm";
-            File helmBinaryFile = ProcessUtil.findExecutable(log, executableName);
-            if (helmBinaryFile == null && this.defaultHelmBinDir != null) {
-                // Looking at the default location for helm
-                helmBinaryFile = ProcessUtil.findExecutable(log, executableName, Collections.singletonList(this.defaultHelmBinDir));
-            }
-            if (helmBinaryFile == null) {
-                log.error("[[B]]helm[[B]] utility doesn't exist, please execute [[B]]mvn fabric8:install[[B]] command to make it work");
-                log.error("or");
-                log.error("to install it manually, please log on to [[B]]http://helm.io/installation/[[B]]");
-                throw new Fabric8ServiceException("Cannot find the helm binary in PATH or default install location");
-            }
+            File helmBinaryFile = findBinaryExecutable(executableName);
 
-            String helmInstallCmd = executableName + " install --dry-run --debug " + helmEvalFileDir;
-            process = Runtime.getRuntime().exec(new String[] {helmBinaryFile.getAbsolutePath(), "install", "--dry-run", "--debug", helmEvalFileDir.toString()});
+            Process process = Runtime.getRuntime().exec(new String[] {helmBinaryFile.getAbsolutePath(), "install", "--dry-run", "--debug", helmEvalFileDir.toString()});
             log.info("Using helm templates from %s", helmEvalFileDir);
 
             int exitCode = 0;
@@ -99,7 +87,21 @@ public class HelmService {
         return tempHelmDir;
     }
 
+    private File findBinaryExecutable(String executableName) throws Fabric8ServiceException {
+        File helmBinaryFile = ProcessUtil.findExecutable(log, executableName);
+        if (helmBinaryFile == null && this.defaultHelmBinDir != null) {
+            // Looking at the default location for helm
+            helmBinaryFile = ProcessUtil.findExecutable(log, executableName, Collections.singletonList(this.defaultHelmBinDir));
+        }
+        if (helmBinaryFile == null) {
+            log.error("[[B]]helm[[B]] utility doesn't exist, please execute [[B]]mvn fabric8:install[[B]] command to make it work");
+            log.error("or");
+            log.error("to install it manually, please log on to [[B]]http://helm.io/installation/[[B]]");
+            throw new Fabric8ServiceException("Cannot find the helm binary in PATH or default install location");
+        }
 
+        return helmBinaryFile;
+    }
 
     public void parseOutput (BufferedReader buf, File targetDir) throws Fabric8ServiceException{
         String line = "";
@@ -114,25 +116,32 @@ public class HelmService {
 
                     String[] tempStr = line.split("/");
                     File fileName = new File(targetDir, tempStr[tempStr.length - 1]);
-                    String innerline = "";
-                    StringBuilder fileContent = new StringBuilder();
-                    while ((innerline = buf.readLine()) != null) {
-
-                        if (innerline.startsWith("---")) {
-                            break;
-                        }
-
-                        if (innerline != "") {
-                            fileContent = fileContent.append("\n" + innerline);
-                        }
-                    }
-
+                    StringBuilder fileContent = getFileContent(buf);
                     IOHelpers.writeFully(fileName, fileContent.toString());
                 }
             }
         } catch (IOException e) {
             throw new Fabric8ServiceException("Failed to run parse Output: ", e);
         }
+    }
+
+    private StringBuilder getFileContent(BufferedReader buf) throws Fabric8ServiceException {
+        StringBuilder fileContent = new StringBuilder();
+
+        try {
+            String innerline = "";
+            while ((innerline = buf.readLine()) != null) {
+                if (innerline.startsWith("---")) {
+                    break;
+                }
+                if (innerline != "") {
+                    fileContent = fileContent.append("\n" + innerline);
+                }
+            }
+        } catch (IOException e) {
+            throw new Fabric8ServiceException("Failed to run parse Output: ", e);
+        }
+        return fileContent;
     }
 
     private int waitForProcess (Process pr) throws Fabric8ServiceException {

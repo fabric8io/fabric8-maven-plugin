@@ -151,6 +151,10 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         //TODO: install helm tiller in K8s cluster. Now failing in CI flow, so commented.
         //log.info("Running helm init");
         //executeCommand(helm, HELM, "init");
+
+        //Get only the client version (-c flag) as there is not connection to tiller available till now.
+        executeCommand(helm, HELM, VERSION_ARGUMENT + " -c");
+
         return helm;
     }
 
@@ -254,8 +258,12 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         // Download to a temporary file
         File tempFile = downloadToTempFile(version, versionUrl, downloadUrl, downloadDir, fileName);
 
-        // Move into it's destination place in ~/.fabric8/bin
-        moveFile(tempFile, destFile, fileName);
+        try {
+            // Move into it's destination place in ~/.fabric8/bin
+            moveFile(tempFile, destFile, fileName);
+        } catch (NullPointerException e) {
+            throw new MojoExecutionException("Unable to move file " + tempFile + "to : " + destFile.toString(), e);
+        }
     }
 
     // First download in a temporary place
