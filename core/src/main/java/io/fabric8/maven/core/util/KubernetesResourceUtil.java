@@ -34,6 +34,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -501,6 +502,19 @@ public class KubernetesResourceUtil {
             }
         }
         return answer;
+    }
+
+    public static boolean removeEnvVar(List<EnvVar> envVarList, String name) {
+        boolean removed = false;
+        for (Iterator<EnvVar> it = envVarList.iterator(); it.hasNext(); ) {
+            EnvVar envVar = it.next();
+            String envVarName = envVar.getName();
+            if (io.fabric8.utils.Objects.equal(name, envVarName)) {
+                it.remove();
+                removed = true;
+            }
+        }
+        return removed;
     }
 
     public static void validateKubernetesMasterUrl(URL masterUrl) throws MojoExecutionException {
