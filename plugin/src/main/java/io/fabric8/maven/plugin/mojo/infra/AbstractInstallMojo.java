@@ -152,9 +152,6 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         //log.info("Running helm init");
         //executeCommand(helm, HELM, "init");
 
-        //Get only the client version (-c flag) as there is not connection to tiller available till now.
-        executeCommand(helm, HELM, VERSION_ARGUMENT + " -c");
-
         return helm;
     }
 
