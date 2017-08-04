@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import io.fabric8.kubernetes.api.model.KubernetesList;-rf
+import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.WatchEvent;
 import io.fabric8.maven.core.config.BuildRecreateMode;
