@@ -41,6 +41,9 @@ public class ResourceConfig {
     @Parameter
     private List<VolumeConfig> volumes;
 
+    @Parameter
+    private List<SecretConfig> secrets;
+
     @Parameter(defaultValue = "${project.artifactId}")
     private String controllerName;
 
@@ -98,6 +101,8 @@ public class ResourceConfig {
     public List<ServiceConfig> getServices() {
         return services;
     }
+
+    public List<SecretConfig> getSecrets() { return secrets; }
 
     public ProbeConfig getLiveness() {
         return liveness;

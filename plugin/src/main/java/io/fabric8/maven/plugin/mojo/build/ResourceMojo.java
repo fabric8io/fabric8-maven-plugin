@@ -35,6 +35,7 @@ import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.util.InitContainerHandler;
 import io.fabric8.maven.enricher.standard.VolumePermissionEnricher;
@@ -58,6 +59,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.Arrays;
+import java.util.Objects;
 
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
@@ -114,7 +117,7 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     // Resource specific configuration for this plugin
     @Parameter
-    private ResourceConfig resources;
+    protected ResourceConfig resources;
 
     // Reusing image configuration from d-m-p
     @Parameter
@@ -213,6 +216,10 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         clusterAccess = new ClusterAccess(namespace);
+
+        // apply the settings file to enricher
+        BaseEnricher.applySettings(this.settings);
+
         try {
             lateInit();
 
@@ -389,9 +396,9 @@ public class ResourceMojo extends AbstractResourceMojo {
         // Add resources found in subdirectories of resourceDir, with a certain profile
         // applied
         addProfiledResourcesFromSubirectories(builder, resourceDir, enricherManager);
-
         return builder.build();
     }
+
 
     private void addProfiledResourcesFromSubirectories(KubernetesListBuilder builder, File resourceDir, EnricherManager enricherManager) throws IOException, MojoExecutionException {
         File[] profileDirs = resourceDir.listFiles(new FileFilter() {
@@ -402,6 +409,10 @@ public class ResourceMojo extends AbstractResourceMojo {
         });
         if (profileDirs != null) {
             for (File profileDir : profileDirs) {
+                if (!needEnricher(profileDir.getName())) {
+                    continue;
+                }
+
                 Profile profile = ProfileUtil.findProfile(profileDir.getName(), resourceDir);
                 if (profile == null) {
                     throw new MojoExecutionException(String.format("Invalid profile '%s' given as directory in %s. " +
@@ -424,10 +435,9 @@ public class ResourceMojo extends AbstractResourceMojo {
         }
     }
 
-    private KubernetesListBuilder generateAppResources(List<ImageConfiguration> images, EnricherManager enricherManager) throws IOException, MojoExecutionException {
+    protected KubernetesListBuilder generateAppResources(List<ImageConfiguration> images, EnricherManager enricherManager) throws IOException, MojoExecutionException {
         Path composeFilePath = checkComposeConfig();
         ComposeService composeUtil = new ComposeService(komposeBinDir, composeFilePath, log);
-
         try {
             File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
             File[] composeResourceFiles = composeUtil.convertToKubeFragments();
@@ -720,7 +730,7 @@ public class ResourceMojo extends AbstractResourceMojo {
         }
     }
 
-    private void addConfiguredResources(KubernetesListBuilder builder, List<ImageConfiguration> images) {
+    protected void addConfiguredResources(KubernetesListBuilder builder, List<ImageConfiguration> images) {
 
         log.verbose("Adding resources from plugin configuration");
         addServices(builder, resources.getServices());
@@ -786,6 +796,34 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     private boolean isPomProject() {
         return "pom".equals(project.getPackaging());
+    }
+
+    protected String[] getEnricherWhiteList() {
+        return null;
+    }
+
+    private final static String[] _enricherBlackList = {SecretConstants.FOLDER_NAME};
+    protected String[] getEnricherBlackList() {
+        return _enricherBlackList;
+    }
+
+    // in white list and not in the black list
+    // if white list is null, means it contains all things
+    // if black list is null, means it contains nothing.
+    private boolean needEnricher(String name) {
+        if (getEnricherWhiteList() == null && !arrayContains(getEnricherBlackList(), name)) {
+            return true;
+        }
+
+        if (getEnricherWhiteList() != null && arrayContains(getEnricherWhiteList(), name)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean arrayContains(String[] array, String name) {
+        return array != null && Arrays.asList(array).contains(name);
     }
 
 }

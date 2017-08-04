@@ -57,6 +57,11 @@
     - spring-boot
     - docker-image
 # end::default[]
+# Can also process secret file in to general yaml
+- name: secrets
+  enricher:
+    includes:
+    - fmp-docker-registry-secret
 # No enrichment at all
 - name: raw
   enricher:

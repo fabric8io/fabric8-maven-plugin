@@ -48,4 +48,22 @@
             </pluginRepositories>
         </profile>
     </profiles>
+    <servers>
+        <server>
+            <id>docker.io</id>
+            <username>username</username>
+            <password>this/is%a#password</password>
+            <configuration>
+                <email>bar@bar.com</email>
+            </configuration>
+        </server>
+        <server>
+            <id>docker1.io</id>
+            <username>username1</username>
+            <password>this/is%a#password!1</password>
+            <configuration>
+                <email>bar1@bar.com</email>
+            </configuration>
+        </server>
+    </servers>
 </settings>

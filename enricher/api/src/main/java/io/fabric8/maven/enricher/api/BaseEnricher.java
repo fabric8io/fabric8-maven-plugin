@@ -25,6 +25,7 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.settings.Settings;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -127,6 +128,11 @@ public abstract class BaseEnricher implements Enricher {
             }
         }
         return false;
+    }
+
+    protected static Settings SETTINGS;
+    public static void applySettings(Settings settings) {
+        SETTINGS = settings;
     }
 
 }

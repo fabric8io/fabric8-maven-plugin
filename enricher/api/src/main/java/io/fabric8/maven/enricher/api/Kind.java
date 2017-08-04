@@ -30,7 +30,8 @@ public enum Kind {
     DAEMON_SET,
     STATEFUL_SET,
     JOB,
-    POD_SPEC;
+    POD_SPEC,
+    SECRET;
 
     /**
      * Returns true if the kind is a controller
