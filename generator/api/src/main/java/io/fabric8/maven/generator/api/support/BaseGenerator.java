@@ -27,7 +27,8 @@ import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.Generator;
 import io.fabric8.maven.generator.api.GeneratorConfig;
 import io.fabric8.maven.generator.api.GeneratorContext;
-import io.fabric8.openshift.api.model.BuildStrategy;
+import io.fabric8.utils.Strings;
+
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
 
@@ -174,7 +175,7 @@ abstract public class BaseGenerator implements Generator {
         String prefix = "";
         if (!PlatformMode.isOpenShiftMode(getProject().getProperties())) {
             String registry = getConfigWithSystemFallbackAndDefault(Config.registry, "fabric8.generator.registry", null);
-            if (registry != null) {
+            if (Strings.isNotBlank(registry)) {
                 prefix = registry + "/";
             }
         }
