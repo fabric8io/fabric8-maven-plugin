@@ -64,7 +64,10 @@ abstract public class BaseGenerator implements Generator {
         from,
 
         // Base image mode (only relevant for OpenShift)
-        fromMode;
+        fromMode,
+
+        // Optional registry
+        registry;
 
         public String def() { return d; } protected String d;
     }
@@ -168,7 +171,15 @@ abstract public class BaseGenerator implements Generator {
      * @return Docker image name which is never null
      */
     protected String getImageName() {
-        return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", getDefaultImageUser());
+        String prefix = "";
+        if (!PlatformMode.isOpenShiftMode(getProject().getProperties())) {
+            String registry = getConfigWithSystemFallbackAndDefault(Config.registry, "fabric8.generator.registry", null);
+            if (registry != null) {
+                prefix = registry + "/";
+            }
+        }
+        String image = getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", getDefaultImageUser());
+        return prefix + image;
     }
 
     private String getDefaultImageUser() {

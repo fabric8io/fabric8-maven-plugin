@@ -25,6 +25,10 @@ There are some configuration options which are shared by all generators:
 | *name*
 | The Docker image name used when doing Docker builds. For OpenShift S2I builds its the name of the image stream. This can be a pattern as descibed in <<image-name-placeholders, Name Placeholders>>. The default is `%g/%a:%l`.
 | `fabric8.generator.name`
+
+| *registry*
+| A optional Docker registry used when doing Docker builds. It has no effect for OpenShift S2I builds.
+| `fabric8.generator.registry`
 |===
 
 When used as properties they can be directly referenced with the property names above.

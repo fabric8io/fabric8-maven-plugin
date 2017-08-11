@@ -241,6 +241,27 @@ public class BaseGeneratorTest {
 
     }
 
+    @Test
+    public void getImageNameWithRegistry() {
+        Properties props = new Properties();
+        props.put("fabric8.generator.registry", "fabric8.io");
+        setupContextKubernetes(props, null, null);
+
+        BaseGenerator generator = createGenerator(null);
+        assertEquals("fabric8.io/%g/%a:%t", generator.getImageName());
+    }
+
+    @Test
+    public void getImageNameWithRegistryInOpenshift() {
+        Properties props = new Properties();
+        props.put("fabric8.generator.registry", "fabric8.io");
+        props.put(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, "openshift");
+        setupContextOpenShift(props, null, null);
+
+        BaseGenerator generator = createGenerator(null);
+        assertEquals("%a:%l", generator.getImageName());
+    }
+
     private void setupNameContext(String propertyName, final String configName) {
         final Properties props = new Properties();
         if (propertyName != null) {
