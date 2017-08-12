@@ -59,7 +59,6 @@
                             <goal>secrets</goal>
                             <goal>build</goal>
                             <goal>push</goal>
-                            <goal>apply-secrets</goal>
                             <goal>apply</goal>
                         </goals>
                     </execution>
