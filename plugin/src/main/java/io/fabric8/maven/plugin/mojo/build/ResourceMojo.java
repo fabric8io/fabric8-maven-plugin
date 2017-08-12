@@ -45,6 +45,8 @@ import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.Template;
+import io.fabric8.utils.Lists;
+import io.fabric8.utils.Strings;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -92,6 +94,9 @@ public class ResourceMojo extends AbstractResourceMojo {
      */
     @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
     private File resourceDir;
+
+    @Parameter(property = "fabric8.secretsResourceDir", defaultValue = "${basedir}/src/main/fabric8/secrets")
+    private File secretsResourceDir;
 
     /**
      * Should we use the project's compile-time classpath to scan for additional enrichers/generators?
@@ -229,18 +234,25 @@ public class ResourceMojo extends AbstractResourceMojo {
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
                 // Extract and generate resources which can be a mix of Kubernetes and OpenShift resources
                 KubernetesList resources = generateResources(resolvedImages);
+                KubernetesList secretsResource = pickOutSecretsResource(resources);
 
-                // Adapt list to use OpenShift specific resource objects
-                KubernetesList openShiftResources = convertToOpenShiftResources(resources);
-                writeResources(openShiftResources, ResourceClassifier.OPENSHIFT);
+                writeAllResources(resources, this.targetDir);
+                writeAllResources(secretsResource, new File(this.targetDir, "secrets"));
 
-                // Remove OpenShift specific stuff provided by fragments
-                KubernetesList kubernetesResources = convertToKubernetesResources(resources, openShiftResources);
-                writeResources(kubernetesResources, ResourceClassifier.KUBERNETES);
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
         }
+    }
+
+    private void writeAllResources(KubernetesList resources, File dir) throws MojoExecutionException {
+        // Adapt list to use OpenShift specific resource objects
+        KubernetesList openShiftResources = convertToOpenShiftResources(resources);
+        writeResources(openShiftResources, ResourceClassifier.OPENSHIFT, dir);
+
+        // Remove OpenShift specific stuff provided by fragments
+        KubernetesList kubernetesResources = convertToKubernetesResources(resources, openShiftResources);
+        writeResources(kubernetesResources, ResourceClassifier.KUBERNETES, dir);
     }
 
     private void lateInit() throws MojoExecutionException {
@@ -409,10 +421,6 @@ public class ResourceMojo extends AbstractResourceMojo {
         });
         if (profileDirs != null) {
             for (File profileDir : profileDirs) {
-                if (!needEnricher(profileDir.getName())) {
-                    continue;
-                }
-
                 Profile profile = ProfileUtil.findProfile(profileDir.getName(), resourceDir);
                 if (profile == null) {
                     throw new MojoExecutionException(String.format("Invalid profile '%s' given as directory in %s. " +
@@ -733,8 +741,45 @@ public class ResourceMojo extends AbstractResourceMojo {
     protected void addConfiguredResources(KubernetesListBuilder builder, List<ImageConfiguration> images) {
 
         log.verbose("Adding resources from plugin configuration");
+        addSecrets(builder);
         addServices(builder, resources.getServices());
         addController(builder, images);
+    }
+
+    private void addSecrets(KubernetesListBuilder builder) {
+        log.verbose("Adding secrets resources from plugin configuration");
+        List<SecretConfig> secrets = resources.getSecrets();
+        if (Lists.isNullOrEmpty(secrets)) { return; }
+        for (int i = 0; i < secrets.size(); i++) {
+            SecretConfig secretConfig = secrets.get(i);
+            if (Strings.isNullOrBlank(secretConfig.name)) {
+                continue;
+            }
+
+            Map<String, String> data = new HashMap();
+            ObjectMeta metadata = new ObjectMeta();
+            String type = "";
+            metadata.setNamespace(secretConfig.namespace == null ? "default" : secretConfig.namespace);
+            metadata.setName(secretConfig.name);
+
+            // docker-registry
+            if (secretConfig.dockerId != null) {
+                String dockerSecret = DockerUtil.getDockerJsonConfigString(settings, secretConfig.dockerId);
+                if (Strings.isNullOrBlank(dockerSecret)) {
+                    continue;
+                }
+                data.put(SecretConstants.DOCKER_DATA_KEY, Base64Util.encodeToString(dockerSecret));
+                type = SecretConstants.DOCKER_CONFIG_TYPE;
+            }
+            // TODO: generic secret
+
+            if (Strings.isNullOrBlank(type) || data.isEmpty()) {
+                continue;
+            }
+
+            Secret secret = new Secret(SecretConstants.API_VERSION, data, SecretConstants.KIND, metadata, null, type);
+            builder.addToSecretItems(i, secret);
+        }
     }
 
     private void addController(KubernetesListBuilder builder, List<ImageConfiguration> images) {
@@ -798,32 +843,16 @@ public class ResourceMojo extends AbstractResourceMojo {
         return "pom".equals(project.getPackaging());
     }
 
-    protected String[] getEnricherWhiteList() {
-        return null;
-    }
-
-    private final static String[] _enricherBlackList = {SecretConstants.FOLDER_NAME};
-    protected String[] getEnricherBlackList() {
-        return _enricherBlackList;
-    }
-
-    // in white list and not in the black list
-    // if white list is null, means it contains all things
-    // if black list is null, means it contains nothing.
-    private boolean needEnricher(String name) {
-        if (getEnricherWhiteList() == null && !arrayContains(getEnricherBlackList(), name)) {
-            return true;
+    private KubernetesList pickOutSecretsResource(KubernetesList raw) {
+        KubernetesListBuilder builder = new KubernetesListBuilder();
+        List<HasMetadata> items = raw.getItems();
+        for (int i = items.size() - 1; i >= 0; i--) {
+            if (items.get(i).getKind().equals(SecretConstants.KIND)) {
+                builder.addToItems(items.get(i));
+                items.remove(i);
+            }
         }
-
-        if (getEnricherWhiteList() != null && arrayContains(getEnricherWhiteList(), name)) {
-            return true;
-        }
-
-        return false;
+        raw.setItems(items);
+        return builder.build();
     }
-
-    private boolean arrayContains(String[] array, String name) {
-        return array != null && Arrays.asList(array).contains(name);
-    }
-
 }
