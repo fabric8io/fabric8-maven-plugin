@@ -1,0 +1,65 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    provider: "fabric8"
+    project: "${project.artifactId}"
+    version: "@ignore@"
+    group: "${project.groupId}"
+  name: "${project.artifactId}"
+spec:
+  minReadySeconds: {{.Values.springboot.minReadySeconds}}
+  replicas: {{.Values.springboot.replicas}}
+  selector:
+    matchLabels:
+      project: "${project.artifactId}"
+      provider: "fabric8"
+      group: "${project.groupId}"
+      version: "@ignore@"
+  strategy:
+    type: "{{.Values.springboot.deploymentStrategy.type}}"
+    rollingUpdate:
+      maxSurge: {{.Values.springboot.deploymentStrategy.maxSurge}}
+      maxUnavailable: {{.Values.springboot.deploymentStrategy.maxUnavailable}}
+  template:
+    metadata:
+      labels:
+        provider: "fabric8"
+        project: "${project.artifactId}"
+        version: "@ignore@"
+        group: "${project.groupId}"
+    spec:
+      containers:
+      - env:
+        - name: KUBERNETES_NAMESPACE
+          value: metadata.namespace
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        image: "{{.Values.springboot.springbootcontainer.image}}:{{.Values.springboot.springbootcontainer.imageTag}}"
+        imagePullPolicy: "{{.Values.springboot.springbootcontainer.imagePullPolicy}}"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: {{.Values.springboot.livenessProbe.initialDelaySeconds}}
+        name: "${project.artifactId}-container"
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 6300
+          name: jacoco
+          protocol: TCP
+        - containerPort: 9779
+          name: prometheus
+          protocol: TCP
+        - containerPort: 8778
+          name: jolokia
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: {{.Values.springboot.readinessProbe.initialDelaySeconds}}
+        securityContext: {}

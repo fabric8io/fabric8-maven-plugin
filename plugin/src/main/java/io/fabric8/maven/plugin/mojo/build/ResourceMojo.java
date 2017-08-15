@@ -15,6 +15,13 @@
  */
 package io.fabric8.maven.plugin.mojo.build;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.util.*;
+
+import javax.validation.ConstraintViolationException;
+
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.extensions.Templates;
@@ -27,6 +34,7 @@ import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
 import io.fabric8.maven.core.service.ComposeService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
+import io.fabric8.maven.core.service.HelmService;
 import io.fabric8.maven.core.util.*;
 import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
@@ -44,20 +52,16 @@ import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.Template;
+import io.fabric8.utils.Files;
+import io.fabric8.utils.Strings;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
-
-import javax.validation.ConstraintViolationException;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
 
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
@@ -91,6 +95,12 @@ public class ResourceMojo extends AbstractResourceMojo {
     private File resourceDir;
 
     /**
+     * Folder where to find helm specific files
+     */
+    @Parameter(property = "fabric8.helm.resourceDir", defaultValue = "${basedir}/src/main/helm")
+    private File helmresourceDir;
+
+    /**
      * Should we use the project's compile-time classpath to scan for additional enrichers/generators?
      */
     @Parameter(property = "fabric8.useProjectClasspath", defaultValue = "false")
@@ -113,6 +123,13 @@ public class ResourceMojo extends AbstractResourceMojo {
     private String composeFile;
 
     // Resource specific configuration for this plugin
+    /**
+     * The helm working directory
+     */
+    @Parameter(property = "fabric8.helm.workDir", defaultValue = "${project.build.directory}/helm")
+    private File helmWorkDir;
+
+    // Resource  specific configuration for this plugin
     @Parameter
     private ResourceConfig resources;
 
@@ -203,6 +220,9 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     @Parameter(property = "kompose.dir", defaultValue = "${user.home}/.kompose/bin")
     private File komposeBinDir;
+
+    @Parameter(property = "helm.dir", defaultValue = "${user.home}/.helm/bin")
+    private File helmBinDir;
 
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
@@ -428,10 +448,29 @@ public class ResourceMojo extends AbstractResourceMojo {
         Path composeFilePath = checkComposeConfig();
         ComposeService composeUtil = new ComposeService(komposeBinDir, composeFilePath, log);
 
+        String chartName = getProperty("fabric8.helm.chart");
+        if (chartName == null) {
+            chartName = project.getArtifactId();
+        }
+
+        File helmEvalFileDir = null;
+        if (helmresourceDir.exists() && helmresourceDir.isDirectory()) {
+            File helmTarget = new File(helmWorkDir, "helm/" + chartName);
+            helmTarget.mkdirs();
+            helmEvalFileDir = copyTemplates(helmresourceDir, helmTarget, chartName);
+        }
+
+        HelmService helmUtil = new HelmService(helmEvalFileDir, helmWorkDir, helmBinDir, log);
+
         try {
             File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
             File[] composeResourceFiles = composeUtil.convertToKubeFragments();
+
+            File[] helmResourceFiles = helmUtil.initHelmResources(chartName);
+
             File[] allResources = ArrayUtils.addAll(resourceFiles, composeResourceFiles);
+            allResources = ArrayUtils.addAll(allResources, helmResourceFiles);
+
             KubernetesListBuilder builder;
 
             // Add resource files found in the fabric8 directory
@@ -443,6 +482,11 @@ public class ResourceMojo extends AbstractResourceMojo {
                 if (composeResourceFiles != null && composeResourceFiles.length > 0) {
                     log.info("using resource templates generated from compose file");
                 }
+
+                if (helmResourceFiles != null && helmResourceFiles.length > 0) {
+                    log.info("using resource templates generated from helm templates");
+                }
+
                 builder = readResourceFragments(allResources);
             } else {
                 builder = new KubernetesListBuilder();
@@ -470,6 +514,36 @@ public class ResourceMojo extends AbstractResourceMojo {
         } finally {
             composeUtil.cleanComposeResources();
         }
+    }
+
+    public File copyTemplates (File sourceDir, File target, String chartName) throws MojoExecutionException {
+        if (sourceDir.exists() && sourceDir.isDirectory()) {
+            target.mkdirs();
+            File[] files = sourceDir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (Files.isDirectory(file)) {
+                        File newTarget = new File(target, file.getName());
+                        copyTemplates(file, newTarget, chartName);
+                    } else {
+                        String name = file.getName();
+                        if (name.endsWith(".yml")) {
+                            name = Strings.stripSuffix(name, ".yml") + ".yaml";
+                        }
+                        File targetFile = new File(target, name);
+                        try {
+                            mavenFileFilter.copyFile(file, targetFile, true,
+                                    project, null, false, "utf8", session);
+                        } catch (MavenFilteringException exp) {
+                            throw new MojoExecutionException(
+                                    String.format("Cannot filter %s to %s", file, targetFile), exp);
+                        }
+                    }
+                }
+            }
+            return target;
+        }
+        return null;
     }
 
     private Path checkComposeConfig() {

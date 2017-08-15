@@ -1,0 +1,19 @@
+springboot:
+  deploymentStrategy: 
+    type: RollingUpdate
+    maxSurge: 1
+    maxUnavailable: 1  
+  springbootcontainer:
+    image: fabric8/fabric8-maven-sample-spring-boot
+    imagePullPolicy: IfNotPresent
+    imageTag: latest
+  minReadySeconds: 10
+  replicas: 1  
+  livenessProbe:
+    initialDelaySeconds: 180
+  readinessProbe:
+    initialDelaySeconds: 10
+  service:
+    serviceType: NodePort
+    expose: true
+

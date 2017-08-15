@@ -19,23 +19,27 @@ import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.IoUtil;
 import io.fabric8.maven.core.util.ProcessUtil;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
-import io.fabric8.utils.IOHelpers;
-import io.fabric8.utils.Strings;
+import io.fabric8.utils.*;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.codehaus.plexus.archiver.commonscompress.archivers.tar.TarArchiveEntry;
+import org.codehaus.plexus.archiver.commonscompress.archivers.tar.TarArchiveInputStream;
 import org.codehaus.plexus.components.interactivity.Prompter;
 import org.codehaus.plexus.components.interactivity.PrompterException;
 
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.*;
 import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Base class for install/tool related mojos
@@ -45,6 +49,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     // Command to call for gofabric8
     protected static final String GOFABRIC8 = "gofabric8";
     protected static final String KOMPOSE = "kompose";
+    protected static final String HELM = "helm";
 
     // Download parameters
     private static final String GOFABRIC8_VERSION_URL = "https://raw.githubusercontent.com/fabric8io/gofabric8/master/version/VERSION";
@@ -53,10 +58,12 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     public static final String BATCH_ARGUMENT = "--batch";
     private static String GOFABRIC_DOWNLOAD_URL_FORMAT = "https://github.com/fabric8io/gofabric8/releases/download/v%s/gofabric8-%s-%s"; // version, platform, arch
     private static String KOMPOSE_DOWNLOAD_URL_FORMAT = "https://github.com/kubernetes/kompose/releases/download/v%s/kompose-%s-%s"; // version, platform, arch
+    private static String HELM_DOWNLOAD_URL_FORMAT = "https://storage.googleapis.com/kubernetes-helm/helm-v%s-%s-%s"; // version, platform, arch
 
     // Variations of gofabric8
     private enum Platform { linux, darwin, windows }
     private enum Architecture { amd64, arm }
+    private String platform = getPlatform().name();
 
     /**
      * Defines the kind of cluster such as `minishift`
@@ -77,6 +84,12 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     @Parameter(property = "kompose.dir", defaultValue = "${user.home}/.kompose/bin")
     private File komposeBinDir;
 
+    @Parameter(property = "helm.dir", defaultValue = "${user.home}/.helm/bin")
+    private File helmBinDir;
+
+    @Parameter(property = "helm.version", defaultValue = "2.5.0")
+    private String helmVersion;
+
     // X-TODO: Add update semantics similar to setup
     // X-TODO: Maybe combine fabric8:setup and fabric8:install
     // X-TODO: wonder if it should be renamed to fabric8:cluster-install?
@@ -96,7 +109,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     protected File installGofabric8IfNotAvailable() throws MojoExecutionException {
         File gofabric8 = ProcessUtil.findExecutable(log, GOFABRIC8);
         if (gofabric8 == null) {
-            gofabric8 = installAndConfigureBinary(fabric8BinDir, GOFABRIC8, GOFABRIC8_VERSION_URL, GOFABRIC_DOWNLOAD_URL_FORMAT);
+            gofabric8 = installAndConfigureBinary(fabric8BinDir, GOFABRIC8, null, GOFABRIC8_VERSION_URL, GOFABRIC_DOWNLOAD_URL_FORMAT);
         } else {
             log.info("Found %s", gofabric8);
         }
@@ -113,7 +126,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     protected File installKomposeIfNotAvailable() throws MojoExecutionException {
         File kompose = ProcessUtil.findExecutable(log, KOMPOSE);
         if (kompose == null) {
-            kompose = installAndConfigureBinary(komposeBinDir, KOMPOSE, KOMPOSE_VERSION_URL, KOMPOSE_DOWNLOAD_URL_FORMAT);
+            kompose = installAndConfigureBinary(komposeBinDir, KOMPOSE, null, KOMPOSE_VERSION_URL, KOMPOSE_DOWNLOAD_URL_FORMAT);
         } else {
             log.info("Found %s", kompose);
         }
@@ -121,7 +134,28 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         return kompose;
     }
 
-    private File installAndConfigureBinary(File binDirectory, String binName, String binVersionUrl, String binDownloadUrlFormat) throws MojoExecutionException {
+    /**
+     * Check for helm and install it to ~/.helm/bin if not available on the path
+     *
+     * @return the path to helm file
+     * @throws MojoExecutionException
+     */
+    protected File installHelmIfNotAvailable() throws MojoExecutionException {
+        File helm = ProcessUtil.findExecutable(log, HELM);
+        if (helm == null) {
+            helm = installAndConfigureBinary(helmBinDir, HELM, helmVersion, null, HELM_DOWNLOAD_URL_FORMAT);
+        } else {
+            log.info("Found %s", helm);
+        }
+
+        //TODO: install helm tiller in K8s cluster. Now failing in CI flow, so commented.
+        //log.info("Running helm init");
+        //executeCommand(helm, HELM, "init");
+
+        return helm;
+    }
+
+    private File installAndConfigureBinary(File binDirectory, String binName, String binVersion, String binVersionUrl, String binDownloadUrlFormat) throws MojoExecutionException {
         File binaryFile = null;
 
         validateDir(binDirectory);
@@ -132,7 +166,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         }
         binaryFile = new File(binDirectory, fileName);
         if (!binaryFile.exists() || !binaryFile.isFile() || !binaryFile.canExecute()) {
-            downloadExecutable(binVersionUrl, binDownloadUrlFormat, binDirectory, binaryFile, binName);
+            downloadExecutable(binVersion, binVersionUrl, binDownloadUrlFormat, binDirectory, binaryFile, binName);
         }
 
         // lets check if the binary directory is on the path
@@ -217,24 +251,168 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     }
 
     // Download gofabric8
-    protected void downloadExecutable(String versionUrl, String downloadUrl, File downloadDir, File destFile, String fileName) throws MojoExecutionException {
-
+    protected void downloadExecutable(String version, String versionUrl, String downloadUrl, File downloadDir, File destFile, String fileName) throws MojoExecutionException {
         // Download to a temporary file
-        File tempFile = downloadToTempFile(versionUrl,downloadUrl, downloadDir, fileName);
+        File tempFile = downloadToTempFile(version, versionUrl, downloadUrl, downloadDir, fileName);
 
-        // Move into it's destination place in ~/.fabric8/bin
-        moveFile(tempFile, destFile, fileName);
+        try {
+            // Move into it's destination place in ~/.fabric8/bin
+            moveFile(tempFile, destFile, fileName);
+        } catch (NullPointerException e) {
+            throw new MojoExecutionException("Unable to move file " + tempFile + "to : " + destFile.toString(), e);
+        }
     }
 
     // First download in a temporary place
-    private File downloadToTempFile(String versionUrl, String downloadUrlFormat, File downloadDir, String fileName) throws MojoExecutionException {
+    private File downloadToTempFile(String version, String versionUrl, String downloadUrlFormat, File downloadDir, String fileName) throws MojoExecutionException {
         // TODO: Very checksum and potentially signature
-        File destFile = createDownloadFile(downloadDir, fileName);
-        URL downloadUrl = getDownloadUrl(versionUrl, downloadUrlFormat, fileName);
+        String downloadFileName = "";
+        if (fileName.equals("helm")) {
+            if (platform.equalsIgnoreCase("windows")) {
+                downloadFileName = fileName + ".zip";
+            } else {
+                downloadFileName = fileName + ".tar.gz";
+            }
+        } else {
+            downloadFileName = fileName;
+        }
+        File destFile = createDownloadFile(downloadDir, downloadFileName);
+        URL downloadUrl = getDownloadUrl(version, versionUrl, downloadUrlFormat, downloadFileName);
         IoUtil.download(log, downloadUrl, destFile);
+        if (destFile.getName().endsWith("zip") || destFile.getName().endsWith("tar.gz")) {
+            try {
+                File extractedFile = extractPackage(destFile, fileName);
+                return extractedFile.exists() ? extractedFile : null;
+            } catch (NullPointerException e) {
+                throw new MojoExecutionException("Failed to extract package file from " + destFile.toString() + ": " + e, e);
+            }
+        }
         return destFile;
     }
 
+    // Extract package if needed
+    private File extractPackage(File tempFile, String fileName) throws MojoExecutionException {
+        File unpackDir = new File(tempFile.getParent(), "unpack").toPath().toFile();
+        unpackDir.deleteOnExit();
+        log.info("Unpacking downloaded file: " + tempFile.toString() + " in dir " + unpackDir.toString());
+
+        if (tempFile.getName().endsWith("tar.gz")) {
+            untargz(tempFile, unpackDir);
+        } else if (tempFile.getName().endsWith(".zip")) {
+            try {
+                Zips.unzip(new FileInputStream(tempFile.toString()), unpackDir);
+            } catch (IOException e) {
+                throw new MojoExecutionException("Failed to extract to " + tempFile + ": " + e, e);
+            }
+        } else {
+            throw new MojoExecutionException("Unknown format: " + tempFile.getName());
+        }
+
+        if (platform.equalsIgnoreCase("windows")) {
+            fileName += ".exe";
+        }
+
+        File binaryFile = new File(tempFile.getParent(), fileName).toPath().toFile();
+        binaryFile.deleteOnExit();
+        try {
+            File extFile = findFile(fileName, unpackDir);
+            if (extFile.exists()) {
+                moveFile(extFile, binaryFile, fileName);
+            } else {
+                throw new MojoExecutionException("Unable to find binary " + fileName + "in dir: " + unpackDir.toString());
+            }
+        } catch (NullPointerException e) {
+            throw new MojoExecutionException("Unable to find binary " + fileName + "in dir: " + unpackDir.toString(), e);
+        }
+        io.fabric8.utils.Files.recursiveDelete(unpackDir);
+
+        return binaryFile.exists() ? binaryFile : null;
+    }
+
+    private File findFile(String name,File source) throws MojoExecutionException{
+        List<Path> files = listAllFiles(source);
+
+        for (Path file  : files) {
+            if (file.endsWith(name)) {
+                return file.toFile();
+            }
+        }
+        return null;
+    }
+
+    private List<Path> listAllFiles(File source) throws MojoExecutionException{
+        Path path= Paths.get(source.toPath().toString());
+        final List<Path> files=new ArrayList<>();
+        try {
+            Files.walkFileTree(path, new SimpleFileVisitor<Path>(){
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    if(!attrs.isDirectory()){
+                        files.add(file);
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to list files in to " + source.toString() + ": " + e, e);
+        }
+
+        return files;
+    }
+
+
+    private static void untargz(File source, File toDir) throws MojoExecutionException {
+        FileInputStream fin = null;
+        BufferedInputStream in = null;
+        GZIPInputStream gzIn = null;
+        TarArchiveInputStream tarIn = null;
+        FileOutputStream fos = null;
+        BufferedOutputStream dest = null;
+
+        try {
+            final int BUFFER = 2048;
+
+            fin = new FileInputStream(source);
+            in = new BufferedInputStream(fin);
+
+            gzIn = new GZIPInputStream(in);
+            tarIn = new TarArchiveInputStream(gzIn);
+            TarArchiveEntry entry = null;
+
+            while ((entry = (TarArchiveEntry) tarIn.getNextEntry()) != null) {
+                if (entry.isDirectory()) {
+                    File f = new File(toDir, entry.getName());
+                    f.mkdirs();
+                }
+                /**
+                 * If the entry is a file,write the decompressed file to the disk
+                 * and close destination stream.
+                 **/
+                else {
+                    int count;
+                    byte data[] = new byte[BUFFER];
+                    File newFile = new File(toDir, entry.getName());
+                    fos = new FileOutputStream(newFile.toString());
+                    dest = new BufferedOutputStream(fos, BUFFER);
+                    while ((count = tarIn.read(data, 0, BUFFER)) != -1) {
+                        dest.write(data, 0, count);
+                    }
+                    dest.close();
+                }
+            }
+            tarIn.close();
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to extract to " + source.toString() + ": " + e, e);
+        }
+        finally {
+                if (fin != null) Closeables.closeQuietly(fin);
+                if (in != null) Closeables.closeQuietly(in);
+                if (gzIn != null) Closeables.closeQuietly(gzIn);
+                if (tarIn != null) Closeables.closeQuietly(tarIn);
+                if (fos != null) Closeables.closeQuietly(fos);
+                if (dest != null) Closeables.closeQuietly(dest);
+        }
+    }
 
     // Where to put the initial download of gofabric8
     private File createDownloadFile(File downloadLocation, String fileName) throws MojoExecutionException {
@@ -251,15 +429,25 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
     }
 
     // Create download URL + log
-    private URL getDownloadUrl(String versionUrl, String downloadUrl, String fileName) throws MojoExecutionException {
-        String version = getBinaryFileVersion(versionUrl);
+    private URL getDownloadUrl(String version, String versionUrl, String downloadUrl, String fileName) throws MojoExecutionException {
+        if (versionUrl != null) {
+            version = getBinaryFileVersion(versionUrl);
+        }
 
-        String platform = getPlatform().name();
         String arch = getArchitecture().name();
         String releaseUrl = String.format(downloadUrl, version, platform, arch);
-        if (platform.equalsIgnoreCase("windows")) {
+        if (fileName.contains("helm")) {
+            if (platform.equalsIgnoreCase("windows")) {
+                releaseUrl += ".zip";
+            }
+            else {
+                releaseUrl += ".tar.gz";
+            }
+        }
+        else if (platform.equalsIgnoreCase("windows")) {
             releaseUrl += ".exe";
         }
+
         log.info("Downloading %s:", fileName);
         log.info("   Version:      [[B]]%s[[B]]", version);
         log.info("   Platform:     [[B]]%s[[B]]", platform);

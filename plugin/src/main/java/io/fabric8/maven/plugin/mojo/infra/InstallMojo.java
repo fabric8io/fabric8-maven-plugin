@@ -38,5 +38,7 @@ public class InstallMojo extends AbstractInstallMojo {
         }
 
         installKomposeIfNotAvailable();
+
+        installHelmIfNotAvailable();
     }
 }

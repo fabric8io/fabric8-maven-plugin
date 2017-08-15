@@ -17,6 +17,8 @@ package io.fabric8.maven.plugin.mojo.build;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -64,11 +66,16 @@ public class HelmMojo extends AbstractFabric8Mojo {
     @Parameter(property = "fabric8.kubernetesManifest", defaultValue = "${basedir}/target/classes/META-INF/fabric8/kubernetes.yml")
     private File kubernetesManifest;
 
+    @Parameter(property = "fabric8.helm.workDir", defaultValue = "${project.build.directory}/helm")
+    private File helmWorkDir;
+
     @Component
     private MavenProjectHelper projectHelper;
 
     @Component(role = Archiver.class, hint = "tar")
     private TarArchiver archiver;
+
+    private String resourceMode = null;
 
     @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
@@ -89,8 +96,14 @@ public class HelmMojo extends AbstractFabric8Mojo {
         log.verbose("SourceDir: %s", sourceDir);
         log.verbose("OutputDir: %s", outputDir);
 
-        // Copy over all resource descriptors into the helm templates dir
-        copyResourceFilesToTemplatesDir(outputDir, sourceDir);
+        if (resourceMode == null || ! resourceMode.equals("helm")) {
+            // Copy over all resource descriptors into the helm templates dir
+            copyResourceFilesToTemplatesDir(outputDir, sourceDir);
+        }
+        else
+        {
+            outputDir = sourceDir;
+        }
 
         // Save Helm chart
         createChartYaml(chartName, outputDir);
@@ -133,22 +146,34 @@ public class HelmMojo extends AbstractFabric8Mojo {
     }
 
     private File checkSourceDir(String chartName, HelmConfig.HelmType type) {
-        String dir = getProperty("fabric8.helm.sourceDir");
-        if (dir == null) {
-            dir = project.getBuild().getOutputDirectory() + "/META-INF/fabric8/" + type.getSourceDir();
+        // If resource mode is helm
+        if (helmWorkDir != null && helmWorkDir.exists()) {
+            String helmWorkdir = String.format("%s/helm/helm/%s",
+                        project.getBuild().getDirectory(),
+                        getChartName());
+
+            resourceMode = "helm";
+
+            return new File(helmWorkdir);
+        } else {
+            String dir = getProperty("fabric8.helm.sourceDir");
+            if (dir == null) {
+                dir = project.getBuild().getOutputDirectory() + "/META-INF/fabric8/" + type.getSourceDir();
+            }
+            File dirF = new File(dir);
+            if (!dirF.isDirectory() || !dirF.exists()) {
+                log.warn("Chart source directory %s does not exist so cannot make chart %s. " +
+                        "Probably you need run 'mvn fabric8:resource' before.", dirF, chartName);
+                return null;
+            }
+            if (!containsYamlFiles(dirF)) {
+                log.warn("Chart source directory %s does not contain any YAML manifest to make chart %s. " +
+                        "Probably you need run 'mvn fabric8:resource' before.", dirF, chartName);
+                return null;
+            }
+
+            return dirF;
         }
-        File dirF = new File(dir);
-        if (!dirF.isDirectory() || !dirF.exists()) {
-            log.warn("Chart source directory %s does not exist so cannot make chart %s. " +
-                     "Probably you need run 'mvn fabric8:resource' before.", dirF, chartName);
-            return null;
-        }
-        if (!containsYamlFiles(dirF)) {
-            log.warn("Chart source directory %s does not contain any YAML manifest to make chart %s. " +
-                     "Probably you need run 'mvn fabric8:resource' before.", dirF, chartName);
-            return null;
-        }
-        return dirF;
     }
 
     private List<HelmConfig.HelmType> getHelmTypes() {
@@ -171,9 +196,21 @@ public class HelmMojo extends AbstractFabric8Mojo {
     }
 
     private void createChartYaml(String chartName, File outputDir) throws MojoExecutionException {
-        Chart chart = helm != null ?
-            new Chart(chartName, project, helm.getKeywords(), helm.getEngine()) :
-            new Chart(chartName, project);
+        Chart chart = null;
+        File chartYaml = new File(outputDir, "Chart.yaml");
+
+        if (resourceMode != null && resourceMode.equals("helm") && chartYaml.isFile()) {
+            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            try {
+                chart = mapper.readValue(chartYaml, Chart.class);
+            } catch (IOException e) {
+                throw new MojoExecutionException("Failed to load Chart YAML " + chartYaml + ". " + e, e);
+            }
+        } else {
+            chart = helm != null ?
+                    new Chart(chartName, project, helm.getKeywords(), helm.getEngine()) :
+                    new Chart(chartName, project);
+        }
 
         String iconUrl = findIconURL();
         getLog().debug("Found icon: " + iconUrl);
