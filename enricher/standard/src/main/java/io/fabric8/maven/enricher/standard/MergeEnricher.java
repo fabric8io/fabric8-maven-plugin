@@ -17,19 +17,12 @@
 package io.fabric8.maven.enricher.standard;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.PodSpec;
-import io.fabric8.kubernetes.api.model.PodSpecBuilder;
-import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.utils.Strings;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import java.util.ArrayList;
@@ -87,45 +80,8 @@ public class MergeEnricher extends BaseEnricher {
 
     private HasMetadata mergeEntities(HasMetadata item1, HasMetadata item2) {
         if (isMergeEnabled()) {
-            if (item1 instanceof Deployment && item2 instanceof Deployment) {
-                HasMetadata answer = item1;
-                Deployment resource1 = (Deployment) item1;
-                Deployment resource2 = (Deployment) item2;
-                DeploymentSpec spec1 = resource1.getSpec();
-                DeploymentSpec spec2 = resource2.getSpec();
-                if (spec1 == null) {
-                    resource1.setSpec(spec2);
-                } else {
-                    PodTemplateSpec template1 = spec1.getTemplate();
-                    PodTemplateSpec template2 = spec2.getTemplate();
-                    if (template1 == null) {
-                        spec1.setTemplate(template2);
-                    } else {
-                        PodSpec podSpec1 = template1.getSpec();
-                        PodSpec podSpec2 = template2.getSpec();
-                        if (podSpec1 == null) {
-                            template1.setSpec(podSpec2);
-                        } else {
-                            String defaultName = null;
-                            PodTemplateSpec updateTemplate = template1;
-                            if (isLocalCustomisation(podSpec1)) {
-                                updateTemplate = template2;
-                                PodSpec tmp = podSpec1;
-                                podSpec1 = podSpec2;
-                                podSpec2 = tmp;
-                            } else {
-                                answer = item2;
-                            }
-                            PodSpecBuilder podSpecBuilder = new PodSpecBuilder(podSpec1);
-                            KubernetesResourceUtil.mergePodSpec(podSpecBuilder, podSpec2, defaultName);
-                            updateTemplate.setSpec(podSpecBuilder.build());
-                            return answer;
-                        }
-                    }
-                }
-                log.info("Merging 2 resources for " + getKind(item1) + " " + KubernetesHelper.getName(item1) + " from " + KubernetesResourceUtil.getSourceUrlAnnotation(item1) + " and " + KubernetesResourceUtil.getSourceUrlAnnotation(item2) + " and removing " + KubernetesResourceUtil.getSourceUrlAnnotation(answer));
-                return answer;
-            }
+            HasMetadata answer = KubernetesResourceUtil.mergeResources(item1, item2, log, true);
+            if (answer != null) return answer;
             /*
                     log.info("Have 2 resources for " + getKind(item1) + " " + KubernetesHelper.getName(item1) + " assuming they are the same and picking one!");
                     // for now lets just pick one and assume they are identical
@@ -146,19 +102,6 @@ public class MergeEnricher extends BaseEnricher {
 
     protected boolean isMergeEnabled() {
         return Configs.asBoolean(getConfig(Config.enabled));
-    }
-
-    // lets use presence of an image name as a clue that we are just enriching things a little
-    // rather than a full complete manifest
-    // we could also use an annotation?
-    private boolean isLocalCustomisation(PodSpec podSpec) {
-        List<Container> containers = notNullList(podSpec.getContainers());
-        for (Container container : containers) {
-            if (Strings.isNotBlank(container.getImage())) {
-                return false;
-            }
-        }
-        return true;
     }
 
     // Available configuration keys

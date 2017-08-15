@@ -45,6 +45,8 @@ import java.util.regex.Pattern;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.extensions.Templates;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
@@ -63,11 +65,13 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodStatus;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSetSpec;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
@@ -99,9 +103,11 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
 import org.slf4j.LoggerFactory;
 
+import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
 import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
 import static io.fabric8.maven.core.util.Constants.RESOURCE_SOURCE_URL_ANNOTATION;
+import static io.fabric8.utils.Lists.notNullList;
 import static io.fabric8.utils.Strings.isNullOrBlank;
 
 /**
@@ -775,6 +781,9 @@ public class KubernetesResourceUtil {
         }
         for (EnvVar var : envVars) {
             if (Objects.equals(var.getName(), envVar.getName())) {
+                // lets replace the object so that we can update the value or valueFrom
+                envVars.remove(var);
+                envVars.add(envVar);
                 return;
             }
         }
@@ -911,4 +920,150 @@ public class KubernetesResourceUtil {
         return null;
     }
 
+    /**
+     * Merges the given resources together into a single resource.
+     *
+     * If switchOnLocalCustomisation is false then the overrides from item2 are merged into item1
+     *
+     * @return the newly merged resources
+     */
+    public static HasMetadata mergeResources(HasMetadata item1, HasMetadata item2, Logger log, boolean switchOnLocalCustomisation) {
+        if (item1 instanceof Deployment && item2 instanceof Deployment) {
+            Deployment resource1 = (Deployment) item1;
+            if (!switchOnLocalCustomisation) {
+                // lets copy the original to avoid modifying it
+                resource1 = new DeploymentBuilder(resource1).build();
+                item1 = resource1;
+            }
+            Deployment resource2 = (Deployment) item2;
+            DeploymentSpec spec1 = resource1.getSpec();
+            DeploymentSpec spec2 = resource2.getSpec();
+            if (spec1 == null) {
+                resource1.setSpec(spec2);
+            } else {
+                PodTemplateSpec template1 = spec1.getTemplate();
+                PodTemplateSpec template2 = null;
+                if (spec2 != null) {
+                    template2 = spec2.getTemplate();
+                }
+                if (template1 != null && template2 != null) {
+                    mergeMetadata(template1, template2);
+                }
+                if (template1 == null) {
+                    spec1.setTemplate(template2);
+                } else {
+                    HasMetadata answer = item1;
+                    PodSpec podSpec1 = template1.getSpec();
+                    PodSpec podSpec2 = null;
+                    if (template2 != null) {
+                        podSpec2 = template2.getSpec();
+                    }
+                    if (podSpec1 == null) {
+                        template1.setSpec(podSpec2);
+                    } else {
+                        String defaultName = null;
+                        PodTemplateSpec updateTemplate = template1;
+                        if (switchOnLocalCustomisation) {
+                            HasMetadata override = item2;
+                            if (isLocalCustomisation(podSpec1)) {
+                                updateTemplate = template2;
+                                PodSpec tmp = podSpec1;
+                                podSpec1 = podSpec2;
+                                podSpec2 = tmp;
+                            } else {
+                                answer = item2;
+                                override = item1;
+                            }
+                            mergeMetadata(answer, override);
+                        } else {
+                            mergeMetadata(item1, item2);
+                        }
+                        if (podSpec2 == null) {
+                            updateTemplate.setSpec(podSpec1);
+                        } else {
+                            PodSpecBuilder podSpecBuilder = new PodSpecBuilder(podSpec1);
+                            mergePodSpec(podSpecBuilder, podSpec2, defaultName);
+                            updateTemplate.setSpec(podSpecBuilder.build());
+                        }
+                        return answer;
+                    }
+                }
+            }
+            log.info("Merging 2 resources for " + getKind(item1) + " " + getName(item1) + " from " + getSourceUrlAnnotation(item1) + " and " + getSourceUrlAnnotation(item2) + " and removing " + getSourceUrlAnnotation(item1));
+        }
+        if (item1 instanceof ConfigMap && item2 instanceof ConfigMap) {
+            ConfigMap cm1 = (ConfigMap) item1;
+            ConfigMap cm2 = (ConfigMap) item2;
+            if (!switchOnLocalCustomisation) {
+                // lets copy the original to avoid modifying it
+                cm1 = new ConfigMapBuilder(cm1).build();
+                item1 = cm1;
+            }
+
+            log.info("Merging 2 resources for " + getKind(cm1) + " " + getName(cm1) + " from " + getSourceUrlAnnotation(cm1) + " and " + getSourceUrlAnnotation(item2) +
+" and removing " + getSourceUrlAnnotation(item1));
+            cm1.setData(mergeMapsAndRemoveEmptyStrings(cm2.getData(), cm1.getData()));
+        }
+        mergeMetadata(item1, item2);
+        return item1;
+    }
+
+    private static void mergeMetadata(PodTemplateSpec item1, PodTemplateSpec item2) {
+        if (item1 != null && item2 != null) {
+            ObjectMeta metadata1 = item1.getMetadata();
+            ObjectMeta metadata2 = item2.getMetadata();
+            if (metadata1 == null) {
+                item1.setMetadata(metadata2);
+            } else if (metadata2 != null) {
+                metadata1.setAnnotations(mergeMapsAndRemoveEmptyStrings(metadata2.getAnnotations(), metadata1.getAnnotations()));
+                metadata1.setLabels(mergeMapsAndRemoveEmptyStrings(metadata2.getLabels(), metadata1.getLabels()));
+            }
+        }
+    }
+
+    protected static void mergeMetadata(HasMetadata item1, HasMetadata item2) {
+        if (item1 != null && item2 != null) {
+            ObjectMeta metadata1 = item1.getMetadata();
+            ObjectMeta metadata2 = item2.getMetadata();
+            if (metadata1 == null) {
+                item1.setMetadata(metadata2);
+            } else if (metadata2 != null) {
+                metadata1.setAnnotations(mergeMapsAndRemoveEmptyStrings(metadata2.getAnnotations(), metadata1.getAnnotations()));
+                metadata1.setLabels(mergeMapsAndRemoveEmptyStrings(metadata2.getLabels(), metadata1.getLabels()));
+            }
+        }
+    }
+
+    /**
+     * Returns a merge of the given maps and then removes any resulting empty string values (which is the way to remove, say, a label or annotation
+     * when overriding
+     */
+    private static Map<String, String> mergeMapsAndRemoveEmptyStrings(Map<String, String> map1, Map<String, String> map2) {
+        Map<String, String> answer = MapUtil.mergeMaps(map1, map2);
+        Set<String> removeKeys = new HashSet<>();
+        Set<Map.Entry<String, String>> entries = answer.entrySet();
+        for (Map.Entry<String, String> entry : entries) {
+            String value = entry.getValue();
+            if (value == null || value.isEmpty()) {
+                removeKeys.add(entry.getKey());
+            }
+        }
+        for (String key : removeKeys) {
+            answer.remove(key);
+        }
+        return answer;
+    }
+
+    // lets use presence of an image name as a clue that we are just enriching things a little
+    // rather than a full complete manifest
+    // we could also use an annotation?
+    private static boolean isLocalCustomisation(PodSpec podSpec) {
+        List<Container> containers = notNullList(podSpec.getContainers());
+        for (Container container : containers) {
+            if (Strings.isNotBlank(container.getImage())) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
