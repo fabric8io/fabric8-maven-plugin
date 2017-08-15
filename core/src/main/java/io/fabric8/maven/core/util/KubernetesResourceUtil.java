@@ -929,55 +929,80 @@ public class KubernetesResourceUtil {
      */
     public static HasMetadata mergeResources(HasMetadata item1, HasMetadata item2, Logger log, boolean switchOnLocalCustomisation) {
         if (item1 instanceof Deployment && item2 instanceof Deployment) {
-            Deployment resource1 = (Deployment) item1;
-            if (!switchOnLocalCustomisation) {
-                // lets copy the original to avoid modifying it
-                resource1 = new DeploymentBuilder(resource1).build();
-                item1 = resource1;
+            return mergeDeployments((Deployment) item1, (Deployment) item2, log, switchOnLocalCustomisation);
+        }
+        if (item1 instanceof ConfigMap && item2 instanceof ConfigMap) {
+            ConfigMap cm1 = (ConfigMap) item1;
+            ConfigMap cm2 = (ConfigMap) item2;
+            return mergeConfigMaps(cm1, cm2, log, switchOnLocalCustomisation);
+        }
+        mergeMetadata(item1, item2);
+        return item1;
+    }
+
+    protected static HasMetadata mergeConfigMaps(ConfigMap cm1, ConfigMap cm2, Logger log, boolean switchOnLocalCustomisation) {
+        ConfigMap cm1OrCopy = cm1;
+        if (!switchOnLocalCustomisation) {
+            // lets copy the original to avoid modifying it
+            cm1OrCopy = new ConfigMapBuilder(cm1OrCopy).build();
+        }
+
+        log.info("Merging 2 resources for " + getKind(cm1OrCopy) + " " + getName(cm1OrCopy) + " from " + getSourceUrlAnnotation(cm1OrCopy) + " and " + getSourceUrlAnnotation(cm2) +
+" and removing " + getSourceUrlAnnotation(cm1OrCopy));
+        cm1OrCopy.setData(mergeMapsAndRemoveEmptyStrings(cm2.getData(), cm1OrCopy.getData()));
+        mergeMetadata(cm1OrCopy, cm2);
+        return cm1OrCopy;
+    }
+
+    protected static HasMetadata mergeDeployments(Deployment resource1, Deployment resource2, Logger log, boolean switchOnLocalCustomisation) {
+        Deployment resource1OrCopy = resource1;
+        if (!switchOnLocalCustomisation) {
+            // lets copy the original to avoid modifying it
+            resource1OrCopy = new DeploymentBuilder(resource1OrCopy).build();
+        }
+        HasMetadata answer = resource1OrCopy;
+        DeploymentSpec spec1 = resource1OrCopy.getSpec();
+        DeploymentSpec spec2 = resource2.getSpec();
+        if (spec1 == null) {
+            resource1OrCopy.setSpec(spec2);
+        } else {
+            PodTemplateSpec template1 = spec1.getTemplate();
+            PodTemplateSpec template2 = null;
+            if (spec2 != null) {
+                template2 = spec2.getTemplate();
             }
-            Deployment resource2 = (Deployment) item2;
-            DeploymentSpec spec1 = resource1.getSpec();
-            DeploymentSpec spec2 = resource2.getSpec();
-            if (spec1 == null) {
-                resource1.setSpec(spec2);
+            if (template1 != null && template2 != null) {
+                mergeMetadata(template1, template2);
+            }
+            if (template1 == null) {
+                spec1.setTemplate(template2);
             } else {
-                PodTemplateSpec template1 = spec1.getTemplate();
-                PodTemplateSpec template2 = null;
-                if (spec2 != null) {
-                    template2 = spec2.getTemplate();
+                PodSpec podSpec1 = template1.getSpec();
+                PodSpec podSpec2 = null;
+                if (template2 != null) {
+                    podSpec2 = template2.getSpec();
                 }
-                if (template1 != null && template2 != null) {
-                    mergeMetadata(template1, template2);
-                }
-                if (template1 == null) {
-                    spec1.setTemplate(template2);
+                if (podSpec1 == null) {
+                    template1.setSpec(podSpec2);
                 } else {
-                    HasMetadata answer = item1;
-                    PodSpec podSpec1 = template1.getSpec();
-                    PodSpec podSpec2 = null;
-                    if (template2 != null) {
-                        podSpec2 = template2.getSpec();
-                    }
-                    if (podSpec1 == null) {
-                        template1.setSpec(podSpec2);
-                    } else {
-                        String defaultName = null;
-                        PodTemplateSpec updateTemplate = template1;
-                        if (switchOnLocalCustomisation) {
-                            HasMetadata override = item2;
-                            if (isLocalCustomisation(podSpec1)) {
-                                updateTemplate = template2;
-                                PodSpec tmp = podSpec1;
-                                podSpec1 = podSpec2;
-                                podSpec2 = tmp;
-                            } else {
-                                answer = item2;
-                                override = item1;
-                            }
-                            mergeMetadata(answer, override);
+                    String defaultName = null;
+                    PodTemplateSpec updateTemplate = template1;
+                    if (switchOnLocalCustomisation) {
+                        HasMetadata override = resource2;
+                        if (isLocalCustomisation(podSpec1)) {
+                            updateTemplate = template2;
+                            PodSpec tmp = podSpec1;
+                            podSpec1 = podSpec2;
+                            podSpec2 = tmp;
                         } else {
-                            mergeMetadata(item1, item2);
+                            answer = resource2;
+                            override = resource1OrCopy;
                         }
+                        mergeMetadata(answer, override);
+                    } else {
+                        mergeMetadata(resource1OrCopy, resource2);
+                    }
+                    if (updateTemplate != null) {
                         if (podSpec2 == null) {
                             updateTemplate.setSpec(podSpec1);
                         } else {
@@ -985,27 +1010,13 @@ public class KubernetesResourceUtil {
                             mergePodSpec(podSpecBuilder, podSpec2, defaultName);
                             updateTemplate.setSpec(podSpecBuilder.build());
                         }
-                        return answer;
                     }
+                    return answer;
                 }
             }
-            log.info("Merging 2 resources for " + getKind(item1) + " " + getName(item1) + " from " + getSourceUrlAnnotation(item1) + " and " + getSourceUrlAnnotation(item2) + " and removing " + getSourceUrlAnnotation(item1));
         }
-        if (item1 instanceof ConfigMap && item2 instanceof ConfigMap) {
-            ConfigMap cm1 = (ConfigMap) item1;
-            ConfigMap cm2 = (ConfigMap) item2;
-            if (!switchOnLocalCustomisation) {
-                // lets copy the original to avoid modifying it
-                cm1 = new ConfigMapBuilder(cm1).build();
-                item1 = cm1;
-            }
-
-            log.info("Merging 2 resources for " + getKind(cm1) + " " + getName(cm1) + " from " + getSourceUrlAnnotation(cm1) + " and " + getSourceUrlAnnotation(item2) +
-" and removing " + getSourceUrlAnnotation(item1));
-            cm1.setData(mergeMapsAndRemoveEmptyStrings(cm2.getData(), cm1.getData()));
-        }
-        mergeMetadata(item1, item2);
-        return item1;
+        log.info("Merging 2 resources for " + getKind(resource1OrCopy) + " " + getName(resource1OrCopy) + " from " + getSourceUrlAnnotation(resource1OrCopy) + " and " + getSourceUrlAnnotation(resource2) + " and removing " + getSourceUrlAnnotation(resource1OrCopy));
+        return resource1OrCopy;
     }
 
     private static void mergeMetadata(PodTemplateSpec item1, PodTemplateSpec item2) {

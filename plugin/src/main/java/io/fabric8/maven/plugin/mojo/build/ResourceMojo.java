@@ -452,8 +452,8 @@ public class ResourceMojo extends AbstractResourceMojo {
                         KubernetesResourceUtil.DEFAULT_RESOURCE_VERSIONING,
                         defaultName,
                         mavenFilterFiles(resourceFiles, this.openshiftOverrideWorkDir));
-                KubernetesList resources = builder.build();
-                for (HasMetadata item : resources.getItems()) {
+                KubernetesList list = builder.build();
+                for (HasMetadata item : list.getItems()) {
                     openShiftOverrideResources.addOpenShiftOverride(item);
                 }
             }

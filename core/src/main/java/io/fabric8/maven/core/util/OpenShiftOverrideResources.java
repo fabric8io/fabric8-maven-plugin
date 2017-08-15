@@ -25,7 +25,7 @@ import java.util.Map;
  * Processs YAML fragments to override parts of the YAML for OpenShift specific clusters
  */
 public class OpenShiftOverrideResources {
-    private final Map<KindAndName, HasMetadata> openshiftOverrideResources = new HashMap<>();
+    private final Map<KindAndName, HasMetadata> map = new HashMap<>();
     private final Logger log;
 
     public OpenShiftOverrideResources(Logger log) {
@@ -34,7 +34,7 @@ public class OpenShiftOverrideResources {
 
     public void addOpenShiftOverride(HasMetadata item) {
         KindAndName key = new KindAndName(item);
-        openshiftOverrideResources.put(key, item);
+        map.put(key, item);
     }
 
 
@@ -43,7 +43,7 @@ public class OpenShiftOverrideResources {
      */
     public HasMetadata overrideResource(HasMetadata item) {
         KindAndName key = new KindAndName(item);
-        HasMetadata override = openshiftOverrideResources.get(key);
+        HasMetadata override = map.get(key);
         if (override != null) {
             log.info("Overriding " + key);
             HasMetadata answer = KubernetesResourceUtil.mergeResources(item, override, log, false);
