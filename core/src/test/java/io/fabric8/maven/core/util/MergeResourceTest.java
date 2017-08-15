@@ -44,7 +44,11 @@ public class MergeResourceTest {
     @Test
     public void testMergeDeploymentMetadataAndEnvVars() throws Exception {
         Deployment resource = new DeploymentBuilder().withNewMetadata().withName("cheese").
-                addToAnnotations("overwriteKey", "originalValue").addToAnnotations("unchangedKey", "shouldNotChange").addToAnnotations("deletedKey", "shouldBeDeleted").endMetadata().
+                addToAnnotations("overwriteKey", "originalValue").
+                addToAnnotations("unchangedKey", "shouldNotChange").
+                addToAnnotations("unchangedBlankKey", "").
+                addToAnnotations("deletedKey", "shouldBeDeleted").
+                endMetadata().
                 withNewSpec().withNewTemplate().withNewSpec().addNewContainer().
                     withImage("cheese-image").
                 addToEnv(new EnvVarBuilder().withName("ENV_UPDATED").withValue("OLD_VALUE").build()).
@@ -55,7 +59,8 @@ public class MergeResourceTest {
 
 
         Deployment override = new DeploymentBuilder().withNewMetadata().withName("cheese").
-                addToAnnotations("overwriteKey", "newValue").addToAnnotations("deletedKey", "").endMetadata().
+                addToAnnotations("overwriteKey", "newValue").
+                addToAnnotations("deletedKey", "").endMetadata().
                 withNewSpec().withNewTemplate().withNewSpec().addNewContainer().
                     addToEnv(new EnvVarBuilder().withName("ENV_UPDATED").withValue("NEW_VALUE").build()).
                     addToEnv(new EnvVarBuilder().withName("ENV_DELETED").withValue("").build()).
@@ -82,13 +87,19 @@ public class MergeResourceTest {
     @Test
     public void testMergeDeploymentMetadataWithNoSpec() throws Exception {
         Deployment resource = new DeploymentBuilder().withNewMetadata().withName("cheese").
-                addToAnnotations("overwriteKey", "originalValue").addToAnnotations("unchangedKey", "shouldNotChange").addToAnnotations("deletedKey", "shouldBeDeleted").endMetadata().
+                addToAnnotations("overwriteKey", "originalValue").
+                addToAnnotations("unchangedKey", "shouldNotChange").
+                addToAnnotations("unchangedBlankKey", "").
+                addToAnnotations("deletedKey", "shouldBeDeleted").
+                endMetadata().
                 withNewSpec().withNewTemplate().withNewSpec().addNewContainer().withImage("cheese-image").endContainer().endSpec().endTemplate().endSpec().
                 build();
 
 
         Deployment override = new DeploymentBuilder().withNewMetadata().withName("cheese").
-                addToAnnotations("overwriteKey", "newValue").addToAnnotations("deletedKey", "").endMetadata().
+                addToAnnotations("overwriteKey", "newValue").
+                addToAnnotations("deletedKey", "").
+                endMetadata().
                 build();
 
 
@@ -108,7 +119,10 @@ public class MergeResourceTest {
                 withNewSpec().withNewTemplate().
                 withNewSpec().addNewContainer().withImage("cheese-image").endContainer().endSpec().
                 withNewMetadata().
-                addToAnnotations("overwriteKey", "originalValue").addToAnnotations("unchangedKey", "shouldNotChange").addToAnnotations("deletedKey", "shouldBeDeleted").
+                addToAnnotations("overwriteKey", "originalValue").
+                addToAnnotations("unchangedKey", "shouldNotChange").
+                addToAnnotations("unchangedBlankKey", "").
+                addToAnnotations("deletedKey", "shouldBeDeleted").
                 endMetadata().
                 endTemplate().endSpec().
                 build();
@@ -118,7 +132,8 @@ public class MergeResourceTest {
                 withNewSpec().withNewTemplate().
                 withNewSpec().addNewContainer().addToEnv(new EnvVarBuilder().withName("ENV_FOO").withValue("FOO_VALUE").build()).endContainer().endSpec().
                 withNewMetadata().
-                addToAnnotations("overwriteKey", "newValue").addToAnnotations("deletedKey", "").
+                addToAnnotations("overwriteKey", "newValue").
+                addToAnnotations("deletedKey", "").
                 endMetadata().
                 endTemplate().endSpec().
                 build();
@@ -142,12 +157,16 @@ public class MergeResourceTest {
     @Test
     public void testMergeConfigMap() throws Exception {
         ConfigMap resource = new ConfigMapBuilder().withNewMetadata().withName("cheese").endMetadata().
-                addToData("overwriteKey", "originalValue").addToData("unchangedKey", "shouldNotChange").addToData("deletedKey", "shouldBeDeleted").
+                addToData("overwriteKey", "originalValue").
+                addToData("unchangedKey", "shouldNotChange").
+                addToData("unchangedBlankKey", "").
+                addToData("deletedKey", "shouldBeDeleted").
                 build();
 
 
         ConfigMap override = new ConfigMapBuilder().withNewMetadata().withName("cheese").endMetadata().
-                addToData("overwriteKey", "newValue").addToData("deletedKey", "").
+                addToData("overwriteKey", "newValue").
+                addToData("deletedKey", "").
                 build();
 
 
@@ -168,6 +187,7 @@ public class MergeResourceTest {
         assertThat(annotations).describedAs(description).
                 containsEntry("overwriteKey", "newValue").
                 containsEntry("unchangedKey", "shouldNotChange").
+                containsEntry("unchangedBlankKey", "").
                 doesNotContainKeys("deletedKey");
     }
 
@@ -175,6 +195,7 @@ public class MergeResourceTest {
         assertThat(annotations).describedAs(description).
                 containsEntry("overwriteKey", "originalValue").
                 containsEntry("unchangedKey", "shouldNotChange").
+                containsEntry("unchangedBlankKey", "").
                 containsEntry("deletedKey", "shouldBeDeleted");
     }
 

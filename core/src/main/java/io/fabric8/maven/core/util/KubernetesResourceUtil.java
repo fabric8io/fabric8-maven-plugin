@@ -1049,18 +1049,15 @@ public class KubernetesResourceUtil {
      * Returns a merge of the given maps and then removes any resulting empty string values (which is the way to remove, say, a label or annotation
      * when overriding
      */
-    private static Map<String, String> mergeMapsAndRemoveEmptyStrings(Map<String, String> map1, Map<String, String> map2) {
-        Map<String, String> answer = MapUtil.mergeMaps(map1, map2);
-        Set<String> removeKeys = new HashSet<>();
-        Set<Map.Entry<String, String>> entries = answer.entrySet();
+    private static Map<String, String> mergeMapsAndRemoveEmptyStrings(Map<String, String> overrideMap, Map<String, String> originalMap) {
+        Map<String, String> answer = MapUtil.mergeMaps(overrideMap, originalMap);
+        Set<Map.Entry<String, String>> entries = overrideMap.entrySet();
         for (Map.Entry<String, String> entry : entries) {
             String value = entry.getValue();
             if (value == null || value.isEmpty()) {
-                removeKeys.add(entry.getKey());
+                String key = entry.getKey();
+                answer.remove(key);
             }
-        }
-        for (String key : removeKeys) {
-            answer.remove(key);
         }
         return answer;
     }
