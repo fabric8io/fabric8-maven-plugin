@@ -1,0 +1,73 @@
+/*
+ * Copyright 2016 Red Hat, Inc.
+ *
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+package io.fabric8.maven.enricher.standard;
+
+import io.fabric8.kubernetes.api.builder.TypedVisitor;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentFluent;
+import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
+import io.fabric8.openshift.api.model.DeploymentConfigFluent;
+
+public class RevisionHistoryEnricher extends BaseEnricher {
+
+    public static final String DEFAULT_NAME = "f8-revision-history";
+    private static final String DEFAULT_NUMBER_OF_REVISIONS = "2";
+
+    enum Config implements Configs.Key {
+        revisionNumbers {{ d = DEFAULT_NUMBER_OF_REVISIONS; }};
+
+        protected String d;
+        public String def() { return d; }
+
+        public Integer toInt() {
+            return Integer.parseInt(d);
+        }
+    }
+
+    public RevisionHistoryEnricher(EnricherContext buildContext) {
+        super(buildContext, DEFAULT_NAME);
+    }
+
+    @Override
+    public void addMissingResources(KubernetesListBuilder builder) {
+        final Integer maxRevisionHistory = Integer.parseInt(getConfig(Config.revisionNumbers));
+
+        log.info("Adding revision history limit to %s", maxRevisionHistory);
+
+        builder.accept(new TypedVisitor<DeploymentBuilder>() {
+            @Override
+            public void visit(DeploymentBuilder item) {
+                DeploymentFluent.SpecNested<DeploymentBuilder> spec =
+                        item.getSpec() == null ? item.withNewSpec() : item.editSpec();
+                spec.withRevisionHistoryLimit(maxRevisionHistory).endSpec();
+            }
+        });
+
+        builder.accept(new TypedVisitor<DeploymentConfigBuilder>() {
+            @Override
+            public void visit(DeploymentConfigBuilder item) {
+                DeploymentConfigFluent.SpecNested<DeploymentConfigBuilder> spec =
+                        item.getSpec() == null ? item.withNewSpec() : item.editSpec();
+                spec.withRevisionHistoryLimit(maxRevisionHistory).endSpec();
+            }
+        });
+    }
+}
