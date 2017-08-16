@@ -125,8 +125,8 @@ public class ResourceMojo extends AbstractResourceMojo {
     /**
      * Folder where to find project specific files
      */
-    @Parameter(property = "fabric8.openshiftResourceOverrideDir", defaultValue = "${basedir}/src/main/fabric8-openshift")
-    private File openshiftReourceOverideDir;
+    @Parameter(property = "fabric8.resourceDirOpenShiftOverride", defaultValue = "${basedir}/src/main/fabric8-openshift-override")
+    private File resourceDirOpenShiftOverride;
 
     /**
      * Should we use the project's compile-time classpath to scan for additional enrichers/generators?
@@ -143,8 +143,8 @@ public class ResourceMojo extends AbstractResourceMojo {
     /**
      * The fabric8 working directory
      */
-    @Parameter(property = "fabric8.openshiftOverrideWorkDir", defaultValue = "${project.build.directory}/fabric8-openshift")
-    private File openshiftOverrideWorkDir;
+    @Parameter(property = "fabric8.workDirOpenShiftOverride", defaultValue = "${project.build.directory}/fabric8-openshift-override")
+    private File workDirOpenShiftOverride;
 
     /**
      * Directory to lookup for docker compose files
@@ -444,14 +444,14 @@ public class ResourceMojo extends AbstractResourceMojo {
     private void loadOpenShiftOverrideResources() throws MojoExecutionException, IOException {
         openShiftOverrideResources = new OpenShiftOverrideResources(log);
 
-        if (openshiftReourceOverideDir.isDirectory() && openshiftReourceOverideDir.exists()) {
-            File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(openshiftReourceOverideDir);
+        if (resourceDirOpenShiftOverride.isDirectory() && resourceDirOpenShiftOverride.exists()) {
+            File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDirOpenShiftOverride);
             if (resourceFiles.length > 0) {
                 String defaultName = MavenUtil.createDefaultResourceName(project);
                 KubernetesListBuilder builder = KubernetesResourceUtil.readResourceFragmentsFrom(
                         KubernetesResourceUtil.DEFAULT_RESOURCE_VERSIONING,
                         defaultName,
-                        mavenFilterFiles(resourceFiles, this.openshiftOverrideWorkDir));
+                        mavenFilterFiles(resourceFiles, this.workDirOpenShiftOverride));
                 KubernetesList list = builder.build();
                 for (HasMetadata item : list.getItems()) {
                     openShiftOverrideResources.addOpenShiftOverride(item);
