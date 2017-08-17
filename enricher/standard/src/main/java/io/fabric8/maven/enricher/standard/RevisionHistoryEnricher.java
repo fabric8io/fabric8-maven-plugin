@@ -23,8 +23,6 @@ import io.fabric8.kubernetes.api.model.extensions.DeploymentFluent;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
-import io.fabric8.openshift.api.model.DeploymentConfigFluent;
 
 public class RevisionHistoryEnricher extends BaseEnricher {
 
@@ -32,7 +30,7 @@ public class RevisionHistoryEnricher extends BaseEnricher {
     private static final String DEFAULT_NUMBER_OF_REVISIONS = "2";
 
     enum Config implements Configs.Key {
-        revisionNumbers {{ d = DEFAULT_NUMBER_OF_REVISIONS; }};
+        revisionHistoryLimit {{ d = DEFAULT_NUMBER_OF_REVISIONS; }};
 
         protected String d;
         public String def() { return d; }
@@ -48,25 +46,16 @@ public class RevisionHistoryEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
-        final Integer maxRevisionHistory = Integer.parseInt(getConfig(Config.revisionNumbers));
+        final Integer maxRevisionHistories = Integer.parseInt(getConfig(Config.revisionHistoryLimit));
 
-        log.info("Adding revision history limit to %s", maxRevisionHistory);
+        log.info("Adding revision history limit to %s", maxRevisionHistories);
 
         builder.accept(new TypedVisitor<DeploymentBuilder>() {
             @Override
             public void visit(DeploymentBuilder item) {
                 DeploymentFluent.SpecNested<DeploymentBuilder> spec =
                         item.getSpec() == null ? item.withNewSpec() : item.editSpec();
-                spec.withRevisionHistoryLimit(maxRevisionHistory).endSpec();
-            }
-        });
-
-        builder.accept(new TypedVisitor<DeploymentConfigBuilder>() {
-            @Override
-            public void visit(DeploymentConfigBuilder item) {
-                DeploymentConfigFluent.SpecNested<DeploymentConfigBuilder> spec =
-                        item.getSpec() == null ? item.withNewSpec() : item.editSpec();
-                spec.withRevisionHistoryLimit(maxRevisionHistory).endSpec();
+                spec.withRevisionHistoryLimit(maxRevisionHistories).endSpec();
             }
         });
     }
