@@ -47,15 +47,13 @@ public class RevisionHistoryEnricherTest {
 
         KubernetesListBuilder builder = new KubernetesListBuilder()
                 .addNewDeploymentItem()
-                .endDeploymentItem()
-                .addNewDeploymentConfigItem()
-                .endDeploymentConfigItem();
+                .endDeploymentItem();
 
         RevisionHistoryEnricher enricher = new RevisionHistoryEnricher(context);
 
         enricher.addMissingResources(builder);
 
-        assertRevisionHistory(builder.build(), RevisionHistoryEnricher.Config.revisionNumbers.toInt());
+        assertRevisionHistory(builder.build(), RevisionHistoryEnricher.Config.revisionHistoryLimit.toInt());
     }
 
     @Test
@@ -69,9 +67,7 @@ public class RevisionHistoryEnricherTest {
 
         KubernetesListBuilder builder = new KubernetesListBuilder()
                 .addNewDeploymentItem()
-                .endDeploymentItem()
-                .addNewDeploymentConfigItem()
-                .endDeploymentConfigItem();
+                .endDeploymentItem();
 
         RevisionHistoryEnricher enricher = new RevisionHistoryEnricher(context);
 
@@ -87,7 +83,7 @@ public class RevisionHistoryEnricherTest {
                     Collections.singletonMap(
                             RevisionHistoryEnricher.DEFAULT_NAME,
                             new TreeMap(Collections.singletonMap(
-                                    RevisionHistoryEnricher.Config.revisionNumbers.name(),
+                                    RevisionHistoryEnricher.Config.revisionHistoryLimit.name(),
                                     revisionNumber)
                             )
                     )
@@ -95,13 +91,9 @@ public class RevisionHistoryEnricherTest {
     }
 
     private void assertRevisionHistory(KubernetesList list, Integer revisionNumber) throws JsonProcessingException {
-        assertEquals(list.getItems().size(),2);
+        assertEquals(list.getItems().size(),1);
 
         String kubeJson = KubernetesResourceUtil.toJson(list.getItems().get(0));
-        assertThat(kubeJson, JsonPathMatchers.isJson());
-        assertThat(kubeJson, JsonPathMatchers.hasJsonPath("$.spec.revisionHistoryLimit", Matchers.equalTo(revisionNumber)));
-
-        String openShiftJson = KubernetesResourceUtil.toJson(list.getItems().get(1));
         assertThat(kubeJson, JsonPathMatchers.isJson());
         assertThat(kubeJson, JsonPathMatchers.hasJsonPath("$.spec.revisionHistoryLimit", Matchers.equalTo(revisionNumber)));
     }
