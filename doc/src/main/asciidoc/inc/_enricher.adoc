@@ -93,7 +93,7 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 | <<fmp-maven-issue-mgmt-enricher>>
 | Add Maven Issue Management information as annotations to the kubernetes/openshift resources
 
-| <<f8-revision-history-enricher>>
+| <<fmp-revision-history-enricher>>
 | Add revision history limit (https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#revision-history-limit[Kubernetes doc]) as a deployment spec property to the Kubernetes/OpenShift resources.
 |===
 
@@ -587,8 +587,8 @@ This information will be enriched as annotations in the generated manifest like,
 ...
 ----
 
-[[f8-revision-history-enricher]]
-==== f8-revision-history
+[[fmp-revision-history-enricher]]
+==== fmp-revision-history
 
 This enricher adds `spec.revisionHistoryLimit` property to deployment spec of Kubernetes/OpenShift resources.
 A deployment’s revision history is stored in the replica sets, that specifies the number of old ReplicaSets to retain in order to allow rollback.
@@ -613,9 +613,9 @@ Just as any other enricher you can specify required properties with in the enric
 ...
 <enricher>
     <config>
-        <f8-revision-history>
+        <fmp-revision-history>
             <limit>8</limit>
-        </f8-revision-history>
+        </fmp-revision-history>
     </config>
 </enricher>
 ...
