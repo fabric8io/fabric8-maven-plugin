@@ -53,7 +53,7 @@ public class RevisionHistoryEnricherTest {
 
         enricher.addMissingResources(builder);
 
-        assertRevisionHistory(builder.build(), RevisionHistoryEnricher.Config.revisionHistoryLimit.toInt());
+        assertRevisionHistory(builder.build(), RevisionHistoryEnricher.Config.limit.toInt());
     }
 
     @Test
@@ -83,7 +83,7 @@ public class RevisionHistoryEnricherTest {
                     Collections.singletonMap(
                             RevisionHistoryEnricher.DEFAULT_NAME,
                             new TreeMap(Collections.singletonMap(
-                                    RevisionHistoryEnricher.Config.revisionHistoryLimit.name(),
+                                    RevisionHistoryEnricher.Config.limit.name(),
                                     revisionNumber)
                             )
                     )

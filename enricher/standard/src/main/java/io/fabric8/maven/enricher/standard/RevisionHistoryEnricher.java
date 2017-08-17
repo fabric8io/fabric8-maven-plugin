@@ -30,7 +30,7 @@ public class RevisionHistoryEnricher extends BaseEnricher {
     private static final String DEFAULT_NUMBER_OF_REVISIONS = "2";
 
     enum Config implements Configs.Key {
-        revisionHistoryLimit {{ d = DEFAULT_NUMBER_OF_REVISIONS; }};
+        limit {{ d = DEFAULT_NUMBER_OF_REVISIONS; }};
 
         protected String d;
         public String def() { return d; }
@@ -46,7 +46,7 @@ public class RevisionHistoryEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
-        final Integer maxRevisionHistories = Integer.parseInt(getConfig(Config.revisionHistoryLimit));
+        final Integer maxRevisionHistories = Integer.parseInt(getConfig(Config.limit));
 
         log.info("Adding revision history limit to %s", maxRevisionHistories);
 
