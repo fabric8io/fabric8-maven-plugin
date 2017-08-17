@@ -44,15 +44,17 @@ public class RevisionHistoryEnricherTest {
 
     @Test
     public void testDefaultRevisionHistoryLimit() throws JsonProcessingException {
-
+        // Given
         KubernetesListBuilder builder = new KubernetesListBuilder()
                 .addNewDeploymentItem()
                 .endDeploymentItem();
 
         RevisionHistoryEnricher enricher = new RevisionHistoryEnricher(context);
 
+        // When
         enricher.addMissingResources(builder);
 
+        // Then
         assertRevisionHistory(builder.build(), RevisionHistoryEnricher.Config.limit.toInt());
     }
 
@@ -65,14 +67,17 @@ public class RevisionHistoryEnricherTest {
             context.getConfig(); result = prepareEnricherConfig(revisionNumber);
         }};
 
+        // Given
         KubernetesListBuilder builder = new KubernetesListBuilder()
                 .addNewDeploymentItem()
                 .endDeploymentItem();
 
         RevisionHistoryEnricher enricher = new RevisionHistoryEnricher(context);
 
+        // When
         enricher.addMissingResources(builder);
 
+        // Then
         assertRevisionHistory(builder.build(), Integer.parseInt(revisionNumber));
     }
 

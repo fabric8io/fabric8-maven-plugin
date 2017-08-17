@@ -24,11 +24,17 @@ import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 
+/**
+ * This enricher adds the 'revisionHistoryLimit' property to deployment spec of RCs / RSs for KuberNetes/OpenShift resource descriptors.
+ * This property determines number of previous ReplicaControlller to retain in history in order to rollback previous one.
+ */
+
 public class RevisionHistoryEnricher extends BaseEnricher {
 
     public static final String DEFAULT_NAME = "fmp-revision-history";
     private static final String DEFAULT_NUMBER_OF_REVISIONS = "2";
 
+    // config keys
     enum Config implements Configs.Key {
         limit {{ d = DEFAULT_NUMBER_OF_REVISIONS; }};
 
