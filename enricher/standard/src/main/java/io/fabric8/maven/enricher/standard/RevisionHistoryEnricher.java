@@ -26,7 +26,7 @@ import io.fabric8.maven.enricher.api.EnricherContext;
 
 public class RevisionHistoryEnricher extends BaseEnricher {
 
-    public static final String DEFAULT_NAME = "f8-revision-history";
+    public static final String DEFAULT_NAME = "fmp-revision-history";
     private static final String DEFAULT_NUMBER_OF_REVISIONS = "2";
 
     enum Config implements Configs.Key {
