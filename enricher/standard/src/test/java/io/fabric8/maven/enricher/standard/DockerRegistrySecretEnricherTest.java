@@ -21,17 +21,12 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.maven.core.util.SecretConstants;
-import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
-import org.apache.maven.model.Scm;
-import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -54,14 +49,19 @@ public class DockerRegistrySecretEnricherTest {
 
     @Test
     public void testDockerRegistry() {
-        final Settings settings = new Settings();
-        settings.addServer(createBaseServer());
-        BaseEnricher.applySettings(settings);
+        new Expectations() {
+            {
+                {
+                    context.getSettings();
+                    result = createSettings();
+                }
+            }
+        };
+
 
         DockerRegistrySecretEnricher enricher = new DockerRegistrySecretEnricher(context);
         KubernetesListBuilder builder = new KubernetesListBuilder();
         builder.addToSecretItems(createBaseSecret(true));
-
         enricher.addMissingResources(builder);
 
         KubernetesListBuilder expectedBuilder = new KubernetesListBuilder();
@@ -73,12 +73,42 @@ public class DockerRegistrySecretEnricherTest {
     }
 
     @Test
+    public void testDockerRegistryWithBadKind() {
+        new Expectations() {
+            {
+                {
+                    context.getSettings();
+                    result = createSettings();
+                }
+            }
+        };
+
+        DockerRegistrySecretEnricher enricher = new DockerRegistrySecretEnricher(context);
+        KubernetesListBuilder builder = new KubernetesListBuilder();
+        Secret secret = createBaseSecret(true);
+        secret.setKind("Secrets");
+        builder.addToSecretItems(createBaseSecret(true));
+        KubernetesList expected = builder.build();
+
+        enricher.addMissingResources(builder);
+        assertEquals(expected, builder.build());
+    }
+
+    @Test
     public void testDockerRegistryWithBadAnnotation() {
         final Settings settings = new Settings();
         settings.addServer(createBaseServer());
-        BaseEnricher.applySettings(settings);
-
         DockerRegistrySecretEnricher enricher = new DockerRegistrySecretEnricher(context);
+
+        new Expectations() {
+            {
+                {
+                    context.getSettings();
+                    returns(new Settings());
+                }
+            }
+        };
+
         KubernetesListBuilder builder = new KubernetesListBuilder();
         Secret secret = createBaseSecret(true);
         secret.getMetadata().getAnnotations().put(annotation, "docker1.io");
@@ -111,4 +141,9 @@ public class DockerRegistrySecretEnricherTest {
         return server;
     }
 
+    public Settings createSettings() {
+        Settings settings = new Settings();
+        settings.addServer(createBaseServer());
+        return settings;
+    }
 }
