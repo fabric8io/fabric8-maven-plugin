@@ -56,7 +56,6 @@
                     <execution>
                         <goals>
                             <goal>resource</goal>
-                            <goal>secrets</goal>
                             <goal>build</goal>
                             <goal>push</goal>
                             <goal>apply</goal>
@@ -66,14 +65,6 @@
                 <configuration>
                     <ignoreServices>true</ignoreServices>
                     <registry>${docker.registry}</registry>
-                    <resources>
-                        <secrets>
-                            <secret>
-                                <dockerId>${docker.registry}</dockerId>
-                                <name>mydockerkey1</name>
-                            </secret>
-                        </secrets>
-                    </resources>
                 </configuration>
             </plugin>
         </plugins>

@@ -83,6 +83,8 @@ public class ResourceMojo extends AbstractResourceMojo {
     private static final String DOCKER_MAVEN_PLUGIN_KEY = "io.fabric8:docker-maven-plugin";
     private static final String DOCKER_IMAGE_USER = "docker.image.user";
 
+    private final String secretsFolderName = "secrets";
+
     @Component(role = MavenFileFilter.class, hint = "default")
     private MavenFileFilter mavenFileFilter;
 
@@ -94,9 +96,6 @@ public class ResourceMojo extends AbstractResourceMojo {
      */
     @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
     private File resourceDir;
-
-    @Parameter(property = "fabric8.secretsResourceDir", defaultValue = "${basedir}/src/main/fabric8/secrets")
-    private File secretsResourceDir;
 
     /**
      * Should we use the project's compile-time classpath to scan for additional enrichers/generators?
@@ -222,9 +221,6 @@ public class ResourceMojo extends AbstractResourceMojo {
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         clusterAccess = new ClusterAccess(namespace);
 
-        // apply the settings file to enricher
-        BaseEnricher.applySettings(this.settings);
-
         try {
             lateInit();
 
@@ -237,7 +233,7 @@ public class ResourceMojo extends AbstractResourceMojo {
                 KubernetesList secretsResource = pickOutSecretsResource(resources);
 
                 writeAllResources(resources, this.targetDir);
-                writeAllResources(secretsResource, new File(this.targetDir, "secrets"));
+                writeAllResources(secretsResource, new File(this.targetDir, secretsFolderName));
 
             }
         } catch (IOException e) {
@@ -396,7 +392,8 @@ public class ResourceMojo extends AbstractResourceMojo {
             .images(resolvedImages)
             .log(log)
             .useProjectClasspath(useProjectClasspath)
-            .openshiftDependencyResources(openshiftDependencyResources);
+            .openshiftDependencyResources(openshiftDependencyResources)
+            .settings(settings);
         if (resources != null) {
             ctxBuilder.namespace(resources.getNamespace());
         }
