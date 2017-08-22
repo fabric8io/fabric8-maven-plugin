@@ -86,3 +86,79 @@ The following subelements are possible for `<labels>` and `<annotations>` :
 | *service*
 | Labels and annotations applied to `Service` objects.
 |===
+
+
+[[resource-secrets]]
+=== Secrets
+
+
+Configure docker registry secrets as section
+<<authentication, Authentication>> says, save the server information
+into `~/.m2/setting.xml`.
+
+**XML configuration**
+
+
+Refer docker id in the `pom.xml`. It should contain the following field:
+
+[cols="1,1,6"]
+|===
+|key |required |description
+
+|**dockerId**
+|true
+|the server id which is configured in
+`~/.m2/setting.xml`
+
+|**name**
+|true
+|this will be used as name of the kubernetes secret resource
+
+|**namespace**
+|false
+|the secret resource will be apply to the specific
+namespace, default is `default`
+|===
+
+This is best explained by an example.
+
+.Example for XML configuration
+
+[source,xml]
+----
+<properties>
+    <docker.registry>docker.io</docker.registry>
+</properties>
+...
+<configuration>
+    <resources>
+        <secrets>
+            <secret>
+                <dockerId>${docker.registry}</dockerId>
+                <name>mydockerkey</name>
+            </secret>
+        </secrets>
+    </resources>
+</configuration>
+----
+
+**Yaml fragment with annotation**
+
+
+Refer the docker id in a yaml fragment with an annotaion
+`maven.fabric8.io/dockerId`. The yaml fragment file should be put under
+the `src/fabric8/secrets` folder.
+
+.Example
+
+[source,yaml]
+----
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mydockerkey
+  namespace: default
+  annotations:
+    maven.fabric8.io/dockerId: ${docker.registry}
+type: kubernetes.io/dockercfg
+----
