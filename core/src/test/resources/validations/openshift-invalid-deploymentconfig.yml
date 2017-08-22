@@ -75,7 +75,7 @@ spec:
           initialDelaySeconds: 10
         securityContext:
           privileged: false
-  test: false
+  test: "true"
   triggers:
   - type: ConfigChange
 status: {}

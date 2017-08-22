@@ -21,32 +21,31 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
-import org.apache.commons.io.FileUtils;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Path;
 import javax.validation.metadata.ConstraintDescriptor;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class ResourceValidator {
 
-    private static final String KUBERNETES = "kubernetes";
+    public static final String KUBERNETES = "kubernetes";
     public static final String OPENSHIFT = "openshift";
 
     private File resources[];
     private String target = KUBERNETES;
     private final static String jsonSchemaPath = "https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s-standalone/%s.json";
-
-    public ResourceValidator(File file, String target) {
-        this(file);
-        this.target = target;
-    }
+    private List<IgnoreRule> ignorePaths = new ArrayList<>();
 
     public ResourceValidator(File inputFile) {
         if(inputFile.isDirectory()) {
@@ -56,10 +55,24 @@ public class ResourceValidator {
         }
     }
 
+    public ResourceValidator(File file, String target) {
+        this(file);
+        this.target = target;
+        setupIgnorePaths(this.target);
+    }
+
+    private void setupIgnorePaths(String target) {
+        if(OPENSHIFT.equalsIgnoreCase(target)) {
+            ignorePaths.add(new IgnoreRule("$.spec.test", IgnoreRule.REQUIRED));
+            ignorePaths.add(new IgnoreRule("$.status", IgnoreRule.REQUIRED));
+        }
+    }
+
     public int validate() throws ConstraintViolationException, IOException {
         for(File resource: resources) {
             JsonNode resourceNode = geFileContent(resource);
             JsonSchema schema = getJsonSchema(prepareSchemaUrl(resourceNode));
+
             Set<ValidationMessage> errors = schema.validate(resourceNode);
             processErrors(errors, resource);
         }
@@ -70,12 +83,23 @@ public class ResourceValidator {
     private void processErrors(Set<ValidationMessage> errors, File resource) {
         Set<ConstraintViolationImpl> constraintViolations = new HashSet<>();
         for (ValidationMessage errorMsg: errors) {
-            constraintViolations.add(new ConstraintViolationImpl(errorMsg));
+            if(!ignoreError(ignorePaths, errorMsg))
+                constraintViolations.add(new ConstraintViolationImpl(errorMsg));
         }
 
         if(constraintViolations.size() > 0) {
             throw new ConstraintViolationException(getErrorMessage(resource, constraintViolations), constraintViolations);
         }
+    }
+
+    private boolean ignoreError(List<IgnoreRule> ignorePaths, ValidationMessage errorMsg) {
+        for (IgnoreRule rule : ignorePaths) {
+            if(errorMsg.getMessage().contains(rule.getPath()) && errorMsg.getType().equalsIgnoreCase(rule.getType())) {
+                return  true;
+            }
+        }
+
+        return false;
     }
 
     private String getErrorMessage(File resource, Set<ConstraintViolationImpl> violations) {
@@ -178,5 +202,26 @@ public class ResourceValidator {
         public String toString() {
             return "[message=" + getMessage().replaceFirst("[$]", "") +", violation type="+errorMsg.getType()+"]";
         }
+    }
+}
+
+class IgnoreRule {
+
+    public static final String REQUIRED = "required";
+
+    private final String path;
+    private final String type;
+
+    public IgnoreRule(String path, String type) {
+        this.path = path;
+        this.type = type;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public String getType() {
+        return type;
     }
 }
