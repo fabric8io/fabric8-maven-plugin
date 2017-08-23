@@ -129,10 +129,4 @@ public abstract class BaseEnricher implements Enricher {
         }
         return false;
     }
-
-    protected static Settings SETTINGS;
-    public static void applySettings(Settings settings) {
-        SETTINGS = settings;
-    }
-
 }

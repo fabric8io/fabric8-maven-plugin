@@ -24,7 +24,7 @@ public class DockerRegistrySecretEnricher extends SecretEnricher {
 
     @Override
     protected Map<String, String> generateData(String dockerId) {
-        String dockerSecret = DockerUtil.getDockerJsonConfigString(SETTINGS, dockerId);
+        String dockerSecret = DockerUtil.getDockerJsonConfigString(getContext().getSettings(), dockerId);
         if (Strings.isNullOrBlank(dockerSecret)) {
             return null;
         }

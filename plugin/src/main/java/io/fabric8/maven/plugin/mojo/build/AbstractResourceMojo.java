@@ -71,9 +71,9 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
         return null;
     }
 
-    protected void writeResources(KubernetesList resources, ResourceClassifier classifier) throws MojoExecutionException {
+    protected void writeResources(KubernetesList resources, ResourceClassifier classifier, File targetDir) throws MojoExecutionException {
         // write kubernetes.yml / openshift.yml
-        File resourceFileBase = new File(this.targetDir, classifier.getValue());
+        File resourceFileBase = new File(targetDir, classifier.getValue());
 
         File file = writeResourcesIndividualAndComposite(resources, resourceFileBase, this.resourceFileType, log);
 
@@ -89,6 +89,10 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
             // Attach it to the Maven reactor so that it will also get deployed
             projectHelper.attachArtifact(project, json.getArtifactType(), classifier.getValue(), file);
         }
+    }
+
+    protected void writeResources(KubernetesList resources, ResourceClassifier classifier) throws MojoExecutionException {
+        writeResources(resources, classifier, this.targetDir);
     }
 
     public static File writeResourcesIndividualAndComposite(KubernetesList resources, File resourceFileBase, ResourceFileType resourceFileType, Logger log) throws MojoExecutionException {

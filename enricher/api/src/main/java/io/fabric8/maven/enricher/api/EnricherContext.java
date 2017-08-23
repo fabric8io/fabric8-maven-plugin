@@ -27,6 +27,7 @@ import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.settings.Settings;
 
 /**
  * The context given to each enricher from where it can extract build specific information.
@@ -50,6 +51,8 @@ public class EnricherContext {
     private OpenShiftDependencyResources openshiftDependencyResources;
     private MavenSession session;
     private GoalFinder goalFinder;
+
+    private Settings settings;
 
     private EnricherContext() {}
 
@@ -75,6 +78,10 @@ public class EnricherContext {
 
     public String getNamespace() {
         return namespace;
+    }
+
+    public Settings getSettings() {
+        return settings;
     }
 
     public boolean isUseProjectClasspath() {
@@ -163,8 +170,14 @@ public class EnricherContext {
             return this;
         }
 
+        public Builder settings(Settings settings) {
+            ctx.settings = settings;
+            return this;
+        }
+
         public EnricherContext build() {
             return ctx;
         }
+
     }
 }
