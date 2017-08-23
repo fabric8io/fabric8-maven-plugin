@@ -163,7 +163,7 @@ type: kubernetes.io/dockercfg
 
 [[resource-validation]]
 === Resource Validation
-Resource goal also validates the generated resource descriptors as per API spec of https://raw.githubusercontent.com/kubernetes/kubernetes/master/api/openapi-spec/swagger.json[Kubernetes] and https://raw.githubusercontent.com/openshift/origin/master/api/swagger-spec/openshift-openapi-spec.json[OpenShift].
+Resource goal also validates the generated resource descriptors using API specification of https://raw.githubusercontent.com/kubernetes/kubernetes/master/api/openapi-spec/swagger.json[Kubernetes] and https://raw.githubusercontent.com/openshift/origin/master/api/swagger-spec/openshift-openapi-spec.json[OpenShift].
 
 .Validation Configuration
 [cols="1,6,1"]
@@ -171,6 +171,6 @@ Resource goal also validates the generated resource descriptors as per API spec 
 | Configuration | Description | Default
 
 | *fabric8.skipResourceValidation*
-| If value is set to `true` then resource validation is skipped
+| If value is set to `true` then resource validation is skipped. This may be useful if resource validation is getting failed due to some reason but still you want to continue the deployment.
 | false
 |===

@@ -28,6 +28,7 @@ import io.fabric8.maven.core.handler.ServiceHandler;
 import io.fabric8.maven.core.service.ComposeService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.core.util.*;
+import io.fabric8.maven.core.util.validator.ResourceValidator;
 import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -277,8 +278,9 @@ public class ResourceMojo extends AbstractResourceMojo {
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
         } catch (ConstraintViolationException e) {
-            log.error(e.getMessage());
-            throw new MojoExecutionException("Failed to generate fabric8 descriptor, use \"mvn -Dfabric8.skipResourceValidation=true\" option to skip the validation");
+            log.error("[[R]]" + e.getMessage() + "[[R]]");
+            log.error("[[R]]use \"mvn -Dfabric8.skipResourceValidation=true\" option to skip the validation[[R]]");
+            throw new MojoExecutionException("Failed to generate fabric8 descriptor");
         }
     }
 

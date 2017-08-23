@@ -13,7 +13,7 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.core.util;
+package io.fabric8.maven.core.util.validator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +21,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
+import io.fabric8.maven.core.util.ResourceClassifier;
+import io.fabric8.maven.core.util.validator.IgnoreRule;
 import io.fabric8.maven.docker.util.Logger;
 
 import javax.validation.ConstraintViolation;
@@ -38,13 +40,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-
 /**
- * Validates the Kubernetes and OpenShift resource descriptors as per API specification.
+ * Validates Kubernetes/OpenShift resource descriptors using JSON schema validation method.
+ * For Openshift it adds some some exceptions from JSON schema constraints and ignores some validation errors.
  */
 
 public class ResourceValidator {
 
+    // TODO: Locate URL under fabric8 repositories
     private final static String jsonSchemaPath = "https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s-standalone/%s.json";
 
     private Logger log;
@@ -65,8 +68,8 @@ public class ResourceValidator {
 
     /**
      * @param inputFile File/Directory path of resource descriptors
-     * @param target Type of resource
-     * @param log Logger for printing messages
+     * @param target  Target platform e.g OpenShift, Kubernetes
+     * @param log Logger for logging messages on standard output devices
      */
     public ResourceValidator(File inputFile, ResourceClassifier target, Logger log) {
         this(inputFile);
@@ -76,11 +79,12 @@ public class ResourceValidator {
     }
 
     /*
-     * Add rules that helps to ignore validation constraint from JSON schema for OpenShift/Kubernetes. There are some fields in JSON schema which are marked as required
-     * but in essense it's not required to provide values for this fields while creating the resources.
+     * Add exception rules to ignore validation constraint from JSON schema for OpenShift/Kubernetes resources. Some fields in JSON schema which are marked as required
+     * but in reality it's not required to provide values for those fields while creating the resources.
      * e.g. In DeploymentConfig(https://docs.openshift.com/container-platform/3.6/rest_api/openshift_v1.html#v1-deploymentconfig) model 'status' field is marked as
      * required.
      */
+    // TODO: Need to improve ignore rules as these are quite generic
     private void setupIgnoreRules(ResourceClassifier target) {
         if(ResourceClassifier.OPENSHIFT.equals(target)) {
             ignorePaths.add(new IgnoreRule("$.spec.test", IgnoreRule.REQUIRED));
@@ -91,7 +95,7 @@ public class ResourceValidator {
     }
 
     /**
-     * Validates the resource descriptors  as per JSON schema. If any resource is invalid it throws @{@link ConstraintViolationException} with
+     * Validates the resource descriptors as per JSON schema. If any resource is invalid it throws @{@link ConstraintViolationException} with
      * all violated constraints
      *
      * @return number of resources processed
@@ -233,30 +237,5 @@ public class ResourceValidator {
         public String toString() {
             return "[message=" + getMessage().replaceFirst("[$]", "") +", violation type="+errorMsg.getType()+"]";
         }
-    }
-}
-
-
-/**
- * Model to represent ignore validation rules as tuple of json tree path and constraint type
- */
-class IgnoreRule {
-
-    public static final String REQUIRED = "required";
-
-    private final String path;
-    private final String type;
-
-    public IgnoreRule(String path, String type) {
-        this.path = path;
-        this.type = type;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public String getType() {
-        return type;
     }
 }

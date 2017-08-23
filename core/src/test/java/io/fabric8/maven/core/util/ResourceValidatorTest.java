@@ -16,6 +16,7 @@
 package io.fabric8.maven.core.util;
 
 import com.jayway.jsonassert.impl.matcher.IsCollectionWithSize;
+import io.fabric8.maven.core.util.validator.ResourceValidator;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Mocked;
 import org.hamcrest.Matchers;
@@ -40,51 +41,85 @@ public class ResourceValidatorTest {
 
     @Test
     public void testValidKubernetesResources() throws IOException, URISyntaxException {
+        // Given
         URL fileUrl = ResourceValidatorTest.class.getResource("/validations/kubernetes-deploy.yml");
+
+        // When
         ResourceValidator resourceValidator = new ResourceValidator(Paths.get(fileUrl.toURI()).toFile(), ResourceClassifier.KUBERNETES, logger);
         int validResources = resourceValidator.validate();
+
+        // Then
         Assert.assertEquals(1, validResources);
     }
 
     @Test
     public void testInvalidKubernetesPodSpec() throws IOException, URISyntaxException {
+        // Given
         URL fileUrl = ResourceValidatorTest.class.getResource("/validations/kubernetes-deploy-invalid.yml");
+
+        // When
         ResourceValidator resourceValidator = new ResourceValidator(Paths.get(fileUrl.toURI()).toFile(), ResourceClassifier.KUBERNETES, logger);
+
+        // Then
         thrown.expect(ConstraintViolationException.class);
         thrown.expect(Matchers.hasProperty("constraintViolations", IsCollectionWithSize.hasSize(2)));
+
+        // On
         resourceValidator.validate();
     }
 
     @Test
     public void testValidKubernetesResourcesDirectory() throws IOException, URISyntaxException {
+        // Given
         URL fileUrl = ResourceValidatorTest.class.getResource("/validations/kubernetes");
+
+        // When
         ResourceValidator resourceValidator = new ResourceValidator(Paths.get(fileUrl.toURI()).toFile(), ResourceClassifier.KUBERNETES, logger);
         int resources = resourceValidator.validate();
+
+        // Then
         Assert.assertEquals(2, resources);
     }
 
     @Test
     public void testValidOpenShiftResources() throws IOException, URISyntaxException {
+        // Given
         URL fileUrl = ResourceValidatorTest.class.getResource("/validations/openshift-deploymentconfig.yml");
+
+        // When
         ResourceValidator resourceValidator = new ResourceValidator(Paths.get(fileUrl.toURI()).toFile(), ResourceClassifier.OPENSHIFT, logger);
         int resources = resourceValidator.validate();
+
+        // Then
         Assert.assertEquals(1, resources);
     }
 
     @Test
     public void testInvalidOpenshiftDeployConfig() throws IOException, URISyntaxException {
+        // Given
         URL fileUrl = ResourceValidatorTest.class.getResource("/validations/openshift-invalid-deploymentconfig.yml");
+
+        // When
         ResourceValidator resourceValidator = new ResourceValidator(Paths.get(fileUrl.toURI()).toFile(), ResourceClassifier.OPENSHIFT, logger);
+
+        // Then
         thrown.expect(ConstraintViolationException.class);
         thrown.expect(Matchers.hasProperty("constraintViolations", IsCollectionWithSize.hasSize(1)));
+
+        // On
         resourceValidator.validate();
     }
 
     @Test
     public void testValidOpenshiftResourcesDirectory() throws IOException, URISyntaxException {
+        // Given
         URL fileUrl = ResourceValidatorTest.class.getResource("/validations/openshift");
+
+        // When
         ResourceValidator resourceValidator = new ResourceValidator(Paths.get(fileUrl.toURI()).toFile(), ResourceClassifier.OPENSHIFT, logger);
         int resources = resourceValidator.validate();
+
+        // Then
         Assert.assertEquals(2, resources);
     }
 }
