@@ -38,6 +38,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+
+/**
+ * Validates the Kubernetes and OpenShift resource descriptors as per API specification.
+ */
+
 public class ResourceValidator {
 
     private final static String jsonSchemaPath = "https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s-standalone/%s.json";
@@ -47,6 +52,9 @@ public class ResourceValidator {
     private ResourceClassifier target = ResourceClassifier.KUBERNETES;
     private List<IgnoreRule> ignorePaths = new ArrayList<>();
 
+    /**
+     * @param inputFile File/Directory path of resource descriptors
+     */
     public ResourceValidator(File inputFile) {
         if(inputFile.isDirectory()) {
             resources = inputFile.listFiles();
@@ -55,13 +63,24 @@ public class ResourceValidator {
         }
     }
 
-    public ResourceValidator(File file, ResourceClassifier target, Logger log) {
-        this(file);
+    /**
+     * @param inputFile File/Directory path of resource descriptors
+     * @param target Type of resource
+     * @param log Logger for printing messages
+     */
+    public ResourceValidator(File inputFile, ResourceClassifier target, Logger log) {
+        this(inputFile);
         this.target = target;
         this.log = log;
         setupIgnoreRules(this.target);
     }
 
+    /*
+     * Add rules that helps to ignore validation constraint from JSON schema for OpenShift/Kubernetes. There are some fields in JSON schema which are marked as required
+     * but in essense it's not required to provide values for this fields while creating the resources.
+     * e.g. In DeploymentConfig(https://docs.openshift.com/container-platform/3.6/rest_api/openshift_v1.html#v1-deploymentconfig) model 'status' field is marked as
+     * required.
+     */
     private void setupIgnoreRules(ResourceClassifier target) {
         if(ResourceClassifier.OPENSHIFT.equals(target)) {
             ignorePaths.add(new IgnoreRule("$.spec.test", IgnoreRule.REQUIRED));
@@ -71,6 +90,14 @@ public class ResourceValidator {
         }
     }
 
+    /**
+     * Validates the resource descriptors  as per JSON schema. If any resource is invalid it throws @{@link ConstraintViolationException} with
+     * all violated constraints
+     *
+     * @return number of resources processed
+     * @throws ConstraintViolationException
+     * @throws IOException
+     */
     public int validate() throws ConstraintViolationException, IOException {
         for(File resource: resources) {
             log.info("validating %s resource", resource.toString());
@@ -209,6 +236,10 @@ public class ResourceValidator {
     }
 }
 
+
+/**
+ * Model to represent ignore validation rules as tuple of json tree path and constraint type
+ */
 class IgnoreRule {
 
     public static final String REQUIRED = "required";
