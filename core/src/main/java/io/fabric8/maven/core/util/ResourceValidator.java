@@ -21,6 +21,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
+import io.fabric8.maven.docker.util.Logger;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -39,12 +40,11 @@ import java.util.Set;
 
 public class ResourceValidator {
 
-    public static final String KUBERNETES = "kubernetes";
-    public static final String OPENSHIFT = "openshift";
-
-    private File resources[];
-    private String target = KUBERNETES;
     private final static String jsonSchemaPath = "https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s-standalone/%s.json";
+
+    private Logger log;
+    private File resources[];
+    private ResourceClassifier target = ResourceClassifier.KUBERNETES;
     private List<IgnoreRule> ignorePaths = new ArrayList<>();
 
     public ResourceValidator(File inputFile) {
@@ -55,21 +55,25 @@ public class ResourceValidator {
         }
     }
 
-    public ResourceValidator(File file, String target) {
+    public ResourceValidator(File file, ResourceClassifier target, Logger log) {
         this(file);
         this.target = target;
-        setupIgnorePaths(this.target);
+        this.log = log;
+        setupIgnoreRules(this.target);
     }
 
-    private void setupIgnorePaths(String target) {
-        if(OPENSHIFT.equalsIgnoreCase(target)) {
+    private void setupIgnoreRules(ResourceClassifier target) {
+        if(ResourceClassifier.OPENSHIFT.equals(target)) {
             ignorePaths.add(new IgnoreRule("$.spec.test", IgnoreRule.REQUIRED));
             ignorePaths.add(new IgnoreRule("$.status", IgnoreRule.REQUIRED));
+            ignorePaths.add(new IgnoreRule("$.spec.host", IgnoreRule.REQUIRED));
+            ignorePaths.add(new IgnoreRule("$.spec.to.weight", IgnoreRule.REQUIRED));
         }
     }
 
     public int validate() throws ConstraintViolationException, IOException {
         for(File resource: resources) {
+            log.info("validating %s resource", resource.toString());
             JsonNode resourceNode = geFileContent(resource);
             JsonSchema schema = getJsonSchema(prepareSchemaUrl(resourceNode));
 
