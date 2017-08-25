@@ -4680,6 +4680,10 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-maven-issue-mgmt-enricher">f8-maven-issue-mgmt</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add Maven Issue Management information as annotations to the kubernetes/openshift resources</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-revision-history-enricher">fmp-revision-history</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add revision history limit (<a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#revision-history-limit">Kubernetes doc</a>) as a deployment spec property to the Kubernetes/OpenShift resources.</p></td>
+</tr>
 </tbody>
 </table>
 <div class="sect3">
@@ -5528,6 +5532,67 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
 </div>
 </div>
 </div>
+<div class="sect4">
+<h5 id="fmp-revision-history-enricher">fmp-revision-history</h5>
+<div class="paragraph">
+<p>This enricher adds <code>spec.revisionHistoryLimit</code> property to deployment spec of Kubernetes/OpenShift resources.
+A deployment’s revision history is stored in the replica sets, that specifies the number of old ReplicaSets to retain in order to allow rollback.
+For more information read <a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#revision-history-limit">Kubernetes documentation</a>.</p>
+</div>
+<div class="paragraph">
+<p>The following configuration parameters can be used to influence the behaviour of this enricher:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 33. Default revision history enricher</caption>
+<colgroup>
+<col style="width: 28.5714%;">
+<col style="width: 28.5714%;">
+<col style="width: 42.8572%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">limit</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of revision histories to retain</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Just as any other enricher you can specify required properties with in the enricher&#8217;s configuration as below,</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml">...
+<span class="tag">&lt;enricher&gt;</span>
+    <span class="tag">&lt;config&gt;</span>
+        <span class="tag">&lt;fmp-revision-history&gt;</span>
+            <span class="tag">&lt;limit&gt;</span>8<span class="tag">&lt;/limit&gt;</span>
+        <span class="tag">&lt;/fmp-revision-history&gt;</span>
+    <span class="tag">&lt;/config&gt;</span>
+<span class="tag">&lt;/enricher&gt;</span>
+...</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This information will be enriched as spec property in the generated manifest like,</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="head"><span class="head">...</span></span>
+<span class="key">kind</span>: <span class="string"><span class="content">Deployment</span></span>
+<span class="key">spec</span>:
+  <span class="key">revisionHistoryLimit</span>: <span class="string"><span class="content">8</span></span>
+<span class="head"><span class="head">...</span></span></code></pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -5607,7 +5672,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
 <p>Each <code>profiles.yml</code> has a list of profiles which are defined with these elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 33. Profile elements</caption>
+<caption class="title">Table 34. Profile elements</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -5643,7 +5708,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
 <p>The definition of generators and enrichers in the profile follow the same format:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 34. Generator and Enericher definition</caption>
+<caption class="title">Table 35. Generator and Enericher definition</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -5801,7 +5866,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
 <p>This plugin comes with a list of the following predefined profiles:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 35. Predefined Profiles</caption>
+<caption class="title">Table 36. Predefined Profiles</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -5879,6 +5944,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
     <span class="comment"># Dependencies shouldn't be enriched anymore, therefor it's last in the list</span>
     - <span class="string"><span class="content">fmp-dependency</span></span>
     - <span class="string"><span class="content">f8-watch</span></span>
+    - <span class="string"><span class="content">fmp-revision-history</span></span>
 
   <span class="key">generator</span>:
     <span class="comment"># The order given in &quot;includes&quot; is the order in which generators are called</span>
@@ -6436,7 +6502,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.25<br>
-Last updated 2017-08-25 09:37:06 UTC
+Last updated 2017-08-25 09:37:39 UTC
 </div>
 </div>
 </body>
