@@ -61,6 +61,11 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                 if (replicas != null) {
                     specBuilder.withReplicas(replicas);
                 }
+                Integer revisionHistoryLimit = spec.getRevisionHistoryLimit();
+                if (revisionHistoryLimit != null) {
+                    specBuilder.withRevisionHistoryLimit(revisionHistoryLimit);
+                }
+
                 LabelSelector selector = spec.getSelector();
                 if (selector  != null) {
                     Map<String, String> matchLabels = selector.getMatchLabels();

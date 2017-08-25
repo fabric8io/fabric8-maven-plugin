@@ -42,6 +42,7 @@
     # Dependencies shouldn't be enriched anymore, therefor it's last in the list
     - fmp-dependency
     - f8-watch
+    - fmp-revision-history
 
   generator:
     # The order given in "includes" is the order in which generators are called
