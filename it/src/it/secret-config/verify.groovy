@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 
 [ "kubernetes", "openshift"  ].each {
   Verify.verifyResourceDescriptors(
-          new File(basedir, sprintf("/target/classes/META-INF/fabric8/secrets/%s.yml",it)),
+          new File(basedir, sprintf("/target/classes/META-INF/fabric8/%s.yml",it)),
           new File(basedir, sprintf("/expected/%s.yml",it)))
 }
 

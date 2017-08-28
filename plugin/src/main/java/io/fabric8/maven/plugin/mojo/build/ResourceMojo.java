@@ -95,8 +95,6 @@ public class ResourceMojo extends AbstractResourceMojo {
     private static final String DOCKER_MAVEN_PLUGIN_KEY = "io.fabric8:docker-maven-plugin";
     private static final String DOCKER_IMAGE_USER = "docker.image.user";
 
-    private final String secretsFolderName = "secrets";
-
     @Component(role = MavenFileFilter.class, hint = "default")
     private MavenFileFilter mavenFileFilter;
 
@@ -255,11 +253,14 @@ public class ResourceMojo extends AbstractResourceMojo {
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
                 // Extract and generate resources which can be a mix of Kubernetes and OpenShift resources
                 KubernetesList resources = generateResources(resolvedImages);
-                KubernetesList secretsResource = pickOutSecretsResource(resources);
 
-                writeAllResources(resources, this.targetDir);
-                writeAllResources(secretsResource, new File(this.targetDir, secretsFolderName));
+                // Adapt list to use OpenShift specific resource objects
+                KubernetesList openShiftResources = convertToOpenShiftResources(resources);
+                writeResources(openShiftResources, ResourceClassifier.OPENSHIFT);
 
+                // Remove OpenShift specific stuff provided by fragments
+                KubernetesList kubernetesResources = convertToKubernetesResources(resources, openShiftResources);
+                writeResources(kubernetesResources, ResourceClassifier.KUBERNETES);
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
@@ -267,13 +268,7 @@ public class ResourceMojo extends AbstractResourceMojo {
     }
 
     private void writeAllResources(KubernetesList resources, File dir) throws MojoExecutionException {
-        // Adapt list to use OpenShift specific resource objects
-        KubernetesList openShiftResources = convertToOpenShiftResources(resources);
-        writeResources(openShiftResources, ResourceClassifier.OPENSHIFT, dir);
-
-        // Remove OpenShift specific stuff provided by fragments
-        KubernetesList kubernetesResources = convertToKubernetesResources(resources, openShiftResources);
-        writeResources(kubernetesResources, ResourceClassifier.KUBERNETES, dir);
+        
     }
 
     private void lateInit() throws MojoExecutionException {
@@ -886,18 +881,5 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     private boolean isPomProject() {
         return "pom".equals(project.getPackaging());
-    }
-
-    private KubernetesList pickOutSecretsResource(KubernetesList raw) {
-        KubernetesListBuilder builder = new KubernetesListBuilder();
-        List<HasMetadata> items = raw.getItems();
-        for (int i = items.size() - 1; i >= 0; i--) {
-            if (items.get(i).getKind().equals(SecretConstants.KIND)) {
-                builder.addToItems(items.get(i));
-                items.remove(i);
-            }
-        }
-        raw.setItems(items);
-        return builder.build();
     }
 }
