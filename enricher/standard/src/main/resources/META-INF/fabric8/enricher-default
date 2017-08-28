@@ -65,3 +65,5 @@ io.fabric8.maven.enricher.standard.MavenIssueManagementEnricher
 # Resolve the docker registry things
 io.fabric8.maven.enricher.standard.DockerRegistrySecretEnricher
 
+# Add an enricher for adding revision history limit for deployment resources
+io.fabric8.maven.enricher.standard.RevisionHistoryEnricher
