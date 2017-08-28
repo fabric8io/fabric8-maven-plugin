@@ -19,7 +19,6 @@ package io.fabric8.maven.enricher.standard;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentFluent;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
@@ -55,8 +54,8 @@ public class RevisionHistoryEnricher extends BaseEnricher {
         builder.accept(new TypedVisitor<DeploymentBuilder>() {
             @Override
             public void visit(DeploymentBuilder item) {
-                DeploymentFluent.SpecNested<DeploymentBuilder> spec = item.editOrNewSpec();
-                spec.withRevisionHistoryLimit(maxRevisionHistories).endSpec();
+                item.editOrNewSpec()
+                    .withRevisionHistoryLimit(maxRevisionHistories).endSpec();
             }
         });
     }
