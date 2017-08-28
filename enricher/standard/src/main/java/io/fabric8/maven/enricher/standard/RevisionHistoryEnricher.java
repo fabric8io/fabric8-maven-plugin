@@ -40,10 +40,6 @@ public class RevisionHistoryEnricher extends BaseEnricher {
 
         protected String d;
         public String def() { return d; }
-
-        public Integer toInt() {
-            return Integer.parseInt(d);
-        }
     }
 
     public RevisionHistoryEnricher(EnricherContext buildContext) {
@@ -52,15 +48,14 @@ public class RevisionHistoryEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
-        final Integer maxRevisionHistories = Integer.parseInt(getConfig(Config.limit));
+        final Integer maxRevisionHistories = Configs.asInt(getConfig(Config.limit));
 
         log.info("Adding revision history limit to %s", maxRevisionHistories);
 
         builder.accept(new TypedVisitor<DeploymentBuilder>() {
             @Override
             public void visit(DeploymentBuilder item) {
-                DeploymentFluent.SpecNested<DeploymentBuilder> spec =
-                        item.getSpec() == null ? item.withNewSpec() : item.editSpec();
+                DeploymentFluent.SpecNested<DeploymentBuilder> spec = item.editOrNewSpec();
                 spec.withRevisionHistoryLimit(maxRevisionHistories).endSpec();
             }
         });
