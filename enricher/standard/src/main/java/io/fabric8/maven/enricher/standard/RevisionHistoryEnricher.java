@@ -55,7 +55,8 @@ public class RevisionHistoryEnricher extends BaseEnricher {
             @Override
             public void visit(DeploymentBuilder item) {
                 item.editOrNewSpec()
-                    .withRevisionHistoryLimit(maxRevisionHistories).endSpec();
+                    .withRevisionHistoryLimit(maxRevisionHistories)
+                .endSpec();
             }
         });
     }
