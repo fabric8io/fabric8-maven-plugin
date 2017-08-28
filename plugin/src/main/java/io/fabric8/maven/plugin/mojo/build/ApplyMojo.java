@@ -85,11 +85,8 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateAnnotations;
 @Mojo(name = "apply", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.INSTALL)
 public class ApplyMojo extends AbstractFabric8Mojo {
 
-    public static final String DEFAULT_KUBERNETES_MANIFEST = "${project.build.outputDirectory}/META-INF/fabric8/kubernetes.yml";
-    public static final String DEFAULT_OPENSHIFT_MANIFEST = "${project.build.outputDirectory}/META-INF/fabric8/openshift.yml";
-
-    private static final String DEFAULT_KUBERNETES_SECRETS_MANIFEST = "${project.build.outputDirectory}/META-INF/fabric8/secrets/kubernetes.yml";
-    private static final String DEFAULT_OPENSHIFT_SECRETS_MANIFEST = "${project.build.outputDirectory}/META-INF/fabric8/secrets/openshift.yml";
+    public static final String DEFAULT_KUBERNETES_MANIFEST = "${basedir}/target/classes/META-INF/fabric8/kubernetes.yml";
+    public static final String DEFAULT_OPENSHIFT_MANIFEST = "${basedir}/target/classes/META-INF/fabric8/openshift.yml";
 
     /**
      * The domain added to the service ID when creating OpenShift routes
@@ -112,14 +109,14 @@ public class ApplyMojo extends AbstractFabric8Mojo {
     /**
      * The generated kubernetes YAML file
      */
-    @Parameter(property = "fabric8.kubernetesManifest", defaultValue= DEFAULT_KUBERNETES_SECRETS_MANIFEST + "," +  DEFAULT_KUBERNETES_MANIFEST)
-    private List<File> kubernetesManifests;
+    @Parameter(property = "fabric8.kubernetesManifest", defaultValue = DEFAULT_KUBERNETES_MANIFEST)
+    private File kubernetesManifest;
 
     /**
      * The generated openshift YAML file
      */
-    @Parameter(property = "fabric8.openshiftManifest", defaultValue = DEFAULT_OPENSHIFT_SECRETS_MANIFEST + "," + DEFAULT_OPENSHIFT_MANIFEST)
-    private List<File> openshiftManifests;
+    @Parameter(property = "fabric8.openshiftManifest", defaultValue = DEFAULT_OPENSHIFT_MANIFEST)
+    private File openshiftManifest;
 
     /**
      * Should we create new kubernetes resources?
@@ -335,66 +332,63 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         try {
             KubernetesClient kubernetes = clusterAccess.createDefaultClient(log);
             URL masterUrl = kubernetes.getMasterUrl();
-            List<File> manifests;
+            File manifest;
             if (KubernetesHelper.isOpenShift(kubernetes)) {
-                manifests = openshiftManifests;
+                manifest = openshiftManifest;
             } else {
-                manifests = kubernetesManifests;
+                manifest = kubernetesManifest;
             }
-
-            for (File manifest : manifests) {
-
-                if (!Files.isFile(manifest)) {
-                    if (failOnNoKubernetesJson) {
-                        throw new MojoFailureException("No such generated manifest file: " + manifest);
-                    } else {
-                        log.warn("No such generated manifest file %s for this project so ignoring", manifest);
-                        continue;
-                    }
-                }
-
-                String clusterKind = "Kubernetes";
-                if (KubernetesHelper.isOpenShift(kubernetes)) {
-                    clusterKind = "OpenShift";
-                }
-                KubernetesResourceUtil.validateKubernetesMasterUrl(masterUrl);
-                log.info("Using %s at %s in namespace %s with manifest %s ", clusterKind, masterUrl, clusterAccess.getNamespace(), manifest);
-
-                Controller controller = createController();
-                controller.setAllowCreate(createNewResources);
-                controller.setServicesOnlyMode(servicesOnly);
-                controller.setIgnoreServiceMode(ignoreServices);
-                controller.setLogJsonDir(jsonLogDir);
-                controller.setBasedir(getRootProjectFolder());
-                controller.setIgnoreRunningOAuthClients(ignoreRunningOAuthClients);
-                controller.setProcessTemplatesLocally(processTemplatesLocally);
-                controller.setDeletePodsOnReplicationControllerUpdate(deletePodsOnReplicationControllerUpdate);
-                controller.setRollingUpgrade(rollingUpgrades);
-                controller.setRollingUpgradePreserveScale(isRollingUpgradePreserveScale());
-
-                boolean openShift = KubernetesHelper.isOpenShift(kubernetes);
-                if (openShift) {
-                    getLog().info("OpenShift platform detected");
+            if (!Files.isFile(manifest)) {
+                if (failOnNoKubernetesJson) {
+                    throw new MojoFailureException("No such generated manifest file: " + manifest);
                 } else {
-                    disableOpenShiftFeatures(controller);
+                    log.warn("No such generated manifest file %s for this project so ignoring", manifest);
+                    return;
                 }
-
-                // lets check we have created the namespace
-                String namespace = clusterAccess.getNamespace();
-                controller.applyNamespace(namespace);
-                controller.setNamespace(namespace);
-
-                Set<HasMetadata> entities = KubernetesResourceUtil.loadResources(manifest);
-
-                if (createExternalUrls) {
-                    if (controller.getOpenShiftClientOrNull() != null) {
-                        createRoutes(controller, entities);
-                    } else {
-                        createIngress(controller, kubernetes, entities);
-                    }
-                }
-                applyEntities(controller, kubernetes, namespace, manifest.getName(), entities);
             }
+
+            String clusterKind = "Kubernetes";
+            if (KubernetesHelper.isOpenShift(kubernetes)) {
+                clusterKind = "OpenShift";
+            }
+            KubernetesResourceUtil.validateKubernetesMasterUrl(masterUrl);
+            log.info("Using %s at %s in namespace %s with manifest %s ", clusterKind, masterUrl, clusterAccess.getNamespace(), manifest);
+
+            Controller controller = createController();
+            controller.setAllowCreate(createNewResources);
+            controller.setServicesOnlyMode(servicesOnly);
+            controller.setIgnoreServiceMode(ignoreServices);
+            controller.setLogJsonDir(jsonLogDir);
+            controller.setBasedir(getRootProjectFolder());
+            controller.setIgnoreRunningOAuthClients(ignoreRunningOAuthClients);
+            controller.setProcessTemplatesLocally(processTemplatesLocally);
+            controller.setDeletePodsOnReplicationControllerUpdate(deletePodsOnReplicationControllerUpdate);
+            controller.setRollingUpgrade(rollingUpgrades);
+            controller.setRollingUpgradePreserveScale(isRollingUpgradePreserveScale());
+
+            boolean openShift = KubernetesHelper.isOpenShift(kubernetes);
+            if (openShift) {
+                getLog().info("OpenShift platform detected");
+            } else {
+                disableOpenShiftFeatures(controller);
+            }
+
+            // lets check we have created the namespace
+            String namespace = clusterAccess.getNamespace();
+            controller.applyNamespace(namespace);
+            controller.setNamespace(namespace);
+
+            Set<HasMetadata> entities = KubernetesResourceUtil.loadResources(manifest);
+
+            if (createExternalUrls) {
+                if (controller.getOpenShiftClientOrNull() != null) {
+                    createRoutes(controller, entities);
+                } else {
+                    createIngress(controller, kubernetes, entities);
+                }
+            }
+            applyEntities(controller, kubernetes, namespace, manifest.getName(), entities);
+
         } catch (KubernetesClientException e) {
             KubernetesResourceUtil.handleKubernetesClientException(e, this.log);
         } catch (MojoExecutionException e) {
