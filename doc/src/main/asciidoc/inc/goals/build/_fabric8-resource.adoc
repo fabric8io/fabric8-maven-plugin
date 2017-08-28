@@ -147,7 +147,7 @@ This is best explained by an example.
 
 Refer the docker id in a yaml fragment with an annotaion
 `maven.fabric8.io/dockerId`. The yaml fragment file should be put under
-the `src/fabric8/secrets` folder.
+the `src/fabric8` folder.
 
 .Example
 

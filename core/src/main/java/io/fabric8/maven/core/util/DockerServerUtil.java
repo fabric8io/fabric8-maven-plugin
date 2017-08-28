@@ -9,7 +9,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DockerUtil {
+public class DockerServerUtil {
     public static Server getServer(final Settings settings, final String serverId) {
         if (settings == null || Strings.isNullOrBlank(serverId)) {
             return null;

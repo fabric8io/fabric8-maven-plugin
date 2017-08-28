@@ -1,6 +1,6 @@
 package io.fabric8.maven.enricher.standard;
 
-import io.fabric8.maven.core.util.DockerUtil;
+import io.fabric8.maven.core.util.DockerServerUtil;
 import io.fabric8.maven.core.util.SecretConstants;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.utils.Strings;
@@ -24,7 +24,7 @@ public class DockerRegistrySecretEnricher extends SecretEnricher {
 
     @Override
     protected Map<String, String> generateData(String dockerId) {
-        String dockerSecret = DockerUtil.getDockerJsonConfigString(getContext().getSettings(), dockerId);
+        String dockerSecret = DockerServerUtil.getDockerJsonConfigString(getContext().getSettings(), dockerId);
         if (Strings.isNullOrBlank(dockerSecret)) {
             return null;
         }

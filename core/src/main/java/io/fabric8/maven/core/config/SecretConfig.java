@@ -4,7 +4,7 @@ import java.io.File;
 
 public class SecretConfig {
     public String name;
-    public String dockerId;
+    public String dockerServerId;
     public String namespace;
     public File path;
 }

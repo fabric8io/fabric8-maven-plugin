@@ -803,8 +803,8 @@ public class ResourceMojo extends AbstractResourceMojo {
             metadata.setName(secretConfig.name);
 
             // docker-registry
-            if (secretConfig.dockerId != null) {
-                String dockerSecret = DockerUtil.getDockerJsonConfigString(settings, secretConfig.dockerId);
+            if (secretConfig.dockerServerId != null) {
+                String dockerSecret = DockerServerUtil.getDockerJsonConfigString(settings, secretConfig.dockerServerId);
                 if (Strings.isNullOrBlank(dockerSecret)) {
                     continue;
                 }

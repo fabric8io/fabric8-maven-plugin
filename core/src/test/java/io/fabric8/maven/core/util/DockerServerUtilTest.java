@@ -9,7 +9,7 @@ import static org.junit.Assert.*;
 /**
  * Created by yuwzho on 8/8/2017.
  */
-public class DockerUtilTest {
+public class DockerServerUtilTest {
     private final Settings settings = createSettings();
 
     private Settings createSettings() {
@@ -35,7 +35,7 @@ public class DockerUtilTest {
 
     @Test
     public void testDockerUtilGetServer() {
-        Server server = DockerUtil.getServer(settings, "docker.io");
+        Server server = DockerServerUtil.getServer(settings, "docker.io");
         assertEquals("docker.io", server.getId());
         assertEquals("username", server.getUsername());
         assertEquals("password", server.getPassword());
@@ -43,10 +43,10 @@ public class DockerUtilTest {
 
     @Test
     public void testDockerUtilGetServerJson() {
-        String server = DockerUtil.getDockerJsonConfigString(settings, "docker.io");
+        String server = DockerServerUtil.getDockerJsonConfigString(settings, "docker.io");
         assertEquals("{\"docker.io\":{\"password\":\"password\",\"email\":\"foo@foo.com\",\"username\":\"username\"}}", server);
 
-        String server1 = DockerUtil.getDockerJsonConfigString(settings, "docker1.io");
+        String server1 = DockerServerUtil.getDockerJsonConfigString(settings, "docker1.io");
         assertEquals("{\"docker1.io\":{\"password\":\"password1\",\"email\":\"bar@bar.com\",\"username\":\"username1\"}}", server1);
     }
 }
