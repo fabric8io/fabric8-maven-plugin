@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.25,</span>
-<span id="revdate">2017-08-28</span>
+<span id="revdate">2017-08-29</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -543,6 +543,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#fabric8:resource">4.1. <strong>fabric8:resource</strong></a>
 <ul class="sectlevel3">
 <li><a href="#resource-labels-annotations">4.1.1. Labels and Annotations</a></li>
+<li><a href="#resource-secrets">4.1.2. Secrets</a></li>
 </ul>
 </li>
 <li><a href="#fabric8:build">4.2. <strong>fabric8:build</strong></a>
@@ -1662,6 +1663,95 @@ This is chapter is incomplete, but there is work in progress.
 </tr>
 </tbody>
 </table>
+</div>
+<div class="sect3">
+<h4 id="resource-secrets">4.1.2. Secrets</h4>
+<div class="paragraph">
+<p>Once you&#8217;ve configured some docker registry credentials into <code>~/.m2/setting.xml</code>, as explained in the
+<a href="#authentication">Authentication</a> section, you can create Kubernetes secrets from a server declaration.</p>
+</div>
+<div class="paragraph">
+<p><strong>XML configuration</strong></p>
+</div>
+<div class="paragraph">
+<p>You can create a secret using xml configuration in the <code>pom.xml</code> file. It should contain the following fields:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 12.5%;">
+<col style="width: 12.5%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">key</th>
+<th class="tableblock halign-left valign-top">required</th>
+<th class="tableblock halign-left valign-top">description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerServerId</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">the server id which is configured in
+<code>~/.m2/setting.xml</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">this will be used as name of the kubernetes secret resource</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>namespace</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">the secret resource will be applied to the specific
+namespace, if provided</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>This is best explained by an example.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example for XML configuration</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;properties&gt;</span>
+    <span class="tag">&lt;docker.registry&gt;</span>docker.io<span class="tag">&lt;/docker.registry&gt;</span>
+<span class="tag">&lt;/properties&gt;</span>
+...
+<span class="tag">&lt;configuration&gt;</span>
+    <span class="tag">&lt;resources&gt;</span>
+        <span class="tag">&lt;secrets&gt;</span>
+            <span class="tag">&lt;secret&gt;</span>
+                <span class="tag">&lt;dockerServerId&gt;</span>${docker.registry}<span class="tag">&lt;/dockerServerId&gt;</span>
+                <span class="tag">&lt;name&gt;</span>mydockerkey<span class="tag">&lt;/name&gt;</span>
+            <span class="tag">&lt;/secret&gt;</span>
+        <span class="tag">&lt;/secrets&gt;</span>
+    <span class="tag">&lt;/resources&gt;</span>
+<span class="tag">&lt;/configuration&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Yaml fragment with annotation</strong></p>
+</div>
+<div class="paragraph">
+<p>You can create a secret using a yaml fragment. You can reference the docker server id with an annotation
+<code>maven.fabric8.io/dockerServerId</code>. The yaml fragment file should be put under
+the <code>src/main/fabric8/</code> folder.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="key">apiVersion</span>: <span class="string"><span class="content">v1</span></span>
+<span class="key">kind</span>: <span class="string"><span class="content">Secret</span></span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="string"><span class="content">mydockerkey</span></span>
+  <span class="key">namespace</span>: <span class="string"><span class="content">default</span></span>
+  <span class="key">annotations</span>:
+    <span class="key">maven.fabric8.io/dockerServerId</span>: <span class="string"><span class="content">${docker.registry}</span></span>
+<span class="key">type</span>: <span class="string"><span class="content">kubernetes.io/dockercfg</span></span></code></pre>
+</div>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -5945,6 +6035,7 @@ For more information read <a href="https://kubernetes.io/docs/concepts/workloads
     - <span class="string"><span class="content">fmp-dependency</span></span>
     - <span class="string"><span class="content">f8-watch</span></span>
     - <span class="string"><span class="content">fmp-revision-history</span></span>
+    - <span class="string"><span class="content">fmp-docker-registry-secret</span></span>
 
   <span class="key">generator</span>:
     <span class="comment"># The order given in &quot;includes&quot; is the order in which generators are called</span>
@@ -6502,7 +6593,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.25<br>
-Last updated 2017-08-28 11:23:22 UTC
+Last updated 2017-08-29 13:10:08 UTC
 </div>
 </div>
 </body>
