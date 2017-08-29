@@ -1,0 +1,29 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ${project.artifactId}
+  labels:
+    run: spring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: spring
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: spring
+    spec:
+      containers:
+      - image: ${docker.registry}/fabric8/${project.artifactId}:latest
+        name: spring
+        ports:
+        - containerPort: 8080
+      imagePullPolicy: Always
+      imagePullSecrets:
+        - name: mydockerkey

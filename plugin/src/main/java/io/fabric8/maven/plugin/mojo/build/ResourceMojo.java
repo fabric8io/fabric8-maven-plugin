@@ -18,33 +18,16 @@ package io.fabric8.maven.plugin.mojo.build;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.extensions.Templates;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
-import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.maven.core.access.ClusterAccess;
-import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
-import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.core.config.Profile;
-import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.maven.core.config.ServiceConfig;
+import io.fabric8.maven.core.config.*;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
 import io.fabric8.maven.core.handler.ServiceHandler;
 import io.fabric8.maven.core.service.ComposeService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
-import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.core.util.OpenShiftDependencyResources;
-import io.fabric8.maven.core.util.OpenShiftOverrideResources;
-import io.fabric8.maven.core.util.ProfileUtil;
-import io.fabric8.maven.core.util.ResourceClassifier;
-import io.fabric8.maven.core.util.ValidationUtil;
+import io.fabric8.maven.core.util.*;
 import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -65,6 +48,8 @@ import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.Template;
+import io.fabric8.utils.Lists;
+import io.fabric8.utils.Strings;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -258,6 +243,7 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         clusterAccess = new ClusterAccess(namespace);
+
         try {
             lateInit();
 
@@ -437,7 +423,6 @@ public class ResourceMojo extends AbstractResourceMojo {
         // Add resources found in subdirectories of resourceDir, with a certain profile
         // applied
         addProfiledResourcesFromSubirectories(builder, resourceDir, enricherManager);
-
         return builder.build();
     }
 
@@ -494,7 +479,6 @@ public class ResourceMojo extends AbstractResourceMojo {
     private KubernetesListBuilder generateAppResources(List<ImageConfiguration> images, EnricherManager enricherManager) throws IOException, MojoExecutionException {
         Path composeFilePath = checkComposeConfig();
         ComposeService composeUtil = new ComposeService(komposeBinDir, composeFilePath, log);
-
         try {
             File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
             File[] composeResourceFiles = composeUtil.convertToKubeFragments();
@@ -792,8 +776,49 @@ public class ResourceMojo extends AbstractResourceMojo {
     private void addConfiguredResources(KubernetesListBuilder builder, List<ImageConfiguration> images) {
 
         log.verbose("Adding resources from plugin configuration");
+        addSecrets(builder);
         addServices(builder, resources.getServices());
         addController(builder, images);
+    }
+
+    private void addSecrets(KubernetesListBuilder builder) {
+        log.verbose("Adding secrets resources from plugin configuration");
+        List<SecretConfig> secrets = resources.getSecrets();
+        if (Lists.isNullOrEmpty(secrets)) { return; }
+        for (int i = 0; i < secrets.size(); i++) {
+            SecretConfig secretConfig = secrets.get(i);
+            if (Strings.isNullOrBlank(secretConfig.getName())) {
+                log.warn("Secret name is empty. You should provide a proper name for the secret");
+                continue;
+            }
+
+            Map<String, String> data = new HashMap<>();
+            String type = "";
+            ObjectMeta metadata = new ObjectMetaBuilder()
+                    .withNamespace(secretConfig.getNamespace())
+                    .withName(secretConfig.getName())
+                    .build();
+
+            // docker-registry
+            if (secretConfig.getDockerServerId() != null) {
+                String dockerSecret = DockerServerUtil.getDockerJsonConfigString(settings, secretConfig.getDockerServerId());
+                if (Strings.isNullOrBlank(dockerSecret)) {
+                    log.warn("Docker secret with id " + secretConfig.getDockerServerId() + " cannot be found in maven settings");
+                    continue;
+                }
+                data.put(SecretConstants.DOCKER_DATA_KEY, Base64Util.encodeToString(dockerSecret));
+                type = SecretConstants.DOCKER_CONFIG_TYPE;
+            }
+            // TODO: generic secret (not supported for now)
+
+            if (Strings.isNullOrBlank(type) || data.isEmpty()) {
+                log.warn("No data can be found for docker secret with id " + secretConfig.getDockerServerId());
+                continue;
+            }
+
+            Secret secret = new SecretBuilder().withData(data).withMetadata(metadata).withType(type).build();
+            builder.addToSecretItems(i, secret);
+        }
     }
 
     private void addController(KubernetesListBuilder builder, List<ImageConfiguration> images) {
@@ -856,5 +881,4 @@ public class ResourceMojo extends AbstractResourceMojo {
     private boolean isPomProject() {
         return "pom".equals(project.getPackaging());
     }
-
 }
