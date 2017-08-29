@@ -16,6 +16,11 @@
 
 package io.fabric8.maven.generator.api.support;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
@@ -27,16 +32,9 @@ import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.Generator;
 import io.fabric8.maven.generator.api.GeneratorConfig;
 import io.fabric8.maven.generator.api.GeneratorContext;
-import io.fabric8.utils.Strings;
 
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
-
-import java.util.*;
-
-import javax.xml.transform.Source;
-
-import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.*;
 
 /**
  * @author roland
@@ -172,15 +170,21 @@ abstract public class BaseGenerator implements Generator {
      * @return Docker image name which is never null
      */
     protected String getImageName() {
-        String prefix = "";
+        return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", getDefaultImageUser());
+    }
+
+    /**
+     * Get the docker registry where the image should be located.
+     * It returns null in Openshift mode.
+     *
+     * @return The docker registry if configured
+     */
+    protected String getRegistry() {
         if (!PlatformMode.isOpenShiftMode(getProject().getProperties())) {
-            String registry = getConfigWithSystemFallbackAndDefault(Config.registry, "fabric8.generator.registry", null);
-            if (Strings.isNotBlank(registry)) {
-                prefix = registry + "/";
-            }
+            return getConfigWithSystemFallbackAndDefault(Config.registry, "fabric8.generator.registry", null);
         }
-        String image = getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", getDefaultImageUser());
-        return prefix + image;
+
+        return null;
     }
 
     private String getDefaultImageUser() {
