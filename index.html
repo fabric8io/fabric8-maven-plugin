@@ -2419,11 +2419,11 @@ In case of an <a href="#build-openshift">S2I Binary build</a> this parameter spe
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ports</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The exposed ports which is a list of <code>&lt;port&gt;</code> elements, one for each port to expose. The format can be either pure numerical ("8080") or with the protocol attached ("8080/tcp"),</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The exposed ports which is a list of <code>&lt;port&gt;</code> elements, one for each port to expose. Whitespace is trimmed from each element and empty elements are ignored. The format can be either pure numerical ("8080") or with the protocol attached ("8080/tcp").</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>runCmds</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Commands to be run during the build process. It contains <strong>run</strong> elements which are passed to the shell. The run commands are inserted right after the assembly and after <strong>workdir</strong> in to the Dockerfile. This tag is not to be confused with the <code>&lt;run&gt;</code> section for this image which specifies the runtime behaviour when starting containers.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Commands to be run during the build process. It contains <strong>run</strong> elements which are passed to the shell. Whitespace is trimmed from each element and empty elements are ignored. The run commands are inserted right after the assembly and after <strong>workdir</strong> in to the Dockerfile. This tag is not to be confused with the <code>&lt;run&gt;</code> section for this image which specifies the runtime behaviour when starting containers.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skip</strong></p></td>
@@ -2431,7 +2431,7 @@ In case of an <a href="#build-openshift">S2I Binary build</a> this parameter spe
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>tags</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of additional <code>tag</code> elements with which an image is to be tagged after the build.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of additional <code>tag</code> elements with which an image is to be tagged after the build. Whitespace is trimmed from each element and empty elements are ignored.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>user</strong></p></td>
@@ -2439,7 +2439,7 @@ In case of an <a href="#build-openshift">S2I Binary build</a> this parameter spe
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>volumes</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>volume</code> elements to create a container volume.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>volume</code> elements to create a container volume. Whitespace is trimmed from each element and empty elements are ignored.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>workdir</strong></p></td>
@@ -4193,6 +4193,11 @@ This plugin definition includes the configuration to generate the Docker image.
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The Docker image name used when doing Docker builds. For OpenShift S2I builds its the name of the image stream. This can be a pattern as descibed in <a href="#image-name-placeholders">Name Placeholders</a>. The default is <code>%g/%a:%l</code>.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.generator.name</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>registry</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A optional Docker registry used when doing Docker builds. It has no effect for OpenShift S2I builds.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.generator.registry</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -6593,7 +6598,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.25<br>
-Last updated 2017-08-29 13:10:08 UTC
+Last updated 2017-08-29 14:21:15 UTC
 </div>
 </div>
 </body>
