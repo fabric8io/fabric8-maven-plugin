@@ -122,7 +122,7 @@ class ContainerHandler {
     private List<ContainerPort> getContainerPorts(ImageConfiguration imageConfig) {
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
         List<String> ports = buildConfig.getPorts();
-        if (ports != null) {
+        if (ports != null && ports.size() > 0) {
             List<ContainerPort> ret = new ArrayList<>();
             PortMapping portMapping = new PortMapping(ports, project.getProperties());
             JSONArray portSpecs = portMapping.toJson();
