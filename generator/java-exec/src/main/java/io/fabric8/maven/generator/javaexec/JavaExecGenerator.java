@@ -125,6 +125,7 @@ public class JavaExecGenerator extends BaseGenerator {
         addLatestTagIfSnapshot(buildBuilder);
         imageBuilder
             .name(getImageName())
+            .registry(getRegistry())
             .alias(getAlias())
             .buildConfig(buildBuilder.build());
         configs.add(imageBuilder.build());

@@ -16,7 +16,11 @@
 
 package io.fabric8.maven.generator.api.support;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
@@ -25,16 +29,24 @@ import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.GeneratorContext;
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.*;
-import static org.junit.Assert.*;
+import mockit.Expectations;
+import mockit.Mocked;
+import mockit.integration.junit4.JMockit;
+
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.kind;
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.name;
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.namespace;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author roland
@@ -239,6 +251,27 @@ public class BaseGeneratorTest {
         generator = createGenerator(null);
         assertEquals("%g/%a:%t", generator.getImageName());
 
+    }
+
+    @Test
+    public void getRegistry() {
+        Properties props = new Properties();
+        props.put("fabric8.generator.registry", "fabric8.io");
+        setupContextKubernetes(props, null, null);
+
+        BaseGenerator generator = createGenerator(null);
+        assertEquals("fabric8.io", generator.getRegistry());
+    }
+
+    @Test
+    public void getRegistryInOpenshift() {
+        Properties props = new Properties();
+        props.put("fabric8.generator.registry", "fabric8.io");
+        props.put(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, "openshift");
+        setupContextOpenShift(props, null, null);
+
+        BaseGenerator generator = createGenerator(null);
+        assertNull(generator.getRegistry());
     }
 
     private void setupNameContext(String propertyName, final String configName) {

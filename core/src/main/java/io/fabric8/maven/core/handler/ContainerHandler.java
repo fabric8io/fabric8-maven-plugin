@@ -16,6 +16,9 @@
 
 package io.fabric8.maven.core.handler;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPort;
@@ -32,12 +35,10 @@ import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.utils.Strings;
+
 import org.apache.maven.project.MavenProject;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author roland
@@ -65,7 +66,7 @@ class ContainerHandler {
 
                 Container container = new ContainerBuilder()
                     .withName(KubernetesResourceUtil.extractContainerName(project, imageConfig))
-                    .withImage(imageConfig.getName())
+                    .withImage(getImageName(imageConfig))
                     .withImagePullPolicy(getImagePullPolicy(config))
                     .withEnv(envVarHandler.getEnvironmentVariables(config.getEnv()))
                     .withSecurityContext(createSecurityContext(config))
@@ -90,6 +91,18 @@ class ContainerHandler {
             return "PullAlways";
         }
         return pullPolicy;
+    }
+
+    private String getImageName(ImageConfiguration imageConfiguration) {
+        if (Strings.isNullOrBlank(imageConfiguration.getName())) {
+            return imageConfiguration.getName();
+        }
+
+        String prefix = "";
+        if (Strings.isNotBlank(imageConfiguration.getRegistry())) {
+            prefix = imageConfiguration.getRegistry() + "/";
+        }
+        return prefix + imageConfiguration.getName();
     }
 
     private SecurityContext createSecurityContext(ResourceConfig config) {
@@ -122,7 +135,7 @@ class ContainerHandler {
     private List<ContainerPort> getContainerPorts(ImageConfiguration imageConfig) {
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
         List<String> ports = buildConfig.getPorts();
-        if (ports != null) {
+        if (!ports.isEmpty()) {
             List<ContainerPort> ret = new ArrayList<>();
             PortMapping portMapping = new PortMapping(ports, project.getProperties());
             JSONArray portSpecs = portMapping.toJson();

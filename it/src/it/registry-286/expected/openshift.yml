@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: Service
+- apiVersion: v1
+  kind: DeploymentConfig
+  spec:
+    template:
+      spec:
+        containers:
+        - image: "@matches('fabric8.io/fabric8/fabric8-maven-sample-registry-286:.*$')@"

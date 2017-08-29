@@ -54,7 +54,6 @@ import io.fabric8.openshift.api.model.DeploymentConfigSpecFluent;
 import io.fabric8.utils.Strings;
 
 import static io.fabric8.maven.core.util.KubernetesResourceUtil.extractContainerName;
-import static io.fabric8.utils.Strings.isNullOrBlank;
 
 /**
  * Merge in image configuration like the image name into ReplicaSet and ReplicationController's
@@ -238,7 +237,7 @@ public class ImageEnricher extends BaseEnricher {
     }
 
     private void mergeContainerName(ImageConfiguration imageConfiguration, Container container) {
-        if (isNullOrBlank(container.getName())) {
+        if (Strings.isNullOrBlank(container.getName())) {
             String containerName = extractContainerName(getProject(), imageConfiguration);
             log.verbose("Setting container name %s",containerName);
             container.setName(containerName);
@@ -246,14 +245,20 @@ public class ImageEnricher extends BaseEnricher {
     }
 
     private void mergeImage(ImageConfiguration imageConfiguration, Container container) {
-        if (isNullOrBlank(container.getImage())) {
-            log.verbose("Setting image %s",imageConfiguration.getName());
-            container.setImage(imageConfiguration.getName());
+        if (Strings.isNullOrBlank(container.getImage())) {
+            String prefix = "";
+            if (Strings.isNotBlank(imageConfiguration.getRegistry())) {
+                log.verbose("Using registry %s for the image", imageConfiguration.getRegistry());
+                prefix = imageConfiguration.getRegistry() + "/";
+            }
+            String imageFullName = prefix + imageConfiguration.getName();
+            log.verbose("Setting image %s", imageFullName);
+            container.setImage(imageFullName);
         }
     }
 
     private void mergeImagePullPolicy(ImageConfiguration imageConfiguration, Container container) {
-        if (isNullOrBlank(container.getImagePullPolicy())) {
+        if (Strings.isNullOrBlank(container.getImagePullPolicy())) {
             String policy = getConfig(Config.pullPolicy);
             if (policy == null) {
                 policy = "IfNotPresent";
