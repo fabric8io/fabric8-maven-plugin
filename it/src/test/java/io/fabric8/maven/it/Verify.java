@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.PathNotFoundException;
 
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
@@ -60,6 +61,15 @@ public class Verify {
                                new JsonMessageValidationContext(),
                                createTestContext(),
                                actualContext);
+    }
+
+    public static void verifyAbsent(File file, String path) throws IOException {
+        try {
+            readWithPath(file, path);
+            throw new RuntimeException("Path " + path + " is present in file " + file.getAbsolutePath());
+        } catch(PathNotFoundException a) {
+            // Everything fine
+        }
     }
 
     public static Object readWithPath(File file, String path) throws IOException {

@@ -15,6 +15,10 @@
  */
 package io.fabric8.maven.plugin.mojo.build;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
@@ -25,14 +29,11 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
 import io.fabric8.openshift.api.model.Template;
 import io.fabric8.utils.Strings;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProjectHelper;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
 
 import static io.fabric8.maven.core.util.ResourceFileType.json;
 import static io.fabric8.maven.core.util.ResourceFileType.yaml;
@@ -71,9 +72,9 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
         return null;
     }
 
-    protected void writeResources(KubernetesList resources, ResourceClassifier classifier, File targetDir) throws MojoExecutionException {
+    protected void writeResources(KubernetesList resources, ResourceClassifier classifier) throws MojoExecutionException {
         // write kubernetes.yml / openshift.yml
-        File resourceFileBase = new File(targetDir, classifier.getValue());
+        File resourceFileBase = new File(this.targetDir, classifier.getValue());
 
         File file = writeResourcesIndividualAndComposite(resources, resourceFileBase, this.resourceFileType, log);
 
@@ -89,10 +90,6 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
             // Attach it to the Maven reactor so that it will also get deployed
             projectHelper.attachArtifact(project, json.getArtifactType(), classifier.getValue(), file);
         }
-    }
-
-    protected void writeResources(KubernetesList resources, ResourceClassifier classifier) throws MojoExecutionException {
-        writeResources(resources, classifier, this.targetDir);
     }
 
     public static File writeResourcesIndividualAndComposite(KubernetesList resources, File resourceFileBase, ResourceFileType resourceFileType, Logger log) throws MojoExecutionException {

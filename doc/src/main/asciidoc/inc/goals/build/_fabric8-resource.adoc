@@ -92,20 +92,19 @@ The following subelements are possible for `<labels>` and `<annotations>` :
 === Secrets
 
 
-Configure docker registry secrets as section
-<<authentication, Authentication>> says, save the server information
-into `~/.m2/setting.xml`.
+Once you've configured some docker registry credentials into `~/.m2/setting.xml`, as explained in the
+<<authentication, Authentication>> section, you can create Kubernetes secrets from a server declaration.
 
 **XML configuration**
 
 
-Refer docker id in the `pom.xml`. It should contain the following field:
+You can create a secret using xml configuration in the `pom.xml` file. It should contain the following fields:
 
 [cols="1,1,6"]
 |===
 |key |required |description
 
-|**dockerId**
+|**dockerServerId**
 |true
 |the server id which is configured in
 `~/.m2/setting.xml`
@@ -116,8 +115,8 @@ Refer docker id in the `pom.xml`. It should contain the following field:
 
 |**namespace**
 |false
-|the secret resource will be apply to the specific
-namespace, default is `default`
+|the secret resource will be applied to the specific
+namespace, if provided
 |===
 
 This is best explained by an example.
@@ -134,7 +133,7 @@ This is best explained by an example.
     <resources>
         <secrets>
             <secret>
-                <dockerId>${docker.registry}</dockerId>
+                <dockerServerId>${docker.registry}</dockerServerId>
                 <name>mydockerkey</name>
             </secret>
         </secrets>
@@ -145,9 +144,9 @@ This is best explained by an example.
 **Yaml fragment with annotation**
 
 
-Refer the docker id in a yaml fragment with an annotaion
-`maven.fabric8.io/dockerId`. The yaml fragment file should be put under
-the `src/fabric8` folder.
+You can create a secret using a yaml fragment. You can reference the docker server id with an annotation
+`maven.fabric8.io/dockerServerId`. The yaml fragment file should be put under
+the `src/main/fabric8/` folder.
 
 .Example
 
@@ -159,6 +158,6 @@ metadata:
   name: mydockerkey
   namespace: default
   annotations:
-    maven.fabric8.io/dockerId: ${docker.registry}
+    maven.fabric8.io/dockerServerId: ${docker.registry}
 type: kubernetes.io/dockercfg
 ----

@@ -16,24 +16,27 @@
 
 package io.fabric8.maven.enricher.standard;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.maven.core.util.SecretConstants;
 import io.fabric8.maven.enricher.api.EnricherContext;
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
+
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.HashMap;
-import java.util.Map;
+import mockit.Expectations;
+import mockit.Mocked;
+import mockit.integration.junit4.JMockit;
 
-import static junit.framework.TestCase.*;
+import static junit.framework.TestCase.assertEquals;
 
 /**
  * @author yuwzho
@@ -45,7 +48,7 @@ public class DockerRegistrySecretEnricherTest {
     private EnricherContext context;
 
     private String dockerUrl = "docker.io";
-    private String annotation = "maven.fabric8.io/dockerId";
+    private String annotation = "maven.fabric8.io/dockerServerId";
 
     @Test
     public void testDockerRegistry() {
@@ -96,8 +99,6 @@ public class DockerRegistrySecretEnricherTest {
 
     @Test
     public void testDockerRegistryWithBadAnnotation() {
-        final Settings settings = new Settings();
-        settings.addServer(createBaseServer());
         DockerRegistrySecretEnricher enricher = new DockerRegistrySecretEnricher(context);
 
         new Expectations() {
@@ -121,16 +122,21 @@ public class DockerRegistrySecretEnricherTest {
     }
 
     private Secret createBaseSecret(boolean withAnnotation) {
-        ObjectMeta meta = new ObjectMeta();
-        meta.setNamespace("default");
+        ObjectMetaBuilder metaBuilder = new ObjectMetaBuilder()
+                .withNamespace("default");
 
         if (withAnnotation) {
-            Map<String, String> annotations = new HashMap();
+            Map<String, String> annotations = new HashMap<>();
             annotations.put(annotation, dockerUrl);
-            meta.setAnnotations(annotations);
+            metaBuilder = metaBuilder.withAnnotations(annotations);
         }
-        Map<String, String> data = new HashMap();
-        return new Secret(SecretConstants.API_VERSION, data, SecretConstants.KIND, meta, null, SecretConstants.DOCKER_CONFIG_TYPE);
+
+        Map<String, String> data = new HashMap<>();
+        return new SecretBuilder()
+            .withData(data)
+            .withMetadata(metaBuilder.build())
+            .withType(SecretConstants.DOCKER_CONFIG_TYPE)
+            .build();
     }
 
     private Server createBaseServer() {

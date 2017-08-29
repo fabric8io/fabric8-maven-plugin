@@ -4,5 +4,5 @@ metadata:
   name: mydockerkey
   namespace: default
   annotations:
-    maven.fabric8.io/dockerId: docker.io
+    maven.fabric8.io/dockerServerId: docker.io
 type: kubernetes.io/dockercfg

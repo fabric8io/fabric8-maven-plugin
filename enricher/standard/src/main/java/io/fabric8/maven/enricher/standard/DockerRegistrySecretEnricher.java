@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DockerRegistrySecretEnricher extends SecretEnricher {
-    final private static String ANNOTATION_KEY = "maven.fabric8.io/dockerId";
+    final private static String ANNOTATION_KEY = "maven.fabric8.io/dockerServerId";
     final private static String ENRICHER_NAME = "fmp-docker-registry-secret";
 
 
@@ -29,7 +29,7 @@ public class DockerRegistrySecretEnricher extends SecretEnricher {
             return null;
         }
 
-        Map<String, String> data = new HashMap();
+        Map<String, String> data = new HashMap<>();
         data.put(SecretConstants.DOCKER_DATA_KEY, encode(dockerSecret));
         return data;
     }

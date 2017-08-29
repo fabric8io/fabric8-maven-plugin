@@ -143,7 +143,7 @@ public class ResourceMojo extends AbstractResourceMojo {
 
     // Resource specific configuration for this plugin
     @Parameter
-    protected ResourceConfig resources;
+    private ResourceConfig resources;
 
     // Reusing image configuration from d-m-p
     @Parameter
@@ -265,10 +265,6 @@ public class ResourceMojo extends AbstractResourceMojo {
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
         }
-    }
-
-    private void writeAllResources(KubernetesList resources, File dir) throws MojoExecutionException {
-        
     }
 
     private void lateInit() throws MojoExecutionException {
@@ -415,8 +411,7 @@ public class ResourceMojo extends AbstractResourceMojo {
             .images(resolvedImages)
             .log(log)
             .useProjectClasspath(useProjectClasspath)
-            .openshiftDependencyResources(openshiftDependencyResources)
-            .settings(settings);
+            .openshiftDependencyResources(openshiftDependencyResources);
         if (resources != null) {
             ctxBuilder.namespace(resources.getNamespace());
         }
@@ -481,7 +476,7 @@ public class ResourceMojo extends AbstractResourceMojo {
         }
     }
 
-    protected KubernetesListBuilder generateAppResources(List<ImageConfiguration> images, EnricherManager enricherManager) throws IOException, MojoExecutionException {
+    private KubernetesListBuilder generateAppResources(List<ImageConfiguration> images, EnricherManager enricherManager) throws IOException, MojoExecutionException {
         Path composeFilePath = checkComposeConfig();
         ComposeService composeUtil = new ComposeService(komposeBinDir, composeFilePath, log);
         try {
@@ -778,7 +773,7 @@ public class ResourceMojo extends AbstractResourceMojo {
         }
     }
 
-    protected void addConfiguredResources(KubernetesListBuilder builder, List<ImageConfiguration> images) {
+    private void addConfiguredResources(KubernetesListBuilder builder, List<ImageConfiguration> images) {
 
         log.verbose("Adding resources from plugin configuration");
         addSecrets(builder);
@@ -792,32 +787,36 @@ public class ResourceMojo extends AbstractResourceMojo {
         if (Lists.isNullOrEmpty(secrets)) { return; }
         for (int i = 0; i < secrets.size(); i++) {
             SecretConfig secretConfig = secrets.get(i);
-            if (Strings.isNullOrBlank(secretConfig.name)) {
+            if (Strings.isNullOrBlank(secretConfig.getName())) {
+                log.warn("Secret name is empty. You should provide a proper name for the secret");
                 continue;
             }
 
-            Map<String, String> data = new HashMap();
-            ObjectMeta metadata = new ObjectMeta();
+            Map<String, String> data = new HashMap<>();
             String type = "";
-            metadata.setNamespace(secretConfig.namespace == null ? "default" : secretConfig.namespace);
-            metadata.setName(secretConfig.name);
+            ObjectMeta metadata = new ObjectMetaBuilder()
+                    .withNamespace(secretConfig.getNamespace())
+                    .withName(secretConfig.getName())
+                    .build();
 
             // docker-registry
-            if (secretConfig.dockerServerId != null) {
-                String dockerSecret = DockerServerUtil.getDockerJsonConfigString(settings, secretConfig.dockerServerId);
+            if (secretConfig.getDockerServerId() != null) {
+                String dockerSecret = DockerServerUtil.getDockerJsonConfigString(settings, secretConfig.getDockerServerId());
                 if (Strings.isNullOrBlank(dockerSecret)) {
+                    log.warn("Docker secret with id " + secretConfig.getDockerServerId() + " cannot be found in maven settings");
                     continue;
                 }
                 data.put(SecretConstants.DOCKER_DATA_KEY, Base64Util.encodeToString(dockerSecret));
                 type = SecretConstants.DOCKER_CONFIG_TYPE;
             }
-            // TODO: generic secret
+            // TODO: generic secret (not supported for now)
 
             if (Strings.isNullOrBlank(type) || data.isEmpty()) {
+                log.warn("No data can be found for docker secret with id " + secretConfig.getDockerServerId());
                 continue;
             }
 
-            Secret secret = new Secret(SecretConstants.API_VERSION, data, SecretConstants.KIND, metadata, null, type);
+            Secret secret = new SecretBuilder().withData(data).withMetadata(metadata).withType(type).build();
             builder.addToSecretItems(i, secret);
         }
     }

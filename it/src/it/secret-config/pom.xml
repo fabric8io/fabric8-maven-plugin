@@ -59,8 +59,13 @@
           <resources>
             <secrets>
               <secret>
-                <dockerId>docker1.io</dockerId>
+                <dockerServerId>docker1.io</dockerServerId>
                 <name>mydockerkey1</name>
+                <namespace>default</namespace>
+              </secret>
+              <secret>
+                <dockerServerId>docker1.io</dockerServerId>
+                <name>mydockerkey2</name>
               </secret>
             </secrets>
           </resources>

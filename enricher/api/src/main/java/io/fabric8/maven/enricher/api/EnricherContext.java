@@ -24,6 +24,7 @@ import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
+
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
@@ -52,8 +53,6 @@ public class EnricherContext {
     private MavenSession session;
     private GoalFinder goalFinder;
 
-    private Settings settings;
-
     private EnricherContext() {}
 
     public MavenProject getProject() {
@@ -80,12 +79,12 @@ public class EnricherContext {
         return namespace;
     }
 
-    public Settings getSettings() {
-        return settings;
-    }
-
     public boolean isUseProjectClasspath() {
         return useProjectClasspath;
+    }
+
+    public Settings getSettings() {
+        return session != null ? session.getSettings() : null;
     }
 
     public OpenShiftDependencyResources getOpenshiftDependencyResources() {
@@ -167,11 +166,6 @@ public class EnricherContext {
 
         public Builder openshiftDependencyResources(OpenShiftDependencyResources openShiftDependencyResources) {
             ctx.openshiftDependencyResources = openShiftDependencyResources;
-            return this;
-        }
-
-        public Builder settings(Settings settings) {
-            ctx.settings = settings;
             return this;
         }
 

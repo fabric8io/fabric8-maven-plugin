@@ -22,6 +22,11 @@ import static org.junit.Assert.*;
   Verify.verifyResourceDescriptors(
           new File(basedir, sprintf("/target/classes/META-INF/fabric8/%s.yml",it)),
           new File(basedir, sprintf("/expected/%s.yml",it)))
+
+  // Ensure that there is no  namespace when not explicitly set
+  Verify.verifyAbsent(new File(basedir, sprintf("/target/classes/META-INF/fabric8/%s.yml",it)),
+          "\$.items[?(@.kind == 'Secret' && @.metadata.name == 'mydockerkey2')].metadata.namespace")
+
 }
 
 true

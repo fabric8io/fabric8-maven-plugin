@@ -1,10 +1,28 @@
 package io.fabric8.maven.core.config;
 
-import java.io.File;
+import org.apache.maven.plugins.annotations.Parameter;
 
 public class SecretConfig {
-    public String name;
-    public String dockerServerId;
-    public String namespace;
-    public File path;
+
+    @Parameter
+    private String name;
+
+    @Parameter
+    private String dockerServerId;
+
+    @Parameter
+    private String namespace;
+
+    public String getName() {
+        return name;
+    }
+
+    public String getDockerServerId() {
+        return dockerServerId;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
 }
