@@ -29,9 +29,9 @@ import static org.assertj.core.api.Assertions.entry;
 public class VertxGeneratorTest {
     
     @Injectable
-    Logger logger;
+    private Logger logger;
 
-    DefaultArtifactHandler handler = new DefaultArtifactHandler("jar");
+    private DefaultArtifactHandler handler = new DefaultArtifactHandler("jar");
 
 
     private final Artifact dropwizard = new DefaultArtifact("io.vertx", "vertx-dropwizard-metrics", "3.4.2", null, "jar", "", null);
@@ -76,7 +76,7 @@ public class VertxGeneratorTest {
                 // Default entries
                 "-Dvertx.cacheDirBase=/tmp", "-Dvertx.disableDnsResolver=true",
                 // Metrics entries
-                "-Dvertx.metrics.options.enabled=true", "-Dvertx.metrics.options.jmxEnabled=true");
+                "-Dvertx.metrics.options.enabled=true", "-Dvertx.metrics.options.jmxEnabled=true", "-Dvertx.metrics.options.jmxDomain=vertx");
     }
 
     @Test

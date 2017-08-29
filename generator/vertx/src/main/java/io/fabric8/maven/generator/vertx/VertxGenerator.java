@@ -72,6 +72,7 @@ public class VertxGenerator extends JavaExecGenerator {
     if (MavenUtil.hasDependency(getProject(), VERTX_GROUPID, VERTX_DROPWIZARD)) {
       opts.add("-Dvertx.metrics.options.enabled=true");
       opts.add("-Dvertx.metrics.options.jmxEnabled=true");
+      opts.add("-Dvertx.metrics.options.jmxDomain=vertx");
     }
 
     if (! contains("-Djava.net.preferIPv4Stack", opts)  && MavenUtil.hasDependency(getProject(), VERTX_GROUPID, VERTX_INFINIPAN)) {
