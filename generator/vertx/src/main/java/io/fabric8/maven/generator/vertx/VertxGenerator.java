@@ -40,9 +40,15 @@ import static io.fabric8.maven.generator.vertx.Constants.*;
  * Maven Shader Plugin or if the project use the Vert.x Maven Plugin.
  *
  * To avoid the issue to write file in the current working directory the `cacheDirBase` is configured to `/tmp`.
+ *
+ * When a cluster manager is detected in the classpath, `-cluster` is automatically appended to the command line.
+ *
+ * To avoid DNS resolution issue, the async DNS resolver is disabled (falling back to the regular Java resolver)
+ *
+ * If vertx-dropwizard-metrics is in the classpath, the metrics are enabled and the JMX export is also enabled.
  */
 public class VertxGenerator extends JavaExecGenerator {
-
+  
   public VertxGenerator(GeneratorContext context) {
     super(context, "vertx");
   }
@@ -58,7 +64,47 @@ public class VertxGenerator extends JavaExecGenerator {
   protected List<String> getExtraJavaOptions() {
     List<String> opts = super.getExtraJavaOptions();
     opts.add("-Dvertx.cacheDirBase=/tmp");
+
+    if (! contains("-Dvertx.disableDnsResolver=", opts)) {
+      opts.add("-Dvertx.disableDnsResolver=true");
+    }
+    
+    if (MavenUtil.hasDependency(getProject(), VERTX_GROUPID, VERTX_DROPWIZARD)) {
+      opts.add("-Dvertx.metrics.options.enabled=true");
+      opts.add("-Dvertx.metrics.options.jmxEnabled=true");
+    }
+
+    if (! contains("-Djava.net.preferIPv4Stack", opts)  && MavenUtil.hasDependency(getProject(), VERTX_GROUPID, VERTX_INFINIPAN)) {
+      opts.add("-Djava.net.preferIPv4Stack=true");
+    }
+
     return opts;
+  }
+
+  @Override
+  protected Map<String, String> getEnv(boolean prePackagePhase) throws MojoExecutionException {
+    Map<String, String> map = super.getEnv(prePackagePhase);
+
+    String args = map.get("JAVA_ARGS");
+    if (args == null) {
+      args = "";
+    }
+
+    if (MavenUtil.hasResource(getProject(), CLUSTER_MANAGER_SPI)) {
+      if (! args.isEmpty()) {
+        args += " ";
+      }
+      args += "-cluster";
+    }
+
+    if (! args.isEmpty()) {
+      map.put("JAVA_ARGS", args);
+    }
+    return map;
+  }
+
+  private boolean contains(String prefix, List<String> opts) {
+    return opts.stream().anyMatch(val -> val.startsWith(prefix));
   }
 
   @Override
