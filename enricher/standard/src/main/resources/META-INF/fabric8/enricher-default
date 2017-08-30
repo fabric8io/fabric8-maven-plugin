@@ -40,10 +40,6 @@ io.fabric8.maven.enricher.standard.GitEnricher
 # Add all objects found in dependencies' jar within META-INF/fabric8/kubernetes.yml
 io.fabric8.maven.enricher.standard.DependencyEnricher
 
-# Add docker environment variables to the kubernetes manifest if using S2I binary builds
-# which strip out docker environment variables
-io.fabric8.maven.enricher.standard.OpenShiftS2IEnricher
-
 # Add an enricher for adding an init container fixing volume mount permissions
 io.fabric8.maven.enricher.standard.VolumePermissionEnricher
 

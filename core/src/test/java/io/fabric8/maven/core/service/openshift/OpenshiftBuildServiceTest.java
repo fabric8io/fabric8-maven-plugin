@@ -16,6 +16,10 @@
 package io.fabric8.maven.core.service.openshift;
 
 import java.io.File;
+import java.io.FileReader;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
@@ -25,8 +29,10 @@ import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.core.util.WebServerEventCollector;
+import io.fabric8.maven.docker.assembly.ArchiverCustomizer;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.service.ArchiveService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.openshift.api.model.Build;
@@ -38,9 +44,11 @@ import io.fabric8.openshift.api.model.ImageStreamBuilder;
 import io.fabric8.openshift.api.model.ImageStreamStatusBuilder;
 import io.fabric8.openshift.api.model.NamedTagEventListBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
-
 import io.fabric8.openshift.client.server.mock.OpenShiftMockServer;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.archiver.tar.TarArchiver;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,8 +57,10 @@ import org.slf4j.LoggerFactory;
 
 import mockit.Expectations;
 import mockit.Mocked;
+import mockit.Verifications;
 import mockit.integration.junit4.JMockit;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
@@ -67,6 +77,12 @@ public class OpenshiftBuildServiceTest {
 
     @Mocked
     private ServiceHub dockerServiceHub;
+
+    @Mocked
+    private ArchiveService archiveService;
+
+    @Mocked
+    private TarArchiver tarArchiver;
 
     @Mocked
     private io.fabric8.maven.docker.util.Logger logger;
@@ -90,8 +106,11 @@ public class OpenshiftBuildServiceTest {
         imageStreamFile.delete();
 
         new Expectations() {{
-            dockerServiceHub.getArchiveService().createDockerBuildArchive(withAny(ImageConfiguration.class.cast(null)), withAny(MojoParameters.class.cast(null)));
-            result = dockerFile;
+            dockerServiceHub.getArchiveService();
+            result = archiveService;
+
+            archiveService.createDockerBuildArchive(withAny(ImageConfiguration.class.cast(null)), withAny(MojoParameters.class.cast(null)));
+            result = dockerFile; minTimes = 0;
 
             project.getArtifact();
             result = "myapp";
@@ -158,6 +177,48 @@ public class OpenshiftBuildServiceTest {
         assertTrue(mockServer.getRequestCount() > 8);
         collector.assertEventsRecordedInOrder("build-config-check", "patch-build-config", "pushed");
         collector.assertEventsNotRecorded("new-build-config");
+    }
+
+    @Test
+    public void checkTarPackage() throws Exception {
+        BuildService.BuildServiceConfig config = defaultConfig.build();
+        WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, true, 50, true, true);
+        OpenShiftMockServer mockServer = collector.getMockServer();
+
+        OpenShiftClient client = mockServer.createOpenShiftClient();
+        final OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
+
+        ImageConfiguration imageWithEnv = new ImageConfiguration.Builder(image)
+                .buildConfig(new BuildImageConfiguration.Builder(image.getBuildConfiguration())
+                        .env(Collections.singletonMap("FOO", "BAR"))
+                        .build()
+                ).build();
+
+        service.createBuildArchive(imageWithEnv);
+
+        final List<ArchiverCustomizer> customizer = new LinkedList<>();
+        new Verifications() {{
+            archiveService.createDockerBuildArchive(withInstanceOf(ImageConfiguration.class), withInstanceOf(MojoParameters.class), withCapture(customizer));
+
+            assertTrue(customizer.size() == 1);
+        }};
+
+        customizer.get(0).customize(tarArchiver);
+
+        final List<File> file = new LinkedList<>();
+        new Verifications() {{
+            String path;
+            tarArchiver.addFile(withCapture(file), path = withCapture());
+
+            assertEquals(".s2i/environment", path);
+        }};
+
+        assertEquals(1, file.size());
+        List<String> lines;
+        try (FileReader reader = new FileReader(file.get(0))) {
+            lines = IOUtils.readLines(reader);
+        }
+        assertTrue(lines.contains("FOO=BAR"));
     }
 
     protected WebServerEventCollector<OpenShiftMockServer> createMockServer(BuildService.BuildServiceConfig config, boolean success, long buildDelay, boolean buildConfigExists, boolean

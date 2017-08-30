@@ -17,7 +17,6 @@
     - fmp-pod-annotations
     - fmp-git
     # TODO: Documents and verify enrichers below
-    - fmp-openshift-s2i
     - fmp-debug
     - fmp-merge
     - fmp-remove-build-annotations

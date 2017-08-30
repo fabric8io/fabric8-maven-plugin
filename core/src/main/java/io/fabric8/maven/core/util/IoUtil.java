@@ -115,6 +115,17 @@ public class IoUtil {
         throw new IllegalStateException("Cannot find a free random port in the range [" + min + ", " + max + "] after " + attempts + " attempts");
     }
 
+    /**
+     * Returns an identifier from the given string that can be used as file name.
+     */
+    public static String sanitizeFileName(String name) {
+        if (name != null) {
+            return name.replaceAll("[^A-Za-z0-9]+", "-");
+        }
+
+        return null;
+    }
+
     // ========================================================================================
 
     private static int PROGRESS_LENGTH = 50;
