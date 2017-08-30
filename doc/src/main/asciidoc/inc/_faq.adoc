@@ -36,7 +36,7 @@ spec:
  template:
    spec:
      containers:
-       -env:
+       - env:
          - name: JAVA_OPTIONS
            value: "-Dfoo=bar -Dxyz=abc"
 ----
