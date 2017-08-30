@@ -38,6 +38,7 @@ import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
+import io.fabric8.maven.core.util.IoUtil;
 import io.fabric8.maven.core.util.KubernetesClientUtil;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.ResourceFileType;
@@ -135,7 +136,7 @@ public class OpenshiftBuildService implements BuildService {
     private ArchiverCustomizer getS2ICustomizer(ImageConfiguration imageConfiguration) throws Fabric8ServiceException {
         try {
             if (imageConfiguration.getBuildConfiguration() != null && imageConfiguration.getBuildConfiguration().getEnv() != null) {
-                String fileName = ("s2i-env-" + imageConfiguration.getName()).replaceAll("[^A-Za-z0-9]+", "-");
+                String fileName = IoUtil.sanitizeFileName("s2i-env-" + imageConfiguration.getName());
                 final File environmentFile = new File(config.getBuildDirectory(), fileName);
 
                 try (PrintWriter out = new PrintWriter(new FileWriter(environmentFile))) {

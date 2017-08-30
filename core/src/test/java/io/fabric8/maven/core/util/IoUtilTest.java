@@ -21,6 +21,7 @@ import java.net.ServerSocket;
 
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class IoUtilTest {
@@ -41,6 +42,13 @@ public class IoUtilTest {
         try (ServerSocket ss = new ServerSocket(port)) {
         }
         assertTrue(port2 > port);
+    }
+
+    @Test
+    public void testSanitizeFileName() {
+        assertEquals("Hello-World", IoUtil.sanitizeFileName("Hello/&%World"));
+        assertEquals("-H-e-l-l-o-", IoUtil.sanitizeFileName(" _H-.-e-.-l-l--.//o()"));
+        assertEquals("s2i-env-docker-io-fabric8-java-latest", IoUtil.sanitizeFileName("s2i-env-docker.io/fabric8/java:latest"));
     }
 
 }
