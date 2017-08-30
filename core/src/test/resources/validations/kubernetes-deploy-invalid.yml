@@ -1,0 +1,75 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    fabric8.io/git-commit: d4364201d2c39fff53c1fcf3be58b3de435996e2
+    fabric8.io/iconUrl: img/icons/spring-boot.svg
+    fabric8.io/git-branch: feat/66-validation
+    fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=fabric8-maven-sample-spring-boot&var-version=3.5-SNAPSHOT
+    fabric8.io/scm-tag: HEAD
+    fabric8.io/scm-url: https://github.com/spring-projects/spring-boot/spring-boot-starter-parent/fabric8-maven-sample-spring-boot
+  labels:
+    testProject: spring-boot-sample
+    app: fabric8-maven-sample-spring-boot
+    provider: fabric8
+    version: 3.5-SNAPSHOT
+    group: io.fabric8
+  name: fabric8-maven-sample-spring-boot
+spec:
+  replicas: "1"
+  revisionHistoryLimit: "2"
+  selector:
+    matchLabels:
+      app: fabric8-maven-sample-spring-boot
+      provider: fabric8
+      group: io.fabric8
+  template:
+    metadata:
+      annotations:
+        fabric8.io/git-commit: d4364201d2c39fff53c1fcf3be58b3de435996e2
+        fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=fabric8-maven-sample-spring-boot&var-version=3.5-SNAPSHOT
+        fabric8.io/scm-url: https://github.com/spring-projects/spring-boot/spring-boot-starter-parent/fabric8-maven-sample-spring-boot
+        fabric8.io/iconUrl: img/icons/spring-boot.svg
+        fabric8.io/git-branch: feat/66-validation
+        fabric8.io/scm-tag: HEAD
+      labels:
+        testProject: spring-boot-sample
+        app: fabric8-maven-sample-spring-boot
+        provider: fabric8
+        version: 3.5-SNAPSHOT
+        group: io.fabric8
+    spec:
+      containers:
+      - env:
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        image: fabric8/fabric8-maven-sample-spring-boot:snapshot-170818-125156-0949
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 180
+        name: spring-boot
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 9779
+          name: prometheus
+          protocol: TCP
+        - containerPort: 8778
+          name: jolokia
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 10
+        securityContext:
+          privileged: false

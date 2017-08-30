@@ -1,0 +1,30 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    fabric8.io/git-commit: d4364201d2c39fff53c1fcf3be58b3de435996e2
+    prometheus.io/port: "9779"
+    fabric8.io/scm-url: https://github.com/spring-projects/spring-boot/spring-boot-starter-parent/fabric8-maven-sample-spring-boot
+    fabric8.io/iconUrl: img/icons/spring-boot.svg
+    fabric8.io/git-branch: feat/66-validation
+    prometheus.io/scrape: "true"
+    fabric8.io/scm-tag: HEAD
+  labels:
+    testProject: spring-boot-sample
+    app: fabric8-maven-sample-spring-boot
+    provider: fabric8
+    version: 3.5-SNAPSHOT
+    group: io.fabric8
+  name: fabric8-maven-sample-spring-boot
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: fabric8-maven-sample-spring-boot
+    provider: fabric8
+    group: io.fabric8
+  type: NodePort

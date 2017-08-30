@@ -28,6 +28,7 @@ import io.fabric8.maven.core.handler.ServiceHandler;
 import io.fabric8.maven.core.service.ComposeService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.core.util.*;
+import io.fabric8.maven.core.util.validator.ResourceValidator;
 import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -145,6 +146,10 @@ public class ResourceMojo extends AbstractResourceMojo {
     @Parameter
     private ResourceConfig resources;
 
+    // Skip resource descriptors validation
+    @Parameter(property = "fabric8.skipResourceValidation", defaultValue = "false")
+    private Boolean skipResourceValidation;
+
     // Reusing image configuration from d-m-p
     @Parameter
     private List<ImageConfiguration> images;
@@ -257,13 +262,25 @@ public class ResourceMojo extends AbstractResourceMojo {
                 // Adapt list to use OpenShift specific resource objects
                 KubernetesList openShiftResources = convertToOpenShiftResources(resources);
                 writeResources(openShiftResources, ResourceClassifier.OPENSHIFT);
+                File openShiftResourceDir = new File(this.targetDir, ResourceClassifier.OPENSHIFT.getValue());
+                if(!skipResourceValidation) {
+                    new ResourceValidator(openShiftResourceDir, ResourceClassifier.OPENSHIFT, log).validate();
+                }
 
                 // Remove OpenShift specific stuff provided by fragments
                 KubernetesList kubernetesResources = convertToKubernetesResources(resources, openShiftResources);
                 writeResources(kubernetesResources, ResourceClassifier.KUBERNETES);
+                File kubernetesResourceDir = new File(this.targetDir, ResourceClassifier.KUBERNETES.getValue());
+                if(!skipResourceValidation) {
+                    new ResourceValidator(kubernetesResourceDir, ResourceClassifier.KUBERNETES, log).validate();
+                }
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
+        } catch (ConstraintViolationException e) {
+            log.error("[[R]]" + e.getMessage() + "[[R]]");
+            log.error("[[R]]use \"mvn -Dfabric8.skipResourceValidation=true\" option to skip the validation[[R]]");
+            throw new MojoExecutionException("Failed to generate fabric8 descriptor");
         }
     }
 
