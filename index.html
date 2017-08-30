@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.25,</span>
-<span id="revdate">2017-08-29</span>
+<span id="revdate">2017-08-30</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -544,6 +544,7 @@ table.CodeRay td.code>pre{padding:0}
 <ul class="sectlevel3">
 <li><a href="#resource-labels-annotations">4.1.1. Labels and Annotations</a></li>
 <li><a href="#resource-secrets">4.1.2. Secrets</a></li>
+<li><a href="#resource-validation">4.1.3. Resource Validation</a></li>
 </ul>
 </li>
 <li><a href="#fabric8:build">4.2. <strong>fabric8:build</strong></a>
@@ -1753,6 +1754,34 @@ the <code>src/main/fabric8/</code> folder.</p>
 </div>
 </div>
 </div>
+<div class="sect3">
+<h4 id="resource-validation">4.1.3. Resource Validation</h4>
+<div class="paragraph">
+<p>Resource goal also validates the generated resource descriptors using API specification of <a href="https://raw.githubusercontent.com/kubernetes/kubernetes/master/api/openapi-spec/swagger.json">Kubernetes</a> and <a href="https://raw.githubusercontent.com/openshift/origin/master/api/swagger-spec/openshift-openapi-spec.json">OpenShift</a>.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 8. Validation Configuration</caption>
+<colgroup>
+<col style="width: 12.5%;">
+<col style="width: 75%;">
+<col style="width: 12.5%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Configuration</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>fabric8.skipResourceValidation</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If value is set to <code>true</code> then resource validation is skipped. This may be useful if resource validation is getting failed due to some reason but still you want to continue the deployment.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div class="sect2">
 <h3 id="fabric8:build">4.2. <strong>fabric8:build</strong></h3>
@@ -1780,7 +1809,7 @@ the <code>src/main/fabric8/</code> folder.</p>
 <p>There are two kind of binary builds supporte by this plugin, which can be selected with the configuration option <code>buildStrategy</code> (property <code>fabric8.build.strategy</code>)</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 8. Build Strategies</caption>
+<caption class="title">Table 9. Build Strategies</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -1839,7 +1868,7 @@ the <code>src/main/fabric8/</code> folder.</p>
 <p>Global configuration parameters specify overall behavior common for all images to build. Some of the configuration options are shared with other goals.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 9. Global configuration</caption>
+<caption class="title">Table 10. Global configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2082,7 +2111,7 @@ the URL is:</p>
 <p>The <code>&lt;image&gt;</code> element can contain the following sub elements:</p>
 </div>
 <table id="config-image" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 10. Image Configuration</caption>
+<caption class="title">Table 11. Image Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2120,7 +2149,7 @@ linking images together or for specifying it with the global <strong>image</stro
 <p>When specifying the name you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 11. Placeholders</caption>
+<caption class="title">Table 12. Placeholders</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2303,7 +2332,7 @@ For replacing other data in associated files targeted for the Docker image, plea
 of an image configuration. The following configuration options are supported:</p>
 </div>
 <table id="config-image-build" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 12. Build configuration (<a href="#config-image">&lt;image&gt;</a>)</caption>
+<caption class="title">Table 13. Build configuration (<a href="#config-image">&lt;image&gt;</a>)</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2499,7 +2528,7 @@ remote API.</p>
 <p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
 </div>
 <table id="config-image-build-assembly" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 13. Assembly Configuration (<a href="#config-image">&lt;image&gt;</a> : <a href="#config-image-build">&lt;build&gt;</a>)</caption>
+<caption class="title">Table 14. Assembly Configuration (<a href="#config-image">&lt;image&gt;</a> : <a href="#config-image-build">&lt;build&gt;</a>)</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2644,7 +2673,7 @@ predefined assembly descriptor. The following symbolic names can be
 used for <code>descriptorRef</code>:</p>
 </div>
 <table id="build-assembly-descriptor-refs" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 14. Predefined Assembly Descriptors</caption>
+<caption class="title">Table 15. Predefined Assembly Descriptors</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -2836,7 +2865,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <p>An entry point or command can be specified in two alternative formats:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 15. Entrypoint and Command Configuration</caption>
+<caption class="title">Table 16. Entrypoint and Command Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2969,7 +2998,7 @@ the global option <code>filter</code> (see <a href="#global-configuration">Globa
 <p>By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option <code>-B</code>). A very simplified progress meter is provided when using no color output (i.e. with <code>-Ddocker.useColor=false</code>).</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 16. Push options</caption>
+<caption class="title">Table 17. Push options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -3102,7 +3131,7 @@ more details.</p></td>
 <p>This configuration section know the following subelements in order to configure your Helm chart.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 17. Helm configuration</caption>
+<caption class="title">Table 18. Helm configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -3718,7 +3747,7 @@ This plugin definition includes the configuration to generate the Docker image.
 <p>The setup can be influenced with the following configuration options:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 18. Setup configuration</caption>
+<caption class="title">Table 19. Setup configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -4035,7 +4064,7 @@ This plugin definition includes the configuration to generate the Docker image.
 <p>The following sub-elements are supported:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 19. Generator configuration</caption>
+<caption class="title">Table 20. Generator configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -4105,7 +4134,7 @@ This plugin definition includes the configuration to generate the Docker image.
 <p>All default generators examine the build information for certain aspects and generate a Docker build configuration on the fly. They can be configured to a certain degree, where the configuration is generator specific.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 20. Default Generators</caption>
+<caption class="title">Table 21. Default Generators</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 16.6666%;">
@@ -4155,7 +4184,7 @@ This plugin definition includes the configuration to generate the Docker image.
 <p>There are some configuration options which are shared by all generators:</p>
 </div>
 <table id="generator-options-common" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 21. Common generator options</caption>
+<caption class="title">Table 22. Common generator options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4225,7 +4254,7 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 <p>It will use the following base image by default, but as explained <a href="#generator-options-common">above</a> and can be changed with the <code>from</code> configuration.</p>
 </div>
 <table id="generator-java-exec-from" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 22. Java Base Images</caption>
+<caption class="title">Table 23. Java Base Images</caption>
 <colgroup>
 <col style="width: 7.6923%;">
 <col style="width: 30.7692%;">
@@ -4265,7 +4294,7 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 <p>Beside the common configuration parameters described in the table <a href="#generator-options-common">common generator options</a> the following additional configuration options are recognized:</p>
 </div>
 <table id="generator-java-exec-options" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 23. Java Application configuration options</caption>
+<caption class="title">Table 24. Java Application configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4330,7 +4359,7 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 <p>Beside the  <a href="#generator-options-common">common generator options</a> and the <a href="#generator-java-exec-options">java-exec options</a> the following additional configuration is recognized:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 24. Spring-Boot configuration options</caption>
+<caption class="title">Table 25. Spring-Boot configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4412,7 +4441,7 @@ fat jar.</p>
 <p>This generator named <code>karaf</code> kicks in when the build uses a <code>karaf-maven-plugin</code>. By default the following base images are used:</p>
 </div>
 <table id="generator-karaf-from" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 25. Karaf Base Images</caption>
+<caption class="title">Table 26. Karaf Base Images</caption>
 <colgroup>
 <col style="width: 11.1111%;">
 <col style="width: 44.4444%;">
@@ -4445,7 +4474,7 @@ fat jar.</p>
 <p>In addition to the  <a href="#generator-options-common">common generator options</a> this generator can be configured with the following options:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 26. Karaf configuration options</caption>
+<caption class="title">Table 27. Karaf configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4509,7 +4538,7 @@ fat jar.</p>
 <p>The base images chosen are:</p>
 </div>
 <table id="generator-webapp-from" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 27. Webapp Base Images</caption>
+<caption class="title">Table 28. Webapp Base Images</caption>
 <colgroup>
 <col style="width: 11.1111%;">
 <col style="width: 44.4444%;">
@@ -4558,7 +4587,7 @@ fat jar.</p>
 <p>In addition to the  <a href="#generator-options-common">common generator options</a> this generator can be configured with the following options:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 28. Webapp configuration options</caption>
+<caption class="title">Table 29. Webapp configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4644,7 +4673,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <p>The <a href="#generator-example">Generator example</a> is a good bluebprint, simply replace <code>&lt;generator&gt;</code> with <code>&lt;enricher&gt;</code>. The configuration is structural identical:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 29. Enricher configuration</caption>
+<caption class="title">Table 30. Enricher configuration</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -4801,7 +4830,7 @@ An explicit configuration always takes precedence over auto detection. For enric
 <p>The following configuration parameters can be used to influence the behaviour of this enricher:</p>
 </div>
 <table id="enricher-fmp-service" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 30. Default service enricher</caption>
+<caption class="title">Table 31. Default service enricher</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -5500,7 +5529,7 @@ These metadata will be added only if <a href="https://maven.apache.org/pom.html#
 <p>The following annotations will be added to the objects that supports annotations,</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 31. Maven SCM Enrichers Annotation Mapping</caption>
+<caption class="title">Table 32. Maven SCM Enrichers Annotation Mapping</caption>
 <colgroup>
 <col style="width: 28.5714%;">
 <col style="width: 28.5714%;">
@@ -5575,7 +5604,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
 <p>The following annotations will be added to the objects that supports annotations,</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 32. Maven Issue Tracker Enrichers Annotation Mapping</caption>
+<caption class="title">Table 33. Maven Issue Tracker Enrichers Annotation Mapping</caption>
 <colgroup>
 <col style="width: 28.5714%;">
 <col style="width: 28.5714%;">
@@ -5638,7 +5667,7 @@ For more information read <a href="https://kubernetes.io/docs/concepts/workloads
 <p>The following configuration parameters can be used to influence the behaviour of this enricher:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 33. Default revision history enricher</caption>
+<caption class="title">Table 34. Default revision history enricher</caption>
 <colgroup>
 <col style="width: 28.5714%;">
 <col style="width: 28.5714%;">
@@ -5767,7 +5796,7 @@ For more information read <a href="https://kubernetes.io/docs/concepts/workloads
 <p>Each <code>profiles.yml</code> has a list of profiles which are defined with these elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 34. Profile elements</caption>
+<caption class="title">Table 35. Profile elements</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -5803,7 +5832,7 @@ For more information read <a href="https://kubernetes.io/docs/concepts/workloads
 <p>The definition of generators and enrichers in the profile follow the same format:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 35. Generator and Enericher definition</caption>
+<caption class="title">Table 36. Generator and Enericher definition</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -5961,7 +5990,7 @@ For more information read <a href="https://kubernetes.io/docs/concepts/workloads
 <p>This plugin comes with a list of the following predefined profiles:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 36. Predefined Profiles</caption>
+<caption class="title">Table 37. Predefined Profiles</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -6598,7 +6627,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.25<br>
-Last updated 2017-08-29 14:21:15 UTC
+Last updated 2017-08-30 15:42:12 UTC
 </div>
 </div>
 </body>
