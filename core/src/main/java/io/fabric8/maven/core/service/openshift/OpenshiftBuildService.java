@@ -135,7 +135,8 @@ public class OpenshiftBuildService implements BuildService {
     private ArchiverCustomizer getS2ICustomizer(ImageConfiguration imageConfiguration) throws Fabric8ServiceException {
         try {
             if (imageConfiguration.getBuildConfiguration() != null && imageConfiguration.getBuildConfiguration().getEnv() != null) {
-                final File environmentFile = new File(config.getBuildDirectory(), "s2i-env-" + imageConfiguration);
+                String fileName = ("s2i-env-" + imageConfiguration.getName()).replaceAll("[^A-Za-z0-9]+", "-");
+                final File environmentFile = new File(config.getBuildDirectory(), fileName);
 
                 try (PrintWriter out = new PrintWriter(new FileWriter(environmentFile))) {
                     for (Map.Entry<String, String> e : imageConfiguration.getBuildConfiguration().getEnv().entrySet()) {
