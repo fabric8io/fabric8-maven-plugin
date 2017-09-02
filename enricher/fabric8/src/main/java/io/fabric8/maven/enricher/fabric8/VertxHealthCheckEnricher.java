@@ -97,7 +97,7 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
                 })
                 .orNull();
         String scheme = getStringValue("scheme", readiness).or(SCHEME_HTTP).toUpperCase();
-        Optional<Integer> initialDelay = getIntegerValue("initialDelay", readiness);
+        Optional<Integer> initialDelay = getIntegerValue("initial-delay", readiness);
         Optional<Integer> period = getIntegerValue("period", readiness);
         Optional<Integer> timeout = getIntegerValue("timeout", readiness);
         Optional<Integer> successThreshold = getIntegerValue("success-threshold", readiness);
