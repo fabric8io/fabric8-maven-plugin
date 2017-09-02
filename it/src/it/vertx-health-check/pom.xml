@@ -83,6 +83,12 @@
                         <config>
                             <vertx-health-check>
                                 <path>/</path>
+                                <liveness>
+                                    <initial-delay>180</initial-delay>
+                                </liveness>
+                                <readiness>
+                                    <initial-delay>10</initial-delay>
+                                </readiness>
                             </vertx-health-check>
                         </config>
                     </enricher>
