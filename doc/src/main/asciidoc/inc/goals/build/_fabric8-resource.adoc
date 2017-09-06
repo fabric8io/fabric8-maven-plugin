@@ -173,4 +173,8 @@ Resource goal also validates the generated resource descriptors using API specif
 | *fabric8.skipResourceValidation*
 | If value is set to `true` then resource validation is skipped. This may be useful if resource validation is getting failed due to some reason but still you want to continue the deployment.
 | false
+
+| *fabric8.failOnValidationError*
+| If value is set to `true` then any validation error will block the plugin execution. A warning will be printed otherwise.
+| false
 |===
