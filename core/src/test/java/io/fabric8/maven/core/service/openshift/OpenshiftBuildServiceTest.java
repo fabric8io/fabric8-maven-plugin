@@ -290,7 +290,7 @@ public class OpenshiftBuildServiceTest {
                 .always();
 
         mockServer.expect().withPath("/oapi/v1/namespaces/test/builds/" + projectName).andReturn(200, build).always();
-        mockServer.expect().withPath("/oapi/v1/namespaces/test/builds?fieldSelector=metadata.name%3D" + projectName + "&resourceVersion=1&watch=true")
+        mockServer.expect().withPath("/oapi/v1/namespaces/test/builds?fieldSelector=metadata.name%3D" + projectName + "&watch=true")
                 .andUpgradeToWebSocket().open()
                 .waitFor(buildDelay)
                 .andEmit(new WatchEvent(build, "MODIFIED"))
