@@ -150,6 +150,10 @@ public class ResourceMojo extends AbstractResourceMojo {
     @Parameter(property = "fabric8.skipResourceValidation", defaultValue = "false")
     private Boolean skipResourceValidation;
 
+    // Determine if the plugin should stop when a validation error is encountered
+    @Parameter(property = "fabric8.failOnValidationError", defaultValue = "false")
+    private Boolean failOnValidationError;
+
     // Reusing image configuration from d-m-p
     @Parameter
     private List<ImageConfiguration> images;
@@ -263,24 +267,38 @@ public class ResourceMojo extends AbstractResourceMojo {
                 KubernetesList openShiftResources = convertToOpenShiftResources(resources);
                 writeResources(openShiftResources, ResourceClassifier.OPENSHIFT);
                 File openShiftResourceDir = new File(this.targetDir, ResourceClassifier.OPENSHIFT.getValue());
-                if(!skipResourceValidation) {
-                    new ResourceValidator(openShiftResourceDir, ResourceClassifier.OPENSHIFT, log).validate();
-                }
+                validateIfRequired(openShiftResourceDir, ResourceClassifier.OPENSHIFT);
 
                 // Remove OpenShift specific stuff provided by fragments
                 KubernetesList kubernetesResources = convertToKubernetesResources(resources, openShiftResources);
                 writeResources(kubernetesResources, ResourceClassifier.KUBERNETES);
                 File kubernetesResourceDir = new File(this.targetDir, ResourceClassifier.KUBERNETES.getValue());
-                if(!skipResourceValidation) {
-                    new ResourceValidator(kubernetesResourceDir, ResourceClassifier.KUBERNETES, log).validate();
-                }
+                validateIfRequired(kubernetesResourceDir, ResourceClassifier.KUBERNETES);
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
+        }
+    }
+
+    private void validateIfRequired(File resourceDir, ResourceClassifier classifier) throws MojoExecutionException, MojoFailureException {
+        try {
+            if (!skipResourceValidation) {
+                new ResourceValidator(resourceDir, classifier, log).validate();
+            }
+        } catch (IOException e) {
+            if (failOnValidationError) {
+                throw new MojoExecutionException("Failed to validate resources", e);
+            } else {
+                log.warn("Failed to validate resources: %s", e.getMessage());
+            }
         } catch (ConstraintViolationException e) {
-            log.error("[[R]]" + e.getMessage() + "[[R]]");
-            log.error("[[R]]use \"mvn -Dfabric8.skipResourceValidation=true\" option to skip the validation[[R]]");
-            throw new MojoExecutionException("Failed to generate fabric8 descriptor");
+            if (failOnValidationError) {
+                log.error("[[R]]" + e.getMessage() + "[[R]]");
+                log.error("[[R]]use \"mvn -Dfabric8.skipResourceValidation=true\" option to skip the validation[[R]]");
+                throw new MojoFailureException("Failed to generate fabric8 descriptor");
+            } else {
+                log.warn("[[Y]]" + e.getMessage() + "[[Y]]");
+            }
         }
     }
 
