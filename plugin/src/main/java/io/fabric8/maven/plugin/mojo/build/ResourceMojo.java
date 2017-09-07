@@ -285,12 +285,6 @@ public class ResourceMojo extends AbstractResourceMojo {
             if (!skipResourceValidation) {
                 new ResourceValidator(resourceDir, classifier, log).validate();
             }
-        } catch (IOException e) {
-            if (failOnValidationError) {
-                throw new MojoExecutionException("Failed to validate resources", e);
-            } else {
-                log.warn("Failed to validate resources: %s", e.getMessage());
-            }
         } catch (ConstraintViolationException e) {
             if (failOnValidationError) {
                 log.error("[[R]]" + e.getMessage() + "[[R]]");
@@ -298,6 +292,12 @@ public class ResourceMojo extends AbstractResourceMojo {
                 throw new MojoFailureException("Failed to generate fabric8 descriptor");
             } else {
                 log.warn("[[Y]]" + e.getMessage() + "[[Y]]");
+            }
+        } catch (Throwable e) {
+            if (failOnValidationError) {
+                throw new MojoExecutionException("Failed to validate resources", e);
+            } else {
+                log.warn("Failed to validate resources: %s", e.getMessage());
             }
         }
     }
