@@ -22,7 +22,6 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
 import io.fabric8.maven.core.util.ResourceClassifier;
-import io.fabric8.maven.core.util.validator.IgnoreRule;
 import io.fabric8.maven.docker.util.Logger;
 
 import javax.validation.ConstraintViolation;
@@ -103,13 +102,15 @@ public class ResourceValidator {
      * @throws IOException
      */
     public int validate() throws ConstraintViolationException, IOException {
-        for(File resource: resources) {
-            log.info("validating %s resource", resource.toString());
-            JsonNode resourceNode = geFileContent(resource);
-            JsonSchema schema = getJsonSchema(prepareSchemaUrl(resourceNode));
+        for (File resource : resources) {
+            if (resource.isFile() && resource.exists()) {
+                log.info("validating %s resource", resource.toString());
+                JsonNode resourceNode = geFileContent(resource);
+                JsonSchema schema = getJsonSchema(prepareSchemaUrl(resourceNode));
 
-            Set<ValidationMessage> errors = schema.validate(resourceNode);
-            processErrors(errors, resource);
+                Set<ValidationMessage> errors = schema.validate(resourceNode);
+                processErrors(errors, resource);
+            }
         }
 
         return resources.length;
@@ -160,13 +161,9 @@ public class ResourceValidator {
     }
 
     private JsonNode geFileContent(File file) throws IOException {
-        InputStream resourceStream = null;
-        try {
-            resourceStream = new FileInputStream(file);
+        try (InputStream resourceStream = new FileInputStream(file)) {
             ObjectMapper jsonMapper = new ObjectMapper(new YAMLFactory());
             return jsonMapper.readTree(resourceStream);
-        } finally {
-            resourceStream.close();
         }
     }
 
