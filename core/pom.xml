@@ -110,6 +110,19 @@
       <artifactId>json-path-assert</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>kubernetes-schema-java</artifactId>
+      <version>master</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>openshift-schema-java</artifactId>
+      <version>master</version>
+    </dependency>
+
+
   </dependencies>
 
   <build>

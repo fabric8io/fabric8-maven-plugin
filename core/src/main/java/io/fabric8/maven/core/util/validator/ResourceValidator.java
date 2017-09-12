@@ -23,6 +23,8 @@ import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
 import io.fabric8.maven.core.util.ResourceClassifier;
 import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.schema.KubernetesSchema;
+import io.fabric8.schema.OpenshiftSchema;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -33,6 +35,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -101,16 +105,14 @@ public class ResourceValidator {
      * @throws ConstraintViolationException
      * @throws IOException
      */
-    public int validate() throws ConstraintViolationException, IOException {
-        for (File resource : resources) {
-            if (resource.isFile() && resource.exists()) {
-                log.info("validating %s resource", resource.toString());
-                JsonNode resourceNode = geFileContent(resource);
-                JsonSchema schema = getJsonSchema(prepareSchemaUrl(resourceNode));
+    public int validate() throws IOException, URISyntaxException {
+        for(File resource: resources) {
+            log.info("validating %s resource", resource.toString());
+            JsonNode resourceNode = geFileContent(resource);
+            JsonSchema schema = getJsonSchema(prepareSchemaUrl(resourceNode));
 
-                Set<ValidationMessage> errors = schema.validate(resourceNode);
-                processErrors(errors, resource);
-            }
+            Set<ValidationMessage> errors = schema.validate(resourceNode);
+            processErrors(errors, resource);
         }
 
         return resources.length;
@@ -151,13 +153,17 @@ public class ResourceValidator {
         return  validationError.toString();
     }
 
-    private JsonSchema getJsonSchema(String schemaUrl) throws MalformedURLException {
+    private JsonSchema getJsonSchema(URI schemaUrl) throws MalformedURLException {
         JsonSchemaFactory factory = new JsonSchemaFactory();
-        return factory.getSchema(new URL(schemaUrl));
+        return factory.getSchema(schemaUrl.toURL());
     }
 
-    private String prepareSchemaUrl(JsonNode resourceNode) {
-        return String.format(jsonSchemaPath, target, "master", resourceNode.get("kind").toString().toLowerCase()).replace("\"", "");
+    private URI prepareSchemaUrl(JsonNode resourceNode) throws URISyntaxException {
+        String resourceKind = resourceNode.get("kind").toString().toLowerCase().replace("\"", "");
+        return ResourceClassifier.OPENSHIFT.equals(target) ? OpenshiftSchema.getSchemaFile(resourceKind):
+                                                             KubernetesSchema.getSchemaFile(resourceKind);
+        //return "/master/" + resourceNode.get("kind").toString().toLowerCase().replace("\"", "") + ".json";
+        //return String.format(jsonSchemaPath, target, "master", resourceNode.get("kind").toString().toLowerCase()).replace("\"", "");
     }
 
     private JsonNode geFileContent(File file) throws IOException {

@@ -66,6 +66,7 @@ import javax.validation.ConstraintViolationException;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -275,7 +276,7 @@ public class ResourceMojo extends AbstractResourceMojo {
                 File kubernetesResourceDir = new File(this.targetDir, ResourceClassifier.KUBERNETES.getValue());
                 validateIfRequired(kubernetesResourceDir, ResourceClassifier.KUBERNETES);
             }
-        } catch (IOException e) {
+        } catch (IOException | URISyntaxException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
         }
     }
