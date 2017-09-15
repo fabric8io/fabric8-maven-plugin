@@ -276,7 +276,7 @@ public class ResourceMojo extends AbstractResourceMojo {
                 File kubernetesResourceDir = new File(this.targetDir, ResourceClassifier.KUBERNETES.getValue());
                 validateIfRequired(kubernetesResourceDir, ResourceClassifier.KUBERNETES);
             }
-        } catch (IOException | URISyntaxException e) {
+        } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
         }
     }
