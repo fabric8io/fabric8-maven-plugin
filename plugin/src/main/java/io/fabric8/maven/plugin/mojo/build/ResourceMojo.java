@@ -713,13 +713,15 @@ public class ResourceMojo extends AbstractResourceMojo {
             // kubernetes App Catalog so we use a Template instead on OpenShift
             return null;
         }
+        // TODO-F8SPEC: ^^^^^ (end)
 
         // lets check if there's an OpenShift resource of this name already from a dependency...
-        HasMetadata dependencyResource = openshiftDependencyResources.convertKubernetesItemToOpenShift(item);
-        if (dependencyResource != null) {
-            return dependencyResource;
+        if (!isOpenshiftItem(item)) {
+            HasMetadata dependencyResource = openshiftDependencyResources.convertKubernetesItemToOpenShift(item);
+            if (dependencyResource != null) {
+                return dependencyResource;
+            }
         }
-        // TODO-F8SPEC: ^^^^^ (end)
 
         KubernetesToOpenShiftConverter converter = openShiftConverters.get(item.getKind());
         return converter != null ? converter.convert(item) : item;
