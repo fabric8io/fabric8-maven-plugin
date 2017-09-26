@@ -76,7 +76,7 @@ public class WebAppGenerator extends BaseGenerator {
         if (getContext().getMode() == PlatformMode.openshift &&
             getContext().getStrategy() == OpenShiftBuildStrategy.s2i) {
             throw new IllegalArgumentException("S2I not yet supported for the webapp-generator. Use -Dfabric8.mode=kubernetes or " +
-                                               "-Dfabric8.buildStrategy=docker for OpenShift mode. Please refer to the reference manual at " +
+                                               "-Dfabric8.build.strategy=docker for OpenShift mode. Please refer to the reference manual at " +
                                                "https://maven.fabric8.io for details about build modes.");
         }
 
