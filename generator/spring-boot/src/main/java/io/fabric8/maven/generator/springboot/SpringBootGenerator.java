@@ -124,7 +124,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
         List<String> answer = new ArrayList<>();
         Properties properties = SpringBootUtil.getSpringBootApplicationProperties(this.getProject());
         String port = properties.getProperty(SpringBootProperties.SERVER_PORT, DEFAULT_SERVER_PORT);
-        addPortIfValid(answer, getConfig(JavaExecGenerator.Config.webPort, replaceKeyWithSystemPropertyValue(port)));
+        addPortIfValid(answer, getConfig(JavaExecGenerator.Config.webPort, replaceKeyWithSystemPropertyValue(port,this.getProject().getProperties())));
         addPortIfValid(answer, getConfig(JavaExecGenerator.Config.jolokiaPort));
         addPortIfValid(answer, getConfig(JavaExecGenerator.Config.prometheusPort));
         return answer;
@@ -141,10 +141,14 @@ public class SpringBootGenerator extends JavaExecGenerator {
      *  @param key The string containing the key to search
      *  @return String The modified key
      */
-    protected static String replaceKeyWithSystemPropertyValue(String key) {
+    protected static String replaceKeyWithSystemPropertyValue(String key, Properties mavenProperties) {
         HashMap values = new HashMap();
         Properties systemProperties = System.getProperties();
         for(Map.Entry<Object, Object> x : systemProperties.entrySet()) {
+            values.put(x.getKey(),x.getValue());
+        }
+
+        for(Map.Entry<Object, Object> x : mavenProperties.entrySet()) {
             values.put(x.getKey(),x.getValue());
         }
         StrSubstitutor sub = new StrSubstitutor(values);
