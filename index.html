@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.28,</span>
-<span id="revdate">2017-09-27</span>
+<span id="revdate">2017-10-04</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -4390,13 +4390,13 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 </div>
 <div class="paragraph">
 <p>The generator works differently when called together with <code>fabric8:watch</code>.
-In that case it enables support for <a href="http://docs.spring.io/spring-boot/docs/current/reference/html/using-boot-devtools.html">Spring Boot Developer Tools</a> which allows for hot reloading of the Spring Bott app.
+In that case it enables support for <a href="http://docs.spring.io/spring-boot/docs/current/reference/html/using-boot-devtools.html">Spring Boot Developer Tools</a> which allows for hot reloading of the Spring Boot app.
 In particular, the following steps are performed:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>If a secret token is not provided within the Spring Boot application configuration <code>appliction.properties</code> or <code>application.yml</code> with the key <code>spring.devtools.remote.secret</code> then a custom secret token is created and added to <code>application.properties</code></p>
+<p>If a secret token is not provided within the Spring Boot application configuration <code>application.properties</code> or <code>application.yml</code> with the key <code>spring.devtools.remote.secret</code> then a custom secret token is created and added to <code>application.properties</code></p>
 </li>
 <li>
 <p>Add <code>spring-boot-devtools.jar</code> as <code>BOOT-INF/lib/spring-devtools.jar</code> to the spring-boot fat jar.</p>
@@ -6631,7 +6631,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.28<br>
-Last updated 2017-09-27 08:56:12 UTC
+Last updated 2017-10-04 21:58:05 UTC
 </div>
 </div>
 </body>
