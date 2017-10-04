@@ -20,10 +20,10 @@ Beside the  <<generator-options-common, common generator options>> and the <<gen
 The generator adds Kubernetes liveness and readiness probes pointing to either the management or server port as read from the `application.properties`. If the `server.ssl.key-store` property is set in `application.properties` then the probes are automatically set to use `https`.
 
 The generator works differently when called together with `fabric8:watch`.
-In that case it enables support for http://docs.spring.io/spring-boot/docs/current/reference/html/using-boot-devtools.html[Spring Boot Developer Tools] which allows for hot reloading of the Spring Bott app.
+In that case it enables support for http://docs.spring.io/spring-boot/docs/current/reference/html/using-boot-devtools.html[Spring Boot Developer Tools] which allows for hot reloading of the Spring Boot app.
 In particular, the following steps are performed:
 
-* If a secret token is not provided within the Spring Boot application configuration `appliction.properties` or `application.yml` with the key `spring.devtools.remote.secret` then a custom secret token is created and added to `application.properties`
+* If a secret token is not provided within the Spring Boot application configuration `application.properties` or `application.yml` with the key `spring.devtools.remote.secret` then a custom secret token is created and added to `application.properties`
 * Add `spring-boot-devtools.jar` as `BOOT-INF/lib/spring-devtools.jar` to the spring-boot fat jar.
 
 Since during `fabric8:watch` the application itself within the `target/` directory is modified for allowing easy reloading you must ensure that you do a `mvn clean` before building an artefact which should be put into production.
