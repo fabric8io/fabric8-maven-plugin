@@ -47,7 +47,8 @@ def updateDownstreamDependencies(stagedProject) {
     projects = [
             'fabric8-services/fabric8-tenant-che',
             'fabric8-services/fabric8-tenant-jenkins',
-            'fabric8-services/fabric8-tenant-team'
+            'fabric8-services/fabric8-tenant-team',
+            'fabric8-jenkins/fabric8-jenkins-platform'
     ]
     version = newVersion
     autoMerge = true
@@ -56,9 +57,6 @@ def updateDownstreamDependencies(stagedProject) {
   pushPomPropertyChangePR {
     propertyName = 'fabric8.maven.plugin.version'
     projects = [
-            'fabric8-services/fabric8-tenant-che',
-            'fabric8-services/fabric8-tenant-jenkins',
-            'fabric8-services/fabric8-tenant-team',
             'fabric8io/fabric8-maven-dependencies',
             'fabric8io/fabric8-devops',
             'fabric8io/fabric8-platform',
