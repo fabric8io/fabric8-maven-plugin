@@ -83,6 +83,8 @@ public class ProbeHandler {
     }
 
     private TCPSocketAction getTCPSocketAction(String port) {
+        // TODO what to do about host?
+        String host = null;
         if (port != null) {
             IntOrString portObj = new IntOrString(port);
             try {
@@ -91,7 +93,7 @@ public class ProbeHandler {
             } catch (NumberFormatException e) {
                 portObj.setStrVal(port);
             }
-            return new TCPSocketAction(portObj);
+            return new TCPSocketAction(host, portObj);
         }
         return null;
     }

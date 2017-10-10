@@ -68,6 +68,7 @@ import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
+import io.fabric8.kubernetes.api.model.Time;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSetSpec;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
@@ -598,6 +599,13 @@ public class KubernetesResourceUtil {
         return null;
     }
 
+    private static Date parseTimestamp(Time time) {
+        if (time != null) {
+            return parseTimestamp(time.getTime());
+        }
+        return null;
+    }
+
     private static Date parseTimestamp(String text) {
         if (Strings.isNullOrBlank(text)) {
             return null;
@@ -721,7 +729,7 @@ public class KubernetesResourceUtil {
     }
 
     public static void mergePodSpec(PodSpecBuilder builder, PodSpec defaultPodSpec, String defaultName) {
-        List<Container> containers = builder.getContainers();
+        List<Container> containers = builder.buildContainers();
         List<Container> defaultContainers = defaultPodSpec.getContainers();
         int size = defaultContainers.size();
         if (size > 0) {
