@@ -599,13 +599,6 @@ public class KubernetesResourceUtil {
         return null;
     }
 
-    private static Date parseTimestamp(Time time) {
-        if (time != null) {
-            return parseTimestamp(time.getTime());
-        }
-        return null;
-    }
-
     private static Date parseTimestamp(String text) {
         if (Strings.isNullOrBlank(text)) {
             return null;
