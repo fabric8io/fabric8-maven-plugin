@@ -1,0 +1,9 @@
+
+kind: OAuthClient
+apiVersion: v1
+metadata:
+  name: fabric8-online-platform
+secret: fabric8
+redirectURIs:
+- "http://keycloak-fabric8.192.168.42.220.nip.io/auth/realms/fabric8/broker/openshift-v3/endpoint"
+grantMethod: prompt
