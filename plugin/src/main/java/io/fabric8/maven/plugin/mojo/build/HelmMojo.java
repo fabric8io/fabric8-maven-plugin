@@ -17,14 +17,19 @@ package io.fabric8.maven.plugin.mojo.build;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.maven.core.config.HelmConfig;
+import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.core.util.ResourceFileType;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
+import io.fabric8.openshift.api.model.Template;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.IOHelpers;
 import io.fabric8.utils.Strings;
@@ -49,6 +54,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+import static io.fabric8.maven.core.util.KubernetesResourceUtil.getNameWithSuffix;
+
 /**
  * Generates a Helm chart for the kubernetes resources
  */
@@ -63,6 +70,12 @@ public class HelmMojo extends AbstractFabric8Mojo {
      */
     @Parameter(property = "fabric8.kubernetesManifest", defaultValue = "${basedir}/target/classes/META-INF/fabric8/kubernetes.yml")
     private File kubernetesManifest;
+
+    /**
+     * The generated kubernetes YAML file
+     */
+    @Parameter(property = "fabric8.kubernetesTemplate", defaultValue = "${basedir}/target/classes/META-INF/fabric8/k8s-template.yml")
+    private File kubernetesTemplate;
 
     @Component
     private MavenProjectHelper projectHelper;
@@ -90,7 +103,7 @@ public class HelmMojo extends AbstractFabric8Mojo {
         log.verbose("OutputDir: %s", outputDir);
 
         // Copy over all resource descriptors into the helm templates dir
-        copyResourceFilesToTemplatesDir(outputDir, sourceDir);
+        File templatesDir = copyResourceFilesToTemplatesDir(outputDir, sourceDir);
 
         // Save Helm chart
         createChartYaml(chartName, outputDir);
@@ -99,6 +112,11 @@ public class HelmMojo extends AbstractFabric8Mojo {
         copyTextFile(outputDir, "README");
         copyTextFile(outputDir, "LICENSE");
 
+
+        Template template = findTemplate();
+        if (template != null) {
+            createTemplateParameters(outputDir, template, templatesDir);
+        }
         // now lets create the tarball
         File destinationFile = new File(project.getBuild().getDirectory(),
                                         chartName + "-" + project.getVersion() + "-" + type.getClassifier() + ".tar.gz");
@@ -122,7 +140,7 @@ public class HelmMojo extends AbstractFabric8Mojo {
         if (dir == null) {
             dir = String.format("%s/fabric8/helm/%s/%s",
                                 project.getBuild().getDirectory(),
-                                type.getSourceDir(),
+                                type.getOutputDir(),
                                 getChartName());
         }
         File dirF = new File(dir);
@@ -182,9 +200,69 @@ public class HelmMojo extends AbstractFabric8Mojo {
         }
         File outputChartFile = new File(outputDir, "Chart.yaml");
         try {
-            KubernetesHelper.saveYaml(chart, outputChartFile);
+            saveYaml(chart, outputChartFile);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to save chart " + outputChartFile + ": " + e, e);
+        }
+    }
+
+    protected static void saveYaml(Object object, File file) throws IOException {
+        KubernetesResourceUtil.writeResourceFile(object, file, ResourceFileType.yaml);
+        //KubernetesHelper.saveYaml(object, file);
+    }
+
+
+    private void createTemplateParameters(File outputDir, Template template, File templatesDir) throws MojoExecutionException {
+        JsonNodeFactory nodeFactory = JsonNodeFactory.instance;
+        ObjectNode values = nodeFactory.objectNode();
+        List<io.fabric8.openshift.api.model.Parameter> parameters = template.getParameters();
+        if (parameters == null && parameters.isEmpty()) {
+            return;
+        }
+        List<HelmParameter> helmParameters = new ArrayList<>();
+        for (io.fabric8.openshift.api.model.Parameter parameter : parameters) {
+            HelmParameter helmParameter = new HelmParameter(parameter);
+            helmParameter.addToValue(nodeFactory, values);
+            helmParameters.add(helmParameter);
+        }
+        File outputChartFile = new File(outputDir, "values.yaml");
+        try {
+            saveYaml(values, outputChartFile);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to save chart values " + outputChartFile + ": " + e, e);
+        }
+
+        // now lets replace all the parameter expressions in each template
+        File[] files = templatesDir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile()) {
+                    String extension = Files.getExtension(file.getName()).toLowerCase();
+                    if (extension.equals("yaml") || extension.equals("yml")) {
+                        convertTemplateParameterExpressionsWithHelmExpressions(file, helmParameters);
+                    }
+                }
+            }
+        }
+    }
+
+    private void convertTemplateParameterExpressionsWithHelmExpressions(File file, List<HelmParameter> helmParameters) throws MojoExecutionException {
+        String text = null;
+        try {
+            text = IOHelpers.readFully(file);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to load " + file + " so we can replacing template expressions " +e, e);
+        }
+        String original = text;
+        for (HelmParameter helmParameter : helmParameters) {
+            text = helmParameter.convertTemplateParameterToHelmExpression(text);
+        }
+        if (!original.equals(text)) {
+            try {
+                IOHelpers.writeFully(file, text);
+            } catch (IOException e) {
+                throw new MojoExecutionException("Failed to save " + file + " after replacing template expressions " +e, e);
+            }
         }
     }
 
@@ -218,12 +296,62 @@ public class HelmMojo extends AbstractFabric8Mojo {
         return answer;
     }
 
-    private void copyResourceFilesToTemplatesDir(File outputDir, File sourceDir) throws MojoExecutionException {
+    private Template findTemplate() throws MojoExecutionException {
+        if (kubernetesTemplate != null && kubernetesTemplate.isFile()) {
+            Object dto = null;
+            try {
+                dto = KubernetesHelper.loadYaml(kubernetesTemplate, KubernetesResource.class);
+            } catch (IOException e) {
+                throw new MojoExecutionException("Failed to load kubernetes YAML " + kubernetesTemplate + ". " + e, e);
+            }
+            if (dto instanceof Template) {
+                return (Template) dto;
+            }
+            if (dto instanceof KubernetesList) {
+                KubernetesList list = (KubernetesList) dto;
+                List<HasMetadata> items = list.getItems();
+                if (items != null) {
+                    for (HasMetadata item : items) {
+                        if (item instanceof Template) {
+                            return (Template) item;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private File copyResourceFilesToTemplatesDir(File outputDir, File sourceDir) throws MojoExecutionException {
         File templatesDir = new File(outputDir, "templates");
         templatesDir.mkdirs();
         File[] files = sourceDir.listFiles();
         if (files != null) {
             for (File file : files) {
+                Object dto;
+                try {
+                    dto = KubernetesHelper.loadYaml(file, KubernetesResource.class);
+                } catch (IOException e) {
+                    throw new MojoExecutionException("Failed to load kubernetes YAML " + file + ". " + e, e);
+                }
+                if (dto instanceof Template) {
+                    // lets split the template into separate files!
+                    Template template = (Template) dto;
+                    List<HasMetadata> objects = template.getObjects();
+                    if (objects != null) {
+                        for (HasMetadata object : objects) {
+                            String name = getNameWithSuffix(KubernetesHelper.getName(object), KubernetesHelper.getKind(object).toString()) + ".yaml";
+                            File outFile = new File(templatesDir, name);
+                            try {
+                                saveYaml(object, outFile);
+                            } catch (IOException e) {
+                                throw new MojoExecutionException("Failed to save template " + outFile + ": " + e, e);
+                            }
+                        }
+                    }
+                    continue;
+                }
+
                 String name = file.getName();
                 if (name.endsWith(".yml")) {
                     name = Strings.stripSuffix(name, ".yml") + ".yaml";
@@ -240,6 +368,7 @@ public class HelmMojo extends AbstractFabric8Mojo {
                 }
             }
         }
+        return templatesDir;
     }
 
     public static String escapeYamlTemplate(String template) {
@@ -506,6 +635,51 @@ public class HelmMojo extends AbstractFabric8Mojo {
             public void setEmail(String email) {
                 this.email = email;
             }
+        }
+    }
+
+    public static class HelmParameter {
+        private final io.fabric8.openshift.api.model.Parameter parameter;
+        private final String helmName;
+
+        public HelmParameter(io.fabric8.openshift.api.model.Parameter parameter) {
+            this.parameter = parameter;
+            this.helmName = parameter.getName().toLowerCase();
+        }
+
+        public void addToValue(JsonNodeFactory nodeFactory, ObjectNode values) {
+            String value = parameter.getValue();
+            if (value != null) {
+                values.put(helmName, value);
+            }
+        }
+
+        public io.fabric8.openshift.api.model.Parameter getParameter() {
+            return parameter;
+        }
+
+        public String getHelmName() {
+            return helmName;
+        }
+
+        public String convertTemplateParameterToHelmExpression(String text) {
+            String name = parameter.getName();
+            String from = "${" + name + "}";
+            String answer = text;
+            String defaultExpression = "";
+            String required = "";
+            String value = parameter.getValue();
+            if (value != null) {
+                defaultExpression = " | default \"" + value + "\"";
+            }
+            Boolean flag = parameter.getRequired();
+            if (flag != null && flag.booleanValue()) {
+                required = "required \"A valid .Values." + helmName + " entry required!\" ";
+            }
+            String to = "{{ " + required + ".Values." + helmName + defaultExpression + " }}";
+            answer = Strings.replaceAllWithoutRegex(answer, from, to);
+            from = "$" + name;
+            return Strings.replaceAllWithoutRegex(answer, from, to);
         }
     }
 }
