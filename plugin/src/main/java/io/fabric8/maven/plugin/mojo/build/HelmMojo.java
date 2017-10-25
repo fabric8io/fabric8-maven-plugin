@@ -62,6 +62,7 @@ import static io.fabric8.maven.core.util.KubernetesResourceUtil.getNameWithSuffi
 @Mojo(name = "helm", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
 public class HelmMojo extends AbstractFabric8Mojo {
     protected static final String FAILED_TO_LOAD_KUBERNETES_YAML = "Failed to load kubernetes YAML ";
+    protected static final String YAML_EXTENSION = ".yaml";
 
     @Parameter
     private HelmConfig helm;
@@ -343,7 +344,7 @@ public class HelmMojo extends AbstractFabric8Mojo {
 
                 String name = file.getName();
                 if (name.endsWith(".yml")) {
-                    name = Strings.stripSuffix(name, ".yml") + ".yaml";
+                    name = Strings.stripSuffix(name, ".yml") + YAML_EXTENSION;
                 }
                 File targetFile = new File(templatesDir, name);
                 try {
