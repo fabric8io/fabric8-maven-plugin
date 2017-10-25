@@ -61,6 +61,7 @@ import static io.fabric8.maven.core.util.KubernetesResourceUtil.getNameWithSuffi
  */
 @Mojo(name = "helm", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
 public class HelmMojo extends AbstractFabric8Mojo {
+    protected static final String FAILED_TO_LOAD_KUBERNETES_YAML = "Failed to load kubernetes YAML ";
 
     @Parameter
     private HelmConfig helm;
@@ -331,7 +332,7 @@ public class HelmMojo extends AbstractFabric8Mojo {
                 try {
                     dto = KubernetesHelper.loadYaml(file, KubernetesResource.class);
                 } catch (IOException e) {
-                    throw new MojoExecutionException("Failed to load kubernetes YAML " + file + ". " + e, e);
+                    throw new MojoExecutionException(FAILED_TO_LOAD_KUBERNETES_YAML + file + ". " + e, e);
                 }
                 if (dto instanceof Template) {
                     // lets split the template into separate files!
