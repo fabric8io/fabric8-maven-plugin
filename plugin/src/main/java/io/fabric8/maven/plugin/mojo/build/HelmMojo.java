@@ -215,7 +215,7 @@ public class HelmMojo extends AbstractFabric8Mojo {
         JsonNodeFactory nodeFactory = JsonNodeFactory.instance;
         ObjectNode values = nodeFactory.objectNode();
         List<io.fabric8.openshift.api.model.Parameter> parameters = template.getParameters();
-        if (parameters == null && parameters.isEmpty()) {
+        if (parameters == null || parameters.isEmpty()) {
             return;
         }
         List<HelmParameter> helmParameters = new ArrayList<>();
