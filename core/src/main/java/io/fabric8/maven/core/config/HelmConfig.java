@@ -70,17 +70,19 @@ public class HelmConfig {
     }
 
     public enum HelmType {
-        kubernetes("helm", "kubernetes", "Kubernetes"),
+        kubernetes("helm", "k8s-template", "Kubernetes"),
         openshift("helmshift", "openshift", "OpenShift");
 
         private final String classifier;
         private final String sourceDir;
         private final String description;
+        private final String outputDir;
 
         HelmType(String classifier, String sourceDir, String description) {
             this.classifier = classifier;
             this.sourceDir = sourceDir;
             this.description = description;
+            this.outputDir = description.toLowerCase();
         }
 
         public String getClassifier() {
@@ -89,6 +91,10 @@ public class HelmConfig {
 
         public String getSourceDir() {
             return sourceDir;
+        }
+
+        public String getOutputDir() {
+            return outputDir;
         }
 
         public String getDescription() {
