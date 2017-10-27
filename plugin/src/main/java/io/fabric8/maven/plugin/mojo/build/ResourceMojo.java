@@ -49,6 +49,7 @@ import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.Template;
+import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.utils.Lists;
 import io.fabric8.utils.Strings;
 import org.apache.commons.lang3.ArrayUtils;
@@ -174,6 +175,8 @@ public class ResourceMojo extends AbstractResourceMojo {
     @Parameter(property = "fabric8.build.strategy")
     private OpenShiftBuildStrategy buildStrategy = OpenShiftBuildStrategy.s2i;
 
+    @Parameter(property = "fabric8.build.switchToDeployment", defaultValue = "false")
+    private Boolean switchToDeployment;
     /**
      * Profile to use. A profile contains the enrichers and generators to
      * use as well as their configuration. Profiles are looked up
@@ -617,6 +620,7 @@ public class ResourceMojo extends AbstractResourceMojo {
         List<HasMetadata> items = resources.getItems();
         List<HasMetadata> objects = new ArrayList<>();
         if (items != null) {
+            switchToDeployment = (switchToDeployment && isImageStreamNotUsed());
             for (HasMetadata item : items) {
                 if (item instanceof Deployment) {
                     // if we have a Deployment and a DeploymentConfig of the same name
@@ -627,7 +631,18 @@ public class ResourceMojo extends AbstractResourceMojo {
                         continue;
                     }
                 }
+
                 item = openShiftOverrideResources.overrideResource(item);
+
+                if(switchToDeployment && item instanceof Deployment) {
+                    /*
+                     * Switch to using Deployments rather than DeploymentConfig on OpenShift
+                     * when not using ImageStreams.
+                     */
+                    objects.add(item);
+                    log.info("filtering out this item, use Kubernetes Deployment instead.");
+                    continue;
+                }
 
                 HasMetadata converted = convertKubernetesItemToOpenShift(item);
                 if (converted != null && !isTargetPlatformKubernetes(item)) {
@@ -641,6 +656,10 @@ public class ResourceMojo extends AbstractResourceMojo {
         // TODO: Remove this ASAP when https://github.com/fabric8io/fabric8-maven-plugin/issues/678 is fixed
         removeInitContainers(builder, VolumePermissionEnricher.ENRICHER_NAME);
         return builder.build();
+    }
+
+    private boolean isImageStreamNotUsed() {
+        return !PlatformMode.isOpenShiftMode(project.getProperties());
     }
 
     private void removeInitContainers(KubernetesListBuilder builder, final String enricherName) {
