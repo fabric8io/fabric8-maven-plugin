@@ -50,6 +50,7 @@ import io.fabric8.utils.IOHelpers;
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
 import io.fabric8.utils.URLUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -472,6 +473,7 @@ public class ImportMojo extends AbstractFabric8Mojo {
     }
 
     private void ensureNamespaceExists(KubernetesClient kubernetes, String name) {
+        name = convertToValidDnsLabel(name);
         // lets check namespace exists
         Namespace namespace = kubernetes.namespaces().withName(name).get();
         if (namespace == null) {
@@ -529,10 +531,17 @@ public class ImportMojo extends AbstractFabric8Mojo {
 
     public String getSecretNamespace() {
         if (Strings.isNullOrBlank(secretNamespace)) {
-            secretNamespace = "user-secrets-source-" + currentUserName();
+            secretNamespace = convertToValidDnsLabel(String.format("user-secrets-source-%s", currentUserName()));
         }
         return secretNamespace;
     }
+
+    private String convertToValidDnsLabel(String name) {
+        name = StringUtils.replaceAll(name,"\\.","-");
+        name = StringUtils.replaceAll(name,"\\:","-");
+        return name;
+    }
+
 
     public String getGogsSecretName(String currentNamespace) {
         if (Strings.isNullOrBlank(gogsSecretName)) {
@@ -546,12 +555,12 @@ public class ImportMojo extends AbstractFabric8Mojo {
     }
 
     protected void logBuildConfigLink(KubernetesClient kubernetes, String namespace, BuildConfig buildConfig, Logger log) {
-        String url = BuildConfigHelper.getBuildConfigConsoleURL(kubernetes, namespace, buildConfig);
+        String url =  URLUtils.pathJoin(kubernetes.getConfiguration().getMasterUrl(),
+                "/console/project/",namespace,"/browse/pipelines/",buildConfig.getMetadata().getName()+"/?tab=configuration");
         if (url != null) {
-            log.info("You can view the project dashboard at: " + url);
             File jenkinsfile = new File(basedir, "Jenkinsfile");
-            if (!jenkinsfile.exists() || !jenkinsfile.isFile()) {
-                log.info("To configure a CD Pipeline go to: " + URLUtils.pathJoin(url, "/forge/command/devops-edit"));
+            if (jenkinsfile.exists() && jenkinsfile.isFile()) {
+                log.info("To configure a CD Pipeline go to: " + url);
             }
         }
     }
