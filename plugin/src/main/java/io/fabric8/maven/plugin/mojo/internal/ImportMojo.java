@@ -361,34 +361,73 @@ public class ImportMojo extends AbstractFabric8Mojo {
         return Base64Encoder.encode(key);
     }
 
-    protected UserDetails createGogsUserDetails(KubernetesClient kubernetes, String namespace) throws MojoExecutionException {
-        String gogsURL = getGogsURL(kubernetes, namespace);
-        log.debug("Got gogs URL: " + gogsURL);
-        if (Strings.isNullOrBlank(gogsURL)) {
-            throw new MojoExecutionException("Could not find the external URL to service " + ServiceNames.GOGS
-                    + " in namespace " + namespace + ". Are you sure you are running gogs in this kubernetes namespace?");
+
+    protected UserDetails createGithubProjectAndUserDetails(KubernetesClient kubernetes, String namespace) throws MojoExecutionException{
+        log.info("Creating Project on GitHub");
+
+        String url = "https://api.github.com";
+        UserDetails userDetails = null;
+
+        String secretNamespace = getSecretNamespace();
+        ensureNamespaceExists(kubernetes, secretNamespace);
+
+        ConfigMap configMap = getSecretGitConfigMap(kubernetes, namespace, secretNamespace);
+        String host = convertToValidDnsLabel(currentUserName()+"-github.com");
+
+        String currentSecretName = configMap.getData().get(host);
+        if (currentSecretName == null) {
+            currentSecretName = createGitSecretName(namespace, host);
         }
+
+        Secret secret = findOrCreateGitSecret(kubernetes, currentSecretName, host);
+
+        //FIXME: Rename the methods to be generic
+        // if empty or retrying lets re-enter the user/pwd
+        gitUserName = getGogsSecretField(kubernetes, secret, host, "username");
+        gitPassword = getGogsSecretField(kubernetes, secret, host, "password");
+
+        if (Strings.isNullOrBlank(gitEmail)) {
+            gitEmail = findEmailFromDotGitConfig();
+        }
+        createOrUpdateSecret(kubernetes, secret);
+
+        updateSecretGitConfigMap(kubernetes, secretNamespace, configMap, host, currentSecretName);
+
+        return new UserDetails("https://api.github.com", "https://api.github.com",
+                gitUserName, gitPassword, gitEmail);
+    }
+
+    protected UserDetails createGogsUserDetails(KubernetesClient kubernetes, String namespace) throws MojoExecutionException {
+        String url = getGogsURL(kubernetes, namespace);
+        Secret secret = null;
+        UserDetails userDetails;
+        if (Strings.isNullOrBlank(url)) {
+            return createGithubProjectAndUserDetails(kubernetes, namespace);
+        }
+
+        log.debug("Got gogs URL: " + url);
         String gogsSecretName = getGogsSecretName(namespace);
-        Secret gogsSecret = null;
         if (Strings.isNullOrBlank(gitUserName) || Strings.isNullOrBlank(gitPassword)) {
-            gogsSecret = findOrCreateGitSecret(kubernetes, gogsSecretName, GOGS_REPO_HOST);
+            secret = findOrCreateGitSecret(kubernetes, gogsSecretName, GOGS_REPO_HOST);
         }
         if (Strings.isNullOrBlank(gitUserName)) {
-            gitUserName = getGogsSecretField(kubernetes, gogsSecret, GOGS_REPO_HOST, "username");
+            gitUserName = getGogsSecretField(kubernetes, secret, GOGS_REPO_HOST, "username");
         }
         if (Strings.isNullOrBlank(gitPassword)) {
-            gitPassword = getGogsSecretField(kubernetes, gogsSecret, GOGS_REPO_HOST, "password");
+            gitPassword = getGogsSecretField(kubernetes, secret, GOGS_REPO_HOST, "password");
         }
         if (Strings.isNullOrBlank(gitEmail)) {
             gitEmail = findEmailFromDotGitConfig();
         }
-        createOrUpdateSecret(kubernetes, gogsSecret);
+        createOrUpdateSecret(kubernetes, secret);
 
         ConfigMap configMap = getSecretGitConfigMap(kubernetes, namespace, secretNamespace);
         updateSecretGitConfigMap(kubernetes, secretNamespace, configMap, GOGS_REPO_HOST, gogsSecretName);
 
         log.info("git username: " + gitUserName + " password: " + hidePassword(gitPassword) + " email: " + gitEmail);
-        return new UserDetails(gogsURL, gogsURL, gitUserName, gitPassword, gitEmail);
+
+
+        return new UserDetails(url, url, gitUserName, gitPassword, gitEmail);
     }
 
     private void createOrUpdateSecret(KubernetesClient kubernetes, Secret secret) {
@@ -566,25 +605,33 @@ public class ImportMojo extends AbstractFabric8Mojo {
     }
 
     private String getGogsURL(KubernetesClient kubernetes, String namespace) throws MojoExecutionException {
+      try {
         Endpoints endpoints = kubernetes.endpoints().inNamespace(namespace).withName(ServiceNames.GOGS).get();
         int runningEndpoints = 0;
         if (endpoints != null) {
-            List<EndpointSubset> subsets = endpoints.getSubsets();
-            for (EndpointSubset subset : subsets) {
-                List<EndpointAddress> addresses = subset.getAddresses();
-                if (addresses != null) {
-                    runningEndpoints += addresses.size();
-                }
+          List<EndpointSubset> subsets = endpoints.getSubsets();
+          for (EndpointSubset subset : subsets) {
+            List<EndpointAddress> addresses = subset.getAddresses();
+            if (addresses != null) {
+              runningEndpoints += addresses.size();
             }
+          }
         }
         if (runningEndpoints == 0) {
-            log.warn("No running endpoints for service %s in namespace %s. " +
-                     "Please run the `gogs` or the `cd-pipeline` application in the fabric8 console.",
-                    ServiceNames.GOGS, namespace);
-            throw new MojoExecutionException("No service " + ServiceNames.GOGS + " running in namespace " + namespace);
+          return null;
         }
         log.info("Running %s endpoints of %s in namespace %s", runningEndpoints, ServiceNames.GOGS, namespace);
+
         return KubernetesHelper.getServiceURL(kubernetes, ServiceNames.GOGS, namespace, "http", true);
+      } catch (Exception e) {
+        String errorMessage = e.getMessage();
+        if (errorMessage.contains(String.format("No service gogs running in namespace %s", namespace))) {
+          log.info("Gogs service does not exists, defaulting to GitHub");
+          return null;
+        } else {
+          throw new MojoExecutionException(e.getMessage());
+        }
+      }
     }
 
     protected String getEntityMessage(Response response) throws IOException {
