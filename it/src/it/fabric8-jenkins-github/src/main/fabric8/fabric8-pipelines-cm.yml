@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fabric8-pipelines
+  annotations:
+    fabric8.io/target-platform: "kubernetes"
+data:
+  external-docker-registry-url: ''
+  # to disable integration tests for CD or CI builds
+  disable-itests-cd: 'false'
+  disable-itests-ci: 'false'
+  ci-branch-patterns: |-
+    - PR-.*
+  cd-branch-patterns: |-
+    - master
+  # enable access to the docker socket
+  use-docker-socket: "true"

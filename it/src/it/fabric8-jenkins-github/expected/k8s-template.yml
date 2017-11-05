@@ -1,0 +1,1796 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  labels:
+    app: fabric8-jenkins-github
+    provider: fabric8
+    version: 1.0.0-SNAPSHOT
+    group: io.fabric8.jenkins.packages
+  name: fabric8-jenkins-github
+objects:
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    annotations:
+      fabric8.io/target-platform: kubernetes
+    labels:
+      app: jenkins
+      provider: fabric8
+      version: 4.0.41
+      group: io.fabric8.tenant.apps
+    name: jenkins
+  data:
+    client.secret: Yjc4NzNmODAtNmFkNy00NGE1LTk3Y2ItYmQyMTA3ODllYjQx
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    labels:
+      app: jenkins
+      provider: fabric8
+      version: 4.0.41
+      group: io.fabric8.tenant.apps
+    name: jenkins-docker-cfg
+  data:
+    config.json: ""
+  type: fabric8.io/jenkins-docker-cfg
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    labels:
+      app: jenkins
+      provider: fabric8
+      version: 4.0.41
+      group: io.fabric8.tenant.apps
+    name: jenkins-git-ssh
+  data:
+    ssh-key: ""
+    ssh-key.pub: ""
+  type: fabric8.io/jenkins-git-ssh
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    labels:
+      app: jenkins
+      provider: fabric8
+      version: 4.0.41
+      group: io.fabric8.tenant.apps
+    name: jenkins-hub-api-token
+  data:
+    hub: ""
+  type: fabric8.io/jenkins-hub-api-token
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    labels:
+      app: fabric8-jenkins-github
+      provider: fabric8
+      version: 1.0.0-SNAPSHOT
+      group: io.fabric8.jenkins.packages
+    name: jenkins-maven-settings
+  data:
+    settings.xml: PHNldHRpbmdzPgogIDwhLS0gc2V0cyB0aGUgbG9jYWwgbWF2ZW4gcmVwb3NpdG9yeSBvdXRzaWRlIG9mIHRoZSB+Ly5tMiBmb2xkZXIgZm9yIGVhc2llciBtb3VudGluZyBvZiBzZWNyZXRzIGFuZCByZXBvIC0tPgogIDxsb2NhbFJlcG9zaXRvcnk+JHt1c2VyLmhvbWV9Ly5tdm5yZXBvc2l0b3J5PC9sb2NhbFJlcG9zaXRvcnk+CgogIDwhLS0gbGV0cyBkaXNhYmxlIHRoZSBkb3dubG9hZCBwcm9ncmVzcyBpbmRpY2F0b3IgdGhhdCBmaWxscyB1cCBsb2dzIC0tPgogIDxpbnRlcmFjdGl2ZU1vZGU+ZmFsc2U8L2ludGVyYWN0aXZlTW9kZT4KCiAgPHNlcnZlcnM+CiAgICA8c2VydmVyPgogICAgICA8aWQ+bG9jYWwtbmV4dXM8L2lkPgogICAgICA8dXNlcm5hbWU+YWRtaW48L3VzZXJuYW1lPgogICAgICA8cGFzc3dvcmQ+YWRtaW4xMjM8L3Bhc3N3b3JkPgogICAgPC9zZXJ2ZXI+CiAgICA8c2VydmVyPgogICAgICA8aWQ+b3NzLXNvbmF0eXBlLXN0YWdpbmc8L2lkPgogICAgICA8dXNlcm5hbWU+PC91c2VybmFtZT4KICAgICAgPHBhc3N3b3JkPjwvcGFzc3dvcmQ+CiAgICA8L3NlcnZlcj4KICA8L3NlcnZlcnM+CgogIDxwcm9maWxlcz4KICAgIDxwcm9maWxlPgogICAgICA8aWQ+bmV4dXM8L2lkPgogICAgICA8cHJvcGVydGllcz4KICAgICAgICA8YWx0RGVwbG95bWVudFJlcG9zaXRvcnk+bG9jYWwtbmV4dXM6OmRlZmF1bHQ6Omh0dHA6Ly9jb250ZW50LXJlcG9zaXRvcnkvY29udGVudC9yZXBvc2l0b3JpZXMvc3RhZ2luZy88L2FsdERlcGxveW1lbnRSZXBvc2l0b3J5PgogICAgICAgIDxhbHRSZWxlYXNlRGVwbG95bWVudFJlcG9zaXRvcnk+bG9jYWwtbmV4dXM6OmRlZmF1bHQ6Omh0dHA6Ly9jb250ZW50LXJlcG9zaXRvcnkvY29udGVudC9yZXBvc2l0b3JpZXMvc3RhZ2luZy88L2FsdFJlbGVhc2VEZXBsb3ltZW50UmVwb3NpdG9yeT4KICAgICAgICA8YWx0U25hcHNob3REZXBsb3ltZW50UmVwb3NpdG9yeT5sb2NhbC1uZXh1czo6ZGVmYXVsdDo6aHR0cDovL2NvbnRlbnQtcmVwb3NpdG9yeS9jb250ZW50L3JlcG9zaXRvcmllcy9zbmFwc2hvdHMvPC9hbHRTbmFwc2hvdERlcGxveW1lbnRSZXBvc2l0b3J5PgogICAgICA8L3Byb3BlcnRpZXM+CiAgICA8L3Byb2ZpbGU+CiAgICA8cHJvZmlsZT4KICAgICAgPGlkPnJlbGVhc2U8L2lkPgogICAgICA8cHJvcGVydGllcz4KICAgICAgICA8Z3BnLmV4ZWN1dGFibGU+Z3BnPC9ncGcuZXhlY3V0YWJsZT4KICAgICAgICA8Z3BnLnBhc3NwaHJhc2U+bXlzZWNyZXRwYXNzcGhyYXNlPC9ncGcucGFzc3BocmFzZT4KICAgICAgPC9wcm9wZXJ0aWVzPgogICAgPC9wcm9maWxlPgogIDwvcHJvZmlsZXM+CiAgPGFjdGl2ZVByb2ZpbGVzPgogICAgPCEtLW1ha2UgdGhlIHByb2ZpbGUgYWN0aXZlIGFsbCB0aGUgdGltZSAtLT4KICAgIDxhY3RpdmVQcm9maWxlPm5leHVzPC9hY3RpdmVQcm9maWxlPgogIDwvYWN0aXZlUHJvZmlsZXM+Cjwvc2V0dGluZ3M+Cg==
+  type: fabric8.io/secret-maven-settings
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    labels:
+      app: jenkins
+      provider: fabric8
+      version: 4.0.41
+      group: io.fabric8.tenant.apps
+    name: jenkins-recommender-api-token
+  data:
+    token: ${RECOMMENDER_API_TOKEN}
+  type: fabric8.io/jenkins-recommender-api-token
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    labels:
+      app: jenkins
+      provider: fabric8
+      version: 4.0.41
+      group: io.fabric8.tenant.apps
+    name: jenkins-release-gpg
+  data:
+    trustdb.gpg: ""
+    pubring.gpg: ""
+    gpg.conf: ""
+    secring.gpg: ""
+  type: fabric8.io/jenkins-release-gpg
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    labels:
+      app: jenkins
+      provider: fabric8
+      version: 4.0.41
+      group: io.fabric8.tenant.apps
+    name: jenkins-ssh-config
+  data:
+    config: ""
+  type: fabric8.io/jenkins-ssh-config
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    labels:
+      provider: fabric8
+      project: keycloak
+      version: 1.0.2
+      group: io.fabric8.apps
+    name: keycloak
+  data:
+    db.name: a2V5Y2xvYWsK
+    db.user: a2V5Y2xvYWsK
+    db.password: a2V5Y2xvYWsK
+    kc.user: YWRtaW4K
+    kc.password: YWRtaW4K
+    kc.clientid.secret: Yjc4NzNmODAtNmFkNy00NGE1LTk3Y2ItYmQyMTA3ODllYjQx
+    kc.private.key: TUlJQ1dnSUJBQUtCZ0VqbFpOMVE3d2c1UU9IelhHcXlOZi9xL1ZIUTBvSjJOZGVPRHMxOHh1WkpHSkxEZVA4ZU5QY2trbGdWb1RJaFZzOTlaNXRMTTFoUCs5R213ODI1dVVXRnZsNHg1MGoyYW0yNUFIOGlpUGhreUw2aEx6dThzYnd3clU5R1RpcllqRVM5RlNRVWF6TmlWMVhYSGR5TGRvRm03dzMzZDVobFdpT1M4NmNmRnNGN0FnTUJBQUVDZ1lBUE5NTDRvOVJwQzhCc0lkN3FadWg2elNNd3VQWGd2eFgyTkMwRVVuNFBOYnBKaXpzblJMN1p1eWhIOWFNZG1QVEo3YWY2TGhLMDNtSnlWbTVMOE8wanlYQ2JzaWdkTVUxSDF4UmZiZ1JOUTViRHpHZUJzYTlFSHlpa2dDbkVTNXRZcFVKQnRzNjdKOVNYTU56VTFDckliM2JPQUhsaXp2aWozaE9KS0plQWlRSkJBSkJzVEd2VmtYZzFTZ0l2bk42dXlIU0h3V0hLaVhFOVdCQ1VQTkZrMklyNmtDYUlEeTB4MHlHbklBcVA3SmdJeE1lR0M1Njl4VmZEcEYvZnIyaTFvQjhDUVFDQk5xSTF3TlZvczVlTGhKcXdGNThLWURLbWZlRjY2QkJXblBJQ01UMFVaL1lCTFc1UlRCbzUvVDlnemxLQk1LUmVRanp6K1ZaQ0F2cHdhb09FUWNNbEFrQnFyc1VvNXVNRk5BQU9hMU5xbnh2T0VMWUY0ZEh6UjBnMVB2dEtCajk3TWltbmZOd1JHM3dGb09tblE3ZVdldXU1STBpVUkwU1NWeCtsL3BzWk13a3JBa0JBTDQ1Mld6cm5qc2JKNUc0ZTZTejByNEtabDlCcENGd05XbHNSWWJvd3A4L1pGK05EK1NUU0I0M3pIYXA0U0Z4dUFrTmJBbEdwNnViUzd1WXp6YU1OQWtCRFRvSXQxL1FHUExBM2JaVzV1YTdLZ3VtdzFtMjF5Y1BmdUFkYklpclhMdE16SGR3dXFuQkFMbElJOXBFZU4xTEttNzR1cGswZDluTitxS05lT2RQSA==
+    kc.public.key: TUlHZU1BMEdDU3FHU0liM0RRRUJBUVVBQTRHTUFEQ0JpQUtCZ0VqbFpOMVE3d2c1UU9IelhHcXlOZi9xL1ZIUTBvSjJOZGVPRHMxOHh1WkpHSkxEZVA4ZU5QY2trbGdWb1RJaFZzOTlaNXRMTTFoUCs5R213ODI1dVVXRnZsNHg1MGoyYW0yNUFIOGlpUGhreUw2aEx6dThzYnd3clU5R1RpcllqRVM5RlNRVWF6TmlWMVhYSGR5TGRvRm03dzMzZDVobFdpT1M4NmNmRnNGN0FnTUJBQUU9
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    labels:
+      provider: fabric8
+      project: configmapcontroller
+      version: 2.2.335
+      group: io.fabric8.devops.apps
+    name: configmapcontroller
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    labels:
+      provider: fabric8
+      project: exposecontroller-app
+      version: 3.0.7
+      group: io.fabric8.apps
+    name: exposecontroller
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    annotations:
+      serviceaccounts.openshift.io/oauth-redirectreference.jenkins: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"jenkins"}}'
+    labels:
+      app: jenkins
+      provider: fabric8
+      version: 4.0.41
+      group: io.fabric8.tenant.apps
+    name: jenkins
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      fabric8.io/app-menu: development
+      fabric8.io/iconUrl: https://cdn.rawgit.com/fabric8io/fabric8-devops/master/nexus/src/main/fabric8/icon.png
+      fabric8.io/git-commit: ae00cfc7e0057fb2f9a79cf3152a76840f6ac915
+      fabric8.io/scm-con-url: scm:git:git@github.com:fabric8-apps/nexus-app.git
+      fabric8.io/scm-url: http://github.com/fabric8-apps/nexus-app
+      fabric8.io/git-branch: release-v1.0.1
+      fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-apps/nexus-app.git
+      fabric8.io/scm-tag: nexus-app-1.0.0
+    labels:
+      expose: "true"
+      provider: fabric8
+      project: nexus-app
+      version: 1.0.1
+      group: io.fabric8.apps
+    name: artifact-repository
+  spec:
+    ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 8081
+    selector:
+      project: nexus-app
+      provider: fabric8
+      group: io.fabric8.apps
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      fabric8.io/iconUrl: https://cdn.rawgit.com/fabric8io/fabric8-devops/master/fabric8-docker-registry/src/main/fabric8/icon.png
+      fabric8.io/git-commit: 3e966ed4dd654367b6b0fff80622fea0e858c2df
+      fabric8.io/scm-con-url: scm:git:git@github.com:fabric8io/fabric8-devops.git/fabric8-docker-registry
+      fabric8.io/scm-url: http://github.com/fabric8io/fabric8-devops/fabric8-docker-registry
+      fabric8.io/git-branch: release-v2.2.335
+      fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8io/fabric8-devops.git/fabric8-docker-registry
+      fabric8.io/scm-tag: fabric8-devops-2.0.1
+    labels:
+      provider: fabric8
+      project: fabric8-docker-registry
+      version: 2.2.335
+      group: io.fabric8.devops.apps
+      expose: "true"
+    name: fabric8-docker-registry
+  spec:
+    ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 5000
+    selector:
+      project: fabric8-docker-registry
+      provider: fabric8
+      group: io.fabric8.devops.apps
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      fabric8.io/app-menu: development
+      fabric8.io/git-commit: 2b99f551ea8d500df90ea4e22e3348276ac6cae8
+      fabric8.io/scm-con-url: scm:git:git@github.com:fabric8-services/tenant-jenkins.git/tenant-jenkins-apps/jenkins
+      fabric8.io/scm-url: http://github.com/fabric8-services/tenant-jenkins/tenant-jenkins-apps/jenkins
+      fabric8.io/iconUrl: https://cdn.rawgit.com/fabric8-services/tenant-jenkins/tenant-jenkins-apps/jenkins/master/apps/jenkins/src/main/fabric8/icon.svg
+      fabric8.io/git-branch: release-v4.0.41
+      fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-services/tenant-jenkins.git/tenant-jenkins-apps/jenkins
+      fabric8.io/scm-tag: fabric8-services/tenant-jenkins-1.0.0
+    labels:
+      app: jenkins
+      provider: fabric8
+      expose: "true"
+      version: 4.0.41
+      group: io.fabric8.tenant.apps
+    name: jenkins
+  spec:
+    ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      app: jenkins
+      provider: fabric8
+      group: io.fabric8.tenant.apps
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      fabric8.io/git-commit: 2b99f551ea8d500df90ea4e22e3348276ac6cae8
+      fabric8.io/scm-con-url: scm:git:git@github.com:fabric8-services/tenant-jenkins.git/tenant-jenkins-apps/jenkins
+      fabric8.io/scm-url: http://github.com/fabric8-services/tenant-jenkins/tenant-jenkins-apps/jenkins
+      fabric8.io/iconUrl: https://cdn.rawgit.com/fabric8-services/tenant-jenkins/tenant-jenkins-apps/jenkins/master/apps/jenkins/src/main/fabric8/icon.svg
+      fabric8.io/git-branch: release-v4.0.41
+      fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-services/tenant-jenkins.git/tenant-jenkins-apps/jenkins
+      fabric8.io/scm-tag: fabric8-services/tenant-jenkins-1.0.0
+    labels:
+      app: jenkins
+      provider: fabric8
+      expose: "false"
+      version: 4.0.41
+      group: io.fabric8.tenant.apps
+    name: jenkins-jnlp
+  spec:
+    ports:
+    - name: agent
+      port: 50000
+      protocol: TCP
+      targetPort: 50000
+    selector:
+      app: jenkins
+      provider: fabric8
+      group: io.fabric8.tenant.apps
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      service.alpha.openshift.io/dependencies: '[{"name":"keycloak-db","namespace":"","kind":"Service"}]'
+      fabric8.io/git-commit: c9de63f98f0be32f5fb9c4d3afce2d8503cdfb8f
+      fabric8.io/git-branch: release-v1.0.2
+      fabric8.io/scm-con-url: scm:git:git@github.com:fabric8-apps/keycloak-app.git/keycloak
+      fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-apps/keycloak-app.git/keycloak
+      fabric8.io/scm-tag: keycloak-app-1.0.0
+      fabric8.io/scm-url: http://github.com/fabric8-apps/keycloak-app/keycloak
+    labels:
+      expose: "true"
+      provider: fabric8
+      project: keycloak
+      version: 1.0.2
+      group: io.fabric8.apps
+    name: keycloak
+  spec:
+    ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      project: keycloak
+      provider: fabric8
+      group: io.fabric8.apps
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      fabric8.io/git-commit: c9de63f98f0be32f5fb9c4d3afce2d8503cdfb8f
+      fabric8.io/git-branch: release-v1.0.2
+      fabric8.io/scm-con-url: scm:git:git@github.com:fabric8-apps/keycloak-app.git/keycloak-db
+      fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-apps/keycloak-app.git/keycloak-db
+      fabric8.io/scm-tag: keycloak-app-1.0.0
+      fabric8.io/scm-url: http://github.com/fabric8-apps/keycloak-app/keycloak-db
+    labels:
+      service: keycloak-db
+      provider: fabric8
+      project: keycloak-db
+      version: 1.0.2
+      group: io.fabric8.apps
+    name: keycloak-db
+  spec:
+    ports:
+    - name: postgres
+      port: 5432
+      protocol: TCP
+      targetPort: 5432
+    selector:
+      service: keycloak-db
+      project: keycloak-db
+      provider: fabric8
+      group: io.fabric8.apps
+    type: ClusterIP
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    labels:
+      provider: fabric8
+      project: fabric8-docker-registry
+      version: 2.2.335
+      group: io.fabric8.devops.apps
+    name: fabric8-docker-registry-storage
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 5Gi
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    labels:
+      app: jenkins
+      provider: fabric8
+      version: 4.0.41
+      group: io.fabric8.tenant.apps
+    name: jenkins-home
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    labels:
+      app: jenkins
+      provider: fabric8
+      version: 4.0.41
+      group: io.fabric8.tenant.apps
+    name: jenkins-mvn-local-repo
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    labels:
+      provider: fabric8
+      project: keycloak-db
+      version: 1.0.2
+      group: io.fabric8.apps
+    name: keycloak-db-postgresql-data
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    labels:
+      provider: fabric8
+      project: nexus-app
+      version: 1.0.1
+      group: io.fabric8.apps
+    name: nexus-storage
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    labels:
+      provider: fabric8
+      project: exposecontroller-app
+      version: 3.0.7
+      group: io.fabric8.apps
+    name: exposecontroller
+  data:
+    config.yml: |-
+      apiserver: ${APISERVER_HOSTPORT}
+      node-ip: ${NODE_IP}
+      exposer: ${EXPOSER}
+      domain: ${DOMAIN}
+      watch-current-namespace: true
+      http: ${HTTP}
+      tls-acme: ${TLS_ACME}
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    labels:
+      fabric8.io/kind: package
+      provider: fabric8.io
+      version: 1.0.0-SNAPSHOT
+      app: fabric8-jenkins-github
+      group: io.fabric8.jenkins.packages
+    name: fabric8-jenkins-github
+  data:
+    metadata-url: http://central.maven.org/maven2/io/fabric8/jenkins/packages/fabric8-jenkins-github/maven-metadata.xml
+    package-url-prefix: http://central.maven.org/maven2/io/fabric8/jenkins/packages/fabric8-jenkins-github/%[1]s/fabric8-jenkins-github-%[1]s-
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    annotations:
+      fabric8.io/target-platform: kubernetes
+    labels:
+      app: fabric8-jenkins-github
+      provider: fabric8
+      version: 1.0.0-SNAPSHOT
+      group: io.fabric8.jenkins.packages
+    name: fabric8-pipelines
+  data:
+    external-docker-registry-url: ""
+    disable-itests-cd: "false"
+    disable-itests-ci: "false"
+    ci-branch-patterns: '- PR-.*'
+    cd-branch-patterns: '- master'
+    use-docker-socket: "true"
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    labels:
+      fabric8.io/kind: package
+      provider: fabric8.io
+      version: 1.0.0-SNAPSHOT
+      app: fabric8-jenkins-github
+      group: io.fabric8.jenkins.packages
+    name: fabric8-system
+  data:
+    metadata-url: http://central.maven.org/maven2/io/fabric8/platform/packages/fabric8-system/maven-metadata.xml
+    package-url-prefix: http://central.maven.org/maven2/io/fabric8/platform/packages/fabric8-system/%[1]s/fabric8-system-%[1]s-
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    annotations:
+      expose.service-key.config.fabric8.io/keycloak: keycloak.url
+      fabric8.io/target-platform: kubernetes
+    labels:
+      app: fabric8-jenkins-github
+      provider: fabric8
+      version: 1.0.0-SNAPSHOT
+      group: io.fabric8.jenkins.packages
+    name: jenkins
+  data:
+    org.jenkinsci.plugins.updatebot.GlobalPluginConfiguration.xml: |-
+      <?xml version='1.0' encoding='UTF-8'?>
+      <org.jenkinsci.plugins.updatebot.GlobalPluginConfiguration plugin="updatebot@1.0.0-SNAPSHOT">
+        <credentialsId>cd-github</credentialsId>
+        <useAnsiColor>true</useAnsiColor>
+        <jenkinsfileLibraryGitCloneURL></jenkinsfileLibraryGitCloneURL>
+      </org.jenkinsci.plugins.updatebot.GlobalPluginConfiguration>
+    org.jenkinsci.main.modules.sshd.SSHD.xml: |-
+      <?xml version='1.0' encoding='UTF-8'?>
+      <org.jenkinsci.main.modules.sshd.SSHD>
+        <port>-1</port>
+      </org.jenkinsci.main.modules.sshd.SSHD>
+    hudson.tasks.Maven.xml: |-
+      <?xml version='1.0' encoding='UTF-8'?>
+      <hudson.tasks.Maven_-DescriptorImpl>
+        <installations>
+          <hudson.tasks.Maven_-MavenInstallation>
+            <name>maven</name>
+            <properties>
+              <hudson.tools.InstallSourceProperty>
+                <installers>
+                  <hudson.tasks.Maven_-MavenInstaller>
+                    <id>3.5.0</id>
+                  </hudson.tasks.Maven_-MavenInstaller>
+                </installers>
+              </hudson.tools.InstallSourceProperty>
+            </properties>
+          </hudson.tasks.Maven_-MavenInstallation>
+        </installations>
+      </hudson.tasks.Maven_-DescriptorImpl
+    config.xml.tpl: |-
+      <?xml version='1.0' encoding='UTF-8'?>
+      <hudson>
+        <disabledAdministrativeMonitors/>
+        <version>1.619</version>
+        <numExecutors>5</numExecutors>
+        <mode>NORMAL</mode>
+        <useSecurity>true</useSecurity>
+        <authorizationStrategy class="hudson.security.FullControlOnceLoggedInAuthorizationStrategy">
+          <denyAnonymousReadAccess>false</denyAnonymousReadAccess>
+        </authorizationStrategy>
+        <securityRealm class="org.jenkinsci.plugins.oic.OicSecurityRealm" plugin="oic-auth@1.0">
+          <clientId>fabric8-online-platform</clientId>
+          <clientSecret>${KEYCLOAK_CLIENT_SECRET}</clientSecret>
+          <tokenServerUrl>${KEYCLOAK_URL}/auth/realms/fabric8/protocol/openid-connect/token</tokenServerUrl>
+          <authorizationServerUrl>${KEYCLOAK_URL}/auth/realms/fabric8/protocol/openid-connect/auth</authorizationServerUrl>
+          <userNameField>email</userNameField>
+          <scopes>openid email</scopes>
+        </securityRealm>
+        <disableRememberMe>false</disableRememberMe>
+        <projectNamingStrategy class="jenkins.model.ProjectNamingStrategy$DefaultProjectNamingStrategy"/>
+        <workspaceDir>${ITEM_ROOTDIR}/workspace</workspaceDir>
+        <buildsDir>${ITEM_ROOTDIR}/builds</buildsDir>
+        <markupFormatter class="hudson.markup.RawHtmlMarkupFormatter" plugin="antisamy-markup-formatter@1.5">
+          <disableSyntaxHighlighting>false</disableSyntaxHighlighting>
+        </markupFormatter>
+        <jdks/>
+        <viewsTabBar class="hudson.views.DefaultViewsTabBar"/>
+        <myViewsTabBar class="hudson.views.DefaultMyViewsTabBar"/>
+        <clouds>
+          <org.csanchez.jenkins.plugins.kubernetes.KubernetesCloud plugin="kubernetes@0.5-SNAPSHOT">
+            <name>kubernetes</name>
+            <templates>
+              <org.csanchez.jenkins.plugins.kubernetes.PodTemplate>
+                <name>base</name>
+                <label>base</label>
+                <serviceAccount>jenkins</serviceAccount>
+                <remoteFs>/home/jenkins/workspace</remoteFs>
+                <rootFs>/home/jenkins/</rootFs>
+                <instanceCap>5</instanceCap>
+                <envVars>
+                  <org.csanchez.jenkins.plugins.kubernetes.PodEnvVar>
+                    <key>KUBERNETES_MASTER</key>
+                    <value>https://kubernetes.default</value>
+                  </org.csanchez.jenkins.plugins.kubernetes.PodEnvVar>
+                  <org.csanchez.jenkins.plugins.kubernetes.PodEnvVar>
+                    <key>KUBERNETES_TRUST_CERTIFICATES</key>
+                    <value>true</value>
+                  </org.csanchez.jenkins.plugins.kubernetes.PodEnvVar>
+                  <org.csanchez.jenkins.plugins.kubernetes.PodEnvVar>
+                    <key>KUBERNETES_NAMESPACE</key>
+                    <value>${KUBERNETES_NAMESPACE}</value>
+                  </org.csanchez.jenkins.plugins.kubernetes.PodEnvVar>
+                </envVars>
+                <containers>
+                  <org.csanchez.jenkins.plugins.kubernetes.ContainerTemplate>
+                    <name>jnlp</name>
+                    <image>fabric8/jenkins-jnlp-client:3.0.47</image>
+                    <command></command>
+                    <args>${computer.jnlpmac} ${computer.name}</args>
+                    <workingDir>/home/jenkins/</workingDir>
+                  </org.csanchez.jenkins.plugins.kubernetes.ContainerTemplate>
+                </containers>
+              </org.csanchez.jenkins.plugins.kubernetes.PodTemplate>
+            </templates>
+            <serverUrl>https://kubernetes.default</serverUrl>
+            <skipTlsVerify>false</skipTlsVerify>
+            <jenkinsUrl>http://jenkins:80</jenkinsUrl>
+            <jenkinsTunnel>jenkins-jnlp:50000</jenkinsTunnel>
+            <containerCap>5</containerCap>
+            <retentionTimeout>5</retentionTimeout>
+          </org.csanchez.jenkins.plugins.kubernetes.KubernetesCloud>
+        </clouds>
+        <quietPeriod>1</quietPeriod>
+        <scmCheckoutRetryCount>0</scmCheckoutRetryCount>
+        <views>
+          <hudson.model.AllView>
+            <owner class="hudson" reference="../../.."/>
+            <name>all</name>
+            <filterExecutors>false</filterExecutors>
+            <filterQueue>false</filterQueue>
+            <properties/>
+          </hudson.model.AllView>
+        </views>
+        <primaryView>all</primaryView>
+        <slaveAgentPort>50000</slaveAgentPort>
+        <label>master</label>
+        <nodeProperties/>
+        <globalNodeProperties>
+          <hudson.slaves.EnvironmentVariablesNodeProperty>
+            <envVars serialization="custom">
+              <unserializable-parents/>
+              <tree-map>
+                <default>
+                  <comparator class="hudson.util.CaseInsensitiveComparator"/>
+                </default>
+                <int>2</int>
+                <string>HUBOT_DEFAULT_ROOM</string>
+                <string>fabric8-chatops</string>
+                <string>HUBOT_URL</string>
+                <string>http://hubot</string>
+              </tree-map>
+            </envVars>
+          </hudson.slaves.EnvironmentVariablesNodeProperty>
+        </globalNodeProperties>
+        <noUsageStatistics>true</noUsageStatistics>
+      </hudson>
+    keycloak.url: ${KEYCLOAK_URL}
+    io.fabric8.jenkins.openshiftsync.GlobalPluginConfiguration.xml: |-
+      <?xml version='1.0' encoding='UTF-8'?>
+      <io.fabric8.jenkins.openshiftsync.GlobalPluginConfiguration plugin="openshift-sync@0.1-SNAPSHOT">
+        <enabled>false</enabled>
+        <jobNamePattern>.*</jobNamePattern>
+        <namespace>${PROJECT_NAMESPACE}</namespace>
+      </io.fabric8.jenkins.openshiftsync.GlobalPluginConfiguration>
+    jenkins.plugins.nodejs.tools.NodeJSInstallation.xml: |-
+      <?xml version='1.0' encoding='UTF-8'?>
+      <jenkins.plugins.nodejs.tools.NodeJSInstallation_-DescriptorImpl plugin="nodejs@1.2.4">
+        <installations class="jenkins.plugins.nodejs.tools.NodeJSInstallation-array">
+          <jenkins.plugins.nodejs.tools.NodeJSInstallation>
+            <name>nodejs</name>
+            <properties>
+              <hudson.tools.InstallSourceProperty>
+                <installers>
+                  <jenkins.plugins.nodejs.tools.NodeJSInstaller>
+                    <id>8.6.0</id>
+                    <npmPackagesRefreshHours>72</npmPackagesRefreshHours>
+                  </jenkins.plugins.nodejs.tools.NodeJSInstaller>
+                </installers>
+              </hudson.tools.InstallSourceProperty>
+            </properties>
+          </jenkins.plugins.nodejs.tools.NodeJSInstallation>
+        </installations>
+      </jenkins.plugins.nodejs.tools.NodeJSInstallation_-DescriptorImpl>
+    scriptApproval.xml: |-
+      <?xml version='1.0' encoding='UTF-8'?>
+      <scriptApproval plugin="script-security@1.15">
+        <approvedScriptHashes>
+        </approvedScriptHashes>
+        <approvedSignatures>
+          <string>field hudson.plugins.git.GitSCM GIT_BRANCH</string>
+          <string>field hudson.plugins.git.GitSCMBackwardCompatibility branch</string>
+          <string>field hudson.plugins.git.GitSCMBackwardCompatibility source</string>
+          <string>method groovy.json.JsonBuilder toPrettyString</string>
+          <string>method groovy.json.JsonSlurper parse java.io.Reader</string>
+          <string>method groovy.json.JsonSlurperClassic parse java.io.Reader</string>
+          <string>method groovy.json.JsonSlurperClassic parseText java.lang.String</string>
+          <string>method groovy.lang.GroovyObject getProperty java.lang.String</string>
+          <string>method groovy.lang.GroovyObject invokeMethod java.lang.String java.lang.Object</string>
+          <string>method groovy.lang.GString plus java.lang.String</string>
+          <string>method groovy.util.ConfigSlurper parse java.net.URL</string>
+          <string>method groovy.util.ConfigSlurper parse java.util.Properties</string>
+          <string>method groovy.util.slurpersupport.GPathResult text</string>
+          <string>method groovy.util.XmlSlurper parse java.lang.String</string>
+          <string>method groovy.util.XmlSlurper parseText java.lang.String</string>
+          <string>method groovy.xml.DOMBuilder parseText java.lang.String</string>
+          <string>method hudson.model.Actionable getAction java.lang.Class</string>
+          <string>method hudson.model.Job getBuildByNumber int</string>
+          <string>method hudson.model.Job getProperty java.lang.Class</string>
+          <string>method hudson.model.Run getCause java.lang.Class</string>
+          <string>method hudson.scm.SCM getBrowser</string>
+          <string>method io.fabric8.kubernetes.client.KubernetesClient configMaps</string>
+          <string>method io.fabric8.kubernetes.client.dsl.Namespaceable inNamespace java.lang.String</string>
+          <string>method io.fabric8.jenkins.openshiftsync.BuildCause getName</string>
+          <string>method io.fabric8.jenkins.openshiftsync.BuildConfigProjectProperty getName</string>
+          <string>method io.fabric8.kubernetes.api.model.Doneable done</string>
+          <string>method io.fabric8.kubernetes.api.model.KubernetesResourceList getItems</string>
+          <string>method io.fabric8.kubernetes.api.model.ObjectMeta getName</string>
+          <string>method io.fabric8.kubernetes.api.model.ObjectMetaFluent addToAnnotations java.lang.String java.lang.String</string>
+          <string>method io.fabric8.kubernetes.api.model.ObjectMetaFluent withName java.lang.String</string>
+          <string>method io.fabric8.kubernetes.api.pipelines.PipelineConfiguration getUseDockerSocketFlag</string>
+          <string>method io.fabric8.kubernetes.api.pipelines.PipelineConfiguration isUseDockerSocket</string>
+          <string>method io.fabric8.kubernetes.client.Client adapt java.lang.Class</string>
+          <string>method io.fabric8.kubernetes.client.Client getNamespace</string>
+          <string>method io.fabric8.kubernetes.client.Client isAdaptable java.lang.Class</string>
+          <string>method io.fabric8.kubernetes.client.dsl.Createable createNew</string>
+          <string>method io.fabric8.kubernetes.client.dsl.Editable edit</string>
+          <string>method io.fabric8.kubernetes.client.dsl.Gettable get</string>
+          <string>method io.fabric8.kubernetes.client.dsl.KubernetesDSL nodes</string>
+          <string>method io.fabric8.kubernetes.client.dsl.Listable list</string>
+          <string>method io.fabric8.kubernetes.client.dsl.Nameable withName java.lang.String</string>
+          <string>method io.fabric8.kubernetes.client.dsl.Namespaceable inNamespace java.lang.String</string>
+          <string>method io.fabric8.kubernetes.client.KubernetesClient namespaces</string>
+          <string>method io.fabric8.kubernetes.client.KubernetesClient nodes</string>
+          <string>method io.fabric8.kubernetes.client.KubernetesClient services</string>
+          <string>method io.fabric8.openshift.api.model.BuildFluent editMetadata</string>
+          <string>method io.fabric8.openshift.api.model.BuildFluent$MetadataNested endMetadata</string>
+          <string>method io.fabric8.openshift.api.model.ImageStream getStatus</string>
+          <string>method io.fabric8.openshift.api.model.ImageStreamStatus getTags</string>
+          <string>method io.fabric8.openshift.api.model.NamedTagEventList getItems</string>
+          <string>method io.fabric8.openshift.api.model.ProjectRequestFluent withDisplayName java.lang.String</string>
+          <string>method io.fabric8.openshift.api.model.ProjectRequestFluent withNewMetadata</string>
+          <string>method io.fabric8.openshift.api.model.ProjectRequestFluent$MetadataNested endMetadata</string>
+          <string>method io.fabric8.openshift.api.model.Route getSpec</string>
+          <string>method io.fabric8.openshift.api.model.TagEvent getImage</string>
+          <string>method io.fabric8.openshift.client.OpenShiftClient builds</string>
+          <string>method io.fabric8.openshift.client.OpenShiftClient imageStreams</string>
+          <string>method io.fabric8.openshift.client.OpenShiftClient projectrequests</string>
+          <string>method io.fabric8.openshift.client.OpenShiftClient projects</string>
+          <string>method io.fabric8.openshift.client.OpenShiftClient supportsOpenShiftAPIGroup</string>
+          <string>method io.fabric8.openshift.client.OpenShiftClient supportsOpenShiftAPIGroup java.lang.String</string>
+          <string>new org.csanchez.jenkins.plugins.kubernetes.PodAnnotation java.lang.String java.lang.String</string>
+          <string>staticMethod org.kohsuke.groovy.sandbox.impl.Checker checkedCall java.lang.Object boolean boolean java.lang.String java.lang.Object[]</string>
+          <string>new java.util.LinkedHashMap java.util.Map</string>
+          <string>method java.lang.Class getPackage</string>
+          <string>method java.lang.Package getSpecificationTitle</string>
+          <string>method java.lang.Package getSpecificationVersion</string>
+          <string>method java.lang.Package getImplementationVersion</string>
+          <string>staticMethod java.lang.Double parseDouble java.lang.String</string>
+          <string>method io.fabric8.kubernetes.client.KubernetesClient configMaps</string>
+          <string>method io.fabric8.kubernetes.api.model.ConfigMap getData</string>
+          <string>method java.io.File close</string>
+          <string>method java.io.File exists</string>
+          <string>method java.io.File newOutputStream</string>
+          <string>method java.io.File toURL</string>
+          <string>method java.io.Flushable flush</string>
+          <string>method java.io.Writer write java.lang.String</string>
+          <string>method java.lang.AutoCloseable close</string>
+          <string>method java.lang.Class isInstance java.lang.Object</string>
+          <string>method java.lang.ClassLoader loadClass java.lang.String</string>
+          <string>method java.lang.Object getClass</string>
+          <string>method java.lang.String isEmpty</string>
+          <string>method java.lang.String replaceAll java.lang.String java.lang.String</string>
+          <string>method java.lang.String substring int</string>
+          <string>method java.lang.Thread getContextClassLoader</string>
+          <string>method java.lang.Throwable printStackTrace</string>
+          <string>method java.net.HttpURLConnection disconnect</string>
+          <string>method java.net.HttpURLConnection getResponseCode</string>
+          <string>method java.net.HttpURLConnection setRequestMethod java.lang.String</string>
+          <string>method java.net.URL openConnection</string>
+          <string>method java.net.URL openStream</string>
+          <string>method java.net.URLConnection connect</string>
+          <string>method java.net.URLConnection getInputStream</string>
+          <string>method java.net.URLConnection getOutputStream</string>
+          <string>method java.net.URLConnection setDoInput boolean</string>
+          <string>method java.net.URLConnection setDoOutput boolean</string>
+          <string>method java.net.URLConnection setRequestProperty java.lang.String java.lang.String</string>
+          <string>method java.util.LinkedHashMap$LinkedHashIterator hasNext</string>
+          <string>method java.util.Properties load java.io.InputStream</string>
+          <string>method java.util.regex.Matcher group java.lang.String</string>
+          <string>method java.util.regex.Matcher matches</string>
+          <string>method java.util.regex.Pattern matcher java.lang.CharSequence</string>
+          <string>method java.util.Scanner useDelimiter java.lang.String</string>
+          <string>method jenkins.model.Jenkins getCloud java.lang.String</string>
+          <string>method jenkins.model.Jenkins getItemByFullName java.lang.String</string>
+          <string>method org.jenkinsci.plugins.workflow.support.actions.EnvironmentAction getEnvironment</string>
+          <string>method org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper getRawBuild</string>
+          <string>method org.w3c.dom.Document getDocumentElement</string>
+          <string>method org.w3c.dom.Document getElementsByTagName java.lang.String</string>
+          <string>method org.w3c.dom.Element getElementsByTagName java.lang.String</string>
+          <string>method org.w3c.dom.Node getChildNodes</string>
+          <string>method org.w3c.dom.Node getNodeName</string>
+          <string>method org.w3c.dom.Node getTextContent</string>
+          <string>method org.w3c.dom.Node setTextContent java.lang.String</string>
+          <string>method org.w3c.dom.NodeList getLength</string>
+          <string>method org.w3c.dom.NodeList item int</string>
+          <string>method io.fabric8.kubernetes.api.model.ConfigMap getData</string>
+          <string>new groovy.json.JsonBuilder java.lang.Object</string>
+          <string>new groovy.json.JsonSlurper</string>
+          <string>new groovy.json.JsonSlurperClassic</string>
+          <string>new groovy.util.ConfigSlurper</string>
+          <string>new groovy.util.XmlSlurper</string>
+          <string>new io.fabric8.kubernetes.client.DefaultKubernetesClient</string>
+          <string>new io.fabric8.openshift.client.DefaultOpenShiftClient</string>
+          <string>new java.io.File java.lang.String</string>
+          <string>new java.io.FileInputStream java.io.File</string>
+          <string>new java.io.InputStreamReader java.io.InputStream java.lang.String</string>
+          <string>new java.io.InputStreamReader java.io.InputStream</string>
+          <string>new java.io.OutputStreamWriter java.io.OutputStream</string>
+          <string>new java.lang.String java.lang.String</string>
+          <string>new java.lang.StringBuilder</string>
+          <string>new java.util.Properties</string>
+          <string>new java.util.Scanner java.io.InputStream java.lang.String</string>
+          <string>new java.util.Scanner java.lang.Readable</string>
+          <string>new java.util.LinkedHashMap java.util.Map</string>
+          <string>staticField groovy.io.FileType FILES</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getAt java.lang.Object java.lang.String</string>
+          <string>staticMethod org.kohsuke.groovy.sandbox.impl.Checker checkedConstructor java.lang.Class java.lang.Object[]</string>
+          <string>staticMethod groovy.xml.DOMBuilder newInstance</string>
+          <string>staticMethod groovy.xml.XmlUtil serialize org.w3c.dom.Element</string>
+          <string>staticMethod io.fabric8.kubernetes.api.environments.Environments load io.fabric8.kubernetes.client.DefaultKubernetesClient java.lang.String</string>
+          <string>staticMethod io.fabric8.kubernetes.api.environments.Environments load io.fabric8.kubernetes.client.KubernetesClient java.lang.String</string>
+          <string>staticMethod io.fabric8.kubernetes.api.environments.Environments load java.lang.String</string>
+          <string>staticMethod io.fabric8.kubernetes.api.environments.Environments load</string>
+          <string>staticMethod io.fabric8.kubernetes.api.environments.Environments namespaceForEnvironment io.fabric8.kubernetes.client.DefaultKubernetesClient java.lang.String java.lang.String</string>
+          <string>staticMethod io.fabric8.kubernetes.api.environments.Environments namespaceForEnvironment io.fabric8.kubernetes.client.KubernetesClient java.lang.String java.lang.String</string>
+          <string>staticMethod io.fabric8.kubernetes.api.environments.Environments namespaceForEnvironment java.lang.String java.lang.String</string>
+          <string>staticMethod io.fabric8.kubernetes.api.environments.Environments namespaceForEnvironment java.lang.String</string>
+          <string>staticMethod io.fabric8.kubernetes.api.KubernetesHelper getServiceURL io.fabric8.kubernetes.client.DefaultKubernetesClient java.lang.String java.lang.String java.lang.String boolean</string>
+          <string>staticMethod io.fabric8.kubernetes.api.KubernetesHelper getServiceURL io.fabric8.kubernetes.client.KubernetesClient java.lang.String java.lang.String java.lang.String boolean</string>
+          <string>staticMethod io.fabric8.kubernetes.api.pipelines.PipelineConfiguration loadPipelineConfiguration io.fabric8.kubernetes.client.DefaultKubernetesClient java.lang.String</string>
+          <string>staticMethod io.fabric8.kubernetes.api.pipelines.PipelineConfiguration loadPipelineConfiguration io.fabric8.kubernetes.client.KubernetesClient java.lang.String</string>
+          <string>staticMethod io.fabric8.kubernetes.api.pipelines.PipelineConfiguration loadPipelineConfiguration java.lang.String</string>
+          <string>staticMethod io.fabric8.kubernetes.api.pipelines.PipelineConfiguration loadPipelineConfiguration</string>
+          <string>staticMethod io.fabric8.kubernetes.api.pipelines.Pipelines getPipeline io.fabric8.kubernetes.client.DefaultKubernetesClient java.lang.String io.fabric8.kubernetes.api.pipelines.JobEnvironment</string>
+          <string>staticMethod io.fabric8.kubernetes.api.pipelines.Pipelines getPipeline io.fabric8.kubernetes.client.DefaultKubernetesClient java.lang.String java.util.Map</string>
+          <string>staticMethod io.fabric8.kubernetes.api.pipelines.Pipelines getPipeline io.fabric8.kubernetes.client.KubernetesClient java.lang.String io.fabric8.kubernetes.api.pipelines.JobEnvironment</string>
+          <string>staticMethod io.fabric8.kubernetes.api.pipelines.Pipelines getPipeline io.fabric8.kubernetes.client.KubernetesClient java.lang.String java.util.Map</string>
+          <string>staticMethod io.fabric8.kubernetes.api.pipelines.Pipelines getPipeline java.lang.String java.util.Map</string>
+          <string>staticMethod io.fabric8.kubernetes.client.Adapters get java.lang.Class</string>
+          <string>staticMethod io.fabric8.utils.Strings isNotBlank java.lang.String</string>
+          <string>staticMethod java.lang.String valueOf int</string>
+          <string>staticMethod java.lang.System getenv</string>
+          <string>staticMethod java.lang.System getProperty java.lang.String</string>
+          <string>staticMethod java.lang.Thread currentThread</string>
+          <string>staticMethod java.lang.Thread sleep long</string>
+          <string>staticMethod java.util.regex.Pattern compile java.lang.String</string>
+          <string>staticMethod java.util.UUID randomUUID</string>
+          <string>staticMethod jenkins.model.Jenkins getActiveInstance</string>
+          <string>staticMethod jenkins.model.Jenkins getInstance</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods count java.lang.String java.lang.String</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods each java.lang.Object groovy.lang.Closure</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachDirRecurse java.io.File groovy.lang.Closure</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachFile java.io.File groovy.lang.Closure</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachFileMatch java.io.File java.lang.Object groovy.lang.Closure</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachFileRecurse java.io.File groovy.io.FileType groovy.lang.Closure</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachFileRecurse java.io.File groovy.lang.Closure</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachLine java.io.File groovy.lang.Closure</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachLine java.lang.String groovy.lang.Closure</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachWithIndex java.lang.Object groovy.lang.Closure</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods get java.util.Map java.lang.Object java.lang.Object</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getCount java.util.regex.Matcher</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getText java.net.URL</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods invokeMethod java.lang.Object java.lang.String java.lang.Object</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods isNumber java.lang.String</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods leftShift java.io.OutputStream java.io.InputStream</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods leftShift java.io.OutputStream java.lang.Object</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods leftShift java.util.Collection java.lang.Object</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.lang.String java.lang.Object</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods newReader java.net.URL</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods println groovy.lang.Closure java.lang.Object</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods readLine java.io.Reader</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods removeAll java.util.Collection java.lang.Object[]</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods size java.lang.Object[]</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods take java.lang.CharSequence int</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toInteger java.lang.String</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods use java.lang.Object java.lang.Class groovy.lang.Closure</string>
+          <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods withInputStream java.io.File groovy.lang.Closure</string>
+          <string>staticMethod org.codehaus.groovy.runtime.ScriptBytecodeAdapter bitwiseNegate java.lang.Object</string>
+          <string>staticMethod org.codehaus.groovy.runtime.ScriptBytecodeAdapter compareGreaterThan java.lang.Object java.lang.Object</string>
+        </approvedSignatures>
+        <aclApprovedSignatures>
+        </aclApprovedSignatures>
+        <approvedClasspathEntries/>
+        <pendingScripts/>
+        <pendingSignatures/>
+        <pendingClasspathEntries/>
+      </scriptApproval>
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    annotations:
+      expose.config.fabric8.io/apiserver-url-key: apiserver.url
+      expose.service-key.config.fabric8.io/fabric8: fabric8.url
+      expose.service-key.config.fabric8.io/keycloak: keycloak.url
+      expose.service-key.config.fabric8.io/jenkins: jenkins.url
+      expose-full.service-key.config.fabric8.io/wit: wit.api.url
+      expose-no-path.service-key.config.fabric8.io/auth: auth.url
+    labels:
+      provider: fabric8
+      project: keycloak
+      version: 1.0.2
+      group: io.fabric8.apps
+    name: keycloak
+  data:
+    db.url: keycloak-db
+    db.port: "5432"
+    apiserver.url: http://kubernetes
+    fabric8.url: http://fabric8
+    jenkins.url: http://jenkins
+    keycloak.url: http://keycloak
+    auth.api.url: http://auth
+    wit.api.url: http://wit
+    fabric8-realm.json: |-
+      {
+        "realm": "fabric8",
+        "enabled": true,
+        "loginTheme": "fabric8",
+        "privateKey": "${KEYCLOAK_PRIVATEKEY}",
+        "publicKey": "${KEYCLOAK_PUBLICKEY}",
+        "sslRequired": "external",
+        "accessTokenLifespan" : 2592000,
+        "accessTokenLifespanForImplicitFlow" : 1296000,
+        "ssoSessionIdleTimeout" : 2592000,
+        "accessCodeLifespanUserAction" : 36000,
+        "accessCodeLifespanLogin" : 2592000,
+        "ssoSessionMaxLifespan" : 2592000,
+        "offlineSessionIdleTimeout" : 2592000,
+        "accessCodeLifespan" : 60,
+        "clients": [
+          {
+            "clientId": "fabric8-online-platform",
+            "enabled": true,
+            "standardFlowEnabled": true,
+            "implicitFlowEnabled": false,
+            "directAccessGrantsEnabled": true,
+            "authorizationServicesEnabled" : true,
+            "fullScopeAllowed": true,
+            "serviceAccountsEnabled": true,
+            "clientAuthenticatorType": "client-secret",
+            "secret": "${KEYCLOAK_CLIENTID_SECRET}",
+            "publicClient" : true,
+            "adminUrl" : "",
+            "baseUrl" : "",
+            "redirectUris": [
+              "http://localhost:8080/api/login/*",
+              "${AUTH_URL}*",
+              "${WIT_URL}*",
+              "${JENKINS_URL}/securityRealm/finishLogin",
+              "${KEYCLOAK_URL}/*"
+            ],
+            "webOrigins": [
+              "*"
+            ],
+            "defaultRoles": ["uma_protection"],
+            "authorizationSettings" : {
+              "allowRemoteResourceManagement" : true,
+              "policyEnforcementMode" : "ENFORCING",
+              "scopes" : [ {
+                "name" : "read:space"
+                }, {
+                "name" : "admin:space"
+              } ]
+            }
+          },
+          {
+            "clientId": "che",
+            "enabled": true,
+            "redirectUris": [
+              "*"
+            ],
+            "implicitFlowEnabled": false,
+            "directAccessGrantsEnabled": true,
+            "publicClient": true,
+            "protocol": "openid-connect",
+            "fullScopeAllowed": true
+          }
+        ],
+        "users": [{
+           "username": "service-account-fabric8-online-platform",
+           "enabled": true,
+           "totp": false,
+           "emailVerified": false,
+           "email": "service-account-fabric8-online-platform@placeholder.org",
+           "serviceAccountClientId": "fabric8-online-platform",
+           "credentials": [],
+           "disableableCredentialTypes": [],
+           "requiredActions": [],
+           "realmRoles": ["offline_access", "uma_authorization"],
+           "clientRoles": {
+              "realm-management": ["view-users", "manage-authorization"],
+              "broker": ["read-token"],
+              "fabric8-online-platform": ["uma_protection"],
+              "account": ["manage-account", "view-profile"]
+           },
+           "groups": []
+        }],
+        "clientScopeMappings": {
+          "realm-management": [
+              {
+                  "client": "fabric8-online-platform",
+                  "roles": ["view-users"]
+              },
+              {
+                  "client": "fabric8-online-platform",
+                  "roles": ["manage-authorization"]
+              }
+          ],
+          "broker": [
+              {
+                  "client": "fabric8-online-platform",
+                  "roles": ["read-token"]
+              }
+          ]
+        },
+        "roles" : {
+          "realm" : [
+            {
+              "name": "read:space",
+              "description": "Read space"
+            },
+            {
+              "name": "admin:space",
+              "description": "Admin space"
+            }
+          ]
+        },
+        "identityProviders": [
+          {
+            "alias" : "openshift-v3",
+            "providerId" : "openshift-v3",
+            "enabled": true,
+            "updateProfileFirstLogin" : "true",
+            "storeToken" : "true",
+            "addReadTokenRoleOnCreate" : true,
+            "config": {
+              "hideOnLoginPage": "${HIDE_OPENSHIFT_BTN}",
+              "baseUrl": "${K8S_API_SERVER}",
+              "clientId": "fabric8-online-platform",
+              "defaultScope": "user:full",
+              "clientSecret": "fabric8"
+            }
+          },
+          {
+            "alias" : "github",
+            "providerId" : "github",
+            "enabled": true,
+            "updateProfileFirstLogin" : "true",
+            "storeToken" : "true",
+            "trustEmail": true,
+            "addReadTokenRoleOnCreate" : true,
+            "config": {
+              "hideOnLoginPage": "${HIDE_GITHUB_BTN}",
+              "clientSecret": "${GITHUB_OAUTH_CLIENT_SECRET}",
+              "clientId": "${GITHUB_OAUTH_CLIENT_ID}",
+              "defaultScope": "admin:repo_hook read:org repo user gist",
+              "useJwksUrl": "true"
+            }
+          }
+        ],
+        "identityProviderMappers" : [
+          {
+            "name" : "approved",
+            "identityProviderAlias" : "openshift-v3",
+            "identityProviderMapper" : "hardcoded-attribute-idp-mapper",
+            "config" : {
+              "attribute.value" : "true",
+              "attribute" : "approved"
+            }
+          }, {
+            "name" : "approved",
+            "identityProviderAlias" : "github",
+            "identityProviderMapper" : "hardcoded-attribute-idp-mapper",
+            "config" : {
+              "attribute.value" : "true",
+              "attribute" : "approved"
+            }
+          }
+        ]
+      }
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    annotations:
+      fabric8.io/git-commit: 3e966ed4dd654367b6b0fff80622fea0e858c2df
+      fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=configmapcontroller&var-version=2.2.335
+      fabric8.io/scm-con-url: scm:git:git@github.com:fabric8io/fabric8-devops.git/configmapcontroller
+      fabric8.io/scm-url: http://github.com/fabric8io/fabric8-devops/configmapcontroller
+      fabric8.io/iconUrl: https://cdn.rawgit.com/fabric8io/fabric8-devops/master/configmapcontroller/src/main/fabric8/icon.png
+      fabric8.io/git-branch: release-v2.2.335
+      fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8io/fabric8-devops.git/configmapcontroller
+      fabric8.io/scm-tag: fabric8-devops-2.0.1
+    labels:
+      provider: fabric8
+      project: configmapcontroller
+      version: 2.2.335
+      group: io.fabric8.devops.apps
+    name: configmapcontroller
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        project: configmapcontroller
+        provider: fabric8
+        group: io.fabric8.devops.apps
+    template:
+      metadata:
+        annotations:
+          fabric8.io/git-commit: 3e966ed4dd654367b6b0fff80622fea0e858c2df
+          fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=configmapcontroller&var-version=2.2.335
+          fabric8.io/scm-con-url: scm:git:git@github.com:fabric8io/fabric8-devops.git/configmapcontroller
+          fabric8.io/scm-url: http://github.com/fabric8io/fabric8-devops/configmapcontroller
+          fabric8.io/iconUrl: https://cdn.rawgit.com/fabric8io/fabric8-devops/master/configmapcontroller/src/main/fabric8/icon.png
+          fabric8.io/git-branch: release-v2.2.335
+          fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8io/fabric8-devops.git/configmapcontroller
+          fabric8.io/scm-tag: fabric8-devops-2.0.1
+          maven.fabric8.io/source-url: jar:file:/home/rohan/.m2/repository/io/fabric8/devops/apps/configmapcontroller/2.2.335/configmapcontroller-2.2.335.jar!/META-INF/fabric8/kubernetes.yml
+        labels:
+          provider: fabric8
+          project: configmapcontroller
+          version: 2.2.335
+          group: io.fabric8.devops.apps
+      spec:
+        containers:
+        - env:
+          - name: KUBERNETES_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          image: fabric8/configmapcontroller:2.3.7
+          name: configmapcontroller
+        serviceAccountName: configmapcontroller
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    annotations:
+      configmap.fabric8.io/update-on-change: exposecontroller
+      fabric8.io/git-commit: c3106e3bed60765a6d42a9d9bfbbea4dd0e93a2d
+      fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=exposecontroller-app&var-version=3.0.7
+      fabric8.io/scm-con-url: scm:git:git@github.com:fabric8-apps/exposecontroller-app.git
+      fabric8.io/scm-url: http://github.com/fabric8-apps/exposecontroller-app
+      fabric8.io/iconUrl: https://cdn.rawgit.com/fabric8-apps/exposecontroller-app/master/src/main/fabric8/icon.png
+      fabric8.io/git-branch: release-v3.0.7
+      fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-apps/exposecontroller-app.git
+      fabric8.io/scm-tag: exposecontroller-app-1.0.0
+    labels:
+      provider: fabric8
+      project: exposecontroller-app
+      version: 3.0.7
+      group: io.fabric8.apps
+    name: exposecontroller
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        project: exposecontroller-app
+        provider: fabric8
+        group: io.fabric8.apps
+    template:
+      metadata:
+        annotations:
+          fabric8.io/git-commit: c3106e3bed60765a6d42a9d9bfbbea4dd0e93a2d
+          fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=exposecontroller-app&var-version=3.0.7
+          fabric8.io/scm-con-url: scm:git:git@github.com:fabric8-apps/exposecontroller-app.git
+          fabric8.io/scm-url: http://github.com/fabric8-apps/exposecontroller-app
+          fabric8.io/iconUrl: https://cdn.rawgit.com/fabric8-apps/exposecontroller-app/master/src/main/fabric8/icon.png
+          configmap.fabric8.io/update-on-change: exposecontroller
+          fabric8.io/git-branch: release-v3.0.7
+          fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-apps/exposecontroller-app.git
+          fabric8.io/scm-tag: exposecontroller-app-1.0.0
+        labels:
+          provider: fabric8
+          project: exposecontroller-app
+          version: 3.0.7
+          group: io.fabric8.apps
+      spec:
+        containers:
+        - env:
+          - name: KUBERNETES_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          image: fabric8/exposecontroller:2.3.28
+          livenessProbe:
+            exec:
+              command:
+              - cat
+              - /tmp/restarteveryday
+            initialDelaySeconds: 86164
+          name: exposecontroller
+          volumeMounts:
+          - mountPath: /etc/exposecontroller
+            name: config-volume
+        serviceAccountName: exposecontroller
+        volumes:
+        - configMap:
+            name: exposecontroller
+          name: config-volume
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    annotations:
+      fabric8.io/iconUrl: https://cdn.rawgit.com/fabric8io/fabric8-devops/master/fabric8-docker-registry/src/main/fabric8/icon.png
+      fabric8.io/git-commit: 3e966ed4dd654367b6b0fff80622fea0e858c2df
+      fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=fabric8-docker-registry&var-version=2.2.335
+      fabric8.io/scm-con-url: scm:git:git@github.com:fabric8io/fabric8-devops.git/fabric8-docker-registry
+      fabric8.io/scm-url: http://github.com/fabric8io/fabric8-devops/fabric8-docker-registry
+      fabric8.io/git-branch: release-v2.2.335
+      fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8io/fabric8-devops.git/fabric8-docker-registry
+      fabric8.io/scm-tag: fabric8-devops-2.0.1
+    labels:
+      provider: fabric8
+      project: fabric8-docker-registry
+      version: 2.2.335
+      group: io.fabric8.devops.apps
+    name: fabric8-docker-registry
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        provider: fabric8
+        project: fabric8-docker-registry
+        group: io.fabric8.devops.apps
+    template:
+      metadata:
+        annotations:
+          fabric8.io/git-commit: 3e966ed4dd654367b6b0fff80622fea0e858c2df
+          fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=fabric8-docker-registry&var-version=2.2.335
+          fabric8.io/scm-con-url: scm:git:git@github.com:fabric8io/fabric8-devops.git/fabric8-docker-registry
+          pod.alpha.kubernetes.io/init-containers: '[{"image":"busybox","imagePullPolicy":"IfNotPresent","name":"fmp-volume-permission","command":["chmod","777","/var/lib/registry"],"volumeMounts":[{"mountPath":"/var/lib/registry","name":"fabric8-docker-registry-storage"}]}]'
+          fabric8.io/scm-url: http://github.com/fabric8io/fabric8-devops/fabric8-docker-registry
+          fabric8.io/iconUrl: https://cdn.rawgit.com/fabric8io/fabric8-devops/master/fabric8-docker-registry/src/main/fabric8/icon.png
+          fabric8.io/git-branch: release-v2.2.335
+          fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8io/fabric8-devops.git/fabric8-docker-registry
+          fabric8.io/scm-tag: fabric8-devops-2.0.1
+          maven.fabric8.io/source-url: jar:file:/home/rohan/.m2/repository/io/fabric8/devops/apps/fabric8-docker-registry/2.2.335/fabric8-docker-registry-2.2.335.jar!/META-INF/fabric8/kubernetes.yml
+        labels:
+          provider: fabric8
+          project: fabric8-docker-registry
+          version: 2.2.335
+          group: io.fabric8.devops.apps
+      spec:
+        containers:
+        - env:
+          - name: KUBERNETES_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          image: registry:2
+          imagePullPolicy: IfNotPresent
+          name: fabric8-docker-registry
+          ports:
+          - containerPort: 5000
+            name: http
+          resources:
+            limits:
+              cpu: "0"
+              memory: "0"
+            requests:
+              cpu: "0"
+              memory: "0"
+          volumeMounts:
+          - mountPath: /var/lib/registry
+            name: fabric8-docker-registry-storage
+            readOnly: false
+        volumes:
+        - name: fabric8-docker-registry-storage
+          persistentVolumeClaim:
+            claimName: fabric8-docker-registry-storage
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    annotations:
+      configmap.fabric8.io/update-on-change: jenkins
+      fabric8.io/target-platform: kubernetes
+      fabric8.io/git-commit: 2b99f551ea8d500df90ea4e22e3348276ac6cae8
+      fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=jenkins&var-version=4.0.41
+      fabric8.io/scm-con-url: scm:git:git@github.com:fabric8-services/tenant-jenkins.git/tenant-jenkins-apps/jenkins
+      fabric8.io/scm-url: http://github.com/fabric8-services/tenant-jenkins/tenant-jenkins-apps/jenkins
+      fabric8.io/iconUrl: https://cdn.rawgit.com/fabric8-services/tenant-jenkins/tenant-jenkins-apps/jenkins/master/apps/jenkins/src/main/fabric8/icon.svg
+      fabric8.io/git-branch: release-v4.0.41
+      fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-services/tenant-jenkins.git/tenant-jenkins-apps/jenkins
+      fabric8.io/scm-tag: fabric8-services/tenant-jenkins-1.0.0
+    labels:
+      app: jenkins
+      provider: fabric8
+      version: 4.0.41
+      group: io.fabric8.tenant.apps
+    name: jenkins
+  spec:
+    replicas: 1
+    revisionHistoryLimit: 2
+    selector:
+      matchLabels:
+        app: jenkins
+        provider: fabric8
+        group: io.fabric8.tenant.apps
+    template:
+      metadata:
+        annotations:
+          fabric8.io/git-commit: 2b99f551ea8d500df90ea4e22e3348276ac6cae8
+          fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=jenkins&var-version=4.0.41
+          fabric8.io/scm-con-url: scm:git:git@github.com:fabric8-services/tenant-jenkins.git/tenant-jenkins-apps/jenkins
+          pod.alpha.kubernetes.io/init-containers: '[{"image":"busybox","imagePullPolicy":"IfNotPresent","name":"fmp-volume-permission","command":["chmod","777","/var/lib/jenkins"],"volumeMounts":[{"mountPath":"/var/lib/jenkins","name":"jenkins-home"}]}]'
+          fabric8.io/scm-url: http://github.com/fabric8-services/tenant-jenkins/tenant-jenkins-apps/jenkins
+          fabric8.io/iconUrl: https://cdn.rawgit.com/fabric8-services/tenant-jenkins/tenant-jenkins-apps/jenkins/master/apps/jenkins/src/main/fabric8/icon.svg
+          configmap.fabric8.io/update-on-change: jenkins
+          fabric8.io/target-platform: kubernetes
+          fabric8.io/git-branch: release-v4.0.41
+          fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-services/tenant-jenkins.git/tenant-jenkins-apps/jenkins
+          fabric8.io/scm-tag: fabric8-services/tenant-jenkins-1.0.0
+        labels:
+          app: jenkins
+          provider: fabric8
+          version: 4.0.41
+          group: io.fabric8.tenant.apps
+      spec:
+        containers:
+        - env:
+          - name: PROJECT_NAMESPACE
+            value: ${PROJECT_NAMESPACE}
+          - name: KUBERNETES_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: KUBERNETES_TRUST_CERTIFICATES
+            value: "true"
+          - name: KUBERNETES_MASTER
+            value: https://kubernetes.default:443
+          - name: MAX_METASPACE_SIZE
+            value: 200m
+          - name: KEYCLOAK_URL
+            valueFrom:
+              configMapKeyRef:
+                key: keycloak.url
+                name: jenkins
+          - name: KEYCLOAK_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                key: client.secret
+                name: jenkins
+          - name: JENKINS_OPTS
+            value: -Dgroovy.use.classvalue=true
+          - name: JAVA_HOME
+            value: /etc/alternatives/java_sdk
+          - name: MAVEN_OPTS
+            value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+          - name: RECOMMENDER_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                key: token
+                name: jenkins-recommender-api-token
+          image: fabric8/jenkins-openshift:vb6fc097
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /login
+              port: 8080
+            initialDelaySeconds: 420
+            timeoutSeconds: 10
+          name: jenkins
+          ports:
+          - containerPort: 50000
+            name: slave
+          - containerPort: 8080
+            name: http
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+          resources:
+            limits:
+              memory: 1Gi
+              cpu: "0.5"
+            requests:
+              cpu: "0"
+          volumeMounts:
+          - mountPath: /var/lib/jenkins
+            name: jenkins-home
+            readOnly: false
+          - mountPath: /opt/openshift/configuration/
+            name: jenkins-config
+        serviceAccountName: jenkins
+        volumes:
+        - name: jenkins-home
+          persistentVolumeClaim:
+            claimName: jenkins-home
+        - configMap:
+            name: jenkins
+          name: jenkins-config
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    annotations:
+      configmap.fabric8.io/update-on-change: keycloak
+      fabric8.io/target-platform: kubernetes
+      fabric8.io/git-commit: c9de63f98f0be32f5fb9c4d3afce2d8503cdfb8f
+      fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=keycloak&var-version=1.0.2
+      fabric8.io/scm-con-url: scm:git:git@github.com:fabric8-apps/keycloak-app.git/keycloak
+      fabric8.io/scm-url: http://github.com/fabric8-apps/keycloak-app/keycloak
+      fabric8.io/git-branch: release-v1.0.2
+      fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-apps/keycloak-app.git/keycloak
+      fabric8.io/scm-tag: keycloak-app-1.0.0
+    labels:
+      provider: fabric8
+      project: keycloak
+      version: 1.0.2
+      group: io.fabric8.apps
+    name: keycloak
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        project: keycloak
+        provider: fabric8
+        group: io.fabric8.apps
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        annotations:
+          fabric8.io/git-commit: c9de63f98f0be32f5fb9c4d3afce2d8503cdfb8f
+          pod.beta.kubernetes.io/init-containers: |-
+            [
+            {
+              "name": "envvar-substitution",
+              "image": "fabric8/envsubst-file:1.0.0",
+              "imagePullPolicy": "IfNotPresent",
+              "args": [
+                "fabric8-realm.json"
+              ],
+              "env": [{
+                "name": "AUTH_URL",
+                "valueFrom": {
+                        "configMapKeyRef": {
+                            "name": "keycloak",
+                            "key": "auth.api.url"
+                        }
+                    }
+              },
+              {
+                "name": "WIT_URL",
+                "valueFrom": {
+                        "configMapKeyRef": {
+                            "name": "keycloak",
+                            "key": "wit.api.url"
+                        }
+                    }
+              },
+              {
+                "name": "JENKINS_URL",
+                "valueFrom": {
+                        "configMapKeyRef": {
+                            "name": "keycloak",
+                            "key": "jenkins.url"
+                        }
+                    }
+              },
+              {
+                "name": "KEYCLOAK_URL",
+                "valueFrom": {
+                        "configMapKeyRef": {
+                            "name": "keycloak",
+                            "key": "keycloak.url"
+                        }
+                    }
+              },
+              {
+                "name": "FABRIC8_URL",
+                "valueFrom": {
+                        "configMapKeyRef": {
+                            "name": "keycloak",
+                            "key": "fabric8.url"
+                        }
+                    }
+              },
+              {
+                "name": "KEYCLOAK_PRIVATEKEY",
+                "valueFrom": {
+                        "secretKeyRef": {
+                            "name": "keycloak",
+                            "key": "kc.private.key"
+                        }
+                    }
+              },
+              {
+                "name": "KEYCLOAK_PUBLICKEY",
+                "valueFrom": {
+                        "secretKeyRef": {
+                            "name": "keycloak",
+                            "key": "kc.public.key"
+                        }
+                    }
+              },
+              {
+                "name": "KEYCLOAK_CLIENTID_SECRET",
+                "valueFrom": {
+                        "secretKeyRef": {
+                            "name": "keycloak",
+                            "key": "kc.clientid.secret"
+                        }
+                    }
+              },
+              {
+                "name": "K8S_API_SERVER",
+                "valueFrom": {
+                        "configMapKeyRef": {
+                            "name": "keycloak",
+                            "key": "apiserver.url"
+                        }
+                    }
+              },
+              {
+                "name": "HIDE_OPENSHIFT_BTN",
+                "value": "true"
+              },
+              {
+                "name": "HIDE_GITHUB_BTN",
+                "value": "false"
+              }],
+              "volumeMounts": [
+              {
+                "name": "keycloak-config",
+                "mountPath": "/workdir/fabric8-realm.json",
+                "subPath": "config/fabric8-realm.json"
+              },
+              {
+                "name": "keycloak-subst-config",
+                "mountPath": "/processed"
+              }
+              ]
+            },
+            {
+                "name": "init-dependencyservice",
+                "image": "fabric8/fabric8-dependency-wait-service:v6632df1",
+                "imagePullPolicy": "IfNotPresent",
+                "command": ["sh", "-c", "fabric8-dependency-wait-service-linux-amd64 postgres://keycloak@keycloak-db:5432"],
+                "env": [{
+                  "name": "DEPENDENCY_POLL_INTERVAL",
+                  "value": "1"
+                }, {
+                  "name": "DEPENDENCY_LOG_VERBOSE",
+                  "value": "true"
+                }]
+            }]
+          fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=keycloak&var-version=1.0.2
+          fabric8.io/scm-con-url: scm:git:git@github.com:fabric8-apps/keycloak-app.git/keycloak
+          fabric8.io/scm-url: http://github.com/fabric8-apps/keycloak-app/keycloak
+          configmap.fabric8.io/update-on-change: keycloak
+          fabric8.io/target-platform: kubernetes
+          fabric8.io/git-branch: release-v1.0.2
+          fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-apps/keycloak-app.git/keycloak
+          fabric8.io/scm-tag: keycloak-app-1.0.0
+          maven.fabric8.io/source-url: jar:file:/home/rohan/.m2/repository/io/fabric8/apps/keycloak/1.0.2/keycloak-1.0.2.jar!/META-INF/fabric8/kubernetes.yml
+        labels:
+          provider: fabric8
+          project: keycloak
+          version: 1.0.2
+          group: io.fabric8.apps
+      spec:
+        containers:
+        - args:
+          - -b $(INTERNAL_POD_IP)
+          - -Djgroups.bind_addr=global
+          - -Djboss.node.name=$(INTERNAL_POD_IP)
+          - -Dkeycloak.migration.action=import
+          - -Dkeycloak.migration.provider=singleFile
+          - -Dkeycloak.migration.file=/opt/jboss/keycloak/standalone/configuration/import/fabric8-realm.json
+          - -Dkeycloak.migration.strategy=IGNORE_EXISTING
+          env:
+          - name: POSTGRES_HOSTNAME
+            value: keycloak-db
+          - name: POSTGRES_USER
+            value: keycloak
+          - name: POSTGRES_PASSWORD
+            value: keycloak
+          - name: OPERATING_MODE
+            value: standalone
+          - name: POSTGRES_PORT_5432_TCP_ADDR
+            value: keycloak-db
+          - name: INTERNAL_POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: KEYCLOAK_USER
+            valueFrom:
+              secretKeyRef:
+                key: kc.user
+                name: keycloak
+          - name: KEYCLOAK_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: kc.password
+                name: keycloak
+          - name: KEYCLOAK_CLIENTID_SECRET
+            valueFrom:
+              secretKeyRef:
+                key: kc.clientid.secret
+                name: keycloak
+          - name: KEYCLOAK_PRIVATEKEY
+            valueFrom:
+              secretKeyRef:
+                key: kc.private.key
+                name: keycloak
+          - name: KEYCLOAK_PUBLICKEY
+            valueFrom:
+              secretKeyRef:
+                key: kc.public.key
+                name: keycloak
+          - name: HIDE_OPENSHIFT_BTN
+            value: "true"
+          - name: HIDE_GITHUB_BTN
+            value: "false"
+          image: fabric8/keycloak-postgres:v15751c8
+          livenessProbe:
+            httpGet:
+              path: /auth
+              port: 8080
+            initialDelaySeconds: 60
+            timeoutSeconds: 10
+          name: keycloak
+          readinessProbe:
+            httpGet:
+              path: /auth
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+          volumeMounts:
+          - mountPath: /opt/jboss/keycloak/standalone/configuration/import
+            name: keycloak-subst-config
+          - mountPath: /opt/jboss/keycloak/themes/fabric8
+            name: keycloak-theme
+        volumes:
+        - emptyDir: {}
+          name: keycloak-subst-config
+        - configMap:
+            items:
+            - key: fabric8-realm.json
+              path: config/fabric8-realm.json
+            name: keycloak
+          name: keycloak-config
+        - gitRepo:
+            directory: login
+            repository: https://github.com/fabric8io/fabric8-keycloak-theme.git
+            revision: 61b08f0a2f4be2395bb0bbb6d16a8538f4f2b836
+          name: keycloak-theme
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    annotations:
+      fabric8.io/git-commit: c9de63f98f0be32f5fb9c4d3afce2d8503cdfb8f
+      fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=keycloak-db&var-version=1.0.2
+      fabric8.io/scm-con-url: scm:git:git@github.com:fabric8-apps/keycloak-app.git/keycloak-db
+      fabric8.io/scm-url: http://github.com/fabric8-apps/keycloak-app/keycloak-db
+      fabric8.io/git-branch: release-v1.0.2
+      fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-apps/keycloak-app.git/keycloak-db
+      fabric8.io/scm-tag: keycloak-app-1.0.0
+    labels:
+      service: keycloak-db
+      provider: fabric8
+      project: keycloak-db
+      version: 1.0.2
+      group: io.fabric8.apps
+    name: keycloak-db
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        project: keycloak-db
+        provider: fabric8
+        group: io.fabric8.apps
+    template:
+      metadata:
+        annotations:
+          fabric8.io/git-commit: c9de63f98f0be32f5fb9c4d3afce2d8503cdfb8f
+          fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=keycloak-db&var-version=1.0.2
+          fabric8.io/scm-con-url: scm:git:git@github.com:fabric8-apps/keycloak-app.git/keycloak-db
+          pod.alpha.kubernetes.io/init-containers: '[{"image":"busybox","imagePullPolicy":"IfNotPresent","name":"fmp-volume-permission","command":["chmod","777","/var/lib/pgsql"],"volumeMounts":[{"mountPath":"/var/lib/pgsql","name":"keycloak-db-postgresql-data"}]}]'
+          fabric8.io/scm-url: http://github.com/fabric8-apps/keycloak-app/keycloak-db
+          fabric8.io/git-branch: release-v1.0.2
+          fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-apps/keycloak-app.git/keycloak-db
+          fabric8.io/scm-tag: keycloak-app-1.0.0
+          maven.fabric8.io/source-url: jar:file:/home/rohan/.m2/repository/io/fabric8/apps/keycloak-db/1.0.2/keycloak-db-1.0.2.jar!/META-INF/fabric8/kubernetes.yml
+        labels:
+          service: keycloak-db
+          provider: fabric8
+          project: keycloak-db
+          version: 1.0.2
+          group: io.fabric8.apps
+      spec:
+        containers:
+        - env:
+          - name: POSTGRESQL_DATABASE
+            value: keycloak
+          - name: POSTGRESQL_PASSWORD
+            value: keycloak
+          - name: POSTGRESQL_USER
+            value: keycloak
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          image: registry.centos.org/postgresql/postgresql:9.6
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - exec pg_isready --host $POD_IP
+            failureThreshold: 6
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+          name: keycloak-db
+          ports:
+          - containerPort: 5432
+            name: postgresql
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - exec pg_isready --host $POD_IP
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            timeoutSeconds: 3
+          volumeMounts:
+          - mountPath: /var/lib/pgsql
+            name: keycloak-db-postgresql-data
+            readOnly: false
+        volumes:
+        - name: keycloak-db-postgresql-data
+          persistentVolumeClaim:
+            claimName: keycloak-db-postgresql-data
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    annotations:
+      fabric8.io/iconUrl: https://cdn.rawgit.com/fabric8io/fabric8-devops/master/nexus/src/main/fabric8/icon.png
+      fabric8.io/git-commit: ae00cfc7e0057fb2f9a79cf3152a76840f6ac915
+      fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=nexus-app&var-version=1.0.1
+      fabric8.io/scm-con-url: scm:git:git@github.com:fabric8-apps/nexus-app.git
+      fabric8.io/scm-url: http://github.com/fabric8-apps/nexus-app
+      fabric8.io/git-branch: release-v1.0.1
+      fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-apps/nexus-app.git
+      fabric8.io/scm-tag: nexus-app-1.0.0
+    labels:
+      provider: fabric8
+      project: nexus-app
+      version: 1.0.1
+      group: io.fabric8.apps
+    name: nexus
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        project: nexus-app
+        provider: fabric8
+        group: io.fabric8.apps
+    template:
+      metadata:
+        annotations:
+          fabric8.io/git-commit: ae00cfc7e0057fb2f9a79cf3152a76840f6ac915
+          fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=nexus-app&var-version=1.0.1
+          fabric8.io/scm-con-url: scm:git:git@github.com:fabric8-apps/nexus-app.git
+          pod.alpha.kubernetes.io/init-containers: '[{"image":"busybox","imagePullPolicy":"IfNotPresent","name":"fmp-volume-permission","command":["chmod","777","/sonatype-work/storage"],"volumeMounts":[{"mountPath":"/sonatype-work/storage","name":"nexus-storage"}]}]'
+          fabric8.io/scm-url: http://github.com/fabric8-apps/nexus-app
+          fabric8.io/iconUrl: https://cdn.rawgit.com/fabric8io/fabric8-devops/master/nexus/src/main/fabric8/icon.png
+          fabric8.io/git-branch: release-v1.0.1
+          fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-apps/nexus-app.git
+          fabric8.io/scm-tag: nexus-app-1.0.0
+          maven.fabric8.io/source-url: jar:file:/home/rohan/.m2/repository/io/fabric8/apps/nexus-app/1.0.1/nexus-app-1.0.1.jar!/META-INF/fabric8/kubernetes.yml
+        labels:
+          provider: fabric8
+          project: nexus-app
+          version: 1.0.1
+          group: io.fabric8.apps
+      spec:
+        containers:
+        - env:
+          - name: KUBERNETES_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          image: fabric8/nexus:vee72dc8
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /content/repositories/
+              port: 8081
+            initialDelaySeconds: 180
+            timeoutSeconds: 10
+          name: nexus
+          ports:
+          - containerPort: 8081
+            name: http
+          readinessProbe:
+            failureThreshold: 10
+            httpGet:
+              path: /content/repositories/
+              port: 8081
+            initialDelaySeconds: 60
+            timeoutSeconds: 10
+          volumeMounts:
+          - mountPath: /sonatype-work/storage
+            name: nexus-storage
+            readOnly: false
+        volumes:
+        - name: nexus-storage
+          persistentVolumeClaim:
+            claimName: nexus-storage
+parameters:
+- name: GITHUB_OAUTH_CLIENT_SECRET
+  required: true
+- name: GITHUB_OAUTH_CLIENT_ID
+  required: true
+- name: APISERVER_HOSTPORT
+- name: NODE_IP
+- name: EXPOSER
+- name: DOMAIN
+- name: HTTP
+- name: TLS_ACME
+- name: RECOMMENDER_API_TOKEN

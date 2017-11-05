@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+     Copyright 2005-2015 Red Hat, Inc.
+
+     Red Hat licenses this file to you under the Apache License, version
+     2.0 (the "License"); you may not use this file except in compliance
+     with the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+     implied.  See the License for the specific language governing
+     permissions and limitations under the License.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <groupId>io.fabric8.jenkins.packages</groupId>
+    <artifactId>jenkins-packages</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>fabric8-jenkins-github</artifactId>
+
+  <name>Fabric8 Jenkins :: Packages SSO with GitHub</name>
+  <description>Fabric8 Jenkins :: Packages SSO with GitHub</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.fabric8.apps</groupId>
+      <artifactId>keycloak</artifactId>
+      <version>${keycloak-app.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.fabric8.apps</groupId>
+      <artifactId>keycloak-db</artifactId>
+      <version>${keycloak-app.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.fabric8.apps</groupId>
+      <artifactId>exposecontroller-app</artifactId>
+      <version>${exposecontroller.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.fabric8.devops.apps</groupId>
+      <artifactId>configmapcontroller</artifactId>
+      <version>${fabric8-devops.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.fabric8.devops.apps</groupId>
+      <artifactId>fabric8-docker-registry</artifactId>
+      <version>${fabric8-devops.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.fabric8.tenant.apps</groupId>
+      <artifactId>jenkins</artifactId>
+      <version>${jenkins-tenant.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.fabric8.apps</groupId>
+      <artifactId>nexus-app</artifactId>
+      <version>${nexus-app.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-plugin</artifactId>
+        <version>${fabric8.maven.plugin.version}</version>
+        <configuration>
+          <enricher>
+            <excludes>
+              <exclude>fmp-controller</exclude>
+            </excludes>
+          </enricher>
+        </configuration>
+        <executions>
+          <execution>
+            <id>fmp</id>
+            <goals>
+              <goal>resource</goal>
+              <goal>helm</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
