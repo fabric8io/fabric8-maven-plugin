@@ -593,7 +593,7 @@ public class KubernetesResourceUtil {
     public static Date getCreationTimestamp(HasMetadata hasMetadata) {
         ObjectMeta metadata = hasMetadata.getMetadata();
         if (metadata != null) {
-            return parseTimestamp(metadata.getCreationTimestamp().getTime());
+            return parseTimestamp(metadata.getCreationTimestamp());
         }
         return null;
     }
