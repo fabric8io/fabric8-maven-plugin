@@ -721,7 +721,7 @@ public class KubernetesResourceUtil {
     }
 
     public static void mergePodSpec(PodSpecBuilder builder, PodSpec defaultPodSpec, String defaultName) {
-        List<Container> containers = builder.getContainers();
+        List<Container> containers = builder.buildContainers();
         List<Container> defaultContainers = defaultPodSpec.getContainers();
         int size = defaultContainers.size();
         if (size > 0) {

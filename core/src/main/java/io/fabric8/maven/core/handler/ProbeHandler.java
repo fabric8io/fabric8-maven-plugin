@@ -55,7 +55,12 @@ public class ProbeHandler {
             probe.setExec(execAction);
             return probe;
         }
-        TCPSocketAction tcpSocketAction = getTCPSocketAction(probeConfig.getTcpPort());
+        TCPSocketAction tcpSocketAction;
+        try {
+            tcpSocketAction = getTCPSocketAction(new URL(probeConfig.getGetUrl()), probeConfig.getTcpPort());
+        } catch (MalformedURLException e) {
+            return null;
+        }
         if (tcpSocketAction != null) {
             probe.setTcpSocket(tcpSocketAction);
             return probe;
@@ -82,7 +87,7 @@ public class ProbeHandler {
         }
     }
 
-    private TCPSocketAction getTCPSocketAction(String port) {
+    private TCPSocketAction getTCPSocketAction(URL url, String port) {
         if (port != null) {
             IntOrString portObj = new IntOrString(port);
             try {
@@ -91,7 +96,7 @@ public class ProbeHandler {
             } catch (NumberFormatException e) {
                 portObj.setStrVal(port);
             }
-            return new TCPSocketAction(portObj);
+            return new TCPSocketAction(url.getHost(), portObj);
         }
         return null;
     }

@@ -27,7 +27,7 @@ items:
       app: fabric8-maven-sample-zero-config
       provider: fabric8
       group: io.fabric8
-- apiVersion: v1
+- apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
     annotations:

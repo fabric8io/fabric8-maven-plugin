@@ -4,7 +4,7 @@ kind: List
 items:
 - apiVersion: v1
   kind: Service
-- apiVersion: v1
+- apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   spec:
     template:

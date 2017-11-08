@@ -89,7 +89,7 @@ public class AutoTLSEnricher extends BaseEnricher {
                 }
                 String jksSecretVolumeName = getConfig(Config.jksVolumeName);
                 if (!isVolumeAlreadyExists(builder.buildVolumes(), jksSecretVolumeName)) {
-                    builder.addNewVolume().withName(jksSecretVolumeName).withNewEmptyDir("Memory").endVolume();
+                    builder.addNewVolume().withName(jksSecretVolumeName).withNewEmptyDir().withMedium("Memory").endEmptyDir().endVolume();
                 }
             }
 

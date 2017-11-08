@@ -7,7 +7,7 @@ items:
   metadata: "@ignore@"
   spec: "@ignore@"
 
-- apiVersion: v1
+- apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   spec:
     replicas: 1

@@ -37,8 +37,9 @@ public enum VolumeType {
         public Volume fromConfig(VolumeConfig config) {
             return new VolumeBuilder()
                     .withName(config.getName())
-                    .withNewEmptyDir(config.getMedium())
+                    .withNewEmptyDir().withMedium(config.getMedium()).endEmptyDir()
                     .build();
+
         }
     }, GIT_REPO("gitRepo") {
         public Volume fromConfig(VolumeConfig config) {
