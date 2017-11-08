@@ -143,7 +143,7 @@ public class ImportMojo extends AbstractFabric8Mojo {
             throw new MojoExecutionException("Failed to find local git repository in current directory: " + e, e);
         }
         try {
-            gitRemoteURL = GitUtils.getRemoteURL(repository);
+            gitRemoteURL = GitUtils.getRemoteAsHttpsURL(repository);
         } catch (Exception e) {
             throw new MojoExecutionException("Failed to get the current git branch: " + e, e);
         }
