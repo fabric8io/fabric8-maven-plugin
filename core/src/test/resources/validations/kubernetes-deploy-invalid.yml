@@ -6,14 +6,14 @@ metadata:
     fabric8.io/git-commit: d4364201d2c39fff53c1fcf3be58b3de435996e2
     fabric8.io/iconUrl: img/icons/spring-boot.svg
     fabric8.io/git-branch: feat/66-validation
-    fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=fabric8-maven-sample-spring-boot&var-version=3.5-SNAPSHOT
+    fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=fabric8-maven-sample-spring-boot&var-version=4.0-SNAPSHOT
     fabric8.io/scm-tag: HEAD
     fabric8.io/scm-url: https://github.com/spring-projects/spring-boot/spring-boot-starter-parent/fabric8-maven-sample-spring-boot
   labels:
     testProject: spring-boot-sample
     app: fabric8-maven-sample-spring-boot
     provider: fabric8
-    version: 3.5-SNAPSHOT
+    version: 4.0-SNAPSHOT
     group: io.fabric8
   name: fabric8-maven-sample-spring-boot
 spec:
@@ -28,7 +28,7 @@ spec:
     metadata:
       annotations:
         fabric8.io/git-commit: d4364201d2c39fff53c1fcf3be58b3de435996e2
-        fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=fabric8-maven-sample-spring-boot&var-version=3.5-SNAPSHOT
+        fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=fabric8-maven-sample-spring-boot&var-version=4.0-SNAPSHOT
         fabric8.io/scm-url: https://github.com/spring-projects/spring-boot/spring-boot-starter-parent/fabric8-maven-sample-spring-boot
         fabric8.io/iconUrl: img/icons/spring-boot.svg
         fabric8.io/git-branch: feat/66-validation
@@ -37,7 +37,7 @@ spec:
         testProject: spring-boot-sample
         app: fabric8-maven-sample-spring-boot
         provider: fabric8
-        version: 3.5-SNAPSHOT
+        version: 4.0-SNAPSHOT
         group: io.fabric8
     spec:
       containers:

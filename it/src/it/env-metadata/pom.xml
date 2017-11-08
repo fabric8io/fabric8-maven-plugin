@@ -20,7 +20,7 @@
 
   <artifactId>fabric8-maven-sample-env-metadata</artifactId>
   <groupId>io.fabric8</groupId>
-  <version>3.5-SNAPSHOT</version>
+  <version>4.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
