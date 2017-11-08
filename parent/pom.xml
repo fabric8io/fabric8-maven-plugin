@@ -19,7 +19,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>fabric8-maven-parent</artifactId>
-  <version>3.5.32</version>
+  <version>3.5.32.fuse-000005</version>
   <packaging>pom</packaging>
 
   <prerequisites>
@@ -60,7 +60,7 @@
     <assertj.core.version>2.4.1</assertj.core.version>
 
     <!-- latest release version of this plugin. Used in the docs.-->
-    <fabric8.maven.plugin.version>3.5.31</fabric8.maven.plugin.version>
+    <fabric8.maven.plugin.version>3.5.32.fuse-000005</fabric8.maven.plugin.version>
 
     <version.maven>3.3.1</version.maven>
     <version.jacoco>0.7.8</version.jacoco>
