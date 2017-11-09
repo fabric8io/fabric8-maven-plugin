@@ -80,8 +80,7 @@ import static io.fabric8.kubernetes.api.extensions.Configs.currentUserName;
 import static io.fabric8.project.support.BuildConfigHelper.createBuildConfig;
 
 /**
- * Imports the current project into fabric8 so that it can be automatically built via Jenkins and appears in the
- * <a href="http://fabric8.io/guide/console.html">fabric8 developer console</a>
+ * Imports the current project into fabric8 so that it can be automatically built via Jenkins
  */
 @Mojo(name = "import", requiresProject = true)
 public class ImportMojo extends AbstractFabric8Mojo {
@@ -97,8 +96,11 @@ public class ImportMojo extends AbstractFabric8Mojo {
     @Parameter(property = "fabric8.project.name")
     private String projectName;
 
-    @Parameter(property = "fabric8.origin.branchName", defaultValue = "origin")
-    private String originBranchName;
+    @Parameter(property = "fabric8.remote.name", defaultValue = "origin")
+    private String remoteName;
+
+    @Parameter(property = "fabric8.branch.name", defaultValue = "master")
+    private String branchName;
 
     @Parameter(property = "fabric8.passsword.retry")
     private boolean retryPassword;
@@ -182,10 +184,11 @@ public class ImportMojo extends AbstractFabric8Mojo {
             } else {
                 // lets create an import a new project
                 UserDetails userDetails = createGogsUserDetails(kubernetes, namespace);
+                userDetails.setBranch(branchName);
                 BuildConfigHelper.CreateGitProjectResults createGitProjectResults;
                 try {
                     createGitProjectResults = BuildConfigHelper.importNewGitProject(kubernetes, userDetails, basedir,
-                            namespace, projectName, originBranchName, "Importing project from mvn fabric8:import", false);
+                            namespace, projectName, remoteName, "Importing project from mvn fabric8:import", false);
                 } catch (WebApplicationException e) {
                     Response response = e.getResponse();
                     if (response.getStatus() > 400) {
