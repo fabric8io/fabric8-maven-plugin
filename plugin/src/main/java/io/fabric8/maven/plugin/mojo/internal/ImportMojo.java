@@ -50,6 +50,7 @@ import io.fabric8.utils.IOHelpers;
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
 import io.fabric8.utils.URLUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -79,8 +80,7 @@ import static io.fabric8.kubernetes.api.extensions.Configs.currentUserName;
 import static io.fabric8.project.support.BuildConfigHelper.createBuildConfig;
 
 /**
- * Imports the current project into fabric8 so that it can be automatically built via Jenkins and appears in the
- * <a href="http://fabric8.io/guide/console.html">fabric8 developer console</a>
+ * Imports the current project into fabric8 so that it can be automatically built via Jenkins
  */
 @Mojo(name = "import", requiresProject = true)
 public class ImportMojo extends AbstractFabric8Mojo {
@@ -96,8 +96,11 @@ public class ImportMojo extends AbstractFabric8Mojo {
     @Parameter(property = "fabric8.project.name")
     private String projectName;
 
-    @Parameter(property = "fabric8.origin.branchName", defaultValue = "origin")
-    private String originBranchName;
+    @Parameter(property = "fabric8.remote.name", defaultValue = "origin")
+    private String remoteName;
+
+    @Parameter(property = "fabric8.branch.name", defaultValue = "master")
+    private String branchName;
 
     @Parameter(property = "fabric8.passsword.retry")
     private boolean retryPassword;
@@ -142,7 +145,7 @@ public class ImportMojo extends AbstractFabric8Mojo {
             throw new MojoExecutionException("Failed to find local git repository in current directory: " + e, e);
         }
         try {
-            gitRemoteURL = GitUtils.getRemoteURL(repository);
+            gitRemoteURL = GitUtils.getRemoteAsHttpsURL(repository);
         } catch (Exception e) {
             throw new MojoExecutionException("Failed to get the current git branch: " + e, e);
         }
@@ -181,10 +184,11 @@ public class ImportMojo extends AbstractFabric8Mojo {
             } else {
                 // lets create an import a new project
                 UserDetails userDetails = createGogsUserDetails(kubernetes, namespace);
+                userDetails.setBranch(branchName);
                 BuildConfigHelper.CreateGitProjectResults createGitProjectResults;
                 try {
                     createGitProjectResults = BuildConfigHelper.importNewGitProject(kubernetes, userDetails, basedir,
-                            namespace, projectName, originBranchName, "Importing project from mvn fabric8:import", false);
+                            namespace, projectName, remoteName, "Importing project from mvn fabric8:import", false);
                 } catch (WebApplicationException e) {
                     Response response = e.getResponse();
                     if (response.getStatus() > 400) {
@@ -360,34 +364,73 @@ public class ImportMojo extends AbstractFabric8Mojo {
         return Base64Encoder.encode(key);
     }
 
-    protected UserDetails createGogsUserDetails(KubernetesClient kubernetes, String namespace) throws MojoExecutionException {
-        String gogsURL = getGogsURL(kubernetes, namespace);
-        log.debug("Got gogs URL: " + gogsURL);
-        if (Strings.isNullOrBlank(gogsURL)) {
-            throw new MojoExecutionException("Could not find the external URL to service " + ServiceNames.GOGS
-                    + " in namespace " + namespace + ". Are you sure you are running gogs in this kubernetes namespace?");
+
+    protected UserDetails createGithubProjectAndUserDetails(KubernetesClient kubernetes, String namespace) throws MojoExecutionException{
+        log.info("Creating Project on GitHub");
+
+        String url = "https://api.github.com";
+        UserDetails userDetails = null;
+
+        String secretNamespace = getSecretNamespace();
+        ensureNamespaceExists(kubernetes, secretNamespace);
+
+        ConfigMap configMap = getSecretGitConfigMap(kubernetes, namespace, secretNamespace);
+        String host = convertToValidDnsLabel(currentUserName()+"-github.com");
+
+        String currentSecretName = configMap.getData().get(host);
+        if (currentSecretName == null) {
+            currentSecretName = createGitSecretName(namespace, host);
         }
+
+        Secret secret = findOrCreateGitSecret(kubernetes, currentSecretName, host);
+
+        //FIXME: Rename the methods to be generic
+        // if empty or retrying lets re-enter the user/pwd
+        gitUserName = getGogsSecretField(kubernetes, secret, host, "username");
+        gitPassword = getGogsSecretField(kubernetes, secret, host, "password");
+
+        if (Strings.isNullOrBlank(gitEmail)) {
+            gitEmail = findEmailFromDotGitConfig();
+        }
+        createOrUpdateSecret(kubernetes, secret);
+
+        updateSecretGitConfigMap(kubernetes, secretNamespace, configMap, host, currentSecretName);
+
+        return new UserDetails("https://api.github.com", "https://api.github.com",
+                gitUserName, gitPassword, gitEmail);
+    }
+
+    protected UserDetails createGogsUserDetails(KubernetesClient kubernetes, String namespace) throws MojoExecutionException {
+        String url = getGogsURL(kubernetes, namespace);
+        Secret secret = null;
+        UserDetails userDetails;
+        if (Strings.isNullOrBlank(url)) {
+            return createGithubProjectAndUserDetails(kubernetes, namespace);
+        }
+
+        log.debug("Got gogs URL: " + url);
         String gogsSecretName = getGogsSecretName(namespace);
-        Secret gogsSecret = null;
         if (Strings.isNullOrBlank(gitUserName) || Strings.isNullOrBlank(gitPassword)) {
-            gogsSecret = findOrCreateGitSecret(kubernetes, gogsSecretName, GOGS_REPO_HOST);
+            secret = findOrCreateGitSecret(kubernetes, gogsSecretName, GOGS_REPO_HOST);
         }
         if (Strings.isNullOrBlank(gitUserName)) {
-            gitUserName = getGogsSecretField(kubernetes, gogsSecret, GOGS_REPO_HOST, "username");
+            gitUserName = getGogsSecretField(kubernetes, secret, GOGS_REPO_HOST, "username");
         }
         if (Strings.isNullOrBlank(gitPassword)) {
-            gitPassword = getGogsSecretField(kubernetes, gogsSecret, GOGS_REPO_HOST, "password");
+            gitPassword = getGogsSecretField(kubernetes, secret, GOGS_REPO_HOST, "password");
         }
         if (Strings.isNullOrBlank(gitEmail)) {
             gitEmail = findEmailFromDotGitConfig();
         }
-        createOrUpdateSecret(kubernetes, gogsSecret);
+        createOrUpdateSecret(kubernetes, secret);
 
         ConfigMap configMap = getSecretGitConfigMap(kubernetes, namespace, secretNamespace);
         updateSecretGitConfigMap(kubernetes, secretNamespace, configMap, GOGS_REPO_HOST, gogsSecretName);
 
         log.info("git username: " + gitUserName + " password: " + hidePassword(gitPassword) + " email: " + gitEmail);
-        return new UserDetails(gogsURL, gogsURL, gitUserName, gitPassword, gitEmail);
+
+
+        return new UserDetails(url, url, gitUserName, gitPassword, gitEmail);
     }
 
     private void createOrUpdateSecret(KubernetesClient kubernetes, Secret secret) {
@@ -472,6 +515,7 @@ public class ImportMojo extends AbstractFabric8Mojo {
     }
 
     private void ensureNamespaceExists(KubernetesClient kubernetes, String name) {
+        name = convertToValidDnsLabel(name);
         // lets check namespace exists
         Namespace namespace = kubernetes.namespaces().withName(name).get();
         if (namespace == null) {
@@ -529,10 +573,17 @@ public class ImportMojo extends AbstractFabric8Mojo {
 
     public String getSecretNamespace() {
         if (Strings.isNullOrBlank(secretNamespace)) {
-            secretNamespace = "user-secrets-source-" + currentUserName();
+            secretNamespace = convertToValidDnsLabel(String.format("user-secrets-source-%s", currentUserName()));
         }
         return secretNamespace;
     }
+
+    private String convertToValidDnsLabel(String name) {
+        name = StringUtils.replaceAll(name,"\\.","-");
+        name = StringUtils.replaceAll(name,"\\:","-");
+        return name;
+    }
+
 
     public String getGogsSecretName(String currentNamespace) {
         if (Strings.isNullOrBlank(gogsSecretName)) {
@@ -546,36 +597,44 @@ public class ImportMojo extends AbstractFabric8Mojo {
     }
 
     protected void logBuildConfigLink(KubernetesClient kubernetes, String namespace, BuildConfig buildConfig, Logger log) {
-        String url = BuildConfigHelper.getBuildConfigConsoleURL(kubernetes, namespace, buildConfig);
+        String url =  URLUtils.pathJoin(kubernetes.getConfiguration().getMasterUrl(),
+                "/console/project/",namespace,"/browse/pipelines/",buildConfig.getMetadata().getName()+"/?tab=configuration");
         if (url != null) {
-            log.info("You can view the project dashboard at: " + url);
             File jenkinsfile = new File(basedir, "Jenkinsfile");
-            if (!jenkinsfile.exists() || !jenkinsfile.isFile()) {
-                log.info("To configure a CD Pipeline go to: " + URLUtils.pathJoin(url, "/forge/command/devops-edit"));
+            if (jenkinsfile.exists() && jenkinsfile.isFile()) {
+                log.info("To configure a CD Pipeline go to: " + url);
             }
         }
     }
 
     private String getGogsURL(KubernetesClient kubernetes, String namespace) throws MojoExecutionException {
+      try {
         Endpoints endpoints = kubernetes.endpoints().inNamespace(namespace).withName(ServiceNames.GOGS).get();
         int runningEndpoints = 0;
         if (endpoints != null) {
-            List<EndpointSubset> subsets = endpoints.getSubsets();
-            for (EndpointSubset subset : subsets) {
-                List<EndpointAddress> addresses = subset.getAddresses();
-                if (addresses != null) {
-                    runningEndpoints += addresses.size();
-                }
+          List<EndpointSubset> subsets = endpoints.getSubsets();
+          for (EndpointSubset subset : subsets) {
+            List<EndpointAddress> addresses = subset.getAddresses();
+            if (addresses != null) {
+              runningEndpoints += addresses.size();
             }
+          }
         }
         if (runningEndpoints == 0) {
-            log.warn("No running endpoints for service %s in namespace %s. " +
-                     "Please run the `gogs` or the `cd-pipeline` application in the fabric8 console.",
-                    ServiceNames.GOGS, namespace);
-            throw new MojoExecutionException("No service " + ServiceNames.GOGS + " running in namespace " + namespace);
+          return null;
         }
         log.info("Running %s endpoints of %s in namespace %s", runningEndpoints, ServiceNames.GOGS, namespace);
+
         return KubernetesHelper.getServiceURL(kubernetes, ServiceNames.GOGS, namespace, "http", true);
+      } catch (Exception e) {
+        String errorMessage = e.getMessage();
+        if (errorMessage.contains(String.format("No service gogs running in namespace %s", namespace))) {
+          log.info("Gogs service does not exists, defaulting to GitHub");
+          return null;
+        } else {
+          throw new MojoExecutionException(e.getMessage());
+        }
+      }
     }
 
     protected String getEntityMessage(Response response) throws IOException {
