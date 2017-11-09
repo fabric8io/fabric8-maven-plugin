@@ -278,8 +278,7 @@
       <dependency>
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-project-utils</artifactId>
-        <!-- FIXME: Currently Overriding, will be removed later once fabric8-components is updated globally -->
-        <version>3.0.8</version>
+        <version>${version.fabric8}</version>
       </dependency>
 
       <dependency>
