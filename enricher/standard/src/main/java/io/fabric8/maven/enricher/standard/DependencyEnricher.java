@@ -179,7 +179,7 @@ public class DependencyEnricher extends BaseEnricher {
     }
 
     public void filterAndAddItemsToBuilder(KubernetesListBuilder builder, List<HasMetadata> items) {
-        HashMap<KindAndName, Integer> aIndexMap = new HashMap<>();
+        Map<KindAndName, Integer> aIndexMap = new HashMap<>();
         int nItems = 0;
 
         // Populate map with existing items in the builder
