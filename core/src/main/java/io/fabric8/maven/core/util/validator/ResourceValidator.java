@@ -45,7 +45,7 @@ import java.util.*;
 
 public class ResourceValidator {
 
-    public static final String SCHEMA_JSON = "/k8-schema.json";
+    public static final String SCHEMA_JSON = "/schema/kube-validation-schema.json";
     private Logger log;
     private File resources[];
     private ResourceClassifier target = ResourceClassifier.KUBERNETES;
@@ -152,18 +152,13 @@ public class ResourceValidator {
         checkIfKindPropertyExists(kind);
         JsonSchemaFactory factory = new JsonSchemaFactory();
         JSONObject jsonSchema = getSchemaJson(schemaUrl);
-        try {
-            getResourceProperties(target.getValue(), kind, jsonSchema);
-        } catch (JSONException e) {
-            getResourceProperties(ResourceClassifier.KUBERNETES.getValue(), kind, jsonSchema);
-        }
+        getResourceProperties(kind, jsonSchema);
 
         return factory.getSchema(jsonSchema.toString());
     }
 
-    private void getResourceProperties(String provider, String kind, JSONObject jsonSchema) {
+    private void getResourceProperties(String kind, JSONObject jsonSchema) {
         jsonSchema.put("properties" , jsonSchema.getJSONObject("resources")
-                .getJSONObject(provider)
                 .getJSONObject(kind.replaceAll("\"", "").toLowerCase())
                 .getJSONObject("properties"));
     }

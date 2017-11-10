@@ -110,19 +110,6 @@
       <artifactId>json-path-assert</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>io.fabric8</groupId>
-      <artifactId>kubernetes-json-schema</artifactId>
-      <version>1.7.5</version>
-    </dependency>
-
-    <dependency>
-      <groupId>io.fabric8</groupId>
-      <artifactId>openshift-json-schema</artifactId>
-      <version>3.6.0</version>
-    </dependency>
-
-
   </dependencies>
 
   <build>
