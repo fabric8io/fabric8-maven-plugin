@@ -14,6 +14,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 
 ###3.5.34
 * Remove duplicate tenant repos from downstream version updates and add in tjenkins platform
+* Fix 1051: resource validation was slow due to online hosted schema. The fix uses the JSON schema from kubernetes-model project
 
 ### 3.3.0
 
