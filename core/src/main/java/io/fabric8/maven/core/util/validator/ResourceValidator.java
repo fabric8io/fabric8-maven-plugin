@@ -92,7 +92,7 @@ public class ResourceValidator {
      * @throws ConstraintViolationException
      * @throws IOException
      */
-    public int validate() throws IOException, URISyntaxException {
+    public int validate() throws ConstraintViolationException, IOException {
         for(File resource: resources) {
             if (resource.isFile() && resource.exists()) {
                 try {
@@ -165,7 +165,7 @@ public class ResourceValidator {
 
     private void checkIfKindPropertyExists(String kind) {
         if(kind == null) {
-            throw new JSONException("Invalid kind of resource or \'kind\' is missing from resource definition");
+            throw new JSONException("Invalid kind of resource or 'kind' is missing from resource definition");
         }
     }
 
