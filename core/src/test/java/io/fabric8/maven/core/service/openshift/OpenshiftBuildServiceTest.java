@@ -282,8 +282,11 @@ public class OpenshiftBuildServiceTest {
 
         mockServer.expect().post().withPath("/oapi/v1/namespaces/test/imagestreams").andReturn(201, imageStream).once();
 
-        mockServer.expect().post().withPath("/oapi/v1/namespaces/test/buildconfigs/" + projectName + config.getS2iBuildNameSuffix() + "/instantiatebinary?commit=").andReply(collector.record
-                ("pushed").andReturn(201, imageStream)).once();
+        mockServer.expect().post().withPath("/oapi/v1/namespaces/test/buildconfigs/" + projectName + config.getS2iBuildNameSuffix() + "/instantiatebinary?commit=")
+                .andReply(
+                        collector.record("pushed")
+                                .andReturn(201, imageStream))
+                .once();
 
         mockServer.expect().get().withPath("/oapi/v1/namespaces/test/builds").andReply(collector.record("check-build").andReturn(200, builds)).always();
         mockServer.expect().get().withPath("/oapi/v1/namespaces/test/builds?labelSelector=openshift.io/build-config.name%3D" + projectName + config.getS2iBuildNameSuffix()).andReturn(200, builds)

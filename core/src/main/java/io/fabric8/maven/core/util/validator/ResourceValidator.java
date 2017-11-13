@@ -23,6 +23,8 @@ import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
 import io.fabric8.maven.core.util.ResourceClassifier;
 import io.fabric8.maven.docker.util.Logger;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -32,12 +34,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.*;
 
 /**
  * Validates Kubernetes/OpenShift resource descriptors using JSON schema validation method.
@@ -46,13 +45,11 @@ import java.util.Set;
 
 public class ResourceValidator {
 
-    // TODO: Locate URL under fabric8 repositories
-    private final static String jsonSchemaPath = "https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s-standalone/%s.json";
-
+    public static final String SCHEMA_JSON = "/schema/kube-validation-schema.json";
     private Logger log;
     private File resources[];
     private ResourceClassifier target = ResourceClassifier.KUBERNETES;
-    private List<IgnoreRule> ignorePaths = new ArrayList<>();
+    private List<ValidationRule> ignoreValidationRules = new ArrayList<>();
 
     /**
      * @param inputFile File/Directory path of resource descriptors
@@ -83,14 +80,8 @@ public class ResourceValidator {
      * e.g. In DeploymentConfig(https://docs.openshift.com/container-platform/3.6/rest_api/openshift_v1.html#v1-deploymentconfig) model 'status' field is marked as
      * required.
      */
-    // TODO: Need to improve ignore rules as these are quite generic
     private void setupIgnoreRules(ResourceClassifier target) {
-        if(ResourceClassifier.OPENSHIFT.equals(target)) {
-            ignorePaths.add(new IgnoreRule("$.spec.test", IgnoreRule.REQUIRED));
-            ignorePaths.add(new IgnoreRule("$.status", IgnoreRule.REQUIRED));
-            ignorePaths.add(new IgnoreRule("$.spec.host", IgnoreRule.REQUIRED));
-            ignorePaths.add(new IgnoreRule("$.spec.to.weight", IgnoreRule.REQUIRED));
-        }
+        ignoreValidationRules.add(new IgnorePortValidationRule(IgnorePortValidationRule.TYPE));
     }
 
     /**
@@ -102,14 +93,20 @@ public class ResourceValidator {
      * @throws IOException
      */
     public int validate() throws ConstraintViolationException, IOException {
-        for (File resource : resources) {
+        for(File resource: resources) {
             if (resource.isFile() && resource.exists()) {
-                log.info("validating %s resource", resource.toString());
-                JsonNode resourceNode = geFileContent(resource);
-                JsonSchema schema = getJsonSchema(prepareSchemaUrl(resourceNode));
-
-                Set<ValidationMessage> errors = schema.validate(resourceNode);
-                processErrors(errors, resource);
+                try {
+                    log.info("validating %s resource", resource.toString());
+                    JsonNode inputSpecNode = geFileContent(resource);
+                    String kind = inputSpecNode.get("kind").toString();
+                    JsonSchema schema = getJsonSchema(prepareSchemaUrl(SCHEMA_JSON), kind);
+                    Set<ValidationMessage> errors = schema.validate(inputSpecNode);
+                    processErrors(errors, resource);
+                } catch (JSONException e) {
+                    throw new ConstraintViolationException(e.getMessage(), new HashSet<ConstraintViolationImpl>());
+                } catch (URISyntaxException e) {
+                    throw new IOException(e);
+                }
             }
         }
 
@@ -119,7 +116,7 @@ public class ResourceValidator {
     private void processErrors(Set<ValidationMessage> errors, File resource) {
         Set<ConstraintViolationImpl> constraintViolations = new HashSet<>();
         for (ValidationMessage errorMsg: errors) {
-            if(!ignoreError(ignorePaths, errorMsg))
+            if(!ignoreError(errorMsg))
                 constraintViolations.add(new ConstraintViolationImpl(errorMsg));
         }
 
@@ -128,9 +125,9 @@ public class ResourceValidator {
         }
     }
 
-    private boolean ignoreError(List<IgnoreRule> ignorePaths, ValidationMessage errorMsg) {
-        for (IgnoreRule rule : ignorePaths) {
-            if(errorMsg.getMessage().contains(rule.getPath()) && errorMsg.getType().equalsIgnoreCase(rule.getType())) {
+    private boolean ignoreError(ValidationMessage errorMsg) {
+        for (ValidationRule rule : ignoreValidationRules) {
+            if(rule.ignore(errorMsg)) {
                 return  true;
             }
         }
@@ -151,13 +148,29 @@ public class ResourceValidator {
         return  validationError.toString();
     }
 
-    private JsonSchema getJsonSchema(String schemaUrl) throws MalformedURLException {
+    private JsonSchema getJsonSchema(URI schemaUrl, String kind) throws IOException {
+        checkIfKindPropertyExists(kind);
         JsonSchemaFactory factory = new JsonSchemaFactory();
-        return factory.getSchema(new URL(schemaUrl));
+        JSONObject jsonSchema = getSchemaJson(schemaUrl);
+        getResourceProperties(kind, jsonSchema);
+
+        return factory.getSchema(jsonSchema.toString());
     }
 
-    private String prepareSchemaUrl(JsonNode resourceNode) {
-        return String.format(jsonSchemaPath, target, "master", resourceNode.get("kind").toString().toLowerCase()).replace("\"", "");
+    private void getResourceProperties(String kind, JSONObject jsonSchema) {
+        jsonSchema.put("properties" , jsonSchema.getJSONObject("resources")
+                .getJSONObject(kind.replaceAll("\"", "").toLowerCase())
+                .getJSONObject("properties"));
+    }
+
+    private void checkIfKindPropertyExists(String kind) {
+        if(kind == null) {
+            throw new JSONException("Invalid kind of resource or 'kind' is missing from resource definition");
+        }
+    }
+
+    private URI prepareSchemaUrl(String schemaFile) throws URISyntaxException {
+        return getClass().getResource(schemaFile).toURI();
     }
 
     private JsonNode geFileContent(File file) throws IOException {
@@ -165,6 +178,14 @@ public class ResourceValidator {
             ObjectMapper jsonMapper = new ObjectMapper(new YAMLFactory());
             return jsonMapper.readTree(resourceStream);
         }
+    }
+
+    public JSONObject getSchemaJson(URI schemaUrl) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        String rootNode = objectMapper.readValue(schemaUrl.toURL(), JsonNode.class).toString();
+        JSONObject jsonObject = new JSONObject(rootNode);
+        jsonObject.remove("id");
+        return jsonObject;
     }
 
     private class ConstraintViolationImpl implements ConstraintViolation<ValidationMessage> {
