@@ -26,3 +26,4 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Changed the default directories which are picked up the `java-exec` generator to `src/main/fabric8-includes` for extra file to be added to a Docker image.
 * In the karaf and java-exec generator configuration `baseDir` changed to `targetDir` for specifying the target directory within the image where to put things into. This is in alignment with the docker-maven-plugin.
 * In the webapp-generator configuration `deploymentDir` changed to `targetDir` for consistencies sake.
+* Added a resources/ folder in enricher/standard/src/test/ directory to add some sample yaml and jar resource files for DependencyEnricherTest.

@@ -23,9 +23,11 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.KindAndName;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.Kind;
 import io.fabric8.openshift.api.model.Template;
 import io.fabric8.utils.Function;
 import org.apache.maven.artifact.Artifact;
@@ -36,13 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
 import static io.fabric8.utils.Lists.notNullList;
@@ -151,7 +147,7 @@ public class DependencyEnricher extends BaseEnricher {
                 return null;
             }
         });
-        builder.addToItems(kubernetesItems.toArray(new HasMetadata[kubernetesItems.size()]));
+        filterAndAddItemsToBuilder(builder, kubernetesItems);
 
         processArtifactSetResources(this.openshiftDependencyArtifacts, new Function<List<HasMetadata>, Void>() {
             @Override
@@ -180,6 +176,32 @@ public class DependencyEnricher extends BaseEnricher {
             }
         }
 
+    }
+
+    public void filterAndAddItemsToBuilder(KubernetesListBuilder builder, List<HasMetadata> items) {
+        Map<KindAndName, Integer> aIndexMap = new HashMap<>();
+        int nItems = 0;
+
+        // Populate map with existing items in the builder
+        for(int index = 0; index < builder.getItems().size(); index++, nItems++) {
+            HasMetadata aItem = builder.getItems().get(index);
+            KindAndName aKey = new KindAndName(aItem);
+            aIndexMap.put(aKey, index);
+        }
+
+        for(HasMetadata item : items) {
+            KindAndName aKey = new KindAndName(item);
+
+            if(aIndexMap.containsKey(aKey)) { // Merge the override fragments, and remove duplicate
+                HasMetadata duplicateItem = builder.getItems().get(aIndexMap.get(aKey));
+                item = KubernetesResourceUtil.mergeResources(item, duplicateItem, log, false);
+                builder.setToItems(aIndexMap.get(aKey), item);
+            }
+            else {
+                aIndexMap.put(aKey, nItems++);
+                builder.addToItems(item);
+            }
+        }
     }
 
     private void processArtifactSetResources(Set<URL> artifactSet, Function<List<HasMetadata>, Void> function) {
