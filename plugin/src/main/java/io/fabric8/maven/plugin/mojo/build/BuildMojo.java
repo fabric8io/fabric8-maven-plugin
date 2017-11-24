@@ -17,6 +17,7 @@
 package io.fabric8.maven.plugin.mojo.build;
 
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -106,8 +107,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
     private File resourceDir;
 
-    @Parameter(property = "fabric8.skip.build.pom", defaultValue = "true")
-    private boolean skipBuildPom;
+    @Parameter(property = "fabric8.skip.build.pom")
+    private Boolean skipBuildPom;
 
     /**
      * Whether to perform a Kubernetes build (i.e. against a vanilla Docker daemon) or
@@ -200,8 +201,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-        if (project != null && skipBuildPom && Objects.equals("pom", project.getPackaging())) {
-            getLog().debug("Disabling docker build for pom packaging");
+        if (shouldSkipBecauseOfPomPackaging()) {
+            getLog().info("Disabling docker build for pom packaging");
             return;
         }
         if (getResolvedImages().size() == 0) {
@@ -222,6 +223,24 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         super.executeInternal(hub);
 
         fabric8ServiceHub.getBuildService().postProcess(getBuildServiceConfig());
+    }
+
+    private boolean shouldSkipBecauseOfPomPackaging() {
+        if (!Objects.equals("pom", project.getPackaging())) {
+            // No pom packaging
+            return false;
+        }
+        if (skipBuildPom != null) {
+            // If configured take the config option
+            return skipBuildPom;
+        }
+        // Not specified: Skip if no image with build configu configured, otherwise don't skip
+        for (ImageConfiguration image : getResolvedImages()) {
+            if (image.getBuildConfiguration() != null) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
