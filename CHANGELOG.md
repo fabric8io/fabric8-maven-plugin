@@ -15,6 +15,8 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 ###3.5.34
 * Remove duplicate tenant repos from downstream version updates and add in tjenkins platform
 * Fix 1051: resource validation was slow due to online hosted schema. The fix uses the JSON schema from kubernetes-model project
+* Fix 1062: Add a filter to avoid duplicates while generating kubernetes template(picking the local generated resource ahead of any dependency). Added a resources/ folder in enricher/standard/src/test/ directory to add some sample yaml and jar resource files for DependencyEnricherTest.
+* Fix 1042: Added a fabric8.build.switchToDeployment option to switch to Deployments rather than DeploymentConfig provided ImageStreams are not used on OpenShift. If value is set to true then fabric8-maven-plugin would switch to deployments, default value is false.
 
 ### 3.3.0
 
@@ -26,4 +28,3 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Changed the default directories which are picked up the `java-exec` generator to `src/main/fabric8-includes` for extra file to be added to a Docker image.
 * In the karaf and java-exec generator configuration `baseDir` changed to `targetDir` for specifying the target directory within the image where to put things into. This is in alignment with the docker-maven-plugin.
 * In the webapp-generator configuration `deploymentDir` changed to `targetDir` for consistencies sake.
-* Added a resources/ folder in enricher/standard/src/test/ directory to add some sample yaml and jar resource files for DependencyEnricherTest.

@@ -177,4 +177,8 @@ Resource goal also validates the generated resource descriptors using API specif
 | *fabric8.failOnValidationError*
 | If value is set to `true` then any validation error will block the plugin execution. A warning will be printed otherwise.
 | false
+
+| *fabric8.build.switchToDeployment*
+| If value is set to `true` then fabric8-maven-plugin would switch to Deployments rather than DeploymentConfig when not using ImageStreams on Openshift.
+| false
 |===
