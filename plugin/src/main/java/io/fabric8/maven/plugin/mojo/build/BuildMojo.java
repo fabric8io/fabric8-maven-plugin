@@ -17,7 +17,6 @@
 package io.fabric8.maven.plugin.mojo.build;
 
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -47,7 +46,6 @@ import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
