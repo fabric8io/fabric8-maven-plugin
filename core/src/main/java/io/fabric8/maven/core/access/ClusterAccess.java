@@ -37,23 +37,35 @@ public class ClusterAccess {
 
     private String namespace;
 
-    public ClusterAccess(String namespace) {
-        this.namespace = namespace;
+    private KubernetesClient client;
 
-        if (Strings.isNullOrBlank(this.namespace)) {
-            this.namespace = KubernetesHelper.defaultNamespace();
-        }
-        if (Strings.isNullOrBlank(this.namespace)) {
-            this.namespace = DEFAULT_NAMESPACE;
-        }
+    public ClusterAccess(String namespace) {
+        this.namespace = setNamespace(namespace);
+        this.client = null;
     }
 
-    public KubernetesClient createDefaultClient(Logger log) {
+    public String setNamespace(String namespace){
+        String ns=namespace;
+        if (Strings.isNullOrBlank(ns)) {
+            ns = KubernetesHelper.defaultNamespace();
+        }
+        if (Strings.isNullOrBlank(ns)) {
+            ns = DEFAULT_NAMESPACE;
+        }
+        return ns;
+    }
+
+    public ClusterAccess(String namespace, KubernetesClient client){
+        this.namespace = setNamespace(namespace);
+        this.client = client;
+    }
+
+    public <T extends KubernetesClient> T createDefaultClient(Logger log) {
         if (isOpenShift(log)) {
-            return createOpenShiftClient();
+            return (T) createOpenShiftClient();
         }
 
-        return createKubernetesClient();
+        return (T) createKubernetesClient();
     }
 
     public KubernetesClient createKubernetesClient() {
@@ -79,15 +91,24 @@ public class ClusterAccess {
      */
     public boolean isOpenShiftImageStream(Logger log) {
         if (isOpenShift(log)) {
-            OpenShiftClient openShiftClient = createOpenShiftClient();
-            return openShiftClient.supportsOpenShiftAPIGroup(OpenShiftAPIGroups.IMAGE);
+            if (this.client == null) {
+                OpenShiftClient openShiftClient = createOpenShiftClient();
+                return openShiftClient.supportsOpenShiftAPIGroup(OpenShiftAPIGroups.IMAGE);
+            }
+            else{
+                OpenShiftClient openShiftClient = (OpenShiftClient)this.client;
+                return openShiftClient.supportsOpenShiftAPIGroup(OpenShiftAPIGroups.IMAGE);
+            }
         }
         return false;
     }
 
     public boolean isOpenShift(Logger log) {
         try {
-            return KubernetesHelper.isOpenShift(createKubernetesClient());
+            if(this.client==null)
+                return KubernetesHelper.isOpenShift(createKubernetesClient());
+            else
+                return KubernetesHelper.isOpenShift(this.client);
         } catch (KubernetesClientException exp) {
             Throwable cause = exp.getCause();
             String prefix = cause instanceof UnknownHostException ? "Unknown host " : "";

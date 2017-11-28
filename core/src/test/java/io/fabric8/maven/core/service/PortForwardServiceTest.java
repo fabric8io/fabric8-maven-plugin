@@ -39,7 +39,6 @@ import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
 
 @RunWith(JMockit.class)
-@Ignore("Doesn't work because of problems in MockWebserver")
 public class PortForwardServiceTest {
 
     @Mocked
@@ -83,12 +82,17 @@ public class PortForwardServiceTest {
 
         mockServer.expect().get().withPath("/api/v1/namespaces/test/pods?labelSelector=mykey%3Dmyvalue").andReturn(200, pods1).always();
         mockServer.expect().get().withPath("/api/v1/namespaces/test/pods").andReturn(200, pods1).always();
-        mockServer.expect().get().withPath("/api/v1/namespaces/test/pods?resourceVersion=1&watch=true")
+        mockServer.expect().get().withPath("/api/v1/namespaces/test/pods?labelSelector=mykey%3Dmyvalue&watch=true")
                 .andUpgradeToWebSocket().open()
                 .waitFor(1000)
                 .andEmit(new WatchEvent(pod1, "MODIFIED"))
                 .done().always();
 
+        mockServer.expect().get().withPath("/api/v1/namespaces/test/pods?resourceVersion=1&watch=true")
+                .andUpgradeToWebSocket().open()
+                .waitFor(1000)
+                .andEmit(new WatchEvent(pod1, "MODIFIED"))
+                .done().always();
 
         OpenShiftClient client = mockServer.createOpenShiftClient();
         PortForwardService service = new PortForwardService(clientToolsService, logger, client) {
