@@ -1,4 +1,4 @@
-package jar;
+package io.fabric8.maven.rt;
 
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.OpenShiftClient;

@@ -1,4 +1,4 @@
-package jar;
+package io.fabric8.maven.rt;
 
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;

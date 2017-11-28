@@ -1,4 +1,4 @@
-package jar;
+package io.fabric8.maven.rt;
 
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;

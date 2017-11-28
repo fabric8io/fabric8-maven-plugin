@@ -52,6 +52,7 @@
     <module>watcher/api</module>
     <module>watcher/standard</module>
     <module>it</module>
+    <module>rt</module>
   </modules>
 
   <scm>
