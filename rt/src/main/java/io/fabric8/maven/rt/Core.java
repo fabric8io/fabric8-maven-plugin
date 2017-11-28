@@ -1,5 +1,10 @@
 package io.fabric8.maven.rt;
 
+import io.fabric8.kubernetes.client.ConfigBuilder;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.openshift.client.DefaultOpenShiftClient;
+import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
@@ -23,6 +28,8 @@ public class Core
 
     private final String fabric8PluginArtifactId = "fabric8-maven-plugin";
 
+    public KubernetesClient kubernetesClient;
+
     private GitCloner gitCloner;
 
     private Model getCurrentProjectModel() throws Exception {
@@ -37,9 +44,9 @@ public class Core
     }
 
     private void modifyPomFileToProjectVersion(Repository aRepository) throws Exception {
-        MavenXpp3Reader reader = new MavenXpp3Reader();
-        String baseDir = aRepository.getWorkTree().getAbsolutePath();
-        Model model = reader.read(new FileInputStream(new File(baseDir, "/pom.xml")));
+        // Read Maven model from the project pom file
+        File pomFile = new File(aRepository.getWorkTree().getAbsolutePath(), "/pom.xml");
+        Model model = readPomModelFromFile(pomFile);
 
         Map<String, Plugin> aStringToPluginMap = model.getBuild().getPluginsAsMap();
         List<Profile> profiles =  model.getProfiles();
@@ -55,9 +62,18 @@ public class Core
             }
         }
 
+        // Write back the updated model to the pom file
+        writePomModelToFile(pomFile, model);
+    }
+
+    public Model readPomModelFromFile(File aFileObj) throws Exception {
+        MavenXpp3Reader reader = new MavenXpp3Reader();
+        return reader.read(new FileInputStream(aFileObj));
+    }
+
+    public void writePomModelToFile(File aFileObj, Model model) throws Exception {
         MavenXpp3Writer writer = new MavenXpp3Writer();
-        writer.write(new FileOutputStream(new File(baseDir, "/pom.xml")), model);
-        model.getArtifactId();
+        writer.write(new FileOutputStream(aFileObj), model);
     }
 
     protected void updateSourceCode(Repository repository) throws Exception {
@@ -77,6 +93,7 @@ public class Core
     }
 
     protected Repository setupSampleTestRepository(String repositoryUrl) throws Exception {
+        kubernetesClient = new DefaultKubernetesClient(new ConfigBuilder().build());
         Repository repository = cloneRepositoryUsingHttp(repositoryUrl);
         modifyPomFileToProjectVersion(repository);
         return repository;
@@ -94,5 +111,7 @@ public class Core
 
     protected void cleanSampleTestRepository() throws Exception {
         gitCloner.removeClone();
+        kubernetesClient.pods().inNamespace(kubernetesClient.getNamespace()).withLabel("app", getCurrentProjectModel().getArtifactId()).delete();
+        kubernetesClient.close();
     }
 }
