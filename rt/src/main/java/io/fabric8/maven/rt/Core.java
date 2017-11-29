@@ -19,6 +19,10 @@ package io.fabric8.maven.rt;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import org.apache.http.HttpStatus;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
@@ -26,7 +30,6 @@ import org.apache.maven.model.Profile;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.arquillian.smart.testing.rules.git.GitCloner;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.jgit.lib.Repository;
 import org.jboss.shrinkwrap.resolver.api.maven.embedded.BuiltProject;
 import org.jboss.shrinkwrap.resolver.api.maven.embedded.EmbeddedMaven;
@@ -47,38 +50,37 @@ public class Core {
 
     private GitCloner gitCloner;
 
-    private Model getCurrentProjectModel() throws Exception {
-        MavenXpp3Reader reader = new MavenXpp3Reader();
-        Model model = reader.read(new FileReader("pom.xml"));
-        return model;
-    }
-
     private Repository cloneRepositoryUsingHttp(String repositoryUrl) throws Exception {
         gitCloner = new GitCloner(repositoryUrl);
         return gitCloner.cloneRepositoryToTempFolder();
     }
 
     private void modifyPomFileToProjectVersion(Repository aRepository) throws Exception {
-        // Read Maven model from the project pom file
-        File pomFile = new File(aRepository.getWorkTree().getAbsolutePath(), "/pom.xml");
-        Model model = readPomModelFromFile(pomFile);
+        /**
+         * Read Maven model from the project pom file(Here the pom file is not the test repository is cloned
+         * for the test suite. It refers to the rt/ project and fetches the current version of fabric8-maven-plugin
+         * (any SNAPSHOT version) and updates that accordingly in the sample cloned project's pom.
+         */
+        File clonedRepositoryPomFile = new File(aRepository.getWorkTree().getAbsolutePath(), "/pom.xml");
+        String fmpCurrentVersion = readPomModelFromFile(new File("pom.xml")).getVersion();
+        Model model = readPomModelFromFile(clonedRepositoryPomFile);
 
         Map<String, Plugin> aStringToPluginMap = model.getBuild().getPluginsAsMap();
         List<Profile> profiles = model.getProfiles();
         if (aStringToPluginMap.get(fabric8PluginGroupId + ":" + fabric8PluginArtifactId) != null) {
-            aStringToPluginMap.get(fabric8PluginGroupId + ":" + fabric8PluginArtifactId).setVersion(getCurrentProjectModel().getVersion());
+            aStringToPluginMap.get(fabric8PluginGroupId + ":" + fabric8PluginArtifactId).setVersion(fmpCurrentVersion);
         } else {
             for (Profile profile : profiles) {
                 if (profile.getBuild() != null && profile.getBuild().getPluginsAsMap().get(fabric8PluginGroupId + ":" + fabric8PluginArtifactId) != null) {
                     profile.getBuild().getPluginsAsMap()
                             .get(fabric8PluginGroupId + ":" + fabric8PluginArtifactId)
-                            .setVersion(getCurrentProjectModel().getVersion());
+                            .setVersion(fmpCurrentVersion);
                 }
             }
         }
 
         // Write back the updated model to the pom file
-        writePomModelToFile(pomFile, model);
+        writePomModelToFile(clonedRepositoryPomFile, model);
     }
 
     public Model readPomModelFromFile(File aFileObj) throws Exception {
@@ -128,5 +130,20 @@ public class Core {
     protected void cleanSampleTestRepository() throws Exception {
         gitCloner.removeClone();
         openShiftClient.close();
+    }
+
+    /**
+     * Just makes a basic GET request to the url provided as parameter and returns a boolean
+     * if response code in 200 OK
+     *
+     * @param hostUrl
+     * @return
+     * @throws Exception
+     */
+    public boolean checkValidHostRoute(String hostUrl) throws Exception {
+        OkHttpClient okHttpClient = new OkHttpClient();
+        Request request = new Request.Builder().url(hostUrl).get().build();
+        Response response = okHttpClient.newCall(request).execute();
+        return response.code() == HttpStatus.SC_OK;
     }
 }
