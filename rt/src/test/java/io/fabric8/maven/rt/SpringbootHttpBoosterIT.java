@@ -16,15 +16,8 @@
 
 package io.fabric8.maven.rt;
 
-import io.fabric8.kubernetes.api.model.DoneablePod;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.client.ConfigBuilder;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
-import io.fabric8.kubernetes.client.dsl.PodResource;
-import io.fabric8.openshift.client.DefaultOpenShiftClient;
-import io.fabric8.openshift.client.OpenShiftClient;
+import io.fabric8.openshift.api.model.DeploymentConfig;
+import io.fabric8.openshift.api.model.DeploymentConfigList;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.codehaus.plexus.util.xml.Xpp3DomBuilder;
 import org.apache.maven.model.Model;
@@ -34,7 +27,6 @@ import org.testng.annotations.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.util.concurrent.TimeUnit;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
@@ -70,21 +62,16 @@ public class SpringbootHttpBoosterIT extends Core {
         // redeploy and assert
         deployAndAssert(testRepository);
         // check for redeployment specific scenario
-        System.out.println("Waiting for pods to start...");
-        TimeUnit.SECONDS.sleep(5);
-
-        assert checkPodsForAnnotation(kubernetesClient, ANNOTATION_KEY);
+        assert checkDeploymentsForAnnotation();
     }
 
     private void deployAndAssert(Repository testRepository) {
         runEmbeddedMavenBuild(testRepository, "fabric8:deploy", "openshift");
 
-        OpenShiftClient openShiftClient = new DefaultOpenShiftClient(new ConfigBuilder().build());
         assertThat(openShiftClient).deployment("spring-boot-rest-http");
         assertThat(openShiftClient).service("spring-boot-rest-http");
 
         RouteAssert.assertRoute(openShiftClient, "spring-boot-rest-http");
-        openShiftClient.close();
     }
 
     private void addRedeploymentAnnotations(Repository testRepository) throws Exception {
@@ -119,16 +106,13 @@ public class SpringbootHttpBoosterIT extends Core {
         writePomModelToFile(pomFile, model);
     }
 
-    private boolean checkPodsForAnnotation(KubernetesClient client, String annotatedElemKey) {
-        NonNamespaceOperation<Pod, PodList, DoneablePod, PodResource<Pod, DoneablePod>> aNonNamespace = client.pods().inNamespace(client.getNamespace());
-        PodList aPodList = aNonNamespace.list();
-
-        for (Pod aPod : aPodList.getItems()) {
-            System.out.println(aPod.getMetadata().getAnnotations().toString());
-            if (aPod.getMetadata().getAnnotations().containsKey(annotatedElemKey)) {
+    private boolean checkDeploymentsForAnnotation() {
+        DeploymentConfigList deploymentConfigs = openShiftClient.deploymentConfigs().inNamespace(testSuiteNamespace).list();
+        for(DeploymentConfig aDeploymentConfig : deploymentConfigs.getItems()) {
+            if(aDeploymentConfig.getMetadata().getAnnotations().containsKey(ANNOTATION_KEY))
                 return true;
-            }
         }
+
         return false;
     }
 

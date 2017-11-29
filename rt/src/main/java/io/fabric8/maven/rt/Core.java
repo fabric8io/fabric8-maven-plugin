@@ -17,8 +17,6 @@
 package io.fabric8.maven.rt;
 
 import io.fabric8.kubernetes.client.ConfigBuilder;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.maven.model.Dependency;
@@ -43,7 +41,9 @@ public class Core {
 
     private final String fabric8PluginArtifactId = "fabric8-maven-plugin";
 
-    public KubernetesClient kubernetesClient;
+    public String testSuiteNamespace;
+
+    public OpenShiftClient openShiftClient;
 
     private GitCloner gitCloner;
 
@@ -108,7 +108,8 @@ public class Core {
     }
 
     protected Repository setupSampleTestRepository(String repositoryUrl) throws Exception {
-        kubernetesClient = new DefaultKubernetesClient(new ConfigBuilder().build());
+        openShiftClient = new DefaultOpenShiftClient(new ConfigBuilder().build());
+        testSuiteNamespace = openShiftClient.getNamespace();
         Repository repository = cloneRepositoryUsingHttp(repositoryUrl);
         modifyPomFileToProjectVersion(repository);
         return repository;
@@ -126,7 +127,6 @@ public class Core {
 
     protected void cleanSampleTestRepository() throws Exception {
         gitCloner.removeClone();
-        kubernetesClient.pods().inNamespace(kubernetesClient.getNamespace()).withLabel("app", getCurrentProjectModel().getArtifactId()).delete();
-        kubernetesClient.close();
+        openShiftClient.close();
     }
 }
