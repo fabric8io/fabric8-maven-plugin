@@ -59,8 +59,7 @@ public class FatJarDetector {
             long maxSize = 0;
             for (String jarOrWar : jarOrWars) {
                 File archiveFile = new File(directory, jarOrWar);
-                try {
-                    JarFile archive = new JarFile(archiveFile);
+                try (JarFile archive = new JarFile(archiveFile)){
                     Manifest mf = archive.getManifest();
                     Attributes mainAttributes = mf.getMainAttributes();
                     if (mainAttributes != null) {
