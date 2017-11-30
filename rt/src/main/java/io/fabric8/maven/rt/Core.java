@@ -22,7 +22,6 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.apache.http.HttpStatus;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
@@ -46,6 +45,8 @@ public class Core {
 
     public String testSuiteNamespace;
 
+    public String TESTSUITE_REPOSITORY_ARTIFACT_ID;
+
     public OpenShiftClient openShiftClient;
 
     private GitCloner gitCloner;
@@ -55,15 +56,16 @@ public class Core {
         return gitCloner.cloneRepositoryToTempFolder();
     }
 
-    private void modifyPomFileToProjectVersion(Repository aRepository) throws Exception {
+    private void modifyPomFileToProjectVersion(Repository aRepository, String relativePomPath) throws Exception {
         /**
          * Read Maven model from the project pom file(Here the pom file is not the test repository is cloned
          * for the test suite. It refers to the rt/ project and fetches the current version of fabric8-maven-plugin
          * (any SNAPSHOT version) and updates that accordingly in the sample cloned project's pom.
          */
-        File clonedRepositoryPomFile = new File(aRepository.getWorkTree().getAbsolutePath(), "/pom.xml");
+        File clonedRepositoryPomFile = new File(aRepository.getWorkTree().getAbsolutePath(), relativePomPath);
         String fmpCurrentVersion = readPomModelFromFile(new File("pom.xml")).getVersion();
         Model model = readPomModelFromFile(clonedRepositoryPomFile);
+        TESTSUITE_REPOSITORY_ARTIFACT_ID = model.getArtifactId();
 
         Map<String, Plugin> aStringToPluginMap = model.getBuild().getPluginsAsMap();
         List<Profile> profiles = model.getProfiles();
@@ -83,7 +85,7 @@ public class Core {
         writePomModelToFile(clonedRepositoryPomFile, model);
     }
 
-    public Model readPomModelFromFile(File aFileObj) throws Exception {
+    public static Model readPomModelFromFile(File aFileObj) throws Exception {
         MavenXpp3Reader reader = new MavenXpp3Reader();
         return reader.read(new FileInputStream(aFileObj));
     }
@@ -93,10 +95,10 @@ public class Core {
         writer.write(new FileOutputStream(aFileObj), model);
     }
 
-    protected void updateSourceCode(Repository repository) throws Exception {
+    protected void updateSourceCode(Repository repository, String relativePomPath) throws Exception {
         MavenXpp3Reader reader = new MavenXpp3Reader();
         String baseDir = repository.getWorkTree().getAbsolutePath();
-        Model model = reader.read(new FileInputStream(new File(baseDir, "/pom.xml")));
+        Model model = reader.read(new FileInputStream(new File(baseDir, relativePomPath)));
 
         Dependency dependency = new Dependency();
         dependency.setGroupId("org.apache.commons");
@@ -105,15 +107,15 @@ public class Core {
         model.getDependencies().add(dependency);
 
         MavenXpp3Writer writer = new MavenXpp3Writer();
-        writer.write(new FileOutputStream(new File(baseDir, "/pom.xml")), model);
+        writer.write(new FileOutputStream(new File(baseDir, relativePomPath)), model);
         model.getArtifactId();
     }
 
-    protected Repository setupSampleTestRepository(String repositoryUrl) throws Exception {
+    protected Repository setupSampleTestRepository(String repositoryUrl, String relativePomPath) throws Exception {
         openShiftClient = new DefaultOpenShiftClient(new ConfigBuilder().build());
         testSuiteNamespace = openShiftClient.getNamespace();
         Repository repository = cloneRepositoryUsingHttp(repositoryUrl);
-        modifyPomFileToProjectVersion(repository);
+        modifyPomFileToProjectVersion(repository, relativePomPath);
         return repository;
     }
 
@@ -124,7 +126,7 @@ public class Core {
                 .setProfiles(profiles)
                 .build();
 
-        assert builtProject.getDefaultBuiltArchive() != null;
+        //assert builtProject.getDefaultBuiltArchive() != null;
     }
 
     protected void cleanSampleTestRepository() throws Exception {
@@ -133,17 +135,15 @@ public class Core {
     }
 
     /**
-     * Just makes a basic GET request to the url provided as parameter and returns a boolean
-     * if response code in 200 OK
+     * Just makes a basic GET request to the url provided as parameter and returns Response.
      *
      * @param hostUrl
      * @return
      * @throws Exception
      */
-    public boolean checkValidHostRoute(String hostUrl) throws Exception {
+    public Response makeHttpRequest(String hostUrl) throws Exception {
         OkHttpClient okHttpClient = new OkHttpClient();
         Request request = new Request.Builder().url(hostUrl).get().build();
-        Response response = okHttpClient.newCall(request).execute();
-        return response.code() == HttpStatus.SC_OK;
+        return okHttpClient.newCall(request).execute();
     }
 }
