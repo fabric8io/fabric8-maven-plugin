@@ -1,8 +1,5 @@
 #!/bin/sh
 
-OC_VERSION="v3.6.0"
-COMMIT_ID="c4dd4cf"
-
 #add insecure docker registry
 tmp=`mktemp`
 echo 'DOCKER_OPTS="$DOCKER_OPTS --insecure-registry 172.30.0.0/16"' > ${tmp}
