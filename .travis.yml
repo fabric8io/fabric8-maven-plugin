@@ -2,12 +2,32 @@
 # - Updating the Sonarqube stats when not on a PR
 # - Update Codecov (codecov.io) stats for every build
 # - Regenerate the docs when commit on master (but not for a PR)
+
+matrix:
+  include:
+    - env: OC_VERSION="v3.6.0" COMMIT_ID="c4dd4cf"
+    - env: OC_VERSION="v3.6.1" COMMIT_ID="008f2d5"
+
+sudo: enabled
+
 language: java
 jdk:
   - oraclejdk8
+
+services:
+  - docker
+
+cache:
+  directories:
+    - $HOME/.m2
+
+install: ./prepare-test-environment.sh
+
+before_script: ./mvnw install -DskipTests
+
 script:
   # Profile jacoco switches on jacoco coverages
-  - mvn test -B -Pjacoco
+  - mvn clean -Pjacoco clean install
    # Only build docs when commited on master and not a pull request.
    # See https://docs.travis-ci.com/user/environment-variables/#Default-Environment-Variables
    # for more details about Travis default vars
