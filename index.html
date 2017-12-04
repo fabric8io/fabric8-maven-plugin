@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.31,</span>
-<span id="revdate">2017-11-14</span>
+<span id="revdate">2017-12-04</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -1782,6 +1782,11 @@ the <code>src/main/fabric8/</code> folder.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>fabric8.failOnValidationError</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If value is set to <code>true</code> then any validation error will block the plugin execution. A warning will be printed otherwise.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>fabric8.build.switchToDeployment</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If value is set to <code>true</code> then fabric8-maven-plugin would switch to Deployments rather than DeploymentConfig when not using ImageStreams on Openshift.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
 </tr>
 </tbody>
@@ -6631,7 +6636,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.31<br>
-Last updated 2017-11-14 10:58:23 UTC
+Last updated 2017-12-04 05:24:59 UTC
 </div>
 </div>
 </body>
