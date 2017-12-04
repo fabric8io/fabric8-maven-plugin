@@ -17,11 +17,11 @@
 package io.fabric8.maven.rt;
 
 import io.fabric8.kubernetes.client.ConfigBuilder;
+import io.fabric8.openshift.api.model.Route;
+import io.fabric8.openshift.api.model.RouteList;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.*;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
@@ -32,6 +32,7 @@ import org.arquillian.smart.testing.rules.git.GitCloner;
 import org.eclipse.jgit.lib.Repository;
 import org.jboss.shrinkwrap.resolver.api.maven.embedded.BuiltProject;
 import org.jboss.shrinkwrap.resolver.api.maven.embedded.EmbeddedMaven;
+import org.json.JSONObject;
 
 import java.io.*;
 import java.util.List;
@@ -50,6 +51,20 @@ public class Core {
     public OpenShiftClient openShiftClient;
 
     private GitCloner gitCloner;
+
+    public enum HttpRequestType {
+        GET("GET"), POST("POST"), PUT("PUT"), DELETE("DELETE");
+
+        private String httpRequestType;
+
+        HttpRequestType(String aHttpRequestType) {
+            this.httpRequestType = aHttpRequestType;
+        }
+
+        public String getValue() {
+            return httpRequestType;
+        }
+    };
 
     private Repository cloneRepositoryUsingHttp(String repositoryUrl) throws Exception {
         gitCloner = new GitCloner(repositoryUrl);
@@ -134,6 +149,16 @@ public class Core {
         openShiftClient.close();
     }
 
+    public Route getApplicationRouteWithName(String name) {
+        RouteList aRouteList = openShiftClient.routes().inNamespace(testSuiteNamespace).list();
+        for (Route aRoute : aRouteList.getItems()) {
+            if (aRoute.getMetadata().getName().equals(name)) {
+                return aRoute;
+            }
+        }
+        return null;
+    }
+
     /**
      * Just makes a basic GET request to the url provided as parameter and returns Response.
      *
@@ -141,9 +166,39 @@ public class Core {
      * @return
      * @throws Exception
      */
-    public Response makeHttpRequest(String hostUrl) throws Exception {
+    public Response makeHttpRequest(HttpRequestType requestType, String hostUrl, String params) throws Exception {
         OkHttpClient okHttpClient = new OkHttpClient();
-        Request request = new Request.Builder().url(hostUrl).get().build();
+        MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+        params = (params == null ? new JSONObject().toString() : params);
+        Request request = null;
+        RequestBody requestBody = RequestBody.create(JSON, params);
+
+        switch (requestType.getValue()) {
+            case "GET":
+                request = new Request.Builder().url(hostUrl).get().build();
+                break;
+            case "POST":
+                request = new Request.Builder().url(hostUrl).post(requestBody).build();
+                break;
+            case "PUT":
+                request = new Request.Builder().url(hostUrl).put(requestBody).build();
+                break;
+            case "DELETE":
+                request = new Request.Builder().url(hostUrl).delete(requestBody).build();
+                break;
+        }
         return okHttpClient.newCall(request).execute();
+    }
+
+    public int exec(String command) throws Exception {
+        Process child = Runtime.getRuntime().exec(command);
+        child.waitFor();
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(child.getInputStream()));
+        String line = null;
+        while((line = reader.readLine()) != null) {
+            System.out.println(line);
+        }
+        return child.exitValue();
     }
 }

@@ -83,7 +83,7 @@ public class SpringbootHttpBoosterIT extends Core {
     }
 
     public void deployAndAssert(Repository testRepository, String buildGoal, String buildProfile) throws Exception {
-        String sampleProjectArtifactId = readPomModelFromFile(new File(testRepository.getWorkTree().getAbsolutePath(), "/pom.xml")).getArtifactId();
+        String sampleProjectArtifactId = readPomModelFromFile(new File(testRepository.getWorkTree().getAbsolutePath(), RELATIVE_POM_PATH)).getArtifactId();
         runEmbeddedMavenBuild(testRepository, buildGoal, buildProfile);
 
         assertThat(openShiftClient).deployment(sampleProjectArtifactId);
@@ -197,7 +197,7 @@ public class SpringbootHttpBoosterIT extends Core {
         if (applicationRoute != null) {
             hostRoute = applicationRoute.getSpec().getHost();
             if (hostRoute != null) {
-                assert makeHttpRequest("http://" + hostRoute).code() == HttpStatus.SC_OK;;
+                assert makeHttpRequest(HttpRequestType.GET,"http://" + hostRoute, null).code() == HttpStatus.SC_OK;;
             }
         } else {
             throw new AssertionError("[No route found for: " + TESTSUITE_REPOSITORY_ARTIFACT_ID + "]\n");

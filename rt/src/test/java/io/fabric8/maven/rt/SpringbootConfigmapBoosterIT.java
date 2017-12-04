@@ -1,3 +1,19 @@
+/*
+ * Copyright 2016 Red Hat, Inc.
+ *
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package io.fabric8.maven.rt;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -6,6 +22,8 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
+import io.fabric8.openshift.api.model.RoleBinding;
+import io.fabric8.openshift.api.model.RoleBindingBuilder;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteList;
 import okhttp3.Response;
@@ -38,6 +56,7 @@ public class SpringbootConfigmapBoosterIT extends Core {
     public void deploy_springboot_app_once() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH);
 
+        createViewRoleToServiceAccount();
         createConfigMapResource(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Hello World from a ConfigMap!");
         deployAndAssert(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
         // Check if the configmap's properties are accessible by the Application runnning in pod.
@@ -50,6 +69,7 @@ public class SpringbootConfigmapBoosterIT extends Core {
     public void redeploy_springboot_app() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH);
 
+        createViewRoleToServiceAccount();
         // 1. Deployment
         createConfigMapResource(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Hello World from a ConfigMap!");
         deployAndAssert(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
@@ -124,15 +144,28 @@ public class SpringbootConfigmapBoosterIT extends Core {
                 .done();
     }
 
-    public void createConfigMapResource(String name, String sampleApplicatoinProperty) {
-        openShiftClient.configMaps()
-                .inNamespace(testSuiteNamespace)
-                .createNew()
-                .withNewMetadata()
-                .withName(name)
-                .endMetadata()
-                .addToData("application.properties", sampleApplicatoinProperty)
-                .done();
+    public void createConfigMapResource(String name, String sampleApplicationProperty) {
+        if (openShiftClient.configMaps().inNamespace(testSuiteNamespace).withName(name).get() == null) {
+            openShiftClient.configMaps()
+                    .inNamespace(testSuiteNamespace)
+                    .createNew()
+                    .withNewMetadata()
+                    .withName(name)
+                    .endMetadata()
+                    .addToData("application.properties", sampleApplicationProperty)
+                    .done();
+        }
+    }
+
+    private void createViewRoleToServiceAccount() throws Exception {
+        exec("oc policy add-role-to-user view -z default");
+        /*
+        RoleBinding response = openShiftClient.roleBindings().createNew()
+                    .withNewMetadata().withName("view").endMetadata()
+                    .addToUserNames("default")
+                    .addNewSubject().withKind("ServiceAccount").withName("svcscct").endSubject()
+                    .done();
+        */
     }
 
     public boolean isCorrectResponseContent(Response response, String key, String value) throws Exception {
@@ -146,18 +179,8 @@ public class SpringbootConfigmapBoosterIT extends Core {
 
         Route applicationRoute = getApplicationRouteWithName(TESTSUITE_REPOSITORY_ARTIFACT_ID);
         String hostUrl = applicationRoute.getSpec().getHost() + testEndpoint;
-        Response response = makeHttpRequest("http://" + hostUrl);
+        Response response = makeHttpRequest(HttpRequestType.GET, "http://" + hostUrl, null);
         return isCorrectResponseContent(response, key, value);
-    }
-
-    private Route getApplicationRouteWithName(String name) {
-        RouteList aRouteList = openShiftClient.routes().inNamespace(testSuiteNamespace).list();
-        for (Route aRoute : aRouteList.getItems()) {
-            if (aRoute.getMetadata().getName().equals(name)) {
-                return aRoute;
-            }
-        }
-        return null;
     }
 
     @After
