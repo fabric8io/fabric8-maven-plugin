@@ -21,7 +21,7 @@ cache:
   directories:
     - $HOME/.m2
 
-install: ./prepare-test-environment.sh
+install: ./rt/src/main/resources/scripts/prepare-test-environment.sh
 
 before_script: ./mvnw install -DskipTests
 
