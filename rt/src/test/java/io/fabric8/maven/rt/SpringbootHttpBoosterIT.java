@@ -24,6 +24,7 @@ import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.openshift.api.model.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpStatus;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.codehaus.plexus.util.xml.Xpp3DomBuilder;
@@ -50,6 +51,8 @@ public class SpringbootHttpBoosterIT extends Core {
     public static final String FABRIC8_MAVEN_PLUGIN_KEY = "io.fabric8:fabric8-maven-plugin";
 
     public static final String ANNOTATION_KEY = "testKey", ANNOTATION_VALUE = "testValue";
+
+    public final String FMP_CONFIGURATION_FILE = "/fmp-plugin-config.xml";
 
     public final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy", EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
 
@@ -146,28 +149,11 @@ public class SpringbootHttpBoosterIT extends Core {
         File pomFile = new File(testRepository.getWorkTree().getAbsolutePath(), "/pom.xml");
         Model model = readPomModelFromFile(pomFile);
 
+        File pomFragment = new File(getClass().getResource(FMP_CONFIGURATION_FILE).getFile());
+        String pomFragmentStr = String.format(FileUtils.readFileToString(pomFragment), annotationKey, annotationValue, annotationKey, annotationValue);
+
         Xpp3Dom configurationDom = Xpp3DomBuilder.build(
-                new ByteArrayInputStream(
-                        ("<configuration>" +
-                                "<resources>" +
-                                "   <labels> " +
-                                "       <all> " +
-                                "           <property>" +
-                                "               <name>" + annotationKey + "</name> " +
-                                "               <value>" + annotationValue + "</value> " +
-                                "           </property> " +
-                                "       </all> " +
-                                "   </labels> " +
-                                "   <annotations> " +
-                                "       <all> " +
-                                "           <property>" +
-                                "               <name>" + annotationKey + "</name> " +
-                                "               <value>" + annotationValue + "</value> " +
-                                "           </property> " +
-                                "       </all> " +
-                                "   </annotations> " +
-                                "</resources>" +
-                                "</configuration>").getBytes()),
+                new ByteArrayInputStream(pomFragmentStr.getBytes()),
                 "UTF-8");
 
         model.getProfiles().get(0).getBuild().getPluginsAsMap().get(FABRIC8_MAVEN_PLUGIN_KEY).setConfiguration(configurationDom);

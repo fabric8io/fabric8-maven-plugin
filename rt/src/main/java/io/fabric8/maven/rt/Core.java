@@ -33,6 +33,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.jboss.shrinkwrap.resolver.api.maven.embedded.BuiltProject;
 import org.jboss.shrinkwrap.resolver.api.maven.embedded.EmbeddedMaven;
 import org.json.JSONObject;
+import org.testng.annotations.AfterClass;
 
 import java.io.*;
 import java.util.List;
@@ -144,6 +145,7 @@ public class Core {
         //assert builtProject.getDefaultBuiltArchive() != null;
     }
 
+    @AfterClass
     protected void cleanSampleTestRepository() throws Exception {
         gitCloner.removeClone();
         openShiftClient.close();
