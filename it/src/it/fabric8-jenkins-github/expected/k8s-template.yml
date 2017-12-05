@@ -1471,7 +1471,7 @@ objects:
           fabric8.io/git-branch: release-v2.2.335
           fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8io/fabric8-devops.git/configmapcontroller
           fabric8.io/scm-tag: fabric8-devops-2.0.1
-          maven.fabric8.io/source-url: jar:file:/home/hshinde/.m2/repository/io/fabric8/devops/apps/configmapcontroller/2.2.335/configmapcontroller-2.2.335.jar!/META-INF/fabric8/kubernetes.yml
+          maven.fabric8.io/source-url: "@ignore@"
         labels:
           provider: fabric8
           project: configmapcontroller
@@ -1590,7 +1590,7 @@ objects:
           fabric8.io/git-branch: release-v2.2.335
           fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8io/fabric8-devops.git/fabric8-docker-registry
           fabric8.io/scm-tag: fabric8-devops-2.0.1
-          maven.fabric8.io/source-url: jar:file:/home/hshinde/.m2/repository/io/fabric8/devops/apps/fabric8-docker-registry/2.2.335/fabric8-docker-registry-2.2.335.jar!/META-INF/fabric8/kubernetes.yml
+          maven.fabric8.io/source-url: "@ignore@"
         labels:
           provider: fabric8
           project: fabric8-docker-registry
@@ -1911,7 +1911,7 @@ objects:
           fabric8.io/git-branch: release-v1.0.2
           fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-apps/keycloak-app.git/keycloak
           fabric8.io/scm-tag: keycloak-app-1.0.0
-          maven.fabric8.io/source-url: jar:file:/home/hshinde/.m2/repository/io/fabric8/apps/keycloak/1.0.2/keycloak-1.0.2.jar!/META-INF/fabric8/kubernetes.yml
+          maven.fabric8.io/source-url: "@ignore@"
         labels:
           provider: fabric8
           project: keycloak
@@ -2040,7 +2040,7 @@ objects:
           fabric8.io/git-branch: release-v1.0.2
           fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-apps/keycloak-app.git/keycloak-db
           fabric8.io/scm-tag: keycloak-app-1.0.0
-          maven.fabric8.io/source-url: jar:file:/home/hshinde/.m2/repository/io/fabric8/apps/keycloak-db/1.0.2/keycloak-db-1.0.2.jar!/META-INF/fabric8/kubernetes.yml
+          maven.fabric8.io/source-url: "@ignore@"
         labels:
           service: keycloak-db
           provider: fabric8
@@ -2130,7 +2130,7 @@ objects:
           fabric8.io/git-branch: release-v1.0.1
           fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-apps/nexus-app.git
           fabric8.io/scm-tag: nexus-app-1.0.0
-          maven.fabric8.io/source-url: jar:file:/home/hshinde/.m2/repository/io/fabric8/apps/nexus-app/1.0.1/nexus-app-1.0.1.jar!/META-INF/fabric8/kubernetes.yml
+          maven.fabric8.io/source-url: "@ignore@"
         labels:
           provider: fabric8
           project: nexus-app
