@@ -2,12 +2,32 @@
 # - Updating the Sonarqube stats when not on a PR
 # - Update Codecov (codecov.io) stats for every build
 # - Regenerate the docs when commit on master (but not for a PR)
+
+matrix:
+  include:
+    - env: OC_VERSION="v3.6.0" COMMIT_ID="c4dd4cf"
+    - env: OC_VERSION="v3.6.1" COMMIT_ID="008f2d5"
+
+sudo: enabled
+
 language: java
 jdk:
   - oraclejdk8
+
+services:
+  - docker
+
+cache:
+  directories:
+    - $HOME/.m2
+
+install: ./prepare-test-environment.sh
+
+before_script: ./mvnw install -DskipTests
+
 script:
   # Profile jacoco switches on jacoco coverages
-  - mvn test -B -Pjacoco
+  - mvn clean -Pjacoco clean install
    # Only build docs when commited on master and not a pull request.
    # See https://docs.travis-ci.com/user/environment-variables/#Default-Environment-Variables
    # for more details about Travis default vars
@@ -15,7 +35,7 @@ script:
 after_success:
   # Update codecov site. See https://codecov.io/gh/fabric8io/fabric8-maven-plugin
   # Also look into .codecov.yml for configuraton of codecov
-  - bash <(curl -s https://codecov.io/bash)
+  #- bash <(curl -s https://codecov.io/bash)
 after_script:
   # Update our sonar installation at https://sonarqube.com/dashboard?id=io.fabric8%3Afabric8-maven-plugin-build
-  - bash doc/sonarqube.sh
+  #- bash doc/sonarqube.sh
