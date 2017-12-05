@@ -48,10 +48,6 @@ public class SpringbootCrudBoosterIT extends Core {
 
     private final String RELATIVE_POM_PATH = "/pom.xml";
 
-    private Pod applicationPod;
-
-    private CountDownLatch terminateLatch = new CountDownLatch(1);
-
     @Test
     public void deploy_springboot_app_once() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CRUD_BOOSTER_GIT, RELATIVE_POM_PATH);
@@ -133,41 +129,5 @@ public class SpringbootCrudBoosterIT extends Core {
                 " --name=" + TESTSUITE_DB_NAME;
         int processRetval = exec(deployCommand);
         System.out.println("process returned : " + processRetval);
-    }
-
-    private void waitTillApplicationPodStarts() throws Exception {
-        FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> pods = openShiftClient.pods()
-                .inNamespace(testSuiteNamespace);
-        Watch podWatcher = pods.watch(new Watcher<Pod>() {
-            @Override
-            public void eventReceived(Action action, Pod pod) {
-                boolean bApplicationPod = pod.getMetadata().getLabels().containsKey("app");
-                String podOfApplication = pod.getMetadata().getLabels().get("app");
-
-                if (action.equals(Action.ADDED) && bApplicationPod) {
-                    if (KubernetesHelper.isPodReady(pod) && podOfApplication.equals(TESTSUITE_REPOSITORY_ARTIFACT_ID)) {
-                        String podStatus = KubernetesHelper.getPodStatusText(pod);
-                        applicationPod = pod;
-                        terminateLatch.countDown();
-                    }
-                }
-            }
-
-            @Override
-            public void onClose(KubernetesClientException e) {
-            }
-        });
-
-        // Wait till pod starts up
-        while (terminateLatch.getCount() > 0) {
-            try {
-                terminateLatch.await();
-            } catch (InterruptedException aException) {
-                // ignore
-            }
-            if (applicationPod != null) {
-                break;
-            }
-        }
     }
 }

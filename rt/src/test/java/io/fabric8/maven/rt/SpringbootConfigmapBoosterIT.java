@@ -48,10 +48,6 @@ public class SpringbootConfigmapBoosterIT extends Core {
 
     private final String RELATIVE_POM_PATH = "/greeting-service/pom.xml";
 
-    private Pod applicationPod;
-
-    private CountDownLatch terminateLatch = new CountDownLatch(1);
-
     @Test
     public void deploy_springboot_app_once() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH);
@@ -60,7 +56,7 @@ public class SpringbootConfigmapBoosterIT extends Core {
         createConfigMapResource(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Hello World from a ConfigMap!");
         deployAndAssert(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
         // Check if the configmap's properties are accessible by the Application runnning in pod.
-        assert assertApplicationEndpoint(applicationPod, "content", "Hello World from a ConfigMap!");
+        assert assertApplicationEndpoint("content", "Hello World from a ConfigMap!");
 
         openShiftClient.configMaps().inNamespace(testSuiteNamespace).withName(TESTSUITE_CONFIGMAP_NAME).delete();
     }
@@ -73,7 +69,7 @@ public class SpringbootConfigmapBoosterIT extends Core {
         // 1. Deployment
         createConfigMapResource(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Hello World from a ConfigMap!");
         deployAndAssert(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
-        assert assertApplicationEndpoint(applicationPod, "content", "Hello World from a ConfigMap!");
+        assert assertApplicationEndpoint("content", "Hello World from a ConfigMap!");
 
         // Make some changes in ConfigMap and rollout
         updateSourceCode(testRepository, RELATIVE_POM_PATH);
@@ -81,7 +77,7 @@ public class SpringbootConfigmapBoosterIT extends Core {
 
         // 2. Re-Deployment
         deployAndAssert(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
-        assert assertApplicationEndpoint(applicationPod, "content", "Bonjour World from a ConfigMap!");
+        assert assertApplicationEndpoint("content", "Bonjour World from a ConfigMap!");
 
         openShiftClient.configMaps().inNamespace(testSuiteNamespace).withName(TESTSUITE_CONFIGMAP_NAME).delete();
     }
@@ -97,42 +93,6 @@ public class SpringbootConfigmapBoosterIT extends Core {
         assertThat(openShiftClient).service(TESTSUITE_REPOSITORY_ARTIFACT_ID);
 
         RouteAssert.assertRoute(openShiftClient, TESTSUITE_REPOSITORY_ARTIFACT_ID);
-    }
-
-    private void waitTillApplicationPodStarts() throws Exception {
-        FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> pods = openShiftClient.pods()
-                .inNamespace(testSuiteNamespace);
-        Watch podWatcher = pods.watch(new Watcher<Pod>() {
-            @Override
-            public void eventReceived(Action action, Pod pod) {
-                boolean bApplicationPod = pod.getMetadata().getLabels().containsKey("app");
-                String podOfApplication = pod.getMetadata().getLabels().get("app");
-
-                if (action.equals(Action.ADDED) && bApplicationPod) {
-                    if (KubernetesHelper.isPodReady(pod) && podOfApplication.equals(TESTSUITE_REPOSITORY_ARTIFACT_ID)) {
-                        String podStatus = KubernetesHelper.getPodStatusText(pod);
-                        applicationPod = pod;
-                        terminateLatch.countDown();
-                    }
-                }
-            }
-
-            @Override
-            public void onClose(KubernetesClientException e) {
-            }
-        });
-
-        // Wait till pod starts up
-        while (terminateLatch.getCount() > 0) {
-            try {
-                terminateLatch.await();
-            } catch (InterruptedException aException) {
-                // ignore
-            }
-            if (applicationPod != null) {
-                break;
-            }
-        }
     }
 
     public void createOrReplaceConfigMap(String name, String sampleApplicationProperty) {
@@ -173,10 +133,7 @@ public class SpringbootConfigmapBoosterIT extends Core {
         return jsonResponse.getString(key).equals(value);
     }
 
-    public boolean assertApplicationEndpoint(Pod applicationPod, String key, String value) throws Exception {
-        if (applicationPod == null)
-            throw new AssertionError("No application pod found for this application");
-
+    public boolean assertApplicationEndpoint(String key, String value) throws Exception {
         Route applicationRoute = getApplicationRouteWithName(TESTSUITE_REPOSITORY_ARTIFACT_ID);
         String hostUrl = applicationRoute.getSpec().getHost() + testEndpoint;
         Response response = makeHttpRequest(HttpRequestType.GET, "http://" + hostUrl, null);
