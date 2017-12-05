@@ -39,7 +39,7 @@ script:
 after_success:
   # Update codecov site. See https://codecov.io/gh/fabric8io/fabric8-maven-plugin
   # Also look into .codecov.yml for configuraton of codecov
-  #- bash <(curl -s https://codecov.io/bash)
+  - bash <(curl -s https://codecov.io/bash)
 after_script:
   # Update our sonar installation at https://sonarqube.com/dashboard?id=io.fabric8%3Afabric8-maven-plugin-build
-  #- bash doc/sonarqube.sh
+  - bash doc/sonarqube.sh
