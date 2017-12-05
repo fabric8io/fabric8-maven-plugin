@@ -10,7 +10,7 @@ matrix:
   include:
     - env: OC_VERSION="v3.6.0" COMMIT_ID="c4dd4cf"
     - env: OC_VERSION="v3.6.1" COMMIT_ID="008f2d5"
-    - env: OC_VERSION="v3.7.0" COMMIT_ID="008f2d5"
+    - env: OC_VERSION="v3.7.0" COMMIT_ID="7ed6862"
 
 sudo: enabled
 
