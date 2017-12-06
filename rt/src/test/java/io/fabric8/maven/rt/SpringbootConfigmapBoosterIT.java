@@ -105,7 +105,7 @@ public class SpringbootConfigmapBoosterIT extends Core {
         Map<String, String> configMapData = new HashMap<>();
         configMapData.put("application.properties", messageProperty);
 
-        createOrReplaceConfigMap("application.properties", configMapData);
+        createOrReplaceConfigMap(configMapName, configMapData);
     }
 
     @After

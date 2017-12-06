@@ -37,8 +37,6 @@ public class SpringbootCrudBoosterIT extends Core {
 
     private final String TESTSUITE_DB_NAME = "my-database", TESTSUITE_DB_IMAGE = "openshift/postgresql-92-centos7";
 
-    private final Integer TESTSUITE_DB_PORT = 5432;
-
     private final String RELATIVE_POM_PATH = "/pom.xml";
 
     @Test

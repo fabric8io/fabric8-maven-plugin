@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
-public class VertexConfigmapBoosterIT extends Core {
+public class VertxConfigmapBoosterIT extends Core {
     public static final String SPRING_BOOT_CONFIGMAP_BOOSTER_GIT = "https://github.com/openshiftio-vertx-boosters/vertx-configmap-booster.git";
 
     public static final String TESTSUITE_CONFIGMAP_NAME = "app-config";
