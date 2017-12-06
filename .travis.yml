@@ -30,8 +30,8 @@ install: ./rt/src/main/resources/scripts/prepare-test-environment.sh
 before_script: ./mvnw install -DskipTests
 
 script:
-  # Profile jacoco switches on jacoco coverages
-  - mvn clean -Pjacoco clean install
+  # Profile jacoco switches on jacoco coverages, regession-test for running regreesion tests on fabric8/OpenShift.io quickstart projects
+  - ./mvnw clean install -P jacoco,regression-test
    # Only build docs when commited on master and not a pull request.
    # See https://docs.travis-ci.com/user/environment-variables/#Default-Environment-Variables
    # for more details about Travis default vars
