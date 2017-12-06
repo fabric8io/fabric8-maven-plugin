@@ -1,0 +1,2 @@
+message : "Hello, %s from a ConfigMap !"
+level : INFO

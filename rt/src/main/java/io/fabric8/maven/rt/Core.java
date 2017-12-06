@@ -84,7 +84,7 @@ public class Core {
         public String getValue() {
             return httpRequestType;
         }
-    };
+    }
 
     private Repository cloneRepositoryUsingHttp(String repositoryUrl) throws Exception {
         gitCloner = new GitCloner(repositoryUrl);
@@ -208,6 +208,7 @@ public class Core {
                 request = new Request.Builder().url(hostUrl).delete(requestBody).build();
                 break;
         }
+        System.out.println("[" + requestType.getValue() + "] " + hostUrl);
         return okHttpClient.newCall(request).execute();
     }
 
@@ -217,7 +218,7 @@ public class Core {
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(child.getInputStream()));
         String line = null;
-        while((line = reader.readLine()) != null) {
+        while ((line = reader.readLine()) != null) {
             System.out.println(line);
         }
         return child.exitValue();
@@ -265,6 +266,7 @@ public class Core {
 
     /**
      * Implements a podWatcher just to wait till application pod comes up
+     *
      * @throws Exception
      */
     public void waitTillApplicationPodStarts() throws Exception {
@@ -299,6 +301,32 @@ public class Core {
             if (applicationPod != null) {
                 break;
             }
+        }
+    }
+
+    public void createViewRoleToServiceAccount() throws Exception {
+        exec("oc policy add-role-to-user view -z default");
+    }
+
+    public void createOrReplaceConfigMap(String name, Map<String, String> data) {
+        openShiftClient.configMaps()
+                .inNamespace(testSuiteNamespace)
+                .withName(name)
+                .edit()
+                .withData(data)
+                .done();
+    }
+
+    public void createConfigMapResource(String name, Map<String, String> data) {
+        if (openShiftClient.configMaps().inNamespace(testSuiteNamespace).withName(name).get() == null) {
+            openShiftClient.configMaps()
+                    .inNamespace(testSuiteNamespace)
+                    .createNew()
+                    .withNewMetadata()
+                    .withName(name)
+                    .endMetadata()
+                    .withData(data)
+                    .done();
         }
     }
 }

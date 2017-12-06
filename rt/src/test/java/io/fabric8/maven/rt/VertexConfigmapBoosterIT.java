@@ -18,19 +18,20 @@ package io.fabric8.maven.rt;
 
 import io.fabric8.openshift.api.model.Route;
 import okhttp3.Response;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.lib.Repository;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
-public class SpringbootConfigmapBoosterIT extends Core {
-    public static final String SPRING_BOOT_CONFIGMAP_BOOSTER_GIT = "https://github.com/snowdrop/spring-boot-configmap-booster.git";
+public class VertexConfigmapBoosterIT extends Core {
+    public static final String SPRING_BOOT_CONFIGMAP_BOOSTER_GIT = "https://github.com/openshiftio-vertx-boosters/vertx-configmap-booster.git";
 
     public static final String TESTSUITE_CONFIGMAP_NAME = "app-config";
 
@@ -38,17 +39,19 @@ public class SpringbootConfigmapBoosterIT extends Core {
 
     private final String testEndpoint = "/api/greeting";
 
-    private final String RELATIVE_POM_PATH = "/greeting-service/pom.xml";
+    private final String appConfigFile = "/app-config.yml";
+
+    private final String RELATIVE_POM_PATH = "/pom.xml";
 
     @Test
     public void deploy_springboot_app_once() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH);
 
         createViewRoleToServiceAccount();
-        createConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Hello World from a ConfigMap!");
+        createConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME);
         deployAndAssert(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
         // Check if the configmap's properties are accessible by the Application runnning in pod.
-        assert assertApplicationEndpoint("content", "Hello World from a ConfigMap!");
+        assert assertApplicationEndpoint("content", "Hello, World from a ConfigMap !");
 
         openShiftClient.configMaps().inNamespace(testSuiteNamespace).withName(TESTSUITE_CONFIGMAP_NAME).delete();
     }
@@ -59,17 +62,17 @@ public class SpringbootConfigmapBoosterIT extends Core {
 
         createViewRoleToServiceAccount();
         // 1. Deployment
-        createConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Hello World from a ConfigMap!");
+        createConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME);
         deployAndAssert(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
-        assert assertApplicationEndpoint("content", "Hello World from a ConfigMap!");
+        assert assertApplicationEndpoint("content", "Hello, World from a ConfigMap !");
 
         // Make some changes in ConfigMap and rollout
         updateSourceCode(testRepository, RELATIVE_POM_PATH);
-        editConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Bonjour World from a ConfigMap!");
+        editConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME);
 
         // 2. Re-Deployment
         deployAndAssert(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
-        assert assertApplicationEndpoint("content", "Bonjour World from a ConfigMap!");
+        assert assertApplicationEndpoint("content", "Bonjour, World from a ConfigMap !");
 
         openShiftClient.configMaps().inNamespace(testSuiteNamespace).withName(TESTSUITE_CONFIGMAP_NAME).delete();
     }
@@ -94,22 +97,23 @@ public class SpringbootConfigmapBoosterIT extends Core {
         return new JSONObject(response.body().string()).getString(key).equals(value);
     }
 
-    private void createConfigMapResourceForApp(String configMapName, String sampleApplicationProperty) {
+    private void createConfigMapResourceForApp(String configMapName) throws Exception {
         Map<String, String> configMapData = new HashMap<>();
-        configMapData.put("application.properties", sampleApplicationProperty);
+        File aConfigMapFile = new File(getClass().getResource(appConfigFile).getFile());
+
+        configMapData.put("app-config.yml", FileUtils.readFileToString(aConfigMapFile));
 
         createConfigMapResource(configMapName, configMapData);
     }
 
-    private void editConfigMapResourceForApp(String configMapName, String messageProperty) {
+    private void editConfigMapResourceForApp(String configMapName) throws Exception {
         Map<String, String> configMapData = new HashMap<>();
-        configMapData.put("application.properties", messageProperty);
+        File aConfigMapFile = new File(getClass().getResource(appConfigFile).getFile());
 
-        createOrReplaceConfigMap("application.properties", configMapData);
-    }
+        String content = FileUtils.readFileToString(aConfigMapFile);
+        content = content.replace("Hello", "Bonjour");
+        configMapData.put("app-config.yml", content);
 
-    @After
-    public void cleanup() throws Exception {
-        cleanSampleTestRepository();
+        createOrReplaceConfigMap(configMapName, configMapData);
     }
 }

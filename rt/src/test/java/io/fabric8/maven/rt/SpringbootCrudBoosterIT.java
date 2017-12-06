@@ -16,12 +16,6 @@
 
 package io.fabric8.maven.rt;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.openshift.api.model.Route;
 import okhttp3.Response;
 import org.apache.http.HttpStatus;
@@ -30,7 +24,6 @@ import org.json.JSONObject;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;

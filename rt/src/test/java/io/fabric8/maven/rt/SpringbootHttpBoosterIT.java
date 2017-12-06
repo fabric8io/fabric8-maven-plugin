@@ -16,13 +16,6 @@
 
 package io.fabric8.maven.rt;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.openshift.api.model.*;
 import org.apache.http.HttpStatus;
 import org.eclipse.jgit.lib.Repository;
@@ -30,7 +23,6 @@ import org.junit.After;
 import org.testng.annotations.Test;
 
 import java.io.File;
-import java.util.concurrent.CountDownLatch;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
