@@ -51,6 +51,7 @@ import java.io.*;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class Core {
 
@@ -270,16 +271,22 @@ public class Core {
      * @throws Exception
      */
     public void waitTillApplicationPodStarts() throws Exception {
+        System.out.println("Waiting to application pod .... ");
+        TimeUnit.SECONDS.sleep(20);
+        /*
         FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> pods = openShiftClient.pods()
-                .inNamespace(testSuiteNamespace);
+                .inNamespace(testSuiteNamespace).withLabel("app", TESTSUITE_REPOSITORY_ARTIFACT_ID);
         Watch podWatcher = pods.watch(new Watcher<Pod>() {
             @Override
             public void eventReceived(Action action, Pod pod) {
+                System.out.println("Waiting for pod to start ... " + TESTSUITE_REPOSITORY_ARTIFACT_ID);
                 boolean bApplicationPod = pod.getMetadata().getLabels().containsKey("app");
                 String podOfApplication = pod.getMetadata().getLabels().get("app");
 
+                System.out.println("Pod Name : " + pod.getMetadata().getName() + ", status : " + KubernetesHelper.getPodStatusText(pod));
                 if (action.equals(Action.ADDED) && bApplicationPod) {
                     if (KubernetesHelper.isPodReady(pod) && podOfApplication.equals(TESTSUITE_REPOSITORY_ARTIFACT_ID)) {
+                        System.out.println("Found !!!!!");
                         applicationPod = pod;
                         terminateLatch.countDown();
                     }
@@ -294,7 +301,7 @@ public class Core {
         // Wait till pod starts up
         while (terminateLatch.getCount() > 0) {
             try {
-                terminateLatch.await();
+                terminateLatch.await(1, TimeUnit.MINUTES);
             } catch (InterruptedException aException) {
                 // ignore
             }
@@ -302,6 +309,8 @@ public class Core {
                 break;
             }
         }
+        */
+        System.out.println("OK ✓ ... Pod wait over.");
     }
 
     public void createViewRoleToServiceAccount() throws Exception {

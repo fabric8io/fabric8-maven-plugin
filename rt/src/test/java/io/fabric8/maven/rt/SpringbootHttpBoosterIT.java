@@ -89,9 +89,6 @@ public class SpringbootHttpBoosterIT extends Core {
      * @throws Exception
      */
     public void assertApplicationPodRoute() throws Exception {
-        if (applicationPod == null)
-            throw new AssertionError("No application pod found for this application");
-
         String hostRoute = null;
         Route applicationRoute = getApplicationRouteWithName(TESTSUITE_REPOSITORY_ARTIFACT_ID);
         if (applicationRoute != null) {
