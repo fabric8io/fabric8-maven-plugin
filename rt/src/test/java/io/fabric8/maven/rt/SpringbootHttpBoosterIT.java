@@ -73,7 +73,6 @@ public class SpringbootHttpBoosterIT extends Core {
 
         assertThat(openShiftClient).deployment(sampleProjectArtifactId);
         assertThat(openShiftClient).service(sampleProjectArtifactId);
-
         RouteAssert.assertRoute(openShiftClient, sampleProjectArtifactId);
     }
 
