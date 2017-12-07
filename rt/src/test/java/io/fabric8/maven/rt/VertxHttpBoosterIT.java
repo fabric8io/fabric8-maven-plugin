@@ -43,28 +43,37 @@ public class VertxHttpBoosterIT extends Core {
     public void deploy_springboot_app_once() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_HTTP_BOOSTER_GIT, RELATIVE_POM_PATH);
 
-        deployAndAssert(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        waitTillApplicationPodStarts();
+
+        assertDeployment(TESTSUITE_REPOSITORY_ARTIFACT_ID);
     }
 
     @Test
     public void redeploy_springboot_app() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_HTTP_BOOSTER_GIT, RELATIVE_POM_PATH);
-        deployAndAssert(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+
+        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        waitTillApplicationPodStarts(ANNOTATION_KEY,ANNOTATION_VALUE);
+
+        assertDeployment(TESTSUITE_REPOSITORY_ARTIFACT_ID);
 
         // change the source code
         updateSourceCode(testRepository, RELATIVE_POM_PATH);
         addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, FMP_CONFIGURATION_FILE);
+        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        waitTillApplicationPodStarts(ANNOTATION_KEY,ANNOTATION_VALUE);
 
-        // redeploy and assert
-        deployAndAssert(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        assertDeployment(TESTSUITE_REPOSITORY_ARTIFACT_ID);
         assert checkDeploymentsForAnnotation(ANNOTATION_KEY);
     }
 
-    public void deployAndAssert(Repository testRepository, String buildGoal, String buildProfile) throws Exception {
+    public void deploy(Repository testRepository, String buildGoal, String buildProfile) throws Exception {
         String sampleProjectArtifactId = readPomModelFromFile(new File(testRepository.getWorkTree().getAbsolutePath(), RELATIVE_POM_PATH)).getArtifactId();
         runEmbeddedMavenBuild(testRepository, buildGoal, buildProfile);
-        waitTillApplicationPodStarts();
+    }
 
+    private void assertDeployment(String sampleProjectArtifactId) throws Exception {
         assertThat(openShiftClient).deployment(sampleProjectArtifactId);
         assertThat(openShiftClient).service(sampleProjectArtifactId);
 
