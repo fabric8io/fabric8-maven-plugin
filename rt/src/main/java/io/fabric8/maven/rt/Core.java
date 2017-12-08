@@ -39,6 +39,7 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.arquillian.smart.testing.rules.git.GitCloner;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.codehaus.plexus.util.xml.Xpp3DomBuilder;
+import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jgit.lib.Repository;
 import org.jboss.shrinkwrap.resolver.api.maven.embedded.BuiltProject;
 import org.jboss.shrinkwrap.resolver.api.maven.embedded.EmbeddedMaven;
@@ -53,23 +54,21 @@ import java.util.concurrent.TimeUnit;
 
 public class Core {
 
-    private final String fabric8PluginGroupId = "io.fabric8";
+    protected final String fabric8PluginGroupId = "io.fabric8";
 
-    public static final String FABRIC8_MAVEN_PLUGIN_KEY = "io.fabric8:fabric8-maven-plugin";
+    protected final String FABRIC8_MAVEN_PLUGIN_KEY = "io.fabric8:fabric8-maven-plugin";
 
-    private final String fabric8PluginArtifactId = "fabric8-maven-plugin";
+    protected final String fabric8PluginArtifactId = "fabric8-maven-plugin";
 
-    public String testSuiteNamespace;
+    protected String TESTSUITE_NAMESPACE;
 
-    public String TESTSUITE_REPOSITORY_ARTIFACT_ID;
+    protected String TESTSUITE_REPOSITORY_ARTIFACT_ID;
 
-    public OpenShiftClient openShiftClient;
+    protected final String FMP_CONFIGURATION_FILE = "/fmp-plugin-config.xml";
+
+    protected OpenShiftClient openShiftClient;
 
     private GitCloner gitCloner;
-
-    public Pod applicationPod;
-
-    public CountDownLatch terminateLatch = new CountDownLatch(1);
 
     public enum HttpRequestType {
         GET("GET"), POST("POST"), PUT("PUT"), DELETE("DELETE");
@@ -147,7 +146,7 @@ public class Core {
 
     protected Repository setupSampleTestRepository(String repositoryUrl, String relativePomPath) throws Exception {
         openShiftClient = new DefaultOpenShiftClient(new ConfigBuilder().build());
-        testSuiteNamespace = openShiftClient.getNamespace();
+        TESTSUITE_NAMESPACE = openShiftClient.getNamespace();
         Repository repository = cloneRepositoryUsingHttp(repositoryUrl);
         modifyPomFileToProjectVersion(repository, relativePomPath);
         return repository;
@@ -170,7 +169,7 @@ public class Core {
     }
 
     public Route getApplicationRouteWithName(String name) {
-        RouteList aRouteList = openShiftClient.routes().inNamespace(testSuiteNamespace).list();
+        RouteList aRouteList = openShiftClient.routes().inNamespace(TESTSUITE_NAMESPACE).list();
         for (Route aRoute : aRouteList.getItems()) {
             if (aRoute.getMetadata().getName().equals(name)) {
                 return aRoute;
@@ -207,8 +206,10 @@ public class Core {
                 request = new Request.Builder().url(hostUrl).delete(requestBody).build();
                 break;
         }
-        System.out.println("[" + requestType.getValue() + "] " + hostUrl);
-        return okHttpClient.newCall(request).execute();
+        Response response = okHttpClient.newCall(request).execute();
+        System.out.println("[" + requestType.getValue() + "] " + hostUrl + " " + HttpStatus.getCode(response.code()));
+
+        return response;
     }
 
     public int exec(String command) throws Exception {
@@ -241,8 +242,18 @@ public class Core {
                 new ByteArrayInputStream(pomFragmentStr.getBytes()),
                 "UTF-8");
 
-        model.getProfiles().get(0).getBuild().getPluginsAsMap().get(FABRIC8_MAVEN_PLUGIN_KEY).setConfiguration(configurationDom);
+        int nOpenShiftProfile = getOpenshiftProfileIndex(model);
+        model.getProfiles().get(nOpenShiftProfile).getBuild().getPluginsAsMap().get(FABRIC8_MAVEN_PLUGIN_KEY).setConfiguration(configurationDom);
         writePomModelToFile(pomFile, model);
+    }
+
+    protected int getOpenshiftProfileIndex(Model aPomModel) {
+        List<Profile> profiles = aPomModel.getProfiles();
+        for(int nIndex = 0; nIndex < profiles.size(); nIndex++) {
+            if(profiles.get(nIndex).getId().equals("openshift"))
+                return nIndex;
+        }
+        throw new AssertionError("No openshift profile found in project's pom.xml");
     }
 
     /**
@@ -254,7 +265,7 @@ public class Core {
      * @return
      */
     public boolean checkDeploymentsForAnnotation(String key) {
-        DeploymentConfigList deploymentConfigs = openShiftClient.deploymentConfigs().inNamespace(testSuiteNamespace).list();
+        DeploymentConfigList deploymentConfigs = openShiftClient.deploymentConfigs().inNamespace(TESTSUITE_NAMESPACE).list();
         for (DeploymentConfig aDeploymentConfig : deploymentConfigs.getItems()) {
             if (aDeploymentConfig.getMetadata() != null && aDeploymentConfig.getMetadata().getAnnotations() != null &&
                     aDeploymentConfig.getMetadata().getAnnotations().containsKey(key))
@@ -264,68 +275,65 @@ public class Core {
     }
 
     /**
-     * Implements a podWatcher just to wait till application pod comes up
+     * It watches over application pod until it becomes ready to serve.
      *
      * @throws Exception
      */
     public void waitTillApplicationPodStarts() throws Exception {
         System.out.println("Waiting to application pod .... ");
-        TimeUnit.SECONDS.sleep(20);
-        /*
-        FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> pods = openShiftClient.pods()
-                .inNamespace(testSuiteNamespace).withLabel("app", TESTSUITE_REPOSITORY_ARTIFACT_ID);
-        Watch podWatcher = pods.watch(new Watcher<Pod>() {
-            @Override
-            public void eventReceived(Action action, Pod pod) {
-                System.out.println("Waiting for pod to start ... " + TESTSUITE_REPOSITORY_ARTIFACT_ID);
-                boolean bApplicationPod = pod.getMetadata().getLabels().containsKey("app");
-                String podOfApplication = pod.getMetadata().getLabels().get("app");
 
-                System.out.println("Pod Name : " + pod.getMetadata().getName() + ", status : " + KubernetesHelper.getPodStatusText(pod));
-                if (action.equals(Action.ADDED) && bApplicationPod) {
-                    if (KubernetesHelper.isPodReady(pod) && podOfApplication.equals(TESTSUITE_REPOSITORY_ARTIFACT_ID)) {
-                        System.out.println("Found !!!!!");
-                        applicationPod = pod;
-                        terminateLatch.countDown();
-                    }
-                }
-            }
-
-            @Override
-            public void onClose(KubernetesClientException e) {
-            }
-        });*/
-
-        // Wait till pod starts up
-       /* while (terminateLatch.getCount() > 0) {
-            try {
-                terminateLatch.await(1, TimeUnit.MINUTES);
-            } catch (InterruptedException aException) {
-                // ignore
-            }
-            if (applicationPod != null) {
-                break;
-            }
-        }*/
-    }
-
-    public void waitTillApplicationPodStarts(String key, String value) throws Exception {
-        System.out.println("Waiting to application pod .... ");
-
-        while (true) {
+        int nPolls = 0;
+        // Keep polling till 5 minutes
+        while (nPolls < 60) {
             PodList podList = openShiftClient.pods().withLabel("app", TESTSUITE_REPOSITORY_ARTIFACT_ID).list();
             for(Pod pod: podList.getItems()) {
-                if(pod.getMetadata().getAnnotations().containsKey(key)
-                        && pod.getMetadata().getAnnotations().get(key).equalsIgnoreCase(value)
-                        && KubernetesHelper.isPodReady(pod)) {
+                System.out.println("waitTillApplicationPodStarts() -> Pod : " + pod.getMetadata().getName() + ", isReady : " + KubernetesHelper.isPodReady(pod));
+                if(KubernetesHelper.isPodReady(pod)) {
+                    System.out.println("OK ✓ ... Pod wait over.");
                     return;
                 }
             }
+            TimeUnit.SECONDS.sleep(5);
+            nPolls++;
+        }
+        throw new AssertionError("Pod wait timeout! Could not find application pod for " + TESTSUITE_REPOSITORY_ARTIFACT_ID);
+    }
 
+    /**
+     * This variation is used in order to check for the redeployment scenario, since some
+     * annotations are added while making changes in source code, and those are checked so
+     * that we are able to differentiate between the redeployed pod and the previously
+     * existing pod instance from previous deployment.
+     *
+     * @param key
+     * @param value
+     * @throws Exception
+     */
+    public void waitTillApplicationPodStarts(String key, String value) throws Exception {
+        System.out.println("Waiting for application pod .... ");
+
+        int nPolls = 0;
+        // Keep polling till 5 minutes
+        while (nPolls < 60) {
+            PodList podList = openShiftClient.pods().withLabel("app", TESTSUITE_REPOSITORY_ARTIFACT_ID).list();
+            for(Pod pod: podList.getItems()) {
+                System.out.println("waitTillApplicationPodStarts("+ key + ", " + value +") -> Pod : "
+                        + pod.getMetadata().getName() + ", STATUS : " + KubernetesHelper.getPodStatus(pod) + ", isPodReady : " + KubernetesHelper.isPodReady(pod));
+
+                if(pod.getMetadata().getAnnotations().containsKey(key)) {
+                    System.out.println(pod.getMetadata().getName() + " is redeployed pod.");
+                }
+                if(pod.getMetadata().getAnnotations().containsKey(key)
+                        && pod.getMetadata().getAnnotations().get(key).equalsIgnoreCase(value)
+                        && KubernetesHelper.isPodReady(pod)) {
+                    System.out.println("OK ✓ ... Pod wait over.");
+                    return;
+                }
+            }
+            nPolls++;
             TimeUnit.SECONDS.sleep(5);
         }
-        */
-        System.out.println("OK ✓ ... Pod wait over.");
+        throw new AssertionError("Pod wait timeout! Could not find application pod for " + TESTSUITE_REPOSITORY_ARTIFACT_ID);
     }
 
     public void createViewRoleToServiceAccount() throws Exception {
@@ -334,7 +342,7 @@ public class Core {
 
     public void createOrReplaceConfigMap(String name, Map<String, String> data) {
         openShiftClient.configMaps()
-                .inNamespace(testSuiteNamespace)
+                .inNamespace(TESTSUITE_NAMESPACE)
                 .withName(name)
                 .edit()
                 .withData(data)
@@ -342,9 +350,9 @@ public class Core {
     }
 
     public void createConfigMapResource(String name, Map<String, String> data) {
-        if (openShiftClient.configMaps().inNamespace(testSuiteNamespace).withName(name).get() == null) {
+        if (openShiftClient.configMaps().inNamespace(TESTSUITE_NAMESPACE).withName(name).get() == null) {
             openShiftClient.configMaps()
-                    .inNamespace(testSuiteNamespace)
+                    .inNamespace(TESTSUITE_NAMESPACE)
                     .createNew()
                     .withNewMetadata()
                     .withName(name)

@@ -29,54 +29,70 @@ import java.util.concurrent.TimeUnit;
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
 public class SpringbootCrudBoosterIT extends Core {
-    private static final String SPRING_BOOT_CRUD_BOOSTER_GIT = "https://github.com/snowdrop/spring-boot-crud-booster.git";
+    private final String SPRING_BOOT_CRUD_BOOSTER_GIT = "https://github.com/snowdrop/spring-boot-crud-booster.git";
 
     private final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy -DskipTests", EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
 
-    private final String testEndpoint = "/api/fruits";
+    private final String TEST_ENDPOINT = "/api/fruits";
 
     private final String TESTSUITE_DB_NAME = "my-database", TESTSUITE_DB_IMAGE = "openshift/postgresql-92-centos7";
 
     private final String RELATIVE_POM_PATH = "/pom.xml";
+
+    private final String ANNOTATION_KEY = "springboot-crud-testKey", ANNOTATION_VALUE = "springboot-crud-testValue";
 
     @Test
     public void deploy_springboot_app_once() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CRUD_BOOSTER_GIT, RELATIVE_POM_PATH);
         deployDatabaseUsingCLI();
 
-        deployAndAssert(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        waitAfterDeployment(false);
+        assertApplication();
     }
 
     @Test
     public void redeploy_springboot_app() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CRUD_BOOSTER_GIT, RELATIVE_POM_PATH);
-
         deployDatabaseUsingCLI();
-        deployAndAssert(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+
+        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        waitAfterDeployment(false);
+        assertApplication();
 
         // Make some changes in ConfigMap and rollout
         updateSourceCode(testRepository, RELATIVE_POM_PATH);
+        addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, FMP_CONFIGURATION_FILE);
 
-        deployAndAssert(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        waitAfterDeployment(true);
+        assertApplication();
     }
 
-    private void deployAndAssert(Repository testRepository, String buildGoal, String buildProfile) throws Exception {
-        String sampleProjectArtifactId = readPomModelFromFile(new File(testRepository.getWorkTree().getAbsolutePath(), RELATIVE_POM_PATH)).getArtifactId();
+    private void deploy(Repository testRepository, String buildGoal, String buildProfile) throws Exception {
         runEmbeddedMavenBuild(testRepository, buildGoal, buildProfile);
-        // Waiting for application pod to start.
-        waitTillApplicationPodStarts();
-        // Wait for Services, Route, ConfigMaps to refresh according to the deployment.
-        TimeUnit.SECONDS.sleep(20);
+    }
 
-        assertThat(openShiftClient).deployment(sampleProjectArtifactId);
-        assertThat(openShiftClient).service(sampleProjectArtifactId);
+    private void assertApplication() throws Exception {
+        assertThat(openShiftClient).deployment(TESTSUITE_REPOSITORY_ARTIFACT_ID);
+        assertThat(openShiftClient).service(TESTSUITE_REPOSITORY_ARTIFACT_ID);
 
-        RouteAssert.assertRoute(openShiftClient, sampleProjectArtifactId);
+        RouteAssert.assertRoute(openShiftClient, TESTSUITE_REPOSITORY_ARTIFACT_ID);
         executeCRUDAssertions(getApplicationRouteWithName(TESTSUITE_REPOSITORY_ARTIFACT_ID));
     }
 
+    private void waitAfterDeployment(boolean bIsRedeployed) throws Exception {
+        // Waiting for application pod to start.
+        if (bIsRedeployed)
+            waitTillApplicationPodStarts(ANNOTATION_KEY, ANNOTATION_VALUE);
+        else
+            waitTillApplicationPodStarts();
+        // Wait for Services, Route, ConfigMaps to refresh according to the deployment.
+        TimeUnit.SECONDS.sleep(20);
+    }
+
     private void executeCRUDAssertions(Route applicationRoute) throws Exception {
-        String hostUrl = "http://" + applicationRoute.getSpec().getHost() + testEndpoint;
+        String hostUrl = "http://" + applicationRoute.getSpec().getHost() + TEST_ENDPOINT;
         JSONObject jsonRequest = new JSONObject();
         String testFruitName = "Pineapple";
 

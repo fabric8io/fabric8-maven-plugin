@@ -27,17 +27,15 @@ import java.io.File;
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
 public class VertxHttpBoosterIT extends Core {
-    public static final String SPRING_BOOT_HTTP_BOOSTER_GIT = "https://github.com/openshiftio-vertx-boosters/vertx-http-booster.git";
+    private final String SPRING_BOOT_HTTP_BOOSTER_GIT = "https://github.com/openshiftio-vertx-boosters/vertx-http-booster.git";
 
-    public final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy", EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
+    private final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy", EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
 
     private final String RELATIVE_POM_PATH = "/pom.xml";
 
     private final String testEndpoint = "/api/greeting";
 
-    public static final String ANNOTATION_KEY = "vertx-testKey", ANNOTATION_VALUE = "vertx-testValue";
-
-    public final String FMP_CONFIGURATION_FILE = "/fmp-plugin-config.xml";
+    private final String ANNOTATION_KEY = "vertx-testKey", ANNOTATION_VALUE = "vertx-testValue";
 
     @Test
     public void deploy_springboot_app_once() throws Exception {
@@ -45,40 +43,47 @@ public class VertxHttpBoosterIT extends Core {
 
         deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
         waitTillApplicationPodStarts();
-
-        assertDeployment(TESTSUITE_REPOSITORY_ARTIFACT_ID);
+        assertDeployment();
     }
 
     @Test
     public void redeploy_springboot_app() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_HTTP_BOOSTER_GIT, RELATIVE_POM_PATH);
 
+        // deploy
         deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
-        waitTillApplicationPodStarts(ANNOTATION_KEY,ANNOTATION_VALUE);
-
-        assertDeployment(TESTSUITE_REPOSITORY_ARTIFACT_ID);
+        waitUntilDeployment(false);
+        assertDeployment();
 
         // change the source code
         updateSourceCode(testRepository, RELATIVE_POM_PATH);
         addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, FMP_CONFIGURATION_FILE);
-        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
-        waitTillApplicationPodStarts(ANNOTATION_KEY,ANNOTATION_VALUE);
 
-        assertDeployment(TESTSUITE_REPOSITORY_ARTIFACT_ID);
+        // re-deploy
+        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        waitUntilDeployment(true);
+        assertDeployment();
+
         assert checkDeploymentsForAnnotation(ANNOTATION_KEY);
     }
 
     public void deploy(Repository testRepository, String buildGoal, String buildProfile) throws Exception {
-        String sampleProjectArtifactId = readPomModelFromFile(new File(testRepository.getWorkTree().getAbsolutePath(), RELATIVE_POM_PATH)).getArtifactId();
         runEmbeddedMavenBuild(testRepository, buildGoal, buildProfile);
     }
 
-    private void assertDeployment(String sampleProjectArtifactId) throws Exception {
-        assertThat(openShiftClient).deployment(sampleProjectArtifactId);
-        assertThat(openShiftClient).service(sampleProjectArtifactId);
+    private void assertDeployment() throws Exception {
+        assertThat(openShiftClient).deployment(TESTSUITE_REPOSITORY_ARTIFACT_ID);
+        assertThat(openShiftClient).service(TESTSUITE_REPOSITORY_ARTIFACT_ID);
 
-        RouteAssert.assertRoute(openShiftClient, sampleProjectArtifactId);
+        RouteAssert.assertRoute(openShiftClient, TESTSUITE_REPOSITORY_ARTIFACT_ID);
         assertThatWeServeAsExpected(getApplicationRouteWithName(TESTSUITE_REPOSITORY_ARTIFACT_ID));
+    }
+
+    private void waitUntilDeployment(boolean bIsReployed) throws Exception {
+        if(bIsReployed)
+            waitTillApplicationPodStarts(ANNOTATION_KEY, ANNOTATION_VALUE);
+        else
+            waitTillApplicationPodStarts();
     }
 
     private void assertThatWeServeAsExpected(Route applicationRoute) throws Exception {

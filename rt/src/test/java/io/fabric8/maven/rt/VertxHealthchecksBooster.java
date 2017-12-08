@@ -20,50 +20,66 @@ import io.fabric8.openshift.api.model.Route;
 import okhttp3.Response;
 import org.apache.http.HttpStatus;
 import org.eclipse.jgit.lib.Repository;
-import org.json.HTTP;
 import org.json.JSONObject;
 import org.testng.annotations.Test;
 
-import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
 public class VertxHealthchecksBooster extends Core {
-    public static final String SPRING_BOOT_HTTP_BOOSTER_GIT = "https://github.com/openshiftio-vertx-boosters/vertx-health-checks-booster.git";
+    private final String SPRING_BOOT_HTTP_BOOSTER_GIT = "https://github.com/openshiftio-vertx-boosters/vertx-health-checks-booster.git";
 
-    public final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy", EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
+    private final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy", EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
 
     private final String RELATIVE_POM_PATH = "/pom.xml";
+
+    private final String ANNOTATION_KEY = "vertx-healthcheck-testKey", ANNOTATION_VALUE = "vertx-healthcheck-testValue";
 
     @Test
     public void deploy_springboot_app_once() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_HTTP_BOOSTER_GIT, RELATIVE_POM_PATH);
 
-        deployAndAssert(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        waitAfterDeployment(false);
+        assertDeployment();
     }
 
     @Test
     public void redeploy_springboot_app() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_HTTP_BOOSTER_GIT, RELATIVE_POM_PATH);
-        deployAndAssert(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        waitAfterDeployment(false);
+        assertDeployment();
 
         // change the source code
         updateSourceCode(testRepository, RELATIVE_POM_PATH);
+        addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, FMP_CONFIGURATION_FILE);
 
         // redeploy and assert
-        deployAndAssert(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        waitAfterDeployment(true);
+        assertDeployment();
     }
 
-    public void deployAndAssert(Repository testRepository, String buildGoal, String buildProfile) throws Exception {
-        String sampleProjectArtifactId = readPomModelFromFile(new File(testRepository.getWorkTree().getAbsolutePath(), RELATIVE_POM_PATH)).getArtifactId();
+    public void deploy(Repository testRepository, String buildGoal, String buildProfile) throws Exception {
         runEmbeddedMavenBuild(testRepository, buildGoal, buildProfile);
         waitTillApplicationPodStarts();
+    }
 
-        assertThat(openShiftClient).deployment(sampleProjectArtifactId);
-        assertThat(openShiftClient).service(sampleProjectArtifactId);
+    private void waitAfterDeployment(boolean bIsRedeployed) throws Exception {
+        // Waiting for application pod to start.
+        if(bIsRedeployed)
+            waitTillApplicationPodStarts(ANNOTATION_KEY, ANNOTATION_VALUE);
+        else
+            waitTillApplicationPodStarts();
+    }
 
-        RouteAssert.assertRoute(openShiftClient, sampleProjectArtifactId);
+    private void assertDeployment() throws Exception {
+        assertThat(openShiftClient).deployment(TESTSUITE_REPOSITORY_ARTIFACT_ID);
+        assertThat(openShiftClient).service(TESTSUITE_REPOSITORY_ARTIFACT_ID);
+
+        RouteAssert.assertRoute(openShiftClient, TESTSUITE_REPOSITORY_ARTIFACT_ID);
         testHealthChecks(getApplicationRouteWithName(TESTSUITE_REPOSITORY_ARTIFACT_ID));
     }
 
@@ -82,10 +98,26 @@ public class VertxHealthchecksBooster extends Core {
         assert new JSONObject(serviceStatus.body().string()).getString("outcome").equals("DOWN");
 
         // Wait for recovery
-        TimeUnit.SECONDS.sleep(20);
+        assertApplicationRecovery(hostUrl + "/api/greeting", 120);
+    }
 
-        // Check state again
-        assert isApplicationUpAndRunning(hostUrl);
+    /**
+     * Await for at most `awaitTimeInSeconds` to see if the application is able to recover
+     * on its own or not.
+     *
+     * @param hostUrl
+     * @throws Exception
+     */
+    private void assertApplicationRecovery(String hostUrl, long awaitTimeInSeconds) throws Exception {
+        for(int nSeconds = 0; nSeconds < 120; nSeconds++) {
+            Response serviceResponse = makeHttpRequest(HttpRequestType.GET, hostUrl, null);
+            if(serviceResponse.code() == HttpStatus.SC_OK) {
+                System.out.println("Application recovery successful");
+                return;
+            }
+            TimeUnit.SECONDS.sleep(1);
+        }
+        throw new AssertionError("Application recovery failed");
     }
 
     private boolean isApplicationUpAndRunning(String hostUrl) throws Exception {
