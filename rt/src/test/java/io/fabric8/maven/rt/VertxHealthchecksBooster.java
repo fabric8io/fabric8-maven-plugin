@@ -54,7 +54,7 @@ public class VertxHealthchecksBooster extends Core {
 
         // change the source code
         updateSourceCode(testRepository, RELATIVE_POM_PATH);
-        addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, FMP_CONFIGURATION_FILE);
+        addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, fmpConfigurationFile);
 
         // redeploy and assert
         deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
@@ -76,11 +76,11 @@ public class VertxHealthchecksBooster extends Core {
     }
 
     private void assertDeployment() throws Exception {
-        assertThat(openShiftClient).deployment(TESTSUITE_REPOSITORY_ARTIFACT_ID);
-        assertThat(openShiftClient).service(TESTSUITE_REPOSITORY_ARTIFACT_ID);
+        assertThat(openShiftClient).deployment(testsuiteRepositoryArtifactId);
+        assertThat(openShiftClient).service(testsuiteRepositoryArtifactId);
 
-        RouteAssert.assertRoute(openShiftClient, TESTSUITE_REPOSITORY_ARTIFACT_ID);
-        testHealthChecks(getApplicationRouteWithName(TESTSUITE_REPOSITORY_ARTIFACT_ID));
+        RouteAssert.assertRoute(openShiftClient, testsuiteRepositoryArtifactId);
+        testHealthChecks(getApplicationRouteWithName(testsuiteRepositoryArtifactId));
     }
 
     private void testHealthChecks(Route applicationRoute) throws Exception {
@@ -109,10 +109,10 @@ public class VertxHealthchecksBooster extends Core {
      * @throws Exception
      */
     private void assertApplicationRecovery(String hostUrl, long awaitTimeInSeconds) throws Exception {
-        for(int nSeconds = 0; nSeconds < 120; nSeconds++) {
+        for(int nSeconds = 0; nSeconds < awaitTimeInSeconds; nSeconds++) {
             Response serviceResponse = makeHttpRequest(HttpRequestType.GET, hostUrl, null);
             if(serviceResponse.code() == HttpStatus.SC_OK) {
-                System.out.println("Application recovery successful");
+                logger.info("Application recovery successful");
                 return;
             }
             TimeUnit.SECONDS.sleep(1);

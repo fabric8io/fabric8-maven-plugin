@@ -24,7 +24,6 @@ import org.testng.annotations.Test;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
-
 /**
  * Created by hshinde on 11/23/17.
  */
@@ -74,10 +73,10 @@ public class SpringbootHttpBoosterIT extends Core {
     }
 
     private void assertApplication() throws Exception {
-        assertThat(openShiftClient).deployment(TESTSUITE_REPOSITORY_ARTIFACT_ID);
-        assertThat(openShiftClient).service(TESTSUITE_REPOSITORY_ARTIFACT_ID);
-        RouteAssert.assertRoute(openShiftClient, TESTSUITE_REPOSITORY_ARTIFACT_ID);
-        assertApplicationPodRoute(getApplicationRouteWithName(TESTSUITE_REPOSITORY_ARTIFACT_ID));
+        assertThat(openShiftClient).deployment(testsuiteRepositoryArtifactId);
+        assertThat(openShiftClient).service(testsuiteRepositoryArtifactId);
+        RouteAssert.assertRoute(openShiftClient, testsuiteRepositoryArtifactId);
+        assertApplicationPodRoute(getApplicationRouteWithName(testsuiteRepositoryArtifactId));
     }
 
     private void waitUntilDeployment(boolean bIsReployed) throws Exception {
@@ -101,7 +100,7 @@ public class SpringbootHttpBoosterIT extends Core {
                 assert makeHttpRequest(HttpRequestType.GET,"http://" + hostRoute, null).code() == HttpStatus.SC_OK;;
             }
         } else {
-            throw new AssertionError("[No route found for: " + TESTSUITE_REPOSITORY_ARTIFACT_ID + "]\n");
+            throw new AssertionError("[No route found for: " + testsuiteRepositoryArtifactId + "]\n");
         }
     }
 

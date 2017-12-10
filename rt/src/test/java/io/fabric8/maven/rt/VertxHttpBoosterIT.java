@@ -22,8 +22,6 @@ import org.eclipse.jgit.lib.Repository;
 import org.json.JSONObject;
 import org.testng.annotations.Test;
 
-import java.io.File;
-
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
 public class VertxHttpBoosterIT extends Core {
@@ -57,7 +55,7 @@ public class VertxHttpBoosterIT extends Core {
 
         // change the source code
         updateSourceCode(testRepository, RELATIVE_POM_PATH);
-        addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, FMP_CONFIGURATION_FILE);
+        addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, fmpConfigurationFile);
 
         // re-deploy
         deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
@@ -72,11 +70,11 @@ public class VertxHttpBoosterIT extends Core {
     }
 
     private void assertDeployment() throws Exception {
-        assertThat(openShiftClient).deployment(TESTSUITE_REPOSITORY_ARTIFACT_ID);
-        assertThat(openShiftClient).service(TESTSUITE_REPOSITORY_ARTIFACT_ID);
+        assertThat(openShiftClient).deployment(testsuiteRepositoryArtifactId);
+        assertThat(openShiftClient).service(testsuiteRepositoryArtifactId);
 
-        RouteAssert.assertRoute(openShiftClient, TESTSUITE_REPOSITORY_ARTIFACT_ID);
-        assertThatWeServeAsExpected(getApplicationRouteWithName(TESTSUITE_REPOSITORY_ARTIFACT_ID));
+        RouteAssert.assertRoute(openShiftClient, testsuiteRepositoryArtifactId);
+        assertThatWeServeAsExpected(getApplicationRouteWithName(testsuiteRepositoryArtifactId));
     }
 
     private void waitUntilDeployment(boolean bIsReployed) throws Exception {

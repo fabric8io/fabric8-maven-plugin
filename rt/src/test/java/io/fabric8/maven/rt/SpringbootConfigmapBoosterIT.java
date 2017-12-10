@@ -52,7 +52,7 @@ public class SpringbootConfigmapBoosterIT extends Core {
         waitAfterDeployment(false);
         assertApplication(false);
 
-        openShiftClient.configMaps().inNamespace(TESTSUITE_NAMESPACE).withName(TESTSUITE_CONFIGMAP_NAME).delete();
+        openShiftClient.configMaps().inNamespace(testsuiteNamespace).withName(TESTSUITE_CONFIGMAP_NAME).delete();
     }
 
     @Test
@@ -68,7 +68,7 @@ public class SpringbootConfigmapBoosterIT extends Core {
 
         // Make some changes in ConfigMap and rollout
         updateSourceCode(testRepository, RELATIVE_POM_PATH);
-        addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, FMP_CONFIGURATION_FILE);
+        addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, fmpConfigurationFile);
         editConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Bonjour World from a ConfigMap!");
 
         // 2. Re-Deployment
@@ -76,7 +76,7 @@ public class SpringbootConfigmapBoosterIT extends Core {
         waitAfterDeployment(true);
         assertApplication(true);
 
-        openShiftClient.configMaps().inNamespace(TESTSUITE_NAMESPACE).withName(TESTSUITE_CONFIGMAP_NAME).delete();
+        openShiftClient.configMaps().inNamespace(testsuiteNamespace).withName(TESTSUITE_CONFIGMAP_NAME).delete();
     }
 
     public void deploy(Repository testRepository, String buildGoal, String buildProfile) throws Exception {
@@ -94,10 +94,10 @@ public class SpringbootConfigmapBoosterIT extends Core {
     }
 
     private void assertApplication(boolean bIsRedeployed) throws Exception {
-        assertThat(openShiftClient).deployment(TESTSUITE_REPOSITORY_ARTIFACT_ID);
-        assertThat(openShiftClient).service(TESTSUITE_REPOSITORY_ARTIFACT_ID);
+        assertThat(openShiftClient).deployment(testsuiteRepositoryArtifactId);
+        assertThat(openShiftClient).service(testsuiteRepositoryArtifactId);
 
-        RouteAssert.assertRoute(openShiftClient, TESTSUITE_REPOSITORY_ARTIFACT_ID);
+        RouteAssert.assertRoute(openShiftClient, testsuiteRepositoryArtifactId);
         // Check if the configmap's properties are accessible by the Application runnning in pod.
         if (bIsRedeployed)
             assert assertApplicationEndpoint("content", "Bonjour World from a ConfigMap!");
@@ -106,7 +106,7 @@ public class SpringbootConfigmapBoosterIT extends Core {
     }
 
     public boolean assertApplicationEndpoint(String key, String value) throws Exception {
-        Route applicationRoute = getApplicationRouteWithName(TESTSUITE_REPOSITORY_ARTIFACT_ID);
+        Route applicationRoute = getApplicationRouteWithName(testsuiteRepositoryArtifactId);
         String hostUrl = applicationRoute.getSpec().getHost() + TEST_ENDPOINT;
         Response response = makeHttpRequest(HttpRequestType.GET, "http://" + hostUrl, null);
         return new JSONObject(response.body().string()).getString(key).equals(value);

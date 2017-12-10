@@ -23,7 +23,6 @@ import org.eclipse.jgit.lib.Repository;
 import org.json.JSONObject;
 import org.junit.Test;
 
-import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
@@ -62,7 +61,7 @@ public class SpringbootCrudBoosterIT extends Core {
 
         // Make some changes in ConfigMap and rollout
         updateSourceCode(testRepository, RELATIVE_POM_PATH);
-        addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, FMP_CONFIGURATION_FILE);
+        addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, fmpConfigurationFile);
 
         deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
         waitAfterDeployment(true);
@@ -74,11 +73,11 @@ public class SpringbootCrudBoosterIT extends Core {
     }
 
     private void assertApplication() throws Exception {
-        assertThat(openShiftClient).deployment(TESTSUITE_REPOSITORY_ARTIFACT_ID);
-        assertThat(openShiftClient).service(TESTSUITE_REPOSITORY_ARTIFACT_ID);
+        assertThat(openShiftClient).deployment(testsuiteRepositoryArtifactId);
+        assertThat(openShiftClient).service(testsuiteRepositoryArtifactId);
 
-        RouteAssert.assertRoute(openShiftClient, TESTSUITE_REPOSITORY_ARTIFACT_ID);
-        executeCRUDAssertions(getApplicationRouteWithName(TESTSUITE_REPOSITORY_ARTIFACT_ID));
+        RouteAssert.assertRoute(openShiftClient, testsuiteRepositoryArtifactId);
+        executeCRUDAssertions(getApplicationRouteWithName(testsuiteRepositoryArtifactId));
     }
 
     private void waitAfterDeployment(boolean bIsRedeployed) throws Exception {
@@ -135,6 +134,5 @@ public class SpringbootCrudBoosterIT extends Core {
                 TESTSUITE_DB_IMAGE +
                 " --name=" + TESTSUITE_DB_NAME;
         int processRetval = exec(deployCommand);
-        System.out.println("process returned : " + processRetval);
     }
 }
