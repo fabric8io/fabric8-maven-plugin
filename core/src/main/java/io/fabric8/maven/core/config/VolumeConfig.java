@@ -17,7 +17,6 @@
 package io.fabric8.maven.core.config;
 
 import java.util.List;
-
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
@@ -132,6 +131,24 @@ public class VolumeConfig {
 
     public List<String> getMounts() {
         return mounts;
+    }
+
+    public static class Builder {
+        private VolumeConfig volumeConfig = new VolumeConfig();
+
+        public VolumeConfig.Builder name(String name) {
+            volumeConfig.name = name;
+            return this;
+        }
+
+        public VolumeConfig.Builder mounts(List<String> mounts) {
+            volumeConfig.mounts = mounts;
+            return this;
+        }
+
+        public VolumeConfig build() {
+            return volumeConfig;
+        }
     }
 
     // TODO: Change to rich configuration as described in http://blog.sonatype.com/2011/03/configuring-plugin-goals-in-maven-3/
