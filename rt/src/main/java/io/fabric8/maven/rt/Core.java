@@ -70,8 +70,6 @@ public class Core {
 
     protected final static Logger logger = LoggerFactory.getLogger(Core.class);
 
-    private GitCloner gitCloner;
-
     protected enum HttpRequestType {
         GET("GET"), POST("POST"), PUT("PUT"), DELETE("DELETE");
 
@@ -90,6 +88,8 @@ public class Core {
         gitCloner = new GitCloner(repositoryUrl);
         return gitCloner.cloneRepositoryToTempFolder();
     }
+
+    private GitCloner gitCloner;
 
     private void modifyPomFileToProjectVersion(Repository aRepository, String relativePomPath) throws IOException, XmlPullParserException {
         /**
@@ -130,7 +130,7 @@ public class Core {
         writer.write(new FileOutputStream(aFileObj), model);
     }
 
-    protected void updateSourceCode(Repository repository, String relativePomPath) throws Exception {
+    protected void updateSourceCode(Repository repository, String relativePomPath) throws XmlPullParserException, IOException {
         MavenXpp3Reader reader = new MavenXpp3Reader();
         String baseDir = repository.getWorkTree().getAbsolutePath();
         Model model = reader.read(new FileInputStream(new File(baseDir, relativePomPath)));
@@ -163,7 +163,7 @@ public class Core {
     }
 
     @AfterClass
-    protected void cleanSampleTestRepository() throws IOException {
+    protected void cleanSampleTestRepository() {
         gitCloner.removeClone();
         openShiftClient.close();
     }
@@ -187,10 +187,10 @@ public class Core {
      */
     protected Response makeHttpRequest(HttpRequestType requestType, String hostUrl, String params) throws IOException {
         OkHttpClient okHttpClient = new OkHttpClient();
-        MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+        MediaType json = MediaType.parse("application/json; charset=utf-8");
         params = (params == null ? new JSONObject().toString() : params);
         Request request = null;
-        RequestBody requestBody = RequestBody.create(JSON, params);
+        RequestBody requestBody = RequestBody.create(json, params);
 
         switch (requestType.getValue()) {
             case "GET":
@@ -210,7 +210,7 @@ public class Core {
                 request = new Request.Builder().url(hostUrl).get().build();
         }
         Response response = okHttpClient.newCall(request).execute();
-        logger.info("[" + requestType.getValue() + "] " + hostUrl + " " + HttpStatus.getCode(response.code()));
+        logger.info(String.format("[%s] %s %s", requestType.getValue(), hostUrl, HttpStatus.getCode(response.code())));
 
         return response;
     }

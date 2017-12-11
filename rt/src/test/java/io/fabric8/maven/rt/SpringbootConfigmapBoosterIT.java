@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
 public class SpringbootConfigmapBoosterIT extends Core {
+
     private final String SPRING_BOOT_CONFIGMAP_BOOSTER_GIT = "https://github.com/snowdrop/spring-boot-configmap-booster.git";
 
     private final String TESTSUITE_CONFIGMAP_NAME = "app-config";
@@ -45,6 +46,7 @@ public class SpringbootConfigmapBoosterIT extends Core {
     @Test
     public void deploy_springboot_app_once() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH);
+
         createViewRoleToServiceAccount();
         createConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Hello World from a ConfigMap!");
 
