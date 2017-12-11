@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
-public class SpringbootConfigmapBoosterIT extends Core {
+public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
 
     private final String SPRING_BOOT_CONFIGMAP_BOOSTER_GIT = "https://github.com/snowdrop/spring-boot-configmap-booster.git";
 

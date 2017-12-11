@@ -52,7 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class Core {
+public class BaseBoosterIT {
 
     protected final String fabric8PluginGroupId = "io.fabric8";
 
@@ -68,7 +68,7 @@ public class Core {
 
     protected OpenShiftClient openShiftClient;
 
-    protected final static Logger logger = LoggerFactory.getLogger(Core.class);
+    protected final static Logger logger = LoggerFactory.getLogger(BaseBoosterIT.class);
 
     protected enum HttpRequestType {
         GET("GET"), POST("POST"), PUT("PUT"), DELETE("DELETE");
