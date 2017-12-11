@@ -102,16 +102,19 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
         RouteAssert.assertRoute(openShiftClient, testsuiteRepositoryArtifactId);
         // Check if the configmap's properties are accessible by the Application runnning in pod.
         if (bIsRedeployed)
-            assert assertApplicationEndpoint("content", "Bonjour World from a ConfigMap!");
+            assertApplicationEndpoint("content", "Bonjour World from a ConfigMap!");
         else
-            assert assertApplicationEndpoint("content", "Hello World from a ConfigMap!");
+            assertApplicationEndpoint("content", "Hello World from a ConfigMap!");
     }
 
-    public boolean assertApplicationEndpoint(String key, String value) throws Exception {
+    private void assertApplicationEndpoint(String key, String value) throws Exception {
         Route applicationRoute = getApplicationRouteWithName(testsuiteRepositoryArtifactId);
         String hostUrl = applicationRoute.getSpec().getHost() + TEST_ENDPOINT;
         Response response = makeHttpRequest(HttpRequestType.GET, "http://" + hostUrl, null);
-        return new JSONObject(response.body().string()).getString(key).equals(value);
+        String responseContent = new JSONObject(response.body().string()).getString(key);
+
+        if (!responseContent.equals(value))
+            throw new AssertionError(String.format("Actual : %s, Expected : %s", responseContent, value));
     }
 
     private void createConfigMapResourceForApp(String configMapName, String sampleApplicationProperty) {

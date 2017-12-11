@@ -21,6 +21,7 @@ import okhttp3.Response;
 import org.apache.http.HttpStatus;
 import org.eclipse.jgit.lib.Repository;
 import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
@@ -133,6 +134,11 @@ public class SpringbootCrudBoosterIT extends BaseBoosterIT {
                 " -ePOSTGRESQL_DATABASE=my_data " +
                 TESTSUITE_DB_IMAGE +
                 " --name=" + TESTSUITE_DB_NAME;
-        int processRetval = exec(deployCommand);
+        exec(deployCommand);
+    }
+
+    @After
+    public void cleanup() throws Exception {
+        cleanSampleTestRepository();
     }
 }

@@ -21,6 +21,7 @@ import okhttp3.Response;
 import org.apache.http.HttpStatus;
 import org.eclipse.jgit.lib.Repository;
 import org.json.JSONObject;
+import org.junit.After;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.TimeUnit;
@@ -62,7 +63,7 @@ public class VertxHealthchecksBooster extends BaseBoosterIT {
         assertDeployment();
     }
 
-    public void deploy(Repository testRepository, String buildGoal, String buildProfile) throws Exception {
+    private void deploy(Repository testRepository, String buildGoal, String buildProfile) throws Exception {
         runEmbeddedMavenBuild(testRepository, buildGoal, buildProfile);
         waitTillApplicationPodStarts();
     }
@@ -127,5 +128,10 @@ public class VertxHealthchecksBooster extends BaseBoosterIT {
                 && new JSONObject(makeHttpRequest(HttpRequestType.GET, hostUrl + "/api/greeting", null).body().string())
                         .getString("content")
                         .equals("Hello, World!");
+    }
+
+    @After
+    public void cleanup() throws Exception {
+        cleanSampleTestRepository();
     }
 }

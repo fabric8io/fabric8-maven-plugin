@@ -21,6 +21,7 @@ import okhttp3.Response;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.lib.Repository;
 import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Test;
 
 import java.io.File;
@@ -82,13 +83,13 @@ public class VertxConfigmapBoosterIT extends BaseBoosterIT {
         openShiftClient.configMaps().inNamespace(testsuiteNamespace).withName(TESTSUITE_CONFIGMAP_NAME).delete();
     }
 
-    public void deploy(Repository testRepository, String buildGoal, String buildProfile) throws Exception {
+    private void deploy(Repository testRepository, String buildGoal, String buildProfile) throws Exception {
         runEmbeddedMavenBuild(testRepository, buildGoal, buildProfile);
     }
 
     private void waitAfterDeployment(boolean bIsRedeployed) throws Exception {
         // Waiting for application pod to start.
-        if(bIsRedeployed)
+        if (bIsRedeployed)
             waitTillApplicationPodStarts(ANNOTATION_KEY, ANNOTATION_VALUE);
         else
             waitTillApplicationPodStarts();
@@ -101,13 +102,13 @@ public class VertxConfigmapBoosterIT extends BaseBoosterIT {
         assertThat(openShiftClient).service(testsuiteRepositoryArtifactId);
 
         RouteAssert.assertRoute(openShiftClient, testsuiteRepositoryArtifactId);
-        if(bIsRedeployed)
+        if (bIsRedeployed)
             assert assertApplicationEndpoint("content", "Bonjour, World from a ConfigMap !");
         else
             assert assertApplicationEndpoint("content", "Hello, World from a ConfigMap !");
     }
 
-    public boolean assertApplicationEndpoint(String key, String value) throws Exception {
+    private boolean assertApplicationEndpoint(String key, String value) throws Exception {
         Route applicationRoute = getApplicationRouteWithName(testsuiteRepositoryArtifactId);
         String hostUrl = applicationRoute.getSpec().getHost() + TEST_ENDPOINT;
         Response response = makeHttpRequest(HttpRequestType.GET, "http://" + hostUrl, null);
@@ -132,5 +133,10 @@ public class VertxConfigmapBoosterIT extends BaseBoosterIT {
         configMapData.put("app-config.yml", content);
 
         createOrReplaceConfigMap(configMapName, configMapData);
+    }
+
+    @After
+    public void cleanup() throws Exception {
+        cleanSampleTestRepository();
     }
 }

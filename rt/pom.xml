@@ -24,6 +24,7 @@
         <testng.version>6.13.1</testng.version>
         <okhttp.version>3.9.1</okhttp.version>
         <apache.commons.version>1.3.2</apache.commons.version>
+        <apache.log4j.version>2.10.0</apache.log4j.version>
     </properties>
 
     <dependencies>

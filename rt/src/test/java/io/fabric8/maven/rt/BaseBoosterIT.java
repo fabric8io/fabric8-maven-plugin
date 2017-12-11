@@ -43,14 +43,13 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.jboss.shrinkwrap.resolver.api.maven.embedded.EmbeddedMaven;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterClass;
 
 import java.io.*;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class BaseBoosterIT {
 
@@ -68,7 +67,9 @@ public class BaseBoosterIT {
 
     protected OpenShiftClient openShiftClient;
 
-    protected final static Logger logger = LoggerFactory.getLogger(BaseBoosterIT.class);
+    protected final static Logger logger = Logger.getLogger(BaseBoosterIT.class.getSimpleName());
+
+    protected GitCloner gitCloner;
 
     protected enum HttpRequestType {
         GET("GET"), POST("POST"), PUT("PUT"), DELETE("DELETE");
@@ -88,8 +89,6 @@ public class BaseBoosterIT {
         gitCloner = new GitCloner(repositoryUrl);
         return gitCloner.cloneRepositoryToTempFolder();
     }
-
-    private GitCloner gitCloner;
 
     private void modifyPomFileToProjectVersion(Repository aRepository, String relativePomPath) throws IOException, XmlPullParserException {
         /**
@@ -162,10 +161,9 @@ public class BaseBoosterIT {
                 .build();
     }
 
-    @AfterClass
     protected void cleanSampleTestRepository() {
-        gitCloner.removeClone();
-        openShiftClient.close();
+        this.gitCloner.removeClone();
+        this.openShiftClient.close();
     }
 
     protected Route getApplicationRouteWithName(String name) {
@@ -206,11 +204,13 @@ public class BaseBoosterIT {
                 request = new Request.Builder().url(hostUrl).delete(requestBody).build();
                 break;
             default:
-                logger.error("No valid Http request type specified, using GET instread.");
+                logger.info("No valid Http request type specified, using GET instread.");
                 request = new Request.Builder().url(hostUrl).get().build();
         }
         Response response = okHttpClient.newCall(request).execute();
-        logger.info(String.format("[%s] %s %s", requestType.getValue(), hostUrl, HttpStatus.getCode(response.code())));
+        if(logger.isLoggable(Level.INFO)) {
+            logger.info(String.format("[%s] %s %s", requestType.getValue(), hostUrl, HttpStatus.getCode(response.code())));
+        }
 
         return response;
     }
@@ -224,6 +224,9 @@ public class BaseBoosterIT {
         while ((line = reader.readLine()) != null) {
             logger.info(line);
         }
+
+        if(child.exitValue() != 0)
+            logger.log(Level.WARNING, String.format("Exec for : %s returned status : %d", command, child.exitValue()));
         return child.exitValue();
     }
 

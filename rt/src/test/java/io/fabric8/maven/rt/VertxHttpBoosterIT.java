@@ -20,6 +20,7 @@ import io.fabric8.openshift.api.model.Route;
 import okhttp3.Response;
 import org.eclipse.jgit.lib.Repository;
 import org.json.JSONObject;
+import org.junit.After;
 import org.testng.annotations.Test;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
@@ -65,7 +66,7 @@ public class VertxHttpBoosterIT extends BaseBoosterIT {
         assert checkDeploymentsForAnnotation(ANNOTATION_KEY);
     }
 
-    public void deploy(Repository testRepository, String buildGoal, String buildProfile) throws Exception {
+    private void deploy(Repository testRepository, String buildGoal, String buildProfile) throws Exception {
         runEmbeddedMavenBuild(testRepository, buildGoal, buildProfile);
     }
 
@@ -95,5 +96,10 @@ public class VertxHttpBoosterIT extends BaseBoosterIT {
 
         readResponse = makeHttpRequest(HttpRequestType.GET, hostUrl, null);
         assert new JSONObject(readResponse.body().string()).getString("content").equals("Hello, vertx!");
+    }
+
+    @After
+    public void cleanup() throws Exception {
+        cleanSampleTestRepository();
     }
 }
