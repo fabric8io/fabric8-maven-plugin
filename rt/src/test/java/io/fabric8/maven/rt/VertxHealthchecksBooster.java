@@ -38,7 +38,7 @@ public class VertxHealthchecksBooster extends BaseBoosterIT {
     private final String ANNOTATION_KEY = "vertx-healthcheck-testKey", ANNOTATION_VALUE = "vertx-healthcheck-testValue";
 
     @Test
-    public void deploy_springboot_app_once() throws Exception {
+    public void deploy_vertx_app_once() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_HTTP_BOOSTER_GIT, RELATIVE_POM_PATH);
 
         deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
@@ -47,7 +47,7 @@ public class VertxHealthchecksBooster extends BaseBoosterIT {
     }
 
     @Test
-    public void redeploy_springboot_app() throws Exception {
+    public void redeploy_vertx_app() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_HTTP_BOOSTER_GIT, RELATIVE_POM_PATH);
         deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
         waitAfterDeployment(false);

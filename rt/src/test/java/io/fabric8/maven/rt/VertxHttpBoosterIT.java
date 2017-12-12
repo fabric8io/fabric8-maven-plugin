@@ -37,7 +37,7 @@ public class VertxHttpBoosterIT extends BaseBoosterIT {
     private final String ANNOTATION_KEY = "vertx-testKey", ANNOTATION_VALUE = "vertx-testValue";
 
     @Test
-    public void deploy_springboot_app_once() throws Exception {
+    public void deploy_vertx_app_once() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_HTTP_BOOSTER_GIT, RELATIVE_POM_PATH);
 
         deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
@@ -46,7 +46,7 @@ public class VertxHttpBoosterIT extends BaseBoosterIT {
     }
 
     @Test
-    public void redeploy_springboot_app() throws Exception {
+    public void redeploy_vertx_app() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_HTTP_BOOSTER_GIT, RELATIVE_POM_PATH);
 
         // deploy

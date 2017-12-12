@@ -47,7 +47,7 @@ public class VertxConfigmapBoosterIT extends BaseBoosterIT {
     private final String RELATIVE_POM_PATH = "/pom.xml";
 
     @Test
-    public void deploy_springboot_app_once() throws Exception {
+    public void deploy_vertx_app_once() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH);
 
         createViewRoleToServiceAccount();
@@ -60,7 +60,7 @@ public class VertxConfigmapBoosterIT extends BaseBoosterIT {
     }
 
     @Test
-    public void redeploy_springboot_app() throws Exception {
+    public void redeploy_vertx_app() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH);
 
         createViewRoleToServiceAccount();
