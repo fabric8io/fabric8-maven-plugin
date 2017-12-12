@@ -18,6 +18,7 @@ package io.fabric8.maven.rt;
 
 import io.fabric8.openshift.api.model.Route;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.eclipse.jgit.lib.Repository;
 import org.json.JSONObject;
 import org.junit.After;
@@ -48,11 +49,6 @@ public class VertxHttpBoosterIT extends BaseBoosterIT {
     @Test
     public void redeploy_vertx_app() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_HTTP_BOOSTER_GIT, RELATIVE_POM_PATH);
-
-        // deploy
-        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
-        waitUntilDeployment(false);
-        assertDeployment();
 
         // change the source code
         updateSourceCode(testRepository, RELATIVE_POM_PATH);
@@ -89,13 +85,8 @@ public class VertxHttpBoosterIT extends BaseBoosterIT {
         String hostUrl = "http://" + applicationRoute.getSpec().getHost() + testEndpoint;
 
         Response readResponse = makeHttpRequest(HttpRequestType.GET, hostUrl, null);
-        assert new JSONObject(readResponse.body().string()).getString("content").equals("Hello, World!");
-
-        // let's change default greeting message
-        hostUrl += "?name=vertx";
-
-        readResponse = makeHttpRequest(HttpRequestType.GET, hostUrl, null);
-        assert new JSONObject(readResponse.body().string()).getString("content").equals("Hello, vertx!");
+        String responseContent = readResponse.body().string();
+        assert new JSONObject(responseContent).getString("content").equals("Hello, World!");
     }
 
     @After

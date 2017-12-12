@@ -60,14 +60,8 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
     @Test
     public void redeploy_springboot_app() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH);
-        createViewRoleToServiceAccount();
+
         createConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Hello World from a ConfigMap!");
-
-        // 1. Deployment
-        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
-        waitAfterDeployment(false);
-        assertApplication(false);
-
         // Make some changes in ConfigMap and rollout
         updateSourceCode(testRepository, RELATIVE_POM_PATH);
         addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, fmpConfigurationFile);

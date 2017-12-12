@@ -49,9 +49,6 @@ public class VertxHealthchecksBooster extends BaseBoosterIT {
     @Test
     public void redeploy_vertx_app() throws Exception {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_HTTP_BOOSTER_GIT, RELATIVE_POM_PATH);
-        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
-        waitAfterDeployment(false);
-        assertDeployment();
 
         // change the source code
         updateSourceCode(testRepository, RELATIVE_POM_PATH);

@@ -296,6 +296,7 @@ public class BaseBoosterIT {
                 logger.info("waitTillApplicationPodStarts() -> Pod : " + pod.getMetadata().getName() + ", isReady : " + KubernetesHelper.isPodReady(pod));
                 if (KubernetesHelper.isPodReady(pod)) {
                     logger.info("OK ✓ ... Pod wait over.");
+                    TimeUnit.SECONDS.sleep(10);
                     return;
                 }
             }
@@ -333,6 +334,7 @@ public class BaseBoosterIT {
                         && pod.getMetadata().getAnnotations().get(key).equalsIgnoreCase(value)
                         && KubernetesHelper.isPodReady(pod)) {
                     logger.info("OK ✓ ... Pod wait over.");
+                    TimeUnit.SECONDS.sleep(10);
                     return;
                 }
             }
