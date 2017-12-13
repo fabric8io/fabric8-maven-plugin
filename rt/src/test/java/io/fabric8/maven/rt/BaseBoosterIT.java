@@ -257,7 +257,6 @@ public class BaseBoosterIT {
         Response response = okHttpClient.newCall(request).execute();
         if (logger.isLoggable(Level.INFO)) {
             logger.info(String.format("[%s] %s %s", requestType.getValue(), hostUrl, HttpStatus.getCode(response.code())));
-            logger.info(response.body() != null ? response.body().string() : null);
         }
 
         return response;

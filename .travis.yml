@@ -12,8 +12,9 @@ matrix:
     - env: OC_VERSION="v3.6.1" COMMIT_ID="008f2d5"
     #- env: OC_VERSION="v3.7.0" COMMIT_ID="7ed6862"
 
+sudo: required
 dist: trusty
-sudo: enabled
+group: deprecated-2017Q4
 
 language: java
 jdk:
