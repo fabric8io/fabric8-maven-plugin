@@ -28,10 +28,7 @@ import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import okhttp3.*;
 import org.apache.commons.io.FileUtils;
-import org.apache.maven.model.Dependency;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.Plugin;
-import org.apache.maven.model.Profile;
+import org.apache.maven.model.*;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.arquillian.smart.testing.rules.git.GitCloner;
@@ -45,6 +42,7 @@ import org.jboss.shrinkwrap.resolver.api.maven.embedded.EmbeddedMaven;
 import org.json.JSONObject;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -101,10 +99,17 @@ public class BaseBoosterIT {
         Model model = readPomModelFromFile(clonedRepositoryPomFile);
         testsuiteRepositoryArtifactId = model.getArtifactId();
 
-        Map<String, Plugin> aStringToPluginMap = model.getBuild().getPluginsAsMap();
+        // Check if fmp is not present in openshift profile
+        model = updatePomIfFmpNotPresent(model, clonedRepositoryPomFile);
+        Build build = model.getBuild();
+
+        /*
+         * Handle the scenarios where build is in outermost scope or present
+         * specifically in openshift profile.
+         */
         List<Profile> profiles = model.getProfiles();
-        if (aStringToPluginMap.get(fabric8PluginGroupId + ":" + fabric8PluginArtifactId) != null) {
-            aStringToPluginMap.get(fabric8PluginGroupId + ":" + fabric8PluginArtifactId).setVersion(fmpCurrentVersion);
+        if (build != null && build.getPluginsAsMap().get(fabric8PluginGroupId + ":" + fabric8PluginArtifactId) != null) {
+            build.getPluginsAsMap().get(fabric8PluginGroupId + ":" + fabric8PluginArtifactId).setVersion(fmpCurrentVersion);
         } else {
             for (Profile profile : profiles) {
                 if (profile.getBuild() != null && profile.getBuild().getPluginsAsMap().get(fabric8PluginGroupId + ":" + fabric8PluginArtifactId) != null) {
@@ -117,6 +122,48 @@ public class BaseBoosterIT {
 
         // Write back the updated model to the pom file
         writePomModelToFile(clonedRepositoryPomFile, model);
+    }
+
+    private Model updatePomIfFmpNotPresent(Model projectModel, File pomFile) throws XmlPullParserException, IOException {
+        if (getProfileIndexUsingFmp(projectModel) < 0)
+            projectModel = writeOpenShiftProfileInPom(projectModel, pomFile);
+
+        return projectModel;
+    }
+
+    private Model writeOpenShiftProfileInPom(Model projectModel, File pomFile) throws XmlPullParserException, IOException {
+        final List<PluginExecution> executions = new ArrayList<>();
+
+        PluginExecution aPluginExecution = new PluginExecution();
+        aPluginExecution.setId("fmp");
+        aPluginExecution.addGoal("resource");
+        aPluginExecution.addGoal("build");
+
+        executions.add(aPluginExecution);
+
+        final Plugin fabric8Plugin = new Plugin();
+        fabric8Plugin.setGroupId(fabric8PluginGroupId);
+        fabric8Plugin.setArtifactId(fabric8PluginArtifactId);
+        fabric8Plugin.setExecutions(executions);
+
+        Build build = new Build();
+        build.getPlugins().add(fabric8Plugin);
+
+        int nOpenShiftIndex;
+        Profile fmpProfile;
+        if ((nOpenShiftIndex = getProfileIndexWithName(projectModel, "openshift")) > 0) { // update existing profile
+            fmpProfile = projectModel.getProfiles().get(nOpenShiftIndex);
+            fmpProfile.setBuild(build);
+            projectModel.getProfiles().set(nOpenShiftIndex, fmpProfile);
+        } else { // if not present, simply create a profile names openshift which would contain fmp.
+            fmpProfile = new Profile();
+            fmpProfile.setId("openshift");
+            fmpProfile.setBuild(build);
+            projectModel.addProfile(fmpProfile);
+        }
+        writePomModelToFile(pomFile, projectModel);
+
+        return projectModel;
     }
 
     protected static Model readPomModelFromFile(File aFileObj) throws XmlPullParserException, IOException {
@@ -208,8 +255,9 @@ public class BaseBoosterIT {
                 request = new Request.Builder().url(hostUrl).get().build();
         }
         Response response = okHttpClient.newCall(request).execute();
-        if(logger.isLoggable(Level.INFO)) {
+        if (logger.isLoggable(Level.INFO)) {
             logger.info(String.format("[%s] %s %s", requestType.getValue(), hostUrl, HttpStatus.getCode(response.code())));
+            logger.info(response.body() != null ? response.body().string() : null);
         }
 
         return response;
@@ -225,7 +273,7 @@ public class BaseBoosterIT {
             logger.info(line);
         }
 
-        if(child.exitValue() != 0)
+        if (child.exitValue() != 0)
             logger.log(Level.WARNING, String.format("Exec for : %s returned status : %d", command, child.exitValue()));
         return child.exitValue();
     }
@@ -248,18 +296,30 @@ public class BaseBoosterIT {
                 new ByteArrayInputStream(pomFragmentStr.getBytes()),
                 "UTF-8");
 
-        int nOpenShiftProfile = getOpenshiftProfileIndex(model);
+        int nOpenShiftProfile = getProfileIndexUsingFmp(model);
         model.getProfiles().get(nOpenShiftProfile).getBuild().getPluginsAsMap().get(fabric8MavenPluginKey).setConfiguration(configurationDom);
         writePomModelToFile(pomFile, model);
     }
 
-    protected int getOpenshiftProfileIndex(Model aPomModel) {
+    protected int getProfileIndexUsingFmp(Model aPomModel) {
         List<Profile> profiles = aPomModel.getProfiles();
         for (int nIndex = 0; nIndex < profiles.size(); nIndex++) {
-            if (profiles.get(nIndex).getId().equals("openshift"))
+            if (profiles.get(nIndex).getBuild() != null
+                    && profiles.get(nIndex).getBuild().getPluginsAsMap().containsKey(fabric8MavenPluginKey))
                 return nIndex;
         }
-        throw new AssertionError("No openshift profile found in project's pom.xml");
+        logger.log(Level.WARNING, "No profile found in project's pom.xml using fmp");
+        return -1;
+    }
+
+    protected int getProfileIndexWithName(Model aPomModel, String profileId) {
+        List<Profile> profiles = aPomModel.getProfiles();
+        for (int nIndex = 0; nIndex < profiles.size(); nIndex++) {
+            if (profiles.get(nIndex).getId().equals(profileId))
+                return nIndex;
+        }
+        logger.log(Level.WARNING, String.format("No profile found in project's pom.xml containing %s", profileId));
+        return -1;
     }
 
     /**
