@@ -92,6 +92,7 @@ public class SpringbootCrudBoosterIT extends BaseBoosterIT {
         JSONObject jsonRequest = new JSONObject();
         String testFruitName = "Pineapple";
 
+        // limiting test scope, a basic write followed by read is sufficient.
         // (C) Create
         jsonRequest.put("name", testFruitName);
         Response createResponse = makeHttpRequest(HttpRequestType.POST, hostUrl, jsonRequest.toString());
@@ -104,18 +105,6 @@ public class SpringbootCrudBoosterIT extends BaseBoosterIT {
         String fruitName = new JSONObject(readResponse.body().string()).getString("name");
         assert readResponse.code() == HttpStatus.SC_OK;
         assert fruitName.equals(testFruitName);
-
-        // (U) Update
-        jsonRequest.put("name", "Strawberry");
-        Response updateResponse = makeHttpRequest(HttpRequestType.PUT, hostUrl, jsonRequest.toString());
-        Response checkUpdateResponse = makeHttpRequest(HttpRequestType.GET, hostUrl, null);
-        String updatedFruitName = new JSONObject(checkUpdateResponse.body().string()).getString("name");
-        assert updateResponse.code() == HttpStatus.SC_OK;
-        assert updatedFruitName.equals("Strawberry");
-
-        // (D) Delete
-        Response deleteResponse = makeHttpRequest(HttpRequestType.DELETE, hostUrl, null);
-        assert deleteResponse.code() == HttpStatus.SC_NO_CONTENT;
     }
 
 

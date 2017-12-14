@@ -25,20 +25,18 @@ import io.fabric8.openshift.client.OpenShiftClient;
 
 public class RouteAssert {
 
-    private RouteAssert(){
+    private RouteAssert() {
 
     }
 
     public static void assertRoute(OpenShiftClient client, String appName) {
         for (Route route : client.routes().list().getItems()) {
-            if(route.getMetadata().getName().equalsIgnoreCase(appName))
-            {
+            if (route.getMetadata().getName().equalsIgnoreCase(appName)) {
                 return;
             }
         }
 
-        throw new AssertionError("[No route exists for name: "+appName+"] \n" +
+        throw new AssertionError("[No route exists for name: " + appName + "] " +
                 "Expecting actual not to be null");
     }
-
 }

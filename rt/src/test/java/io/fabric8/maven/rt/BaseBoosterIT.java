@@ -70,18 +70,8 @@ public class BaseBoosterIT {
     protected GitCloner gitCloner;
 
     protected enum HttpRequestType {
-        GET("GET"), POST("POST"), PUT("PUT"), DELETE("DELETE");
-
-        private String httpRequestType;
-
-        HttpRequestType(String aHttpRequestType) {
-            this.httpRequestType = aHttpRequestType;
-        }
-
-        protected String getValue() {
-            return httpRequestType;
-        }
-    }
+        GET, POST, PUT, DELETE;
+    };
 
     private Repository cloneRepositoryUsingHttp(String repositoryUrl) throws IOException, GitAPIException {
         gitCloner = new GitCloner(repositoryUrl);
@@ -125,7 +115,7 @@ public class BaseBoosterIT {
     }
 
     private Model updatePomIfFmpNotPresent(Model projectModel, File pomFile) throws XmlPullParserException, IOException {
-        if (getProfileIndexUsingFmp(projectModel) < 0)
+        if (getProfileIndexUsingFmp(projectModel, fabric8MavenPluginKey) < 0)
             projectModel = writeOpenShiftProfileInPom(projectModel, pomFile);
 
         return projectModel;
@@ -237,17 +227,17 @@ public class BaseBoosterIT {
         Request request = null;
         RequestBody requestBody = RequestBody.create(json, params);
 
-        switch (requestType.getValue()) {
-            case "GET":
+        switch (requestType) {
+            case GET:
                 request = new Request.Builder().url(hostUrl).get().build();
                 break;
-            case "POST":
+            case POST:
                 request = new Request.Builder().url(hostUrl).post(requestBody).build();
                 break;
-            case "PUT":
+            case PUT:
                 request = new Request.Builder().url(hostUrl).put(requestBody).build();
                 break;
-            case "DELETE":
+            case DELETE:
                 request = new Request.Builder().url(hostUrl).delete(requestBody).build();
                 break;
             default:
@@ -256,7 +246,7 @@ public class BaseBoosterIT {
         }
         Response response = okHttpClient.newCall(request).execute();
         if (logger.isLoggable(Level.INFO)) {
-            logger.info(String.format("[%s] %s %s", requestType.getValue(), hostUrl, HttpStatus.getCode(response.code())));
+            logger.info(String.format("[%s] %s %s", requestType.name(), hostUrl, HttpStatus.getCode(response.code())));
         }
 
         return response;
@@ -295,16 +285,16 @@ public class BaseBoosterIT {
                 new ByteArrayInputStream(pomFragmentStr.getBytes()),
                 "UTF-8");
 
-        int nOpenShiftProfile = getProfileIndexUsingFmp(model);
+        int nOpenShiftProfile = getProfileIndexUsingFmp(model, fabric8MavenPluginKey);
         model.getProfiles().get(nOpenShiftProfile).getBuild().getPluginsAsMap().get(fabric8MavenPluginKey).setConfiguration(configurationDom);
         writePomModelToFile(pomFile, model);
     }
 
-    protected int getProfileIndexUsingFmp(Model aPomModel) {
+    protected int getProfileIndexUsingFmp(Model aPomModel, String pluginName) {
         List<Profile> profiles = aPomModel.getProfiles();
         for (int nIndex = 0; nIndex < profiles.size(); nIndex++) {
             if (profiles.get(nIndex).getBuild() != null
-                    && profiles.get(nIndex).getBuild().getPluginsAsMap().containsKey(fabric8MavenPluginKey))
+                    && profiles.get(nIndex).getBuild().getPluginsAsMap().containsKey(pluginName))
                 return nIndex;
         }
         logger.log(Level.WARNING, "No profile found in project's pom.xml using fmp");
