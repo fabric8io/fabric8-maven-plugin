@@ -1,3 +1,19 @@
+/*
+ * Copyright 2016 Red Hat, Inc.
+ *
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package io.fabric8.maven.core.handler;
 
 import io.fabric8.kubernetes.api.model.ContainerPort;
@@ -29,6 +45,8 @@ public class ContainerHandlerTest {
     @Test
     public void getContainersTest(){
         MavenProject project = new MavenProject();
+        project.setArtifactId("test-artifact");
+        project.setGroupId("test-group");
 
         ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
         ResourceConfig config = new ResourceConfig.Builder()
@@ -45,26 +63,51 @@ public class ContainerHandlerTest {
         tags.add("latest");
         tags.add("test");
 
-        BuildImageConfiguration buildImageConfiguration1 = new BuildImageConfiguration.Builder().
+        //container name with alias
+        BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().
                 ports(ports).from("fabric8/maven:latest").cleanup("try").tags(tags).compression("gzip").build();
 
-        ImageConfiguration imageConfiguration1 = new ImageConfiguration.Builder().
-                name("test").alias("test-app").buildConfig(buildImageConfiguration1).registry("docker.io").build();
+        ImageConfiguration imageConfiguration = new ImageConfiguration.Builder().
+                name("test").alias("test-app").buildConfig(buildImageConfiguration).registry("docker.io").build();
 
-        BuildImageConfiguration buildImageConfiguration2 = new BuildImageConfiguration.Builder().
+        List<ImageConfiguration> images = new ArrayList<>();
+        images.add(imageConfiguration);
+
+        containers = handler.getContainers(config, images);
+        assertNotNull(containers);
+        assertEquals("test-app",containers.get(0).getName());
+        assertEquals("docker.io/test",containers.get(0).getImage());
+        assertEquals("IfNotPresent",containers.get(0).getImagePullPolicy());
+
+        //container name with group id and aritact id without alias and user
+        buildImageConfiguration = new BuildImageConfiguration.Builder().
                 ports(ports).from("fabric8/").cleanup("try").tags(tags)
                 .compression("gzip").dockerFile("testFile").dockerFileDir("/demo").build();
 
-        ImageConfiguration imageConfiguration2 = new ImageConfiguration.Builder().
-                name("test").alias("test-app").buildConfig(buildImageConfiguration2).registry("docker.io").build();
+        imageConfiguration = new ImageConfiguration.Builder().
+                name("test").buildConfig(buildImageConfiguration).registry("docker.io").build();
 
-        List<ImageConfiguration> images = new ArrayList<>();
-        images.add(imageConfiguration1);
-        images.add(imageConfiguration2);
+        images.clear();
+        images.add(imageConfiguration);
 
         containers = handler.getContainers(config, images);
+        assertNotNull(containers);
+        assertEquals("test-group-test-artifact",containers.get(0).getName());
+        assertEquals("docker.io/test",containers.get(0).getImage());
+        assertEquals("IfNotPresent",containers.get(0).getImagePullPolicy());
 
-        assertEquals(2,containers.size());
+        //container name with user and image with tag
+        imageConfiguration = new ImageConfiguration.Builder().
+                name("user/test:latest").buildConfig(buildImageConfiguration).registry("docker.io").build();
+
+        images.clear();
+        images.add(imageConfiguration);
+
+        containers = handler.getContainers(config, images);
+        assertNotNull(containers);
+        assertEquals("user-test-artifact",containers.get(0).getName());
+        assertEquals("docker.io/user/test:latest",containers.get(0).getImage());
+        assertEquals("IfNotPresent",containers.get(0).getImagePullPolicy());
     }
 
     @Test
