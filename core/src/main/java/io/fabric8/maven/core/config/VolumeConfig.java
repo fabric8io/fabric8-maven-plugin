@@ -146,6 +146,16 @@ public class VolumeConfig {
             return this;
         }
 
+        public VolumeConfig.Builder type(String type) {
+            volumeConfig.type = type;
+            return this;
+        }
+
+        public VolumeConfig.Builder path(String path) {
+            volumeConfig.path = path;
+            return this;
+        }
+
         public VolumeConfig build() {
             return volumeConfig;
         }
