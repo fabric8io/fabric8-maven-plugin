@@ -27,7 +27,8 @@ public class PodTemplateHandlerTest {
 
         MavenProject project = new MavenProject();
 
-        ContainerHandler containerHandler = new ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler containerHandler =
+                new ContainerHandler(project, envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -56,10 +57,12 @@ public class PodTemplateHandlerTest {
 
         //container name with alias
         BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().
-                ports(ports).from("fabric8/maven:latest").cleanup("try").tags(tags).compression("gzip").build();
+                ports(ports).from("fabric8/maven:latest").cleanup("try")
+                .tags(tags).compression("gzip").build();
 
         ImageConfiguration imageConfiguration = new ImageConfiguration.Builder().
-                name("test").alias("test-app").buildConfig(buildImageConfiguration).registry("docker.io").build();
+                name("test").alias("test-app").buildConfig(buildImageConfiguration).
+                registry("docker.io").build();
 
         List<ImageConfiguration> images = new ArrayList<>();
         images.add(imageConfiguration);
@@ -70,9 +73,12 @@ public class PodTemplateHandlerTest {
         assertEquals("test-account",podTemplateSpec.getSpec().getServiceAccountName());
         assertTrue(podTemplateSpec.getSpec().getVolumes().isEmpty());
         assertNotNull(podTemplateSpec.getSpec().getContainers());
-        assertEquals("test-app",podTemplateSpec.getSpec().getContainers().get(0).getName());
-        assertEquals("docker.io/test",podTemplateSpec.getSpec().getContainers().get(0).getImage());
-        assertEquals("IfNotPresent",podTemplateSpec.getSpec().getContainers().get(0).getImagePullPolicy());
+        assertEquals("test-app",podTemplateSpec.getSpec()
+                .getContainers().get(0).getName());
+        assertEquals("docker.io/test",podTemplateSpec.getSpec()
+                .getContainers().get(0).getImage());
+        assertEquals("IfNotPresent",podTemplateSpec.getSpec()
+                .getContainers().get(0).getImagePullPolicy());
 
         //Pod with empty Volume Config and wihtout ServiceAccount
         config = new ResourceConfig.Builder()
@@ -91,7 +97,8 @@ public class PodTemplateHandlerTest {
 
         //Config with Volume Config and ServiceAccount
         //valid type
-        VolumeConfig volumeConfig1 = new VolumeConfig.Builder().name("test").mounts(mounts).type("hostPath").path("/test/path").build();
+        VolumeConfig volumeConfig1 = new VolumeConfig.Builder().name("test")
+                .mounts(mounts).type("hostPath").path("/test/path").build();
         volumes1.clear();
         volumes1.add(volumeConfig1);
 
@@ -108,12 +115,15 @@ public class PodTemplateHandlerTest {
         //Assertion
         assertEquals("test-account",podTemplateSpec.getSpec().getServiceAccountName());
         assertFalse(podTemplateSpec.getSpec().getVolumes().isEmpty());
-        assertEquals("test",podTemplateSpec.getSpec().getVolumes().get(0).getName());
-        assertEquals("/test/path",podTemplateSpec.getSpec().getVolumes().get(0).getHostPath().getPath());
+        assertEquals("test",podTemplateSpec.getSpec()
+                .getVolumes().get(0).getName());
+        assertEquals("/test/path",podTemplateSpec.getSpec()
+                .getVolumes().get(0).getHostPath().getPath());
         assertNotNull(podTemplateSpec.getSpec().getContainers());
 
         //invalid type
-        volumeConfig1 = new VolumeConfig.Builder().name("test").mounts(mounts).type("hoStPath").path("/test/path").build();
+        volumeConfig1 = new VolumeConfig.Builder().name("test")
+                .mounts(mounts).type("hoStPath").path("/test/path").build();
         volumes1.clear();
         volumes1.add(volumeConfig1);
 
