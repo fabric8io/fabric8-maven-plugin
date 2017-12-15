@@ -83,7 +83,7 @@
     <!-- =======================================================  -->
     <!-- === Karaf base image versions for docker, s2i (istag == s2i) -->
     <!-- Upstream -->
-    <version.image.karaf.upstream.docker>2.0</version.image.karaf.upstream.docker>
+    <version.image.karaf.upstream.docker>2.1</version.image.karaf.upstream.docker>
     <version.image.karaf.upstream.s2i>${version.image.karaf.upstream.docker}</version.image.karaf.upstream.s2i>
 
     <!-- RedHat  -->
