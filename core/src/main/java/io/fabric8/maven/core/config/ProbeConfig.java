@@ -63,4 +63,39 @@ public class ProbeConfig {
     public String getTcpPort() {
         return tcpPort;
     }
+
+    // =============================================================
+
+    public static class Builder {
+        private ProbeConfig config = new ProbeConfig();
+
+        public Builder initialDelaySeconds(Integer initialDelaySeconds) {
+            config.initialDelaySeconds = initialDelaySeconds;
+            return this;
+        }
+
+        public Builder timeoutSeconds(Integer timeoutSeconds) {
+            config.timeoutSeconds = timeoutSeconds;
+            return this;
+        }
+
+        public Builder exec(String exec) {
+            config.exec = exec;
+            return this;
+        }
+
+        public Builder tcpPort(String tcpPort) {
+            config.tcpPort = tcpPort;
+            return this;
+        }
+
+        public Builder getUrl(String getUrl) {
+            config.getUrl = getUrl;
+            return this;
+        }
+
+        public ProbeConfig build() {
+            return config;
+        }
+    }
 }
