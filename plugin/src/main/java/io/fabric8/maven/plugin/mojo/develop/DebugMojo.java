@@ -17,7 +17,10 @@ package io.fabric8.maven.plugin.mojo.develop;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 
 import io.fabric8.kubernetes.api.Controller;
@@ -76,11 +79,15 @@ public class DebugMojo extends ApplyMojo {
     @Parameter(property = "fabric8.debug.port", defaultValue = "5005")
     private String localDebugPort;
 
+    @Parameter(property = "fabric8.debug.suspend", defaultValue = "false")
+    private boolean debugSuspend;
+
     private String remoteDebugPort = DebugConstants.ENV_VAR_JAVA_DEBUG_PORT_DEFAULT;
     private Watch podWatcher;
     private CountDownLatch terminateLatch = new CountDownLatch(1);
     private Pod foundPod;
     private Logger podWaitLog;
+    private String debugSuspendValue;
 
     @Override
     protected void applyEntities(Controller controller, KubernetesClient kubernetes, String namespace, String fileName, Set<HasMetadata> entities) throws Exception {
@@ -137,21 +144,27 @@ public class DebugMojo extends ApplyMojo {
             }
         }
         if (firstSelector != null) {
-            String podName = waitForRunningPodWithEnvVar(kubernetes, namespace, firstSelector, DebugConstants.ENV_VAR_JAVA_DEBUG, "true");
+            Map<String, String> envVars = new TreeMap<>();
+            envVars.put(DebugConstants.ENV_VAR_JAVA_DEBUG, "true");
+            envVars.put(DebugConstants.ENV_VAR_JAVA_DEBUG_SUSPEND, String.valueOf(this.debugSuspend));
+            if (this.debugSuspendValue != null) {
+                envVars.put(DebugConstants.ENV_VAR_JAVA_DEBUG_SESSION, this.debugSuspendValue);
+            }
+
+            String podName = waitForRunningPodWithEnvVar(kubernetes, namespace, firstSelector, envVars);
             portForward(controller, podName);
         }
     }
 
-    private String waitForRunningPodWithEnvVar(final KubernetesClient kubernetes, final String namespace, LabelSelector selector, final String envVarName, final String envVarValue) throws MojoExecutionException {
+    private String waitForRunningPodWithEnvVar(final KubernetesClient kubernetes, final String namespace, LabelSelector selector, final Map<String, String> envVars) throws MojoExecutionException {
         //  wait for the newest pod to be ready with the given env var
         FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> pods = withSelector(kubernetes.pods().inNamespace(namespace), selector, log);
-        log.info("Waiting for debug pod with selector " + selector + " and $" + envVarName + " = " + envVarValue);
+        log.info("Waiting for debug pod with selector " + selector + " and environment variables " + envVars);
         podWaitLog = createExternalProcessLogger("[[Y]][W][[Y]] ");
         PodList list = pods.list();
         if (list != null) {
-            List<Pod> items = list.getItems();
             Pod latestPod = KubernetesResourceUtil.getNewestPod(list.getItems());
-            if (latestPod != null && podHasEnvVarValue(latestPod, envVarName, envVarValue)) {
+            if (latestPod != null && podHasEnvVars(latestPod, envVars)) {
                 return getName(latestPod);
             }
         }
@@ -161,7 +174,7 @@ public class DebugMojo extends ApplyMojo {
                 podWaitLog.info(getName(pod) + " status: " + getPodStatusDescription(pod) + getPodStatusMessagePostfix(action));
 
                 if (isAddOrModified(action) && isPodRunning(pod) && isPodReady(pod) &&
-                        podHasEnvVarValue(pod, envVarName, envVarValue)) {
+                        podHasEnvVars(pod, envVars)) {
                     foundPod = pod;
                     terminateLatch.countDown();
                 }
@@ -185,11 +198,21 @@ public class DebugMojo extends ApplyMojo {
                 return getName(foundPod);
             }
         }
-        throw new MojoExecutionException("Could not find a running pod with $" + envVarName + " = " + envVarValue);
+        throw new MojoExecutionException("Could not find a running pod with environment variables " + envVars);
     }
 
     private boolean isAddOrModified(Watcher.Action action) {
         return action.equals(Watcher.Action.ADDED) || action.equals(Watcher.Action.MODIFIED);
+    }
+
+    private boolean podHasEnvVars(Pod pod, Map<String, String> envVars) {
+        for (String envVarName : envVars.keySet()) {
+            String envVarValue = envVars.get(envVarName);
+            if (!podHasEnvVarValue(pod, envVarName, envVarValue)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private boolean podHasEnvVarValue(Pod pod, String envVarName, String envVarValue) {
@@ -243,6 +266,10 @@ public class DebugMojo extends ApplyMojo {
                         container.setEnv(env);
                         enabled = true;
                     }
+                    if (KubernetesResourceUtil.setEnvVar(env, DebugConstants.ENV_VAR_JAVA_DEBUG_SUSPEND, String.valueOf(debugSuspend))) {
+                        container.setEnv(env);
+                        enabled = true;
+                    }
                     List<ContainerPort> ports = container.getPorts();
                     if (ports == null) {
                         ports = new ArrayList<>();
@@ -250,6 +277,22 @@ public class DebugMojo extends ApplyMojo {
                     if (KubernetesResourceUtil.addPort(ports, remoteDebugPort, "debug", log)) {
                         container.setPorts(ports);
                         enabled = true;
+                    }
+                    if (debugSuspend) {
+                        // Setting a random session value to force pod restart
+                        this.debugSuspendValue = String.valueOf(new Random().nextLong());
+                        KubernetesResourceUtil.setEnvVar(env, DebugConstants.ENV_VAR_JAVA_DEBUG_SESSION, this.debugSuspendValue);
+                        container.setEnv(env);
+                        if (container.getReadinessProbe() != null) {
+                            log.info("Readiness probe will be disabled on " + getKind(entity) + " " + getName(entity) + " to allow attaching a remote debugger during suspension");
+                            container.setReadinessProbe(null);
+                        }
+                        enabled = true;
+                    } else {
+                        if (KubernetesResourceUtil.removeEnvVar(env, DebugConstants.ENV_VAR_JAVA_DEBUG_SESSION)) {
+                            container.setEnv(env);
+                            enabled = true;
+                        }
                     }
                 }
                 if (enabled) {

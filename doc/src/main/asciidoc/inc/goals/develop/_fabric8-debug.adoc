@@ -61,3 +61,22 @@ Then whenever you type the `fabric8:debug` goal there is no need for the maven g
 ----
 mvn fabric8:debug
 ----
+
+### Debugging with suspension
+
+The `fabric8:debug` goal allows to attach a remote debugger to a running container, but the application is free to execute when the debugger is not attached.
+In some cases, you may want to have complete control on the execution, e.g. to investigate the application behavior at startup. This can be done using the `fabric8.debug.suspend` flag:
+
+[source, sh]
+----
+mvn fabric8:debug -Dfabric8.debug.suspend
+----
+
+The suspend flag will set the `JAVA_DEBUG_SUSPEND` environment variable to `true` and `JAVA_DEBUG_SESSION` to a random number in your deployment.
+When the `JAVA_DEBUG_SUSPEND` environment variable is set, standard docker images will use `suspend=y` in the JVM startup options for debugging.
+
+The `JAVA_DEBUG_SESSION` environment variable is always set to a random number (each time you run the debug goal with the suspend flag) in order to tell Kubernetes to restart the pod.
+The remote application will start only after a remote debugger is attached. You can use the remote debugging feature of your IDE to connect (on `localhost`, port `5005` by default).
+
+WARNING: The `fabric8.debug.suspend` flag will disable readiness probes in the Kubernetes deployment in order to start port-forwarding during the early phases of application startup
+
