@@ -13,6 +13,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 
 
 ###3.5.34
+* Feature 1003: Added suspend option to remote debugging 
 * Remove duplicate tenant repos from downstream version updates and add in tjenkins platform
 * Fix 1051: resource validation was slow due to online hosted schema. The fix uses the JSON schema from kubernetes-model project
 * Fix 1062: Add a filter to avoid duplicates while generating kubernetes template(picking the local generated resource ahead of any dependency). Added a resources/ folder in enricher/standard/src/test/ directory to add some sample yaml and jar resource files for DependencyEnricherTest.
