@@ -587,6 +587,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#fabric8:debug">5.7. <strong>fabric8:debug</strong></a>
 <ul class="sectlevel3">
 <li><a href="#speeding-up-debugging">5.7.1. Speeding up debugging</a></li>
+<li><a href="#debugging-with-suspension">5.7.2. Debugging with suspension</a></li>
 </ul>
 </li>
 <li><a href="#fabric8:watch">5.8. <strong>fabric8:watch</strong></a>
@@ -3560,6 +3561,38 @@ mvn fabric8:stop</code></pre>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:debug</code></pre>
 </div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="debugging-with-suspension">5.7.2. Debugging with suspension</h4>
+<div class="paragraph">
+<p>The <code>fabric8:debug</code> goal allows to attach a remote debugger to a running container, but the application is free to execute when the debugger is not attached.
+In some cases, you may want to have complete control on the execution, e.g. to investigate the application behavior at startup. This can be done using the <code>fabric8.debug.suspend</code> flag:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">mvn fabric8:debug -Dfabric8.debug.suspend</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The suspend flag will set the <code>JAVA_DEBUG_SUSPEND</code> environment variable to <code>true</code> and <code>JAVA_DEBUG_SESSION</code> to a random number in your deployment.
+When the <code>JAVA_DEBUG_SUSPEND</code> environment variable is set, standard docker images will use <code>suspend=y</code> in the JVM startup options for debugging.</p>
+</div>
+<div class="paragraph">
+<p>The <code>JAVA_DEBUG_SESSION</code> environment variable is always set to a random number (each time you run the debug goal with the suspend flag) in order to tell Kubernetes to restart the pod.
+The remote application will start only after a remote debugger is attached. You can use the remote debugging feature of your IDE to connect (on <code>localhost</code>, port <code>5005</code> by default).</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+The <code>fabric8.debug.suspend</code> flag will disable readiness probes in the Kubernetes deployment in order to start port-forwarding during the early phases of application startup
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -6636,7 +6669,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.31<br>
-Last updated 2017-12-20 10:43:34 UTC
+Last updated 2017-12-20 11:53:04 UTC
 </div>
 </div>
 </body>
