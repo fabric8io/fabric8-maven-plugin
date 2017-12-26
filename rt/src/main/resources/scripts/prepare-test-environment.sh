@@ -23,5 +23,5 @@ echo "Configured Docker daemon with insecure-registry"
 #make OpenShift up & running
 oc cluster up --version=${OC_VERSION}
 sleep 10
-oc login -u system:admin
+oc login -u developer -p developer
 echo "Configured OpenShift cluster : ${OC_VERSION}"

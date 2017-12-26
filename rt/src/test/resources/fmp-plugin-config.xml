@@ -1,0 +1,1 @@
+<configuration><resources><labels><all><property><name>%s</name><value>%s</value></property></all></labels><annotations><all><property><name>%s</name><value>%s</value></property></all></annotations></resources></configuration>
