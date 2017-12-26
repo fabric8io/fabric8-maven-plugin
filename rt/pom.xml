@@ -20,7 +20,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
-        <artifactId>fabric8-maven-plugin-build</artifactId>
+        <artifactId>fabric8-maven-parent</artifactId>
         <groupId>io.fabric8</groupId>
         <version>3.5-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
@@ -28,6 +28,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>fabric8-maven-rt</artifactId>
+    <version>3.5-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
     <name>Fabric8 Maven :: Regression Test</name>
 
