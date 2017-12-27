@@ -23,14 +23,12 @@ import java.io.PrintWriter;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.builds.Builds;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectReference;
-import io.fabric8.kubernetes.api.model.Status;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
@@ -330,13 +328,15 @@ public class OpenshiftBuildService implements BuildService {
         }
     }
 
-    private void waitForOpenShiftBuildToComplete(OpenShiftClient client, Build build) throws MojoExecutionException {
+    private void waitForOpenShiftBuildToComplete(OpenShiftClient client, Build build) throws MojoExecutionException, InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
         final CountDownLatch logTerminateLatch = new CountDownLatch(1);
         final String buildName = KubernetesHelper.getName(build);
 
         final AtomicReference<Build> buildHolder = new AtomicReference<>();
 
+        // Don't query for logs directly, Watch over the build pod:
+        waitUntilPodIsReady(buildName + "-build", 20, log);
         log.info("Waiting for build " + buildName + " to complete...");
         try (LogWatch logWatch = client.pods().withName(buildName + "-build").watchLog()) {
             KubernetesClientUtil.printLogsAsync(logWatch,
@@ -361,6 +361,35 @@ public class OpenshiftBuildService implements BuildService {
                 }
                 log.info("Build " + buildName + " " + status);
             }
+        }
+    }
+
+    /**
+     * A Simple utility function to watch over pod until it gets ready
+     *
+     * @param podName Name of the pod
+     * @param nAwaitTimeout Time in seconds upto which pod must be watched
+     * @param log Logger object
+     * @throws InterruptedException
+     */
+    private void waitUntilPodIsReady(String podName, int nAwaitTimeout, final Logger log) throws InterruptedException {
+        final CountDownLatch readyLatch = new CountDownLatch(1);
+        try (Watch watch = client.pods().withName(podName).watch(new Watcher<Pod>() {
+            @Override
+            public void eventReceived(Action action, Pod aPod) {
+                if(KubernetesHelper.isPodReady(aPod)) {
+                    readyLatch.countDown();
+                }
+            }
+
+            @Override
+            public void onClose(KubernetesClientException e) {
+                // Ignore
+            }
+        })) {
+            readyLatch.await(nAwaitTimeout, TimeUnit.SECONDS);
+        } catch (KubernetesClientException | InterruptedException e) {
+            log.error("Could not watch pod", e);
         }
     }
 
