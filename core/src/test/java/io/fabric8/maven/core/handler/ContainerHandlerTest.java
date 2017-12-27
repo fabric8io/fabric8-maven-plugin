@@ -42,26 +42,53 @@ public class ContainerHandlerTest {
 
     private List<Container> containers;
 
+    MavenProject project = new MavenProject();
+
+    MavenProject project1 = new MavenProject();
+
+    MavenProject project2 = new MavenProject();
+
+    ResourceConfig config = new ResourceConfig.Builder()
+            .imagePullPolicy("IfNotPresent")
+            .controllerName("testing")
+            .withReplicas(5)
+            .build();
+
+    //policy is set in config
+    ResourceConfig config1 = new ResourceConfig.Builder()
+            .imagePullPolicy("IfNotPresent").build();
+
+    List<String> ports = new ArrayList<>();
+
+    List<String> tags = new ArrayList<>();
+
+    List<ImageConfiguration> images = new ArrayList<>();
+
+    //volumes with volumeconfigs
+    List<VolumeConfig> volumes1 = new ArrayList<>();
+
+    //empty volume, no volumeconfigs
+    List<VolumeConfig> volumes2 = new ArrayList<>();
+
+    //a sample image configuration
+    BuildImageConfiguration buildImageConfiguration1 = new BuildImageConfiguration.Builder()
+            .from("fabric8/maven:latest").build();
+    ImageConfiguration imageConfiguration1 = new ImageConfiguration.Builder().
+            name("test").alias("test-app").buildConfig(buildImageConfiguration1).registry("docker.io").build();
+
     @Test
-    public void getContainersTest(){
-        MavenProject project = new MavenProject();
+    public void getContainersTest() {
+
         project.setArtifactId("test-artifact");
         project.setGroupId("test-group");
 
-        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
-        ResourceConfig config = new ResourceConfig.Builder()
-                .imagePullPolicy("IfNotPresent")
-                .controllerName("testing")
-                .withReplicas(5)
-                .build();
-
-        List<String> ports = new ArrayList<>();
         ports.add("8080");
         ports.add("9090");
 
-        List<String> tags = new ArrayList<>();
         tags.add("latest");
         tags.add("test");
+
+        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
 
         //container name with alias
         BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().
@@ -70,21 +97,35 @@ public class ContainerHandlerTest {
         ImageConfiguration imageConfiguration = new ImageConfiguration.Builder().
                 name("test").alias("test-app").buildConfig(buildImageConfiguration).registry("docker.io").build();
 
-        List<ImageConfiguration> images = new ArrayList<>();
+        images.clear();
         images.add(imageConfiguration);
 
         containers = handler.getContainers(config, images);
         assertNotNull(containers);
-        assertEquals("test-app",containers.get(0).getName());
-        assertEquals("docker.io/test",containers.get(0).getImage());
-        assertEquals("IfNotPresent",containers.get(0).getImagePullPolicy());
+        assertEquals("test-app", containers.get(0).getName());
+        assertEquals("docker.io/test", containers.get(0).getImage());
+        assertEquals("IfNotPresent", containers.get(0).getImagePullPolicy());
+    }
 
+    @Test
+    public void getContainerTestSecond() {
+
+        project.setArtifactId("test-artifact");
+        project.setGroupId("test-group");
+
+        ports.add("8080");
+        ports.add("9090");
+
+        tags.add("latest");
+        tags.add("test");
+
+        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
         //container name with group id and aritact id without alias and user
-        buildImageConfiguration = new BuildImageConfiguration.Builder().
+        BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().
                 ports(ports).from("fabric8/").cleanup("try").tags(tags)
                 .compression("gzip").dockerFile("testFile").dockerFileDir("/demo").build();
 
-        imageConfiguration = new ImageConfiguration.Builder().
+        ImageConfiguration imageConfiguration = new ImageConfiguration.Builder().
                 name("test").buildConfig(buildImageConfiguration).registry("docker.io").build();
 
         images.clear();
@@ -92,12 +133,29 @@ public class ContainerHandlerTest {
 
         containers = handler.getContainers(config, images);
         assertNotNull(containers);
-        assertEquals("test-group-test-artifact",containers.get(0).getName());
-        assertEquals("docker.io/test",containers.get(0).getImage());
-        assertEquals("IfNotPresent",containers.get(0).getImagePullPolicy());
+        assertEquals("test-group-test-artifact", containers.get(0).getName());
+        assertEquals("docker.io/test", containers.get(0).getImage());
+        assertEquals("IfNotPresent", containers.get(0).getImagePullPolicy());
+    }
+    @Test
+    public void getContainerTestThird(){
+        project.setArtifactId("test-artifact");
+        project.setGroupId("test-group");
+
+        ports.add("8080");
+        ports.add("9090");
+
+        tags.add("latest");
+        tags.add("test");
 
         //container name with user and image with tag
-        imageConfiguration = new ImageConfiguration.Builder().
+        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
+
+        BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().
+                ports(ports).from("fabric8/").cleanup("try").tags(tags)
+                .compression("gzip").dockerFile("testFile").dockerFileDir("/demo").build();
+
+        ImageConfiguration imageConfiguration = new ImageConfiguration.Builder().
                 name("user/test:latest").buildConfig(buildImageConfiguration).registry("docker.io").build();
 
         images.clear();
@@ -111,44 +169,47 @@ public class ContainerHandlerTest {
     }
 
     @Test
-    public void imagePullPolicyTest(){
+    public void imagePullPolicyTest() {
 
         //check if policy is set then both in case of version is not null or null
 
         //project with version and ending in SNAPSHOT
-        MavenProject project1 = new MavenProject();
         project1.setVersion("3.5-SNAPSHOT");
 
         //project with version but not ending in SNAPSHOT
-        MavenProject project2 = new MavenProject();
         project2.setVersion("3.5-NEW");
-
-        //project without version
-        MavenProject project3 = new MavenProject();
 
         //creating container Handler for all
         ContainerHandler handler1 = new ContainerHandler(project1, envVarHandler, probeHandler);
         ContainerHandler handler2 = new ContainerHandler(project2, envVarHandler, probeHandler);
-        ContainerHandler handler3 = new ContainerHandler(project3, envVarHandler, probeHandler);
 
-        //policy is set in config
-        ResourceConfig config = new ResourceConfig.Builder()
-                .imagePullPolicy("IfNotPresent").build();
-
-        //a sample image configuration
-        BuildImageConfiguration buildImageConfiguration1 = new BuildImageConfiguration.Builder()
-                .from("fabric8/maven:latest").build();
-        ImageConfiguration imageConfiguration1 = new ImageConfiguration.Builder().
-                name("test").alias("test-app").buildConfig(buildImageConfiguration1).registry("docker.io").build();
-
-        List<ImageConfiguration> images = new ArrayList<>();
+        images.clear();
         images.add(imageConfiguration1);
 
-        containers = handler1.getContainers(config, images);
-        assertEquals("IfNotPresent",containers.get(0).getImagePullPolicy());
+        containers = handler1.getContainers(config1, images);
+        assertEquals("IfNotPresent", containers.get(0).getImagePullPolicy());
 
-        containers = handler2.getContainers(config, images);
-        assertEquals("IfNotPresent",containers.get(0).getImagePullPolicy());
+        containers = handler2.getContainers(config1, images);
+        assertEquals("IfNotPresent", containers.get(0).getImagePullPolicy());
+    }
+    @Test
+    public void imagePullPolicyTestSecond(){
+
+        //project with version and ending in SNAPSHOT
+        project1.setVersion("3.5-SNAPSHOT");
+
+        //project with version but not ending in SNAPSHOT
+        project2.setVersion("3.5-NEW");
+
+        //creating container Handler for two
+        ContainerHandler handler1 = new ContainerHandler(project1, envVarHandler, probeHandler);
+        ContainerHandler handler2 = new ContainerHandler(project2, envVarHandler, probeHandler);
+
+        //project without version
+        ContainerHandler handler3 = new ContainerHandler(project, envVarHandler, probeHandler);
+
+        images.clear();
+        images.add(imageConfiguration1);
 
         //check if policy is not set then both in case of version is set or not
         ResourceConfig config2 = new ResourceConfig.Builder()
@@ -168,18 +229,7 @@ public class ContainerHandlerTest {
     @Test
     public void getImageNameTest(){
 
-        MavenProject project = new MavenProject();
         ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
-
-        ResourceConfig config = new ResourceConfig.Builder()
-                .imagePullPolicy("IfNotPresent").build();
-
-        BuildImageConfiguration buildImageConfiguration1 = new BuildImageConfiguration.Builder()
-                .from("fabric8/maven:latest").build();
-
-        //Image Configuration with name and registry
-        ImageConfiguration imageConfiguration1 = new ImageConfiguration.Builder().
-                name("test").alias("test-app").buildConfig(buildImageConfiguration1).registry("docker.io").build();
 
         //Image Configuration with name and without registry
         ImageConfiguration imageConfiguration2 = new ImageConfiguration.Builder().
@@ -193,13 +243,13 @@ public class ContainerHandlerTest {
         ImageConfiguration imageConfiguration4 = new ImageConfiguration.Builder().
                 alias("test-app").buildConfig(buildImageConfiguration1).build();
 
-        List<ImageConfiguration> images = new ArrayList<>();
+        images.clear();
         images.add(imageConfiguration1);
         images.add(imageConfiguration2);
         images.add(imageConfiguration3);
         images.add(imageConfiguration4);
 
-        containers = handler.getContainers(config, images);
+        containers = handler.getContainers(config1, images);
 
         assertEquals("docker.io/test",containers.get(0).getImage());
         assertEquals("test",containers.get(1).getImage());
@@ -208,23 +258,10 @@ public class ContainerHandlerTest {
     }
 
     @Test
-    public void getvolumeMountTests(){
-        MavenProject project = new MavenProject();
+    public void getVolumeMountTest() {
         ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
 
-        //volumes with volumeconfigs
-        List<VolumeConfig> volumes1 = new ArrayList<>();
-
-        //empty volume, no volumeconfigs
-        List<VolumeConfig> volumes2 = new ArrayList<>();
-
-        //a sample image configuration
-        BuildImageConfiguration buildImageConfiguration1 = new BuildImageConfiguration.Builder()
-                .from("fabric8/maven:latest").build();
-        ImageConfiguration imageConfiguration1 = new ImageConfiguration.Builder().
-                name("test").alias("test-app").buildConfig(buildImageConfiguration1).registry("docker.io").build();
-
-        List<ImageConfiguration> images = new ArrayList<>();
+        images.clear();
         images.add(imageConfiguration1);
 
         //volume config without mount
@@ -233,18 +270,40 @@ public class ContainerHandlerTest {
         ResourceConfig config1 = new ResourceConfig.Builder().volumes(volumes1).build();
         containers = handler.getContainers(config1, images);
         assertTrue(containers.get(0).getVolumeMounts().isEmpty());
+    }
+
+    @Test
+    public void getVolumeMountTestSecond() {
+
+        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
+
+        images.clear();
+        images.add(imageConfiguration1);
 
         List<String> mounts = new ArrayList<>();
         mounts.add("/path/etc");
+
         //volume config without name but with mount
         VolumeConfig volumeConfig2 = new VolumeConfig.Builder().mounts(mounts).build();
         volumes1.clear();
         volumes1.add(volumeConfig2);
+
         ResourceConfig config2 = new ResourceConfig.Builder().volumes(volumes1).build();
         containers = handler.getContainers(config2, images);
-        assertEquals(1,containers.get(0).getVolumeMounts().size());
-        assertEquals(null,containers.get(0).getVolumeMounts().get(0).getName());
-        assertEquals("/path/etc",containers.get(0).getVolumeMounts().get(0).getMountPath());
+        assertEquals(1, containers.get(0).getVolumeMounts().size());
+        assertEquals(null, containers.get(0).getVolumeMounts().get(0).getName());
+        assertEquals("/path/etc", containers.get(0).getVolumeMounts().get(0).getMountPath());
+    }
+
+    @Test
+    public void getVolumeMountTestThird() {
+        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
+
+        List<String> mounts = new ArrayList<>();
+        mounts.add("/path/etc");
+
+        images.clear();
+        images.add(imageConfiguration1);
 
         //volume config with name and single mount
         VolumeConfig volumeConfig3 = new VolumeConfig.Builder().name("third").mounts(mounts).build();
@@ -252,10 +311,20 @@ public class ContainerHandlerTest {
         volumes1.add(volumeConfig3);
         ResourceConfig config3 = new ResourceConfig.Builder().volumes(volumes1).build();
         containers = handler.getContainers(config3, images);
-        assertEquals(1,containers.get(0).getVolumeMounts().size());
-        assertEquals("third",containers.get(0).getVolumeMounts().get(0).getName());
-        assertEquals("/path/etc",containers.get(0).getVolumeMounts().get(0).getMountPath());
+        assertEquals(1, containers.get(0).getVolumeMounts().size());
+        assertEquals("third", containers.get(0).getVolumeMounts().get(0).getName());
+        assertEquals("/path/etc", containers.get(0).getVolumeMounts().get(0).getMountPath());
+    }
 
+    @Test
+    public void getVolumeMountTestFourth() {
+        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
+
+        images.clear();
+        images.add(imageConfiguration1);
+
+        List<String> mounts = new ArrayList<>();
+        mounts.add("/path/etc");
 
         //volume config with name and multiple mount
         mounts.add("/path/system");
@@ -265,9 +334,17 @@ public class ContainerHandlerTest {
         volumes1.add(volumeConfig4);
         ResourceConfig config4 = new ResourceConfig.Builder().volumes(volumes1).build();
         containers = handler.getContainers(config4, images);
-        assertEquals(3,containers.get(0).getVolumeMounts().size());
-        for(int i=0;i<=2;i++)
-            assertEquals("test",containers.get(0).getVolumeMounts().get(i).getName());
+        assertEquals(3, containers.get(0).getVolumeMounts().size());
+        for (int i = 0; i <= 2; i++)
+            assertEquals("test", containers.get(0).getVolumeMounts().get(i).getName());
+    }
+
+    @Test
+    public void getVolumeMountTestFifth() {
+        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
+
+        images.clear();
+        images.add(imageConfiguration1);
 
         //empty volume
         ResourceConfig config5 = new ResourceConfig.Builder().volumes(volumes2).build();
@@ -276,43 +353,38 @@ public class ContainerHandlerTest {
     }
 
     @Test
-    public void containerPortsTest(){
-        MavenProject project = new MavenProject();
+    public void containerPortsTest() {
         ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
-        ResourceConfig config = new ResourceConfig.Builder()
-                .imagePullPolicy("IfNotPresent")
-                .controllerName("testing")
-                .withReplicas(5)
-                .build();
-
-        List<String> ports = new ArrayList<>();
-
-        //Empty Ports Array
-        BuildImageConfiguration buildImageConfiguration1 = new BuildImageConfiguration.Builder().
-                ports(ports).from("fabric8/maven:latest").cleanup("try").compression("gzip").build();
-
-        ImageConfiguration imageConfiguration1 = new ImageConfiguration.Builder().
-                name("test").alias("test-app").buildConfig(buildImageConfiguration1).registry("docker.io").build();
-
-        List<ImageConfiguration> images = new ArrayList<>();
-        images.add(imageConfiguration1);
-
-        containers = handler.getContainers(config, images);
-        assertTrue(containers.get(0).getPorts().isEmpty());
-
-        //without Ports
-        buildImageConfiguration1 = new BuildImageConfiguration.Builder().
-                from("fabric8/maven:latest").cleanup("try").compression("gzip").build();
-
-        imageConfiguration1 = new ImageConfiguration.Builder().
-                name("test").alias("test-app").buildConfig(buildImageConfiguration1).registry("docker.io").build();
 
         images.clear();
         images.add(imageConfiguration1);
 
+        //Empty Ports
         containers = handler.getContainers(config, images);
         assertTrue(containers.get(0).getPorts().isEmpty());
+    }
 
+    @Test
+    public void containerPortsTestSecond() {
+
+        ContainerHandler handler = new ContainerHandler(project,envVarHandler,probeHandler);
+
+        //without Ports
+        BuildImageConfiguration buildImageConfiguration2 = new BuildImageConfiguration.Builder().
+                from("fabric8/maven:latest").cleanup("try").compression("gzip").build();
+
+        ImageConfiguration imageConfiguration2 = new ImageConfiguration.Builder().
+                name("test").alias("test-app").buildConfig(buildImageConfiguration2).registry("docker.io").build();
+
+        images.clear();
+        images.add(imageConfiguration2);
+
+        containers = handler.getContainers(config, images);
+        assertTrue(containers.get(0).getPorts().isEmpty());
+    }
+
+    @Test
+    public void containerPortsTestThird(){
         //Different kind of Ports Specification
         ports.add("172.22.27.82:82:8082");
         ports.add("172.22.27.81:81:8081/tcp");
@@ -332,6 +404,8 @@ public class ContainerHandlerTest {
 
         images.clear();
         images.add(imageConfiguration1);
+
+        ContainerHandler handler = new ContainerHandler(project,envVarHandler,probeHandler);
 
         containers = handler.getContainers(config, images);
         List<ContainerPort> outputports = containers.get(0).getPorts();

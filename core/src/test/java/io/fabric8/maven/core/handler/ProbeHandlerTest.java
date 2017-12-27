@@ -22,15 +22,15 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class ProbeHandlerTest {
+    Probe probe;
+    ProbeHandler probeHandler = new ProbeHandler();
+
+    ProbeConfig probeConfig;
 
     @Test
     //EmptyProbeConfig
     public void getProbeTestFirst() {
-
-        Probe probe;
-        ProbeHandler probeHandler = new ProbeHandler();
-
-        ProbeConfig probeConfig = null;
+        probeConfig = null;
 
         probe = probeHandler.getProbe(probeConfig);
 
@@ -41,10 +41,7 @@ public class ProbeHandlerTest {
     //ProbeConfig without any action
     public void getProbeTestSecond() {
 
-        Probe probe;
-        ProbeHandler probeHandler = new ProbeHandler();
-
-        ProbeConfig probeConfig = new ProbeConfig.Builder()
+        probeConfig = new ProbeConfig.Builder()
                 .build();
 
         probe = probeHandler.getProbe(probeConfig);
@@ -54,18 +51,21 @@ public class ProbeHandlerTest {
 
     @Test
     //ProbeConfig with HTTPGet Action
-    public void getProbeTestThird() {
+    public void getHTTPProbeTest() {
 
-        Probe probe;
-        ProbeHandler probeHandler = new ProbeHandler();
         //withEmptyUrl
-        ProbeConfig probeConfig = new ProbeConfig.Builder()
+        probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5).getUrl(null)
                 .build();
 
         probe = probeHandler.getProbe(probeConfig);
         //assertion
         assertNull(probe);
+    }
+
+    @Test
+    //ProbeConfig with HTTPGet Action
+    public void getHTTPProbeTestSecond() {
 
         //withUrl
         probeConfig = new ProbeConfig.Builder()
@@ -84,7 +84,11 @@ public class ProbeHandlerTest {
         assertEquals("http",probe.getHttpGet().getScheme());
         assertNull(probe.getExec());
         assertNull(probe.getTcpSocket());
+    }
 
+    @Test
+    //ProbeConfig with HTTPGet Action
+    public void getHTTPProbeTestThird() {
         //URL Without http Portocol
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5).getUrl("www.healthcheck.com:8080/healthz")
@@ -92,6 +96,11 @@ public class ProbeHandlerTest {
 
         probe = probeHandler.getProbe(probeConfig);
         assertNull(probe);
+    }
+
+    @Test
+    //ProbeConfig with HTTPGet Action
+    public void getHTTPProbeTestFourth() {
 
         //withInvalidUrl
         probeConfig = new ProbeConfig.Builder()
@@ -110,19 +119,21 @@ public class ProbeHandlerTest {
 
     @Test
     //ProbeConfig with Exec Action
-    public void getProbeTestFourth() {
+    public void getExecProbeTest() {
 
-        Probe probe;
-        ProbeHandler probeHandler = new ProbeHandler();
         //withEmptyExec
-        ProbeConfig probeConfig = new ProbeConfig.Builder()
+        probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5).exec("")
                 .build();
 
         probe = probeHandler.getProbe(probeConfig);
         //assertion
         assertNull(probe);
+    }
 
+    @Test
+    //ProbeConfig with Exec Action
+    public void getExecProbeTestSecond() {
         //withExec
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5).exec("cat /tmp/probe")
@@ -138,7 +149,11 @@ public class ProbeHandlerTest {
         assertEquals("[cat, /tmp/probe]",probe.getExec().getCommand().toString());
         assertNull(probe.getHttpGet());
         assertNull(probe.getTcpSocket());
+    }
 
+    @Test
+    //ProbeConfig with Exec Action
+    public void getExecProbeTestThird() {
         //withInvalidExec
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5).exec("   ")
@@ -151,12 +166,10 @@ public class ProbeHandlerTest {
 
     @Test
     //ProbeConfig with TCP Action
-    public void getProbeTestFifth() {
+    public void getTCPProbeTest() {
 
-        Probe probe;
-        ProbeHandler probeHandler = new ProbeHandler();
         //withno url, only port
-        ProbeConfig probeConfig = new ProbeConfig.Builder()
+        probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5).tcpPort("80")
                 .build();
 
@@ -170,7 +183,11 @@ public class ProbeHandlerTest {
         assertNull(probe.getExec());
         assertEquals(5,probe.getInitialDelaySeconds().intValue());
         assertEquals(5,probe.getTimeoutSeconds().intValue());
+    }
 
+    @Test
+    //ProbeConfig with TCP Action
+    public void getTCPProbeTestFirst() {
         //withport and url but with http request
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5)
@@ -190,7 +207,11 @@ public class ProbeHandlerTest {
         assertEquals("/healthz",probe.getHttpGet().getPath());
         assertEquals(8080,probe.getHttpGet().getPort().getIntVal().intValue());
         assertEquals("http",probe.getHttpGet().getScheme());
+    }
 
+    @Test
+    //ProbeConfig with TCP Action
+    public void getTCPProbeTestSecond() {
         //withport and url but with other request and port as int
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5)
@@ -207,7 +228,11 @@ public class ProbeHandlerTest {
         assertEquals("www.healthcheck.com",probe.getTcpSocket().getHost());
         assertEquals(5,probe.getInitialDelaySeconds().intValue());
         assertEquals(5,probe.getTimeoutSeconds().intValue());
+    }
 
+    @Test
+    //ProbeConfig with TCP Action
+    public void getTCPProbeTestThird() {
         //withport and url but with other request and port as string
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5)
@@ -224,7 +249,11 @@ public class ProbeHandlerTest {
         assertEquals("www.healthcheck.com",probe.getTcpSocket().getHost());
         assertEquals(5,probe.getInitialDelaySeconds().intValue());
         assertEquals(5,probe.getTimeoutSeconds().intValue());
+    }
 
+    @Test
+    //ProbeConfig with TCP Action
+    public void getTCPProbeTestFourth() {
         //without port and url with http request
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5)
@@ -244,7 +273,11 @@ public class ProbeHandlerTest {
         assertEquals("/healthz",probe.getHttpGet().getPath());
         assertEquals(8080,probe.getHttpGet().getPort().getIntVal().intValue());
         assertEquals("http",probe.getHttpGet().getScheme());
+    }
 
+    @Test
+    //ProbeConfig with TCP Action
+    public void getTCPProbeTestFifth() {
         //without port and url with tcp request
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5)
@@ -254,7 +287,11 @@ public class ProbeHandlerTest {
         probe = probeHandler.getProbe(probeConfig);
         //assertion
         assertNull(probe);
+    }
 
+    @Test
+    //ProbeConfig with TCP Action
+    public void getTCPProbeTestSixth() {
         //withInvalidUrl
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5).getUrl("healthcheck.com:8080/healthz")
