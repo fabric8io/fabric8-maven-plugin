@@ -18,15 +18,15 @@ spec:
             value: bar
 ----
 
-The above will generate an environment variable `$FOO` of value `bar
+The above will generate an environment variable `$FOO` of value `bar`
 
-For a full list of the environments used in java base images https://hub.docker.com/r/fabric8/java-jboss-openjdk8-jdk[see this list]
+For a full list of the environments used in java base images, https://hub.docker.com/r/fabric8/java-jboss-openjdk8-jdk[see this list]
 
 === How do I define a system property?
 
 The simplest way is to add system properties to the `JAVA_OPTIONS` environment variable.
 
-For a full list of the environments used in java base images https://hub.docker.com/r/fabric8/java-jboss-openjdk8-jdk[see this list]
+For a full list of the environments used in java base images, https://hub.docker.com/r/fabric8/java-jboss-openjdk8-jdk[see this list]
 
 e.g. add a `src/main/fabric8/deployment.yml` file to your project containing something like:
 

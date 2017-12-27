@@ -2,7 +2,7 @@
 [[fabric8:import]]
 == *fabric8:import*
 
-This goal imports the current project into the [fabric8 console] so that you can browse the source code via the web interface and associate a [Continuous Delivery] pipeline with the project to start automatic Continuous Deployment.
+This goal imports the current project into the https://github.com/fabric8io/fabric8-console[fabric8 console] so that you can browse the source code via the web interface and associate a https://fabric8.io/guide/cdelivery.html[Continuous Delivery] pipeline with the project to start automatic Continuous Deployment.
 
 If you have a project on the file system then type:
 
@@ -15,4 +15,4 @@ This goal assumes you have already enabled the `fabric8 maven plugin`. If you ha
 
 If no git repository exists yet for the current project then a new git repository will be created and the current code pushed into it so that it can then be built with Jenkins.
 
-If the current project is a git clone from a remote repository then this goal will also try to setup a `Secret` in kubernetes to keep track of the user name and password/access code or in the case of SSH protocol with git the SSH key pairs.
+If the current project is a git clone from a remote repository then this goal will also try to setup a `Secret` in kubernetes to keep track of the username and password/access code or in the case of SSH protocol with git the SSH key pairs.
