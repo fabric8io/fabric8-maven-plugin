@@ -22,10 +22,6 @@
   <version>3.5-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <prerequisites>
-    <maven>3.0.3</maven>
-  </prerequisites>
-
   <name>Fabric8 Maven :: Parent</name>
   <description>${project.name}</description>
 
