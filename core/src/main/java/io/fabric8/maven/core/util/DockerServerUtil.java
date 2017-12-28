@@ -39,9 +39,6 @@ public class DockerServerUtil {
     }
 
     private static String getConfigurationValue(final Server server, final String key) {
-        if (server == null) {
-            return null;
-        }
 
         final Xpp3Dom configuration = (Xpp3Dom) server.getConfiguration();
         if (configuration == null) {
