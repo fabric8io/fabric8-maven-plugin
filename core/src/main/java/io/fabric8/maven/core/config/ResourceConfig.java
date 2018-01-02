@@ -169,6 +169,16 @@ public class ResourceConfig {
             return this;
         }
 
+        public Builder volumes(List<VolumeConfig> volumes) {
+            config.volumes = volumes;
+            return this;
+        }
+
+        public Builder withServiceAccount(String serviceAccount) {
+            config.serviceAccount = serviceAccount;
+            return this;
+        }
+
         public ResourceConfig build() {
             return config;
         }

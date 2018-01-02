@@ -55,12 +55,7 @@ public class ProbeHandler {
             probe.setExec(execAction);
             return probe;
         }
-        TCPSocketAction tcpSocketAction;
-        try {
-            tcpSocketAction = getTCPSocketAction(new URL(probeConfig.getGetUrl()), probeConfig.getTcpPort());
-        } catch (MalformedURLException e) {
-            return null;
-        }
+        TCPSocketAction tcpSocketAction = getTCPSocketAction(probeConfig.getGetUrl(), probeConfig.getTcpPort());
         if (tcpSocketAction != null) {
             probe.setTcpSocket(tcpSocketAction);
             return probe;
@@ -72,22 +67,22 @@ public class ProbeHandler {
     // ========================================================================================
 
     private HTTPGetAction getHTTPGetAction(String getUrl) {
-        if (getUrl == null) {
+        if (getUrl == null || !getUrl.subSequence(0,4).toString().equalsIgnoreCase("http")) {
             return null;
         }
         try {
             URL url = new URL(getUrl);
-            return new HTTPGetAction(url.getHost(),
-                                     null /* headers */,
-                                     url.getPath(),
-                                     new IntOrString(url.getPort()),
-                                     url.getProtocol());
+                return new HTTPGetAction(url.getHost(),
+                        null /* headers */,
+                        url.getPath(),
+                        new IntOrString(url.getPort()),
+                        url.getProtocol());
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("Invalid URL " + getUrl + " given for HTTP GET readiness check");
         }
     }
 
-    private TCPSocketAction getTCPSocketAction(URL url, String port) {
+    private TCPSocketAction getTCPSocketAction(String getUrl, String port) {
         if (port != null) {
             IntOrString portObj = new IntOrString(port);
             try {
@@ -96,7 +91,16 @@ public class ProbeHandler {
             } catch (NumberFormatException e) {
                 portObj.setStrVal(port);
             }
-            return new TCPSocketAction(url.getHost(), portObj);
+            if(getUrl==null)
+                return new TCPSocketAction(getUrl, portObj);
+            String validurl = getUrl.replaceFirst("(([a-zA-Z])+)://","http://");
+            try{
+                URL url = new URL(validurl);
+                return new TCPSocketAction(url.getHost(), portObj);
+            }
+            catch (MalformedURLException e){
+                throw new IllegalArgumentException("Invalid URL " + getUrl + " given for TCP readiness check");
+            }
         }
         return null;
     }
