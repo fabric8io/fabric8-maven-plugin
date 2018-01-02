@@ -34,9 +34,9 @@ public class EnvVarHandlerTest {
 
     final MavenProject project = new MavenProject();
 
-    Map<String, String> ret = new TreeMap<>();
+    Map<String, String> ret = new HashMap<>();
 
-    Map<String, String> env = new HashMap<>();
+    Map env = new HashMap();
 
     //it will be present in all
     EnvVar var4 = new EnvVarBuilder().withName("KUBERNETES_NAMESPACE").
@@ -47,10 +47,11 @@ public class EnvVarHandlerTest {
             .build();
 
     @Test
-    //Empty Environment Variable in Config
-    public void envVarHandlerTestFirst(){
-
+    public void emptyEnvVarHandlerTest(){
+        //Empty Environment Variable in Config
         EnvVarHandler envVarHandler = new EnvVarHandler(project);
+
+        env.clear();
 
         new Expectations(){{
             externalEnvVarHandler.getExportedEnvironmentVariables(project,env);
@@ -67,12 +68,13 @@ public class EnvVarHandlerTest {
     }
 
     @Test
-    //Some Environment Variable in Config
-    public void envVarHandlerTestSecond(){
+    public void envVarHandlerTest(){
+        //Some Environment Variable in Config
         EnvVar var1 = new EnvVarBuilder().withName("TEST1").withValue("OK").build();
         EnvVar var2 = new EnvVarBuilder().withName("TEST2").withValue("DONE").build();
         EnvVar var3 = new EnvVarBuilder().withName("TEST3").withValue("").build();
 
+        env.clear();
         env.put(var1.getName(), var1.getValue());
         env.put(var2.getName(), var2.getValue());
         env.put(var3.getName(), var3.getValue());
@@ -95,17 +97,19 @@ public class EnvVarHandlerTest {
         assertTrue(envVars.contains(var4));
     }
 
-    //Environment Variable without name in Config
-    public void envVarHandlerTestThird(){
-        EnvVar var1 = new EnvVarBuilder().withName("").withValue("OK").build();
+    @Test
+    public void envVarHandlerWithoutNameTest(){
+        //Environment Variable without name in Config
+        EnvVar var1 = new EnvVarBuilder().withName(null).withValue("OK").build();
 
-        env.put(var1.getName(), var1.getValue());
+        env.clear();
+        env.put(null, var1.getValue());
 
         EnvVarHandler envVarHandler = new EnvVarHandler(project);
 
         new Expectations(){{
             externalEnvVarHandler.getExportedEnvironmentVariables(project,env);
-            ret.putAll(env);
+            ret.put(null,"OK");
             result = ret;
         }};
 

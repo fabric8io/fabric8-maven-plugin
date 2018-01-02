@@ -115,63 +115,46 @@ public class ReplicaSetHandlerTest {
 
     }
 
-    @Test
-    //invalid controller name
-    public void replicaSetHandlerSecondTest() {
-        try {
+    @Test(expected = IllegalArgumentException.class)
+    public void replicaSetHandlerWithInvalidNameTest() {
+        //invalid controller name
+        ContainerHandler containerHandler =
+                new ContainerHandler(project, envVarHandler, probeHandler);
 
-            ContainerHandler containerHandler =
-                    new ContainerHandler(project, envVarHandler, probeHandler);
+        PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
-            PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
+        ReplicaSetHandler replicaSetHandler = new ReplicaSetHandler(podTemplateHandler);
 
-            ReplicaSetHandler replicaSetHandler = new ReplicaSetHandler(podTemplateHandler);
+        //with invalid controller name
+        ResourceConfig config = new ResourceConfig.Builder()
+                .imagePullPolicy("IfNotPresent")
+                .controllerName("TesTing")
+                .withServiceAccount("test-account")
+                .withReplicas(5)
+                .volumes(volumes1)
+                .build();
 
-            //with invalid controller name
-            ResourceConfig config = new ResourceConfig.Builder()
-                    .imagePullPolicy("IfNotPresent")
-                    .controllerName("TesTing")
-                    .withServiceAccount("test-account")
-                    .withReplicas(5)
-                    .volumes(volumes1)
-                    .build();
-
-            replicaSetHandler.getReplicaSet(config, images);
-        }
-        //asserting the exact message because
-        // it throws the same exception in case controller name is null
-        catch(IllegalArgumentException exception) {
-            assertEquals("Invalid upper case letter 'T' at index 0 for " +
-                    "controller name value: TesTing", exception.getMessage());
-        }
+        replicaSetHandler.getReplicaSet(config, images);
     }
 
-    @Test
-    //without controller name
-    public void replicaSetHandlerThirdTest() {
-        try {
+    @Test(expected = IllegalArgumentException.class)
+    public void replicaSetHandlerWithoutControllerTest() {
+        //without controller name
+        ContainerHandler containerHandler = new
+                ContainerHandler(project, envVarHandler, probeHandler);
 
-            ContainerHandler containerHandler = new
-                    ContainerHandler(project, envVarHandler, probeHandler);
+        PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
-            PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
+        ReplicaSetHandler replicaSetHandler = new ReplicaSetHandler(podTemplateHandler);
 
-            ReplicaSetHandler replicaSetHandler = new ReplicaSetHandler(podTemplateHandler);
+        //without controller name
+        ResourceConfig config = new ResourceConfig.Builder()
+                .imagePullPolicy("IfNotPresent")
+                .withServiceAccount("test-account")
+                .withReplicas(5)
+                .volumes(volumes1)
+                .build();
 
-            //without controller name
-            ResourceConfig config = new ResourceConfig.Builder()
-                    .imagePullPolicy("IfNotPresent")
-                    .withServiceAccount("test-account")
-                    .withReplicas(5)
-                    .volumes(volumes1)
-                    .build();
-
-            replicaSetHandler.getReplicaSet(config, images);
-        }
-        //asserting the exact message because
-        //it throws the same exception in case controller name is invalid
-        catch(IllegalArgumentException exception) {
-            assertEquals("No controller name is specified!", exception.getMessage());
-        }
+        replicaSetHandler.getReplicaSet(config, images);
     }
 }

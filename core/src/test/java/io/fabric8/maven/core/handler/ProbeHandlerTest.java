@@ -28,8 +28,9 @@ public class ProbeHandlerTest {
     ProbeConfig probeConfig;
 
     @Test
-    //EmptyProbeConfig
-    public void getProbeTestFirst() {
+    public void getProbeEmptyTest() {
+        //EmptyProbeConfig
+
         probeConfig = null;
 
         probe = probeHandler.getProbe(probeConfig);
@@ -38,8 +39,8 @@ public class ProbeHandlerTest {
     }
 
     @Test
-    //ProbeConfig without any action
-    public void getProbeTestSecond() {
+    public void getProbeNullTest() {
+        //ProbeConfig without any action
 
         probeConfig = new ProbeConfig.Builder()
                 .build();
@@ -50,8 +51,8 @@ public class ProbeHandlerTest {
     }
 
     @Test
-    //ProbeConfig with HTTPGet Action
-    public void getHTTPProbeTest() {
+    public void getHTTPProbeWithEmptyURLTest() {
+        //ProbeConfig with HTTPGet Action
 
         //withEmptyUrl
         probeConfig = new ProbeConfig.Builder()
@@ -64,9 +65,9 @@ public class ProbeHandlerTest {
     }
 
     @Test
-    //ProbeConfig with HTTPGet Action
-    public void getHTTPProbeTestSecond() {
+    public void getHTTPProbeWithHTTPURLTest() {
 
+        //ProbeConfig with HTTPGet Action
         //withUrl
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5).getUrl("http://www.healthcheck.com:8080/healthz")
@@ -87,8 +88,8 @@ public class ProbeHandlerTest {
     }
 
     @Test
-    //ProbeConfig with HTTPGet Action
-    public void getHTTPProbeTestThird() {
+    public void getHTTPProbeWithoutHTTPURLTest() {
+        //ProbeConfig with HTTPGet Action
         //URL Without http Portocol
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5).getUrl("www.healthcheck.com:8080/healthz")
@@ -98,29 +99,20 @@ public class ProbeHandlerTest {
         assertNull(probe);
     }
 
-    @Test
-    //ProbeConfig with HTTPGet Action
-    public void getHTTPProbeTestFourth() {
-
+    @Test(expected = IllegalArgumentException.class)
+    public void getHTTPProbeWithInvalidURLTest() {
+        //ProbeConfig with HTTPGet Action
         //withInvalidUrl
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5).getUrl("httphealthcheck.com:8080/healthz")
                 .build();
 
-        try {
-            probe = probeHandler.getProbe(probeConfig);
-        }
-        catch(IllegalArgumentException e){
-            //assertion
-            assertEquals("Invalid URL httphealthcheck.com:8080/healthz " +
-                    "given for HTTP GET readiness check",e.getMessage());
-        }
+        probe = probeHandler.getProbe(probeConfig);
     }
 
     @Test
-    //ProbeConfig with Exec Action
-    public void getExecProbeTest() {
-
+    public void getExecProbeWithEmptyExecTest() {
+        //ProbeConfig with Exec Action
         //withEmptyExec
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5).exec("")
@@ -132,8 +124,8 @@ public class ProbeHandlerTest {
     }
 
     @Test
-    //ProbeConfig with Exec Action
-    public void getExecProbeTestSecond() {
+    public void getExecProbeWithExecTest() {
+        //ProbeConfig with Exec Action
         //withExec
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5).exec("cat /tmp/probe")
@@ -152,8 +144,8 @@ public class ProbeHandlerTest {
     }
 
     @Test
-    //ProbeConfig with Exec Action
-    public void getExecProbeTestThird() {
+    public void getExecProbeWithInvalidExecTest() {
+        //ProbeConfig with Exec Action
         //withInvalidExec
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5).exec("   ")
@@ -165,9 +157,8 @@ public class ProbeHandlerTest {
     }
 
     @Test
-    //ProbeConfig with TCP Action
-    public void getTCPProbeTest() {
-
+    public void getTCPProbeWithoutURLTest() {
+        //ProbeConfig with TCP Action
         //withno url, only port
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5).tcpPort("80")
@@ -186,8 +177,8 @@ public class ProbeHandlerTest {
     }
 
     @Test
-    //ProbeConfig with TCP Action
-    public void getTCPProbeTestFirst() {
+    public void getTCPProbeWithHTTPURLAndPortTest() {
+        //ProbeConfig with TCP Action
         //withport and url but with http request
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5)
@@ -210,8 +201,8 @@ public class ProbeHandlerTest {
     }
 
     @Test
-    //ProbeConfig with TCP Action
-    public void getTCPProbeTestSecond() {
+    public void getTCPProbeWithNonHTTPURLTest() {
+        //ProbeConfig with TCP Action
         //withport and url but with other request and port as int
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5)
@@ -231,8 +222,8 @@ public class ProbeHandlerTest {
     }
 
     @Test
-    //ProbeConfig with TCP Action
-    public void getTCPProbeTestThird() {
+    public void getTCPProbeWithNonHTTPURLAndStringPortTest() {
+        //ProbeConfig with TCP Action
         //withport and url but with other request and port as string
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5)
@@ -252,8 +243,8 @@ public class ProbeHandlerTest {
     }
 
     @Test
-    //ProbeConfig with TCP Action
-    public void getTCPProbeTestFourth() {
+    public void getTCPWithHTTPURLAndWithoutPort() {
+        //ProbeConfig with TCP Action
         //without port and url with http request
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5)
@@ -276,8 +267,8 @@ public class ProbeHandlerTest {
     }
 
     @Test
-    //ProbeConfig with TCP Action
-    public void getTCPProbeTestFifth() {
+    public void getTCPProbeWithTCPURLTest() {
+        //ProbeConfig with TCP Action
         //without port and url with tcp request
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5)
@@ -289,22 +280,15 @@ public class ProbeHandlerTest {
         assertNull(probe);
     }
 
-    @Test
-    //ProbeConfig with TCP Action
-    public void getTCPProbeTestSixth() {
+    @Test(expected = IllegalArgumentException.class)
+    public void getTCPProbeWithInvalidURLTest() {
+        //ProbeConfig with TCP Action
         //withInvalidUrl
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5).getUrl("healthcheck.com:8080/healthz")
                 .tcpPort("80")
                 .build();
 
-        try {
-            probe = probeHandler.getProbe(probeConfig);
-        }
-        catch(IllegalArgumentException e){
-            //assertion
-            assertEquals("Invalid URL healthcheck.com:8080/healthz " +
-                    "given for TCP readiness check",e.getMessage());
-        }
+        probe = probeHandler.getProbe(probeConfig);
     }
 }

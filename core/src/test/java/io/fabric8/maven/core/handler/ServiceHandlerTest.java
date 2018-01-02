@@ -73,7 +73,7 @@ public class ServiceHandlerTest {
     }
 
     @Test
-    public void getServicesTestSecond() {
+    public void getServicesWithoutPortTest() {
         //second scenario
         //*create a service without ports
         serviceconfig = new ServiceConfig.Builder()
@@ -89,7 +89,7 @@ public class ServiceHandlerTest {
     }
 
     @Test
-    public void getServicesTestThird() {
+    public void getServicesWithHeadlessServiceTest() {
         //third scenario
         //*create a service without ports and with headless service
         serviceconfig = new ServiceConfig.Builder()
@@ -111,7 +111,7 @@ public class ServiceHandlerTest {
     }
 
     @Test
-    public void getServicesTestFourth() {
+    public void getServicesBothPortAndHealessTest() {
         ports.clear();
         port = new ServiceConfig.Port.Builder()
                 .port(8080).protocol("tcp").targetPort(80).nodePort(50).name("port-test").build();
@@ -141,7 +141,7 @@ public class ServiceHandlerTest {
     }
 
     @Test
-    public void getServicesTestFifth() {
+    public void getServicesWithTCPProtocolTest() {
 
         //checking protocol now
         //TCP
@@ -162,7 +162,7 @@ public class ServiceHandlerTest {
     }
 
     @Test
-    public void getServicesTestSixth() {
+    public void getServicesWithUDPProtocolTest() {
         //UDP
         port = new ServiceConfig.Port.Builder()
                 .port(8080).protocol("udp").targetPort(80).nodePort(50).name("port-test").build();
@@ -181,7 +181,7 @@ public class ServiceHandlerTest {
     }
 
     @Test
-    public void getServicesTestSeventh() {
+    public void getServicesWithDefaultProtocolTest() {
         //DEFAULT
         port = new ServiceConfig.Port.Builder()
                 .port(8080).targetPort(80).nodePort(50).name("port-test").build();
@@ -200,7 +200,7 @@ public class ServiceHandlerTest {
     }
 
     @Test
-    public void getServicesTestEighth() {
+    public void getServicesWithNullProtocolTest() {
         //checking null type
         port = new ServiceConfig.Port.Builder()
                 .port(8080).targetPort(80).nodePort(50).name("port-test").build();

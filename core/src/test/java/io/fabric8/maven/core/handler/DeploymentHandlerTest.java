@@ -115,61 +115,46 @@ public class DeploymentHandlerTest {
 
     }
 
-    @Test
-    //invalid controller name
-    public void deploymentTemplateHandlerSecondTest() {
-        try {
-            ContainerHandler containerHandler =
-                    new ContainerHandler(project, envVarHandler, probeHandler);
+    @Test(expected = IllegalArgumentException.class)
+    public void deploymentTemplateHandlerWithInvalidNameTest() {
+        //invalid controller name
+        ContainerHandler containerHandler =
+                new ContainerHandler(project, envVarHandler, probeHandler);
 
-            PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
+        PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
-            DeploymentHandler deploymentHandler = new DeploymentHandler(podTemplateHandler);
+        DeploymentHandler deploymentHandler = new DeploymentHandler(podTemplateHandler);
 
-            //with invalid controller name
-            ResourceConfig config = new ResourceConfig.Builder()
-                    .imagePullPolicy("IfNotPresent")
-                    .controllerName("TesTing")
-                    .withServiceAccount("test-account")
-                    .withReplicas(5)
-                    .volumes(volumes1)
-                    .build();
+        //with invalid controller name
+        ResourceConfig config = new ResourceConfig.Builder()
+                .imagePullPolicy("IfNotPresent")
+                .controllerName("TesTing")
+                .withServiceAccount("test-account")
+                .withReplicas(5)
+                .volumes(volumes1)
+                .build();
 
-            deploymentHandler.getDeployment(config, images);
-        }
-        //asserting the exact message because
-        // it throws the same exception in case controller name is null
-        catch(IllegalArgumentException exception) {
-            assertEquals("Invalid upper case letter 'T' at index 0 for " +
-                    "controller name value: TesTing", exception.getMessage());
-        }
+        deploymentHandler.getDeployment(config, images);
     }
 
-    @Test
-    //without controller name
-    public void deploymentTemplateHandlerThirdTest() {
-        try {
-            ContainerHandler containerHandler = new
-                    ContainerHandler(project, envVarHandler, probeHandler);
+    @Test(expected = IllegalArgumentException.class)
+    public void deploymentTemplateHandlerWithoutControllerTest() {
+        //without controller name
+        ContainerHandler containerHandler = new
+                ContainerHandler(project, envVarHandler, probeHandler);
 
-            PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
+        PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
-            DeploymentHandler deploymentHandler = new DeploymentHandler(podTemplateHandler);
+        DeploymentHandler deploymentHandler = new DeploymentHandler(podTemplateHandler);
 
-            //without controller name
-            ResourceConfig config = new ResourceConfig.Builder()
-                    .imagePullPolicy("IfNotPresent")
-                    .withServiceAccount("test-account")
-                    .withReplicas(5)
-                    .volumes(volumes1)
-                    .build();
+        //without controller name
+        ResourceConfig config = new ResourceConfig.Builder()
+                .imagePullPolicy("IfNotPresent")
+                .withServiceAccount("test-account")
+                .withReplicas(5)
+                .volumes(volumes1)
+                .build();
 
-            deploymentHandler.getDeployment(config, images);
-        }
-        //asserting the exact message because
-        //it throws the same exception in case controller name is invalid
-        catch(IllegalArgumentException exception) {
-            assertEquals("No controller name is specified!", exception.getMessage());
-        }
+        deploymentHandler.getDeployment(config, images);
     }
 }

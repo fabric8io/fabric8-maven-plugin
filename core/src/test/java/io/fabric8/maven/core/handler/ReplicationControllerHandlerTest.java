@@ -115,63 +115,46 @@ public class ReplicationControllerHandlerTest {
 
     }
 
-    @Test
-    //invalid controller name
-    public void replicationControllerHandlerSecondTest() {
-        try {
+    @Test(expected = IllegalArgumentException.class)
+    public void replicationControllerHandlerWithInvalidNameTest() {
+        //invalid controller name
+        ContainerHandler containerHandler =
+                new ContainerHandler(project, envVarHandler, probeHandler);
 
-            ContainerHandler containerHandler =
-                    new ContainerHandler(project, envVarHandler, probeHandler);
+        PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
-            PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
+        ReplicationControllerHandler replicationControllerHandler = new ReplicationControllerHandler(podTemplateHandler);
 
-            ReplicationControllerHandler replicationControllerHandler = new ReplicationControllerHandler(podTemplateHandler);
+        //with invalid controller name
+        ResourceConfig config = new ResourceConfig.Builder()
+                .imagePullPolicy("IfNotPresent")
+                .controllerName("TesTing")
+                .withServiceAccount("test-account")
+                .withReplicas(5)
+                .volumes(volumes1)
+                .build();
 
-            //with invalid controller name
-            ResourceConfig config = new ResourceConfig.Builder()
-                    .imagePullPolicy("IfNotPresent")
-                    .controllerName("TesTing")
-                    .withServiceAccount("test-account")
-                    .withReplicas(5)
-                    .volumes(volumes1)
-                    .build();
-
-            replicationControllerHandler.getReplicationController(config, images);
-        }
-        //asserting the exact message because
-        // it throws the same exception in case controller name is null
-        catch(IllegalArgumentException exception) {
-            assertEquals("Invalid upper case letter 'T' at index 0 for " +
-                    "replication controller name value: TesTing", exception.getMessage());
-        }
+        replicationControllerHandler.getReplicationController(config, images);
     }
 
-    @Test
-    //without controller name
-    public void replicationControllerHandlerThirdTest() {
-        try {
+    @Test(expected = IllegalArgumentException.class)
+    public void replicationControllerHandlerWithoutControllerTest() {
+        //without controller name
+        ContainerHandler containerHandler = new
+                ContainerHandler(project, envVarHandler, probeHandler);
 
-            ContainerHandler containerHandler = new
-                    ContainerHandler(project, envVarHandler, probeHandler);
+        PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
-            PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
+        ReplicationControllerHandler replicationControllerHandler = new ReplicationControllerHandler(podTemplateHandler);
 
-            ReplicationControllerHandler replicationControllerHandler = new ReplicationControllerHandler(podTemplateHandler);
+        //without controller name
+        ResourceConfig config = new ResourceConfig.Builder()
+                .imagePullPolicy("IfNotPresent")
+                .withServiceAccount("test-account")
+                .withReplicas(5)
+                .volumes(volumes1)
+                .build();
 
-            //without controller name
-            ResourceConfig config = new ResourceConfig.Builder()
-                    .imagePullPolicy("IfNotPresent")
-                    .withServiceAccount("test-account")
-                    .withReplicas(5)
-                    .volumes(volumes1)
-                    .build();
-
-            replicationControllerHandler.getReplicationController(config, images);
-        }
-        //asserting the exact message because
-        //it throws the same exception in case controller name is invalid
-        catch(IllegalArgumentException exception) {
-            assertEquals("No replication controller name is specified!", exception.getMessage());
-        }
+        replicationControllerHandler.getReplicationController(config, images);
     }
 }

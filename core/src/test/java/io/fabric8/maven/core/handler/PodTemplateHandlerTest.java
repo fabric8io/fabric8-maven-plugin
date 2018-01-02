@@ -75,7 +75,7 @@ public class PodTemplateHandlerTest {
     }
 
     @Test
-    public void podTemplateHandlerTest() {
+    public void podWithoutVolumeTemplateHandlerTest() {
 
         ContainerHandler containerHandler =
                 new ContainerHandler(project, envVarHandler, probeHandler);
@@ -105,7 +105,7 @@ public class PodTemplateHandlerTest {
     }
 
     @Test
-    public void podTemplateHandlerTestSecond(){
+    public void podWithEmotyVolumeTemplateHandlerTest(){
         ContainerHandler containerHandler =
                 new ContainerHandler(project, envVarHandler, probeHandler);
 
@@ -127,7 +127,7 @@ public class PodTemplateHandlerTest {
     }
 
     @Test
-    public void podTemplateHandlerTestThird(){
+    public void podWithVolumeTemplateHandlerTest(){
         ContainerHandler containerHandler =
                 new ContainerHandler(project, envVarHandler, probeHandler);
 
@@ -160,7 +160,7 @@ public class PodTemplateHandlerTest {
     }
 
     @Test
-    public void podTemplateHandlerTestFourth(){
+    public void podWithInvalidVolumeTypeTemplateHandlerTest(){
         ContainerHandler containerHandler =
                 new ContainerHandler(project, envVarHandler, probeHandler);
 
@@ -189,7 +189,7 @@ public class PodTemplateHandlerTest {
     }
 
     @Test
-    public void podTemplateHandlerTestFifth(){
+    public void podWithoutEmptyTypeTemplateHandlerTest(){
         ContainerHandler containerHandler =
                 new ContainerHandler(project, envVarHandler, probeHandler);
 

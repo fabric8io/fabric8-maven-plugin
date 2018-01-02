@@ -15,11 +15,11 @@
  */
 package io.fabric8.maven.core.handler;
 
+import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.VolumeConfig;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.kubernetes.api.model.extensions.*;
 import mockit.Mocked;
 import org.apache.maven.project.MavenProject;
 import org.junit.Before;
@@ -112,58 +112,43 @@ public class DaemonSetHandlerTest {
 
     }
 
-    @Test
-    //invalid controller name
-    public void daemonTemplateHandlerSecondTest() {
-        try {
-            ContainerHandler containerHandler =
-                    new ContainerHandler(project, envVarHandler, probeHandler);
+    @Test(expected = IllegalArgumentException.class)
+    public void daemonTemplateHandlerWithInvalidNameTest() {
+        //invalid controller name
+        ContainerHandler containerHandler =
+                new ContainerHandler(project, envVarHandler, probeHandler);
 
-            PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
+        PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
-            DaemonSetHandler daemonSetHandler = new DaemonSetHandler(podTemplateHandler);
+        DaemonSetHandler daemonSetHandler = new DaemonSetHandler(podTemplateHandler);
 
-            //with invalid controller name
-            ResourceConfig config = new ResourceConfig.Builder()
-                    .imagePullPolicy("IfNotPresent")
-                    .controllerName("TesTing")
-                    .withServiceAccount("test-account")
-                    .volumes(volumes1)
-                    .build();
+        //with invalid controller name
+        ResourceConfig config = new ResourceConfig.Builder()
+                .imagePullPolicy("IfNotPresent")
+                .controllerName("TesTing")
+                .withServiceAccount("test-account")
+                .volumes(volumes1)
+                .build();
 
-            daemonSetHandler.getDaemonSet(config, images);
-        }
-        //asserting the exact message because
-        // it throws the same exception in case controller name is null
-        catch(IllegalArgumentException exception) {
-            assertEquals("Invalid upper case letter 'T' at index 0 for " +
-                    "controller name value: TesTing", exception.getMessage());
-        }
+        daemonSetHandler.getDaemonSet(config, images);
     }
 
-    @Test
-    //without controller name
-    public void daemonTemplateHandlerThirdTest() {
-        try {
-            ContainerHandler containerHandler =
-                    new ContainerHandler(project, envVarHandler, probeHandler);
+    @Test(expected = IllegalArgumentException.class)
+    public void daemonTemplateHandlerWithoutControllerTest() {
+        //without controller name
+        ContainerHandler containerHandler =
+                new ContainerHandler(project, envVarHandler, probeHandler);
 
-            PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
+        PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
-            DaemonSetHandler daemonSetHandler = new DaemonSetHandler(podTemplateHandler);
-            //without controller name
-            ResourceConfig config = new ResourceConfig.Builder()
-                    .imagePullPolicy("IfNotPresent")
-                    .withServiceAccount("test-account")
-                    .volumes(volumes1)
-                    .build();
+        DaemonSetHandler daemonSetHandler = new DaemonSetHandler(podTemplateHandler);
+        //without controller name
+        ResourceConfig config = new ResourceConfig.Builder()
+                .imagePullPolicy("IfNotPresent")
+                .withServiceAccount("test-account")
+                .volumes(volumes1)
+                .build();
 
-            daemonSetHandler.getDaemonSet(config, images);
-        }
-        //asserting the exact message because
-        //it throws the same exception in case controller name is invalid
-        catch(IllegalArgumentException exception) {
-            assertEquals("No controller name is specified!", exception.getMessage());
-        }
+        daemonSetHandler.getDaemonSet(config, images);
     }
 }

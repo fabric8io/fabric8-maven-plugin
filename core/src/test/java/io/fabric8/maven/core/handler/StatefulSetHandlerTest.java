@@ -116,61 +116,46 @@ public class StatefulSetHandlerTest {
 
     }
 
-    @Test
-    //invalid controller name
-    public void statefulSetHandlerSecondTest() {
-        try {
-            ContainerHandler containerHandler =
-                    new ContainerHandler(project, envVarHandler, probeHandler);
+    @Test(expected = IllegalArgumentException.class)
+    public void statefulSetHandlerWithInvalidNameTest() {
+        //invalid controller name
+        ContainerHandler containerHandler =
+                new ContainerHandler(project, envVarHandler, probeHandler);
 
-            PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
+        PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
-            StatefulSetHandler statefulSetHandler = new StatefulSetHandler(podTemplateHandler);
+        StatefulSetHandler statefulSetHandler = new StatefulSetHandler(podTemplateHandler);
 
-            //with invalid controller name
-            ResourceConfig config = new ResourceConfig.Builder()
-                    .imagePullPolicy("IfNotPresent")
-                    .controllerName("TesTing")
-                    .withServiceAccount("test-account")
-                    .withReplicas(5)
-                    .volumes(volumes1)
-                    .build();
+        //with invalid controller name
+        ResourceConfig config = new ResourceConfig.Builder()
+                .imagePullPolicy("IfNotPresent")
+                .controllerName("TesTing")
+                .withServiceAccount("test-account")
+                .withReplicas(5)
+                .volumes(volumes1)
+                .build();
 
-            statefulSetHandler.getStatefulSet(config, images);
-        }
-        //asserting the exact message because
-        // it throws the same exception in case controller name is null
-        catch(IllegalArgumentException exception) {
-            assertEquals("Invalid upper case letter 'T' at index 0 for " +
-                    "controller name value: TesTing", exception.getMessage());
-        }
+        statefulSetHandler.getStatefulSet(config, images);
     }
 
-    @Test
-    //without controller name
-    public void statefulSetHandlerThirdTest() {
-        try {
-            ContainerHandler containerHandler = new
-                    ContainerHandler(project, envVarHandler, probeHandler);
+    @Test(expected = IllegalArgumentException.class)
+    public void statefulSetHandlerWithoutControllerTest() {
+        //without controller name
+        ContainerHandler containerHandler = new
+                ContainerHandler(project, envVarHandler, probeHandler);
 
-            PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
+        PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
-            StatefulSetHandler statefulSetHandler = new StatefulSetHandler(podTemplateHandler);
+        StatefulSetHandler statefulSetHandler = new StatefulSetHandler(podTemplateHandler);
 
-            //without controller name
-            ResourceConfig config = new ResourceConfig.Builder()
-                    .imagePullPolicy("IfNotPresent")
-                    .withServiceAccount("test-account")
-                    .withReplicas(5)
-                    .volumes(volumes1)
-                    .build();
+        //without controller name
+        ResourceConfig config = new ResourceConfig.Builder()
+                .imagePullPolicy("IfNotPresent")
+                .withServiceAccount("test-account")
+                .withReplicas(5)
+                .volumes(volumes1)
+                .build();
 
-            statefulSetHandler.getStatefulSet(config, images);
-        }
-        //asserting the exact message because
-        //it throws the same exception in case controller name is invalid
-        catch(IllegalArgumentException exception) {
-            assertEquals("No controller name is specified!", exception.getMessage());
-        }
+        statefulSetHandler.getStatefulSet(config, images);
     }
 }

@@ -77,7 +77,7 @@ public class ContainerHandlerTest {
             name("test").alias("test-app").buildConfig(buildImageConfiguration1).registry("docker.io").build();
 
     @Test
-    public void getContainersTest() {
+    public void getContainersWithAliasTest() {
 
         project.setArtifactId("test-artifact");
         project.setGroupId("test-group");
@@ -108,7 +108,7 @@ public class ContainerHandlerTest {
     }
 
     @Test
-    public void getContainerTestSecond() {
+    public void getContainerWithGroupArtifactTest() {
 
         project.setArtifactId("test-artifact");
         project.setGroupId("test-group");
@@ -138,7 +138,7 @@ public class ContainerHandlerTest {
         assertEquals("IfNotPresent", containers.get(0).getImagePullPolicy());
     }
     @Test
-    public void getContainerTestThird(){
+    public void getContainerTestWithUser(){
         project.setArtifactId("test-artifact");
         project.setGroupId("test-group");
 
@@ -169,7 +169,7 @@ public class ContainerHandlerTest {
     }
 
     @Test
-    public void imagePullPolicyTest() {
+    public void imagePullPolicyWithPolicySetTest() {
 
         //check if policy is set then both in case of version is not null or null
 
@@ -193,7 +193,7 @@ public class ContainerHandlerTest {
         assertEquals("IfNotPresent", containers.get(0).getImagePullPolicy());
     }
     @Test
-    public void imagePullPolicyTestSecond(){
+    public void imagePullPolicyWithoutPolicySetTest(){
 
         //project with version and ending in SNAPSHOT
         project1.setVersion("3.5-SNAPSHOT");
@@ -258,7 +258,7 @@ public class ContainerHandlerTest {
     }
 
     @Test
-    public void getVolumeMountTest() {
+    public void getVolumeMountWithoutMountTest() {
         ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
 
         images.clear();
@@ -273,7 +273,7 @@ public class ContainerHandlerTest {
     }
 
     @Test
-    public void getVolumeMountTestSecond() {
+    public void getVolumeMountWithoutNameTest() {
 
         ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
 
@@ -296,7 +296,7 @@ public class ContainerHandlerTest {
     }
 
     @Test
-    public void getVolumeMountTestThird() {
+    public void getVolumeMountWithNameAndMountTest() {
         ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
 
         List<String> mounts = new ArrayList<>();
@@ -317,7 +317,7 @@ public class ContainerHandlerTest {
     }
 
     @Test
-    public void getVolumeMountTestFourth() {
+    public void getVolumeMountWithMultipleMountTest() {
         ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
 
         images.clear();
@@ -340,7 +340,7 @@ public class ContainerHandlerTest {
     }
 
     @Test
-    public void getVolumeMountTestFifth() {
+    public void getVolumeMountWithEmptyVolumeTest() {
         ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
 
         images.clear();
@@ -353,7 +353,7 @@ public class ContainerHandlerTest {
     }
 
     @Test
-    public void containerPortsTest() {
+    public void containerEmptyPortsTest() {
         ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
 
         images.clear();
@@ -365,7 +365,7 @@ public class ContainerHandlerTest {
     }
 
     @Test
-    public void containerPortsTestSecond() {
+    public void containerPortsWithoutPortTest() {
 
         ContainerHandler handler = new ContainerHandler(project,envVarHandler,probeHandler);
 
@@ -384,7 +384,7 @@ public class ContainerHandlerTest {
     }
 
     @Test
-    public void containerPortsTestThird(){
+    public void containerPortsWithDifferentPortTest(){
         //Different kind of Ports Specification
         ports.add("172.22.27.82:82:8082");
         ports.add("172.22.27.81:81:8081/tcp");
