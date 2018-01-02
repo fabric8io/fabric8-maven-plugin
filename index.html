@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.33,</span>
-<span id="revdate">2017-12-27</span>
+<span id="revdate">2018-01-02</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -707,9 +707,9 @@ table.CodeRay td.code>pre{padding:0}
 <div class="sectionbody">
 <div class="paragraph">
 <p>The <strong>fabric8-maven-plugin</strong> (f8-m-p) brings your Java applications on to <a href="http://kubernetes.io/">Kubernetes</a> and <a href="https://www.openshift.com/">OpenShift</a>.
-It provides a tight integration into <a href="http://maven.apache.org">Maven</a> and benefits from the build configration already provided.
+It provides a tight integration into <a href="http://maven.apache.org">Maven</a> and benefits from the build configuration already provided.
 This plugin focus on two tasks: <em>Building Docker images</em> and <em>creating Kubernetes and OpenShift resource descriptors</em>.
-It can be configured very flexibly and supports multiple configuration models for creating : A <em>Zero-Config</em> setup allows for a quick ramp-up with some opinionated defaults.
+It can be configured very flexibly and supports multiple configuration models for creating: A <em>Zero-Config</em> setup allows for a quick ramp-up with some opinionated defaults.
 For more advanced requirements, an <em>XML configuration</em> provides additional configuration options which can be added to the <code>pom.xml</code>.
 For the full power, in order to tune all facets of the creation, external <em>resource fragments</em> and <em>Dockerfiles</em> can be used.
 A docker compose configuration can be also used to bring up docker compose deployments on a Kubernetes/OpenShift cluster.</p>
@@ -726,7 +726,7 @@ That images can then be pushed to public or private Docker registries with <a hr
 <p>Depending on the operational mode, for building the actual image either a Docker daemon is used directly or an <a href="https://docs.openshift.com/enterprise/3.0/architecture/core_concepts/builds_and_image_streams.html#docker-build">OpenShift Docker Build</a> is performed.</p>
 </div>
 <div class="paragraph">
-<p>A special <a href="#fabric8:watch"><strong>fabric8:watch</strong></a> goal allows for reacting on code changes and automatic recreation of images or copying new artifacts into running containers.</p>
+<p>A special <a href="#fabric8:watch"><strong>fabric8:watch</strong></a> goal allows for reacting to code changes and automatic recreation of images or copying new artifacts into running containers.</p>
 </div>
 <div class="paragraph">
 <p>These image related features are inherited from the <a href="https://github.com/fabric8io/docker-maven-plugin">fabric8io/docker-maven-plugin</a> which is part of this plugin.</p>
@@ -739,7 +739,7 @@ That images can then be pushed to public or private Docker registries with <a hr
 These files are packaged within the Maven artifacts and can be deployed to a running orchestration platform with <a href="#fabric8:apply"><strong>fabric8:apply</strong></a>.</p>
 </div>
 <div class="paragraph">
-<p>Typically you only specify a small part of the real resource descriptors which will be enriched by this plugin with various extra informations taken from the <code>pom.xml</code>.
+<p>Typically you only specify a small part of the real resource descriptors which will be enriched by this plugin with various extra information taken from the <code>pom.xml</code>.
 This drastically reduces boilerplate code for common scenarios.</p>
 </div>
 </div>
@@ -756,10 +756,10 @@ This is great for starting up things and for keeping quickstart applications sma
 </li>
 <li>
 <p><strong>XML plugin configuration</strong> mode is similar to what <a href="https://fabric8io.github.io/docker-maven-plugin/#example">docker-maven-plugin</a> provides.
-This allows for type safe configuration with IDE support, but only a subset of possible resource descriptor features is provided.</p>
+This allows for type-safe configuration with IDE support, but only a subset of possible resource descriptor features is provided.</p>
 </li>
 <li>
-<p><strong>Kubernetes &amp; OpenShift resource fragments</strong> are user provided YAML files that can be <em>enriched</em> by the plugin. This allows expert users to use plain configuration file with all their capabilities, but also to add project specific build information and avoid boilerplate code.</p>
+<p><strong>Kubernetes &amp; OpenShift resource fragments</strong> are user provided YAML files that can be <em>enriched</em> by the plugin. This allows expert users to use a plain configuration file with all their capabilities, but also to add project specific build information and avoid boilerplate code.</p>
 </li>
 <li>
 <p><strong>Docker Compose</strong> can be used to bring up docker compose deployments on a Kubernetes/OpenShift cluster. This requires minimum to no knowledge of Kubernetes/OpenShift deployment process.</p>
@@ -797,7 +797,7 @@ This allows for type safe configuration with IDE support, but only a subset of p
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Resource Fragments</strong> and <strong>Dockerfiles</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Like the docker-maven-plugin f8-m-p supports <a href="#external-dockerfile">external Dockerfiles</a> too, which are referenced from the plugin configuration.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Resource descriptors can be provided as external YAML files which specify a skeleton. This skeleton is then filled by Enrichers which add labels and more. Maven properties within these files are resolved to thier values. With this model you can use every Kubernetes / OpenShift resource object with all their flexibility, but still get the benefit of adding build informations.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Resource descriptors can be provided as external YAML files which specify a skeleton. This skeleton is then filled by Enrichers which add labels and more. Maven properties within these files are resolved to thier values. With this model you can use every Kubernetes / OpenShift resource object with all their flexibility, but still get the benefit of adding build information.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Docker Compose</strong></p></td>
@@ -1817,7 +1817,7 @@ the <code>src/main/fabric8/</code> folder.</p>
 <p>For the mode <code>openshift</code> OpenShift specific <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html">Builds</a> can be performed. These are so called <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html">Binary Source</a> builds ("binary builds" in short), where the data specified with the <a href="#build-configuration">build configuration</a>  is send directly to OpenShift as a binary archive.</p>
 </div>
 <div class="paragraph">
-<p>There are two kind of binary builds supporte by this plugin, which can be selected with the configuration option <code>buildStrategy</code> (property <code>fabric8.build.strategy</code>)</p>
+<p>There are two kind of binary builds supported by this plugin, which can be selected with the configuration option <code>buildStrategy</code> (property <code>fabric8.build.strategy</code>)</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 9. Build Strategies</caption>
@@ -1873,7 +1873,7 @@ the <code>src/main/fabric8/</code> folder.</p>
 <p>The following sections describe the usual configuration, which is similar to the build configuration used in the <a href="https://dmp.fabric8.io">docker-maven-plugin</a>.</p>
 </div>
 <div class="paragraph">
-<p>In addition a more automatic way for creating predefined build configuration can be performed with so called <a href="#generators">Generators</a>. Generators are very flexibel and can be easily created. These are described in an extra <a href="#generators">section</a>.</p>
+<p>In addition a more automatic way for creating predefined build configuration can be performed with so called <a href="#generators">Generators</a>. Generators are very flexible and can be easily created. These are described in an extra <a href="#generators">section</a>.</p>
 </div>
 <div class="paragraph">
 <p>Global configuration parameters specify overall behavior common for all images to build. Some of the configuration options are shared with other goals.</p>
@@ -4012,7 +4012,7 @@ This plugin definition includes the configuration to generate the Docker image.
 <div class="sect2">
 <h3 id="fabric8:import">7.1. <strong>fabric8:import</strong></h3>
 <div class="paragraph">
-<p>This goal imports the current project into the [fabric8 console] so that you can browse the source code via the web interface and associate a [Continuous Delivery] pipeline with the project to start automatic Continuous Deployment.</p>
+<p>This goal imports the current project into the <a href="https://github.com/fabric8io/fabric8-console">fabric8 console</a> so that you can browse the source code via the web interface and associate a <a href="https://fabric8.io/guide/cdelivery.html">Continuous Delivery</a> pipeline with the project to start automatic Continuous Deployment.</p>
 </div>
 <div class="paragraph">
 <p>If you have a project on the file system then type:</p>
@@ -4029,7 +4029,7 @@ This plugin definition includes the configuration to generate the Docker image.
 <p>If no git repository exists yet for the current project then a new git repository will be created and the current code pushed into it so that it can then be built with Jenkins.</p>
 </div>
 <div class="paragraph">
-<p>If the current project is a git clone from a remote repository then this goal will also try to setup a <code>Secret</code> in kubernetes to keep track of the user name and password/access code or in the case of SSH protocol with git the SSH key pairs.</p>
+<p>If the current project is a git clone from a remote repository then this goal will also try to setup a <code>Secret</code> in kubernetes to keep track of the username and password/access code or in the case of SSH protocol with git the SSH key pairs.</p>
 </div>
 </div>
 <div class="sect2">
@@ -6505,7 +6505,7 @@ Use the IAM <strong>Access key ID</strong> as the username and the <strong>Secre
 <h2 id="migration">14. Migration from version 2</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This version 3 of f8-m-p is using a completely new configuration syntax compated to version 2.</p>
+<p>This version 3 of f8-m-p is using a completely new configuration syntax compared to version 2.</p>
 </div>
 <div class="paragraph">
 <p>If you have a maven project with a 2.x fabric8-maven-plugin then we recommend you run the <a href="http://fabric8.io/guide/mavenFabric8Migrate.html">mvn fabric8:migrate</a> goal directly on your project to do the migration:</p>
@@ -6544,10 +6544,10 @@ mvn fabric8:migrate
 </div>
 </div>
 <div class="paragraph">
-<p>The above will generate an environment variable <code>$FOO</code> of value `bar</p>
+<p>The above will generate an environment variable <code>$FOO</code> of value <code>bar</code></p>
 </div>
 <div class="paragraph">
-<p>For a full list of the environments used in java base images <a href="https://hub.docker.com/r/fabric8/java-jboss-openjdk8-jdk">see this list</a></p>
+<p>For a full list of the environments used in java base images, <a href="https://hub.docker.com/r/fabric8/java-jboss-openjdk8-jdk">see this list</a></p>
 </div>
 </div>
 <div class="sect3">
@@ -6556,7 +6556,7 @@ mvn fabric8:migrate
 <p>The simplest way is to add system properties to the <code>JAVA_OPTIONS</code> environment variable.</p>
 </div>
 <div class="paragraph">
-<p>For a full list of the environments used in java base images <a href="https://hub.docker.com/r/fabric8/java-jboss-openjdk8-jdk">see this list</a></p>
+<p>For a full list of the environments used in java base images, <a href="https://hub.docker.com/r/fabric8/java-jboss-openjdk8-jdk">see this list</a></p>
 </div>
 <div class="paragraph">
 <p>e.g. add a <code>src/main/fabric8/deployment.yml</code> file to your project containing something like:</p>
@@ -6669,7 +6669,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.33<br>
-Last updated 2017-12-27 04:46:46 UTC
+Last updated 2018-01-02 10:08:00 UTC
 </div>
 </div>
 </body>
