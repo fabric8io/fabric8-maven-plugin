@@ -30,6 +30,14 @@ public class DockerServerUtilTest {
         configuration.addChild(mail);
         server1.setConfiguration(configuration);
         settings.addServer(server1);
+
+        Server server2 = new Server();
+        server2.setId("docker2.io");
+        server2.setUsername("username2");
+        server2.setPassword("password2");
+        Xpp3Dom configuration1 = new Xpp3Dom("configuration");
+        server2.setConfiguration(configuration1);
+        settings.addServer(server2);
         return settings;
     }
 
@@ -48,5 +56,11 @@ public class DockerServerUtilTest {
 
         String server1 = DockerServerUtil.getDockerJsonConfigString(settings, "docker1.io");
         assertEquals("{\"docker1.io\":{\"password\":\"password1\",\"email\":\"bar@bar.com\",\"username\":\"username1\"}}", server1);
+
+        String server2 = DockerServerUtil.getDockerJsonConfigString(null,"docker.io");
+        assertEquals("",server2);
+
+        String server3 = DockerServerUtil.getDockerJsonConfigString(settings,"docker2.io");
+        assertEquals("{\"docker2.io\":{\"password\":\"password2\",\"email\":\"foo@foo.com\",\"username\":\"username2\"}}",server3);
     }
 }

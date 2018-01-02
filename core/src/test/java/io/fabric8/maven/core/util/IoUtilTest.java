@@ -39,13 +39,14 @@ public class IoUtilTest {
         try (ServerSocket ss = new ServerSocket(port)) {
         }
         int port2 = IoUtil.getFreeRandomPort(port, 65535, 100);
-        try (ServerSocket ss = new ServerSocket(port)) {
+        try (ServerSocket ss = new ServerSocket(port2)) {
         }
         assertTrue(port2 > port);
     }
 
     @Test
     public void testSanitizeFileName() {
+        assertEquals(null, IoUtil.sanitizeFileName(null));
         assertEquals("Hello-World", IoUtil.sanitizeFileName("Hello/&%World"));
         assertEquals("-H-e-l-l-o-", IoUtil.sanitizeFileName(" _H-.-e-.-l-l--.//o()"));
         assertEquals("s2i-env-docker-io-fabric8-java-latest", IoUtil.sanitizeFileName("s2i-env-docker.io/fabric8/java:latest"));
