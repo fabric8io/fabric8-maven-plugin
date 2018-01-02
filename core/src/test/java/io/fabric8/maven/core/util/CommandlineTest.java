@@ -41,64 +41,52 @@ public class CommandlineTest {
     }
 
     @Test
-    public void simpleTest(){
-        result = commandline.translateCommandline("cd /tmp");
+    public void simpleCommandTest(){
         expected.clear();
         expected.add("cd");
         expected.add("/tmp");
+        result = commandline.translateCommandline("cd /tmp");
         assertEquals(expected,result);
     }
 
     @Test
-    public void simpleTestSecond(){
-        result = commandline.translateCommandline("echo \"Hello! World\"");
+    public void CommandWithDoubleQuoteTest(){
         expected.clear();
         expected.add("echo");
         expected.add("Hello! World");
+        result = commandline.translateCommandline("echo \"Hello! World\"");
         assertEquals(expected,result);
     }
 
     @Test
-    public void simpleTestThird(){
-        result = commandline.
-                translateCommandline("echo \"Hello! World\" \'Hello Java Folks\'");
+    public void commandWithBothTypeofQuotesTest(){
         expected.clear();
         expected.add("echo");
         expected.add("Hello! World");
         expected.add("Hello Java Folks");
+        result = commandline.
+                translateCommandline("echo \"Hello! World\" \'Hello Java Folks\'");
         assertEquals(expected,result);
     }
 
     @Test
-    public void simpleTestFourth(){
-        result = commandline.
-                translateCommandline("echo \"Hello! World \'Hello Java Folks\'\"");
+    public void commandWithNestedQuotesTest(){
         expected.clear();
         expected.add("echo");
         expected.add("Hello! World \'Hello Java Folks\'");
+        result = commandline.
+                translateCommandline("echo \"Hello! World \'Hello Java Folks\'\"");
         assertEquals(expected,result);
     }
 
-    @Test
-    public void simpleInvalidCommandTest(){
-        try {
-            result = commandline.
-                    translateCommandline("echo \"Hello! World\" \'Hello Java Folks");
-        }
-        catch (IllegalArgumentException e){
-            assertEquals("unbalanced quotes in echo \"Hello! World\" \'Hello Java Folks",
-                    e.getMessage());
-        }
+    @Test(expected = IllegalArgumentException.class)
+    public void invalidDoubleQuoteCommandTest(){
+        result = commandline.
+                translateCommandline("echo \"Hello! World\" \'Hello Java Folks");
     }
-    @Test
-    public void simpleInvalidCommandTestSecond(){
-        try {
-            result = commandline.
-                    translateCommandline("echo \"Hello! World \'Hello Java Folks\'");
-        }
-        catch (IllegalArgumentException e){
-            assertEquals("unbalanced quotes in echo \"Hello! World \'Hello Java Folks\'",
-                    e.getMessage());
-        }
+    @Test(expected = IllegalArgumentException.class)
+    public void invalidSingleQuoteCommandTest(){
+        result = commandline.
+                translateCommandline("echo \"Hello! World \'Hello Java Folks\'");
     }
 }
