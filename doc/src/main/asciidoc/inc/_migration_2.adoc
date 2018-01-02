@@ -1,7 +1,7 @@
 [[migration]]
 = Migration from version 2
 
-This version 3 of f8-m-p is using a completely new configuration syntax compated to version 2.
+This version 3 of f8-m-p is using a completely new configuration syntax compared to version 2.
 
 If you have a maven project with a 2.x fabric8-maven-plugin then we recommend you run the http://fabric8.io/guide/mavenFabric8Migrate.html[mvn fabric8:migrate] goal directly on your project to do the migration:
 

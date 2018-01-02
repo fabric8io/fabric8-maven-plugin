@@ -3,9 +3,9 @@
 = Introduction
 
 The *fabric8-maven-plugin* (f8-m-p) brings your Java applications on to http://kubernetes.io/[Kubernetes] and https://www.openshift.com/[OpenShift].
-It provides a tight integration into http://maven.apache.org[Maven] and benefits from the build configration already provided.
+It provides a tight integration into http://maven.apache.org[Maven] and benefits from the build configuration already provided.
 This plugin focus on two tasks: _Building Docker images_ and _creating Kubernetes and OpenShift resource descriptors_.
-It can be configured very flexibly and supports multiple configuration models for creating : A _Zero-Config_ setup allows for a quick ramp-up with some opinionated defaults.
+It can be configured very flexibly and supports multiple configuration models for creating: A _Zero-Config_ setup allows for a quick ramp-up with some opinionated defaults.
 For more advanced requirements, an _XML configuration_ provides additional configuration options which can be added to the `pom.xml`.
 For the full power, in order to tune all facets of the creation, external _resource fragments_ and _Dockerfiles_ can be used.
 A docker compose configuration can be also used to bring up docker compose deployments on a Kubernetes/OpenShift cluster.
@@ -20,7 +20,7 @@ That images can then be pushed to public or private Docker registries with <<fab
 
 Depending on the operational mode, for building the actual image either a Docker daemon is used directly or an https://docs.openshift.com/enterprise/3.0/architecture/core_concepts/builds_and_image_streams.html#docker-build[OpenShift Docker Build] is performed.
 
-A special <<fabric8:watch>> goal allows for reacting on code changes and automatic recreation of images or copying new artifacts into running containers.
+A special <<fabric8:watch>> goal allows for reacting to code changes and automatic recreation of images or copying new artifacts into running containers.
 
 These image related features are inherited from the https://github.com/fabric8io/docker-maven-plugin[fabric8io/docker-maven-plugin] which is part of this plugin.
 
@@ -30,7 +30,7 @@ These image related features are inherited from the https://github.com/fabric8io
 Kubernetes and OpenShift resource descriptors can be created or generated from existing docker compose with <<fabric8:resource>>.
 These files are packaged within the Maven artifacts and can be deployed to a running orchestration platform with <<fabric8:apply>>.
 
-Typically you only specify a small part of the real resource descriptors which will be enriched by this plugin with various extra informations taken from the `pom.xml`.
+Typically you only specify a small part of the real resource descriptors which will be enriched by this plugin with various extra information taken from the `pom.xml`.
 This drastically reduces boilerplate code for common scenarios.
 
 == Configuration
@@ -41,9 +41,9 @@ As mentioned already there are four levels of configuration:
 This is great for starting up things and for keeping quickstart applications small and tidy.
 
 * *XML plugin configuration* mode is similar to what https://fabric8io.github.io/docker-maven-plugin/#example[docker-maven-plugin] provides.
-This allows for type safe configuration with IDE support, but only a subset of possible resource descriptor features is provided.
+This allows for type-safe configuration with IDE support, but only a subset of possible resource descriptor features is provided.
 
-* *Kubernetes &amp; OpenShift resource fragments* are user provided YAML files that can be _enriched_ by the plugin. This allows expert users to use plain configuration file with all their capabilities, but also to add project specific build information and avoid boilerplate code.
+* *Kubernetes &amp; OpenShift resource fragments* are user provided YAML files that can be _enriched_ by the plugin. This allows expert users to use a plain configuration file with all their capabilities, but also to add project specific build information and avoid boilerplate code.
 
 
 * *Docker Compose* can be used to bring up docker compose deployments on a Kubernetes/OpenShift cluster. This requires minimum to no knowledge of Kubernetes/OpenShift deployment process.
@@ -65,7 +65,7 @@ The following table gives an overview of the different models
 
 | *Resource Fragments* and *Dockerfiles*
 | Like the docker-maven-plugin f8-m-p supports <<external-dockerfile,external Dockerfiles>> too, which are referenced from the plugin configuration.
-| Resource descriptors can be provided as external YAML files which specify a skeleton. This skeleton is then filled by Enrichers which add labels and more. Maven properties within these files are resolved to thier values. With this model you can use every Kubernetes / OpenShift resource object with all their flexibility, but still get the benefit of adding build informations.
+| Resource descriptors can be provided as external YAML files which specify a skeleton. This skeleton is then filled by Enrichers which add labels and more. Maven properties within these files are resolved to thier values. With this model you can use every Kubernetes / OpenShift resource object with all their flexibility, but still get the benefit of adding build information.
 
 | *Docker Compose*
 | All above methods can works with docker compose configuration.
