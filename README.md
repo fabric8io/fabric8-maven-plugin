@@ -18,7 +18,7 @@ This Maven plugin is a one-stop-shop for building and deploying Java application
 + Deploy application on Kubernetes and OpenShift
 
 ### Usage
-To enable fabric8 maven plugin on your project just add this to the plugins sections of your pom.xml: 
+To enable fabric8 maven plugin on your project just add this to the plugins sections of your pom.xml:
 
 ```
       <plugin>
@@ -103,9 +103,10 @@ The full documentation can be found in the [User Manual](http://maven.fabric8.io
 * Supports both Kubernetes and OpenShift descriptors
 * OpenShift Docker builds with a binary source (as an alternative to a direct image build agains a Docker daemon)
 * Various configuration styles:
-  * **Zero Config** for a quick ramp-up where opinionated defaults will be pre-selected.
-  * **Inline Configuration** within the plugin configuration in an XML syntax
+  * **Zero Configuration** for a quick ramp-up where opinionated defaults will be pre-selected.
+  * **Inline Configuration** within the plugin configuration in an XML syntax.
   * **External Configuration** templates of the real deployment descriptors which are enriched by the plugin.
+  * **Docker Compose Configuration** provide Docker Compose file and bring up docker compose deployments on a Kubernetes/OpenShift cluster.
 * Flexible customization:
   * **Generators** analyze the Maven build and generated automatic Docker image configurations for certain systems (spring-boot, plain java, karaf ...)
   * **Enrichers** extend the Kubernetes / OpenShift resource descriptors by extra information like SCM labels and can add default objects like Services.
@@ -122,4 +123,4 @@ The full documentation can be found in the [User Manual](http://maven.fabric8.io
 ### fabric8-maven-plugin 3 vs. 2
 
 > This is a complete rewrite of the former fabric8-maven plugin. It does not share the same configuration syntax,
-> but migration should be straight forward - please use the [fabric8:migrate goal from 2.x of the plugin](http://fabric8.io/guide/mavenFabric8Migrate.html). 
+> but migration should be straight forward - please use the [fabric8:migrate goal from 2.x of the plugin](http://fabric8.io/guide/mavenFabric8Migrate.html).
