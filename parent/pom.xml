@@ -19,7 +19,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>fabric8-maven-parent</artifactId>
-  <version>3.5.32</version>
+  <version>3.5.32.fuse-000028</version>
   <packaging>pom</packaging>
 
   <prerequisites>
@@ -60,14 +60,14 @@
     <assertj.core.version>2.4.1</assertj.core.version>
 
     <!-- latest release version of this plugin. Used in the docs.-->
-    <fabric8.maven.plugin.version>3.5.31</fabric8.maven.plugin.version>
+    <fabric8.maven.plugin.version>3.5.32.fuse-000028</fabric8.maven.plugin.version>
 
     <version.maven>3.3.1</version.maven>
     <version.jacoco>0.7.8</version.jacoco>
-    <version.fabric8>2.3.7</version.fabric8>
-    <version.kubernetes-client>2.6.3</version.kubernetes-client>
+    <version.fabric8>2.3.7.fuse-000023</version.fabric8>
+    <version.kubernetes-client>2.6.3.fuse-000020</version.kubernetes-client>
     <version.mockwebserver>0.0.13</version.mockwebserver>
-    <version.docker-maven-plugin>0.22.1</version.docker-maven-plugin>
+    <version.docker-maven-plugin>0.23.0.fuse-000013</version.docker-maven-plugin>
     <version.networknt.validator>0.1.7</version.networknt.validator>
 
     <!-- =======================================================  -->
@@ -77,8 +77,8 @@
     <version.image.java.upstream.s2i>2.0</version.image.java.upstream.s2i>
 
     <!-- RedHat -->
-    <version.image.java.redhat.docker>2.0</version.image.java.redhat.docker>
-    <version.image.java.redhat.s2i>${version.image.java.redhat.docker}</version.image.java.redhat.s2i>
+    <version.image.java.redhat.docker>1.0</version.image.java.redhat.docker>
+    <version.image.java.redhat.s2i>1.0</version.image.java.redhat.s2i>
 
     <!-- =======================================================  -->
     <!-- === Karaf base image versions for docker, s2i (istag == s2i) -->
@@ -87,8 +87,8 @@
     <version.image.karaf.upstream.s2i>${version.image.karaf.upstream.docker}</version.image.karaf.upstream.s2i>
 
     <!-- RedHat  -->
-    <version.image.karaf.redhat.docker>2.0</version.image.karaf.redhat.docker>
-    <version.image.karaf.redhat.s2i>${version.image.karaf.redhat.docker}</version.image.karaf.redhat.s2i>
+    <version.image.karaf.redhat.docker>1.0</version.image.karaf.redhat.docker>
+    <version.image.karaf.redhat.s2i>1.0</version.image.karaf.redhat.s2i>
 
     <!-- =======================================================  -->
     <!-- Servlet container images -->
@@ -105,8 +105,8 @@
     <image.java.upstream.docker>fabric8/java-jboss-openjdk8-jdk:${version.image.java.upstream.docker}</image.java.upstream.docker>
     <image.java.upstream.istag>fabric8-java:${version.image.java.upstream.s2i}</image.java.upstream.istag>
 
-    <image.java.redhat.s2i>jboss-fuse-6/fis-java-openshift:${version.image.java.redhat.s2i}</image.java.redhat.s2i>
-    <image.java.redhat.docker>jboss-fuse-6/fis-java-openshift:${version.image.java.redhat.docker}</image.java.redhat.docker>
+    <image.java.redhat.s2i>jboss-fuse-7/fis-java-openshift:1.0</image.java.redhat.s2i>
+    <image.java.redhat.docker>jboss-fuse-7/fis-java-openshift:1.0</image.java.redhat.docker>
     <image.java.redhat.istag>fis-java-openshift:${version.image.java.redhat.s2i}</image.java.redhat.istag>
 
     <!-- karaf -->
@@ -114,8 +114,8 @@
     <image.karaf.upstream.s2i>fabric8/s2i-karaf:${version.image.karaf.upstream.s2i}</image.karaf.upstream.s2i>
     <image.karaf.upstream.istag>fabric8-karaf:${version.image.karaf.upstream.s2i}</image.karaf.upstream.istag>
 
-    <image.karaf.redhat.docker>jboss-fuse-6/fis-karaf-openshift:${version.image.karaf.redhat.docker}</image.karaf.redhat.docker>
-    <image.karaf.redhat.s2i>jboss-fuse-6/fis-karaf-openshift:${version.image.karaf.redhat.s2i}</image.karaf.redhat.s2i>
+    <image.karaf.redhat.docker>jboss-fuse-7/fis-karaf-openshift:1.0</image.karaf.redhat.docker>
+    <image.karaf.redhat.s2i>jboss-fuse-7/fis-karaf-openshift:1.0</image.karaf.redhat.s2i>
     <image.karaf.redhat.istag>fis-karaf-openshift:${version.image.karaf.redhat.s2i}</image.karaf.redhat.istag>
 
     <!-- webapp -->
@@ -140,16 +140,6 @@
   </repositories>
 
   <distributionManagement>
-    <snapshotRepository>
-      <id>sonatype-nexus-snapshots</id>
-      <name>Sonatype Nexus Snapshots</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-    </snapshotRepository>
-    <repository>
-      <id>sonatype-nexus-staging</id>
-      <name>Nexus Release Repository</name>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-    </repository>
   </distributionManagement>
 
   <dependencyManagement>
