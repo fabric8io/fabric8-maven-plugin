@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.33,</span>
-<span id="revdate">2018-01-03</span>
+<span id="revdate">2018-01-05</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -4048,7 +4048,7 @@ This plugin definition includes the configuration to generate the Docker image.
 <h2 id="generators">8. Generators</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The usual way to define Docker images is with the plugin configuration as explained in <a href="#fabric8:build"><strong>fabric8:build</strong></a>. This can either be done completely within the <code>pom.xml</code> or by refering to an external Dockerfile. Since fabric8-maven-plugin includes <a href="https://github.com/fabric8io/docker-maven-plugin">docker-maven-plugin</a> the way how images are built is identical.</p>
+<p>The usual way to define Docker images is with the plugin configuration as explained in <a href="#fabric8:build"><strong>fabric8:build</strong></a>. This can either be done completely within the <code>pom.xml</code> or by referring to an external Dockerfile. Since fabric8-maven-plugin includes <a href="https://github.com/fabric8io/docker-maven-plugin">docker-maven-plugin</a> the way by which images are built is identical.</p>
 </div>
 <div class="paragraph">
 <p>However, this plugin provides an additional route for defining image configurations. This is done by so called <em>Generators</em>. A generator is a Java component providing an auto-detection mechanism for certain build types like a Spring Boot build or a plain Java build. As soon as a <em>Generator</em> detects that it is applicable it will be called with the list of images configured in the <code>pom.xml</code>. Typically a generator only creates dynamically a new image configuration if this list is empty. But a generator is free to also add new images to an existing list or even change the current image list.</p>
@@ -4280,18 +4280,18 @@ This plugin definition includes the configuration to generate the Docker image.
 <h4 id="generator-java-exec">8.1.1. Java Applications</h4>
 <div class="paragraph">
 <p>One of the most generic <em>Generators</em> is the <code>java-exec</code> generator.
-It is responsible to start up arbitrary Java application.
+It is responsible for starting up arbitrary Java application.
 It knows how to deal with fat-jar applications where the application and all dependencies are included within a single jar and the <code>MANIFEST.MF</code> within the jar references a main class.
 But also flat classpath applications, where the dependencies are separate jar files and a main class is given.</p>
 </div>
 <div class="paragraph">
-<p>If no main class is explicitely configured, first a fat jar is tried to be found.
+<p>If no main class is explicitly configured, the plugin first attempts to locate a fat jar.
 If the Maven build creates a JAR file with a <code>META-INF/MANIFEST.MF</code> containing a <code>Main-Class</code> entry, then this is considered to be the fat jar to use.
-If there are more than one of such files then the largest is taken.</p>
+If there are more than one of such files then the largest one is used.</p>
 </div>
 <div class="paragraph">
 <p>If a main class is configured (see below) then the image configuration will contain the application jar plus all dependency jars.
-If no main clasas is configured but also not fat jar is detected, then this <em>Generator</em> tries to detect a single main class by searching for <code>public static void main(String args[])</code> among the application classes. If exactly one class is found this is considered to be the main class. If no or more than one is found the <em>Generator</em> finally does nothing.</p>
+If no main class is configured as well as no fat jar being detected, then this <em>Generator</em> tries to detect a single main class by searching for <code>public static void main(String args[])</code> among the application classes. If exactly one class is found this is considered to be the main class. If no or more than one is found the <em>Generator</em> finally does nothing.</p>
 </div>
 <div class="paragraph">
 <p>It will use the following base image by default, but as explained <a href="#generator-options-common">above</a> and can be changed with the <code>from</code> configuration.</p>
@@ -4328,7 +4328,7 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 </tbody>
 </table>
 <div class="paragraph">
-<p>These images refer always to the latest tag. The <em>Red Hat</em> base images are selected, when the plugin itself is a Red Hat supported version (which is detected by the plugins version number).</p>
+<p>These images always refer to the latest tag. The <em>Red Hat</em> base images are selected, when the plugin itself is a Red Hat supported version (which is detected by the plugins version number).</p>
 </div>
 <div class="paragraph">
 <p>When a <code>fromMode</code> of <code>istag</code> is used to specify an <code>ImageStreamTag</code> and when no <code>from</code> is given, then as default the <code>ImageStreamTag</code> <code>fis-java-openshift</code> in the namespace <code>openshift</code> is chosen. If you are using a RedHat variation of this plugin (i.e. if the version is ending with <code>-redhat</code>), then a <code>fromMode</code> of <code>istag</code> is the default, otherwise its <code>fromMode = "docker"</code> which use the a plain Docker image reference for the S2I builder image.</p>
@@ -4368,12 +4368,12 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>mainClass</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Main class to call. If not given first a check is performed to detect a fat-jar (see above). Next a class is tried to be found by scanning <code>target/classes</code> for a single class with a main method. If no if found or more than one is found, then this generator does nothing.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Main class to call. If not given first a check is performed to detect a fat-jar (see above). Next a class is looked up by scanning <code>target/classes</code> for a single class with a main method. If no such class is found or if more than one is found, then this generator does nothing.</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>prometheusPort</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Port of the Prometheus jmx_exporter exposed by the base image. Set this to 0 if you don&#8217;t want to expose the Jolokia port.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Port of the Prometheus jmx_exporter exposed by the base image. Set this to 0 if you don&#8217;t want to expose the Prometheus port.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">9779</p></td>
 </tr>
 <tr>
@@ -4387,7 +4387,7 @@ If no main clasas is configured but also not fat jar is detected, then this <em>
 <p>The exposed ports are typically later on use by <a href="#enrichers">Enrichers</a> to create default Kubernetes or OpenShift services.</p>
 </div>
 <div class="paragraph">
-<p>You can add additional files to the target image within <code>baseDir</code> by putting files into <code>src/main/fabric8-includes</code>. These will be added with mode <code>0644</code>, everything in <code>src/main/fabric8-includes/bin</code> will be added with <code>0755</code>.</p>
+<p>You can add additional files to the target image within <code>baseDir</code> by placing files into <code>src/main/fabric8-includes</code>. These will be added with mode <code>0644</code>, while everything in <code>src/main/fabric8-includes/bin</code> will be added with <code>0755</code>.</p>
 </div>
 </div>
 <div class="sect3">
@@ -6669,7 +6669,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.33<br>
-Last updated 2018-01-03 05:24:03 UTC
+Last updated 2018-01-05 10:14:53 UTC
 </div>
 </div>
 </body>
