@@ -67,10 +67,15 @@ public class VertxConfigmapBoosterIT extends BaseBoosterIT {
         createConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME);
         updateSourceCode(testRepository, RELATIVE_POM_PATH);
         addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, fmpConfigurationFile);
-        editConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME);
 
         // 2. Re-Deployment
         deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        /*
+         * Since the maintainers of this booster project have moved the configmap to
+         * src/main/fabric8 directory the configmap resource gets created during the
+         * time of compilation.
+         */
+        editConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME);
         waitAfterDeployment(true);
         assertDeployment(true);
 

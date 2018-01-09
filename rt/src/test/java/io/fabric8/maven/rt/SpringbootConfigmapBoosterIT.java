@@ -65,10 +65,10 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
         // Make some changes in ConfigMap and rollout
         updateSourceCode(testRepository, RELATIVE_POM_PATH);
         addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, fmpConfigurationFile);
-        editConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Bonjour World from a ConfigMap!");
 
         // 2. Re-Deployment
         deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        editConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Bonjour World from a ConfigMap!");
         waitAfterDeployment(true);
         assertApplication(true);
 
