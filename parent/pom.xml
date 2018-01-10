@@ -19,7 +19,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>fabric8-maven-parent</artifactId>
-  <version>3.5.32</version>
+  <version>3.5.32.redhat-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <prerequisites>
@@ -77,7 +77,7 @@
     <version.image.java.upstream.s2i>2.0</version.image.java.upstream.s2i>
 
     <!-- RedHat -->
-    <version.image.java.redhat.docker>2.0</version.image.java.redhat.docker>
+    <version.image.java.redhat.docker>1.0</version.image.java.redhat.docker>
     <version.image.java.redhat.s2i>${version.image.java.redhat.docker}</version.image.java.redhat.s2i>
 
     <!-- =======================================================  -->
@@ -87,7 +87,7 @@
     <version.image.karaf.upstream.s2i>${version.image.karaf.upstream.docker}</version.image.karaf.upstream.s2i>
 
     <!-- RedHat  -->
-    <version.image.karaf.redhat.docker>2.0</version.image.karaf.redhat.docker>
+    <version.image.karaf.redhat.docker>1.0</version.image.karaf.redhat.docker>
     <version.image.karaf.redhat.s2i>${version.image.karaf.redhat.docker}</version.image.karaf.redhat.s2i>
 
     <!-- =======================================================  -->
@@ -105,18 +105,18 @@
     <image.java.upstream.docker>fabric8/java-jboss-openjdk8-jdk:${version.image.java.upstream.docker}</image.java.upstream.docker>
     <image.java.upstream.istag>fabric8-java:${version.image.java.upstream.s2i}</image.java.upstream.istag>
 
-    <image.java.redhat.s2i>jboss-fuse-6/fis-java-openshift:${version.image.java.redhat.s2i}</image.java.redhat.s2i>
-    <image.java.redhat.docker>jboss-fuse-6/fis-java-openshift:${version.image.java.redhat.docker}</image.java.redhat.docker>
-    <image.java.redhat.istag>fis-java-openshift:${version.image.java.redhat.s2i}</image.java.redhat.istag>
+    <image.java.redhat.s2i>jboss-fuse-7/fuse-java-openshift:${version.image.java.redhat.s2i}</image.java.redhat.s2i>
+    <image.java.redhat.docker>jboss-fuse-7/fuse-java-openshift:${version.image.java.redhat.docker}</image.java.redhat.docker>
+    <image.java.redhat.istag>jboss-fuse70-java-openshift:${version.image.java.redhat.s2i}</image.java.redhat.istag>
 
     <!-- karaf -->
     <image.karaf.upstream.docker>fabric8/s2i-karaf:${version.image.karaf.upstream.docker}</image.karaf.upstream.docker>
     <image.karaf.upstream.s2i>fabric8/s2i-karaf:${version.image.karaf.upstream.s2i}</image.karaf.upstream.s2i>
     <image.karaf.upstream.istag>fabric8-karaf:${version.image.karaf.upstream.s2i}</image.karaf.upstream.istag>
 
-    <image.karaf.redhat.docker>jboss-fuse-6/fis-karaf-openshift:${version.image.karaf.redhat.docker}</image.karaf.redhat.docker>
-    <image.karaf.redhat.s2i>jboss-fuse-6/fis-karaf-openshift:${version.image.karaf.redhat.s2i}</image.karaf.redhat.s2i>
-    <image.karaf.redhat.istag>fis-karaf-openshift:${version.image.karaf.redhat.s2i}</image.karaf.redhat.istag>
+    <image.karaf.redhat.docker>jboss-fuse-7/fuse-karaf-openshift:${version.image.karaf.redhat.docker}</image.karaf.redhat.docker>
+    <image.karaf.redhat.s2i>jboss-fuse-7/fuse-karaf-openshift:${version.image.karaf.redhat.s2i}</image.karaf.redhat.s2i>
+    <image.karaf.redhat.istag>jboss-fuse70-karaf-openshift:${version.image.karaf.redhat.s2i}</image.karaf.redhat.istag>
 
     <!-- webapp -->
     <image.tomcat.upstream>fabric8/tomcat-8:${version.image.tomcat.upstream}</image.tomcat.upstream>
