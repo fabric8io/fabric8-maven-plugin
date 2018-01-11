@@ -5,6 +5,8 @@
 language: java
 jdk:
   - oraclejdk8
+before_script:
+  - mvn -N license:check
 script:
   # Profile jacoco switches on jacoco coverages
   - mvn test -B -Pjacoco
