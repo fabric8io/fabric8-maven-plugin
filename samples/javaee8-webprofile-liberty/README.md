@@ -86,7 +86,7 @@ container with the demo application:
                     def process = command.execute()
                     def outputStream = new StringBuffer()
                     process.waitForProcessOutput(outputStream, System.err)
-                    def port = outputStream.toString().trim()
+                    def port = outputStream.toString().replace("\"", "").trim()
                     println "testProxyHttpPort = " + port
                     project.properties.testProxyHttpPort = port
                     println "Unfortunately the fabric8:start command is a background command, so a pause is needed to let the liberty profile start inside a docker container"
