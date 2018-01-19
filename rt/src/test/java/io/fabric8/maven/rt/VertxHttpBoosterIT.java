@@ -18,11 +18,15 @@ package io.fabric8.maven.rt;
 
 import io.fabric8.openshift.api.model.Route;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
+import org.apache.http.HttpStatus;
 import org.eclipse.jgit.lib.Repository;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
 import org.testng.annotations.Test;
+
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
@@ -84,9 +88,21 @@ public class VertxHttpBoosterIT extends BaseBoosterIT {
     private void assertThatWeServeAsExpected(Route applicationRoute) throws Exception {
         String hostUrl = "http://" + applicationRoute.getSpec().getHost() + testEndpoint;
 
-        Response readResponse = makeHttpRequest(HttpRequestType.GET, hostUrl, null);
+        int nTries = 0;
+        Response readResponse = null;
+        do {
+            readResponse = makeHttpRequest(HttpRequestType.GET, hostUrl, null);
+            nTries++;
+            TimeUnit.SECONDS.sleep(10);
+        } while(nTries < 3 && readResponse != null && readResponse.code() != HttpStatus.SC_OK);
+
         String responseContent = readResponse.body().string();
-        assert new JSONObject(responseContent).getString("content").equals("Hello, World!");
+        try {
+            assert new JSONObject(responseContent).getString("content").equals("Hello, World!");
+        } catch (JSONException jsonException) {
+            logger.log(Level.SEVERE, "Unexpected response, expecting json. Actual : " + responseContent);
+            logger.log(Level.SEVERE, jsonException.getMessage(), jsonException);
+        }
     }
 
     @After
