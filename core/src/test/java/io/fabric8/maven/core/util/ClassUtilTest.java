@@ -18,14 +18,13 @@ package io.fabric8.maven.core.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.junit.Test;
 
+import static io.fabric8.maven.core.util.FileUtil.getAbsolutePath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -61,17 +60,9 @@ public class ClassUtilTest {
     }
 
     private File getRelativePackagePath(String subpath) {
-        File parent =
-            new File(decodeUrl(this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath()));
+    	File parent =        		
+            new File(getAbsolutePath(this.getClass().getProtectionDomain().getCodeSource().getLocation()));
         String intermediatePath = getClass().getPackage().getName().replace(".","/");
         return new File(new File(parent, intermediatePath),subpath);
-    }
-
-     private static String decodeUrl(String url) {
-        try {
-            return URLDecoder.decode(url, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

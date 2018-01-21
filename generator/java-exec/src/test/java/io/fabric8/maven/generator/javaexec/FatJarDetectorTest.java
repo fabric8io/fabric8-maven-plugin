@@ -17,13 +17,12 @@
 package io.fabric8.maven.generator.javaexec;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.net.URLDecoder;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
 
+import static io.fabric8.maven.core.util.FileUtil.getAbsolutePath;
 import static org.junit.Assert.*;
 
 /**
@@ -33,17 +32,13 @@ import static org.junit.Assert.*;
 public class FatJarDetectorTest {
 
     @Test
-    public void simple() throws MojoExecutionException, UnsupportedEncodingException {
+    public void simple() throws MojoExecutionException {
         URL testDirUrl = getClass().getResource("/fatjar-simple");
-        FatJarDetector detector = new FatJarDetector(decodeUrl(testDirUrl));
+        FatJarDetector detector = new FatJarDetector(getAbsolutePath(testDirUrl));
         FatJarDetector.Result result = detector.scan();
         assertNotNull(result);
-        assertEquals(new File(decodeUrl(testDirUrl) + "/test.jar"), result.getArchiveFile());
+        assertEquals(new File(getAbsolutePath(testDirUrl) + "/test.jar"), result.getArchiveFile());
         assertEquals("org.springframework.boot.loader.JarLauncher", result.getMainClass());
         assertEquals("Plexus Archiver", result.getManifestEntry("Archiver-Version"));
-    }
-
-    private String decodeUrl(URL testDirUrl) throws UnsupportedEncodingException {
-        return URLDecoder.decode(testDirUrl.getPath(), "UTF-8");
     }
 }
