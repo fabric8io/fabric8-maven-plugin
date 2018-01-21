@@ -1,23 +1,38 @@
+/*
+ * Copyright 2016 Red Hat, Inc.
+ *
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package io.fabric8.maven.generator.api.support;
+
+import static io.fabric8.maven.core.util.FileUtil.getAbsolutePath;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+
+import java.util.Map;
+
+import org.apache.maven.project.MavenProject;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.generator.api.PortsExtractor;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
-import org.apache.maven.project.MavenProject;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 
 @RunWith(JMockit.class)
 public class AbstractPortsExtractorTest {
@@ -31,7 +46,9 @@ public class AbstractPortsExtractorTest {
     @Test
     public void testReadConfigFromFile() throws Exception {
         for (String path : new String[] { ".json", ".yaml",
-                                          "-nested.yaml", ".properties"}) {
+                                          "-nested.yaml", 
+                                          ".properties",
+                                          "++suffix.yaml"}) {
             Map<String, Integer> map = extractFromFile("vertx.config", getClass().getSimpleName() + path);
             assertThat(map, hasEntry("http.port", 80));
             assertThat(map, hasEntry("https.port", 443));
@@ -90,7 +107,7 @@ public class AbstractPortsExtractorTest {
     public void testConfigFileDoesNotExist() throws Exception {
         final String nonExistingFile = "/bla/blub/lalala/config.yml";
         new Expectations() {{
-            logger.warn(anyString, withEqual(nonExistingFile));
+            logger.warn(anyString, withEqual(getAbsolutePath(nonExistingFile)));
         }};
         System.setProperty("vertx.config.test", nonExistingFile);
         try {
@@ -113,24 +130,10 @@ public class AbstractPortsExtractorTest {
 
             @Override
             public String getConfigPathFromProject(MavenProject project) {
-                return path != null ? decodeUrl(this.getClass().getResource(path).getFile()) : null;
+                // working on Windows: https://stackoverflow.com/a/31957696/3309168
+                return path != null ? getAbsolutePath(getClass().getResource(path)) : null;
             }
         };
         return extractor.extract(project);
     }
-
-    /**
-     * Simple method to decode url.
-     * Needed when reading resources via url in environments where path contains url escaped chars (e.g. jenkins workspace).
-     * @param url   The url to decode.
-     * @return
-     */
-    private String decodeUrl(String url) {
-        try {
-            return URLDecoder.decode(url, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 }
