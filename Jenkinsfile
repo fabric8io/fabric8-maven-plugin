@@ -56,16 +56,21 @@ clientsTemplate{
 deployTemplate{
   dockerNode {
     stage 'Deploy and run system tests'
-    deployAndRunSystemTests()
+    runSystemTestsAndDeploy()
   }
 }
 
-def deployAndRunSystemTests() {
+def runSystemTestsAndDeploy() {
 
     def fabric8Quickstarts
     def fabric8Devops
     def fabric8Forge
     def yaml
+
+    stage 'starting system tests'
+    fabric8SystemTests {
+        packageYAML = yaml
+    }
 
     stage 'build snapshot fabric8-devops'
     ws('devops') {
@@ -103,8 +108,4 @@ def deployAndRunSystemTests() {
         }
     }
 
-    stage 'starting system tests'
-    fabric8SystemTests {
-        packageYAML = yaml
-    }
 }
