@@ -36,7 +36,7 @@ Now in order to use fabric8 maven plugin to build or deploy, make sure you have 
 ```
 After you issue this command would start building resources and then deploy them to the running cluster. Below is a snippet of the build log on running spring-boot project in samples/spring-boot directory on MiniKube :
 ```
-[INFO] --- fabric8-maven-plugin:3.5-SNAPSHOT:build (default) @ fabric8-maven-sample-spring-boot ---
+[INFO] --- fabric8-maven-plugin:4.0-SNAPSHOT:build (default) @ fabric8-maven-sample-spring-boot ---
 [INFO] F8: Building Docker image in Kubernetes mode
 [INFO] F8: Running generator spring-boot
 [INFO] F8: spring-boot: Using Docker image fabric8/java-jboss-openjdk8-jdk:1.2 as base / builder
@@ -46,7 +46,7 @@ After you issue this command would start building resources and then deploy them
 [INFO] F8: [fabric8/fabric8-maven-sample-spring-boot:snapshot-171218-140833-0299] "spring-boot": Built image sha256:d83ec
 [INFO] F8: [fabric8/fabric8-maven-sample-spring-boot:snapshot-171218-140833-0299] "spring-boot": Tag with latest
 [INFO]
-[INFO] --- fabric8-maven-plugin:3.5-SNAPSHOT:helm (default) @ fabric8-maven-sample-spring-boot ---
+[INFO] --- fabric8-maven-plugin:4.0-SNAPSHOT:helm (default) @ fabric8-maven-sample-spring-boot ---
 [WARNING] F8: Chart source directory /home/rohan/work/repos/fabric8-maven-plugin/samples/spring-boot/target/classes/META-INF/fabric8/k8s-template does not exist so cannot make chart fabric8-maven-sample-spring-boot. Probably you need run 'mvn fabric8:resource' before.
 [INFO]
 [INFO] --- maven-install-plugin:2.5.2:install (default-install) @ fabric8-maven-sample-spring-boot ---

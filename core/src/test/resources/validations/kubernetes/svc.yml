@@ -14,7 +14,7 @@ metadata:
     testProject: spring-boot-sample
     app: fabric8-maven-sample-spring-boot
     provider: fabric8
-    version: 3.5-SNAPSHOT
+    version: 4.0-SNAPSHOT
     group: io.fabric8
   name: fabric8-maven-sample-spring-boot
 spec:
