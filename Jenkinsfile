@@ -23,12 +23,13 @@ clientsTemplate{
         sh "git remote set-url origin git@github.com:fabric8io/fabric8-maven-plugin.git"
 
         def pipeline = load 'release.groovy'
+        
+        // Test for both CI and CD flows till we have confidence in the process.
+        sh "mvn clean install"
+        
         if (utils.isCI()) {
-
             echo 'CI pipeline'
-
-            sh "mvn clean install"
-
+            
         } else if (utils.isCD()) {
 
             def stagedProject
