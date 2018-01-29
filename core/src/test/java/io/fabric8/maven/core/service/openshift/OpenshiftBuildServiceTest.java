@@ -17,6 +17,7 @@ package io.fabric8.maven.core.service.openshift;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,6 +44,7 @@ import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.ImageStreamBuilder;
 import io.fabric8.openshift.api.model.ImageStreamStatusBuilder;
 import io.fabric8.openshift.api.model.NamedTagEventListBuilder;
+import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftMockServer;
 
@@ -68,6 +70,8 @@ import static org.junit.Assert.assertTrue;
 public class OpenshiftBuildServiceTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(OpenshiftBuildServiceTest.class);
+
+    private static final int MAX_TIMEOUT_RETRIES = 5;
 
     private String baseDir = "target/test-files/openshift-build-service";
 
@@ -139,18 +143,37 @@ public class OpenshiftBuildServiceTest {
 
     @Test
     public void testSuccessfulBuild() throws Exception {
-        BuildService.BuildServiceConfig config = defaultConfig.build();
-        WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, true, 50, false, false);
-        OpenShiftMockServer mockServer = collector.getMockServer();
+        int nTries = 0;
+        boolean bTestComplete = false;
+        do {
+            try {
+                nTries++;
+                BuildService.BuildServiceConfig config = defaultConfig.build();
+                WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, true, 50, false, false);
+                OpenShiftMockServer mockServer = collector.getMockServer();
 
-        OpenShiftClient client = mockServer.createOpenShiftClient();
-        OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
-        service.build(image);
+                DefaultOpenShiftClient client = (DefaultOpenShiftClient)mockServer.createOpenShiftClient();
+                LOG.info("Current write timeout is : {}", client.getHttpClient().writeTimeoutMillis());
+                LOG.info("Current read timeout is : {}", client.getHttpClient().readTimeoutMillis());
+                LOG.info("Retry on failure : {}", client.getHttpClient().retryOnConnectionFailure());
+                OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
+                service.build(image);
 
-        // we should Foadd a better way to assert that a certain call has been made
-        assertTrue(mockServer.getRequestCount() > 8);
-        collector.assertEventsRecordedInOrder("build-config-check", "new-build-config", "pushed");
-        collector.assertEventsNotRecorded("patch-build-config");
+                // we should Foadd a better way to assert that a certain call has been made
+                assertTrue(mockServer.getRequestCount() > 8);
+                collector.assertEventsRecordedInOrder("build-config-check", "new-build-config", "pushed");
+                collector.assertEventsNotRecorded("patch-build-config");
+                bTestComplete = true;
+            } catch (Fabric8ServiceException exception) {
+                Throwable rootCause = getRootCause(exception);
+                logger.warn("A problem encountered while running test {}, retrying..", exception.getMessage());
+                // Let's wait for a while, and then retry again
+                if (rootCause != null && rootCause instanceof IOException) {
+                    Thread.sleep(5 * 1000);
+                    continue;
+                }
+            }
+        } while(nTries < MAX_TIMEOUT_RETRIES && !bTestComplete);
     }
 
     @Test(expected = Fabric8ServiceException.class)
@@ -300,6 +323,21 @@ public class OpenshiftBuildServiceTest {
                 .done().always();
 
         return collector;
+    }
+
+    /**
+     * Helper method to get root cause, pretty much like Apache's ExceptionUtils
+     *
+     * @param aThrowable
+     * @return
+     */
+    private Throwable getRootCause(Throwable aThrowable) {
+        Throwable cause, result = aThrowable;
+
+        while((cause = result.getCause()) != null && cause != result) {
+            result = cause;
+        }
+        return result;
     }
 
 }
