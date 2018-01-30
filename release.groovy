@@ -19,6 +19,11 @@ def repo(){
  return 'fabric8io/fabric8-maven-plugin'
 }
 
+//This is execute the call() from stageProject.groovy in
+//https://github.com/fabric8io/fabric8-pipeline-library/vars
+
+//same applies for other functions
+
 def stage(){
   return stageProject{
     project = repo()
