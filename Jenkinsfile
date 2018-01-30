@@ -23,6 +23,7 @@ clientsTemplate{
         sh "git remote set-url origin git@github.com:fabric8io/fabric8-maven-plugin.git"
 
         def pipeline = load 'release.groovy'
+
         if (utils.isCI()) {
 
             echo 'CI pipeline'
@@ -31,13 +32,33 @@ clientsTemplate{
 
         } else if (utils.isCD()) {
 
+            //First we need to check that master is
+            //stable and all tests are working properly
+            //before generating tags and pushing it to github
+
+            sh "mvn clean -B"
+
+            sh "mvn clean verify"
+
             def stagedProject
 
+            //These stage(), release(stagedProject) and
+            //updateDownstreamDependencies(stagedProject)
+            //are coming form release.groovy in same repo
+
             stage('Stage') {
+
+                // This will generate new tag, push them to github,
+                // create the new release branch, build and run test
+
                 stagedProject = pipeline.stage()
             }
 
             stage('Promote') {
+
+                //This will release the project and update on
+                //maven central
+
                 pipeline.release(stagedProject)
             }
 
@@ -47,11 +68,16 @@ clientsTemplate{
             //pipeline.website(stagedProject)
 
             stage('Update downstream dependencies') {
+
+                //This will update the version of fmp
+                //in the pom.xml of some downstream repos like
+                //fabric8-services, quickstart etc.
                 pipeline.updateDownstreamDependencies(stagedProject)
             }
         }
     }
 }
+
 
 deployTemplate{
   dockerNode {
@@ -61,6 +87,11 @@ deployTemplate{
 }
 
 def deployAndRunSystemTests() {
+
+    //This will build the downstream projects
+    // (may be not all projects)
+    // to check whether the new version is
+    // working fine for them
 
     def fabric8Quickstarts
     def fabric8Devops
