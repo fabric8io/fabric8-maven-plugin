@@ -283,4 +283,56 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         assertEquals(8443, probe.getHttpGet().getPort().getIntVal().intValue());
     }
 
+    @Test
+    public void testDefaultInitialDelayForLivenessAndReadiness() {
+        SpringBootHealthCheckEnricher enricher = new SpringBootHealthCheckEnricher(context);
+        withAllRequiredClasses();
+        final Properties emptyProps = new Properties();
+        withProjectProperties(emptyProps);
+
+        Probe probe = enricher.getReadinessProbe();
+        assertNotNull(probe);
+        assertEquals(10, probe.getInitialDelaySeconds().intValue());
+
+        probe = enricher.getLivenessProbe();
+        assertNotNull(probe);
+        assertEquals(180, probe.getInitialDelaySeconds().intValue());
+    }
+
+    @Test
+    public void testCustomInitialDelayForLivenessAndReadiness() {
+        SpringBootHealthCheckEnricher enricher = new SpringBootHealthCheckEnricher(context);
+        withAllRequiredClasses();
+
+        final Properties props = new Properties();
+        props.put("readiness-initial-delay", 20);
+        props.put("liveness-initial-delay", 360);
+        withProjectProperties(props);
+
+        Probe probe = enricher.getReadinessProbe();
+        assertNotNull(probe);
+        assertEquals(20, probe.getInitialDelaySeconds().intValue());
+
+        probe = enricher.getLivenessProbe();
+        assertNotNull(probe);
+        assertEquals(360, probe.getInitialDelaySeconds().intValue());
+    }
+
+    private void withAllRequiredClasses() {
+        new MockUp<MavenUtil>() {
+            @Mock
+            public boolean hasAllClasses(MavenProject project, String ... classNames) {
+                return true;
+            }
+        };
+    }
+
+    private void withProjectProperties(final Properties properties) {
+        new MockUp<SpringBootUtil>() {
+            @Mock
+            public Properties getSpringBootApplicationProperties(MavenProject project) {
+                return properties;
+            }
+        };
+    }
 }

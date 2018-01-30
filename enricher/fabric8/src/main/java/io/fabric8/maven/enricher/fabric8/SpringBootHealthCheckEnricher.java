@@ -41,6 +41,8 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
     private static final int DEFAULT_SERVER_PORT = 8080;
     private static final String SCHEME_HTTPS = "HTTPS";
     private static final String SCHEME_HTTP = "HTTP";
+    private static final int READINESS_INITIAL_DELAY = 10;
+    private static final int LIVENESS_INITIAL_DELAY = 180;
 
     public SpringBootHealthCheckEnricher(EnricherContext buildContext) {
         super(buildContext, "spring-boot-health-check");
@@ -48,18 +50,19 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
     @Override
     protected Probe getReadinessProbe() {
-        return discoverSpringBootHealthCheck(10);
+        return discoverSpringBootHealthCheck(SpringBootProperties.READINESS_INITIAL_DELAY, READINESS_INITIAL_DELAY);
     }
 
     @Override
     protected Probe getLivenessProbe() {
-        return discoverSpringBootHealthCheck(180);
+        return discoverSpringBootHealthCheck(SpringBootProperties.LIVENESS_INITIAL_DELAY, LIVENESS_INITIAL_DELAY);
     }
 
-    protected Probe discoverSpringBootHealthCheck(int initialDelay) {
+    protected Probe discoverSpringBootHealthCheck(String initialDelayProperty, int defaultInitialDelay) {
         try {
             if (MavenUtil.hasAllClasses(this.getProject(), REQUIRED_CLASSES)) {
                 Properties properties = SpringBootUtil.getSpringBootApplicationProperties(this.getProject());
+                Integer initialDelay = PropertiesHelper.getInteger(properties, initialDelayProperty, defaultInitialDelay);
                 return buildProbe(properties, initialDelay);
             }
         } catch (Exception ex) {
