@@ -64,6 +64,8 @@ public interface BuildService {
 
         private Attacher attacher;
 
+        private boolean s2iImageStreamLookupPolicyLocal;
+
         public BuildServiceConfig() {
         }
 
@@ -97,6 +99,10 @@ public interface BuildService {
 
         public Object getArtifactId() {
             return dockerMojoParameters.getProject().getArtifactId();
+        }
+
+        public boolean isS2iImageStreamLookupPolicyLocal() {
+            return s2iImageStreamLookupPolicyLocal;
         }
 
         public void attachArtifact(String classifier, File destFile) {
@@ -138,6 +144,11 @@ public interface BuildService {
 
             public Builder s2iBuildNameSuffix(String s2iBuildNameSuffix) {
                 config.s2iBuildNameSuffix = s2iBuildNameSuffix;
+                return this;
+            }
+
+            public Builder s2iImageStreamLookupPolicyLocal(boolean s2iImageStreamLookupPolicyLocal) {
+                config.s2iImageStreamLookupPolicyLocal = s2iImageStreamLookupPolicyLocal;
                 return this;
             }
 

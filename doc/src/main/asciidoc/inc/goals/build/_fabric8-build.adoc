@@ -37,6 +37,8 @@ Both build strategies update an https://docs.openshift.com/enterprise/latest/arc
 The https://docs.openshift.com/enterprise/latest/dev_guide/builds.html#defining-a-buildconfig[Build Config] and https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#image-streams[Image streams] can be managed by this plugin. If they do not exist, they will be automatically created by `fabric8:build`. If they do already exist, they are reused, except when the configuration option `buildRecreate` (property `fabric8.build.recreate`) is set to a value as described in <<build-goal-configuration, Configuration>>. Also if the provided build strategy is different than for the existing build configuration, the Build Config is edited to reflect the new type (which in turn removes all build associated with the previous build).
 
 This image stream created can then be referenced directly from a https://docs.openshift.com/enterprise/latest/architecture/core_concepts/deployments.html#deployments-and-deployment-configurations[Deployment Configuration] objects created by <<fabric8:resource>>.
+By default, image streams are created with a local lookup policy, so that they can be used also by other resources such as Deployments or StatefulSets.
+This behavior can be turned off by setting the flag `-Dfabric8.s2i.imageStreamLookupPolicyLocal=false` when building the project.
 
 In order to be able to to create these OpenShift resource objects access to an OpenShift installation is required. The access parameters are described in <<access-configuration, Access Configuration>>.
 
