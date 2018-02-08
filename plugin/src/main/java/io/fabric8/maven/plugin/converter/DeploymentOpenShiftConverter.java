@@ -48,7 +48,7 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
     }
 
     @Override
-    public HasMetadata convert(HasMetadata item) {
+    public HasMetadata convert(HasMetadata item, boolean trimImageInContainerSpec) {
             Deployment resource = (Deployment) item;
             DeploymentConfigBuilder builder = new DeploymentConfigBuilder();
             builder.withMetadata(resource.getMetadata());
@@ -110,6 +110,26 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                                     .endImageChangeParams()
                                     .endTrigger();
                         }
+                    }
+                    if(trimImageInContainerSpec) {
+                        /*
+                         * In Openshift 3.7, update to container image is automatically triggering redeployments
+                         * and those subsequent rollouts lead to RC complaining about a missing image reference.
+                         *
+                         *    See this : https://github.com/openshift/origin/issues/18406#issuecomment-364090247
+                         *
+                         * this the time it gets fixed. Do this:
+                         * Since we're using ImageTrigger here, set container image to " ". If there is any config
+                         * change never set to image else than " "; so doing oc apply/rollouts won't be creating
+                         * re-deployments again and again.
+                         *
+                         */
+                        List<Container> containers = template.getSpec().getContainers();
+                        for (Integer nIndex = 0; nIndex < containers.size(); nIndex++) {
+                            containers.get(nIndex).setImage(" ");
+                        }
+                        template.getSpec().setContainers(containers);
+                        specBuilder.withTemplate(template);
                     }
                 }
 

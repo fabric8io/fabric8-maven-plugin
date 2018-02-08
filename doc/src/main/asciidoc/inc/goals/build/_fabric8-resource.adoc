@@ -77,3 +77,17 @@ The following subelements are possible for `<labels>` and `<annotations>` :
 | *service*
 | Labels and annotations applied to `Service` objects.
 |===
+
+[[resource-validation]]
+=== Resource Validation
+Resource goal also validates the generated resource descriptors using API specification of https://raw.githubusercontent.com/kubernetes/kubernetes/master/api/openapi-spec/swagger.json[Kubernetes] and https://raw.githubusercontent.com/openshift/origin/master/api/swagger-spec/openshift-openapi-spec.json[OpenShift].
+
+.Validation Configuration
+[cols="1,6,1"]
+|===
+| Configuration | Description | Default
+
+| *fabric8.openshift.trimImageInContainerSpec*
+| If value is set to `true` then it would set the container image reference to "", this is done to handle weird behavior of Openshift 3.7 in which subsequent rollouts lead to ImagePullErr
+| false
+|===
