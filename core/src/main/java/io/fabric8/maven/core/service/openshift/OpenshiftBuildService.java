@@ -299,8 +299,13 @@ public class OpenshiftBuildService implements BuildService {
             log.info("Creating ImageStream %s", imageStreamName);
             builder.addNewImageStreamItem()
                     .withNewMetadata()
-                    .withName(imageStreamName)
+                        .withName(imageStreamName)
                     .endMetadata()
+                    .withNewSpec()
+                        .withNewLookupPolicy()
+                            .withLocal(config.isS2iImageStreamLookupPolicyLocal())
+                        .endLookupPolicy()
+                    .endSpec()
                     .endImageStreamItem();
         } else {
             log.info("Adding to ImageStream %s", imageStreamName);

@@ -131,6 +131,13 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     private String s2iBuildNameSuffix;
 
     /**
+     * Allow the ImageStream used in the S2I binary build to be used in standard
+     * Kubernetes resources such as Deployment or StatefulSet.
+     */
+    @Parameter(property = "fabric8.s2i.imageStreamLookupPolicyLocal", defaultValue = "true")
+    private boolean s2iImageStreamLookupPolicyLocal = true;
+
+    /**
      * Should we use the project's compile-time classpath to scan for additional enrichers/generators?
      */
     @Parameter(property = "fabric8.useProjectClasspath", defaultValue = "false")
@@ -270,6 +277,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .buildRecreateMode(BuildRecreateMode.fromParameter(buildRecreate))
                 .openshiftBuildStrategy(buildStrategy)
                 .s2iBuildNameSuffix(s2iBuildNameSuffix)
+                .s2iImageStreamLookupPolicyLocal(s2iImageStreamLookupPolicyLocal)
                 .buildDirectory(project.getBuild().getDirectory())
                 .attacher(new BuildService.BuildServiceConfig.Attacher() {
                     @Override
