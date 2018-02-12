@@ -24,7 +24,7 @@ import io.fabric8.openshift.api.model.ProjectRequestBuilder;
  */
 public class NamespaceOpenShiftConverter implements KubernetesToOpenShiftConverter {
     @Override
-    public HasMetadata convert(HasMetadata item, boolean trimImageInContainerSpec) {
+    public HasMetadata convert(HasMetadata item, boolean trimImageInContainerSpec, boolean enableAutomaticTrigger) {
         return new ProjectRequestBuilder().withMetadata(item.getMetadata()).build();
     }
 }
