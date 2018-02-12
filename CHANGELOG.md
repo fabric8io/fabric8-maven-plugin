@@ -10,7 +10,8 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
-
+###3.5.35
+* Feature 1174: ImageStreams use local lookup policy by default to simplify usage of Deployment or StatefulSet resources on Openshift
 
 ###3.5.34
 * Feature 1003: Added suspend option to remote debugging 
