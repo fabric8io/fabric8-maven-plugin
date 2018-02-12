@@ -124,3 +124,9 @@ The full documentation can be found in the [User Manual](http://maven.fabric8.io
 
 > This is a complete rewrite of the former fabric8-maven plugin. It does not share the same configuration syntax,
 > but migration should be straight forward - please use the [fabric8:migrate goal from 2.x of the plugin](http://fabric8.io/guide/mavenFabric8Migrate.html).
+
+### Tests we run for every new Pull Request
+There are the links of the TravisCI and Jenkins for the tests which run for every new Pull Request. You can view all the recent builds also.
+
+* [Regression Tests](https://travis-ci.org/fabric8io/fabric8-maven-plugin/requests)
+* [Unit Tests](https://ci.fabric8.io/job/fabric8-maven-plugin-pullreq/)
