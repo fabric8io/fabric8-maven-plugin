@@ -181,4 +181,8 @@ Resource goal also validates the generated resource descriptors using API specif
 | *fabric8.build.switchToDeployment*
 | If value is set to `true` then fabric8-maven-plugin would switch to Deployments rather than DeploymentConfig when not using ImageStreams on Openshift.
 | false
+
+| *fabric8.openshift.trimImageInContainerSpec*
+| If value is set to `true` then it would set the container image reference to "", this is done to handle weird behavior of Openshift 3.7 in which subsequent rollouts lead to ImagePullErr
+| false
 |===
