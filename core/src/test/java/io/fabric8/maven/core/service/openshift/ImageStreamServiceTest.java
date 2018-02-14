@@ -58,7 +58,7 @@ public class ImageStreamServiceTest {
     public void simple() throws IOException, MojoExecutionException {
         ImageStreamService service = new ImageStreamService(client, log);
 
-        final ImageStream lookedUpIs = lookupImageStream("ab12cd");
+        final ImageStream lookedUpIs = lookupImageStream("ab12cdv1", "ab12cdv2");
         setupClientMock(lookedUpIs,"test");
         ImageName name = new ImageName("test:1.0");
         File target = File.createTempFile("ImageStreamServiceTest",".yml");
@@ -83,7 +83,7 @@ public class ImageStreamServiceTest {
         Map tag = (Map) tags.get(0);
         Map from = (Map) tag.get("from");
         assertEquals("ImageStreamImage", from.get("kind"));
-        assertEquals("test@ab12cd", from.get("name"));
+        assertEquals("test@ab12cdv2", from.get("name"));
         assertEquals("default", from.get("namespace"));
 
         // Add a second image stream
@@ -126,11 +126,13 @@ public class ImageStreamServiceTest {
         }};
     }
 
-    private ImageStream lookupImageStream(String sha) {
+    private ImageStream lookupImageStream(String ...shaList) {
         NamedTagEventList list = new NamedTagEventList();
-        TagEvent tag = new TagEvent();
-        tag.setImage(sha);
-        list.setItems(new ArrayList<TagEvent>(Arrays.asList(tag)));
+        for (String sha: shaList) {
+            TagEvent tag = new TagEvent();
+            tag.setImage(sha);
+            list.getItems().add(tag);
+        }
 
         return new ImageStreamBuilder()
             .withNewStatus()
