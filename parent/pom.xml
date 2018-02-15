@@ -19,7 +19,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>fabric8-maven-parent</artifactId>
-  <version>3.5-SNAPSHOT</version>
+  <version>3.5.35</version>
   <packaging>pom</packaging>
 
   <name>Fabric8 Maven :: Parent</name>
