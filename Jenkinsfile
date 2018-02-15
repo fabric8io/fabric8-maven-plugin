@@ -36,10 +36,6 @@ clientsTemplate{
             //stable and all tests are working properly
             //before generating tags and pushing it to github
 
-            sh "mvn clean -B"
-
-            sh "mvn clean verify"
-
             def stagedProject
 
             //These stage(), release(stagedProject) and
