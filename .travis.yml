@@ -1,0 +1,47 @@
+# We use Travis for the following tasks:
+# - Download and install `kubectl`, `oc` CLI client tools
+# - Configure docker daemon to run insecure registry for OpenShift cluster
+# - Execute `oc cluster up` with different environments (metrics profile) : v3.6.0, v3.6.1, v3.7.0
+# - Updating the Sonarqube stats when not on a PR
+# - Update Codecov (codecov.io) stats for every build
+# - Regenerate the docs when commit on master (but not for a PR)
+
+matrix:
+  include:
+    - env: OC_VERSION="v3.6.0" COMMIT_ID="c4dd4cf"
+    - env: OC_VERSION="v3.6.1" COMMIT_ID="008f2d5"
+    - env: OC_VERSION="v3.7.0" COMMIT_ID="7ed6862"
+
+sudo: required
+dist: trusty
+group: deprecated-2017Q4
+
+language: java
+jdk:
+  - oraclejdk8
+
+services:
+  - docker
+
+cache:
+  directories:
+    - $HOME/.m2
+
+install: ./rt/src/main/resources/scripts/prepare-test-environment.sh
+
+before_script: ./mvnw clean install -DskipTests
+
+script:
+  # Profile jacoco switches on jacoco coverages, regession-test for running regreesion tests on fabric8/OpenShift.io quickstart projects
+  - ./mvnw -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -B install -pl rt -P regression-test
+   # Only build docs when commited on master and not a pull request.
+   # See https://docs.travis-ci.com/user/environment-variables/#Default-Environment-Variables
+   # for more details about Travis default vars
+  - if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then sh doc/ci-docs.sh; else true; fi
+after_success:
+  # Update codecov site. See https://codecov.io/gh/fabric8io/fabric8-maven-plugin
+  # Also look into .codecov.yml for configuraton of codecov
+  - bash <(curl -s https://codecov.io/bash)
+after_script:
+  # Update our sonar installation at https://sonarqube.com/dashboard?id=io.fabric8%3Afabric8-maven-plugin-build
+  - bash doc/sonarqube.sh

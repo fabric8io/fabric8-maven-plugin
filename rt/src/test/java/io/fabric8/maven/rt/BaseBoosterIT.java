@@ -346,7 +346,7 @@ public class BaseBoosterIT {
 
         int nPolls = 0;
         // Keep polling till 5 minutes
-        while (nPolls < 60) {
+        while (nPolls < 120) {
             PodList podList = openShiftClient.pods().withLabel("app", testsuiteRepositoryArtifactId).list();
             for (Pod pod : podList.getItems()) {
                 logger.info("waitTillApplicationPodStarts() -> Pod : " + pod.getMetadata().getName() + ", isReady : " + KubernetesHelper.isPodReady(pod));
