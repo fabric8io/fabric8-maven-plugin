@@ -1,7 +1,7 @@
 # We use Travis for the following tasks:
 # - Download and install `kubectl`, `oc` CLI client tools
 # - Configure docker daemon to run insecure registry for OpenShift cluster
-# - Execute `oc cluster up` with different environments (metrics profile) : v3.6.0, v3.6.1, v3.7.0
+# - Execute `oc cluster up` with different environments (metrics profile) : v3.6.0, v3.6.1, v3.7.0, v3.7.1
 # - Updating the Sonarqube stats when not on a PR
 # - Update Codecov (codecov.io) stats for every build
 # - Regenerate the docs when commit on master (but not for a PR)
@@ -11,6 +11,7 @@ matrix:
     - env: OC_VERSION="v3.6.0" COMMIT_ID="c4dd4cf"
     - env: OC_VERSION="v3.6.1" COMMIT_ID="008f2d5"
     - env: OC_VERSION="v3.7.0" COMMIT_ID="7ed6862"
+    #- env: OC_VERSION="v3.7.1" COMMIT_ID="ab0f056"
 
 sudo: required
 dist: trusty

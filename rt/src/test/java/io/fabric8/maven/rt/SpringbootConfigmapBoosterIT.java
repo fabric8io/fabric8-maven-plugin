@@ -18,6 +18,7 @@ package io.fabric8.maven.rt;
 
 import io.fabric8.openshift.api.model.Route;
 import okhttp3.Response;
+import org.apache.http.HttpStatus;
 import org.eclipse.jgit.lib.Repository;
 import org.json.JSONObject;
 import org.junit.After;
@@ -104,10 +105,17 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
     }
 
     private void assertApplicationEndpoint(String key, String value) throws Exception {
+        int nTries = 0;
+        Response readResponse = null;
+        String responseContent = null;
         Route applicationRoute = getApplicationRouteWithName(testsuiteRepositoryArtifactId);
         String hostUrl = applicationRoute.getSpec().getHost() + TEST_ENDPOINT;
-        Response response = makeHttpRequest(HttpRequestType.GET, "http://" + hostUrl, null);
-        String responseContent = new JSONObject(response.body().string()).getString(key);
+        do {
+            Response response = makeHttpRequest(HttpRequestType.GET, "http://" + hostUrl, null);
+            responseContent = new JSONObject(response.body().string()).getString(key);
+            nTries++;
+            TimeUnit.SECONDS.sleep(10);
+        } while(nTries < 3 && readResponse != null && readResponse.code() != HttpStatus.SC_OK);
 
         if (!responseContent.equals(value))
             throw new AssertionError(String.format("Actual : %s, Expected : %s", responseContent, value));
