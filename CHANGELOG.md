@@ -14,6 +14,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Refactor 678: Enricher Workflow to allow direct generation of OpenShift objects.
 * Refactor 802: Remove resource object post processing.
 * Feature 729: Select custom resources depending on environment.
+* Feature 968: Improved support for sidecar containers with sidecar auto-detection and targeted health checks
 * Feature 601: Adds healthcheck for webapp
 * Fix 1460: Upgraded kubernetes client to 4.1.1
 * Fix 690: Removes deprecated _legacyPortMapping_ property.

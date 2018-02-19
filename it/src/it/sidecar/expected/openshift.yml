@@ -29,10 +29,10 @@ items:
     labels:
       expose: "true"
       provider: fabric8
-      app: fabric8-maven-sample-env-metadata
+      app: fabric8-maven-sample-sidecar
       version: "@ignore@"
       group: io.fabric8
-    name: fabric8-maven-sample-env-metadata
+    name: fabric8-maven-sample-sidecar
   spec:
     ports:
     - name: http
@@ -40,28 +40,27 @@ items:
       protocol: TCP
       targetPort: 8080
     selector:
-      app: fabric8-maven-sample-env-metadata
+      app: fabric8-maven-sample-sidecar
       provider: fabric8
       group: io.fabric8
-- apiVersion: apps/v1
-  kind: Deployment
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
   metadata:
     annotations:
       fabric8.io/git-commit: "@ignore@"
       fabric8.io/git-branch: "@ignore@"
     labels:
       provider: fabric8
-      app: fabric8-maven-sample-env-metadata
+      app: fabric8-maven-sample-sidecar
       version: "@ignore@"
       group: io.fabric8
-    name: fabric8-maven-sample-env-metadata
+    name: fabric8-maven-sample-sidecar
   spec:
     replicas: 1
     selector:
-      matchLabels:
-        app: fabric8-maven-sample-env-metadata
-        provider: fabric8
-        group: io.fabric8
+      app: fabric8-maven-sample-sidecar
+      provider: fabric8
+      group: io.fabric8
     template:
       metadata:
         annotations:
@@ -69,21 +68,23 @@ items:
           fabric8.io/git-branch: "@ignore@"
         labels:
           provider: fabric8
-          app: fabric8-maven-sample-env-metadata
+          app: fabric8-maven-sample-sidecar
           version: "@ignore@"
           group: io.fabric8
       spec:
         containers:
+        - image: busybox
+          name: sidecar1
         - env:
-          - name: MY_ENV_key
-            value: MY_ENV_value
+          - name: THIS_IS_THE_APP_BECAUSE_THERE_S_NO_NAME
+            value: "true"
           - name: KUBERNETES_NAMESPACE
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
           - name: FABRIC8_GENERATED
             value: "true"
-          image: "@matches('fabric8/fabric8-maven-sample-env-metadata:.*$')@"
+          image: "@matches('fabric8/fabric8-maven-sample-sidecar:.*$')@"
           imagePullPolicy: IfNotPresent
           name: spring-boot
           ports:
@@ -98,3 +99,7 @@ items:
             protocol: TCP
           securityContext:
             privileged: false
+        - image: busybox
+          name: sidecar2
+    triggers:
+    - type: ConfigChange
