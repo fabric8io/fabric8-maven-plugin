@@ -149,7 +149,7 @@ public abstract class AbstractInstallMojo extends AbstractFabric8Mojo {
         String indent = "  ";
         log.warn("The %s bin folder %s is not on the PATH.", fileName, binDir.getAbsolutePath());
         log.warn("To easily start fabric8 CLI tools like [[B]]%s[[B]] directly, please adapt your environment:", fileName);
-        if (getPlatform().equals(Platform.windows.name())) {
+        if (Platform.windows.name().equals(getPlatform().name())) {
             log.info("Please add the following to PATH environment variable:");
             log.info("%s[[C]]set PATH=%%PATH%%;%s[[C]]",indent, absolutePath);
         } else {
