@@ -49,7 +49,7 @@ public class DeploymentConfigOpenShiftConverter implements KubernetesToOpenShift
     }
 
     @Override
-    public HasMetadata convert(HasMetadata item) {
+    public HasMetadata convert(HasMetadata item, boolean trimImageInContainerSpec) {
         if (item instanceof DeploymentConfig) {
             DeploymentConfig resource = (DeploymentConfig) item;
 

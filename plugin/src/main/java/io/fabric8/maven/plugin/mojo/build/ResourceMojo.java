@@ -224,6 +224,19 @@ public class ResourceMojo extends AbstractResourceMojo {
     @Parameter(property = "fabric8.openshift.deployTimeoutSeconds")
     private Long openshiftDeployTimeoutSeconds;
 
+    /**
+     * If set to true it would set the container image reference to "", this is done to handle weird
+     * behavior of Openshift 3.7 in which subsequent rollouts lead to ImagePullErr
+     *
+     * Please see discussion at
+     * <ul>
+     *     <li>https://github.com/openshift/origin/issues/18406</li>
+     *     <li>https://github.com/fabric8io/fabric8-maven-plugin/issues/1130</li>
+     * </ul>
+     */
+    @Parameter(property = "fabric8.openshift.trimImageInContainerSpec", defaultValue = "false")
+    private Boolean trimImageInContainerSpec;
+
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
 
@@ -704,7 +717,7 @@ public class ResourceMojo extends AbstractResourceMojo {
             return dependencyResource;
         }
         KubernetesToOpenShiftConverter converter = openShiftConverters.get(item.getKind());
-        return converter != null ? converter.convert(item) : item;
+        return converter != null ? converter.convert(item, trimImageInContainerSpec) : item;
     }
 
     // ==================================================================================
