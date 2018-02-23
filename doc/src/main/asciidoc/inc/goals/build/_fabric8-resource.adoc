@@ -186,3 +186,34 @@ Resource goal also validates the generated resource descriptors using API specif
 | If value is set to `true` then it would set the container image reference to "", this is done to handle weird behavior of Openshift 3.7 in which subsequent rollouts lead to ImagePullErr
 | false
 |===
+
+[[resource-route-geneartion]]
+=== Route Generation
+
+If you hit fabric8:resource goal, it will also generate route along with service for both kubernetes and Openshift, deployment, deployment Config. If you do not want to generate route.yml, you can do the same using the below configuration.
+
+.Route Generation Configuration
+[cols="1.6.1"]
+|===
+| Configuration | Description | Default
+
+| *fabric8.openshift.generateRoute*
+| If value is set to 'false' then it will not generate the route.yml file. By default it is set to 'true', which will create route.yml and also add resource route in openshift.yml.
+| true
+|===
+
+If you want to generate route.yml but do not want to create route resource on your OpenShift Cluster. You can do the same by doing the following configuration in pom.xml
+.Example for not generating route resource on your cluster
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+<plugin>
+    ...
+    <configuration>
+        <enricher>
+            <excludes>
+                <exclude>f8-expose</exclude>
+            </excludes>
+        </enricher>
+    </configuration>
+</plugin>
+----
