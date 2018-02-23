@@ -229,13 +229,13 @@ public class AppCatalogMojo extends AbstractResourceMojo {
         if (openshiftResources.isEmpty()) {
             log.warn("No OpenShift resources generated");
         } else {
-            writeResources(new KubernetesListBuilder().withItems(openshiftResources).build(), ResourceClassifier.OPENSHIFT);
+            writeResources(new KubernetesListBuilder().withItems(openshiftResources).build(), ResourceClassifier.OPENSHIFT, true);
         }
 
         if (kubernetesResources.isEmpty()) {
             log.warn("No Kubernetes resources generated");
         } else {
-            writeResources(new KubernetesListBuilder().withItems(kubernetesResources).build(), ResourceClassifier.KUBERNETES);
+            writeResources(new KubernetesListBuilder().withItems(kubernetesResources).build(), ResourceClassifier.KUBERNETES, true);
         }
 
         // lets remove the dependencies which are not app templates

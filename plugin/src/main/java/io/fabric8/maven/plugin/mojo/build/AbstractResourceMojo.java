@@ -17,6 +17,7 @@ package io.fabric8.maven.plugin.mojo.build;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -72,11 +73,11 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
         return null;
     }
 
-    protected void writeResources(KubernetesList resources, ResourceClassifier classifier) throws MojoExecutionException {
+    protected void writeResources(KubernetesList resources, ResourceClassifier classifier, boolean generateRoute) throws MojoExecutionException {
         // write kubernetes.yml / openshift.yml
         File resourceFileBase = new File(this.targetDir, classifier.getValue());
 
-        File file = writeResourcesIndividualAndComposite(resources, resourceFileBase, this.resourceFileType, log);
+        File file = writeResourcesIndividualAndComposite(resources, resourceFileBase, this.resourceFileType, log, generateRoute);
 
         // Attach it to the Maven reactor so that it will also get deployed
         projectHelper.attachArtifact(project, this.resourceFileType.getArtifactType(), classifier.getValue(), file);
@@ -92,21 +93,44 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
         }
     }
 
-    public static File writeResourcesIndividualAndComposite(KubernetesList resources, File resourceFileBase, ResourceFileType resourceFileType, Logger log) throws MojoExecutionException {
+    public static File writeResourcesIndividualAndComposite(KubernetesList resources, File resourceFileBase, ResourceFileType resourceFileType, Logger log, Boolean generateRoute) throws MojoExecutionException {
+
+        List<HasMetadata> oldItemList = new ArrayList<>();
+        oldItemList = resources.getItems();
+
+        List<HasMetadata> newItemList = new ArrayList<>();
+
+        if(!generateRoute) {
+
+            for (HasMetadata item : resources.getItems()) {
+                if (item.getKind().equalsIgnoreCase("Route")) {
+                    continue;
+                }
+                newItemList.add(item);
+            }
+
+            resources.setItems(newItemList);
+
+        }
+
         Object entity = resources;
+
         // if the list contains a single Template lets unwrap it
         Template template = getSingletonTemplate(resources);
         if (template != null) {
+            System.out.println("In");
             entity = template;
         }
+
         File file = writeResource(resourceFileBase, entity, resourceFileType);
 
         // write separate files, one for each resource item
-        writeIndividualResources(resources, resourceFileBase, resourceFileType, log);
+        resources.setItems(oldItemList);
+        writeIndividualResources(resources, resourceFileBase, resourceFileType, log, generateRoute);
         return file;
     }
 
-    private static void writeIndividualResources(KubernetesList resources, File targetDir, ResourceFileType resourceFileType, Logger log) throws MojoExecutionException {
+    private static void writeIndividualResources(KubernetesList resources, File targetDir, ResourceFileType resourceFileType, Logger log, Boolean generateRoute) throws MojoExecutionException {
         for (HasMetadata item : resources.getItems()) {
             String name = KubernetesHelper.getName(item);
             if (Strings.isNullOrBlank(name)) {
@@ -114,8 +138,11 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
                 continue;
             }
             String itemFile = KubernetesResourceUtil.getNameWithSuffix(name, item.getKind());
-            File itemTarget = new File(targetDir, itemFile);
-            writeResource(itemTarget, item, resourceFileType);
+
+            if (!(item.getKind().equalsIgnoreCase("Route") && generateRoute.equals(false))){
+                File itemTarget = new File(targetDir, itemFile);
+                writeResource(itemTarget, item, resourceFileType);
+            }
         }
     }
 

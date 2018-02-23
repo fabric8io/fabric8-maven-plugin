@@ -256,6 +256,9 @@ public class ResourceMojo extends AbstractResourceMojo {
     @Parameter(property = "fabric8.openshift.trimImageInContainerSpec", defaultValue = "false")
     private Boolean trimImageInContainerSpec;
 
+    @Parameter(property = "fabric8.openshift.generateRoute", defaultValue = "true")
+    private Boolean generateRoute;
+
     @Parameter(property = "kompose.dir", defaultValue = "${user.home}/.kompose/bin")
     private File komposeBinDir;
 
@@ -282,13 +285,13 @@ public class ResourceMojo extends AbstractResourceMojo {
 
                 // Adapt list to use OpenShift specific resource objects
                 KubernetesList openShiftResources = convertToOpenShiftResources(resources);
-                writeResources(openShiftResources, ResourceClassifier.OPENSHIFT);
+                writeResources(openShiftResources, ResourceClassifier.OPENSHIFT, generateRoute);
                 File openShiftResourceDir = new File(this.targetDir, ResourceClassifier.OPENSHIFT.getValue());
                 validateIfRequired(openShiftResourceDir, ResourceClassifier.OPENSHIFT);
 
                 // Remove OpenShift specific stuff provided by fragments
                 KubernetesList kubernetesResources = convertToKubernetesResources(resources, openShiftResources);
-                writeResources(kubernetesResources, ResourceClassifier.KUBERNETES);
+                writeResources(kubernetesResources, ResourceClassifier.KUBERNETES, generateRoute);
                 File kubernetesResourceDir = new File(this.targetDir, ResourceClassifier.KUBERNETES.getValue());
                 validateIfRequired(kubernetesResourceDir, ResourceClassifier.KUBERNETES);
             }
@@ -365,7 +368,7 @@ public class ResourceMojo extends AbstractResourceMojo {
         if (template != null) {
             KubernetesList kubernetesTemplateList = createKubernetesTemplate(kubernetesResources, template);
             if (kubernetesTemplateList != null) {
-                writeResources(kubernetesTemplateList, ResourceClassifier.KUBERNETES_TEMPLATE);
+                writeResources(kubernetesTemplateList, ResourceClassifier.KUBERNETES_TEMPLATE, generateRoute);
             }
             kubernetesResources = replaceTemplateExpressions(kubernetesResources, template);
         }
