@@ -73,7 +73,7 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
         return null;
     }
 
-    protected void writeResources(KubernetesList resources, ResourceClassifier classifier, boolean generateRoute) throws MojoExecutionException {
+    protected void writeResources(KubernetesList resources, ResourceClassifier classifier, Boolean generateRoute) throws MojoExecutionException {
         // write kubernetes.yml / openshift.yml
         File resourceFileBase = new File(this.targetDir, classifier.getValue());
 
@@ -95,12 +95,15 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
 
     public static File writeResourcesIndividualAndComposite(KubernetesList resources, File resourceFileBase, ResourceFileType resourceFileType, Logger log, Boolean generateRoute) throws MojoExecutionException {
 
+        //Storing the current items list to send it later in further functions.
         List<HasMetadata> oldItemList = resources.getItems();
 
+        //Creating a new items list. This will be used to generate openshift.yml
         List<HasMetadata> newItemList = new ArrayList<>();
 
         if(!generateRoute) {
 
+            //if flag is set false, this will remove the Route resource from resources list
             for (HasMetadata item : resources.getItems()) {
                 if (item.getKind().equalsIgnoreCase("Route")) {
                     continue;
@@ -108,13 +111,19 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
                 newItemList.add(item);
             }
 
+            //update the resource with new list
             resources.setItems(newItemList);
 
         }
 
+        // entity is object which will be sent to writeResource for openshift.yml
+        // if generateRoute is false, this will be set to resources with new list
+        // otherwise it will be set to resources with old list.
         Object entity = resources;
 
         // if the list contains a single Template lets unwrap it
+        // in resources already new or old as per condition is set.
+        // no need to worry about this for dropping Route.
         Template template = getSingletonTemplate(resources);
         if (template != null) {
             entity = template;
@@ -123,6 +132,9 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
         File file = writeResource(resourceFileBase, entity, resourceFileType);
 
         // write separate files, one for each resource item
+        // Again setting the old resource list in resource, to make it as it was previously.
+        // It is exclusively used at various places, we should not change it and keep it as it was after our work is done.
+
         resources.setItems(oldItemList);
         writeIndividualResources(resources, resourceFileBase, resourceFileType, log, generateRoute);
         return file;
@@ -137,6 +149,9 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
             }
             String itemFile = KubernetesResourceUtil.getNameWithSuffix(name, item.getKind());
 
+            // Here we are writing individual file for all the resources.
+            // if generateRoute is false and resource is route, we should not generate it.
+            
             if (!(item.getKind().equalsIgnoreCase("Route") && generateRoute.equals(false))){
                 File itemTarget = new File(targetDir, itemFile);
                 writeResource(itemTarget, item, resourceFileType);
