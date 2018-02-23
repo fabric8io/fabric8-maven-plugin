@@ -95,8 +95,7 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
 
     public static File writeResourcesIndividualAndComposite(KubernetesList resources, File resourceFileBase, ResourceFileType resourceFileType, Logger log, Boolean generateRoute) throws MojoExecutionException {
 
-        List<HasMetadata> oldItemList = new ArrayList<>();
-        oldItemList = resources.getItems();
+        List<HasMetadata> oldItemList = resources.getItems();
 
         List<HasMetadata> newItemList = new ArrayList<>();
 
@@ -118,7 +117,6 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
         // if the list contains a single Template lets unwrap it
         Template template = getSingletonTemplate(resources);
         if (template != null) {
-            System.out.println("In");
             entity = template;
         }
 
