@@ -27,7 +27,7 @@ import java.util.Map;
 
 /**
  * Created by ceposta
- * <a href="http://christianposta.com/blog>http://christianposta.com/blog</a>.
+ * <a href="http://christianposta.com/blog">http://christianposta.com/blog</a>.
  */
 public class WildFlySwarmGenerator extends JavaExecGenerator {
 
@@ -43,13 +43,11 @@ public class WildFlySwarmGenerator extends JavaExecGenerator {
     @Override
     protected Map<String, String> getEnv(boolean isPrepackagePhase) throws MojoExecutionException {
         Map<String, String> ret = super.getEnv(isPrepackagePhase);
-        // Switch off agent_bond until logging issue with wilfdlfy-swarm is resolved
+        // Switch off Prometheus agent until logging issue with WildFly Swarm is resolved
         // See:
-        // - https://github.com/fabric8io/fabric8-maven-plugin/issues/320
-        // - https://github.com/rhuss/jolokia/pull/260
-        // - https://issues.jboss.org/browse/SWARM-204
-        ret.put("AB_OFF", "true");
-        ret.put("AB_JOLOKIA_OFF", "true");
+        // - https://github.com/fabric8io/fabric8-maven-plugin/issues/1173
+        // - https://issues.jboss.org/browse/SWARM-1859
+        ret.put("AB_PROMETHEUS_OFF", "true");
         return ret;
     }
 
