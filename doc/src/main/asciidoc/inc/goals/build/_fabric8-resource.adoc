@@ -190,7 +190,7 @@ Resource goal also validates the generated resource descriptors using API specif
 [[resource-route-geneartion]]
 === Route Generation
 
-If you hit fabric8:resource goal, it will also generate route along with service for both kubernetes and Openshift, deployment, deployment Config. If you do not want to generate route.yml, you can do the same using the below configuration.
+If you hit fabric8:resource goal, it will also generate route along with service for OpenShift. If you do not want to generate route.yml, you can do the same using the below configuration.
 
 .Route Generation Configuration
 [cols="1.6.1"]
@@ -203,7 +203,9 @@ If you hit fabric8:resource goal, it will also generate route along with service
 |===
 
 If you do now want to generate route.yml and want to configure it in pom.xml then you can do the same using following configuration in pom.xml
+
 .Example for not generating route resource by configuring it in pom.xml
+
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
 <plugin>
@@ -215,6 +217,7 @@ If you do now want to generate route.yml and want to configure it in pom.xml the
 ----
 
 If you are using resource fragments, then also you can configure it in service.yml. You need to add a label `expose` in the metadata of the service and need to set it false.
+
 .Example for not generating route resource by configuring it in resource fragments
 
 [source.yaml]
