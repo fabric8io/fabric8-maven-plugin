@@ -105,7 +105,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
     private File resourceDir;
 
-    @Parameter(property = "fabric8.skip.build.pom")
+    @Parameter(property = "fabric8.skip.build.pom", defaultValue = "true")
     private Boolean skipBuildPom;
 
     /**
@@ -239,7 +239,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             // If configured take the config option
             return skipBuildPom;
         }
-        // Not specified: Skip if no image with build configu configured, otherwise don't skip
+
+        // Not specified: Skip if no image with build configured, otherwise don't skip
         for (ImageConfiguration image : getResolvedImages()) {
             if (image.getBuildConfiguration() != null) {
                 return false;
