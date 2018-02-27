@@ -184,7 +184,7 @@ a| The build mode which can be
 | `docker.skip.build`
 
 | *skipBuildPom*
-| If set to `false` the build step will not be skipped for modules of type `pom`. By default the plugin is not executed for modules with `pom` packaging.
+| If set the build step will be skipped for modules of type `pom`. If not set, then by default projects of type `pom` will be skipped if there are no image configurations contained.
 | `docker.skip.build.pom`
 
 | *skipTag*
