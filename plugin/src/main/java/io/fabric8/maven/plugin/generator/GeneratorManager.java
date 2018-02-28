@@ -16,7 +16,6 @@
 
 package io.fabric8.maven.plugin.generator;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import io.fabric8.maven.core.config.ProcessorConfig;

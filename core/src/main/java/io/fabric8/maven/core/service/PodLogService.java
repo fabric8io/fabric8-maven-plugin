@@ -36,7 +36,6 @@ import static io.fabric8.maven.core.util.KubernetesClientUtil.getPodStatusDescri
 import static io.fabric8.maven.core.util.KubernetesClientUtil.getPodStatusMessagePostfix;
 import static io.fabric8.maven.core.util.KubernetesClientUtil.resizeApp;
 import static io.fabric8.maven.core.util.KubernetesClientUtil.withSelector;
-import static io.fabric8.maven.core.util.KubernetesResourceUtil.getPodLabelSelector;
 
 /**
  * Prints to the console the output of the pods.

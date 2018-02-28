@@ -30,7 +30,6 @@ import io.fabric8.openshift.client.OpenShiftClient;
 
 import io.fabric8.openshift.client.server.mock.OpenShiftMockServer;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 

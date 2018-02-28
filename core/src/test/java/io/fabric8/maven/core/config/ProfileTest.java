@@ -17,12 +17,9 @@
 package io.fabric8.maven.core.config;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
-import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.ProfileUtil;
-import org.codehaus.plexus.util.ReflectionUtils;
 import org.junit.Test;
 
 import static java.util.Arrays.asList;

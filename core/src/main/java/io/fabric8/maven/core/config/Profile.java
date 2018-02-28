@@ -16,8 +16,6 @@
 
 package io.fabric8.maven.core.config;
 
-import java.util.Comparator;
-import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
