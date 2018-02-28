@@ -152,7 +152,7 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
             // Here we are writing individual file for all the resources.
             // if generateRoute is false and resource is route, we should not generate it.
             
-            if (!(item.getKind().equalsIgnoreCase("Route") && generateRoute.equals(false))){
+            if (!(item.getKind().equalsIgnoreCase("Route") && !generateRoute)){
                 File itemTarget = new File(targetDir, itemFile);
                 writeResource(itemTarget, item, resourceFileType);
             }

@@ -45,7 +45,9 @@ By default the behaviour of resource goal is it generates `route.yml` for a serv
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
 <plugin>
-    ...
+    <groupId>io.fabric8</groupId>
+    <artifactId>fabric8-maven-plugin</artifactId>
+    <version>{version}</version>
     <configuration>
         <enricher>
             <excludes>

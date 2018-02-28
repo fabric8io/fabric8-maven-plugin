@@ -202,14 +202,16 @@ If you hit fabric8:resource goal, it will also generate route along with service
 | true
 |===
 
-If you do now want to generate route.yml and want to configure it in pom.xml then you can do the same using following configuration in pom.xml
+If you do not want to generate route.yml and want to configure it in pom.xml then you can do the same using following configuration in pom.xml
 
 .Example for not generating route resource by configuring it in pom.xml
 
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
 <plugin>
-    ...
+    <groupId>io.fabric8</groupId>
+    <artifactId>fabric8-maven-plugin</artifactId>
+    <version>{version}</version>
     <configuration>
         <generateRoute>false</generateRoute>
     </configuration>
