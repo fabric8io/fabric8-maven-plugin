@@ -185,7 +185,7 @@ a| The build mode which can be
 
 | *skipBuildPom*
 | If set the build step will be skipped for modules of type `pom`. If not set, then by default projects of type `pom` will be skipped if there are no image configurations contained.
-| `docker.skip.build.pom`
+| `fabric8.skip.build.pom`
 
 | *skipTag*
 | If set to `true` this plugin won't add any tags to images that have been built with `{plugin}:build`
