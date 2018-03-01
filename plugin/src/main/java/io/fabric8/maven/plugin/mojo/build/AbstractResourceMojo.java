@@ -95,9 +95,6 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
 
     public static File writeResourcesIndividualAndComposite(KubernetesList resources, File resourceFileBase, ResourceFileType resourceFileType, Logger log, Boolean generateRoute) throws MojoExecutionException {
 
-        //Storing the current items list to send it later in further functions.
-        List<HasMetadata> oldItemList = resources.getItems();
-
         //Creating a new items list. This will be used to generate openshift.yml
         List<HasMetadata> newItemList = new ArrayList<>();
 
@@ -132,10 +129,7 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
         File file = writeResource(resourceFileBase, entity, resourceFileType);
 
         // write separate files, one for each resource item
-        // Again setting the old resource list in resource, to make it as it was previously.
-        // It is exclusively used at various places, we should not change it and keep it as it was after our work is done.
-
-        resources.setItems(oldItemList);
+        // resources passed to writeIndividualResources is also new one.
         writeIndividualResources(resources, resourceFileBase, resourceFileType, log, generateRoute);
         return file;
     }
