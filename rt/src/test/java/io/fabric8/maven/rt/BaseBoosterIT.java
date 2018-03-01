@@ -64,7 +64,7 @@ public class BaseBoosterIT {
 
     protected final String fmpConfigurationFile = "/fmp-plugin-config.xml";
 
-    protected final int APPLICATION_POD_WAIT_POLLS = 180;
+    protected final int APPLICATION_POD_WAIT_POLLS = 400;
 
     protected OpenShiftClient openShiftClient;
 
@@ -358,7 +358,7 @@ public class BaseBoosterIT {
                     return;
                 }
             }
-            TimeUnit.SECONDS.sleep(5);
+            TimeUnit.SECONDS.sleep(10);
             nPolls++;
         }
         throw new AssertionError("Pod wait timeout! Could not find application pod for " + testsuiteRepositoryArtifactId);
@@ -397,7 +397,7 @@ public class BaseBoosterIT {
                 }
             }
             nPolls++;
-            TimeUnit.SECONDS.sleep(5);
+            TimeUnit.SECONDS.sleep(10);
         }
         throw new AssertionError("Pod wait timeout! Could not find application pod for " + testsuiteRepositoryArtifactId);
     }

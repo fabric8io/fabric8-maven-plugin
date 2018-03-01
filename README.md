@@ -1,6 +1,8 @@
 ## fabric8-maven-plugin
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.fabric8/fabric8-maven-plugin/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/io.fabric8/fabric8-maven-plugin/)
+[![Travis](https://secure.travis-ci.org/fabric8io/fabric8-maven-plugin.png)](http://travis-ci.org/fabric8io/fabric8-maven-plugin)
+[![Circle CI](https://circleci.com/gh/fabric8io/fabric8-maven-plugin/tree/master.svg?style=shield)](https://circleci.com/gh/fabric8io/fabric8-maven-plugin/tree/master)
 [![Coverage](https://sonarqube.com/api/badges/measure?key=io.fabric8:fabric8-maven-plugin-build&metric=coverage)](https://sonarqube.com/dashboard?id=io.fabric8%3Afabric8-maven-plugin-build)
 [![Technical Debt](https://sonarqube.com/api/badges/measure?key=io.fabric8:fabric8-maven-plugin-build&metric=sqale_debt_ratio)](https://sonarqube.com/dashboard?id=io.fabric8%3Afabric8-maven-plugin-build)
 [![Dependency Status](https://dependencyci.com/github/fabric8io/fabric8-maven-plugin/badge)](https://dependencyci.com/github/fabric8io/fabric8-maven-plugin)
@@ -126,7 +128,8 @@ The full documentation can be found in the [User Manual](http://maven.fabric8.io
 > but migration should be straight forward - please use the [fabric8:migrate goal from 2.x of the plugin](http://fabric8.io/guide/mavenFabric8Migrate.html).
 
 ### Tests we run for every new Pull Request
-There are the links of the TravisCI and Jenkins for the tests which run for every new Pull Request. You can view all the recent builds also.
+There are the links of the CircleCI and Jenkins for the tests which run for every new Pull Request. You can view all the recent builds also.
 
-* [Regression Tests](https://travis-ci.org/fabric8io/fabric8-maven-plugin/requests)
-* [Unit Tests](https://ci.fabric8.io/job/fabric8-maven-plugin-pullreq/)
+* [Travis: build](http://travis-ci.org/fabric8io/fabric8-maven-plugin)
+* [CircleCI: Regression Tests](https://circleci.com/gh/fabric8io/fabric8-maven-plugin/tree/master)
+* [Jenkins: Unit Tests](https://ci.fabric8.io/job/fabric8-maven-plugin-pullreq/)
