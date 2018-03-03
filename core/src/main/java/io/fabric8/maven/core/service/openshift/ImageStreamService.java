@@ -213,7 +213,8 @@ public class ImageStreamService {
                     continue TAG_EVENT_LIST;
                 }
 
-                // latest item is the first
+                // latest item is the last
+                Collections.reverse(items);
                 for (TagEvent item : items) {
                     String image = item.getImage();
                     if (Strings.isNotBlank(image)) {
