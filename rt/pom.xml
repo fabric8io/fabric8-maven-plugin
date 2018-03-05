@@ -46,44 +46,49 @@
 
     <dependencies>
         <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.arquillian.smart.testing</groupId>
             <artifactId>git-rules</artifactId>
+            <scope>test</scope>
             <version>${git.rules.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.jboss.shrinkwrap.resolver</groupId>
             <artifactId>shrinkwrap-resolver-impl-maven-embedded</artifactId>
+            <scope>test</scope>
             <version>${embedded.maven.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>kubernetes-assertions</artifactId>
+            <scope>test</scope>
             <version>${kubernetes.assertions.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>openshift-client</artifactId>
+            <scope>test</scope>
             <version>${openshift.client.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>${testng.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
+            <scope>test</scope>
             <version>${okhttp.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-io</artifactId>
+            <scope>test</scope>
             <version>${apache.commons.version}</version>
         </dependency>
     </dependencies>
