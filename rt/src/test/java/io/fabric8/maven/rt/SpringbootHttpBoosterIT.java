@@ -16,19 +16,16 @@
 
 package io.fabric8.maven.rt;
 
-import io.fabric8.openshift.api.model.*;
+import io.fabric8.openshift.api.model.Route;
+import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpStatus;
 import org.eclipse.jgit.lib.Repository;
 import org.junit.After;
-import org.testng.annotations.Test;
-
-import java.util.concurrent.TimeUnit;
+import org.junit.Test;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
-/**
- * Created by hshinde on 11/23/17.
- */
+
 public class SpringbootHttpBoosterIT extends BaseBoosterIT {
 
     private final String SPRING_BOOT_HTTP_BOOSTER_GIT = "https://github.com/snowdrop/spring-boot-http-booster.git";

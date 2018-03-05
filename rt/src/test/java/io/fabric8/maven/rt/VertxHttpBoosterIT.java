@@ -23,10 +23,10 @@ import org.eclipse.jgit.lib.Repository;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
-import org.testng.annotations.Test;
 
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import org.junit.Test;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
