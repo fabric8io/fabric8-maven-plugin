@@ -10,13 +10,16 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
+###3.5.38
+* Feature 1209: Added flag fabric8.openshift.generateRoute which if set to false will not generate route.yml and also will not add Route resource in openshift.yml. If set to true or not set, it will generate rou  te.yml and also add Route resource in openshift.yml. By default its value is true.
+
 ###3.5.35
-* Fix 1130: Added flag fabric8.openshift.trimImageInContainerSpec which would set the container image reference to "", this is done to handle weird 
+* Fix 1130: Added flag fabric8.openshift.trimImageInContainerSpec which would set the container image reference to "", this is done to handle weird
   behavior of Openshift 3.7 in which subsequent rollouts lead to ImagePullErr.
 * Feature 1174: ImageStreams use local lookup policy by default to simplify usage of Deployment or StatefulSet resources on Openshift
 
 ###3.5.34
-* Feature 1003: Added suspend option to remote debugging 
+* Feature 1003: Added suspend option to remote debugging
 * Remove duplicate tenant repos from downstream version updates and add in tjenkins platform
 * Fix 1051: resource validation was slow due to online hosted schema. The fix uses the JSON schema from kubernetes-model project
 * Fix 1062: Add a filter to avoid duplicates while generating kubernetes template(picking the local generated resource ahead of any dependency). Added a resources/ folder in enricher/standard/src/test/ directory to add some sample yaml and jar resource files for DependencyEnricherTest.

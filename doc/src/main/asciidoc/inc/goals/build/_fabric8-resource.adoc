@@ -186,3 +186,51 @@ Resource goal also validates the generated resource descriptors using API specif
 | If value is set to `true` then it would set the container image reference to "", this is done to handle weird behavior of Openshift 3.7 in which subsequent rollouts lead to ImagePullErr
 | false
 |===
+
+[[resource-route-geneartion]]
+=== Route Generation
+
+If you hit fabric8:resource goal, it will also generate route along with service for OpenShift. If you do not want to generate route.yml, you can do the same using the below configuration.
+
+.Route Generation Configuration
+[cols="1.6.1"]
+|===
+| Configuration | Description | Default
+
+| *fabric8.openshift.generateRoute*
+| If value is set to 'false' then it will not generate the route.yml file. By default it is set to 'true', which will create route.yml and also add resource route in openshift.yml.
+| true
+|===
+
+If you do not want to generate route.yml and want to configure it in pom.xml then you can do the same using following configuration in pom.xml
+
+.Example for not generating route resource by configuring it in pom.xml
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+<plugin>
+    <groupId>io.fabric8</groupId>
+    <artifactId>fabric8-maven-plugin</artifactId>
+    <version>{version}</version>
+    <configuration>
+        <generateRoute>false</generateRoute>
+    </configuration>
+</plugin>
+----
+
+If you are using resource fragments, then also you can configure it in service.yml. You need to add a label `expose` in the metadata of the service and need to set it false.
+
+.Example for not generating route resource by configuring it in resource fragments
+
+[source.yaml]
+----
+metadata:
+  annotations:
+    api.service.kubernetes.io/path: /hello
+  labels:
+    expose: "false"
+spec:
+  type: LoadBalancer
+----
+
+In case both the label in the resource fragment and also the flag is set then precedence will be given to flag. Like you have set the label to true and flag to false then it will not generate route.yml because flag is set to false.

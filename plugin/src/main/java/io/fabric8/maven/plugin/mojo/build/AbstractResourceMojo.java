@@ -17,6 +17,7 @@ package io.fabric8.maven.plugin.mojo.build;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -72,11 +73,11 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
         return null;
     }
 
-    protected void writeResources(KubernetesList resources, ResourceClassifier classifier) throws MojoExecutionException {
+    protected void writeResources(KubernetesList resources, ResourceClassifier classifier, Boolean generateRoute) throws MojoExecutionException {
         // write kubernetes.yml / openshift.yml
         File resourceFileBase = new File(this.targetDir, classifier.getValue());
 
-        File file = writeResourcesIndividualAndComposite(resources, resourceFileBase, this.resourceFileType, log);
+        File file = writeResourcesIndividualAndComposite(resources, resourceFileBase, this.resourceFileType, log, generateRoute);
 
         // Attach it to the Maven reactor so that it will also get deployed
         projectHelper.attachArtifact(project, this.resourceFileType.getArtifactType(), classifier.getValue(), file);
@@ -92,21 +93,48 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
         }
     }
 
-    public static File writeResourcesIndividualAndComposite(KubernetesList resources, File resourceFileBase, ResourceFileType resourceFileType, Logger log) throws MojoExecutionException {
+    public static File writeResourcesIndividualAndComposite(KubernetesList resources, File resourceFileBase, ResourceFileType resourceFileType, Logger log, Boolean generateRoute) throws MojoExecutionException {
+
+        //Creating a new items list. This will be used to generate openshift.yml
+        List<HasMetadata> newItemList = new ArrayList<>();
+
+        if(!generateRoute) {
+
+            //if flag is set false, this will remove the Route resource from resources list
+            for (HasMetadata item : resources.getItems()) {
+                if (item.getKind().equalsIgnoreCase("Route")) {
+                    continue;
+                }
+                newItemList.add(item);
+            }
+
+            //update the resource with new list
+            resources.setItems(newItemList);
+
+        }
+
+        // entity is object which will be sent to writeResource for openshift.yml
+        // if generateRoute is false, this will be set to resources with new list
+        // otherwise it will be set to resources with old list.
         Object entity = resources;
+
         // if the list contains a single Template lets unwrap it
+        // in resources already new or old as per condition is set.
+        // no need to worry about this for dropping Route.
         Template template = getSingletonTemplate(resources);
         if (template != null) {
             entity = template;
         }
+
         File file = writeResource(resourceFileBase, entity, resourceFileType);
 
         // write separate files, one for each resource item
-        writeIndividualResources(resources, resourceFileBase, resourceFileType, log);
+        // resources passed to writeIndividualResources is also new one.
+        writeIndividualResources(resources, resourceFileBase, resourceFileType, log, generateRoute);
         return file;
     }
 
-    private static void writeIndividualResources(KubernetesList resources, File targetDir, ResourceFileType resourceFileType, Logger log) throws MojoExecutionException {
+    private static void writeIndividualResources(KubernetesList resources, File targetDir, ResourceFileType resourceFileType, Logger log, Boolean generateRoute) throws MojoExecutionException {
         for (HasMetadata item : resources.getItems()) {
             String name = KubernetesHelper.getName(item);
             if (Strings.isNullOrBlank(name)) {
@@ -114,8 +142,14 @@ public abstract class AbstractResourceMojo extends AbstractFabric8Mojo {
                 continue;
             }
             String itemFile = KubernetesResourceUtil.getNameWithSuffix(name, item.getKind());
-            File itemTarget = new File(targetDir, itemFile);
-            writeResource(itemTarget, item, resourceFileType);
+
+            // Here we are writing individual file for all the resources.
+            // if generateRoute is false and resource is route, we should not generate it.
+            
+            if (!(item.getKind().equalsIgnoreCase("Route") && !generateRoute)){
+                File itemTarget = new File(targetDir, itemFile);
+                writeResource(itemTarget, item, resourceFileType);
+            }
         }
     }
 
