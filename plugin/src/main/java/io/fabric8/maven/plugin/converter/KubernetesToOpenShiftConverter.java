@@ -24,6 +24,6 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
  */
 public interface KubernetesToOpenShiftConverter {
 
-    HasMetadata convert(HasMetadata item, boolean trimImageInContainerSpec);
+    HasMetadata convert(HasMetadata item, boolean trimImageInContainerSpec, boolean enableAutomaticTrigger);
 
 }

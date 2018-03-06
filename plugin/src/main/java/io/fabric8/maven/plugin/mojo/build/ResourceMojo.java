@@ -257,6 +257,9 @@ public class ResourceMojo extends AbstractResourceMojo {
     @Parameter(property = "fabric8.openshift.generateRoute", defaultValue = "true")
     private Boolean generateRoute;
 
+    @Parameter(property = "fabric8.openshift.enableAutomaticTrigger", defaultValue = "true")
+    private Boolean enableAutomaticTrigger;
+
     @Parameter(property = "kompose.dir", defaultValue = "${user.home}/.kompose/bin")
     private File komposeBinDir;
 
@@ -758,7 +761,7 @@ public class ResourceMojo extends AbstractResourceMojo {
         }
 
         KubernetesToOpenShiftConverter converter = openShiftConverters.get(item.getKind());
-        return converter != null ? converter.convert(item, trimImageInContainerSpec) : item;
+        return converter != null ? converter.convert(item, trimImageInContainerSpec, enableAutomaticTrigger) : item;
     }
 
     // ==================================================================================

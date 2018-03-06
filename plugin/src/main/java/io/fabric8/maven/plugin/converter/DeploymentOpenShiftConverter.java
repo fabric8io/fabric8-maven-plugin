@@ -50,7 +50,7 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
     }
 
     @Override
-    public HasMetadata convert(HasMetadata item, boolean trimImageInContainerSpec) {
+    public HasMetadata convert(HasMetadata item, boolean trimImageInContainerSpec, boolean enableAutomaticTrigger) {
             Deployment resource = (Deployment) item;
             DeploymentConfigBuilder builder = new DeploymentConfigBuilder();
             builder.withMetadata(resource.getMetadata());
@@ -107,7 +107,9 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                 }
 
                 // lets add a default trigger so that its triggered when we change its config
-                specBuilder.addNewTrigger().withType("ConfigChange").endTrigger();
+                if(enableAutomaticTrigger) {
+                    specBuilder.addNewTrigger().withType("ConfigChange").endTrigger();
+                }
 
                 // add a new image change trigger for the build stream
                 if (containerToImageMap.size() != 0) {
@@ -119,10 +121,11 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                             specBuilder.addNewTrigger()
                                     .withType("ImageChange")
                                     .withNewImageChangeParams()
-                                    .withAutomatic(true)
+                                    .withAutomatic(enableAutomaticTrigger)
                                     .withNewFrom()
                                     .withKind("ImageStreamTag")
                                     .withName(image.getSimpleName() + ":" + tag)
+                                    .withNamespace(image.getUser())
                                     .endFrom()
                                     .withContainerNames(containerName)
                                     .endImageChangeParams()

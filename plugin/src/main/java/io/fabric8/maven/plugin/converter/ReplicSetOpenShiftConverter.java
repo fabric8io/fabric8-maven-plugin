@@ -32,7 +32,7 @@ import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
  */
 public class ReplicSetOpenShiftConverter implements KubernetesToOpenShiftConverter {
     @Override
-    public HasMetadata convert(HasMetadata item, boolean trimImageInContainerSpec) {
+    public HasMetadata convert(HasMetadata item, boolean trimImageInContainerSpec, boolean enableAutomaticTrigger) {
         ReplicaSet resource = (ReplicaSet) item;
         ReplicationControllerBuilder builder = new ReplicationControllerBuilder();
         builder.withMetadata(resource.getMetadata());

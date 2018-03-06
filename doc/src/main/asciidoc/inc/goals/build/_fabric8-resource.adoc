@@ -234,3 +234,8 @@ spec:
 ----
 
 In case both the label in the resource fragment and also the flag is set then precedence will be given to flag. Like you have set the label to true and flag to false then it will not generate route.yml because flag is set to false.
+
+| *fabric8.openshift.enableAutomaticTrigger*
+| If the value is set to `false` then automatic deployments would be disabled.
+| true
+|===

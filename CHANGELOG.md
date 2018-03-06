@@ -17,6 +17,8 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1130: Added flag fabric8.openshift.trimImageInContainerSpec which would set the container image reference to "", this is done to handle weird
   behavior of Openshift 3.7 in which subsequent rollouts lead to ImagePullErr.
 * Feature 1174: ImageStreams use local lookup policy by default to simplify usage of Deployment or StatefulSet resources on Openshift
+* Fix 1177: Added flag fabric8.openshift.enableAutomaticTrigger which would be able to enable/disable automatic deployments whenever there is new image
+  generated.
 
 ###3.5.34
 * Feature 1003: Added suspend option to remote debugging
