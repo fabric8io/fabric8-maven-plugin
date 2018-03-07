@@ -41,9 +41,10 @@ import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.*;
 
-import static io.fabric8.maven.core.util.ResourceFileType.yaml;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -81,10 +82,13 @@ public class DependencyEnricherTest {
         return aBuilder.build();
     }
 
-    private KubernetesListBuilder createResourcesForTest() throws IOException {
+    private KubernetesListBuilder createResourcesForTest() throws IOException, URISyntaxException {
         setupExpectations();
         List<File> resourceList = new ArrayList<>();
-        resourceList.add(new File(getClass().getResource(overrideFragementFile).getFile()));
+
+        resourceList.add(new File(Paths.get(getClass().getResource(overrideFragementFile).toURI()).toAbsolutePath().toString()));
+
+
 
         /*
          * Our override file also contains a ConfigMap item with name jenkins, load it while
