@@ -16,66 +16,69 @@
  */
 @Library('github.com/fabric8io/fabric8-pipeline-library@master')
 def utils = new io.fabric8.Utils()
-clientsTemplate{
+clientsTemplate {
     mavenNode {
-        checkout scm
-        readTrusted 'release.groovy'
-        sh "git remote set-url origin git@github.com:fabric8io/fabric8-maven-plugin.git"
+        container('maven') {
+            checkout scm
+            readTrusted 'release.groovy'
+            sh "git remote set-url origin git@github.com:fabric8io/fabric8-maven-plugin.git"
 
-        def pipeline = load 'release.groovy'
+            def pipeline = load 'release.groovy'
 
-        if (utils.isCI()) {
+            if (utils.isCI()) {
 
-            echo 'CI pipeline'
+                echo 'CI pipeline'
 
-            sh "mvn clean install"
+                sh "mvn clean install"
 
-        } else if (utils.isCD()) {
+            } else if (utils.isCD()) {
 
-            //First we need to check that master is
-            //stable and all tests are working properly
-            //before generating tags and pushing it to github
+                sh "mvn clean install"
+                
+                //First we need to check that master is
+                //stable and all tests are working properly
+                //before generating tags and pushing it to github
 
-            def stagedProject
+                def stagedProject
 
-            //These stage(), release(stagedProject) and
-            //updateDownstreamDependencies(stagedProject)
-            //are coming form release.groovy in same repo
+                //These stage(), release(stagedProject) and
+                //updateDownstreamDependencies(stagedProject)
+                //are coming form release.groovy in same repo
 
-            stage('Stage') {
+                stage('Stage') {
 
-                // This will generate new tag, push them to github,
-                // create the new release branch, build and run test
+                    // This will generate new tag, push them to github,
+                    // create the new release branch, build and run test
 
-                stagedProject = pipeline.stage()
-            }
+                    stagedProject = pipeline.stage()
+                }
 
-            stage('Promote') {
+                /*stage('Promote') {
 
-                //This will release the project and update on
-                //maven central
+                    //This will release the project and update on
+                    //maven central
 
-                pipeline.release(stagedProject)
-            }
+                    pipeline.release(stagedProject)
+                }
 
-            // Disabled for now as it probably doesn't work because of the different directory structure
-            // with a dedicated doc-module
-            //stage 'Website'
-            //pipeline.website(stagedProject)
+                // Disabled for now as it probably doesn't work because of the different directory structure
+                // with a dedicated doc-module
+                //stage 'Website'
+                //pipeline.website(stagedProject)
 
-            stage('Update downstream dependencies') {
+                stage('Update downstream dependencies') {
 
-                //This will update the version of fmp
-                //in the pom.xml of some downstream repos like
-                //fabric8-services, quickstart etc.
-                pipeline.updateDownstreamDependencies(stagedProject)
+                    //This will update the version of fmp
+                    //in the pom.xml of some downstream repos like
+                    //fabric8-services, quickstart etc.
+                    pipeline.updateDownstreamDependencies(stagedProject)
+                }*/
             }
         }
     }
 }
 
-
-deployTemplate{
+/*deployTemplate{
   dockerNode {
     stage 'Deploy and run system tests'
     deployAndRunSystemTests()
@@ -134,4 +137,4 @@ def deployAndRunSystemTests() {
     fabric8SystemTests {
         packageYAML = yaml
     }
-}
+}*/
