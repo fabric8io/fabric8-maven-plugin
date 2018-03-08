@@ -35,9 +35,9 @@ clientsTemplate{
 
             } else if (utils.isCD()) {
 
-                //First we need to check that master is
-                //stable and all tests are working properly
-                //before generating tags and pushing it to github
+                // First we need to check that master is
+                // stable and all tests are working properly
+                // before generating tags and pushing it to github
 
                 sh "mvn clean -B"
 
@@ -45,9 +45,9 @@ clientsTemplate{
 
                 def stagedProject
 
-                //These stage(), release(stagedProject) and
-                //updateDownstreamDependencies(stagedProject)
-                //are coming form release.groovy in same repo
+                // These stage(), release(stagedProject) and
+                // updateDownstreamDependencies(stagedProject)
+                // are coming form release.groovy in same repo
 
                 stage('Stage') {
 
@@ -59,22 +59,22 @@ clientsTemplate{
 
                 stage('Promote') {
 
-                    //This will release the project and update on
-                    //maven central
+                    // This will release the project and update on
+                    // maven central
 
                     pipeline.release(stagedProject)
                 }
 
                 // Disabled for now as it probably doesn't work because of the different directory structure
                 // with a dedicated doc-module
-                //stage 'Website'
-                //pipeline.website(stagedProject)
+                // stage 'Website'
+                // pipeline.website(stagedProject)
 
                 stage('Update downstream dependencies') {
 
-                    //This will update the version of fmp
-                    //in the pom.xml of some downstream repos like
-                    //fabric8-services, quickstart etc.
+                    // This will update the version of fmp
+                    // in the pom.xml of some downstream repos like
+                    // fabric8-services, quickstart etc.
                     pipeline.updateDownstreamDependencies(stagedProject)
                 }
             }
@@ -93,7 +93,7 @@ deployTemplate{
 
 def deployAndRunSystemTests() {
 
-    //This will build the downstream projects
+    // This will build the downstream projects
     // (may be not all projects)
     // to check whether the new version is
     // working fine for them
