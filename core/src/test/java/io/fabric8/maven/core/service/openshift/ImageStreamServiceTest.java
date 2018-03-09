@@ -29,6 +29,8 @@ import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.yaml.snakeyaml.Yaml;
@@ -137,5 +139,33 @@ public class ImageStreamServiceTest {
             .addToTags(list)
             .endStatus()
             .build();
+    }
+
+    @Test
+    public void should_return_newer_tag() throws Exception {
+        // GIVEN
+        ImageStreamService service = new ImageStreamService(client, log);
+        TagEvent oldTag = new TagEvent("2018-03-09T03:27:05Z\n", null, null, null);
+        TagEvent latestTag = new TagEvent("2018-03-09T03:28:05Z\n", null, null, null);
+
+        // WHEN
+        TagEvent resultedTag = service.newerTag(oldTag, latestTag);
+
+        // THEN
+        Assert.assertEquals(latestTag, resultedTag);
+    }
+
+    @Test
+    public void should_return_first_tag() throws Exception {
+        // GIVEN
+        ImageStreamService service = new ImageStreamService(client, log);
+        TagEvent first = new TagEvent("2018-03-09T03:27:05Z\n", null, null, null);
+        TagEvent latestTag = null;
+
+        // WHEN
+        TagEvent resultedTag = service.newerTag(first, latestTag);
+
+        // THEN
+        Assert.assertEquals(first, resultedTag);
     }
 }

@@ -18,6 +18,8 @@ package io.fabric8.maven.core.service.openshift;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -42,6 +44,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 public class ImageStreamService {
 
 
+    public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
     private final OpenShiftClient client;
     private final Logger log;
 
@@ -184,6 +187,7 @@ public class ImageStreamService {
 
     private String findTagSha(OpenShiftClient client, String imageStreamName, String namespace) throws MojoExecutionException {
         ImageStream currentImageStream = null;
+
         for (int i = 0; i < IMAGE_STREAM_TAG_RETRIES; i++) {
             if (i > 0) {
                 log.info("Retrying to find tag on ImageStream %s", imageStreamName);
@@ -205,29 +209,62 @@ public class ImageStreamService {
             if (tags == null || tags.isEmpty()) {
                 continue;
             }
-            // latest tag is the first
+
+            // Iterate all imagestream tags and get the latest one by 'created' attribute
+            TagEvent latestTag = null;
+
             TAG_EVENT_LIST:
             for (NamedTagEventList list : tags) {
                 List<TagEvent> items = list.getItems();
-                if (items == null) {
+                if (items == null || items.isEmpty()) {
                     continue TAG_EVENT_LIST;
                 }
 
-                // latest item is the first
-                for (TagEvent item : items) {
-                    String image = item.getImage();
-                    if (Strings.isNotBlank(image)) {
-                        log.info("Found tag on ImageStream " + imageStreamName + " tag: " + image);
-                        return image;
-                    }
+                for (TagEvent tag : items) {
+                    latestTag = latestTag == null ? tag : newerTag(tag, latestTag);
                 }
             }
+
+            if (latestTag != null && Strings.isNotBlank(latestTag.getImage())) {
+                String image = latestTag.getImage();
+                log.info("Found tag on ImageStream " + imageStreamName + " tag: " + image);
+                return image;
+            }
         }
+
         // No image found, even after several retries:
         if (currentImageStream == null) {
             throw new MojoExecutionException("Could not find a current ImageStream with name " + imageStreamName + " in namespace " + namespace);
         } else {
             throw new MojoExecutionException("Could not find a tag in the ImageStream " + imageStreamName);
         }
+    }
+
+    public TagEvent newerTag(TagEvent tag1, TagEvent tag2) {
+        Date tag1Date = extractDate(tag1);
+        Date tag2Date = extractDate(tag2);
+
+        if(tag1Date == null) {
+            return tag2;
+        }
+
+        if(tag2Date == null) {
+            return tag1;
+        }
+
+        return tag1Date.compareTo(tag2Date) > 0 ? tag1 : tag2;
+    }
+
+    private Date extractDate(TagEvent tag) {
+        try {
+            return new SimpleDateFormat(DATE_FORMAT).parse(tag.getCreated());
+        } catch (ParseException e) {
+            log.error("parsing date error : " + e.getMessage(), e);
+            return null;
+        } catch (NullPointerException e) {
+            log.error("tag date is null : " + e.getMessage(), e);
+            return null;
+        }
+
     }
 }

@@ -15,6 +15,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1177: Added flag fabric8.openshift.enableAutomaticTrigger which would be able to enable/disable automatic deployments whenever there is new image
   generated.
 * Fix 1184: MultiModule projects were not getting deployed using FMP 3.5.34 onwards. This was working after adding an extra flag which was breaking the previous behaviour in patch release. We will make these change again in minor release and will add the notes regarding that. For the time being, we have reverted the change.
+* Fix #1226: Plugin fails to deploy changes to an application with S2I build. It used to pick first image verion always. This fix pick the right image tag by comaring created attribute of image tag
 
 ###3.5.35
 * Fix 1130: Added flag fabric8.openshift.trimImageInContainerSpec which would set the container image reference to "", this is done to handle weird
