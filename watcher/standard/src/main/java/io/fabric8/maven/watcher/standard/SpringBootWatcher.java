@@ -30,7 +30,7 @@ import io.fabric8.maven.core.util.IoUtil;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.PrefixedLogger;
-import io.fabric8.maven.core.util.SpringBootProperties;
+import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
@@ -42,7 +42,7 @@ import io.fabric8.utils.Strings;
 
 import org.apache.maven.project.MavenProject;
 
-import static io.fabric8.maven.core.util.SpringBootProperties.DEV_TOOLS_REMOTE_SECRET;
+import static io.fabric8.maven.core.util.SpringBootConfigurationHelper.DEV_TOOLS_REMOTE_SECRET;
 
 public class SpringBootWatcher extends BaseWatcher {
 
@@ -100,21 +100,23 @@ public class SpringBootWatcher extends BaseWatcher {
         }
 
         Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getContext().getProject());
+        SpringBootConfigurationHelper propertyHelper = new SpringBootConfigurationHelper(SpringBootUtil.getSpringBootVersion(getContext().getProject()));
 
         PortForwardService portForwardService = getContext().getFabric8ServiceHub().getPortForwardService();
         int port = IoUtil.getFreeRandomPort();
-        int containerPort = findSpringBootWebPort(properties);
+        int containerPort = findSpringBootWebPort(propertyHelper, properties);
         portForwardService.forwardPortAsync(getContext().getLogger(), selector, containerPort, port);
-        return createForwardUrl(properties, port);
+
+        return createForwardUrl(propertyHelper, properties, port);
     }
 
-    private int findSpringBootWebPort(Properties properties) {
-        return PropertiesHelper.getInteger(properties, SpringBootProperties.SERVER_PORT, DEFAULT_SERVER_PORT);
+    private int findSpringBootWebPort(SpringBootConfigurationHelper propertyHelper, Properties properties) {
+        return PropertiesHelper.getInteger(properties, propertyHelper.getServerPortPropertyKey(), DEFAULT_SERVER_PORT);
     }
 
-    private String createForwardUrl(Properties properties, int localPort) {
-        String scheme = Strings.isNotBlank(properties.getProperty(SpringBootProperties.SERVER_KEYSTORE)) ? "https://" : "http://";
-        String contextPath = properties.getProperty(SpringBootProperties.SERVER_CONTEXT_PATH, "");
+    private String createForwardUrl(SpringBootConfigurationHelper propertyHelper, Properties properties, int localPort) {
+        String scheme = Strings.isNotBlank(properties.getProperty(propertyHelper.getServerKeystorePropertyKey())) ? "https://" : "http://";
+        String contextPath = properties.getProperty(propertyHelper.getServerContextPathPropertyKey(), "");
         return scheme + "localhost:" + localPort + contextPath;
     }
 
@@ -274,7 +276,7 @@ public class SpringBootWatcher extends BaseWatcher {
         if (version == null) {
             throw new IllegalStateException("Unable to find the spring-boot version");
         }
-        return getContext().getFabric8ServiceHub().getArtifactResolverService().resolveArtifact(SpringBootProperties.SPRING_BOOT_GROUP_ID, SpringBootProperties.SPRING_BOOT_DEVTOOLS_ARTIFACT_ID, version, "jar");
+        return getContext().getFabric8ServiceHub().getArtifactResolverService().resolveArtifact(SpringBootConfigurationHelper.SPRING_BOOT_GROUP_ID, SpringBootConfigurationHelper.SPRING_BOOT_DEVTOOLS_ARTIFACT_ID, version, "jar");
     }
 
 }

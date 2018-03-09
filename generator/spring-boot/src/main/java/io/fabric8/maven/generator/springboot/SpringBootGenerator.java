@@ -35,7 +35,7 @@ import java.util.zip.ZipOutputStream;
 
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.core.util.SpringBootProperties;
+import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
@@ -50,7 +50,7 @@ import org.apache.maven.model.PluginExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
-import static io.fabric8.maven.core.util.SpringBootProperties.DEV_TOOLS_REMOTE_SECRET;
+import static io.fabric8.maven.core.util.SpringBootConfigurationHelper.DEV_TOOLS_REMOTE_SECRET;
 import static io.fabric8.maven.generator.springboot.SpringBootGenerator.Config.color;
 
 /**
@@ -94,9 +94,9 @@ public class SpringBootGenerator extends JavaExecGenerator {
         Map<String, String> res = super.getEnv(prePackagePhase);
         if (getContext().isWatchMode()) {
             // adding dev tools token to env variables to prevent override during recompile
-            String secret = SpringBootUtil.getSpringBootApplicationProperties(getProject()).getProperty(SpringBootProperties.DEV_TOOLS_REMOTE_SECRET);
+            String secret = SpringBootUtil.getSpringBootApplicationProperties(getProject()).getProperty(SpringBootConfigurationHelper.DEV_TOOLS_REMOTE_SECRET);
             if (secret != null) {
-                res.put(SpringBootProperties.DEV_TOOLS_REMOTE_SECRET_ENV, secret);
+                res.put(SpringBootConfigurationHelper.DEV_TOOLS_REMOTE_SECRET_ENV, secret);
             }
         }
         return res;
@@ -123,7 +123,8 @@ public class SpringBootGenerator extends JavaExecGenerator {
     protected List<String> extractPorts() {
         List<String> answer = new ArrayList<>();
         Properties properties = SpringBootUtil.getSpringBootApplicationProperties(this.getProject());
-        String port = properties.getProperty(SpringBootProperties.SERVER_PORT, DEFAULT_SERVER_PORT);
+        SpringBootConfigurationHelper propertyHelper = new SpringBootConfigurationHelper(SpringBootUtil.getSpringBootVersion(getProject()));
+        String port = properties.getProperty(propertyHelper.getServerPortPropertyKey(), DEFAULT_SERVER_PORT);
         addPortIfValid(answer, getConfig(JavaExecGenerator.Config.webPort, port));
         addPortIfValid(answer, getConfig(JavaExecGenerator.Config.jolokiaPort));
         addPortIfValid(answer, getConfig(JavaExecGenerator.Config.prometheusPort));
@@ -286,7 +287,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
         if (version == null) {
             throw new IllegalStateException("Unable to find the spring-boot version");
         }
-        return getContext().getArtifactResolver().resolveArtifact(SpringBootProperties.SPRING_BOOT_GROUP_ID, SpringBootProperties.SPRING_BOOT_DEVTOOLS_ARTIFACT_ID, version, "jar");
+        return getContext().getArtifactResolver().resolveArtifact(SpringBootConfigurationHelper.SPRING_BOOT_GROUP_ID, SpringBootConfigurationHelper.SPRING_BOOT_DEVTOOLS_ARTIFACT_ID, version, "jar");
     }
 
 }

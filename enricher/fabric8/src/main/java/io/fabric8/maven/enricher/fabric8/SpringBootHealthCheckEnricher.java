@@ -21,7 +21,7 @@ import java.util.Properties;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.core.util.SpringBootProperties;
+import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
@@ -69,29 +69,36 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
     }
 
     protected Probe buildProbe(Properties springBootProperties, int initialDelay) {
-        Integer managementPort = PropertiesHelper.getInteger(springBootProperties, SpringBootProperties.MANAGEMENT_PORT);
+        SpringBootConfigurationHelper propertyHelper = new SpringBootConfigurationHelper(SpringBootUtil.getSpringBootVersion(getContext().getProject()));
+        Integer managementPort = PropertiesHelper.getInteger(springBootProperties, propertyHelper.getManagementPortPropertyKey());
         boolean usingManagementPort = managementPort != null;
 
         Integer port = managementPort;
         if (port == null) {
-            port = PropertiesHelper.getInteger(springBootProperties, SpringBootProperties.SERVER_PORT, DEFAULT_SERVER_PORT);
+            port = PropertiesHelper.getInteger(springBootProperties, propertyHelper.getServerPortPropertyKey(), DEFAULT_SERVER_PORT);
         }
 
         String scheme;
         String prefix;
         if (usingManagementPort) {
-            scheme = Strings.isNotBlank(springBootProperties.getProperty(SpringBootProperties.MANAGEMENT_KEYSTORE)) ? SCHEME_HTTPS : SCHEME_HTTP;
-            prefix = springBootProperties.getProperty(SpringBootProperties.MANAGEMENT_CONTEXT_PATH, "");
+            scheme = Strings.isNotBlank(springBootProperties.getProperty(propertyHelper.getManagementKeystorePropertyKey())) ? SCHEME_HTTPS : SCHEME_HTTP;
+            prefix = springBootProperties.getProperty(propertyHelper.getManagementContextPathPropertyKey(), "");
         } else {
-            scheme = Strings.isNotBlank(springBootProperties.getProperty(SpringBootProperties.SERVER_KEYSTORE)) ? SCHEME_HTTPS : SCHEME_HTTP;
-            prefix = springBootProperties.getProperty(SpringBootProperties.SERVER_CONTEXT_PATH, "");
-            prefix += springBootProperties.getProperty(SpringBootProperties.SERVLET_PATH, "");
-            prefix += springBootProperties.getProperty(SpringBootProperties.MANAGEMENT_CONTEXT_PATH, "");
+            scheme = Strings.isNotBlank(springBootProperties.getProperty(propertyHelper.getServerKeystorePropertyKey())) ? SCHEME_HTTPS : SCHEME_HTTP;
+            prefix = springBootProperties.getProperty(propertyHelper.getServerContextPathPropertyKey(), "");
+            prefix += springBootProperties.getProperty(propertyHelper.getServletPathPropertyKey(), "");
+            prefix += springBootProperties.getProperty(propertyHelper.getManagementContextPathPropertyKey(), "");
+        }
+
+        String actuatorBasePathKey = propertyHelper.getActuatorBasePathPropertyKey();
+        String actuatorBasePath = propertyHelper.getActuatorDefaultBasePath();
+        if (actuatorBasePathKey != null) {
+            actuatorBasePath = springBootProperties.getProperty(actuatorBasePathKey, actuatorBasePath);
         }
 
         // lets default to adding a spring boot actuator health check
         return new ProbeBuilder().
-                withNewHttpGet().withNewPort(port).withPath(prefix + "/health").withScheme(scheme).endHttpGet().
+                withNewHttpGet().withNewPort(port).withPath(prefix + actuatorBasePath + "/health").withScheme(scheme).endHttpGet().
                 withInitialDelaySeconds(initialDelay).build();
     }
 
