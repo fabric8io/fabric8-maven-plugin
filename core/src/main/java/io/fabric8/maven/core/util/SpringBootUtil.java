@@ -111,7 +111,14 @@ public class SpringBootUtil {
      * Determine the spring-boot devtools version for the current project
      */
     public static String getSpringBootDevToolsVersion(MavenProject mavenProject) {
-        return MavenUtil.getDependencyVersion(mavenProject, SpringBootProperties.SPRING_BOOT_GROUP_ID, SpringBootProperties.SPRING_BOOT_ARTIFACT_ID);
+        return getSpringBootVersion(mavenProject);
+    }
+
+    /**
+     * Determine the spring-boot major version for the current project
+     */
+    public static String getSpringBootVersion(MavenProject mavenProject) {
+        return MavenUtil.getDependencyVersion(mavenProject, SpringBootConfigurationHelper.SPRING_BOOT_GROUP_ID, SpringBootConfigurationHelper.SPRING_BOOT_ARTIFACT_ID);
     }
 
     /**
