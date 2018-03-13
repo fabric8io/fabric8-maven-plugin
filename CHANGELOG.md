@@ -12,6 +12,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 
 ###3.5.39
 * Feature 1206: Added support for spring-boot 2 health endpoint
+* Fix 1173: disable the Prometheus agent for WildFly Swarm applications, because it uses Java logging too early; also reenable the Jolokia agent, which was disabled due to the same problem but was fixed a long time ago
 
 ###3.5.38
 * Feature 1209: Added flag fabric8.openshift.generateRoute which if set to false will not generate route.yml and also will not add Route resource in openshift.yml. If set to true or not set, it will generate rou  te.yml and also add Route resource in openshift.yml. By default its value is true.
