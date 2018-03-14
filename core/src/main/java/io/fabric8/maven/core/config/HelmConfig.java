@@ -45,6 +45,9 @@ public class HelmConfig {
     @Parameter
     private List<HelmType> type;
 
+    @Parameter
+    private String chartExtension;
+
     public String getChart() {
         return chart;
     }
@@ -67,6 +70,10 @@ public class HelmConfig {
 
     public List<HelmType> getType() {
         return type;
+    }
+
+    public String getChartExtension() {
+        return chartExtension;
     }
 
     public enum HelmType {
