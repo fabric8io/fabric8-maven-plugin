@@ -92,6 +92,12 @@ public class HelmIndexMojo extends AbstractArtifactSearchMojo {
     @Parameter(property = "fabric8.helm.tempDir", defaultValue = "${project.build.directory}/fabric8/tmp-charts")
     private File tempDir;
 
+	/**
+	 * Chart file extension
+	 */
+	@Parameter(property = "fabric8.helm.chartArtifactType", defaultValue = "tar.gz")
+    private String chartArtifactType;
+
     @Component(role = UnArchiver.class, hint = "tar")
     private TarUnArchiver unArchiver;
 
@@ -266,7 +272,7 @@ public class HelmIndexMojo extends AbstractArtifactSearchMojo {
     }
 
     private HelmMojo.Chart createChartFile(ArtifactDTO artifactDTO) {
-        File file = resolveArtifactFile(artifactDTO, "helm", "tar.gz");
+        File file = resolveArtifactFile(artifactDTO, "helm", chartArtifactType);
 
         File untarDestDir = new File(tempDir, artifactDTO.getG() + "/" + artifactDTO.getA() + "-" + artifactDTO.getV() + "-chart");
         untarDestDir.mkdirs();
@@ -360,7 +366,7 @@ public class HelmIndexMojo extends AbstractArtifactSearchMojo {
             String artifactId = artifact.getA();
             String version = artifact.getV();
             urls.add(mavenRepoUrl + artifact.getG().replace('.', '/') +
-                    "/" + artifactId + "/" + version + "/" + artifactId + "-" + version + "-helm.tar.gz");
+                    "/" + artifactId + "/" + version + "/" + artifactId + "-" + version + "-helm." + chartArtifactType);
             this.name = artifactId;
         }
 
