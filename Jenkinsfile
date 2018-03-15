@@ -19,9 +19,6 @@ def utils = new io.fabric8.Utils()
 clientsTemplate{
     mavenNode {
 
-        // TODO: this is commented , will be required when we will make these commands working
-        // container('maven') {
-
             checkout scm
             readTrusted 'release.groovy'
             sh "git remote set-url origin git@github.com:fabric8io/fabric8-maven-plugin.git"
@@ -40,11 +37,13 @@ clientsTemplate{
                 // stable and all tests are working properly
                 // before generating tags and pushing it to github
 
-                // TODO: make these commands working
+                container('maven') {
 
-                //sh "mvn clean -B"
+                    sh "mvn clean -B"
 
-                //sh "mvn clean install"
+                    sh "mvn clean install"
+
+                }
 
                 def stagedProject
 
@@ -81,8 +80,6 @@ clientsTemplate{
                     pipeline.updateDownstreamDependencies(stagedProject)
                 }
             }
-
-        // }
     }
 }
 
