@@ -114,7 +114,8 @@ public class OpenshiftBuildServiceTest {
             result = archiveService;
 
             archiveService.createDockerBuildArchive(withAny(ImageConfiguration.class.cast(null)), withAny(MojoParameters.class.cast(null)));
-            result = dockerFile; minTimes = 0;
+            result = dockerFile;
+            minTimes = 0;
 
             project.getArtifact();
             result = "myapp";
@@ -152,7 +153,7 @@ public class OpenshiftBuildServiceTest {
                 WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, true, 50, false, false);
                 OpenShiftMockServer mockServer = collector.getMockServer();
 
-                DefaultOpenShiftClient client = (DefaultOpenShiftClient)mockServer.createOpenShiftClient();
+                DefaultOpenShiftClient client = (DefaultOpenShiftClient) mockServer.createOpenShiftClient();
                 LOG.info("Current write timeout is : {}", client.getHttpClient().writeTimeoutMillis());
                 LOG.info("Current read timeout is : {}", client.getHttpClient().readTimeoutMillis());
                 LOG.info("Retry on failure : {}", client.getHttpClient().retryOnConnectionFailure());
@@ -169,11 +170,10 @@ public class OpenshiftBuildServiceTest {
                 logger.warn("A problem encountered while running test {}, retrying..", exception.getMessage());
                 // Let's wait for a while, and then retry again
                 if (rootCause != null && rootCause instanceof IOException) {
-                    Thread.sleep(5 * 1000);
                     continue;
                 }
             }
-        } while(nTries < MAX_TIMEOUT_RETRIES && !bTestComplete);
+        } while (nTries < MAX_TIMEOUT_RETRIES && !bTestComplete);
     }
 
     @Test(expected = Fabric8ServiceException.class)
@@ -189,59 +189,89 @@ public class OpenshiftBuildServiceTest {
 
     @Test
     public void testSuccessfulSecondBuild() throws Exception {
-        BuildService.BuildServiceConfig config = defaultConfig.build();
-        WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, true, 50, true, true);
-        OpenShiftMockServer mockServer = collector.getMockServer();
+        int nTries = 0;
+        boolean bTestComplete = false;
+        do {
+            try {
+                nTries++;
+                BuildService.BuildServiceConfig config = defaultConfig.build();
+                WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, true, 50, true, true);
+                OpenShiftMockServer mockServer = collector.getMockServer();
 
-        OpenShiftClient client = mockServer.createOpenShiftClient();
-        OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
-        service.build(image);
+                OpenShiftClient client = mockServer.createOpenShiftClient();
+                OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
+                service.build(image);
 
-        assertTrue(mockServer.getRequestCount() > 8);
-        collector.assertEventsRecordedInOrder("build-config-check", "patch-build-config", "pushed");
-        collector.assertEventsNotRecorded("new-build-config");
+                assertTrue(mockServer.getRequestCount() > 8);
+                collector.assertEventsRecordedInOrder("build-config-check", "patch-build-config", "pushed");
+                collector.assertEventsNotRecorded("new-build-config");
+                bTestComplete = true;
+            } catch (Fabric8ServiceException exception) {
+                Throwable rootCause = getRootCause(exception);
+                logger.warn("A problem encountered while running test {}, retrying..", exception.getMessage());
+                // Let's wait for a while, and then retry again
+                if (rootCause != null && rootCause instanceof IOException) {
+                    continue;
+                }
+            }
+        } while (nTries < MAX_TIMEOUT_RETRIES && !bTestComplete);
     }
 
     @Test
     public void checkTarPackage() throws Exception {
-        BuildService.BuildServiceConfig config = defaultConfig.build();
-        WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, true, 50, true, true);
-        OpenShiftMockServer mockServer = collector.getMockServer();
+        int nTries = 0;
+        boolean bTestComplete = false;
+        do {
+            try {
+                nTries++;
+                BuildService.BuildServiceConfig config = defaultConfig.build();
+                WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, true, 50, true, true);
+                OpenShiftMockServer mockServer = collector.getMockServer();
 
-        OpenShiftClient client = mockServer.createOpenShiftClient();
-        final OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
+                OpenShiftClient client = mockServer.createOpenShiftClient();
+                final OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
 
-        ImageConfiguration imageWithEnv = new ImageConfiguration.Builder(image)
-                .buildConfig(new BuildImageConfiguration.Builder(image.getBuildConfiguration())
-                        .env(Collections.singletonMap("FOO", "BAR"))
-                        .build()
-                ).build();
+                ImageConfiguration imageWithEnv = new ImageConfiguration.Builder(image)
+                        .buildConfig(new BuildImageConfiguration.Builder(image.getBuildConfiguration())
+                                .env(Collections.singletonMap("FOO", "BAR"))
+                                .build()
+                        ).build();
 
-        service.createBuildArchive(imageWithEnv);
+                service.createBuildArchive(imageWithEnv);
 
-        final List<ArchiverCustomizer> customizer = new LinkedList<>();
-        new Verifications() {{
-            archiveService.createDockerBuildArchive(withInstanceOf(ImageConfiguration.class), withInstanceOf(MojoParameters.class), withCapture(customizer));
+                final List<ArchiverCustomizer> customizer = new LinkedList<>();
+                new Verifications() {{
+                    archiveService.createDockerBuildArchive(withInstanceOf(ImageConfiguration.class), withInstanceOf(MojoParameters.class), withCapture(customizer));
 
-            assertTrue(customizer.size() == 1);
-        }};
+                    assertTrue(customizer.size() == 1);
+                }};
 
-        customizer.get(0).customize(tarArchiver);
+                customizer.get(0).customize(tarArchiver);
 
-        final List<File> file = new LinkedList<>();
-        new Verifications() {{
-            String path;
-            tarArchiver.addFile(withCapture(file), path = withCapture());
+                final List<File> file = new LinkedList<>();
+                new Verifications() {{
+                    String path;
+                    tarArchiver.addFile(withCapture(file), path = withCapture());
 
-            assertEquals(".s2i/environment", path);
-        }};
+                    assertEquals(".s2i/environment", path);
+                }};
 
-        assertEquals(1, file.size());
-        List<String> lines;
-        try (FileReader reader = new FileReader(file.get(0))) {
-            lines = IOUtils.readLines(reader);
-        }
-        assertTrue(lines.contains("FOO=BAR"));
+                assertEquals(1, file.size());
+                List<String> lines;
+                try (FileReader reader = new FileReader(file.get(0))) {
+                    lines = IOUtils.readLines(reader);
+                }
+                assertTrue(lines.contains("FOO=BAR"));
+                bTestComplete = true;
+            } catch (Fabric8ServiceException exception) {
+                Throwable rootCause = getRootCause(exception);
+                logger.warn("A problem encountered while running test {}, retrying..", exception.getMessage());
+                // Let's wait for a while, and then retry again
+                if (rootCause != null && rootCause instanceof IOException) {
+                    continue;
+                }
+            }
+        } while (nTries < MAX_TIMEOUT_RETRIES && !bTestComplete);
     }
 
     protected WebServerEventCollector<OpenShiftMockServer> createMockServer(BuildService.BuildServiceConfig config, boolean success, long buildDelay, boolean buildConfigExists, boolean
