@@ -192,6 +192,10 @@ public class BaseBoosterIT {
         return repository;
     }
 
+    protected String getCurrentFMPVersion() throws Exception{
+        return readPomModelFromFile(new File("pom.xml")).getVersion();
+    }
+
     protected void runEmbeddedMavenBuild(Repository sampleRepository, String goals, String profiles) {
         String baseDir = sampleRepository.getWorkTree().getAbsolutePath();
         EmbeddedMaven.forProject(baseDir + "/pom.xml")

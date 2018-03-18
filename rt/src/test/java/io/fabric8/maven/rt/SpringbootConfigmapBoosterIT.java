@@ -35,7 +35,7 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
 
     private final String TESTSUITE_CONFIGMAP_NAME = "app-config";
 
-    private final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy -DskipTests", EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
+    private final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy -DskipTests -Dfabric8-maven-plugin.version=" , EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
 
     private final String TEST_ENDPOINT = "/api/greeting";
 
@@ -45,13 +45,15 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
 
     @Test
     public void deploy_springboot_app_once() throws Exception {
+
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH);
 
         createViewRoleToServiceAccount();
         createConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Hello World from a ConfigMap!");
 
-        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL + getCurrentFMPVersion(), EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
         waitAfterDeployment(false);
+
         assertApplication(false);
 
         openShiftClient.configMaps().inNamespace(testsuiteNamespace).withName(TESTSUITE_CONFIGMAP_NAME).delete();
@@ -59,6 +61,7 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
 
     @Test
     public void redeploy_springboot_app() throws Exception {
+
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH);
 
         createConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Hello World from a ConfigMap!");
@@ -68,7 +71,7 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
         editConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Bonjour World from a ConfigMap!");
 
         // 2. Re-Deployment
-        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL + getCurrentFMPVersion(), EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
         waitAfterDeployment(true);
         assertApplication(true);
 
