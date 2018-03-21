@@ -18,9 +18,11 @@ package io.fabric8.maven.rt;
 
 import io.fabric8.openshift.api.model.Route;
 import okhttp3.Response;
+import org.apache.http.HttpStatus;
 import org.eclipse.jgit.lib.Repository;
 import org.json.JSONObject;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -69,8 +71,8 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
         addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, fmpConfigurationFile);
 
         // 2. Re-Deployment
-        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
         editConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Bonjour World from a ConfigMap!");
+        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
         waitAfterDeployment(true);
         assertApplication(true);
 
@@ -104,10 +106,17 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
     }
 
     private void assertApplicationEndpoint(String key, String value) throws Exception {
+        int nTries = 0;
+        Response readResponse = null;
+        String responseContent = null;
         Route applicationRoute = getApplicationRouteWithName(testsuiteRepositoryArtifactId);
         String hostUrl = applicationRoute.getSpec().getHost() + TEST_ENDPOINT;
-        Response response = makeHttpRequest(HttpRequestType.GET, "http://" + hostUrl, null);
-        String responseContent = new JSONObject(response.body().string()).getString(key);
+        do {
+            readResponse = makeHttpRequest(HttpRequestType.GET, "http://" + hostUrl, null);
+            responseContent = new JSONObject(readResponse.body().string()).getString(key);
+            nTries++;
+            TimeUnit.SECONDS.sleep(10);
+        } while(nTries < 3 && readResponse.code() != HttpStatus.SC_OK);
 
         if (!responseContent.equals(value))
             throw new AssertionError(String.format("Actual : %s, Expected : %s", responseContent, value));

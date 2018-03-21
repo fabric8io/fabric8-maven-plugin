@@ -1,3 +1,4 @@
+# Fabric8 Maven Plugin Regression tests
 
 The core directory for fabric8-maven-plugin regression tests
 
@@ -15,16 +16,15 @@ maven plugin, it would be a bit easier for the maintainers to find out
   or maybe by plain Kubernetes Client(asserting resources, labels etc)
 * Redeploy the application and re-test; to check redeployment scenario.
 
-== Travis CI Setup for regression-tests ==
+## Circle CI Setup for regression-tests
 These tests only run in a particular build profile( See rt/pom.xml).These
  are intended to run on each pull request. So we basically spin off a 
- live OpenShift cluster in order to test. See .travis.yml in project's 
-root directory, for Travis setup which basically invokes a shell script 
-(located in  ./rt/src/main/resources/scripts/prepare-test-environment.sh)
-, to spin of various versions of OpenShift for tests.
+ live OpenShift cluster in order to test. See .circle/config.yml in project's
+root directory, for CircleCI v2 setup which basically invokes a shell script
+in each of it's job, to spin of various versions of OpenShift(namely 3.6.0,
+3.6.1, 3.7.0 and 3.7.1) for tests.
 
-== FUTURE WORK ==
-* Add Support for OpenShift v3.7.0: Right now these tests seem to be failing on OpenShift v3.7.0, so it would be nice if the related build issues get fixed.
-
-
-
+## Future Work
+* Improve build time of these regression tests
+* Add support for Openshift v3.9.x
+* Add support for newer stable Openshift versions

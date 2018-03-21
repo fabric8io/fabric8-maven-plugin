@@ -64,6 +64,8 @@ public class BaseBoosterIT {
 
     protected final String fmpConfigurationFile = "/fmp-plugin-config.xml";
 
+    protected final int APPLICATION_POD_WAIT_POLLS = 400;
+
     protected OpenShiftClient openShiftClient;
 
     protected final static Logger logger = Logger.getLogger(BaseBoosterIT.class.getSimpleName());
@@ -346,7 +348,7 @@ public class BaseBoosterIT {
 
         int nPolls = 0;
         // Keep polling till 5 minutes
-        while (nPolls < 60) {
+        while (nPolls < APPLICATION_POD_WAIT_POLLS) {
             PodList podList = openShiftClient.pods().withLabel("app", testsuiteRepositoryArtifactId).list();
             for (Pod pod : podList.getItems()) {
                 logger.info("waitTillApplicationPodStarts() -> Pod : " + pod.getMetadata().getName() + ", isReady : " + KubernetesHelper.isPodReady(pod));
@@ -356,7 +358,7 @@ public class BaseBoosterIT {
                     return;
                 }
             }
-            TimeUnit.SECONDS.sleep(5);
+            TimeUnit.SECONDS.sleep(10);
             nPolls++;
         }
         throw new AssertionError("Pod wait timeout! Could not find application pod for " + testsuiteRepositoryArtifactId);
@@ -377,7 +379,7 @@ public class BaseBoosterIT {
 
         int nPolls = 0;
         // Keep polling till 5 minutes
-        while (nPolls < 120) {
+        while (nPolls < APPLICATION_POD_WAIT_POLLS) {
             PodList podList = openShiftClient.pods().withLabel("app", testsuiteRepositoryArtifactId).list();
             for (Pod pod : podList.getItems()) {
                 logger.info("waitTillApplicationPodStarts(" + key + ", " + value + ") -> Pod : "
@@ -395,7 +397,7 @@ public class BaseBoosterIT {
                 }
             }
             nPolls++;
-            TimeUnit.SECONDS.sleep(5);
+            TimeUnit.SECONDS.sleep(10);
         }
         throw new AssertionError("Pod wait timeout! Could not find application pod for " + testsuiteRepositoryArtifactId);
     }
