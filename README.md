@@ -114,6 +114,32 @@ The full documentation can be found in the [User Manual](http://maven.fabric8.io
   * **Enrichers** extend the Kubernetes / OpenShift resource descriptors by extra information like SCM labels and can add default objects like Services.
   * Generators and Enrichers can be individually configured and combined into *profiles*
 
+### OpenShift and Kubernetes Compatibility
+
+##### OpenShift
+
+|     FMP     | OpenShift 3.7.0  | OpenShift 3.6.0  | OpenShift 3.5.0  | OpenShift 1.4.1  |
+|-------------|------------------|------------------|------------------|------------------|
+| FMP 3.5.38  |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.37  |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.36  |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.35  |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.34  |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.33  |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.32  |        ✓         |        ✓         |        ✓         |        ✓         |
+
+##### Kubernetes
+
+|     FMP     | Kubernetes 1.9.0 | Kubernetes 1.8.0 | Kubernetes 1.7.0 | Kubernetes 1.6.0 | Kubernetes 1.5.1 | Kubernetes 1.4.0 |
+|-------------|------------------|------------------|------------------|------------------|------------------|------------------|
+| FMP 3.5.38  |        ✓         |        ✓         |        ✓         |        ✓         |        ✓         |        ✓         |
+| FMP 3.5.37  |        ✓         |        ✓         |        ✓         |        ✓         |        ✓         |        ✓         |
+| FMP 3.5.36  |        ✓         |        ✓         |        ✓         |        ✓         |        ✓         |        ✓         |
+| FMP 3.5.35  |        ✓         |        ✓         |        ✓         |        ✓         |        ✓         |        ✓         |
+| FMP 3.5.34  |        ✓         |        ✓         |        ✓         |        ✓         |        ✓         |        ✓         |
+| FMP 3.5.33  |        ✓         |        ✓         |        ✓         |        ✓         |        ✓         |        ✓         |
+| FMP 3.5.32  |        ✓         |        ✓         |        ✓         |        ✓         |        ✓         |        ✓         |
+
 ### Documentation and Support
 
 * [User Manual](http://maven.fabric8.io) [[PDF](https://fabric8io.github.io/fabric8-maven-plugin/fabric8-maven-plugin.pdf)]
