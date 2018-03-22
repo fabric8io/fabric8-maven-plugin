@@ -187,7 +187,7 @@ Resource goal also validates the generated resource descriptors using API specif
 | false
 |===
 
-[[resource-route-geneartion]]
+[[resource-route-generation]]
 === Route Generation
 
 If you hit fabric8:resource goal, it will also generate route along with service for OpenShift. If you do not want to generate route.yml, you can do the same using the below configuration.
@@ -234,6 +234,14 @@ spec:
 ----
 
 In case both the label in the resource fragment and also the flag is set then precedence will be given to flag. Like you have set the label to true and flag to false then it will not generate route.yml because flag is set to false.
+
+[[disable-automatic-deployments]]
+=== Disable Automatic Deployments
+
+.Automatic Trigger Configuration
+[cols="1.6.1"]
+|===
+| Configuration | Description | Default
 
 | *fabric8.openshift.enableAutomaticTrigger*
 | If the value is set to `false` then automatic deployments would be disabled.
