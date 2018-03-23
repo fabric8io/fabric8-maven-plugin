@@ -147,7 +147,7 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                          */
                         List<Container> containers = template.getSpec().getContainers();
                         for (Integer nIndex = 0; nIndex < containers.size(); nIndex++) {
-                            containers.get(nIndex).setImage(" ");
+                            containers.get(nIndex).setImage("");
                         }
                         template.getSpec().setContainers(containers);
                         specBuilder.withTemplate(template);
