@@ -31,7 +31,7 @@ import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 public class SpringbootCrudBoosterIT extends BaseBoosterIT {
     private final String SPRING_BOOT_CRUD_BOOSTER_GIT = "https://github.com/snowdrop/spring-boot-crud-booster.git";
 
-    private final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy -Dfabric8.openshift.trimImageInContainerSpec=true -DskipTests", EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
+    private final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy -DskipTests", EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
 
     private final String TEST_ENDPOINT = "/api/fruits";
 
@@ -46,11 +46,8 @@ public class SpringbootCrudBoosterIT extends BaseBoosterIT {
         Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CRUD_BOOSTER_GIT, RELATIVE_POM_PATH);
         deployDatabaseUsingCLI();
 
-        addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, "deploymentType", "deployOnce", fmpConfigurationFile);
-
         deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
-        waitTillApplicationPodStarts("deploymentType", "deployOnce");
-        TimeUnit.SECONDS.sleep(20);
+        waitAfterDeployment(false);
         assertApplication();
     }
 

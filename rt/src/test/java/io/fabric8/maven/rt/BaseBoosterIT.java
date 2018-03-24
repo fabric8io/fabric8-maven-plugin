@@ -42,7 +42,6 @@ import org.jboss.shrinkwrap.resolver.api.maven.embedded.EmbeddedMaven;
 import org.json.JSONObject;
 
 import java.io.*;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -64,9 +63,9 @@ public class BaseBoosterIT {
 
     protected final String fmpConfigurationFile = "/fmp-plugin-config.xml";
 
-    protected final int APPLICATION_POD_WAIT_POLLS = 400;
-
     protected OpenShiftClient openShiftClient;
+
+    protected final int APPLICATION_POD_WAIT_POLLS = 100;
 
     protected final static Logger logger = Logger.getLogger(BaseBoosterIT.class.getSimpleName());
 
@@ -197,6 +196,7 @@ public class BaseBoosterIT {
         String baseDir = sampleRepository.getWorkTree().getAbsolutePath();
         EmbeddedMaven.forProject(baseDir + "/pom.xml")
                 .setGoals(goals)
+                .setQuiet(true)
                 .setProfiles(profiles)
                 .build();
     }
@@ -223,7 +223,7 @@ public class BaseBoosterIT {
      * @return
      * @throws Exception
      */
-    protected Response makeHttpRequest(HttpRequestType requestType, String hostUrl, String params) throws IOException, IllegalStateException {
+    protected Response makeHttpRequest(HttpRequestType requestType, String hostUrl, String params) throws IOException {
         OkHttpClient okHttpClient = new OkHttpClient();
         MediaType json = MediaType.parse("application/json; charset=utf-8");
         params = (params == null ? new JSONObject().toString() : params);
@@ -247,18 +247,12 @@ public class BaseBoosterIT {
                 logger.info("No valid Http request type specified, using GET instread.");
                 request = new Request.Builder().url(hostUrl).get().build();
         }
-
-        // Sometimes nip.io is not up, so handling that case too.
-        try {
-            Response response = okHttpClient.newCall(request).execute();
-            if (logger.isLoggable(Level.INFO)) {
-                logger.info(String.format("[%s] %s %s", requestType.name(), hostUrl, HttpStatus.getCode(response.code())));
-            }
-
-            return response;
-        } catch (UnknownHostException unknownHostException) {
-            throw new IllegalStateException("No Host with name " + hostUrl + "found, maybe nip.io is down!");
+        Response response = okHttpClient.newCall(request).execute();
+        if (logger.isLoggable(Level.INFO)) {
+            logger.info(String.format("[%s] %s %s", requestType.name(), hostUrl, HttpStatus.getCode(response.code())));
         }
+
+        return response;
     }
 
     protected int exec(String command) throws IOException, InterruptedException {
@@ -358,7 +352,7 @@ public class BaseBoosterIT {
                     return;
                 }
             }
-            TimeUnit.SECONDS.sleep(10);
+            TimeUnit.SECONDS.sleep(5);
             nPolls++;
         }
         throw new AssertionError("Pod wait timeout! Could not find application pod for " + testsuiteRepositoryArtifactId);
@@ -397,7 +391,7 @@ public class BaseBoosterIT {
                 }
             }
             nPolls++;
-            TimeUnit.SECONDS.sleep(10);
+            TimeUnit.SECONDS.sleep(5);
         }
         throw new AssertionError("Pod wait timeout! Could not find application pod for " + testsuiteRepositoryArtifactId);
     }
