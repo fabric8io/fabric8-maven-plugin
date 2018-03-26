@@ -3,8 +3,8 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.fabric8/fabric8-maven-plugin/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/io.fabric8/fabric8-maven-plugin/)
 [![Travis](https://secure.travis-ci.org/fabric8io/fabric8-maven-plugin.png)](http://travis-ci.org/fabric8io/fabric8-maven-plugin)
 [![Circle CI](https://circleci.com/gh/fabric8io/fabric8-maven-plugin/tree/master.svg?style=shield)](https://circleci.com/gh/fabric8io/fabric8-maven-plugin/tree/master)
-[![Coverage](https://sonarqube.com/api/badges/measure?key=io.fabric8:fabric8-maven-plugin-build&metric=coverage)](https://sonarqube.com/dashboard?id=io.fabric8%3Afabric8-maven-plugin-build)
-[![Technical Debt](https://sonarqube.com/api/badges/measure?key=io.fabric8:fabric8-maven-plugin-build&metric=sqale_debt_ratio)](https://sonarqube.com/dashboard?id=io.fabric8%3Afabric8-maven-plugin-build)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=io.fabric8%3Afabric8-maven-plugin-build&metric=coverage)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=io.fabric8%3Afabric8-maven-plugin-build&metric=sqale_index)
 [![Dependency Status](https://dependencyci.com/github/fabric8io/fabric8-maven-plugin/badge)](https://dependencyci.com/github/fabric8io/fabric8-maven-plugin)
 
 <p align="center">
