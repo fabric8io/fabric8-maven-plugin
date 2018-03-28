@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.37,</span>
-<span id="revdate">2018-03-27</span>
+<span id="revdate">2018-03-28</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -5610,6 +5610,25 @@ You can force the plugin to add annotations by setting enricher&#8217;s config <
 The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use, and fallback to use <code>HTTP</code> otherwise.</p>
 </div>
 <div class="paragraph">
+<p>The enricher will use the following settings by default:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>readinessProbeInitialDelaySeconds = <code>10</code></p>
+</li>
+<li>
+<p>readinessProbePeriodSeconds = &lt;kubernetes-default&gt;</p>
+</li>
+<li>
+<p>livenessProbeInitialDelaySeconds = <code>180</code></p>
+</li>
+<li>
+<p>livenessProbePeriodSeconds = &lt;kubernetes-default&gt;</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
 <p>These values can be configured by the enricher in the <code>fabric8-maven-plugin</code> configuration as shown below:</p>
 </div>
 <div class="listingblock">
@@ -5632,7 +5651,7 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
           <span class="tag">&lt;enricher&gt;</span>
             <span class="tag">&lt;config&gt;</span>
               <span class="tag">&lt;spring-boot-health-check&gt;</span>
-                <span class="tag">&lt;port&gt;</span>4444<span class="tag">&lt;/port&gt;</span>
+                <span class="tag">&lt;readinessProbeInitialDelaySeconds&gt;</span>30<span class="tag">&lt;/readinessProbeInitialDelaySeconds&gt;</span>
               <span class="tag">&lt;/spring-boot-health-check&gt;</span>
             <span class="tag">&lt;/config&gt;</span>
           <span class="tag">&lt;/enricher&gt;</span>
@@ -6965,7 +6984,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.37<br>
-Last updated 2018-03-27 06:23:25 UTC
+Last updated 2018-03-28 15:19:54 UTC
 </div>
 </div>
 </body>
