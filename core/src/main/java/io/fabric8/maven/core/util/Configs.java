@@ -33,6 +33,10 @@ public class Configs {
         return value != null ? Integer.parseInt(value) : 0;
     }
 
+    public static Integer asInteger(String value) {
+        return value != null ? Integer.parseInt(value) : null;
+    }
+
     public static boolean asBoolean(String value) {
         return value != null ? Boolean.parseBoolean(value) : false;
     }

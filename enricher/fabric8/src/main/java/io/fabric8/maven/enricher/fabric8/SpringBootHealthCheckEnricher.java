@@ -20,6 +20,7 @@ import java.util.Properties;
 
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.core.util.SpringBootUtil;
@@ -33,6 +34,8 @@ import io.fabric8.utils.Strings;
  */
 public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
+    public static final String ENRICHER_NAME = "spring-boot-health-check";
+
     private static final String[] REQUIRED_CLASSES = {
             "org.springframework.boot.actuate.health.HealthIndicator",
             "org.springframework.web.context.support.GenericWebApplicationContext"
@@ -42,25 +45,38 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
     private static final String SCHEME_HTTPS = "HTTPS";
     private static final String SCHEME_HTTP = "HTTP";
 
+    private enum Config implements Configs.Key {
+        readinessProbeInitialDelaySeconds   {{ d = "10"; }},
+        readinessProbePeriodSeconds,
+        livenessProbeInitialDelaySeconds   {{ d = "180"; }},
+        livenessProbePeriodSeconds;
+
+        public String def() { return d; } protected String d;
+    }
+
     public SpringBootHealthCheckEnricher(EnricherContext buildContext) {
-        super(buildContext, "spring-boot-health-check");
+        super(buildContext, ENRICHER_NAME);
     }
 
     @Override
     protected Probe getReadinessProbe() {
-        return discoverSpringBootHealthCheck(10);
+        Integer initialDelay = Configs.asInteger(getConfig(Config.readinessProbeInitialDelaySeconds));
+        Integer period = Configs.asInteger(getConfig(Config.readinessProbePeriodSeconds));
+        return discoverSpringBootHealthCheck(initialDelay, period);
     }
 
     @Override
     protected Probe getLivenessProbe() {
-        return discoverSpringBootHealthCheck(180);
+        Integer initialDelay = Configs.asInteger(getConfig(Config.livenessProbeInitialDelaySeconds));
+        Integer period = Configs.asInteger(getConfig(Config.livenessProbePeriodSeconds));
+        return discoverSpringBootHealthCheck(initialDelay, period);
     }
 
-    protected Probe discoverSpringBootHealthCheck(int initialDelay) {
+    protected Probe discoverSpringBootHealthCheck(Integer initialDelay, Integer period) {
         try {
             if (MavenUtil.hasAllClasses(this.getProject(), REQUIRED_CLASSES)) {
                 Properties properties = SpringBootUtil.getSpringBootApplicationProperties(this.getProject());
-                return buildProbe(properties, initialDelay);
+                return buildProbe(properties, initialDelay, period);
             }
         } catch (Exception ex) {
             log.error("Error while reading the spring-boot configuration", ex);
@@ -68,7 +84,7 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
         return null;
     }
 
-    protected Probe buildProbe(Properties springBootProperties, int initialDelay) {
+    protected Probe buildProbe(Properties springBootProperties, Integer initialDelay, Integer period) {
         SpringBootConfigurationHelper propertyHelper = new SpringBootConfigurationHelper(SpringBootUtil.getSpringBootVersion(getContext().getProject()));
         Integer managementPort = PropertiesHelper.getInteger(springBootProperties, propertyHelper.getManagementPortPropertyKey());
         boolean usingManagementPort = managementPort != null;
@@ -97,9 +113,17 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
         }
 
         // lets default to adding a spring boot actuator health check
-        return new ProbeBuilder().
-                withNewHttpGet().withNewPort(port).withPath(prefix + actuatorBasePath + "/health").withScheme(scheme).endHttpGet().
-                withInitialDelaySeconds(initialDelay).build();
+        ProbeBuilder probeBuilder = new ProbeBuilder().
+                withNewHttpGet().withNewPort(port).withPath(prefix + actuatorBasePath + "/health").withScheme(scheme).endHttpGet();
+
+        if (initialDelay != null) {
+            probeBuilder = probeBuilder.withInitialDelaySeconds(initialDelay);
+        }
+        if (period != null) {
+            probeBuilder = probeBuilder.withPeriodSeconds(period);
+        }
+
+        return probeBuilder.build();
     }
 
 }

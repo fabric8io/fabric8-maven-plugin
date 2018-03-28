@@ -12,6 +12,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 
 ###3.5.39
 * Feature 1206: Added support for spring-boot 2 health endpoint
+* Feature 1171: Added configuration options for delay and period on spring-boot health check probes
 * Fix 1173: disable the Prometheus agent for WildFly Swarm applications, because it uses Java logging too early; also reenable the Jolokia agent, which was disabled due to the same problem but was fixed a long time ago
 * Fix 1231: make helm artifact extension configurable with default value "tar.gz"
 
