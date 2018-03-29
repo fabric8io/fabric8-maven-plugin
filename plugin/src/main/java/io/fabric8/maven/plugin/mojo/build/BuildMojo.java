@@ -283,7 +283,9 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .attacher(new BuildService.BuildServiceConfig.Attacher() {
                     @Override
                     public void attach(String classifier, File destFile) {
-                        projectHelper.attachArtifact(project, "yml", classifier, destFile);
+                        if (destFile.exists()) {
+                            projectHelper.attachArtifact(project, "yml", classifier, destFile);
+                        }
                     }
                 })
                 .enricherTask(new Task<KubernetesListBuilder>() {
