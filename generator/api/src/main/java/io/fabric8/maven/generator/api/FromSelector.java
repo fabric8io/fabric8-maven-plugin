@@ -69,6 +69,10 @@ public abstract class FromSelector {
         MavenProject project = context.getProject();
         Plugin plugin = project.getPlugin("io.fabric8:fabric8-maven-plugin");
         if (plugin == null) {
+            // This plugin might be repackaged.
+            plugin = project.getPlugin("org.jboss.redhat-fuse:fabric8-maven-plugin");
+        }
+        if (plugin == null) {
             // Can happen if not configured in a build section but only in a dependency management section
             return false;
         }
