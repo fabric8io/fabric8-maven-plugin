@@ -22,14 +22,21 @@ import org.apache.http.HttpStatus;
 import org.eclipse.jgit.lib.Repository;
 import org.json.JSONObject;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
 public class SpringbootCrudBoosterIT extends BaseBoosterIT {
-    private final String SPRING_BOOT_CRUD_BOOSTER_GIT = "https://github.com/snowdrop/spring-boot-crud-booster.git";
+
+    private final String SPRING_BOOT_CRUD_BOOSTER_BOOSTERYAMLURL = "https://raw.githubusercontent.com/fabric8-launcher/launcher-booster-catalog/master/spring-boot/1.5.10-redhat/crud/booster.yaml";
+
+    private String SPRING_BOOT_CRUD_BOOSTER_GIT;
+
+    private String RELEASED_VERSION_TAG;
 
     private final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy -DskipTests", EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
 
@@ -41,9 +48,21 @@ public class SpringbootCrudBoosterIT extends BaseBoosterIT {
 
     private final String ANNOTATION_KEY = "springboot-crud-testKey", ANNOTATION_VALUE = "springboot-crud-testValue";
 
+    private final ReadYaml readYaml = new ReadYaml();
+
+    @Before
+    public void set_repo_tag() throws IOException {
+
+        BoosterYaml boosterYaml = readYaml.readYaml(SPRING_BOOT_CRUD_BOOSTER_BOOSTERYAMLURL);
+        SPRING_BOOT_CRUD_BOOSTER_GIT = boosterYaml.getSource().getGitSource().getUrl();
+        RELEASED_VERSION_TAG = boosterYaml.getSource().getGitSource().getRef();
+
+    }
+
     @Test
     public void deploy_springboot_app_once() throws Exception {
-        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CRUD_BOOSTER_GIT, RELATIVE_POM_PATH);
+
+        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CRUD_BOOSTER_GIT, RELATIVE_POM_PATH, RELEASED_VERSION_TAG);
         deployDatabaseUsingCLI();
 
         deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
@@ -53,7 +72,8 @@ public class SpringbootCrudBoosterIT extends BaseBoosterIT {
 
     @Test
     public void redeploy_springboot_app() throws Exception {
-        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CRUD_BOOSTER_GIT, RELATIVE_POM_PATH);
+
+        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CRUD_BOOSTER_GIT, RELATIVE_POM_PATH, RELEASED_VERSION_TAG);
         deployDatabaseUsingCLI();
 
         // Make some changes in ConfigMap and rollout
