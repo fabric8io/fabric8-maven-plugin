@@ -36,6 +36,7 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.codehaus.plexus.util.xml.Xpp3DomBuilder;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.jboss.shrinkwrap.resolver.api.maven.embedded.EmbeddedMaven;
@@ -75,9 +76,11 @@ public class BaseBoosterIT {
         GET, POST, PUT, DELETE;
     };
 
-    private Repository cloneRepositoryUsingHttp(String repositoryUrl) throws IOException, GitAPIException {
+    private Repository cloneRepositoryUsingHttp(String repositoryUrl, String releasedVersionTag) throws IOException, GitAPIException {
         gitCloner = new GitCloner(repositoryUrl);
-        return gitCloner.cloneRepositoryToTempFolder();
+        Repository repository =  gitCloner.cloneRepositoryToTempFolder();
+        Git.wrap(repository).checkout().setCreateBranch(true).setName("test-branch").setStartPoint("tags/" +releasedVersionTag).call();
+        return repository;
     }
 
     private void modifyPomFileToProjectVersion(Repository aRepository, String relativePomPath) throws IOException, XmlPullParserException {
@@ -184,10 +187,11 @@ public class BaseBoosterIT {
         model.getArtifactId();
     }
 
-    protected Repository setupSampleTestRepository(String repositoryUrl, String relativePomPath) throws IOException, GitAPIException, XmlPullParserException {
+    protected Repository setupSampleTestRepository(String repositoryUrl, String relativePomPath, String releasedVersionTag) throws IOException, GitAPIException, XmlPullParserException {
         openShiftClient = new DefaultOpenShiftClient(new ConfigBuilder().build());
         testsuiteNamespace = openShiftClient.getNamespace();
-        Repository repository = cloneRepositoryUsingHttp(repositoryUrl);
+        Repository repository = cloneRepositoryUsingHttp(repositoryUrl, releasedVersionTag);
+
         modifyPomFileToProjectVersion(repository, relativePomPath);
         return repository;
     }

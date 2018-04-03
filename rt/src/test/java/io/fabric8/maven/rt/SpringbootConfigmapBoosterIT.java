@@ -21,8 +21,10 @@ import okhttp3.Response;
 import org.eclipse.jgit.lib.Repository;
 import org.json.JSONObject;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +33,11 @@ import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
 public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
 
-    private final String SPRING_BOOT_CONFIGMAP_BOOSTER_GIT = "https://github.com/snowdrop/spring-boot-configmap-booster.git";
+    private final String SPRING_BOOT_CONFIGMAP_BOOSTER_BOOSTERYAMLURL = "https://raw.githubusercontent.com/fabric8-launcher/launcher-booster-catalog/master/spring-boot/1.5.10-redhat/configmap/booster.yaml";
+
+    private String SPRING_BOOT_CONFIGMAP_BOOSTER_GIT;
+
+    private String RELEASED_VERSION_TAG;
 
     private final String TESTSUITE_CONFIGMAP_NAME = "app-config";
 
@@ -43,10 +49,22 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
 
     private final String ANNOTATION_KEY = "springboot-configmap-testKey", ANNOTATION_VALUE = "springboot-configmap-testValue";
 
+    private final ReadYaml readYaml = new ReadYaml();
+
+    @Before
+    public void set_repo_tag() throws IOException {
+
+        BoosterYaml boosterYaml = readYaml.readYaml(SPRING_BOOT_CONFIGMAP_BOOSTER_BOOSTERYAMLURL);
+        SPRING_BOOT_CONFIGMAP_BOOSTER_GIT = boosterYaml.getSource().getGitSource().getUrl();
+        RELEASED_VERSION_TAG = boosterYaml.getSource().getGitSource().getRef();
+
+    }
+
     @Test
     public void deploy_springboot_app_once() throws Exception {
 
-        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH);
+
+        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH, RELEASED_VERSION_TAG);
 
         createViewRoleToServiceAccount();
         createConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Hello World from a ConfigMap!");
@@ -62,7 +80,9 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
     @Test
     public void redeploy_springboot_app() throws Exception {
 
-        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH);
+
+        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH, RELEASED_VERSION_TAG);
+
 
         createConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Hello World from a ConfigMap!");
         // Make some changes in ConfigMap and rollout

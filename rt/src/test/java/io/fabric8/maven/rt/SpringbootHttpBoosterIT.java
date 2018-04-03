@@ -16,17 +16,24 @@
 
 package io.fabric8.maven.rt;
 
-import io.fabric8.openshift.api.model.*;
+import io.fabric8.openshift.api.model.Route;
+
+import java.io.IOException;
 import org.apache.http.HttpStatus;
 import org.eclipse.jgit.lib.Repository;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
 public class SpringbootHttpBoosterIT extends BaseBoosterIT {
 
-    private final String SPRING_BOOT_HTTP_BOOSTER_GIT = "https://github.com/snowdrop/spring-boot-http-booster.git";
+    private final String SPRING_BOOT_HTTP_BOOSTER_BOOSTERYAMLURL = "https://raw.githubusercontent.com/fabric8-launcher/launcher-booster-catalog/master/spring-boot/1.5.10-redhat/rest-http/booster.yaml";
+
+    private String SPRING_BOOT_HTTP_BOOSTER_GIT;
+
+    private String RELEASED_VERSION_TAG;
 
     private final String ANNOTATION_KEY = "testKey", ANNOTATION_VALUE = "testValue";
 
@@ -36,9 +43,21 @@ public class SpringbootHttpBoosterIT extends BaseBoosterIT {
 
     private final String RELATIVE_POM_PATH = "/pom.xml";
 
+    private final ReadYaml readYaml = new ReadYaml();
+
+    @Before
+    public void set_repo_tag() throws IOException{
+
+        BoosterYaml boosterYaml = readYaml.readYaml(SPRING_BOOT_HTTP_BOOSTER_BOOSTERYAMLURL);
+        SPRING_BOOT_HTTP_BOOSTER_GIT = boosterYaml.getSource().getGitSource().getUrl();
+        RELEASED_VERSION_TAG = boosterYaml.getSource().getGitSource().getRef();
+
+    }
+
     @Test
     public void deploy_springboot_app_once() throws Exception {
-        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_HTTP_BOOSTER_GIT, RELATIVE_POM_PATH);
+
+        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_HTTP_BOOSTER_GIT, RELATIVE_POM_PATH, RELEASED_VERSION_TAG);
 
         deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
         waitUntilDeployment(false);
@@ -47,7 +66,8 @@ public class SpringbootHttpBoosterIT extends BaseBoosterIT {
 
     @Test
     public void redeploy_springboot_app() throws Exception {
-        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_HTTP_BOOSTER_GIT, RELATIVE_POM_PATH);
+
+        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_HTTP_BOOSTER_GIT, RELATIVE_POM_PATH, RELEASED_VERSION_TAG);
 
         // change the source code
         updateSourceCode(testRepository, RELATIVE_POM_PATH);
