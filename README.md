@@ -1,5 +1,6 @@
 ## fabric8-maven-plugin
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.fabric8/fabric8-maven-plugin/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/io.fabric8/fabric8-maven-plugin/)
 [![Travis](https://secure.travis-ci.org/fabric8io/fabric8-maven-plugin.png)](http://travis-ci.org/fabric8io/fabric8-maven-plugin)
 [![Circle CI](https://circleci.com/gh/fabric8io/fabric8-maven-plugin/tree/master.svg?style=shield)](https://circleci.com/gh/fabric8io/fabric8-maven-plugin/tree/master)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=io.fabric8%3Afabric8-maven-plugin-build&metric=coverage)](https://sonarcloud.io/dashboard?id=io.fabric8%3Afabric8-maven-plugin-build)
