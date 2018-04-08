@@ -249,7 +249,7 @@ public class BaseGeneratorTest {
 
         setupNameContext(null, null);
         generator = createGenerator(null);
-        assertEquals("%g/%a:%t", generator.getImageName());
+        assertEquals("%g/%a:%l", generator.getImageName());
 
     }
 
