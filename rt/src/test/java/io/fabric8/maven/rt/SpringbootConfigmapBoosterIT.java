@@ -18,11 +18,9 @@ package io.fabric8.maven.rt;
 
 import io.fabric8.openshift.api.model.Route;
 import okhttp3.Response;
-import org.apache.http.HttpStatus;
 import org.eclipse.jgit.lib.Repository;
 import org.json.JSONObject;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -37,7 +35,7 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
 
     private final String TESTSUITE_CONFIGMAP_NAME = "app-config";
 
-    private final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy -Dfabric8.openshift.trimImageInContainerSpec=true -DskipTests", EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
+    private final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy -DskipTests", EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
 
     private final String TEST_ENDPOINT = "/api/greeting";
 
@@ -51,11 +49,9 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
 
         createViewRoleToServiceAccount();
         createConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Hello World from a ConfigMap!");
-        addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, "deploymentType", "deployOnce", fmpConfigurationFile);
 
         deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
-        waitTillApplicationPodStarts("deploymentType", "deployOnce");
-        TimeUnit.SECONDS.sleep(20);
+        waitAfterDeployment(false);
         assertApplication(false);
 
         openShiftClient.configMaps().inNamespace(testsuiteNamespace).withName(TESTSUITE_CONFIGMAP_NAME).delete();
@@ -69,9 +65,9 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
         // Make some changes in ConfigMap and rollout
         updateSourceCode(testRepository, RELATIVE_POM_PATH);
         addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, fmpConfigurationFile);
+        editConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Bonjour World from a ConfigMap!");
 
         // 2. Re-Deployment
-        editConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Bonjour World from a ConfigMap!");
         deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
         waitAfterDeployment(true);
         assertApplication(true);
@@ -106,17 +102,10 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
     }
 
     private void assertApplicationEndpoint(String key, String value) throws Exception {
-        int nTries = 0;
-        Response readResponse = null;
-        String responseContent = null;
         Route applicationRoute = getApplicationRouteWithName(testsuiteRepositoryArtifactId);
         String hostUrl = applicationRoute.getSpec().getHost() + TEST_ENDPOINT;
-        do {
-            readResponse = makeHttpRequest(HttpRequestType.GET, "http://" + hostUrl, null);
-            responseContent = new JSONObject(readResponse.body().string()).getString(key);
-            nTries++;
-            TimeUnit.SECONDS.sleep(10);
-        } while(nTries < 3 && readResponse.code() != HttpStatus.SC_OK);
+        Response response = makeHttpRequest(HttpRequestType.GET, "http://" + hostUrl, null);
+        String responseContent = new JSONObject(response.body().string()).getString(key);
 
         if (!responseContent.equals(value))
             throw new AssertionError(String.format("Actual : %s, Expected : %s", responseContent, value));
