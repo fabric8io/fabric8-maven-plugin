@@ -117,15 +117,15 @@ The full documentation can be found in the [User Manual](http://maven.fabric8.io
 
 ##### OpenShift
 
-|     FMP     | OpenShift 3.7.0  | OpenShift 3.6.0  | OpenShift 3.5.0  | OpenShift 1.4.1  |
-|-------------|------------------|------------------|------------------|------------------|
-| FMP 3.5.38  |        ✓         |        ✓         |        x         |        x         |
-| FMP 3.5.37  |        ✓         |        ✓         |        x         |        x         |
-| FMP 3.5.36  |        ✓         |        ✓         |        x         |        x         |
-| FMP 3.5.35  |        ✓         |        ✓         |        x         |        x         |
-| FMP 3.5.34  |        ✓         |        ✓         |        x         |        x         |
-| FMP 3.5.33  |        ✓         |        ✓         |        x         |        x         |
-| FMP 3.5.32  |        ✓         |        ✓         |        ✓         |        ✓         |
+|     FMP     | OpenShift 3.9.0  | OpenShift 3.7.0  | OpenShift 3.6.0  | OpenShift 3.5.0  | OpenShift 1.4.1  |
+|-------------|------------------|------------------|------------------|------------------|------------------|
+| FMP 3.5.38  |        ✓         |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.37  |        ✓         |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.36  |        ✓         |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.35  |        ✓         |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.34  |        ✓         |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.33  |        ✓         |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.32  |        ✓         |        ✓         |        ✓         |        ✓         |        ✓         |
 
 ##### Kubernetes
 
@@ -156,5 +156,4 @@ The full documentation can be found in the [User Manual](http://maven.fabric8.io
 There are the links of the CircleCI and Jenkins for the tests which run for every new Pull Request. You can view all the recent builds also.
 
 * [Travis: build](http://travis-ci.org/fabric8io/fabric8-maven-plugin)
-* [CircleCI: Regression Tests](https://circleci.com/gh/fabric8io/fabric8-maven-plugin/tree/master)
 * [Jenkins: Unit Tests](https://ci.fabric8.io/job/fabric8-maven-plugin-pullreq/)
