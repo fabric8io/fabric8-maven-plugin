@@ -374,31 +374,30 @@ public class OpenshiftBuildService implements BuildService {
 
     private void waitForOpenShiftBuildToComplete(OpenShiftClient client, Build build) throws MojoExecutionException, InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
+        final CountDownLatch readyLatch = new CountDownLatch(1);
         final CountDownLatch logTerminateLatch = new CountDownLatch(1);
         final String buildName = KubernetesHelper.getName(build);
-
-        final AtomicReference<Build> buildHolder = new AtomicReference<>();
+        final String buildPodName = buildName + "-build";
 
         // Don't query for logs directly, Watch over the build pod:
-        waitUntilPodIsReady(buildName + "-build", 20, log);
-        log.info("Waiting for build " + buildName + " to complete...");
-        try (LogWatch logWatch = client.pods().withName(buildName + "-build").watchLog()) {
-            KubernetesClientUtil.printLogsAsync(logWatch,
-                    "Failed to tail build log", logTerminateLatch, log);
-            Watcher<Build> buildWatcher = getBuildWatcher(latch, buildName, buildHolder);
-            try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {
+        Watcher<Pod> buildWatcher = getBuildWatcher(latch, readyLatch, buildPodName);
+        try (Watch watcher = client.pods().withName(buildPodName).watch(buildWatcher)) {
+            log.info("Waiting for build " + buildName + " to complete...");
+            waitForBuildEvent(readyLatch);
+            try (LogWatch logWatch = client.pods().withName(buildName + "-build").watchLog()) {
+                KubernetesClientUtil.printLogsAsync(logWatch,
+                        "Failed to tail build log", logTerminateLatch, log);
                 // Check if the build is already finished to avoid waiting indefinitely
                 Build lastBuild = client.builds().withName(buildName).get();
                 String lastStatus = KubernetesResourceUtil.getBuildStatusPhase(lastBuild);
                 if (Builds.isFinished(lastStatus)) {
                     log.debug("Build %s is already finished", buildName);
-                    buildHolder.set(lastBuild);
                     latch.countDown();
                 }
 
-                waitUntilBuildFinished(latch);
+                waitForBuildEvent(latch);
                 logTerminateLatch.countDown();
-                build = buildHolder.get();
+                build = client.builds().withName(buildName).get();
                 String status = KubernetesResourceUtil.getBuildStatusPhase(build);
                 if (Builds.isFailed(status) || Builds.isCancelled(status)) {
                     throw new MojoExecutionException("OpenShift Build " + buildName + ": " + KubernetesResourceUtil.getBuildStatusReason(build));
@@ -408,36 +407,7 @@ public class OpenshiftBuildService implements BuildService {
         }
     }
 
-    /**
-     * A Simple utility function to watch over pod until it gets ready
-     *
-     * @param podName Name of the pod
-     * @param nAwaitTimeout Time in seconds upto which pod must be watched
-     * @param log Logger object
-     * @throws InterruptedException
-     */
-    private void waitUntilPodIsReady(String podName, int nAwaitTimeout, final Logger log) throws InterruptedException {
-        final CountDownLatch readyLatch = new CountDownLatch(1);
-        try (Watch watch = client.pods().withName(podName).watch(new Watcher<Pod>() {
-            @Override
-            public void eventReceived(Action action, Pod aPod) {
-                if(KubernetesHelper.isPodReady(aPod)) {
-                    readyLatch.countDown();
-                }
-            }
-
-            @Override
-            public void onClose(KubernetesClientException e) {
-                // Ignore
-            }
-        })) {
-            readyLatch.await(nAwaitTimeout, TimeUnit.SECONDS);
-        } catch (KubernetesClientException | InterruptedException e) {
-            log.error("Could not watch pod", e);
-        }
-    }
-
-    private void waitUntilBuildFinished(CountDownLatch latch) {
+    private void waitForBuildEvent(CountDownLatch latch) {
         while (latch.getCount() > 0L) {
             try {
                 latch.await();
@@ -447,21 +417,23 @@ public class OpenshiftBuildService implements BuildService {
         }
     }
 
-    private Watcher<Build> getBuildWatcher(final CountDownLatch latch, final String buildName, final AtomicReference<Build> buildHolder) {
-        return new Watcher<Build>() {
+    private Watcher<Pod> getBuildWatcher(final CountDownLatch latch, final CountDownLatch readyLatch, final String buildName) {
+        return new Watcher<Pod>() {
 
             String lastStatus = "";
 
             @Override
-            public void eventReceived(Action action, Build build) {
-                buildHolder.set(build);
-                String status = KubernetesResourceUtil.getBuildStatusPhase(build);
-                log.verbose("BuildWatch: Received event %s , build status: %s", action, build.getStatus());
+            public void eventReceived(Action action, Pod buildPod) {
+                String status = KubernetesHelper.getPodStatusText(buildPod);
+                log.verbose("BuildWatch: Received event %s , build status: %s", action, status);
+                if(KubernetesHelper.isPodReady(buildPod)) {
+                    readyLatch.countDown();
+                }
                 if (!lastStatus.equals(status)) {
                     lastStatus = status;
                     log.verbose("Build %s status: %s", buildName, status);
                 }
-                if (Builds.isFinished(status)) {
+                if (status.equals(KubernetesResourceUtil.PodStatusPhase.SUCCESS)) {
                     latch.countDown();
                 }
             }
@@ -477,6 +449,7 @@ public class OpenshiftBuildService implements BuildService {
                     }
                 }
                 latch.countDown();
+                readyLatch.countDown();
             }
         };
     }

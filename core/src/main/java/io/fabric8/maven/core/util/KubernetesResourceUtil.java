@@ -133,6 +133,11 @@ public class KubernetesResourceUtil {
 
     public static final HashSet<Class<?>> SIMPLE_FIELD_TYPES = new HashSet<>();
 
+    public static class PodStatusPhase {
+        public static final String PENDING = "Pending";
+        public static final String SUCCESS = "Succeeded";
+    }
+
     protected static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX";
 
 
