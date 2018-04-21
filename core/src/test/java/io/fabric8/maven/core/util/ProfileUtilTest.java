@@ -42,7 +42,7 @@ public class ProfileUtilTest {
         assertNotNull(is);
         List<Profile> profiles = ProfileUtil.fromYaml(is);
         assertNotNull(profiles);
-        assertEquals(profiles.size(),2);
+        assertEquals(profiles.size(),3);
         Profile profile = profiles.get(0);
         assertEquals("simple", profile.getName());
         ProcessorConfig config = profile.getEnricherConfig();
@@ -124,5 +124,18 @@ public class ProfileUtilTest {
         assertTrue(mergeConfig.use("i2"));
         assertFalse(mergeConfig.use("spring.swarm"));
 
+    }
+
+    @Test
+    public void shouldExtend() throws Exception {
+        Profile aProfile = ProfileUtil.findProfile("minimal", getProfileDir());
+
+        assertEquals("minimal", aProfile.getName());
+        assertEquals("simple", aProfile.getParentProfile());
+
+        assertTrue(aProfile.getEnricherConfig().use("fmp-name"));
+        assertTrue(aProfile.getEnricherConfig().use("default.service"));
+        assertTrue(aProfile.getGeneratorConfig().use("spring.swarm"));
+        assertFalse(aProfile.getGeneratorConfig().use("java.app"));
     }
 }
