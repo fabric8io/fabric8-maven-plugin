@@ -29,7 +29,7 @@ import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
 public class SpringbootHttpBoosterIT extends BaseBoosterIT {
 
-    private final String SPRING_BOOT_HTTP_BOOSTER_BOOSTERYAMLURL = "https://raw.githubusercontent.com/fabric8-launcher/launcher-booster-catalog/master/spring-boot/1.5.10-redhat/rest-http/booster.yaml";
+    private final String SPRING_BOOT_HTTP_BOOSTER_BOOSTERYAMLURL = "https://raw.githubusercontent.com/fabric8-launcher/launcher-booster-catalog/master/spring-boot/current-redhat/rest-http/booster.yaml";
 
     private String SPRING_BOOT_HTTP_BOOSTER_GIT;
 
@@ -50,7 +50,7 @@ public class SpringbootHttpBoosterIT extends BaseBoosterIT {
 
         BoosterYaml boosterYaml = readYaml.readYaml(SPRING_BOOT_HTTP_BOOSTER_BOOSTERYAMLURL);
         SPRING_BOOT_HTTP_BOOSTER_GIT = boosterYaml.getSource().getGitSource().getUrl();
-        RELEASED_VERSION_TAG = boosterYaml.getSource().getGitSource().getRef();
+        RELEASED_VERSION_TAG = boosterYaml.getEnvironment().getProduction().getSource().getGitSource().getRef();
 
     }
 
