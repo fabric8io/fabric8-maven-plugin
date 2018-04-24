@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
@@ -33,7 +34,6 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
-import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
@@ -71,13 +71,6 @@ public class OpenshiftBuildService implements BuildService {
     private final Logger log;
     private ServiceHub dockerServiceHub;
     private BuildServiceConfig config;
-    private ClusterAccess clusterAccess;
-
-    /*
-     * Retry parameter
-     */
-    private static final int RESOURCE_CREATION_RETRIES = 5;
-    private static final int RESOURCE_CREATION_RETRY_TIMEOUT_IN_MILLIS = 1000;
 
     public OpenshiftBuildService(OpenShiftClient client, Logger log, ServiceHub dockerServiceHub, BuildServiceConfig config) {
         Objects.requireNonNull(client, "client");
@@ -89,12 +82,11 @@ public class OpenshiftBuildService implements BuildService {
         this.log = log;
         this.dockerServiceHub = dockerServiceHub;
         this.config = config;
-        this.clusterAccess = new ClusterAccess(null);
     }
 
     @Override
     public void build(ImageConfiguration imageConfig) throws Fabric8ServiceException {
-
+        String buildName = null;
         try {
             ImageName imageName = new ImageName(imageConfig.getName());
 
@@ -103,7 +95,7 @@ public class OpenshiftBuildService implements BuildService {
             KubernetesListBuilder builder = new KubernetesListBuilder();
 
             // Check for buildconfig / imagestream and create them if necessary
-            String buildName = updateOrCreateBuildConfig(config, client, builder, imageConfig);
+            buildName = updateOrCreateBuildConfig(config, client, builder, imageConfig);
             checkOrCreateImageStream(config, client, builder, getImageStreamName(imageName));
             applyResourceObjects(config, client, builder);
 
@@ -118,7 +110,13 @@ public class OpenshiftBuildService implements BuildService {
         } catch (Fabric8ServiceException e) {
             throw e;
         } catch (Exception ex) {
-            throw new Fabric8ServiceException("Unable to build the image using the OpenShift build service", ex);
+            // Log additional details in case of any IOException
+            if (ex != null && ex.getCause() instanceof IOException) {
+                log.error("Build for %s failed: %s", buildName, ex.getCause().getMessage());
+                logBuildFailure(client, buildName);
+            } else {
+                throw new Fabric8ServiceException("Unable to build the image using the OpenShift build service", ex);
+            }
         }
     }
 
@@ -188,7 +186,7 @@ public class OpenshiftBuildService implements BuildService {
                 .withName(outputImageStreamTag)
                 .endTo().build();
 
-        // Fetch exsting build config
+        // Fetch existing build config
         BuildConfig buildConfig = client.buildConfigs().withName(buildName).get();
         if (buildConfig != null) {
             // lets verify the BC
@@ -313,44 +311,14 @@ public class OpenshiftBuildService implements BuildService {
     }
 
     private void applyResourceObjects(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder) throws Exception {
-        // Adding a workaround to handle intermittent Socket closed errors while
-        // building on OpenShift. See https://github.com/fabric8io/fabric8-maven-plugin/issues/1133
-        // for more details.
-        int nTries = 0;
-        boolean bResourcesCreated = false;
-        Exception buildException = null;
-        do {
-            try {
-                if (config.getEnricherTask() != null) {
-                    config.getEnricherTask().execute(builder);
-                }
-                if (builder.hasItems()) {
-                    KubernetesList k8sList = builder.build();
-                    client.lists().create(k8sList);
-                }
-                // If we are here, it means resources got created successfully.
-                bResourcesCreated = true;
-            } catch (Exception aException) {
-                // Handling the exception like this because we get a generic Exception from the above block.
-                // Retry only when Exception is of socket closed message.
-                if(aException.getMessage() != null && aException.getMessage().contains("Socket closed")) {
-                    log.warn("Problem encountered while applying resource objects, retrying..");
-                    buildException = aException;
-                    nTries++;
-                    Thread.sleep(RESOURCE_CREATION_RETRY_TIMEOUT_IN_MILLIS);
-                    // Make a connection to cluster again.
-                    client = clusterAccess.createDefaultClient(log);
-                }
-                else {
-                    // The exception caught is not related to closed socket, so let's break
-                    // and simply throw as it is.
-                    throw new MojoExecutionException(aException.getMessage());
-                }
-            }
-        } while (nTries < RESOURCE_CREATION_RETRIES && !bResourcesCreated);
+        if (config.getEnricherTask() != null) {
+            config.getEnricherTask().execute(builder);
+        }
 
-        if (!bResourcesCreated)
-            throw new MojoExecutionException(buildException.getMessage());
+        if (builder.hasItems()) {
+            KubernetesList k8sList = builder.build();
+            client.lists().create(k8sList);
+        }
     }
 
     private Build startBuild(OpenShiftClient client, File dockerTar, String buildName) {
@@ -366,7 +334,7 @@ public class OpenshiftBuildService implements BuildService {
             }
             if (exp.getCause() instanceof IOException && exp.getCause().getMessage().contains("Stream Closed")) {
                 log.error("Build for %s failed: %s", buildName, exp.getCause().getMessage());
-                logBuildBuildFailedDetails(client, buildName);
+                logBuildFailedDetails(client, buildName);
             }
             throw exp;
         }
@@ -490,7 +458,7 @@ public class OpenshiftBuildService implements BuildService {
         };
     }
 
-    private void logBuildBuildFailedDetails(OpenShiftClient client, String buildName) {
+    private void logBuildFailedDetails(OpenShiftClient client, String buildName) {
         try {
             BuildConfig build = client.buildConfigs().withName(buildName).get();
             ObjectReference ref = build.getSpec().getStrategy().getSourceStrategy().getFrom();
@@ -512,6 +480,24 @@ public class OpenshiftBuildService implements BuildService {
             }
         } catch (Exception ex) {
             log.error("Unable to get detailed information from the BuildServiceConfig: " + ex.getMessage());
+        }
+    }
+
+    private void logBuildFailure(OpenShiftClient client, String buildName) throws Fabric8ServiceException {
+        try {
+            List<Build> builds = client.builds().inNamespace(client.getNamespace()).list().getItems();
+            for(Build build : builds) {
+                if(build.getMetadata().getName().contains(buildName)) {
+                    log.error(build.getMetadata().getName() + "\t" + "\t" + build.getStatus().getReason() + "\t" + build.getStatus().getMessage());
+                    throw new Fabric8ServiceException("Unable to build the image using the OpenShift build service", new KubernetesClientException(build.getStatus().getReason() + " " + build.getStatus().getMessage()));
+                }
+            }
+
+            log.error("Also, check cluster events via `oc get events` to see what could have possibly gone wrong");
+        } catch (KubernetesClientException clientException) {
+            Status status = clientException.getStatus();
+            if (status != null)
+                log.error("OpenShift Error: [%d] %s", status.getCode(), status.getMessage());
         }
     }
 
