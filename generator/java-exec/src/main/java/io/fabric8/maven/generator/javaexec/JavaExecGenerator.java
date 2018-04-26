@@ -191,6 +191,7 @@ public class JavaExecGenerator extends BaseGenerator {
                     fileSet.setDirectory(toRelativePath(buildDir, project.getBasedir()));
                     fileSet.addInclude(toRelativePath(fatJar.getArchiveFile(), buildDir));
                     fileSet.setOutputDirectory(".");
+                    fileSet.setFileMode("0640");
                     assembly.addFileSet(fileSet);
                 }
                 assembly.addFileSet(createFileSet("src/main/fabric8-includes/bin","bin","0755","0755"));
