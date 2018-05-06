@@ -29,9 +29,9 @@ To enable fabric8 maven plugin on your project just add this to the plugins sect
       </plugin>
 ```
 
-You can also do it using maven command like this : `mvn io.fabric8:fabric8-maven-plugin:<version>:setup`. You can check for the latest released version from the [maven central](http://search.maven.org/#search%7Cga%7C1%7Cfabric8-maven-plugin).
+You can also do it using a maven command like this : `mvn io.fabric8:fabric8-maven-plugin:<version>:setup`. You can check for the latest released version from the [maven central](http://search.maven.org/#search%7Cga%7C1%7Cfabric8-maven-plugin).
 
-Now in order to use fabric8 maven plugin to build or deploy, make sure you have an OpenShift/Kubernetes cluster up and running. After making sure that, you can simply run your app in the cluster  :
+Now in order to use fabric8 maven plugin to build or deploy, make sure you have an OpenShift/Kubernetes cluster up and running. After making sure of that, you can simply run your app in the cluster :
 ```
       mvn fabric8:deploy
 ```
@@ -79,7 +79,7 @@ After you issue this command would start building resources and then deploy them
 [INFO] ------------------------------------------------------------------------
 
 ```
-After build is finished, your application pod gets created:
+After the build is finished, your application pod gets created:
 ```
 ~/work/repos/fabric8-maven-plugin/samples/spring-boot : $ kubectl get pods
 NAME                                                READY     STATUS    RESTARTS   AGE
