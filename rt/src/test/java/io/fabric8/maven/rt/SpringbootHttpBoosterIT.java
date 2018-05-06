@@ -50,7 +50,7 @@ public class SpringbootHttpBoosterIT extends BaseBoosterIT {
 
         BoosterYaml boosterYaml = readYaml.readYaml(SPRING_BOOT_HTTP_BOOSTER_BOOSTERYAMLURL);
         SPRING_BOOT_HTTP_BOOSTER_GIT = boosterYaml.getSource().getGitSource().getUrl();
-        RELEASED_VERSION_TAG = boosterYaml.getEnvironment().getProduction().getSource().getGitSource().getRef();
+        RELEASED_VERSION_TAG = boosterYaml.getSource().getGitSource().getRef();
 
     }
 
