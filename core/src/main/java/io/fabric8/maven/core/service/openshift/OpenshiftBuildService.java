@@ -389,8 +389,7 @@ public class OpenshiftBuildService implements BuildService {
             try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {
                 // Check if the build is already finished to avoid waiting indefinitely
                 Build lastBuild = client.builds().withName(buildName).get();
-                String lastStatus = KubernetesResourceUtil.getBuildStatusPhase(lastBuild);
-                if (Builds.isFinished(lastStatus)) {
+                if (Builds.isFinished(KubernetesResourceUtil.getBuildStatusPhase(lastBuild))) {
                     log.debug("Build %s is already finished", buildName);
                     buildHolder.set(lastBuild);
                     latch.countDown();
@@ -398,12 +397,22 @@ public class OpenshiftBuildService implements BuildService {
 
                 waitUntilBuildFinished(latch);
                 logTerminateLatch.countDown();
+
                 build = buildHolder.get();
+                if (build == null) {
+                    log.debug("Build watcher on %s was closed prematurely", buildName);
+                    build = client.builds().withName(buildName).get();
+                }
                 String status = KubernetesResourceUtil.getBuildStatusPhase(build);
                 if (Builds.isFailed(status) || Builds.isCancelled(status)) {
-                    throw new MojoExecutionException("OpenShift Build " + buildName + ": " + KubernetesResourceUtil.getBuildStatusReason(build));
+                    throw new MojoExecutionException("OpenShift Build " + buildName + " error: " + KubernetesResourceUtil.getBuildStatusReason(build));
                 }
-                log.info("Build " + buildName + " " + status);
+
+                if (!Builds.isFinished(status)) {
+                    log.warn("Could not wait for the completion of build %s. It may be  may be still running (status=%s)", buildName, status);
+                } else {
+                    log.info("Build %s in status %s", buildName, status);
+                }
             }
         }
     }
