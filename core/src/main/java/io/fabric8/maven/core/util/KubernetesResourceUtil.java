@@ -553,19 +553,16 @@ public class KubernetesResourceUtil {
     }
 
     public static String getBuildStatusPhase(Build build) {
-        String status = null;
-        BuildStatus buildStatus = build.getStatus();
-        if (buildStatus != null) {
-            status = buildStatus.getPhase();
+        if (build != null && build.getStatus() != null) {
+            return build.getStatus().getPhase();
         }
-        return status;
+        return null;
     }
 
     public static String getBuildStatusReason(Build build) {
-        BuildStatus buildStatus = build.getStatus();
-        if (buildStatus != null) {
-            String reason = buildStatus.getReason();
-            String phase = buildStatus.getPhase();
+        if (build != null && build.getStatus() != null) {
+            String reason = build.getStatus().getReason();
+            String phase = build.getStatus().getPhase();
             if (Strings.isNotBlank(phase)) {
                 if (Strings.isNotBlank(reason)) {
                     return phase + ": " + reason;
