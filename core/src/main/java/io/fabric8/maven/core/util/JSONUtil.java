@@ -30,12 +30,17 @@ import org.json.JSONObject;
  */
 public class JSONUtil {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    public static ObjectMapper mapper() {
+        return OBJECT_MAPPER;
+    }
+
     public static boolean equals(JSONObject first, JSONObject second) {
-        final ObjectMapper mapper = new ObjectMapper();
 
         try {
-            final JsonNode tree1 = mapper.readTree(first.toString());
-            final JsonNode tree2 = mapper.readTree(second.toString());
+            final JsonNode tree1 = OBJECT_MAPPER.readTree(first.toString());
+            final JsonNode tree2 = OBJECT_MAPPER.readTree(second.toString());
             return tree1.equals(tree2);
         } catch (IOException e) {
             return false;

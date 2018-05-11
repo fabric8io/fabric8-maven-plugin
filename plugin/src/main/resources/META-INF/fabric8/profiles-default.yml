@@ -43,7 +43,8 @@
     - fmp-dependency
     - f8-watch
     - fmp-revision-history
-    - fmp-docker-registry-secret    
+    - fmp-docker-registry-secret
+    - fmp-triggers-annotation
 
   generator:
     # The order given in "includes" is the order in which generators are called

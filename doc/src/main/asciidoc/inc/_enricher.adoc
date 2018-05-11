@@ -96,6 +96,9 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 
 | <<fmp-revision-history-enricher>>
 | Add revision history limit (https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#revision-history-limit[Kubernetes doc]) as a deployment spec property to the Kubernetes/OpenShift resources.
+
+| <<fmp-triggers-annotation>>
+| Add ImageStreamTag change triggers on Kubernetes resources such as StatefulSets, ReplicaSets and DaemonSets using the `image.openshift.io/triggers` annotation.
 |===
 
 [[enrichers-standard]]
