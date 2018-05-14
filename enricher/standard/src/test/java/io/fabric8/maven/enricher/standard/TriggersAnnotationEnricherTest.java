@@ -16,6 +16,7 @@
 
 package io.fabric8.maven.enricher.standard;
 
+import io.fabric8.kubernetes.api.model.Job;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
@@ -211,6 +212,40 @@ public class TriggersAnnotationEnricherTest {
         assertEquals("ImageStreamTag", trigger2.getFrom().getKind());
         assertEquals("is3:latest", trigger2.getFrom().getName());
         assertTrue(trigger2.getAdditionalProperties().containsKey("fieldPath"));
+    }
+
+    @Test
+    public void testNoEnrichment() {
+
+        KubernetesListBuilder builder = new KubernetesListBuilder()
+                .addNewJobItem()
+                    .withNewMetadata()
+                        .addToAnnotations("dummy", "annotation")
+                    .endMetadata()
+                    .withNewSpec()
+                        .withNewTemplate()
+                            .withNewSpec()
+                                .addNewContainer()
+                                    .withName("c1")
+                                    .withImage("is1:latest")
+                                .endContainer()
+                                .addNewContainer()
+                                    .withName("c2")
+                                    .withImage("is2:latest")
+                                .endContainer()
+                            .endSpec()
+                        .endTemplate()
+                    .endSpec()
+                .endJobItem();
+
+
+        TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
+        enricher.adapt(builder);
+
+
+        Job res = (Job) builder.build().getItems().get(0);
+        String triggers = res.getMetadata().getAnnotations().get("image.openshift.io/triggers");
+        assertNull(triggers);
     }
 
 }
