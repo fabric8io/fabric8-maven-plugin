@@ -26,6 +26,7 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSetBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSetBuilder;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.JSONUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.enricher.api.BaseEnricher;
@@ -33,8 +34,7 @@ import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.openshift.api.model.ImageChangeTrigger;
 import io.fabric8.openshift.api.model.ImageChangeTriggerBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * This adds a `image.openshift.io/triggers` tag to all kubernetes resources in order to make them run on Openshift when using ImageStreams.
@@ -45,6 +45,20 @@ import java.util.List;
 public class TriggersAnnotationEnricher extends BaseEnricher {
 
     private static final String TRIGGERS_ANNOTATION = "image.openshift.io/triggers";
+
+    // Available configuration keys
+    private enum Config implements Configs.Key {
+
+        /**
+         * Comma-separated list of container names that should be enriched (default all that apply)
+         */
+        containers;
+
+        protected String d; public String def() {
+            return d;
+        }
+    }
+
 
     public TriggersAnnotationEnricher(EnricherContext buildContext) {
         super(buildContext, "fmp-triggers-annotation");
@@ -103,7 +117,7 @@ public class TriggersAnnotationEnricher extends BaseEnricher {
                 String containerName = container.getName();
                 String containerImage = container.getImage();
                 ImageName image = new ImageName(containerImage);
-                if (image.getRegistry() == null && image.getUser() == null) {
+                if (isContainerAllowed(containerName) && image.getRegistry() == null && image.getUser() == null) {
                     // Imagestreams used as trigger are in the same namespace
                     String tag = image.getTag() != null ? image.getTag() : "latest";
 
@@ -126,6 +140,18 @@ public class TriggersAnnotationEnricher extends BaseEnricher {
             getLog().error("Error while creating ImageStreamTag triggers for Kubernetes resources: %s", e);
             return "[]";
         }
+    }
+
+    protected boolean isContainerAllowed(String containerName) {
+        String namesStr = this.getConfig(Config.containers);
+        Set<String> allowedNames = new HashSet<>();
+        if (namesStr != null) {
+            for (String name : namesStr.split(",")) {
+                allowedNames.add(name.trim());
+            }
+        }
+
+        return allowedNames.isEmpty() || allowedNames.contains(containerName);
     }
 
 }

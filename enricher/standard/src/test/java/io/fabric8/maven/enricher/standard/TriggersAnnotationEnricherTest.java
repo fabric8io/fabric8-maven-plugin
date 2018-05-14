@@ -23,6 +23,7 @@ import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.maven.core.util.JSONUtil;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.openshift.api.model.ImageChangeTrigger;
+import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
 import org.junit.Test;
@@ -30,6 +31,7 @@ import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 
 import static junit.framework.TestCase.*;
 
@@ -154,6 +156,61 @@ public class TriggersAnnotationEnricherTest {
         assertEquals("ImageStreamTag", trigger.getFrom().getKind());
         assertEquals("iss:1.1.0", trigger.getFrom().getName());
         assertTrue(trigger.getAdditionalProperties().containsKey("fieldPath"));
+    }
+
+    @Test
+    public void testConditionalStatefulSetEnrichment() throws IOException {
+
+        final Properties props = new Properties();
+        props.put("fabric8.enricher.fmp-triggers-annotation.containers", "c2, c3, anotherc");
+        new Expectations() {{
+            context.getProject().getProperties();
+            result = props;
+        }};
+
+        KubernetesListBuilder builder = new KubernetesListBuilder()
+                .addNewStatefulSetItem()
+                    .withNewSpec()
+                        .withNewTemplate()
+                            .withNewSpec()
+                                .addNewContainer()
+                                    .withName("c1")
+                                    .withImage("is1:latest")
+                                .endContainer()
+                                .addNewContainer()
+                                    .withName("c2")
+                                    .withImage("is2:latest")
+                                .endContainer()
+                                .addNewContainer()
+                                    .withName("c3")
+                                    .withImage("is3:latest")
+                                .endContainer()
+                            .endSpec()
+                        .endTemplate()
+                    .endSpec()
+                .endStatefulSetItem();
+
+
+        TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
+        enricher.adapt(builder);
+
+
+        StatefulSet res = (StatefulSet) builder.build().getItems().get(0);
+        String triggers = res.getMetadata().getAnnotations().get("image.openshift.io/triggers");
+        assertNotNull(triggers);
+
+        List<ImageChangeTrigger> triggerList = JSONUtil.mapper().readValue(triggers, JSONUtil.mapper().getTypeFactory().constructCollectionType(List.class, ImageChangeTrigger.class));
+        assertEquals(2, triggerList.size());
+
+        ImageChangeTrigger trigger1 = triggerList.get(0);
+        assertEquals("ImageStreamTag", trigger1.getFrom().getKind());
+        assertEquals("is2:latest", trigger1.getFrom().getName());
+        assertTrue(trigger1.getAdditionalProperties().containsKey("fieldPath"));
+
+        ImageChangeTrigger trigger2 = triggerList.get(1);
+        assertEquals("ImageStreamTag", trigger2.getFrom().getKind());
+        assertEquals("is3:latest", trigger2.getFrom().getName());
+        assertTrue(trigger2.getAdditionalProperties().containsKey("fieldPath"));
     }
 
 }
