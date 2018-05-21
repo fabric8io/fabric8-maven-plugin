@@ -473,7 +473,7 @@ public class ResourceMojo extends AbstractResourceMojo {
         }
         EnricherManager enricherManager = new EnricherManager(resources, ctxBuilder.build());
 
-        // Generate all resources from the main resource diretory, configuration and enrich them accordingly
+        // Generate all resources from the main resource directory, configuration and enrich them accordingly
         KubernetesListBuilder builder = generateAppResources(images, enricherManager);
 
         // Add resources found in subdirectories of resourceDir, with a certain profile

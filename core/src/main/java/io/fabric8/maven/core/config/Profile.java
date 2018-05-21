@@ -39,6 +39,12 @@ public class Profile implements Comparable<Profile> {
     private String name;
 
     /**
+     * Extends configuration
+     */
+    @JsonProperty(value = "extends")
+    private String parentProfile;
+
+    /**
      * Enricher configurations
      */
     @JsonProperty(value = "enricher")
@@ -72,6 +78,7 @@ public class Profile implements Comparable<Profile> {
     public Profile(Profile profile) {
         this();
         this.name = profile.name;
+        this.parentProfile = profile.parentProfile;
         this.order = profile.order;
         this.enricherConfig = ProcessorConfig.cloneProcessorConfig(profile.enricherConfig);
         this.generatorConfig = ProcessorConfig.cloneProcessorConfig(profile.generatorConfig);
@@ -103,6 +110,8 @@ public class Profile implements Comparable<Profile> {
         return name;
     }
 
+    public String getParentProfile() { return parentProfile; }
+
     public ProcessorConfig getEnricherConfig() {
         return enricherConfig;
     }
@@ -114,6 +123,12 @@ public class Profile implements Comparable<Profile> {
     public ProcessorConfig getWatcherConfig() {
         return watcherConfig;
     }
+
+    public void setEnricherConfig(ProcessorConfig config) { this.enricherConfig = config; }
+
+    public void setGeneratorConfig(ProcessorConfig config) { this.generatorConfig = config; }
+
+    public void setWatcherConfig(ProcessorConfig config) { this.watcherConfig = config; }
 
     public int getOrder() {
         return order;

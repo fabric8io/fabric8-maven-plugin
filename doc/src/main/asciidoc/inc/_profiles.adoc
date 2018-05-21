@@ -202,6 +202,25 @@ This plugin comes with a list of the following predefined profiles:
 | Do not expose a port for the service to generate. Otherwise the same as the _default_ profile.
 |===
 
+[[profiles-extended]]
+## Extending Profiles
+
+A profile can also extend another profile to avoid repetition e.g of generators if the profile is only about including certain enrichers. For example, for a profile like:
+
+[source, yaml]
+----
+- name: minimal
+   extends: default
+   enricher:
+     includes:
+     - fmp-name
+     - fmp-controller
+     - fmp-service
+     - fmp-image
+     - fmp-project
+     - fmp-debug
+----
+one then would not need to repeat all generators as they are inherited from the `default` profile.
 
 [[profiles-default]]
 .Default Profile
