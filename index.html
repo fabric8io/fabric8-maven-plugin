@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.37,</span>
-<span id="revdate">2018-05-10</span>
+<span id="revdate">2018-05-21</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -668,6 +668,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#profiles-lookup-order">11.2. Lookup order</a></li>
 <li><a href="#profiles-using">11.3. Using Profiles</a></li>
 <li><a href="#profiles-predefined">11.4. Predefined Profiles</a></li>
+<li><a href="#profiles-extended">11.5. Extending Profiles</a></li>
 </ul>
 </li>
 <li><a href="#access-configuration">12. Access configuration</a>
@@ -6391,6 +6392,29 @@ For more information read <a href="https://kubernetes.io/docs/concepts/workloads
 </tr>
 </tbody>
 </table>
+</div>
+<div class="sect2">
+<h3 id="profiles-extended">11.5. Extending Profiles</h3>
+<div class="paragraph">
+<p>A profile can also extend another profile to avoid repetition e.g of generators if the profile is only about including certain enrichers. For example, for a profile like:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml">- <span class="string"><span class="content">name: minimal</span><span class="content">
+   extends: default
+   enricher:
+     includes:
+     - fmp-name
+     - fmp-controller
+     - fmp-service
+     - fmp-image
+     - fmp-project
+     - fmp-debug</span></span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>one then would not need to repeat all generators as they are inherited from the <code>default</code> profile.</p>
+</div>
 <div id="profiles-default" class="listingblock">
 <div class="title">Default Profile</div>
 <div class="content">
@@ -6993,7 +7017,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.37<br>
-Last updated 2018-05-10 10:56:56 UTC
+Last updated 2018-05-21 12:31:46 UTC
 </div>
 </div>
 </body>
