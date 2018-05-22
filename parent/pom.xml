@@ -61,7 +61,7 @@
     <version.maven>3.3.1</version.maven>
     <version.jacoco>0.7.8</version.jacoco>
     <version.fabric8>3.0.8</version.fabric8>
-    <version.kubernetes-client>3.0.3</version.kubernetes-client>
+    <version.kubernetes-client>3.1.12</version.kubernetes-client>
     <version.mockwebserver>0.0.13</version.mockwebserver>
     <version.docker-maven-plugin>0.22.1</version.docker-maven-plugin>
     <version.networknt.validator>0.1.7</version.networknt.validator>
@@ -263,6 +263,18 @@
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-client</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.fabric8</groupId>
+            <artifactId>openshift-client</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.fabric8</groupId>
+            <artifactId>openshift-server-mock</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
 
@@ -397,6 +409,18 @@
         <artifactId>openshift-server-mock</artifactId>
         <version>${version.kubernetes-client}</version>
         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>kubernetes-client</artifactId>
+        <version>${version.kubernetes-client}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>openshift-client</artifactId>
+        <version>${version.kubernetes-client}</version>
       </dependency>
 
       <dependency>
