@@ -45,7 +45,7 @@ public class SpaceLabelEnricherTest {
 
     @Mocked
     private EnricherContext context;
-    
+
     private static final String SPACE_KEY = "fabric8.enricher.osio-space-label.space";
     private static final String SPACE_VALUE = "test";
 
@@ -61,7 +61,7 @@ public class SpaceLabelEnricherTest {
         Map<String, String> labels = enricher.getLabels(Kind.SERVICE);
         assertNull(labels);
     }
-    
+
     @Test
     public void testLabelSystemProperty() {
         new MockUp<System>() {
@@ -72,7 +72,7 @@ public class SpaceLabelEnricherTest {
                 return null;
             }
         };
-        
+
         final Properties props = new Properties();
         new Expectations() {{
             context.getProject().getProperties();
@@ -83,9 +83,9 @@ public class SpaceLabelEnricherTest {
         Map<String, String> labels = enricher.getLabels(Kind.SERVICE);
         checkLabel(labels);
     }
-    
+
     @Test
-    public void testLabelMavenProperty() {       
+    public void testLabelMavenProperty() {
         final Properties props = new Properties();
         props.put(SPACE_KEY, SPACE_VALUE);
         new Expectations() {{
@@ -97,7 +97,7 @@ public class SpaceLabelEnricherTest {
         Map<String, String> labels = enricher.getLabels(Kind.SERVICE);
         checkLabel(labels);
     }
-    
+
     @Test
     public void testLabelPluginConfig() {
         @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -123,7 +123,7 @@ public class SpaceLabelEnricherTest {
         Map<String, String> labels = enricher.getLabels(Kind.SERVICE);
         checkLabel(labels);
     }
-    
+
     private void checkLabel(Map<String, String> labels) {
         assertNotNull(labels);
         assertEquals(1, labels.size());

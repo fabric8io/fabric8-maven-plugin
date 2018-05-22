@@ -694,7 +694,7 @@ To provide the value of the `space` label to be applied by this enricher, use on
 ...
 ----
 
-Regardless of which above method you choose to configure the enricher, the resulting resources will have the `space` 
+Regardless of which above method you choose to configure the enricher, the resulting resources will have the `space`
 label applied, like the following:
 [source,yaml]
 ----
