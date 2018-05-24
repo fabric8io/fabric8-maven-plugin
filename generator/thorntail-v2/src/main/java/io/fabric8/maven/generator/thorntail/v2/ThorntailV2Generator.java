@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc.
+ * Copyright 2018 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
  * 2.0 (the "License"); you may not use this file except in compliance
@@ -13,7 +13,7 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.generator.wildflyswarm;
+package io.fabric8.maven.generator.thorntail.v2;
 
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -24,19 +24,18 @@ import org.apache.maven.plugin.MojoExecutionException;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by ceposta
- * <a href="http://christianposta.com/blog">http://christianposta.com/blog</a>.
- */
-public class WildFlySwarmGenerator extends JavaExecGenerator {
+public class ThorntailV2Generator extends JavaExecGenerator {
 
-    public WildFlySwarmGenerator(GeneratorContext context) {
-        super(context, "wildfly-swarm");
+    public ThorntailV2Generator(GeneratorContext context) {
+        super(context, "thorntail-v2");
     }
 
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
-        return shouldAddImageConfiguration(configs) && MavenUtil.hasPlugin(getProject(), "org.wildfly.swarm:wildfly-swarm-plugin");
+        return shouldAddImageConfiguration(configs)
+                && MavenUtil.hasPlugin(getProject(), "io.thorntail:thorntail-maven-plugin")
+                // if there's thorntail-kernel, it's Thorntail v4
+                && !MavenUtil.hasDependency(getProject(), "io.thorntail", "thorntail-kernel");
     }
 
     @Override
@@ -45,7 +44,7 @@ public class WildFlySwarmGenerator extends JavaExecGenerator {
         // Switch off Prometheus agent until logging issue with WildFly Swarm is resolved
         // See:
         // - https://github.com/fabric8io/fabric8-maven-plugin/issues/1173
-        // - https://issues.jboss.org/browse/SWARM-1859
+        // - https://issues.jboss.org/browse/THORN-1859
         ret.put("AB_PROMETHEUS_OFF", "true");
         return ret;
     }

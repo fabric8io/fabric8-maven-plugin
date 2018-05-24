@@ -173,6 +173,13 @@ public class IconEnricher extends BaseEnricher {
             MavenUtil.hasDependencyOnAnyArtifactOfGroup(project, "org.wildfly.swarm")) {
             return "wildfly-swarm";
         }
+        if (hasPlugin(project, "io.thorntail:thorntail-maven-plugin") ||
+            MavenUtil.hasDependencyOnAnyArtifactOfGroup(project, "io.thorntail")) {
+            // use the WildFly Swarm icon until there's a dedicated Thorntail icon
+            // Thorntail is a new name of WildFly Swarm
+            return "wildfly-swarm";
+        }
+
         return null;
     }
 

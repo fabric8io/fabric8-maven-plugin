@@ -44,6 +44,7 @@
     <module>generator/java-exec</module>
     <module>generator/spring-boot</module>
     <module>generator/wildfly-swarm</module>
+    <module>generator/thorntail-v2</module>
     <module>generator/karaf</module>
     <module>generator/webapp</module>
     <module>generator/vertx</module>

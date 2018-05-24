@@ -32,6 +32,7 @@
     - fmp-openshift-route
     - spring-boot-health-check
     - wildfly-swarm-health-check
+    - thorntail-v2-health-check
     - karaf-health-check
     - vertx-health-check
     - docker-health-check
@@ -49,6 +50,7 @@
     includes:
     - spring-boot
     - wildfly-swarm
+    - thorntail-v2
     - karaf
     - vertx
     - java-exec
@@ -76,6 +78,7 @@
     includes:
     - spring-boot
     - wildfly-swarm
+    - thorntail-v2
     - karaf
     - vertx
     - java-exec

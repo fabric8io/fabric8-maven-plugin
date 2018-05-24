@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat, Inc.
+ * Copyright 2018 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
  * 2.0 (the "License"); you may not use this file except in compliance
@@ -24,12 +24,12 @@ import io.fabric8.maven.enricher.api.EnricherContext;
 import static io.fabric8.maven.core.util.MavenUtil.hasDependency;
 
 /**
- * Enriches wildfly-swarm containers with health checks if the monitoring fraction is present.
+ * Enriches thorntail-v2 containers with health checks if the monitoring fraction is present.
  */
-public class WildFlySwarmHealthCheckEnricher extends AbstractHealthCheckEnricher {
+public class ThorntailV2HealthCheckEnricher extends AbstractHealthCheckEnricher {
 
-    public WildFlySwarmHealthCheckEnricher(EnricherContext buildContext) {
-        super(buildContext, "wildfly-swarm-health-check");
+    public ThorntailV2HealthCheckEnricher(EnricherContext buildContext) {
+        super(buildContext, "thorntail-v2-health-check");
     }
 
     // Available configuration keys
@@ -54,25 +54,29 @@ public class WildFlySwarmHealthCheckEnricher extends AbstractHealthCheckEnricher
 
     @Override
     protected Probe getReadinessProbe() {
-        Probe probe = discoverWildFlySwarmHealthCheck(10);
+        Probe probe = discoverThorntailHealthCheck(10);
         return probe;
     }
 
     @Override
     protected Probe getLivenessProbe() {
-        Probe probe = discoverWildFlySwarmHealthCheck(180);
+        Probe probe = discoverThorntailHealthCheck(180);
         return probe;
     }
 
-    private Probe discoverWildFlySwarmHealthCheck(int initialDelay) {
-        if (hasDependency(this.getProject(), "org.wildfly.swarm", "monitor")
-                || hasDependency(this.getProject(), "org.wildfly.swarm", "microprofile-health")) {
+    private Probe discoverThorntailHealthCheck(int initialDelay) {
+        if (hasDependency(this.getProject(), "io.thorntail", "thorntail-kernel")) {
+            // if there's thorntail-kernel, it's Thorntail v4
+            return null;
+        }
+
+        if (hasDependency(this.getProject(), "io.thorntail", "monitor")
+                || hasDependency(this.getProject(), "io.thorntail", "microprofile-health")) {
             Integer port = getPort();
             // scheme must be in upper case in k8s
             String scheme = getScheme().toUpperCase();
             String path = getPath();
 
-            // lets default to adding a wildfly swarm health check
             return new ProbeBuilder().
                     withNewHttpGet().withNewPort(port).withPath(path).withScheme(scheme).endHttpGet().
                     withInitialDelaySeconds(initialDelay).build();

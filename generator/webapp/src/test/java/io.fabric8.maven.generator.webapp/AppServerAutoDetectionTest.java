@@ -60,6 +60,7 @@ public class AppServerAutoDetectionTest {
             "org.jboss.as.plugins:jboss-as-maven-plugin", true,
             "org.wildfly.plugins:wildfly-maven-plugin", true,
             "org.wildfly.swarm:wildfly-swarm-plugin", false,
+            "io.thorntail:thorntail-maven-plugin", false,
         };
 
         assertAppServerDescriptorApplicability(descriptorNames);

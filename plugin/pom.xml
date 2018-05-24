@@ -99,6 +99,11 @@
 
     <dependency>
       <groupId>io.fabric8</groupId>
+      <artifactId>fabric8-maven-generator-thorntail-v2</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.fabric8</groupId>
       <artifactId>fabric8-maven-generator-webapp</artifactId>
     </dependency>
 

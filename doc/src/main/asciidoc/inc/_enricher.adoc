@@ -389,6 +389,54 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
       </plugin>
 
 
+[[f8-thorntail-v2-health-check]]
+==== f8-thorntail-v2-health-check
+
+This enricher adds kubernetes readiness and liveness probes with Thorntail v2. This requires the following fraction
+ has been enabled in Thorntail
+
+[source,xml]
+   <dependency>
+     <groupId>io.thorntail</groupId>
+     <artifactId>microprofile-health</artifactId>
+   </dependency>
+
+The enricher will use the following settings by default:
+
+- port = `8080`
+- scheme = `HTTP`
+- path = `/health`
+
+These values can be configured by the enricher in the `fabric8-maven-plugin` configuration as shown below:
+[source,xml]
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-plugin</artifactId>
+        <version>3.3.0</version>
+        <executions>
+          <execution>
+            <id>fmp</id>
+            <goals>
+              <goal>resource</goal>
+              <goal>helm</goal>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <enricher>
+            <config>
+              <thorntail-v2-health-check>
+                <port>4444</port>
+                <scheme>HTTPS</scheme>
+                <path>health/myapp</path>
+              </thorntail-v2-health-check>
+            </config>
+          </enricher>
+        </configuration>
+      </plugin>
+
+
 [[f8-vertx-health-check]]
 ==== f8-vertx-health-check
 
