@@ -350,7 +350,7 @@ This enricher adds kubernetes readiness and liveness probes with WildFly Swarm. 
 [source,xml]
    <dependency>
      <groupId>org.wildfly.swarm</groupId>
-     <artifactId>monitor</artifactId>
+     <artifactId>microprofile-health</artifactId>
    </dependency>
 
 The enricher will use the following settings by default:
