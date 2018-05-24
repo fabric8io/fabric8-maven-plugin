@@ -12,6 +12,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 
 ###3.5.40
 * Feature 1264: Added `osio` profile, with enricher to apply OpenShift.io space labels to resources
+* Fix 1265: WildFly Swarm health check enricher now supports detecting MicroProfile Health
 
 ###3.5.39
 * Feature 1206: Added support for spring-boot 2 health endpoint

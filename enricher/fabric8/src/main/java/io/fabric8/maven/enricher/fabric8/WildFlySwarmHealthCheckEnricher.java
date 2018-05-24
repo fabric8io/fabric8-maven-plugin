@@ -50,7 +50,8 @@ public class WildFlySwarmHealthCheckEnricher extends AbstractHealthCheckEnricher
     }
 
     private Probe discoverWildFlySwarmHealthCheck(int initialDelay) {
-        if (hasDependency(this.getProject(), "org.wildfly.swarm", "monitor")) {
+        if (hasDependency(this.getProject(), "org.wildfly.swarm", "monitor")
+                || hasDependency(this.getProject(), "org.wildfly.swarm", "microprofile-health")) {
             Integer port = getPort();
             // scheme must be in upper case in k8s
             String scheme = getScheme().toUpperCase();
