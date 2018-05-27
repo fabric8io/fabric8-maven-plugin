@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.37,</span>
-<span id="revdate">2018-05-24</span>
+<span id="revdate">2018-05-27</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -4755,7 +4755,7 @@ Since the released version are typically generated with a CI system which does a
 <div class="sect3">
 <h4 id="generator-wildfly-swarm">9.1.3. Wildfly Swarm</h4>
 <div class="paragraph">
-<p>The Wildfly-Swarm generator detects a wildlfy swarm build an enables some workaround to disable Jolokia because of this <a href="https://issues.jboss.org/browse/SWARM-204">issue</a>. This will be fixed with a workaround in a new Jolokia agent.</p>
+<p>The WildFly Swarm generator detects a WildFly Swarm build and disables the Prometheus Java agent because of this <a href="https://issues.jboss.org/browse/THORN-1859">issue</a>.</p>
 </div>
 <div class="paragraph">
 <p>Otherwise this generator is identical to the <a href="#generator-java-exec">java-exec generator</a>. It supports the  <a href="#generator-options-common">common generator options</a> and the <a href="#generator-java-exec-options"><code>java-exec</code> options</a>.</p>
@@ -7017,7 +7017,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.37<br>
-Last updated 2018-05-24 08:46:16 UTC
+Last updated 2018-05-27 10:52:15 UTC
 </div>
 </div>
 </body>
