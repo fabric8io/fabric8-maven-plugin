@@ -160,6 +160,12 @@ a| The build mode which can be
 | Profile to which contains enricher and generators configuration. See <<profiles,Profiles>> for details.
 | `fabric8.profile`
 
+| *pullSecret*
+| The name to use for naming pullSecret to be created to pull the base image in case pulling from a private registry which requires authentication for Openshift.
+
+  The default value for pull registry will be picked from "docker.pull.registry/docker.registry".
+| `fabric8.build.pullSecret`
+
 | *registry*
 | Specify globally a registry to use for pulling and pushing images. See <<registry,Registry handling>> for details.
 | `docker.registry`

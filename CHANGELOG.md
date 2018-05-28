@@ -9,6 +9,8 @@ We use semantic versioning in some slight variation until our feature set has st
 * The `PATCH_LEVEL` is used for regular CD releases which add new features and bug fixes.
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
+###3.5.40
+* Feature 1293: Added support to create pullSecret in buildConfig when pulling from private registry in Openshift.
 
 ###3.5.39
 * Feature 1206: Added support for spring-boot 2 health endpoint
