@@ -20,12 +20,12 @@
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>fabric8-maven-parent</artifactId>
-    <version>3.1.80.redhat-SNAPSHOT</version>
+    <version>3.1.80.fuse-000079</version>
     <relativePath>../../parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>fabric8-maven-enricher-api</artifactId>
-  <version>3.1.80.redhat-SNAPSHOT</version>
+  <version>3.1.80.fuse-000079</version>
 
   <name>Fabric8 Maven :: Enricher :: API</name>
 
