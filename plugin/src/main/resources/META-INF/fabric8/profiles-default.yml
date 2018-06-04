@@ -107,3 +107,10 @@
   enricher:
     excludes:
       - f8-expose
+# Includes everything from 'default', plus enrichers/generators
+# only useful to OpenShift.io
+- name: osio
+  extends: default
+  enricher:
+    includes:
+    - osio-space-label
