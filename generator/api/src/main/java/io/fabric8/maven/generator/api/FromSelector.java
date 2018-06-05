@@ -68,12 +68,17 @@ public abstract class FromSelector {
     public boolean isRedHat() {
         MavenProject project = context.getProject();
         Plugin plugin = project.getPlugin("io.fabric8:fabric8-maven-plugin");
-        if (plugin == null) {
-            // Can happen if not configured in a build section but only in a dependency management section
-            return false;
+        if( plugin!=null ) {
+            String version = plugin.getVersion();
+            return REDHAT_VERSION_PATTERN.matcher(version).matches();
         }
-        String version = plugin.getVersion();
-        return REDHAT_VERSION_PATTERN.matcher(version).matches();
+        plugin = project.getPlugin("org.jboss.redhat-fuse:fabric8-maven-plugin");
+        if (plugin != null) {
+            // This plugin was repacked in the https://github.com/jboss-fuse/redhat-fuse project
+            return true;
+        }
+        // Can happen if not configured in a build section but only in a dependency management section
+        return false;
     }
 
     public static class Default extends FromSelector {

@@ -19,17 +19,25 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>fabric8-maven-plugin-build</artifactId>
-  <version>3.5.33</version>
+  <version>3.5.33.fuse-000069</version>
   <packaging>pom</packaging>
 
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>fabric8-maven-parent</artifactId>
-    <version>3.5.33</version>
+    <version>3.5.33.fuse-000069</version>
     <relativePath>parent/pom.xml</relativePath>
   </parent>
 
   <name>Fabric8 Maven :: Build</name>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
 
   <prerequisites>
     <maven>3.0.3</maven>
@@ -45,9 +53,7 @@
     <module>generator/api</module>
     <module>generator/java-exec</module>
     <module>generator/spring-boot</module>
-    <module>generator/wildfly-swarm</module>
     <module>generator/karaf</module>
-    <module>generator/webapp</module>
     <module>generator/vertx</module>
     <module>watcher/api</module>
     <module>watcher/standard</module>
