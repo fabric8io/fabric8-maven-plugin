@@ -71,15 +71,6 @@ public class MavenUtil {
         return false;
     }
 
-    public static File extractKubernetesJson(File f, Path dir) throws IOException {
-        if (hasKubernetesJson(f)) {
-            Zips.unzip(new FileInputStream(f), dir.toFile());
-            File result = dir.resolve(DEFAULT_CONFIG_FILE_NAME).toFile();
-            return result.exists() ? result : null;
-        }
-        return null;
-    }
-
     public static URLClassLoader getCompileClassLoader(MavenProject project) {
         try {
             List<String> classpathElements = project.getCompileClasspathElements();
