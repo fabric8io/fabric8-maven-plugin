@@ -45,7 +45,7 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
 
     private final String TEST_ENDPOINT = "/api/greeting";
 
-    private final String RELATIVE_POM_PATH = "/greeting-service/pom.xml";
+    private final String RELATIVE_POM_PATH = "/pom.xml";
 
     private final String ANNOTATION_KEY = "springboot-configmap-testKey", ANNOTATION_VALUE = "springboot-configmap-testValue";
 
