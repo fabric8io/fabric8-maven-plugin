@@ -5182,6 +5182,10 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-revision-history-enricher">fmp-revision-history</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add revision history limit (<a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#revision-history-limit">Kubernetes doc</a>) as a deployment spec property to the Kubernetes/OpenShift resources.</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-triggers-annotation">fmp-triggers-annotation</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add ImageStreamTag change triggers on Kubernetes resources such as StatefulSets, ReplicaSets and DaemonSets using the <code>image.openshift.io/triggers</code> annotation.</p></td>
+</tr>
 </tbody>
 </table>
 <div class="sect3">
@@ -6259,6 +6263,28 @@ label applied, like the following:</p>
 </div>
 </div>
 </div>
+<div class="sect4">
+<h5 id="fmp-triggers-annotation">fmp-triggers-annotation</h5>
+<div class="paragraph">
+<p>This enricher adds ImageStreamTag change triggers on Kubernetes resources that support the <code>image.openshift.io/triggers</code> annotation, such as StatefulSets, ReplicaSets and DaemonSets.</p>
+</div>
+<div class="paragraph">
+<p>The trigger is added to all containers that apply, but can be restricted to a limited set of containers using the following configuration:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml">...
+<span class="tag">&lt;enricher&gt;</span>
+    <span class="tag">&lt;config&gt;</span>
+        <span class="tag">&lt;fmp-triggers-annotation&gt;</span>
+            <span class="tag">&lt;containers&gt;</span>container-name-1,c2<span class="tag">&lt;/containers&gt;</span>
+        <span class="tag">&lt;/fmp-triggers-annotation&gt;</span>
+    <span class="tag">&lt;/config&gt;</span>
+<span class="tag">&lt;/enricher&gt;</span>
+...</code></pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -6639,6 +6665,7 @@ label applied, like the following:</p>
     - <span class="string"><span class="content">f8-watch</span></span>
     - <span class="string"><span class="content">fmp-revision-history</span></span>
     - <span class="string"><span class="content">fmp-docker-registry-secret</span></span>
+    - <span class="string"><span class="content">fmp-triggers-annotation</span></span>
 
   <span class="key">generator</span>:
     <span class="comment"># The order given in &quot;includes&quot; is the order in which generators are called</span>
@@ -7197,7 +7224,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.39<br>
-Last updated 2018-06-15 08:30:55 UTC
+Last updated 2018-06-15 17:02:28 UTC
 </div>
 </div>
 </body>
