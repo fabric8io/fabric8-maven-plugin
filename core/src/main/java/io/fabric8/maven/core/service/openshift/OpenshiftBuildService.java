@@ -16,10 +16,8 @@
 
 package io.fabric8.maven.core.service.openshift;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -41,25 +39,24 @@ import io.fabric8.maven.core.util.IoUtil;
 import io.fabric8.maven.core.util.KubernetesClientUtil;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.ResourceFileType;
+import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.assembly.ArchiverCustomizer;
+import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
+import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.docker.util.ImageName;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.openshift.api.model.Build;
-import io.fabric8.openshift.api.model.BuildConfig;
-import io.fabric8.openshift.api.model.BuildConfigSpec;
-import io.fabric8.openshift.api.model.BuildOutput;
-import io.fabric8.openshift.api.model.BuildOutputBuilder;
-import io.fabric8.openshift.api.model.BuildSource;
-import io.fabric8.openshift.api.model.BuildStrategy;
-import io.fabric8.openshift.api.model.BuildStrategyBuilder;
+import io.fabric8.maven.docker.util.*;
+import io.fabric8.openshift.api.model.*;
 import io.fabric8.openshift.client.OpenShiftClient;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.archiver.tar.TarArchiver;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  * @author nicola
@@ -71,6 +68,9 @@ public class OpenshiftBuildService implements BuildService {
     private final Logger log;
     private ServiceHub dockerServiceHub;
     private BuildServiceConfig config;
+    private RegistryService.RegistryConfig registryConfig;
+    private AuthConfigFactory authConfigFactory;
+
 
     public OpenshiftBuildService(OpenShiftClient client, Logger log, ServiceHub dockerServiceHub, BuildServiceConfig config) {
         Objects.requireNonNull(client, "client");
@@ -94,8 +94,15 @@ public class OpenshiftBuildService implements BuildService {
 
             KubernetesListBuilder builder = new KubernetesListBuilder();
 
-            // Check for buildconfig / imagestream and create them if necessary
-            buildName = updateOrCreateBuildConfig(config, client, builder, imageConfig);
+            // Check for buildconfig / imagestream / pullSecret and create them if necessary
+            String openshiftPullSecret = config.getOpenshiftPullSecret();
+            Boolean usePullSecret = checkOrCreatePullSecret(config, client, builder, openshiftPullSecret, imageConfig);
+            if (usePullSecret) {
+                buildName = updateOrCreateBuildConfig(config, client, builder, imageConfig, openshiftPullSecret);
+            } else {
+                buildName = updateOrCreateBuildConfig(config, client, builder, imageConfig, null);
+            }
+
             checkOrCreateImageStream(config, client, builder, getImageStreamName(imageName));
             applyResourceObjects(config, client, builder);
 
@@ -174,13 +181,13 @@ public class OpenshiftBuildService implements BuildService {
         config.attachArtifact("is", getImageStreamFile(config));
     }
 
-    private String updateOrCreateBuildConfig(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder, ImageConfiguration imageConfig) {
+    private String updateOrCreateBuildConfig(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder, ImageConfiguration imageConfig, String openshiftPullSecret) {
         ImageName imageName = new ImageName(imageConfig.getName());
         String buildName = getS2IBuildName(config, imageName);
         String imageStreamName = getImageStreamName(imageName);
         String outputImageStreamTag = imageStreamName + ":" + (imageName.getTag() != null ? imageName.getTag() : "latest");
 
-        BuildStrategy buildStrategyResource = createBuildStrategy(imageConfig, config.getOpenshiftBuildStrategy());
+        BuildStrategy buildStrategyResource = createBuildStrategy(imageConfig, config.getOpenshiftBuildStrategy(), openshiftPullSecret);
         BuildOutput buildOutput = new BuildOutputBuilder().withNewTo()
                 .withKind("ImageStreamTag")
                 .withName(outputImageStreamTag)
@@ -261,9 +268,19 @@ public class OpenshiftBuildService implements BuildService {
         return buildName;
     }
 
-    private BuildStrategy createBuildStrategy(ImageConfiguration imageConfig, OpenShiftBuildStrategy osBuildStrategy) {
+    private BuildStrategy createBuildStrategy(ImageConfiguration imageConfig, OpenShiftBuildStrategy osBuildStrategy, String openshiftPullSecret) {
         if (osBuildStrategy == OpenShiftBuildStrategy.docker) {
-            return new BuildStrategyBuilder().withType("Docker").build();
+            BuildStrategy buildStrategy = new BuildStrategyBuilder().withType("Docker")
+                    .withNewDockerStrategy()
+                    .endDockerStrategy().build();
+
+            if (openshiftPullSecret != null) {
+                buildStrategy.getDockerStrategy().setPullSecret(new LocalObjectReferenceBuilder()
+                .withName(openshiftPullSecret)
+                .build());
+            }
+
+            return buildStrategy;
         } else if (osBuildStrategy == OpenShiftBuildStrategy.s2i) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             Map<String, String> fromExt = buildConfig.getFromExt();
@@ -272,7 +289,7 @@ public class OpenshiftBuildService implements BuildService {
             String fromKind = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.kind, "DockerImage");
             String fromNamespace = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.namespace, "ImageStreamTag".equals(fromKind) ? "openshift" : null);
 
-            return new BuildStrategyBuilder()
+            BuildStrategy buildStrategy = new BuildStrategyBuilder()
                     .withType("Source")
                     .withNewSourceStrategy()
                     .withNewFrom()
@@ -282,9 +299,121 @@ public class OpenshiftBuildService implements BuildService {
                     .endFrom()
                     .endSourceStrategy()
                     .build();
+            if (openshiftPullSecret != null) {
+                buildStrategy.getSourceStrategy().setPullSecret(new LocalObjectReferenceBuilder()
+                .withName(openshiftPullSecret)
+                .build());
+            }
+
+            return buildStrategy;
+
         } else {
             throw new IllegalArgumentException("Unsupported BuildStrategy " + osBuildStrategy);
         }
+    }
+
+    private Boolean checkOrCreatePullSecret(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder, String pullSecretName, ImageConfiguration imageConfig)
+            throws MojoExecutionException, UnsupportedEncodingException {
+        io.fabric8.maven.docker.service.BuildService.BuildContext dockerBuildContext = config.getDockerBuildContext();
+        BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+
+        String fromImage;
+        if (buildConfig.isDockerFileMode()) {
+            fromImage = extractBaseFromDockerfile(buildConfig, dockerBuildContext);
+        } else {
+            fromImage = extractBaseFromConfiguration(buildConfig);
+        }
+
+        String pullRegistry = EnvUtil.findRegistry(new ImageName(fromImage).getRegistry(), dockerBuildContext.getPullRegistry(), dockerBuildContext.getRegistryConfig().getRegistry());;
+
+        if (pullRegistry != null) {
+            RegistryService.RegistryConfig registryConfig = dockerBuildContext.getRegistryConfig();
+            AuthConfig authConfig = registryConfig.getAuthConfigFactory().createAuthConfig(false, registryConfig.isSkipExtendedAuth(), registryConfig.getAuthConfig(),
+                    registryConfig.getSettings(), null, pullRegistry);
+
+            if (authConfig != null) {
+
+                JSONObject auths = new JSONObject();
+                JSONObject auth = new JSONObject();
+                JSONObject item = new JSONObject();
+
+                String authString = authConfig.getUsername() + ":" + authConfig.getPassword();
+                item.put("auth", Base64.encodeBase64String(authString.getBytes("UTF-8")));
+                auth.put(pullRegistry, item);
+                auths.put("auths", auth);
+
+                String credentials = Base64.encodeBase64String(auths.toString().getBytes("UTF-8"));
+
+                Map<String, String> data = new HashMap<>();
+                data.put(".dockerconfigjson", credentials);
+
+                boolean hasPullSecret = client.secrets().withName(pullSecretName).get() != null;
+
+                if (!hasPullSecret) {
+                    log.info("Creating Secret %s", hasPullSecret);
+                    builder.addNewSecretItem()
+                            .withNewMetadata()
+                            .withName(pullSecretName)
+                            .endMetadata()
+                            .withData(data)
+                            .withType("kubernetes.io/dockerconfigjson")
+                            .endSecretItem();
+                } else {
+                    log.info("Adding to Secret %s", pullSecretName);
+                    return updateSecret(client, pullSecretName, data);
+                }
+
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    private boolean updateSecret(OpenShiftClient client, String pullSecretName, Map<String, String> data) {
+        if (!Objects.equals(data, client.secrets().withName(pullSecretName).get().getData())) {
+            client.secrets().withName(pullSecretName).edit()
+                    .editMetadata()
+                    .withName(pullSecretName)
+                    .endMetadata()
+                    .withData(data)
+                    .withType("kubernetes.io/dockerconfigjson")
+                    .done();
+            log.info("Updating Secret %s", pullSecretName);
+        } else {
+            log.info("Using Secret %s", pullSecretName);
+        }
+        return true;
+    }
+
+
+    private String extractBaseFromConfiguration(BuildImageConfiguration buildConfig) {
+        String fromImage;
+        fromImage = buildConfig.getFrom();
+        if (fromImage == null) {
+            AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
+            if (assemblyConfig == null) {
+                fromImage = DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE;
+            }
+        }
+        return fromImage;
+    }
+
+    private String extractBaseFromDockerfile(BuildImageConfiguration buildConfig, io.fabric8.maven.docker.service.BuildService.BuildContext buildContext) {
+        String fromImage;
+        try {
+            File fullDockerFilePath = buildConfig.getAbsoluteDockerFilePath(buildContext.getMojoParameters());
+            fromImage = DockerFileUtil.extractBaseImage(
+                    fullDockerFilePath,
+                    buildContext.getMojoParameters().getProject().getProperties(),
+                    buildConfig.getFilter());
+        } catch (IOException e) {
+            // Cant extract base image, so we wont try an auto pull. An error will occur later anyway when
+            // building the image, so we are passive here.
+            fromImage = null;
+        }
+        return fromImage;
     }
 
     private void checkOrCreateImageStream(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder, String imageStreamName) {

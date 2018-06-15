@@ -58,6 +58,8 @@ public interface BuildService {
 
         private String s2iBuildNameSuffix;
 
+        private String openshiftPullSecret;
+
         private Task<KubernetesListBuilder> enricherTask;
 
         private String buildDirectory;
@@ -87,6 +89,10 @@ public interface BuildService {
 
         public String getS2iBuildNameSuffix() {
             return s2iBuildNameSuffix;
+        }
+
+        public String getOpenshiftPullSecret() {
+            return openshiftPullSecret;
         }
 
         public Task<KubernetesListBuilder> getEnricherTask() {
@@ -144,6 +150,11 @@ public interface BuildService {
 
             public Builder s2iBuildNameSuffix(String s2iBuildNameSuffix) {
                 config.s2iBuildNameSuffix = s2iBuildNameSuffix;
+                return this;
+            }
+
+            public Builder openshiftPullSecret(String openshiftPullSecret) {
+                config.openshiftPullSecret = openshiftPullSecret;
                 return this;
             }
 
