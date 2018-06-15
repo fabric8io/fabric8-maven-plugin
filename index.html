@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.39,</span>
-<span id="revdate">2018-06-13</span>
+<span id="revdate">2018-06-15</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -643,9 +643,10 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#generator-java-exec">9.1.1. Java Applications</a></li>
 <li><a href="#generator-spring-boot">9.1.2. Spring Boot</a></li>
 <li><a href="#generator-wildfly-swarm">9.1.3. Wildfly Swarm</a></li>
-<li><a href="#generator-vertx">9.1.4. Vert.x</a></li>
-<li><a href="#generator-karaf">9.1.5. Karaf</a></li>
-<li><a href="#generator-webapp">9.1.6. Web Applications</a></li>
+<li><a href="#generator-thorntail-v2">9.1.4. Thorntail v2</a></li>
+<li><a href="#generator-vertx">9.1.5. Vert.x</a></li>
+<li><a href="#generator-karaf">9.1.6. Karaf</a></li>
+<li><a href="#generator-webapp">9.1.7. Web Applications</a></li>
 </ul>
 </li>
 <li><a href="#generators-api">9.2. Generator API</a></li>
@@ -4514,6 +4515,11 @@ This plugin definition includes the configuration to generate the Docker image.
 <td class="tableblock halign-left valign-top"><p class="tableblock">Generator for Wildfly Swarm apps</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#generator-thorntail-v2">Thorntail v2</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>thorntail-v2</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Generator for Thorntail v2 apps</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#generator-vertx">Vert.x</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>vertx</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Generator for Vert.x applications</p></td>
@@ -4763,7 +4769,16 @@ Since the released version are typically generated with a CI system which does a
 </div>
 </div>
 <div class="sect3">
-<h4 id="generator-vertx">9.1.4. Vert.x</h4>
+<h4 id="generator-thorntail-v2">9.1.4. Thorntail v2</h4>
+<div class="paragraph">
+<p>The Thorntail v2 generator detects a Thorntail v2 build and disables the Prometheus Java agent because of this <a href="https://issues.jboss.org/browse/THORN-1859">issue</a>.</p>
+</div>
+<div class="paragraph">
+<p>Otherwise this generator is identical to the <a href="#generator-java-exec">java-exec generator</a>. It supports the  <a href="#generator-options-common">common generator options</a> and the <a href="#generator-java-exec-options"><code>java-exec</code> options</a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="generator-vertx">9.1.5. Vert.x</h4>
 <div class="paragraph">
 <p>The Vert.x generator detects an application using Eclipse Vert.x. It generates the metadata to start the application as a
 fat jar.</p>
@@ -4786,7 +4801,7 @@ fat jar.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="generator-karaf">9.1.5. Karaf</h4>
+<h4 id="generator-karaf">9.1.6. Karaf</h4>
 <div class="paragraph">
 <p>This generator named <code>karaf</code> kicks in when the build uses a <code>karaf-maven-plugin</code>. By default the following base images are used:</p>
 </div>
@@ -4867,7 +4882,7 @@ fat jar.</p>
 </table>
 </div>
 <div class="sect3">
-<h4 id="generator-webapp">9.1.6. Web Applications</h4>
+<h4 id="generator-webapp">9.1.7. Web Applications</h4>
 <div class="paragraph">
 <p>The <code>webapp</code> generator tries to detect WAR builds and selects a base servlet container image based on the configuration found in the <code>pom.xml</code>:</p>
 </div>
@@ -5739,6 +5754,70 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
 </div>
 </div>
 <div class="sect4">
+<h5 id="f8-thorntail-v2-health-check">f8-thorntail-v2-health-check</h5>
+<div class="paragraph">
+<p>This enricher adds kubernetes readiness and liveness probes with Thorntail v2. This requires the following fraction
+ has been enabled in Thorntail</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml">   <span class="tag">&lt;dependency&gt;</span>
+     <span class="tag">&lt;groupId&gt;</span>io.thorntail<span class="tag">&lt;/groupId&gt;</span>
+     <span class="tag">&lt;artifactId&gt;</span>microprofile-health<span class="tag">&lt;/artifactId&gt;</span>
+   <span class="tag">&lt;/dependency&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The enricher will use the following settings by default:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>port = <code>8080</code></p>
+</li>
+<li>
+<p>scheme = <code>HTTP</code></p>
+</li>
+<li>
+<p>path = <code>/health</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>These values can be configured by the enricher in the <code>fabric8-maven-plugin</code> configuration as shown below:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml">      <span class="tag">&lt;plugin&gt;</span>
+        <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+        <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+        <span class="tag">&lt;version&gt;</span>3.3.0<span class="tag">&lt;/version&gt;</span>
+        <span class="tag">&lt;executions&gt;</span>
+          <span class="tag">&lt;execution&gt;</span>
+            <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
+            <span class="tag">&lt;goals&gt;</span>
+              <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
+              <span class="tag">&lt;goal&gt;</span>helm<span class="tag">&lt;/goal&gt;</span>
+              <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
+            <span class="tag">&lt;/goals&gt;</span>
+          <span class="tag">&lt;/execution&gt;</span>
+        <span class="tag">&lt;/executions&gt;</span>
+        <span class="tag">&lt;configuration&gt;</span>
+          <span class="tag">&lt;enricher&gt;</span>
+            <span class="tag">&lt;config&gt;</span>
+              <span class="tag">&lt;thorntail-v2-health-check&gt;</span>
+                <span class="tag">&lt;port&gt;</span>4444<span class="tag">&lt;/port&gt;</span>
+                <span class="tag">&lt;scheme&gt;</span>HTTPS<span class="tag">&lt;/scheme&gt;</span>
+                <span class="tag">&lt;path&gt;</span>health/myapp<span class="tag">&lt;/path&gt;</span>
+              <span class="tag">&lt;/thorntail-v2-health-check&gt;</span>
+            <span class="tag">&lt;/config&gt;</span>
+          <span class="tag">&lt;/enricher&gt;</span>
+        <span class="tag">&lt;/configuration&gt;</span>
+      <span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
 <h5 id="f8-vertx-health-check">f8-vertx-health-check</h5>
 <div class="paragraph">
 <p>This enricher adds kubernetes readiness and liveness probes with Eclipse Vert.x. The readiness probe lets Kubernetes
@@ -6542,6 +6621,7 @@ label applied, like the following:</p>
     - <span class="string"><span class="content">fmp-openshift-route</span></span>
     - <span class="string"><span class="content">spring-boot-health-check</span></span>
     - <span class="string"><span class="content">wildfly-swarm-health-check</span></span>
+    - <span class="string"><span class="content">thorntail-v2-health-check</span></span>
     - <span class="string"><span class="content">karaf-health-check</span></span>
     - <span class="string"><span class="content">vertx-health-check</span></span>
     - <span class="string"><span class="content">docker-health-check</span></span>
@@ -6559,6 +6639,7 @@ label applied, like the following:</p>
     <span class="key">includes</span>:
     - <span class="string"><span class="content">spring-boot</span></span>
     - <span class="string"><span class="content">wildfly-swarm</span></span>
+    - <span class="string"><span class="content">thorntail-v2</span></span>
     - <span class="string"><span class="content">karaf</span></span>
     - <span class="string"><span class="content">vertx</span></span>
     - <span class="string"><span class="content">java-exec</span></span>
@@ -7110,7 +7191,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.39<br>
-Last updated 2018-06-13 12:53:23 UTC
+Last updated 2018-06-15 07:44:27 UTC
 </div>
 </div>
 </body>
