@@ -9,18 +9,17 @@ We use semantic versioning in some slight variation until our feature set has st
 * The `PATCH_LEVEL` is used for regular CD releases which add new features and bug fixes.
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
-###3.5.40
-* Feature 1293: Added support to create pullSecret in buildConfig when pulling from private registry in Openshift.
 
 ###3.5.40
 * Feature 1264: Added `osio` profile, with enricher to apply OpenShift.io space labels to resources
+* Feature 1291: Added ImageStream triggers for StatefulSets, ReplicaSets and DaemonSets
+* Feature 1293: Added support to create pullSecret in buildConfig when pulling from private registry in Openshift.
 * Fix 1265: WildFly Swarm health check enricher now supports detecting MicroProfile Health
 * Fix 1298: WildFly Swarm was renamed to Thorntail
 
 ###3.5.39
 * Feature 1206: Added support for spring-boot 2 health endpoint
 * Feature 1171: Added configuration options for delay and period on spring-boot health check probes
-* Feature 1291: Added ImageStream triggers for StatefulSets, ReplicaSets and DaemonSets
 * Fix 1173: disable the Prometheus agent for WildFly Swarm applications, because it uses Java logging too early; also reenable the Jolokia agent, which was disabled due to the same problem but was fixed a long time ago
 * Fix 1231: make helm artifact extension configurable with default value "tar.gz"
 * Fix 1247: do not try to install non-existent imagestream yml file

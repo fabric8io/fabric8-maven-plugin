@@ -19,12 +19,18 @@ package io.fabric8.maven.enricher.standard;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.builder.Visitable;
+import io.fabric8.kubernetes.api.builder.VisitableBuilder;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSetBuilder;
+import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
+import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSetBuilder;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.JSONUtil;
@@ -70,10 +76,9 @@ public class TriggersAnnotationEnricher extends BaseEnricher {
         builder.accept(new TypedVisitor<StatefulSetBuilder>() {
             @Override
             public void visit(StatefulSetBuilder o) {
-                if (canWriteTriggers(o.build())) {
-                    o.editOrNewMetadata()
-                            .addToAnnotations(TRIGGERS_ANNOTATION, createAnnotation(o))
-                            .endMetadata();
+                StatefulSet s = o.build();
+                if (canWriteTriggers(s)) {
+                    o.withMetadata(getMetaEnrichedWithTriggers(s.getMetadata(), o));
                 }
             }
         });
@@ -81,10 +86,9 @@ public class TriggersAnnotationEnricher extends BaseEnricher {
         builder.accept(new TypedVisitor<ReplicaSetBuilder>() {
             @Override
             public void visit(ReplicaSetBuilder o) {
-                if (canWriteTriggers(o.build())) {
-                    o.editOrNewMetadata()
-                            .addToAnnotations(TRIGGERS_ANNOTATION, createAnnotation(o))
-                            .endMetadata();
+                ReplicaSet s = o.build();
+                if (canWriteTriggers(s)) {
+                    o.withMetadata(getMetaEnrichedWithTriggers(s.getMetadata(), o));
                 }
             }
         });
@@ -92,14 +96,26 @@ public class TriggersAnnotationEnricher extends BaseEnricher {
         builder.accept(new TypedVisitor<DaemonSetBuilder>() {
             @Override
             public void visit(DaemonSetBuilder o) {
-                if (canWriteTriggers(o.build())) {
-                    o.editOrNewMetadata()
-                            .addToAnnotations(TRIGGERS_ANNOTATION, createAnnotation(o))
-                            .endMetadata();
+                DaemonSet s = o.build();
+                if (canWriteTriggers(s)) {
+                    o.withMetadata(getMetaEnrichedWithTriggers(s.getMetadata(), o));
                 }
             }
         });
 
+    }
+
+    protected ObjectMeta getMetaEnrichedWithTriggers(ObjectMeta meta, VisitableBuilder<?, ?> o) {
+        ObjectMetaBuilder metaBuilder;
+        if (meta != null) {
+            metaBuilder = new ObjectMetaBuilder(meta);
+        } else {
+            metaBuilder = new ObjectMetaBuilder();
+        }
+
+        return metaBuilder
+                .addToAnnotations(TRIGGERS_ANNOTATION, createAnnotation(o))
+                .build();
     }
 
     protected boolean canWriteTriggers(HasMetadata res) {

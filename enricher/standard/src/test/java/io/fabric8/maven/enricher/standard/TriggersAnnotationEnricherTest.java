@@ -16,6 +16,8 @@
 
 package io.fabric8.maven.enricher.standard;
 
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.Job;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
@@ -31,13 +33,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 import static junit.framework.TestCase.*;
 
 /**
- * @author kameshs
+ * @author nicola
  */
 @RunWith(JMockit.class)
 public class TriggersAnnotationEnricherTest {
@@ -53,10 +56,7 @@ public class TriggersAnnotationEnricherTest {
                     .withNewSpec()
                         .withNewTemplate()
                             .withNewSpec()
-                                .addNewContainer()
-                                    .withName("c1")
-                                    .withImage("is:latest")
-                                .endContainer()
+                                .withContainers(createContainers("c1", "is:latest"))
                             .endSpec()
                         .endTemplate()
                     .endSpec()
@@ -89,14 +89,10 @@ public class TriggersAnnotationEnricherTest {
                     .withNewSpec()
                         .withNewTemplate()
                             .withNewSpec()
-                                .addNewContainer()
-                                    .withName("c1")
-                                    .withImage("is")
-                                .endContainer()
-                                .addNewContainer()
-                                    .withName("c2")
-                                    .withImage("a-docker-user/is:latest")
-                                .endContainer()
+                                .withContainers(createContainers(
+                                    "c1", "is",
+                                    "c2", "a-docker-user/is:latest"
+                                ))
                             .endSpec()
                         .endTemplate()
                     .endSpec()
@@ -125,17 +121,16 @@ public class TriggersAnnotationEnricherTest {
 
         KubernetesListBuilder builder = new KubernetesListBuilder()
                 .addNewDaemonSetItem()
+                    .withNewMetadata()
+                        .addToAnnotations("annkey", "annvalue")
+                    .endMetadata()
                     .withNewSpec()
                         .withNewTemplate()
                             .withNewSpec()
-                                .addNewContainer()
-                                    .withName("c1")
-                                    .withImage("iss:1.1.0")
-                                .endContainer()
-                                .addNewContainer()
-                                    .withName("c2")
-                                    .withImage("docker.io/a-docker-user/is:latest")
-                                .endContainer()
+                                .withContainers(createContainers(
+                                    "c1", "iss:1.1.0",
+                                    "c2", "docker.io/a-docker-user/is:latest"
+                                ))
                             .endSpec()
                         .endTemplate()
                     .endSpec()
@@ -157,6 +152,8 @@ public class TriggersAnnotationEnricherTest {
         assertEquals("ImageStreamTag", trigger.getFrom().getKind());
         assertEquals("iss:1.1.0", trigger.getFrom().getName());
         assertTrue(trigger.getAdditionalProperties().containsKey("fieldPath"));
+
+        assertEquals("annvalue", res.getMetadata().getAnnotations().get("annkey"));
     }
 
     @Test
@@ -174,18 +171,11 @@ public class TriggersAnnotationEnricherTest {
                     .withNewSpec()
                         .withNewTemplate()
                             .withNewSpec()
-                                .addNewContainer()
-                                    .withName("c1")
-                                    .withImage("is1:latest")
-                                .endContainer()
-                                .addNewContainer()
-                                    .withName("c2")
-                                    .withImage("is2:latest")
-                                .endContainer()
-                                .addNewContainer()
-                                    .withName("c3")
-                                    .withImage("is3:latest")
-                                .endContainer()
+                                .withContainers(createContainers(
+                                    "c1", "is1:latest",
+                                    "c2", "is2:latest",
+                                    "c3", "is3:latest"
+                                ))
                             .endSpec()
                         .endTemplate()
                     .endSpec()
@@ -225,14 +215,10 @@ public class TriggersAnnotationEnricherTest {
                     .withNewSpec()
                         .withNewTemplate()
                             .withNewSpec()
-                                .addNewContainer()
-                                    .withName("c1")
-                                    .withImage("is1:latest")
-                                .endContainer()
-                                .addNewContainer()
-                                    .withName("c2")
-                                    .withImage("is2:latest")
-                                .endContainer()
+                                .withContainers(createContainers(
+                                    "c1", "is1:latest",
+                                    "c2", "is2:latest"
+                                ))
                             .endSpec()
                         .endTemplate()
                     .endSpec()
@@ -246,6 +232,21 @@ public class TriggersAnnotationEnricherTest {
         Job res = (Job) builder.build().getItems().get(0);
         String triggers = res.getMetadata().getAnnotations().get("image.openshift.io/triggers");
         assertNull(triggers);
+    }
+
+
+    private List<Container> createContainers(String... nameImage) {
+        assertEquals(0, nameImage.length % 2);
+        List<Container> containers = new ArrayList<>();
+        for (int i=0; i<nameImage.length; i+=2) {
+            Container container = new ContainerBuilder()
+                    .withName(nameImage[i])
+                    .withImage(nameImage[i+1])
+                    .build();
+            containers.add(container);
+        }
+
+        return containers;
     }
 
 }
