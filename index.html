@@ -2349,6 +2349,12 @@ the URL is:</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.profile</code></p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>pullSecret</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The name to use for naming pullSecret to be created to pull the base image in case pulling from a private registry which requires authentication for Openshift.
+</p><p class="tableblock">  The default value for pull registry will be picked from "docker.pull.registry/docker.registry".</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.build.pullSecret</code></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>registry</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Specify globally a registry to use for pulling and pushing images. See <a href="#registry">Registry handling</a> for details.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.registry</code></p></td>
@@ -7191,7 +7197,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.39<br>
-Last updated 2018-06-15 07:44:28 UTC
+Last updated 2018-06-15 08:28:49 UTC
 </div>
 </div>
 </body>
