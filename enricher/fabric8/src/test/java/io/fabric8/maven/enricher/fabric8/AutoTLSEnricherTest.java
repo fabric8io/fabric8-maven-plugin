@@ -17,6 +17,7 @@ package io.fabric8.maven.enricher.fabric8;
 
 import java.util.*;
 
+import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplate;
 import io.fabric8.maven.core.config.PlatformMode;
@@ -177,9 +178,8 @@ public class AutoTLSEnricherTest {
             enricher.adapt(klb);
             PodTemplate pt = (PodTemplate) klb.getItems().get(0);
 
-            String initContainers = pt.getTemplate().getMetadata().getAnnotations()
-                                      .get(InitContainerHandler.INIT_CONTAINER_ANNOTATION);
-            assertEquals(tc.mode == PlatformMode.openshift, initContainers != null);
+            List<Container> initContainers = pt.getTemplate().getSpec().getInitContainers();
+            assertEquals(tc.mode == PlatformMode.openshift, !initContainers.isEmpty());
 
             if (tc.mode == PlatformMode.kubernetes) {
                 continue;

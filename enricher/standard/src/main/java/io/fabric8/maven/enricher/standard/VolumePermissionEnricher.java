@@ -17,27 +17,15 @@
 package io.fabric8.maven.enricher.standard;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaimBuilder;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaimVolumeSource;
-import io.fabric8.kubernetes.api.model.PodSpec;
-import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
-import io.fabric8.kubernetes.api.model.Volume;
-import io.fabric8.kubernetes.api.model.VolumeMount;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.util.InitContainerHandler;
 import io.fabric8.utils.Strings;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author roland
@@ -102,36 +90,40 @@ public class VolumePermissionEnricher extends BaseEnricher {
                 return false;
             }
 
-            private JSONObject createPvInitContainer(PodSpec podSpec) {
+            private Container createPvInitContainer(PodSpec podSpec) {
                 Map<String, String> mountPoints = extractMountPoints(podSpec);
-
-                JSONObject entry = new JSONObject();
-                entry.put("name", ENRICHER_NAME);
-                entry.put("image","busybox");
-                entry.put("imagePullPolicy","IfNotPresent");
-                entry.put("command", createChmodCommandArray(mountPoints));
-                entry.put("volumeMounts", createMounts(mountPoints));
-                return entry;
+                return new ContainerBuilder()
+                        .withName(ENRICHER_NAME)
+                        .withImage("busybox")
+                        .withImagePullPolicy("IfNotPresent")
+                        .withCommand(createChmodCommandArray(mountPoints))
+                        .withVolumeMounts(createMounts(mountPoints))
+                        .build();
             }
 
-            private JSONArray createChmodCommandArray(Map<String, String> mountPoints) {
-                JSONArray ret = new JSONArray();
-                ret.put("chmod");
-                ret.put(getConfig(Config.permission));
+            private List<String> createChmodCommandArray(Map<String, String> mountPoints) {
+                List<String> ret = new ArrayList<>();
+                ret.add("chmod");
+                ret.add(getConfig(Config.permission));
                 Set<String> uniqueNames = new LinkedHashSet<>(mountPoints.values());
                 for (String name : uniqueNames) {
-                    ret.put(name);
+                    ret.add(name);
                 }
                 return ret;
             }
 
-            private JSONArray createMounts(Map<String, String> mountPoints) {
-                JSONArray ret = new JSONArray();
+            private List<VolumeMount> createMounts(Map<String, String> mountPoints) {
+                List<VolumeMount> ret = new ArrayList<>();
                 for (Map.Entry<String, String> entry : mountPoints.entrySet()) {
                     JSONObject mount = new JSONObject();
                     mount.put("name", entry.getKey());
                     mount.put("mountPath", entry.getValue());
-                    ret.put(mount);
+
+                    VolumeMount volumeMount = new VolumeMountBuilder()
+                            .withName(entry.getKey())
+                            .withMountPath(entry.getValue())
+                            .build();
+                    ret.add(volumeMount);
                 }
                 return ret;
             }

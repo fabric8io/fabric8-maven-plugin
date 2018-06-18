@@ -12,7 +12,8 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 
 ###3.5.41
 * Feature 1032: Improvements of the Vert.x Generator and enrichers
-* Removed unused Maven goals. Please contact us if something's missing for you.
+* Fix 1313: Removed unused Maven goals. Please contact us if something's missing for you.
+* Fix 1299: autotls feature doesn't work with OpenShift 3.9 (Kubernetes 1.8+) due to InitContainer annotation deprecation
 
 ###3.5.40
 * Feature 1264: Added `osio` profile, with enricher to apply OpenShift.io space labels to resources
