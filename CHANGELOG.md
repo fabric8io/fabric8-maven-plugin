@@ -16,6 +16,11 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Feature 1293: Added support to create pullSecret in buildConfig when pulling from private registry in Openshift.
 * Fix 1265: WildFly Swarm health check enricher now supports detecting MicroProfile Health
 * Fix 1298: WildFly Swarm was renamed to Thorntail
+* Fix 1284: Handle intermittent SocketTimeoutException while s2i build
+* Fix Unzip Issue - https://github.com/fabric8io/fabric8-maven-plugin/pull/1303
+* Bring Wildfly swarm documentation uptodate - https://github.com/fabric8io/fabric8-maven-plugin/pull/1297
+* Upgraded Kubernetes Client to 3.2.0 - https://github.com/fabric8io/fabric8-maven-plugin/pull/1304
+* Upgraded Fabric8 to 3.0.12 - https://github.com/fabric8io/fabric8-maven-plugin/pull/1307
 
 ###3.5.39
 * Feature 1206: Added support for spring-boot 2 health endpoint
@@ -27,8 +32,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1237: When trimImageInContainerSpec is enabled, the generated yaml is incorrect
 * Fix 1245: Use released version of Booster in place of master always in regression test
 * Fix 1263: Display a warning in case of premature close of the build watcher by kubernetes client
-* Fix 886 : Introduce extends for profiles
-* Fix 1284: Handle intermittent SocketTimeoutException while s2i build
+* Fix 886: Introduce extends for profiles
 
 ###3.5.38
 * Feature 1209: Added flag fabric8.openshift.generateRoute which if set to false will not generate route.yml and also will not add Route resource in openshift.yml. If set to true or not set, it will generate rou  te.yml and also add Route resource in openshift.yml. By default its value is true.
