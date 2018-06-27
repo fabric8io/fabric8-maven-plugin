@@ -206,6 +206,7 @@ public class BaseBoosterIT {
                 .setGoals(goals)
                 .setQuiet(true)
                 .setProfiles(profiles)
+                .useMaven3Version("3.5.2")
                 .build();
     }
 
