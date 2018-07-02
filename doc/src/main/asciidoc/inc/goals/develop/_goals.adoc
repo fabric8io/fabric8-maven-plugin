@@ -1,11 +1,8 @@
 [[goals-overview-develop]]
 # Development Goals
 
-include::_fabric8-run.adoc[]
 include::_fabric8-deploy.adoc[]
 include::_fabric8-undeploy.adoc[]
-include::_fabric8-start.adoc[]
-include::_fabric8-stop.adoc[]
 include::_fabric8-log.adoc[]
 include::_fabric8-debug.adoc[]
 include::_fabric8-watch.adoc[]
