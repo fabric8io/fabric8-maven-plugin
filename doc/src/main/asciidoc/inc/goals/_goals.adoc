@@ -2,7 +2,7 @@
 [[goals]]
 = Goals Overview
 
-This plugin supports a rich set for providing a smooth Java developer experience. These goals can categorized in multiple groups:
+This plugin supports a rich set for providing a smooth Java developer experience. These goals can be categorized in multiple groups:
 
 * <<goals-build, Build goals>> are all about creating and managing Kubernetes and OpenShift build artifacts like Docker images or S2I builds.
 
@@ -61,13 +61,13 @@ This plugin supports a rich set for providing a smooth Java developer experience
 | Undeploy and remove resources decriptors from a cluster.
 
 | *<<fabric8:start>>*
-| Start the application which has been deployed previously
+| Start the application which has been previously deployed
 
 | *<<fabric8:stop>>*
-| Stop the application which has been deployed previously
+| Stop the application which has been previously deployed
 
 | *<<fabric8:watch>>*
-| Watch for doing rebuilds and redeployments
+| Watch for file changes and perform rebuilds and redeployments
 
 | *<<fabric8:watch-spring-boot>>*
 | Watch for local code changes in Spring Boot apps and restart the container on the fly
