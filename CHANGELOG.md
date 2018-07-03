@@ -27,11 +27,11 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1346: karaf-maven-plugin is detected under any groupId
 
 ###4.0-SNAPSHOT
-
 * Refactor 1344: Removed unused Maven goals. Please contact us if something's missing for you.
 * Refactor 949: Remove dependency from fabric8/fabric8
 * Feature 1214: Don't use a default for skipBuildPom. This might break backwards compatibility, so please specify the desired value in case
 * Fix 1093: Default tag for snapshot release is "latest", not the timestamp anymore
+* Fix 1155 : Decouple regression test module from Fabric8 Maven Plugin
 
 ###3.5.40
 * Feature 1264: Added `osio` profile, with enricher to apply OpenShift.io space labels to resources
