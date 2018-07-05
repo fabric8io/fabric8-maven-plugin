@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.40,</span>
-<span id="revdate">2018-06-20</span>
+<span id="revdate">2018-07-05</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -737,7 +737,7 @@ That images can then be pushed to public or private Docker registries with <a hr
 <p>Depending on the operational mode, for building the actual image either a Docker daemon is used directly or an <a href="https://docs.openshift.com/enterprise/3.0/architecture/core_concepts/builds_and_image_streams.html#docker-build">OpenShift Docker Build</a> is performed.</p>
 </div>
 <div class="paragraph">
-<p>A special <a href="#fabric8:watch"><strong>fabric8:watch</strong></a> goal allows for reacting to code changes and automatic recreation of images or copying new artifacts into running containers.</p>
+<p>A special <a href="#fabric8:watch"><strong>fabric8:watch</strong></a> goal allows for reacting to code changes to automatically recreate images or copy new artifacts into running containers.</p>
 </div>
 <div class="paragraph">
 <p>These image related features are inherited from the <a href="https://github.com/fabric8io/docker-maven-plugin">fabric8io/docker-maven-plugin</a> which is part of this plugin.</p>
@@ -797,17 +797,17 @@ This allows for type-safe configuration with IDE support, but only a subset of p
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Zero-Config</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#generators">Generators</a> are used to create Docker image configurations. Generators can detect certain aspects of the build (e.g. whether Spring Boot is used) and then choose some default like the base image, which ports to expose and the startup command. The can be configured, but offer only a few options.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#generators">Generators</a> are used to create Docker image configurations. Generators can detect certain aspects of the build (e.g. whether Spring Boot is used) and then choose some default like the base image, which ports to expose and the startup command. They can be configured, but offer only a few options.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Default <a href="#enrichers">Enrichers</a> will create a default <em>Service</em> and <em>Deployment</em> (<em>DeploymentConfig</em> for OpenShift) when no other resource objects are provided. Depending on the image they can detect which port to expose in the service. As with Generators, Enrichers support a limited set of configuration options.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>XML configuration</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">f8-m-p inherits the XML based configuration for building images from the <a href="https://fabric8io.github.io/docker-maven-plugin/#docker:build">docker-maven-plugin</a> and provides the same functionality. It supports an <a href="http://maven.apache.org/components/plugins/maven-assembly-plugin/assembly.html">assembly descriptor</a> for specifying the content of the Docker image.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A subset of possible resource objects can be configured with a dedicated XML syntax. With a decent IDE you get autocompletion on most object and inline documentation for the available configuration elements. The provide configuration can be still enhanced by Enhancers which is useful for adding e.g. labels and annotation containing build or other information.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A subset of possible resource objects can be configured with a dedicated XML syntax. With a decent IDE you get autocompletion on most object and inline documentation for the available configuration elements. The provided configuration can be still enhanced by Enhancers which is useful for adding e.g. labels and annotations containing build or other information.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Resource Fragments</strong> and <strong>Dockerfiles</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Like the docker-maven-plugin f8-m-p supports <a href="#external-dockerfile">external Dockerfiles</a> too, which are referenced from the plugin configuration.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Similarly to the docker-maven-plugin, f8-m-p supports <a href="#external-dockerfile">external Dockerfiles</a> too, which are referenced from the plugin configuration.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Resource descriptors can be provided as external YAML files which specify a skeleton. This skeleton is then filled by Enrichers which add labels and more. Maven properties within these files are resolved to thier values. With this model you can use every Kubernetes / OpenShift resource object with all their flexibility, but still get the benefit of adding build information.</p></td>
 </tr>
 <tr>
@@ -916,7 +916,7 @@ This allows for type-safe configuration with IDE support, but only a subset of p
 </div>
 </div>
 <div class="paragraph">
-<p>This will create the Docker image against a running Docker daemon (which must be accessible either via Unix Socker or with the URL set in <code>DOCKER_HOST</code>). Alternatively, when using <code>mvn -Dfabric8.mode=openshift package fabric8:build</code> and connected to an OpenShift cluster, then a Docker build will be performed on OpenShift which at the end creates an <a href="https://docs.openshift.com/enterprise/3.1/architecture/core_concepts/builds_and_image_streams.html">ImageStream</a>.</p>
+<p>This will create the Docker image against a running Docker daemon (which must be accessible either via Unix Socket or with the URL set in <code>DOCKER_HOST</code>). Alternatively, when connected to an OpenShift cluster (or using the <code>openshift</code> <a href="#build-mode">mode</a> explicitly), then a Docker build will be performed on OpenShift which at the end creates an <a href="https://docs.openshift.com/enterprise/3.1/architecture/core_concepts/builds_and_image_streams.html">ImageStream</a>.</p>
 </div>
 <div class="paragraph">
 <p>To deploy the resources to the cluster call</p>
@@ -986,13 +986,14 @@ This allows for type-safe configuration with IDE support, but only a subset of p
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-XML based configuration is implemented only partially and not recommended to use right now.
+XML based configuration is only partially implemented and is not recommended for use right now.
 </td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>Although the Zero-config mode with its generators can be tweaked with options up to a certain degree. In many cases more flexibility and power is required, though. For this an XML based plugin configuration can be use, much similar to the <a href="https://fabric8io.github.io/docker-maven-plugin/#configuration">XML configuration</a> used by <code>docker-maven-plugin</code>.</p>
+<p>Although the Zero-config mode and its generators can be tweaked with options up to a certain degree, many cases require more flexibility. For such instances, an XML-based plugin configuration can be used, in a way similar to the
+<a href="https://fabric8io.github.io/docker-maven-plugin/#configuration">XML configuration</a> used by <code>docker-maven-plugin</code>.</p>
 </div>
 <div class="paragraph">
 <p>The plugin configuration can be roughly divided into the following sections:</p>
@@ -1000,24 +1001,24 @@ XML based configuration is implemented only partially and not recommended to use
 <div class="ulist">
 <ul>
 <li>
-<p>A global configuration options are responsible for tuning the behaviour of plugin goals</p>
+<p>Global configuration options are responsible for tuning the behaviour of plugin goals</p>
 </li>
 <li>
-<p><code>&lt;images&gt;</code> section which defines the Docker <a href="#image-configuratuon">images</a> to build. It has the <a href="https://fabric8io.github.io/docker-maven-plugin/#image-configuration">same syntax</a> as the similar configuration of <code>docker-maven-plugin</code> (except that <code>&lt;run&gt;</code> and <code>&lt;external&gt;</code> sub-elements are ignored)</p>
+<p><code>&lt;images&gt;</code> defines which Docker <a href="#image-configuration">images</a> are used and configured. This section is similar to the <a href="https://fabric8io.github.io/docker-maven-plugin/#image-configuration">image configuration</a> of the <code>docker-maven-plugin</code>, except that <code>&lt;run&gt;</code> and <code>&lt;external&gt;</code> sub-elements are ignored)</p>
 </li>
 <li>
-<p><code>&lt;resource&gt;</code> is used to defined the resource descriptors for deploying on an OpenShift or Kuberneres cluster.</p>
+<p><code>&lt;resource&gt;</code> defines the resource descriptors for deploying on an OpenShift or Kuberneres cluster.</p>
 </li>
 <li>
-<p><code>&lt;generator&gt;</code> is for configuring <a href="#generators">generators</a> which are responsible for creating images. Generators are used as an alternative to a dedicates <code>&lt;images&gt;</code> section.</p>
+<p><code>&lt;generator&gt;</code> configures <a href="#generators">generators</a> which are responsible for creating images. Generators are used as an alternative to a dedicated <code>&lt;images&gt;</code> section.</p>
 </li>
 <li>
-<p><code>&lt;enricher&gt;</code> is used to configure various aspects of <a href="#enrichers">enrichers</a> for creating or enhancing resource descriptors.</p>
+<p><code>&lt;enricher&gt;</code> configures various aspects of <a href="#enrichers">enrichers</a> for creating or enhancing resource descriptors.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>A working example can be found in the  <a href="https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/xml-config">samples/xml-config</a> directory. An extract of the plugin configuration is shown in the next example</p>
+<p>A working example can be found in the  <a href="https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/xml-config">samples/xml-config</a> directory. An extract of the plugin configuration is shown below:</p>
 </div>
 <div class="listingblock">
 <div class="title">Example for an XML configuration</div>
@@ -1103,7 +1104,7 @@ XML based configuration is implemented only partially and not recommended to use
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>Container to include in the deployment</td>
+<td>Containers to include in the deployment</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="6"></i><b>6</b></td>
@@ -1120,16 +1121,19 @@ XML based configuration is implemented only partially and not recommended to use
 </table>
 </div>
 <div class="paragraph">
-<p>The XML resource configuration is based on plain Kubernetes resource objects. For creating OpenShift resource descriptor an automatic conversion will happen, e.g. from Kubernetes <a href="http://kubernetes.io/docs/user-guide/deployments/">Deployment</a> to an OpenShift <a href="https://docs.openshift.com/enterprise/3.0/dev_guide/deployments.html">DeploymentConfig</a>.</p>
+<p>The XML resource configuration is based on plain Kubernetes resource objects. When targeting OpenShift, Kubernetes resource descriptors will be automatically converted to their OpenShift counterparts, e.g. a Kubernetes <a href="http://kubernetes.io/docs/user-guide/deployments/">Deployment</a> will be converted to an OpenShift <a href="https://docs.openshift.org/latest/architecture/core_concepts/deployments.html#deployments-and-deployment-configurations">DeploymentConfig</a>.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="resource-fragments">1.4.3. Resource Fragments</h4>
 <div class="paragraph">
-<p>The third configuration option is to use an external configuration in form of YAML resource descriptors which are located in the  <code>src/main/fabric8</code> directory. Each resource get is own file, which contains some skeleton of a resource description. The plugin will pick up the resource, enriches it and the combines all to a single <code>kubernetes.yml</code> and <code>openshift.yml</code>. Within these descriptor files you are can freely use any Kubernetes feature. Note, that in order to support simultaneously both OpenShift and Kubernetes, there is currently no way to specify OpenShift feature only this way (but this might change).</p>
+<p>The third configuration option is to use an external configuration in form of YAML resource descriptors which are located in the  <code>src/main/fabric8</code> directory. Each resource get its own file, which contains a skeleton of a resource descriptor. The plugin will pick up the resource, enrich it and then combine all to a single <code>kubernetes.yml</code> and <code>openshift.yml</code> file. Within these descriptor files you are can freely use any Kubernetes feature.</p>
 </div>
 <div class="paragraph">
-<p>Let&#8217;s have a look at an example from <a href="https://github.com/rhuss/fabric8-maven-plugin/tree/master/samples/external-resources">samples/external-resources</a>. This is a plain spring-boot application, whose images are auto generated like in the <a href="#zero-config">Zero-Config</a> case. The resource fragments are in <code>src/mainfabric8</code>.</p>
+<p>Note: In order to support simultaneously both OpenShift and Kubernetes, there is currently no way to specify OpenShift-only features this way, though this might change in future releases.</p>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s have a look at an example from <a href="https://github.com/rhuss/fabric8-maven-plugin/tree/master/samples/external-resources">samples/external-resources</a>. This is a plain Spring Boot application, whose images are auto generated like in the <a href="#zero-config">Zero-Config</a> case. The resource fragments are in <code>src/mainfabric8</code>.</p>
 </div>
 <div class="listingblock">
 <div class="title">Example fragment "deployment.yml"</div>
@@ -1158,10 +1162,16 @@ XML based configuration is implemented only partially and not recommended to use
 </div>
 </div>
 <div class="paragraph">
-<p>As you can see, there is no <code>metadata</code> section as expected for each Kubernetes resource object. This section will be created automatically by fabric8-maven-plugin. The object&#8217;s <code>Kind</code>, if not given, will be extracted from the filename. In this case its a <code>Deployment</code> because the file is called <code>deployment.xml</code>. For each supported resource type such a mapping exists. In addition you could specify a name in like in <code>myapp-deployment.xml</code> to give the resource a fixed name. Otherwise it will be automatically extracted from project information (i.e. the artificact id).</p>
+<p>As you can see, there is no <code>metadata</code> section as would be expected for Kubernetes resources because it will be automatically added by the <code>fabric8-maven-plugin</code>. The object&#8217;s <code>Kind</code>, if not given, is automatically derived from the
+filename. In this case, the <code>fabric8-maven-plugin</code> will create a <code>Deployment</code> because the file is called <code>deployment.yml</code>. Similar mappings between file names and resource type exist for each supported resource kind, the
+complete list of which (along with associated abbreviations) can be found at <a href="https://github.com/fabric8io/fabric8-maven-plugin/blob/master/core/src/main/java/io/fabric8/maven/core/util/KubernetesResourceUtil.java#L234-L280" class="bare">https://github.com/fabric8io/fabric8-maven-plugin/blob/master/core/src/main/java/io/fabric8/maven/core/util/KubernetesResourceUtil.java#L234-L280</a>.</p>
 </div>
 <div class="paragraph">
-<p>Here also the reference to the image is missing. In this case it will be automatically connected to the image you are building with this plugin (And you already know, that the image definition comes either from a generator or by a dedicated image plugin configuration).</p>
+<p>Additionally, if you name your fragment using a name prefix followed by a dash and the mapped file name, the plugin will automatically use that name for your resource. So, for example, if you name your deployment fragment
+<code>myapp-deployment.yml</code>, the plugin will name your resource <code>myapp</code>. In the absence of such provided name for your resource, a name will be automatically derived from your project&#8217;s metadata (in particular, its <code>artifactId</code> as specified in your POM).</p>
+</div>
+<div class="paragraph">
+<p>No image is also referenced in this example because the plugin also fills in the image details based on the configured image you are building with (either from a generator or from a dedicated image plugin configuration, as seen before).</p>
 </div>
 </div>
 <div class="sect3">
@@ -1228,7 +1238,7 @@ For building images there is also an alternative mode using external Dockerfiles
 </div>
 <hr>
 <div class="paragraph">
-<p>Enrichment of resource fragments can be fine tune by using profile sub-directories. For more details see <a href="#profiles">Profiles</a>.</p>
+<p>Enrichment of resource fragments can be fine-tuned by using profile sub-directories. For more details see <a href="#profiles">Profiles</a>.</p>
 </div>
 <div class="paragraph">
 <p>Now that we have seen some examples for the various ways how this plugin can be used, the following sections will describe the plugin goals and extension points in detail.</p>
@@ -1464,7 +1474,7 @@ available goals are described below.</p>
 <h2 id="goals">4. Goals Overview</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This plugin supports a rich set for providing a smooth Java developer experience. These goals can categorized in multiple groups:</p>
+<p>This plugin supports a rich set for providing a smooth Java developer experience. These goals can be categorized in multiple groups:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1556,15 +1566,15 @@ available goals are described below.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:start"><strong>fabric8:start</strong></a></strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Start the application which has been deployed previously</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Start the application which has been previously deployed</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:stop"><strong>fabric8:stop</strong></a></strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Stop the application which has been deployed previously</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Stop the application which has been previously deployed</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:watch"><strong>fabric8:watch</strong></a></strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Watch for doing rebuilds and redeployments</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Watch for file changes and perform rebuilds and redeployments</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#fabric8:watch-spring-boot">[fabric8:watch-spring-boot]</a></strong></p></td>
@@ -1801,7 +1811,7 @@ This is chapter is incomplete, but there is work in progress.
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
-<td><code>&lt;pod&gt;</code> holds lables for pod specifications in replication controller, replica sets and deployments</td>
+<td><code>&lt;pod&gt;</code> holds labels for pod specifications in replication controller, replica sets and deployments</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="6"></i><b>6</b></td>
@@ -1883,18 +1893,18 @@ This is chapter is incomplete, but there is work in progress.
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerServerId</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">the server id which is configured in
 <code>~/.m2/setting.xml</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">this will be used as name of the kubernetes secret resource</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>namespace</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">the secret resource will be applied to the specific
 namespace, if provided</p></td>
 </tr>
@@ -1966,23 +1976,23 @@ the <code>src/main/fabric8/</code> folder.</p>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>fabric8.skipResourceValidation</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">If value is set to <code>true</code> then resource validation is skipped. This may be useful if resource validation is getting failed due to some reason but still you want to continue the deployment.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If value is set to <code>true</code> then resource validation is skipped. This may be useful if resource validation is failing for some reason but you still want to continue the deployment.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>fabric8.failOnValidationError</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If value is set to <code>true</code> then any validation error will block the plugin execution. A warning will be printed otherwise.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>fabric8.build.switchToDeployment</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If value is set to <code>true</code> then fabric8-maven-plugin would switch to Deployments rather than DeploymentConfig when not using ImageStreams on Openshift.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>fabric8.openshift.trimImageInContainerSpec</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If value is set to <code>true</code> then it would set the container image reference to "", this is done to handle weird behavior of Openshift 3.7 in which subsequent rollouts lead to ImagePullErr</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -1990,7 +2000,8 @@ the <code>src/main/fabric8/</code> folder.</p>
 <div class="sect3">
 <h4 id="resource-route-generation">5.1.4. Route Generation</h4>
 <div class="paragraph">
-<p>If you hit fabric8:resource goal, it will also generate route along with service for OpenShift. If you do not want to generate route.yml, you can do the same using the below configuration.</p>
+<p>When the <code>fabric8:resource</code> goal is run, an OpenShift <a href="https://docs.openshift.org/latest/architecture/networking/routes.html">Route</a> descriptor (<code>route.yml</code>) will also be generated along the service if an OpenShift cluster is targeted.
+If you do not want to generate a Route descriptor, you can set the <code>fabric8.openshift.generateRoute</code> property to <code>false</code>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 11. Route Generation Configuration</caption>
@@ -2009,16 +2020,16 @@ the <code>src/main/fabric8/</code> folder.</p>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>fabric8.openshift.generateRoute</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">If value is set to 'false' then it will not generate the route.yml file. By default it is set to 'true', which will create route.yml and also add resource route in openshift.yml.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If value is set to <code>false</code> then no Route descriptor will be generated. By default it is set to <code>true</code>, which will create a <code>route.yml</code> descriptor and also add Route resource to <code>openshift.yml</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code></p></td>
 </tr>
 </tbody>
 </table>
 <div class="paragraph">
-<p>If you do not want to generate route.yml and want to configure it in pom.xml then you can do the same using following configuration in pom.xml</p>
+<p>If you do not want to generate a Route descriptor, you can also specify so in the plugin configuration in your POM as seen below.</p>
 </div>
 <div class="listingblock">
-<div class="title">Example for not generating route resource by configuring it in pom.xml</div>
+<div class="title">Example for not generating route resource by configuring it in <code>pom.xml</code></div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
@@ -2031,7 +2042,7 @@ the <code>src/main/fabric8/</code> folder.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>If you are using resource fragments, then also you can configure it in service.yml. You need to add a label <code>expose</code> in the metadata of the service and need to set it false.</p>
+<p>If you are using resource fragments, then also you can configure it in your Service resource fragment (e.g. <code>service.yml</code>). You need to add an <code>expose</code> label to the <code>metadata</code> section of your service and set it to <code>false</code>.</p>
 </div>
 <div class="listingblock yaml">
 <div class="title">Example for not generating route resource by configuring it in resource fragments</div>
@@ -2046,7 +2057,7 @@ spec:
 </div>
 </div>
 <div class="paragraph">
-<p>In case both the label in the resource fragment and also the flag is set then precedence will be given to flag. Like you have set the label to true and flag to false then it will not generate route.yml because flag is set to false.</p>
+<p>In case both the label and the property have been set with conflicting values, precedence will be given to the property value, so if you set the label to <code>true</code> but set the property to <code>false</code> then no Route descriptor will be generated because precedence will be given to the property value.</p>
 </div>
 </div>
 <div class="sect3">
@@ -2069,7 +2080,7 @@ spec:
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>fabric8.openshift.enableAutomaticTrigger</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If the value is set to <code>false</code> then automatic deployments would be disabled.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -2078,10 +2089,8 @@ spec:
 <div class="sect2">
 <h3 id="fabric8:build">5.2. <strong>fabric8:build</strong></h3>
 <div class="paragraph">
-<p>This goal is for building Docker images. Images can be build in two ways which depend on the <code>mode</code> (property: <code>fabric8.mode</code>). This mode can have be either <code>kubernetes</code> for a standard Docker build (the default) or <code>openshift</code> for an OpenShift build.</p>
-</div>
-<div class="paragraph">
-<p>By default the mode is set to <code>auto</code>. In this case the plugin tries to detect which kind of build should be performed by contaction the API server. If this fails or if no cluster access is conigured e.g. with <code>oc login</code> then the mode is set to <code>kubernetes</code>.</p>
+<p>This goal is for building Docker images. Images can be built in two different ways depending on the <code>mode</code> configuration (controlled by the <code>fabric8.mode</code> property).
+By default the mode is set to <code>auto</code>. In this case the plugin tries to detect which kind of build should be performed by contacting the API server. If this fails or if no cluster access is configured e.g. with <code>oc login</code> then the mode is set to <code>kubernetes</code> in which case a standard Docker build is performed. It can also be forced to <code>openshift</code> to perform an OpenShift build.</p>
 </div>
 <div class="sect3">
 <h4 id="build-kubernetes">5.2.1. Kubernetes Build</h4>
@@ -2089,16 +2098,16 @@ spec:
 <p>If the mode is set to <code>kubernetes</code> then a normal Docker build is performed. The connection configuration to access the Docker daemon is described in <a href="#access-configuration">Access Configuration</a>.</p>
 </div>
 <div class="paragraph">
-<p>In order to make the generated images available to the Kubernetes cluster the generated images need to be pushed to a registry with the goal <a href="#fabric8:push"><strong>fabric8:push</strong></a>. This is not necessary for single node clusters, though as their is no need to distribute images.</p>
+<p>In order to make the generated images available to the Kubernetes cluster the generated images need to be pushed to a registry with the goal <a href="#fabric8:push"><strong>fabric8:push</strong></a>. This is not necessary for single node clusters, though as there is no need to distribute images.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="build-openshift">5.2.2. OpenShift Build</h4>
 <div class="paragraph">
-<p>For the mode <code>openshift</code> OpenShift specific <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html">Builds</a> can be performed. These are so called <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html">Binary Source</a> builds ("binary builds" in short), where the data specified with the <a href="#build-configuration">build configuration</a>  is send directly to OpenShift as a binary archive.</p>
+<p>For the <code>openshift</code> mode, OpenShift specific <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html">builds</a> will be performed. These are so called <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html">Binary Source</a> builds ("binary builds" in short), where the data specified with the <a href="#build-configuration">build configuration</a>  is sent directly to OpenShift as a binary archive.</p>
 </div>
 <div class="paragraph">
-<p>There are two kind of binary builds supported by this plugin, which can be selected with the configuration option <code>buildStrategy</code> (property <code>fabric8.build.strategy</code>)</p>
+<p>There are two kind of binary builds supported by this plugin, which can be selected with the <code>buildStrategy</code> configuration option (<code>fabric8.build.strategy</code> property)</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 13. Build Strategies</caption>
@@ -2127,27 +2136,29 @@ spec:
 <p>Both build strategies update an <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#image-streams">Image Stream</a> after the image creation.</p>
 </div>
 <div class="paragraph">
-<p>The <a href="https://docs.openshift.com/enterprise/latest/dev_guide/builds.html#defining-a-buildconfig">Build Config</a> and <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#image-streams">Image streams</a> can be managed by this plugin. If they do not exist, they will be automatically created by <code>fabric8:build</code>. If they do already exist, they are reused, except when the configuration option <code>buildRecreate</code> (property <code>fabric8.build.recreate</code>) is set to a value as described in <a href="#build-goal-configuration">Configuration</a>. Also if the provided build strategy is different than for the existing build configuration, the Build Config is edited to reflect the new type (which in turn removes all build associated with the previous build).</p>
+<p>The <a href="https://docs.openshift.com/enterprise/latest/dev_guide/builds.html#defining-a-buildconfig">Build Config</a> and <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#image-streams">Image streams</a> can be managed by this plugin. If they do not exist, they will be automatically created by <code>fabric8:build</code>. If they do already exist, they are reused, except when the <code>buildRecreate</code> configuration option (property <code>fabric8.build.recreate</code>) is set to a value as described in <a href="#build-goal-configuration">Configuration</a>. Also if the provided build strategy is different than the one defined in the existing build configuration, the Build Config is edited to reflect the new type (which in turn removes all build associated with the previous build).</p>
 </div>
 <div class="paragraph">
-<p>This image stream created can then be referenced directly from a <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/deployments.html#deployments-and-deployment-configurations">Deployment Configuration</a> objects created by <a href="#fabric8:resource"><strong>fabric8:resource</strong></a>.
+<p>This image stream created can then be directly referenced from <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/deployments.html#deployments-and-deployment-configurations">Deployment Configuration</a> objects created by <a href="#fabric8:resource"><strong>fabric8:resource</strong></a>.
 By default, image streams are created with a local lookup policy, so that they can be used also by other resources such as Deployments or StatefulSets.
-This behavior can be turned off by setting the flag <code>-Dfabric8.s2i.imageStreamLookupPolicyLocal=false</code> when building the project.</p>
+This behavior can be turned off by setting the <code>fabric8.s2i.imageStreamLookupPolicyLocal</code> property to <code>false</code> when building the project.</p>
 </div>
 <div class="paragraph">
 <p>In order to be able to to create these OpenShift resource objects access to an OpenShift installation is required. The access parameters are described in <a href="#access-configuration">Access Configuration</a>.</p>
 </div>
 <div class="paragraph">
-<p>Regardless which build mode is used, the images are configured in the same way.</p>
+<p>Regardless of which build mode is used, the images are configured in the same way.</p>
 </div>
 <div class="paragraph">
-<p>The configuration consists of two parts: A global section which defines the overall behaviour of this plugin. And a <code>&lt;images&gt;</code> section which defines how the one or more images should be build.</p>
+<p>The configuration consists of two parts:
+* a global section which defines the overall behaviour of this plugin
+* and an <code>&lt;images&gt;</code> section which defines how the images should be build</p>
 </div>
 <div class="paragraph">
 <p>Many of the options below are relevant for the <a href="#build-kubernetes">Kubernetes Workflow</a> or the <a href="#build-openshift">OpenShift Workflow</a> with Docker builds as they influence how the Docker image is build.</p>
 </div>
 <div class="paragraph">
-<p>For an S2I binary build mostly the <a href="#build-assembly">Assembly</a> is relevant because it depends on the buider image how to interpret the content of the uploaded <code>docker.tar</code>.</p>
+<p>For an S2I binary build, on the other hand, the most relevant section is the <a href="#build-assembly">Assembly</a> one because the build depends on which buider/base image is used and how it interprets the content of the uploaded <code>docker.tar</code>.</p>
 </div>
 </div>
 <div class="sect3">
@@ -7224,7 +7235,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.40<br>
-Last updated 2018-06-20 19:02:15 UTC
+Last updated 2018-07-05 17:55:10 UTC
 </div>
 </div>
 </body>
