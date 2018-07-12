@@ -27,7 +27,7 @@ items:
       app: fabric8-maven-sample-env-metadata
       provider: fabric8
       group: io.fabric8
-- apiVersion: extensions/v1beta1
+- apiVersion: apps/v1
   kind: Deployment
   metadata:
     annotations:
