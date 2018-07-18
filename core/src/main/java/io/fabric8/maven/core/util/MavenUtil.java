@@ -187,6 +187,23 @@ public class MavenUtil {
     }
 
     /**
+     * Returns true if any of the given resources could be found on the given class loader
+     */
+    public static boolean hasResource(MavenProject project, String... paths) {
+        URLClassLoader compileClassLoader = getCompileClassLoader(project);
+        for (String path : paths) {
+            try {
+                if (compileClassLoader.getResource(path) != null) {
+                    return true;
+                }
+            } catch (Throwable e) {
+                // ignore
+            }
+        }
+        return false;
+    }
+
+    /**
      * Returns true if all the given class names could be found on the given class loader
      */
     public static boolean hasAllClasses(MavenProject project, String ... classNames) {
