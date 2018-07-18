@@ -10,6 +10,9 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
+###3.5.41
+* Feature 1032: Improvements of the Vert.x Generator and enrichers
+
 ###3.5.40
 * Feature 1264: Added `osio` profile, with enricher to apply OpenShift.io space labels to resources
 * Feature 1291: Added ImageStream triggers for StatefulSets, ReplicaSets and DaemonSets
