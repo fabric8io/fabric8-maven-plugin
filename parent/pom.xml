@@ -65,7 +65,7 @@
     <version.mockwebserver>0.0.13</version.mockwebserver>
     <version.docker-maven-plugin>0.22.1</version.docker-maven-plugin>
     <version.networknt.validator>0.1.7</version.networknt.validator>
-    <version.jgit>4.11.0.201803080745-r</version.jgit>
+    <version.jgit>5.0.1.201806211838-r</version.jgit>
 
     <!-- =======================================================  -->
     <!-- === Java base image versions for docker, s2i (istag == s2i) -->
