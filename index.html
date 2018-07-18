@@ -4797,8 +4797,7 @@ Since the released version are typically generated with a CI system which does a
 <div class="sect3">
 <h4 id="generator-vertx">9.1.5. Vert.x</h4>
 <div class="paragraph">
-<p>The Vert.x generator detects an application using Eclipse Vert.x. It generates the metadata to start the application as a
-fat jar.</p>
+<p>The Vert.x generator detects an application using Eclipse Vert.x. It generates the metadata to start the application as a fat jar.</p>
 </div>
 <div class="paragraph">
 <p>Currently, this generator is enabled if:</p>
@@ -4815,6 +4814,39 @@ fat jar.</p>
 </div>
 <div class="paragraph">
 <p>Otherwise this generator is identical to the <a href="#generator-java-exec">java-exec generator</a>. It supports the  <a href="#generator-options-common">common generator options</a> and the <a href="#generator-java-exec-options"><code>java-exec</code> options</a>.</p>
+</div>
+<div class="paragraph">
+<p>The generator automatically:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>enable metrics and JMX publishing of the metrics when <code>io.vertx:vertx-dropwizard-metrics</code> is in the project&#8217;s classpath / dependencies.</p>
+</li>
+<li>
+<p>enable clustering when a Vert.x cluster manager is available in the project&#8217;s classpath / dependencies. this is done by appending <code>-cluster</code> to the command line.</p>
+</li>
+<li>
+<p>Force IPv4 stack when <code>vertx-infinispan</code> is used.</p>
+</li>
+<li>
+<p>Disable the async DNS resolver to fallback to the regular JVM DNS resolver.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>You can pass application parameter by setting the <code>JAVA_ARGS</code> env variable. You can pass system properties either using the same variable or using <code>JAVA_OPTIONS</code>. For instance, create <code>src/main/fabric8/deployment.yml</code> with the following content to configure <code>JAVA_ARGS</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="key">spec</span>:
+ <span class="key">template</span>:
+   <span class="key">spec</span>:
+     <span class="key">containers</span>:
+       - <span class="string"><span class="content">env:</span></span>
+         - <span class="string"><span class="content">name: JAVA_ARGS</span></span>
+           <span class="key">value</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">-Dfoo=bar -cluster -instances=2</span><span class="delimiter">&quot;</span></span></code></pre>
+</div>
 </div>
 </div>
 <div class="sect3">
@@ -5841,25 +5873,63 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
 <div class="sect4">
 <h5 id="f8-vertx-health-check">f8-vertx-health-check</h5>
 <div class="paragraph">
-<p>This enricher adds kubernetes readiness and liveness probes with Eclipse Vert.x. The readiness probe lets Kubernetes
+<p>This enricher adds kubernetes readiness and liveness probes with Eclipse Vert.x applications. The readiness probe lets Kubernetes
 detects when the application is ready, while the liveness probe allows Kubernetes to verify that the application is
 still alive.</p>
 </div>
 <div class="paragraph">
-<p>By default, this enricher use the same URL for liveness and readiness probes. But the readiness path can be explicitly
-configured to use different paths.</p>
+<p>This enricher allows configuring the readiness and liveness probes. Are supported: <code>http</code> (emit HTTP requests), <code>tcp</code> (open a socket), <code>exec</code> (execute a command).</p>
 </div>
 <div class="paragraph">
-<p>The probes are added if the projects uses the Vert.x Maven Plugin or depends on the <code>io.vertx:vertx-core</code> artifact
-<strong>and</strong> the path is explicitly configured.</p>
+<p>By default, this enricher uses the same configuration for liveness and readiness probes. But specific configurations can be provided. The configurations can be overridden using project&#8217;s properties.</p>
+</div>
+<div class="sect5">
+<h6 id="using-the-f8-vertx-health-check-enricher">Using the f8-vertx-health-check enricher</h6>
+<div class="paragraph">
+<p>The enricher is automatically executed if your project uses the <code>vertx-maven-plugin</code> or depends on <code>io.vertx:vertx-core</code>.
+However, by default, no health check will be added to your deployment.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="minimal-configuration">Minimal configuration</h6>
+<div class="paragraph">
+<p>The minimal configuration to add health checks is the following:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.5.40<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;executions&gt;</span>
+    <span class="tag">&lt;execution&gt;</span>
+      <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
+      <span class="tag">&lt;goals&gt;</span>
+        <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
+        <span class="tag">&lt;goal&gt;</span>helm<span class="tag">&lt;/goal&gt;</span>
+        <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
+      <span class="tag">&lt;/goals&gt;</span>
+    <span class="tag">&lt;/execution&gt;</span>
+  <span class="tag">&lt;/executions&gt;</span>
+  <span class="tag">&lt;configuration&gt;</span>
+    <span class="tag">&lt;enricher&gt;</span>
+      <span class="tag">&lt;config&gt;</span>
+        <span class="tag">&lt;vertx-health-check&gt;</span>
+            <span class="tag">&lt;path&gt;</span>/health<span class="tag">&lt;/path&gt;</span>
+        <span class="tag">&lt;/vertx-health-check&gt;</span>
+      <span class="tag">&lt;/config&gt;</span>
+    <span class="tag">&lt;/enricher&gt;</span>
+  <span class="tag">&lt;/configuration&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p>The enricher will use the following settings by default:</p>
+<p>It configures the readiness and liveness health checks using HTTP requests on the port <code>8080</code> (default port) and on the path <code>/health</code>. The defaults are:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>port = <code>8080</code></p>
+<p>port = <code>8080</code> (for HTTP)</p>
 </li>
 <li>
 <p>scheme = <code>HTTP</code></p>
@@ -5867,128 +5937,389 @@ configured to use different paths.</p>
 <li>
 <p>path = <em>none</em> (disabled)</p>
 </li>
-<li>
-<p>readiness path = same as the path by default</p>
-</li>
 </ul>
 </div>
 <div class="paragraph">
-<p>To enable the health checks, configure the probed path using:</p>
+<p>the previous configuration can also be given use project&#8217;s properties:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p>the <code>vertx.health.path</code> project properties (<code>&lt;vertx.health.path&gt;/ping&lt;/vertx.health.path&gt;</code>)</p>
-</li>
-<li>
-<p>the <code>path</code> in the <code>fabric8-maven-plugin</code> configuration:</p>
-</li>
-</ul>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;properties&gt;</span>
+    <span class="tag">&lt;vertx.health.path&gt;</span>/health<span class="tag">&lt;/vertx.health.path&gt;</span>
+<span class="tag">&lt;/properties&gt;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="configuring-differently-the-readiness-and-liveness-health-checks">Configuring differently the readiness and liveness health checks</h6>
+<div class="paragraph">
+<p>You can provide two different configuration for the readiness and liveness checks:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
-    <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
-    <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>3.3.0<span class="tag">&lt;/version&gt;</span>
-    <span class="tag">&lt;executions&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.5.40<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;executions&gt;</span>
     <span class="tag">&lt;execution&gt;</span>
-    <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
-    <span class="tag">&lt;goals&gt;</span>
-      <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
-      <span class="tag">&lt;goal&gt;</span>helm<span class="tag">&lt;/goal&gt;</span>
-      <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
-    <span class="tag">&lt;/goals&gt;</span>
+      <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
+      <span class="tag">&lt;goals&gt;</span>
+        <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
+        <span class="tag">&lt;goal&gt;</span>helm<span class="tag">&lt;/goal&gt;</span>
+        <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
+      <span class="tag">&lt;/goals&gt;</span>
     <span class="tag">&lt;/execution&gt;</span>
-    <span class="tag">&lt;/executions&gt;</span>
-    <span class="tag">&lt;configuration&gt;</span>
+  <span class="tag">&lt;/executions&gt;</span>
+  <span class="tag">&lt;configuration&gt;</span>
     <span class="tag">&lt;enricher&gt;</span>
-    <span class="tag">&lt;config&gt;</span>
-      <span class="tag">&lt;vertx-health-check&gt;</span>
-        <span class="tag">&lt;path&gt;</span>/health<span class="tag">&lt;/path&gt;</span>
-      <span class="tag">&lt;/vertx-health-check&gt;</span>
-    <span class="tag">&lt;/config&gt;</span>
+      <span class="tag">&lt;config&gt;</span>
+        <span class="tag">&lt;vertx-health-check&gt;</span>
+            <span class="tag">&lt;readiness&gt;</span>
+              <span class="tag">&lt;path&gt;</span>/ready<span class="tag">&lt;/path&gt;</span>
+            <span class="tag">&lt;/readiness&gt;</span>
+            <span class="tag">&lt;liveness&gt;</span>
+              <span class="tag">&lt;path&gt;</span>/health<span class="tag">&lt;/path&gt;</span>
+            <span class="tag">&lt;/liveness&gt;</span>
+        <span class="tag">&lt;/vertx-health-check&gt;</span>
+      <span class="tag">&lt;/config&gt;</span>
     <span class="tag">&lt;/enricher&gt;</span>
-    <span class="tag">&lt;/configuration&gt;</span>
+  <span class="tag">&lt;/configuration&gt;</span>
 <span class="tag">&lt;/plugin&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>These path, port and scheme can be configured by the enricher in the <code>fabric8-maven-plugin</code> configuration as shown below:</p>
+<p>You can also use the <code>readiness</code> and <code>liveness</code> chunks in user properties:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml">  <span class="tag">&lt;plugin&gt;</span>
-    <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
-    <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>3.3.0<span class="tag">&lt;/version&gt;</span>
-    <span class="tag">&lt;executions&gt;</span>
-      <span class="tag">&lt;execution&gt;</span>
-        <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
-        <span class="tag">&lt;goals&gt;</span>
-          <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
-          <span class="tag">&lt;goal&gt;</span>helm<span class="tag">&lt;/goal&gt;</span>
-          <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
-        <span class="tag">&lt;/goals&gt;</span>
-      <span class="tag">&lt;/execution&gt;</span>
-    <span class="tag">&lt;/executions&gt;</span>
-    <span class="tag">&lt;configuration&gt;</span>
-      <span class="tag">&lt;enricher&gt;</span>
-        <span class="tag">&lt;config&gt;</span>
-          <span class="tag">&lt;vertx-health-check&gt;</span>
-            <span class="tag">&lt;port&gt;</span>4444<span class="tag">&lt;/port&gt;</span>
-            <span class="tag">&lt;scheme&gt;</span>HTTPS<span class="tag">&lt;/scheme&gt;</span>
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;properties&gt;</span>
+    <span class="tag">&lt;vertx.health.readiness.path&gt;</span>/ready<span class="tag">&lt;/vertx.health.readiness.path&gt;</span>
+    <span class="tag">&lt;vertx.health.liveness.path&gt;</span>/ready<span class="tag">&lt;/vertx.health.liveness.path&gt;</span>
+<span class="tag">&lt;/properties&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Shared (generic) configuration can be set outside of the specific configuration. For instance, to use the port 8081:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.5.40<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;executions&gt;</span>
+    <span class="tag">&lt;execution&gt;</span>
+      <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
+      <span class="tag">&lt;goals&gt;</span>
+        <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
+        <span class="tag">&lt;goal&gt;</span>helm<span class="tag">&lt;/goal&gt;</span>
+        <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
+      <span class="tag">&lt;/goals&gt;</span>
+    <span class="tag">&lt;/execution&gt;</span>
+  <span class="tag">&lt;/executions&gt;</span>
+  <span class="tag">&lt;configuration&gt;</span>
+    <span class="tag">&lt;enricher&gt;</span>
+      <span class="tag">&lt;config&gt;</span>
+        <span class="tag">&lt;vertx-health-check&gt;</span>
+            <span class="tag">&lt;port&gt;</span>8081<span class="tag">&lt;/port&gt;</span>
+            <span class="tag">&lt;readiness&gt;</span>
+              <span class="tag">&lt;path&gt;</span>/ready<span class="tag">&lt;/path&gt;</span>
+            <span class="tag">&lt;/readiness&gt;</span>
+            <span class="tag">&lt;liveness&gt;</span>
+              <span class="tag">&lt;path&gt;</span>/health<span class="tag">&lt;/path&gt;</span>
+            <span class="tag">&lt;/liveness&gt;</span>
+        <span class="tag">&lt;/vertx-health-check&gt;</span>
+      <span class="tag">&lt;/config&gt;</span>
+    <span class="tag">&lt;/enricher&gt;</span>
+  <span class="tag">&lt;/configuration&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Or:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;properties&gt;</span>
+    <span class="tag">&lt;vertx.health.port&gt;</span>8081<span class="tag">&lt;/vertx.health.port&gt;</span>
+    <span class="tag">&lt;vertx.health.readiness.path&gt;</span>/ready<span class="tag">&lt;/vertx.health.readiness.path&gt;</span>
+    <span class="tag">&lt;vertx.health.liveness.path&gt;</span>/ready<span class="tag">&lt;/vertx.health.liveness.path&gt;</span>
+<span class="tag">&lt;/properties&gt;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="configuration-structure">Configuration Structure</h6>
+<div class="paragraph">
+<p>The configuration is structured as follows</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;config&gt;</span>
+    <span class="tag">&lt;vertx-health-check&gt;</span>
+        <span class="comment">&lt;!-- Generic configuration, applied to both liveness and readiness --&gt;</span>
+        <span class="tag">&lt;path&gt;</span>/both<span class="tag">&lt;/path&gt;</span>
+        <span class="tag">&lt;liveness&gt;</span>
+            <span class="comment">&lt;!-- Specific configuration for the liveness probe --&gt;</span>
+            <span class="tag">&lt;port-name&gt;</span>ping<span class="tag">&lt;/port-name&gt;</span>
+        <span class="tag">&lt;/liveness&gt;</span>
+        <span class="tag">&lt;readiness&gt;</span>
+            <span class="comment">&lt;!-- Specific configuration for the readiness probe --&gt;</span>
+            <span class="tag">&lt;port-name&gt;</span>ready<span class="tag">&lt;/port-name&gt;</span>
+        <span class="tag">&lt;/readiness&gt;</span>
+    <span class="tag">&lt;/vertx-health-check&gt;</span>
+<span class="tag">&lt;/config&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The same structured is used in project&#8217;s properties:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="comment">&lt;!-- Generic configuration given as vertx.health.$attribute --&gt;</span>
+<span class="tag">&lt;vertx.health.path&gt;</span>/both<span class="tag">&lt;/vertx.health.path&gt;</span>
+<span class="comment">&lt;!-- Specific liveness configuration given as vertx.health.liveness.$attribute --&gt;</span>
+<span class="tag">&lt;vertx.health.liveness.port-name&gt;</span>ping<span class="tag">&lt;/vertx.health.liveness.port-name&gt;</span>
+<span class="comment">&lt;!-- Specific readiness configuration given as vertx.health.readiness.$attribute --&gt;</span>
+<span class="tag">&lt;vertx.health.readiness.port-name&gt;</span>ready<span class="tag">&lt;/vertx.health.readiness.port-name&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Important</strong>: Project&#8217;s properties override the configuration provided in the plugin configuration. The overriding rules are:
+<em>specific properties</em> &gt; <em>generic properties</em> &gt; <em>specific configuration</em> &gt; <em>generic configuration</em>.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="probe-configuration">Probe configuration</h6>
+<div class="paragraph">
+<p>You can configure the different aspect of the probes. These attributes can be configured for both the readiness and liveness probes or be specific to one.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 36. Probe configuration</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>type</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The probe type among <code>http</code> (default), <code>tcp</code> and <code>exec</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>initial-delay</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of seconds after the container has started before probes are initiated.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>period</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">How often (in seconds) to perform the probe.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>timeout</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of seconds after which the probe times out.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>success-threshold</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Minimum consecutive successes for the probe to be considered successful after having failed.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>failure-threshold</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Minimum consecutive failures for the probe to be considered failed after having succeeded.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>More details about probes are available on <a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/" class="bare">https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/</a>.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="http-probe-configuration">HTTP probe configuration</h6>
+<div class="paragraph">
+<p>When using HTTP <code>GET</code> requests to determine readiness or liveness, several aspects can be configured. HTTP probes are used by default. To be more specific set the <code>type</code> attribute to <code>http</code>.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 37. HTTP probes configuration</caption>
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>scheme</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Scheme to use for connecting to the host.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>HTTP</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>path</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to access on the HTTP server. An empty path disable the check</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>headers</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Custom headers to set in the request. HTTP allows repeated headers. Cannot be configured using project&#8217;s properties. An example is available below.</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>port</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of the port to access on the container. A 0 or negative number disable the check.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8080</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>port-name</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of the port to access on the container. If neither the <code>port</code> or the <code>port-name</code> is set, the check is disabled. If both are set the configuration is considered invalid.</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Here is an example of HTTP probe configuration:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;config&gt;</span>
+    <span class="tag">&lt;vertx-health-check&gt;</span>
+        <span class="tag">&lt;initialDelay&gt;</span>3<span class="tag">&lt;/initialDelay&gt;</span>
+        <span class="tag">&lt;period&gt;</span>3<span class="tag">&lt;/period&gt;</span>
+        <span class="tag">&lt;liveness&gt;</span>
+            <span class="tag">&lt;port&gt;</span>8081<span class="tag">&lt;/port&gt;</span>
             <span class="tag">&lt;path&gt;</span>/ping<span class="tag">&lt;/path&gt;</span>
-            <span class="tag">&lt;readiness&gt;</span>/ping<span class="tag">&lt;/readiness&gt;</span>
-          <span class="tag">&lt;/vertx-health-check&gt;</span>
-        <span class="tag">&lt;/config&gt;</span>
-      <span class="tag">&lt;/enricher&gt;</span>
-    <span class="tag">&lt;/configuration&gt;</span>
-  <span class="tag">&lt;/plugin&gt;</span></code></pre>
+            <span class="tag">&lt;scheme&gt;</span>HTTPS<span class="tag">&lt;/scheme&gt;</span>
+            <span class="tag">&lt;headers&gt;</span>
+                <span class="tag">&lt;X-Custom-Header&gt;</span>Awesome<span class="tag">&lt;/X-Custom-Header&gt;</span>
+            <span class="tag">&lt;/headers&gt;</span>
+        <span class="tag">&lt;/liveness&gt;</span>
+        <span class="tag">&lt;readiness&gt;</span>
+            <span class="comment">&lt;!-- disable the readiness probe --&gt;</span>
+            <span class="tag">&lt;port&gt;</span>-1<span class="tag">&lt;/port&gt;</span>
+        <span class="tag">&lt;/readiness&gt;</span>
+    <span class="tag">&lt;/vertx-health-check&gt;</span>
+<span class="tag">&lt;/config&gt;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="tcp-probe-configuration">TCP probe configuration</h6>
+<div class="paragraph">
+<p>You can also configure the probes to just open a socket on a specific port. The <code>type</code> attribute must be set to <code>tcp</code>.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 38. TCP probes configuration</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>port</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of the port to access on the container. A 0 or negative number disable the check.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>port-name</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of the port to access on the container. If neither the <code>port</code> or the <code>port-name</code> is set, the check is disabled. If both are set the configuration is considered invalid.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;config&gt;</span>
+    <span class="tag">&lt;vertx-health-check&gt;</span>
+        <span class="tag">&lt;initialDelay&gt;</span>3<span class="tag">&lt;/initialDelay&gt;</span>
+        <span class="tag">&lt;period&gt;</span>3<span class="tag">&lt;/period&gt;</span>
+        <span class="tag">&lt;liveness&gt;</span>
+            <span class="tag">&lt;type&gt;</span>tcp<span class="tag">&lt;/type&gt;</span>
+            <span class="tag">&lt;port&gt;</span>8081<span class="tag">&lt;/port&gt;</span>
+        <span class="tag">&lt;/liveness&gt;</span>
+        <span class="tag">&lt;readiness&gt;</span>
+            <span class="tag">&lt;--</span> <span class="attribute-name">use</span> <span class="attribute-name">HTTP</span> <span class="attribute-name">Get</span> <span class="attribute-name">probe</span> <span class="attribute-name">--</span><span class="tag">&gt;</span>
+            <span class="tag">&lt;path&gt;</span>/ping<span class="tag">&lt;/path&gt;</span>
+            <span class="tag">&lt;port&gt;</span>8080<span class="tag">&lt;/port&gt;</span>
+        <span class="tag">&lt;/readiness&gt;</span>
+    <span class="tag">&lt;/vertx-health-check&gt;</span>
+<span class="tag">&lt;/config&gt;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="exec-probe-configuration">Exec probe configuration</h6>
+<div class="paragraph">
+<p>You can also configure the probes to execute a command. If the command succeeds, it returns 0, and Kubernetes consider the pod to be alive and healthy. If the command returns a non-zero value, Kubernetes kills the pod and restarts it. To use a command, you must set the <code>type</code> attribute to <code>exec</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;config&gt;</span>
+    <span class="tag">&lt;vertx-health-check&gt;</span>
+        <span class="tag">&lt;initialDelay&gt;</span>3<span class="tag">&lt;/initialDelay&gt;</span>
+        <span class="tag">&lt;period&gt;</span>3<span class="tag">&lt;/period&gt;</span>
+        <span class="tag">&lt;liveness&gt;</span>
+            <span class="tag">&lt;type&gt;</span>exec<span class="tag">&lt;/type&gt;</span>
+            <span class="tag">&lt;command&gt;</span>
+                <span class="tag">&lt;cmd&gt;</span>cat<span class="tag">&lt;/cmd&gt;</span>
+                <span class="tag">&lt;cmd&gt;</span>/tmp/healthy<span class="tag">&lt;/cmd&gt;</span>
+            <span class="tag">&lt;/command&gt;</span>
+        <span class="tag">&lt;/liveness&gt;</span>
+        <span class="tag">&lt;readiness&gt;</span>
+            <span class="tag">&lt;--</span> <span class="attribute-name">use</span> <span class="attribute-name">HTTP</span> <span class="attribute-name">Get</span> <span class="attribute-name">probe</span> <span class="attribute-name">--</span><span class="tag">&gt;</span>
+            <span class="tag">&lt;path&gt;</span>/ping<span class="tag">&lt;/path&gt;</span>
+            <span class="tag">&lt;port&gt;</span>8080<span class="tag">&lt;/port&gt;</span>
+        <span class="tag">&lt;/readiness&gt;</span>
+    <span class="tag">&lt;/vertx-health-check&gt;</span>
+<span class="tag">&lt;/config&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Alternatively, you can use project&#8217;s properties to configure the health checks:</p>
+<p>As you can see in the snippet above the command is passed using the <code>command</code> attribute. This attribute cannot be configured using project&#8217;s properties. An empty command disables the check.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="disabling-health-checks">Disabling health checks</h6>
+<div class="paragraph">
+<p>You can disables the checks by setting:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><code>vertx.health.port</code> - the port, 8080 by default, a negative number disables the health check</p>
+<p>the <code>port</code> to 0 or to a negative number for <code>http</code> and <code>tcp</code> probes</p>
 </li>
 <li>
-<p><code>vertx.health.path</code> - the path, an empty (non null) value disables the health check.</p>
-</li>
-<li>
-<p><code>vertx.health.readiness.path</code> - the path used for the readiness probe, an empty (non null) value disables the readiness
-check. If not set it uses the regular path.</p>
-</li>
-<li>
-<p><code>vertx.health.scheme</code> - the scheme, HTTP by default, can be set to HTTPS (adjusts the port accordingly)</p>
+<p>the <code>command</code> to an empty list for <code>exec</code></p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>By playing with the <code>vertx.health.path</code> and <code>`vertx.health.readiness.path</code> properties (and also the <code>&lt;path&gt;</code> and
-<code>&lt;readiness</code>&gt; values in the configuration), you can enables or disables the check individually:</p>
+<p>In the first case, you can use project&#8217;s properties to disable them:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>vertx.health.path</code> not set &#8658; the health checks are disabled</p>
-</li>
-<li>
-<p><code>vertx.health.path</code> set to "" (empty) and <code>vertx.health.readiness.path</code> set to "/ping &#8658; the liveness check is disabled,
-the readiness check uses <code>GET localhost:8080/ping</code></p>
-</li>
-<li>
-<p><code>vertx.health.path</code> set to "/ping" and <code>vertx.health.readiness.path</code> set to "" (empty) &#8658; the readiness check is
-disabled, the liveness check uses <code>GET localhost:8080/ping</code></p>
-</li>
-<li>
-<p><code>vertx.health.path</code> set to "/ping" and <code>vertx.health.readiness.path</code> set to "/ready"  &#8658; the readiness check uses
-<code>GET localhost:8080/ready</code> , the liveness check uses the <code>GET localhost:8080/ping</code></p>
-</li>
-</ul>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="comment">&lt;!-- Disables <code>tcp</code> and <code>http</code> probes --&gt;</span>
+<span class="tag">&lt;vertx.health.port&gt;</span>-1<span class="tag">&lt;/vertx.health.port&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For <code>http</code> probes, an empty or not set <code>path</code> also disable the probe.</p>
+</div>
 </div>
 </div>
 <div class="sect4">
@@ -6001,7 +6332,7 @@ These metadata will be added only if <a href="https://maven.apache.org/pom.html#
 <p>The following annotations will be added to the objects that supports annotations,</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 36. Maven SCM Enrichers Annotation Mapping</caption>
+<caption class="title">Table 39. Maven SCM Enrichers Annotation Mapping</caption>
 <colgroup>
 <col style="width: 28.5714%;">
 <col style="width: 28.5714%;">
@@ -6076,7 +6407,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
 <p>The following annotations will be added to the objects that supports annotations,</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 37. Maven Issue Tracker Enrichers Annotation Mapping</caption>
+<caption class="title">Table 40. Maven Issue Tracker Enrichers Annotation Mapping</caption>
 <colgroup>
 <col style="width: 28.5714%;">
 <col style="width: 28.5714%;">
@@ -6139,7 +6470,7 @@ For more information read <a href="https://kubernetes.io/docs/concepts/workloads
 <p>The following configuration parameters can be used to influence the behaviour of this enricher:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 38. Default revision history enricher</caption>
+<caption class="title">Table 41. Default revision history enricher</caption>
 <colgroup>
 <col style="width: 28.5714%;">
 <col style="width: 28.5714%;">
@@ -6375,7 +6706,7 @@ label applied, like the following:</p>
 <p>Each <code>profiles.yml</code> has a list of profiles which are defined with these elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 39. Profile elements</caption>
+<caption class="title">Table 42. Profile elements</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -6411,7 +6742,7 @@ label applied, like the following:</p>
 <p>The definition of generators and enrichers in the profile follow the same format:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 40. Generator and Enericher definition</caption>
+<caption class="title">Table 43. Generator and Enericher definition</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -6569,7 +6900,7 @@ label applied, like the following:</p>
 <p>This plugin comes with a list of the following predefined profiles:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 41. Predefined Profiles</caption>
+<caption class="title">Table 44. Predefined Profiles</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -7133,7 +7464,7 @@ mvn fabric8:migrate
  <span class="key">template</span>:
    <span class="key">spec</span>:
      <span class="key">containers</span>:
-       <span class="key">-env</span>:
+       - <span class="string"><span class="content">env:</span></span>
          - <span class="string"><span class="content">name: JAVA_OPTIONS</span></span>
            <span class="key">value</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">-Dfoo=bar -Dxyz=abc</span><span class="delimiter">&quot;</span></span></code></pre>
 </div>
@@ -7235,7 +7566,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.40<br>
-Last updated 2018-07-18 15:02:45 UTC
+Last updated 2018-07-18 16:28:54 UTC
 </div>
 </div>
 </body>
