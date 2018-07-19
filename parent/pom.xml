@@ -89,7 +89,7 @@
 
     <!-- =======================================================  -->
     <!-- Servlet container images -->
-    <version.image.tomcat.upstream>1.1.5</version.image.tomcat.upstream>
+    <version.image.tomcat.upstream>1.1.6</version.image.tomcat.upstream>
     <version.image.jetty.upstream>1.1.10</version.image.jetty.upstream>
     <version.image.wildfly.upstream>10.1.0.Final</version.image.wildfly.upstream>
 
