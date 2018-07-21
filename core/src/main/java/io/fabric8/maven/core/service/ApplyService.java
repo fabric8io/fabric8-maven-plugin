@@ -86,6 +86,7 @@ public class ApplyService {
     private boolean servicesOnlyMode;
     private boolean ignoreServiceMode;
     private boolean ignoreRunningOAuthClients = true;
+    private boolean ignoreBoundPersistentVolumeClaims = true;
     private boolean rollingUpgrade;
     private boolean processTemplatesLocally;
     private File logJsonDir;
@@ -402,8 +403,15 @@ public class ApplyService {
                 log.info("PersistentVolumeClaim has not changed so not doing anything");
             } else {
                 if (alwaysRecreate || isRecreateMode()) {
-                    kubernetesClient.persistentVolumeClaims().inNamespace(namespace).withName(id).delete();
-                    doCreatePersistentVolumeClaim(entity, namespace, sourceName);
+                    if (!isRecreateMode() && isIgnoreBoundPersistentVolumeClaims() && isBound(old)) {
+                        log.warn("PersistentVolumeClaim " + id + " in namespace " + namespace + " is already bound and will not be replaced with the new one from " + sourceName);
+                    } else {
+                        log.info("Deleting PersistentVolumeClaim from namespace " + namespace + " with name " + id);
+                        kubernetesClient.persistentVolumeClaims().inNamespace(namespace).withName(id).delete();
+                        log.info("Deleted PersistentVolumeClaim from namespace " + namespace + " with name " + id);
+
+                        doCreatePersistentVolumeClaim(entity, namespace, sourceName);
+                    }
                 } else {
                     log.info("Updating a PersistentVolumeClaim from " + sourceName);
                     try {
@@ -421,6 +429,12 @@ public class ApplyService {
                 doCreatePersistentVolumeClaim(entity, namespace, sourceName);
             }
         }
+    }
+
+     protected boolean isBound(PersistentVolumeClaim claim) {
+        return claim != null &&
+                claim.getStatus() != null &&
+                "Bound".equals(claim.getStatus().getPhase());
     }
 
     protected void doCreatePersistentVolumeClaim(PersistentVolumeClaim entity, String namespace, String sourceName) {
@@ -1290,6 +1304,20 @@ public class ApplyService {
 
     public void setIgnoreRunningOAuthClients(boolean ignoreRunningOAuthClients) {
         this.ignoreRunningOAuthClients = ignoreRunningOAuthClients;
+    }
+
+    /**
+     * If enabled, persistent volume claims are not replaced (deleted and recreated) if already bound
+     */
+    public boolean isIgnoreBoundPersistentVolumeClaims() {
+        return ignoreBoundPersistentVolumeClaims;
+    }
+
+    /**
+     * Do not replace (delete and recreate) persistent volume claims if already bound
+     */
+    public void setIgnoreBoundPersistentVolumeClaims(boolean ignoreBoundPersistentVolumeClaims) {
+        this.ignoreBoundPersistentVolumeClaims = ignoreBoundPersistentVolumeClaims;
     }
 
     public void setSupportOAuthClients(boolean supportOAuthClients) {
