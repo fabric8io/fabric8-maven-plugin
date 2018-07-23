@@ -15,6 +15,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Removed unused Maven goals. Please contact us if something's missing for you.
 * Fix 1276: Proper inclusion of webapp's war regardless of the final name
 * Feature: New 'path' config option for the webapp generator to set the context path
+* Fix 1334: support for docker.pull.registry
 
 ###3.5.40
 * Feature 1264: Added `osio` profile, with enricher to apply OpenShift.io space labels to resources

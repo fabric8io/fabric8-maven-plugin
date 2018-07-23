@@ -16,9 +16,9 @@
 
 package io.fabric8.maven.core.handler;
 
+import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.maven.core.config.VolumeConfig;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -255,6 +255,23 @@ public class ContainerHandlerTest {
         assertEquals("test",containers.get(1).getImage());
         assertNull(containers.get(2).getImage());
         assertNull(containers.get(3).getImage());
+    }
+
+    @Test
+    public void getRegistryTest() {
+        ContainerHandler handler = new ContainerHandler(project1, envVarHandler, probeHandler);
+
+        ImageConfiguration imageConfig = new ImageConfiguration.Builder().
+                name("test").alias("test-app").buildConfig(buildImageConfiguration1).build();
+
+        images.clear();
+        images.add(imageConfig);
+
+        project1.getProperties().setProperty("docker.pull.registry", "push.me");
+        containers = handler.getContainers(config1, images);
+
+        project1.getProperties().remove("docker.pull.registry");
+        assertEquals("push.me/test", containers.get(0).getImage());
     }
 
     @Test
