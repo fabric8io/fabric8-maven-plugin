@@ -16,29 +16,22 @@
 
 package io.fabric8.maven.core.handler;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.ContainerBuilder;
-import io.fabric8.kubernetes.api.model.ContainerPort;
-import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
-import io.fabric8.kubernetes.api.model.Probe;
-import io.fabric8.kubernetes.api.model.SecurityContext;
-import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
-import io.fabric8.kubernetes.api.model.VolumeMount;
-import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.VolumeConfig;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.utils.Strings;
-
 import org.apache.maven.project.MavenProject;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author roland
@@ -95,13 +88,19 @@ class ContainerHandler {
 
     private String getImageName(ImageConfiguration imageConfiguration) {
         if (Strings.isNullOrBlank(imageConfiguration.getName())) {
-            return imageConfiguration.getName();
+            return null;
         }
+        String configuredRegistry = EnvUtil.findRegistry(
+                Strings.isNullOrBlank(imageConfiguration.getName()) ? null : new ImageName(imageConfiguration.getName()).getRegistry(),
+                imageConfiguration.getRegistry(),
+                project.getProperties().getProperty("docker.pull.registry"),
+                project.getProperties().getProperty("docker.registry"));
 
         String prefix = "";
-        if (Strings.isNotBlank(imageConfiguration.getRegistry())) {
-            prefix = imageConfiguration.getRegistry() + "/";
+        if (Strings.isNotBlank(configuredRegistry)) {
+            prefix = configuredRegistry + "/";
         }
+
         return prefix + imageConfiguration.getName();
     }
 
