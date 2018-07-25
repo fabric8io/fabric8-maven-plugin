@@ -295,7 +295,7 @@ The third configuration option is to use an external configuration in form of YA
 
 Note: In order to support simultaneously both OpenShift and Kubernetes, there is currently no way to specify OpenShift-only features this way, though this might change in future releases.
 
-Let's have a look at an example from https://github.com/rhuss/fabric8-maven-plugin/tree/master/samples/external-resources[samples/external-resources]. This is a plain Spring Boot application, whose images are auto generated like in the <<zero-config, Zero-Config>> case. The resource fragments are in `src/mainfabric8`.
+Let's have a look at an example from https://github.com/rhuss/fabric8-maven-plugin/tree/master/samples/external-resources[samples/external-resources]. This is a plain Spring Boot application, whose images are auto generated like in the <<zero-config, Zero-Config>> case. The resource fragments are in `src/main/fabric8`.
 
 .Example fragment "deployment.yml"
 [source,yaml,indent=0,subs="verbatim,quotes,attributes"]
