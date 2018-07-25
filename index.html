@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.40,</span>
-<span id="revdate">2018-07-24</span>
+<span id="revdate">2018-07-25</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -1090,7 +1090,7 @@ XML based configuration is only partially implemented and is not recommended for
 <p>Note: In order to support simultaneously both OpenShift and Kubernetes, there is currently no way to specify OpenShift-only features this way, though this might change in future releases.</p>
 </div>
 <div class="paragraph">
-<p>Let&#8217;s have a look at an example from <a href="https://github.com/rhuss/fabric8-maven-plugin/tree/master/samples/external-resources">samples/external-resources</a>. This is a plain Spring Boot application, whose images are auto generated like in the <a href="#zero-config">Zero-Config</a> case. The resource fragments are in <code>src/mainfabric8</code>.</p>
+<p>Let&#8217;s have a look at an example from <a href="https://github.com/rhuss/fabric8-maven-plugin/tree/master/samples/external-resources">samples/external-resources</a>. This is a plain Spring Boot application, whose images are auto generated like in the <a href="#zero-config">Zero-Config</a> case. The resource fragments are in <code>src/main/fabric8</code>.</p>
 </div>
 <div class="listingblock">
 <div class="title">Example fragment "deployment.yml"</div>
@@ -2237,7 +2237,7 @@ the URL is:</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>resourceDir</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Directory where fabric8 resources are stored. This is also the directory where a custom profile is looked up</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Directory where fabric8 resources are stored. This is also the directory where a custom profile is looked up. Default is <code>src/main/fabric8</code>.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.resourceDir</code></p></td>
 </tr>
 <tr>
@@ -6965,7 +6965,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.40<br>
-Last updated 2018-07-24 20:19:18 UTC
+Last updated 2018-07-25 17:25:57 UTC
 </div>
 </div>
 </body>
