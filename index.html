@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.40,</span>
-<span id="revdate">2018-07-25</span>
+<span id="revdate">2018-07-27</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -4148,7 +4148,8 @@ If no main class is configured as well as no fat jar being detected, then this <
 </tbody>
 </table>
 <div class="paragraph">
-<p>The generator adds Kubernetes liveness and readiness probes pointing to either the management or server port as read from the <code>application.properties</code>. If the <code>server.ssl.key-store</code> property is set in <code>application.properties</code> then the probes are automatically set to use <code>https</code>.</p>
+<p>The generator adds Kubernetes liveness and readiness probes pointing to either the management or server port as read from the <code>application.properties</code>.
+If the <code>management.port</code> (for Spring Boot 1) or <code>management.server.port</code> (for Spring Boot 2) and <code>management.ssl.key-store</code> (for Spring Boot 1) or <code>management.server.ssl.key-store</code> (for Spring Boot 2) properties are set in <code>application.properties</code> otherwise or <code>server.ssl.key-store</code> property is set in <code>application.properties</code> then the probes are automatically set to use <code>https</code>.</p>
 </div>
 <div class="paragraph">
 <p>The generator works differently when called together with <code>fabric8:watch</code>.
@@ -6965,7 +6966,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.40<br>
-Last updated 2018-07-25 17:25:47 UTC
+Last updated 2018-07-27 10:09:30 UTC
 </div>
 </div>
 </body>
