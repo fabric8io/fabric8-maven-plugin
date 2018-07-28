@@ -18,9 +18,9 @@ package io.fabric8.maven.core.util;
 
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
-import io.fabric8.utils.Zips;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
+import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
@@ -38,7 +38,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -168,6 +167,36 @@ public class MavenUtil {
 
     public static boolean hasPlugin(MavenProject project, String plugin) {
         return project.getPlugin(plugin) != null;
+    }
+
+    public static boolean hasPluginOfAnyGroupId(MavenProject project, String pluginArtifact) {
+        return getPluginOfAnyGroupId(project, pluginArtifact) != null;
+    }
+
+    public static Plugin getPluginOfAnyGroupId(MavenProject project, String pluginArtifact) {
+        return getPlugin(project, null, pluginArtifact);
+    }
+
+    /**
+     * Returns the plugin with the given groupId (if present) and artifactId.
+     */
+    public static Plugin getPlugin(MavenProject project, String groupId, String artifactId) {
+        if (artifactId == null) {
+            throw new IllegalArgumentException("artifactId cannot be null");
+        }
+
+        List<Plugin> plugins = project.getBuildPlugins();
+        if (plugins != null) {
+            for (Plugin plugin : plugins) {
+                boolean matchesArtifactId = artifactId.equals(plugin.getArtifactId());
+                boolean matchesGroupId = groupId == null || groupId.equals(plugin.getGroupId());
+
+                if (matchesGroupId && matchesArtifactId) {
+                    return plugin;
+                }
+            }
+        }
+        return null;
     }
 
     /**

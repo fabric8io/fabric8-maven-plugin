@@ -85,7 +85,8 @@ public class SpringBootGeneratorTest {
             // TODO: Prepare more relastic test setup
             build.getDirectory(); result = tempDir;
             build.getOutputDirectory(); result = tempDir;
-            project.getPlugin(anyString); result = null;
+            project.getPlugin(anyString); result = null; minTimes = 0;
+            project.getBuildPlugins(); result = null;
             project.getVersion(); result = "1.0.0"; minTimes = 0;
         }};
         return context;
