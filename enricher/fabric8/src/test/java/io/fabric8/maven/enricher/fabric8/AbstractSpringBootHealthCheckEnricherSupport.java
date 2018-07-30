@@ -379,7 +379,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
     private void withProjectProperties(final Properties properties) {
         new MockUp<SpringBootUtil>() {
             @Mock
-            public Properties getSpringBootApplicationProperties(MavenProject project) {
+            public Properties getApplicationProperties(MavenProject project, String activeProfiles) {
                 return properties;
             }
         };

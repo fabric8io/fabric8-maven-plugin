@@ -62,7 +62,6 @@
     <version.jacoco>0.7.8</version.jacoco>
     <version.fabric8>3.0.12</version.fabric8>
     <version.kubernetes-client>3.2.0</version.kubernetes-client>
-    <version.spring-boot>1.5.3.RELEASE</version.spring-boot>
     <version.mockwebserver>0.0.13</version.mockwebserver>
     <version.docker-maven-plugin>0.22.1</version.docker-maven-plugin>
     <version.networknt.validator>0.1.7</version.networknt.validator>

@@ -1,9 +1,0 @@
----
-my:
-  name: "Hello"
-
----
-server:
-  port: 9090
-their:
-  name: Foo

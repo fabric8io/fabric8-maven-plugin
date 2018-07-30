@@ -62,9 +62,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
     private static final String DEFAULT_SERVER_PORT = "8080";
 
     public enum Config implements Configs.Key {
-        color {{
-            d = "false";
-        }},
+        color {{ d = "false"; }},
 
         // comma separated list of spring boot profile(s) that would be passed set as -Dspring.profiles.active
         activeProfiles;
@@ -101,7 +99,8 @@ public class SpringBootGenerator extends JavaExecGenerator {
     protected Map<String, String> getEnv(boolean prePackagePhase) throws MojoExecutionException {
         Map<String, String> res = super.getEnv(prePackagePhase);
         if (getContext().isWatchMode()) {
-            Properties properties = getSpringBootProperties();
+            String strActiveProfiles = getContext().getConfig().getConfig("spring-boot", "activeProfiles");
+            Properties properties = SpringBootUtil.getApplicationProperties(getProject(), strActiveProfiles);
             // adding dev tools token to env variables to prevent override during recompile
             String secret = properties.getProperty(SpringBootConfigurationHelper.DEV_TOOLS_REMOTE_SECRET);
             if (secret != null) {
@@ -144,8 +143,12 @@ public class SpringBootGenerator extends JavaExecGenerator {
     protected List<String> extractPorts() {
         List<String> answer = new ArrayList<>();
 
-        Properties properties = getSpringBootProperties();
-        //TODO SK - do we need to handle the parsing of port properties like ${PORT:1234}
+        String strActiveProfiles = getConfig(activeProfiles);
+
+        Properties properties = SpringBootUtil.getApplicationProperties(getContext().getProject(),
+                SpringBootUtil.getActiveProfiles(strActiveProfiles));
+
+        //TODO SK - do we need to handle the parsin of port properties like ${PORT:1234}
         SpringBootConfigurationHelper propertyHelper = new SpringBootConfigurationHelper(SpringBootUtil.getSpringBootVersion(getProject()));
         String port = properties.getProperty(propertyHelper.getServerPortPropertyKey(), DEFAULT_SERVER_PORT);
         addPortIfValid(answer, getConfig(JavaExecGenerator.Config.webPort, port));
@@ -157,7 +160,10 @@ public class SpringBootGenerator extends JavaExecGenerator {
     // =============================================================================
 
     private void ensureSpringDevToolSecretToken() throws MojoExecutionException {
-        Properties properties = getSpringBootProperties();
+        String strActiveProfiles = getConfig(activeProfiles);
+
+        Properties properties = SpringBootUtil.getApplicationProperties(getContext().getProject(),
+                SpringBootUtil.getActiveProfiles(strActiveProfiles));
         String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET);
         if (Strings.isNullOrEmpty(remoteSecret)) {
             addSecretTokenToApplicationProperties();
@@ -303,15 +309,6 @@ public class SpringBootGenerator extends JavaExecGenerator {
             }
         }
         return false;
-    }
-
-    private Properties getSpringBootProperties() {
-        try {
-            String strActiveProfiles = getContext().getConfig().getConfig("spring-boot", "activeProfiles");
-            return SpringBootUtil.getApplicationProperties(getProject(), strActiveProfiles);
-        } catch (IOException e) {
-            throw new IllegalStateException("Failed to load Spring Boot properties", e);
-        }
     }
 
     private File getSpringBootDevToolsJar() throws IOException {

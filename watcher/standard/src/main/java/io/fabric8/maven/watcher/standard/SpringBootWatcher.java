@@ -172,12 +172,7 @@ public class SpringBootWatcher extends BaseWatcher {
         log.info("Running RemoteSpringApplication against endpoint: " + url);
 
         String strActiveProfiles = getContext().getConfig().getConfig("spring-boot", "activeProfiles");
-        Properties properties = null;
-        try {
-            properties = SpringBootUtil.getApplicationProperties(getContext().getProject(), strActiveProfiles);
-        } catch (IOException e) {
-            throw new IllegalStateException("Failed to load Spring Boot properties",e);
-        }
+        Properties properties = SpringBootUtil.getApplicationProperties(getContext().getProject(), strActiveProfiles);
 
         String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET, System.getProperty(DEV_TOOLS_REMOTE_SECRET));
         if (Strings.isNullOrBlank(remoteSecret)) {
