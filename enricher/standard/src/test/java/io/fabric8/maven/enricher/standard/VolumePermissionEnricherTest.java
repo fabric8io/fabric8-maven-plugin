@@ -15,7 +15,9 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.TreeMap;
 
 import io.fabric8.kubernetes.api.model.*;
@@ -66,23 +68,21 @@ public class VolumePermissionEnricherTest {
         PodTemplateBuilder ptb = createEmptyPodTemplate();
         addVolume(ptb, "VolumeA");
 
-        JSONArray initContainers = new JSONArray();
-        JSONObject initContainer = new JSONObject();
-        initContainer.put("name", VolumePermissionEnricher.ENRICHER_NAME);
-        initContainer.put("mountPath", "blub");
-        initContainers.put(initContainer);
-        ptb.editTemplate().editMetadata().withAnnotations(Collections.singletonMap(InitContainerHandler.INIT_CONTAINER_ANNOTATION, initContainers.toString())).endMetadata().endTemplate();
+        Container initContainer = new ContainerBuilder()
+                .withName(VolumePermissionEnricher.ENRICHER_NAME)
+                .withVolumeMounts(new VolumeMountBuilder().withName("vol-blub").withMountPath("blub").build())
+                .build();
+        ptb.editTemplate().editSpec().withInitContainers(Collections.singletonList(initContainer)).endSpec().endTemplate();
         KubernetesListBuilder klb = new KubernetesListBuilder().addToPodTemplateItems(ptb.build());
 
         VolumePermissionEnricher enricher = new VolumePermissionEnricher(context);
         enricher.adapt(klb);
 
-        String initS = ((PodTemplate) klb.build().getItems().get(0)).getTemplate().getMetadata().getAnnotations().get(InitContainerHandler.INIT_CONTAINER_ANNOTATION);
+        List<Container> initS = ((PodTemplate) klb.build().getItems().get(0)).getTemplate().getSpec().getInitContainers();
         assertNotNull(initS);
-        JSONArray actualInitContainers = new JSONArray(initS);
-        assertEquals(1, actualInitContainers.length());
-        JSONObject actualInitContainer = actualInitContainers.getJSONObject(0);
-        assertEquals("blub", actualInitContainer.get("mountPath"));
+        assertEquals(1, initS.size());
+        Container actualInitContainer = initS.get(0);
+        assertEquals("blub", actualInitContainer.getVolumeMounts().get(0).getMountPath());
     }
 
     @Test
@@ -115,10 +115,9 @@ public class VolumePermissionEnricherTest {
 
             PodTemplate pt = (PodTemplate) klb.buildItem(0);
 
-            String initContainers = pt.getTemplate().getMetadata().getAnnotations()
-                    .get(InitContainerHandler.INIT_CONTAINER_ANNOTATION);
+            List<Container> initContainers = pt.getTemplate().getSpec().getInitContainers();
             boolean shouldHaveInitContainer = tc.volumeNames.length > 0;
-            assertEquals(shouldHaveInitContainer, initContainers != null);
+            assertEquals(shouldHaveInitContainer, !initContainers.isEmpty());
             if (!shouldHaveInitContainer) {
                 continue;
             }

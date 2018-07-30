@@ -23,12 +23,4 @@ import static org.junit.Assert.*;
           new File(basedir, sprintf("/expected/%s.yml",it)))
 }
 
-// Ensure that there is no init container for openshift.yml included
-List<Map<String, String>> annos = Verify.readWithPath(
-        new File(basedir, "/target/classes/META-INF/fabric8/openshift.yml"),
-        "\$.items[?(@.kind == 'DeploymentConfig')].spec.template.metadata.annotations")
-
-assertEquals(1,annos.size());
-assertFalse(annos.get(0).containsKey("pod.alpha.kubernetes.io/init-containers"))
-
 true
