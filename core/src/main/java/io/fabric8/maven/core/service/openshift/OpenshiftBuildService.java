@@ -257,8 +257,8 @@ public class OpenshiftBuildService implements BuildService {
         if (!Objects.equals(buildStrategy, spec.getStrategy()) || !Objects.equals(buildOutput, spec.getOutput())) {
             client.buildConfigs().withName(buildName).edit()
                     .editSpec()
-                    .withStrategy(buildStrategy)
-                    .withOutput(buildOutput)
+                    .withStrategy(spec.getStrategy())
+                    .withOutput(spec.getOutput())
                     .endSpec()
                     .done();
             log.info("Updating BuildServiceConfig %s for %s strategy", buildName, buildStrategy.getType());
