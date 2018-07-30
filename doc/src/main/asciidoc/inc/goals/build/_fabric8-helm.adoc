@@ -2,8 +2,6 @@
 [[fabric8:helm]]
 == *fabric8:helm*
 
-IMPORTANT: This goal is deprecated and might vanish in version 4.0 of this plugin. It's not yet decided whether we fix this goal for 4.0 or drop it. Please raise your voice if you want to keep it. Even better, if you want to support this goal, we are always looking for contributions ;-)
-
 This goal is for creating https://github.com/kubernetes/helm/blob/master/docs/charts.md#the-chart-file-structure[Helm charts] for your Maven project so that you can install, update or delete your app in Kubernetes using https://github.com/kubernetes/helm[Helm].
 
 For creating a Helm chart you simply call `fabric8:helm` goal on the command line:
