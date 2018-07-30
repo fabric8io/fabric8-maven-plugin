@@ -26,6 +26,10 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import mockit.Expectations;
+import mockit.Mocked;
+import org.apache.maven.project.MavenProject;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -44,6 +48,9 @@ import static org.junit.Assert.fail;
 public class KubernetesResourceUtilTest {
 
     private static File fabric8Dir;
+
+    @Mocked
+    final MavenProject project = new MavenProject();
 
     @BeforeClass
     public static void initPath() throws UnsupportedEncodingException {
@@ -141,6 +148,25 @@ public class KubernetesResourceUtilTest {
             assertTrue(exp.getMessage().contains("json"));
             assertTrue(exp.getMessage().contains("yml"));
         }
+    }
+
+    @Test
+    public void containerName() {
+        new Expectations() {{
+            project.getGroupId();
+            result = "io.fabric8-test-";
+
+            project.getArtifactId();
+            result = "fabric8-maven-plugin-dummy";
+        }};
+
+        ImageConfiguration imageConfiguration = new ImageConfiguration.Builder()
+                .name("dummy-image")
+                .registry("example.com/someregistry")
+                .name("test")
+                .build();
+        String containerName = KubernetesResourceUtil.extractContainerName(project, imageConfiguration);
+        assertTrue(containerName.matches(KubernetesResourceUtil.CONTAINER_NAME_REGEX));
     }
 
     @Test

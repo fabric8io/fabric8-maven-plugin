@@ -172,7 +172,7 @@ a| The build mode which can be
 | `docker.registry`
 
 | *resourceDir*
-| Directory where fabric8 resources are stored. This is also the directory where a custom profile is looked up
+| Directory where fabric8 resources are stored. This is also the directory where a custom profile is looked up. Default is `src/main/fabric8`.
 | `fabric8.resourceDir`
 
 | *skip*

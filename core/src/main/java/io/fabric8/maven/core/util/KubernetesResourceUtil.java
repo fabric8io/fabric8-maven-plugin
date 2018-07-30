@@ -133,6 +133,8 @@ public class KubernetesResourceUtil {
 
     public static final HashSet<Class<?>> SIMPLE_FIELD_TYPES = new HashSet<>();
 
+    public static final String CONTAINER_NAME_REGEX = "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$";
+
     protected static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX";
 
 
@@ -402,7 +404,17 @@ public class KubernetesResourceUtil {
     private static String extractImageUser(String image, MavenProject project) {
         ImageName name = new ImageName(image);
         String imageUser = name.getUser();
-        return imageUser != null ? imageUser : project.getGroupId();
+        String projectGroupId = project.getGroupId();
+        if(imageUser != null) {
+            return imageUser;
+        } else {
+            if(projectGroupId == null || projectGroupId.matches(CONTAINER_NAME_REGEX)) {
+                return projectGroupId;
+            }
+            else {
+                return projectGroupId.replaceAll("[^a-zA-Z0-9-]", "").replaceFirst("^-*(.*?)-*$","$1");
+            }
+        }
     }
 
     public static Map<String, String> removeVersionSelector(Map<String, String> selector) {
