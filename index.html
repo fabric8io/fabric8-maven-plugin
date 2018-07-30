@@ -5084,8 +5084,7 @@ You can force the plugin to add annotations by setting enricher&#8217;s config <
 </div>
 </div>
 <div class="paragraph">
-<p>The enricher will try to discover the settings from the <code>application.properties</code> / <code>application.yaml</code> Spring Boot
- configuration file.</p>
+<p>The enricher will try to discover the settings from the <code>application.properties</code> / <code>application.yaml</code> Spring Boot configuration file.</p>
 </div>
 <div class="paragraph">
 <p>The port number is read from the <code>management.port</code> option, and will use the default value of <code>8080</code>
@@ -5097,16 +5096,19 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
 <div class="ulist">
 <ul>
 <li>
-<p>readinessProbeInitialDelaySeconds = <code>10</code></p>
+<p><code>readinessProbeInitialDelaySeconds</code> : <code>10</code></p>
 </li>
 <li>
-<p>readinessProbePeriodSeconds = &lt;kubernetes-default&gt;</p>
+<p><code>readinessProbePeriodSeconds</code> : <em>&lt;kubernetes-default&gt;</em></p>
 </li>
 <li>
-<p>livenessProbeInitialDelaySeconds = <code>180</code></p>
+<p><code>livenessProbeInitialDelaySeconds</code> : <code>180</code></p>
 </li>
 <li>
-<p>livenessProbePeriodSeconds = &lt;kubernetes-default&gt;</p>
+<p><code>livenessProbePeriodSeconds</code> : <em>&lt;kubernetes-default&gt;</em></p>
+</li>
+<li>
+<p><code>timeoutSeconds</code> : <em>&lt;kubernetes-default&gt;</em></p>
 </li>
 </ul>
 </div>
@@ -5133,6 +5135,7 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
           <span class="tag">&lt;enricher&gt;</span>
             <span class="tag">&lt;config&gt;</span>
               <span class="tag">&lt;spring-boot-health-check&gt;</span>
+                <span class="tag">&lt;timeoutSeconds&gt;</span>5<span class="tag">&lt;/timeoutSeconds&gt;</span>
                 <span class="tag">&lt;readinessProbeInitialDelaySeconds&gt;</span>30<span class="tag">&lt;/readinessProbeInitialDelaySeconds&gt;</span>
               <span class="tag">&lt;/spring-boot-health-check&gt;</span>
             <span class="tag">&lt;/config&gt;</span>
@@ -6966,7 +6969,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.40<br>
-Last updated 2018-07-30 17:27:28 UTC
+Last updated 2018-07-30 19:44:36 UTC
 </div>
 </div>
 </body>
