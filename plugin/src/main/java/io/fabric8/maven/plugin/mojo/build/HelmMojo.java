@@ -444,20 +444,20 @@ public class HelmMojo extends AbstractFabric8Mojo {
                     return lower.equals(srcFile.toLowerCase()) || lower.startsWith(srcFile.toLowerCase() + ".");
                 }
             };
-            copyFirstFile(project.getBasedir(), filter, new File(outputDir, srcFile));
+            copyFirstFile(project.getBasedir(), filter, outputDir);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to save " + srcFile + ": " + e, e);
         }
     }
 
-    protected void copyFirstFile(File sourceDir, FilenameFilter filter, File outFile) throws IOException {
+    protected void copyFirstFile(File sourceDir, FilenameFilter filter, File outDir) throws IOException {
         File[] files = sourceDir.listFiles(filter);
         if (files != null && files.length > 0) {
             File sourceFile = files[0];
-            Files.copy(sourceFile, outFile);
+            Files.copy(sourceFile, new File(outDir, sourceFile.getName()));
         }
-        if (files.length > 1) {
-            log.warn("Found %d of %s files. Using first one %s", files.length, outFile, files[0]);
+        if (files != null && files.length > 1) {
+            log.warn("Found %d of %s files. Using first one %s", files.length, files[0].getName(), files[0]);
         }
     }
 
