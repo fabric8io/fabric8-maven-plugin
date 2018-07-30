@@ -1,0 +1,3 @@
+
+[[fabric8:manifest-index]]
+== *fabric8:manifest-index*

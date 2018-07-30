@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.plugin.mojo.develop;
 
 import java.util.Set;
@@ -21,28 +20,21 @@ import java.util.Set;
 import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.maven.plugin.mojo.build.ApplyMojo;
 
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
+import static io.fabric8.maven.core.util.KubernetesClientUtil.resizeApp;
+
 /**
- * This goal tails the log of the most recent pod for the app that was deployed via <code>fabric8:deploy</code>
- * <p>
- * To terminate the log hit
- * <code>Ctrl+C</code>
+ * Stops the application that was previously created via <code>fabric8:deploy</code>
  */
-@Mojo(name = "log", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.VALIDATE)
-public class LogMojo extends AbstractTailLogMojo {
-
-    @Parameter(property = "fabric8.log.follow", defaultValue = "true")
-    private boolean followLog;
-
+@Mojo(name = "stop", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.INSTALL)
+public class StopMojo extends ApplyMojo {
     @Override
-    protected void applyEntities(Controller controller, final KubernetesClient kubernetes, final String namespace, String fileName, final Set<HasMetadata> entities) throws Exception {
-        getLogService().tailAppPodsLogs(kubernetes, namespace, entities, false, null, followLog, null, true);
+    protected void applyEntities(Controller controller, KubernetesClient kubernetes, String namespace, String fileName, Set<HasMetadata> entities) throws Exception {
+        resizeApp(kubernetes, namespace, entities, 0, log);
     }
-
-
 }

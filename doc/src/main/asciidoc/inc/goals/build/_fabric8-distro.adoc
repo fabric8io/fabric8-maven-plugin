@@ -1,0 +1,5 @@
+
+[[fabric8:distro]]
+== *fabric8:distro*
+
+Generates a tarball of all the dependent kubernetes and openshift templates

@@ -1,0 +1,33 @@
+
+[[fabric8:cluster-stop]]
+== *fabric8:cluster-stop*
+
+This goal will stop a local kubernetes cluster.
+
+This goal  stops the VM running the local cluster so it will free up resources on your machine (memory + CPU) though the VM is not destroyed; it can restarted.
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:cluster-stop
+----
+
+=== Restarting
+
+You can restart the cluster at any time via <<fabric8:cluster-start>>
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:cluster-start
+----
+
+Once restarted all the images, resources and pods should come back
+
+=== Deleting
+
+If you wish to destroy the cluster VM and all the data inside it then you can pass the `fabric8.cluster.delete` parameter with a value of `true`:
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:cluster-stop -Dfabric8.cluster.delete=true
+----
+

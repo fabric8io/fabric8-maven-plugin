@@ -1,0 +1,81 @@
+
+[[fabric8:setup]]
+== *fabric8:setup*
+
+This goal is for setting up a maven project to use f8-m-p. It can be used to add the f8-m-p plugin within an existing `pom.xml` file under the `<plugins>` section
+but also to update an existing configuration.
+
+Remark : The plugin will also bound some goals as `resource, build` to Maven execution phases
+
+To use this goal type:
+
+[source,sh,subs="attributes"]
+----
+mvn io.fabric8:fabric8-maven-plugin:{version}:setup
+----
+
+Now your `pom.xml` is modified.
+
+.Manual Setup
+Alternatively, if you prefer to do it all by hand, then add the following plugin definition to your `pom.xml` file:
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>fabric8-maven-plugin</artifactId>
+  <version>{version}</version>
+
+  <configuration>
+     ....
+     <images>
+        <!-- A single's image configuration -->
+        <image>
+          ...
+          <build>
+           ....
+          </build>
+        </image>
+        ....
+     </images>
+  </configuration>
+
+  <!-- Connect fabric8:resource and fabric8:build to lifecycle phases -->
+  <executions>
+    <execution>
+       <id>fabric8</id>
+       <goals>
+         <goal>resource</goal>
+         <goal>build</goal>
+         <goal>helm</goal>
+       </goals>
+    </execution>
+  </executions>
+</plugin>
+----
+
+NOTE: This plugin definition includes the configuration to generate the Docker image.
+
+The setup can be influenced with the following configuration options:
+
+.Setup configuration
+[cols="1,5,1"]
+|===
+| Element | Description | Property
+
+| *updateVersion*
+| If set to `true` then an already existing plugin configuration will be updated. Otherwise an existing configuration is left untouched. Default is `true`.
+| `updateVersion`
+
+| *useVersionProperty*
+| Whether we should use a version property for the plugin which is defined in a dedicates `<properties>` section with the name `fabric8.maven.plugin.version`
+| `useVersionProperty`
+
+| *generateBackupPoms*
+| Controls whether a backup pom should be created when the `pom.xml` is modified. Ddefault is `true`.
+| `generateBackupPoms`
+
+| *backupPomFileName*
+| Name of the backup file to create. Default is `${basedir}/pom.xml-backup`
+| `backupPomFileName`
+|===
