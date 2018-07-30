@@ -68,6 +68,17 @@ public class ClusterAccess {
         return (T) createKubernetesClient();
     }
 
+    public KubernetesClient createDefaultClient(Logger log, PlatformMode mode){
+        if (mode == PlatformMode.openshift) {
+            return createOpenShiftClient();
+        }
+        if (mode == PlatformMode.auto && isOpenShift(log)) {
+            return createOpenShiftClient();
+        }
+
+        return createKubernetesClient();
+    }
+
     public KubernetesClient createKubernetesClient() {
         return new DefaultKubernetesClient(createDefaultConfig());
     }

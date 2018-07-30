@@ -68,7 +68,9 @@ public class Fabric8ServiceHub {
 
     private KubernetesClient client;
 
+
     private ConcurrentHashMap<Class<?>, LazyBuilder<?>> services = new ConcurrentHashMap<>();
+
 
     private Fabric8ServiceHub() {
     }
