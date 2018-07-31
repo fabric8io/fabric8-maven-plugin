@@ -76,6 +76,7 @@
             <id>fmp</id>
             <goals>
               <goal>resource</goal>
+              <goal>helm</goal>
               <goal>build</goal>
             </goals>
           </execution>

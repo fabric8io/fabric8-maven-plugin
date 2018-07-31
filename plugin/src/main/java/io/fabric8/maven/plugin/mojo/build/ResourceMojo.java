@@ -47,7 +47,6 @@ import io.fabric8.maven.plugin.converter.NamespaceOpenShiftConverter;
 import io.fabric8.maven.plugin.converter.ReplicSetOpenShiftConverter;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
-import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.Template;
 import io.fabric8.utils.Lists;
@@ -60,7 +59,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 
@@ -80,8 +78,6 @@ import java.util.Objects;
 import java.util.Properties;
 
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
-import static io.fabric8.maven.core.util.ResourceFileType.json;
-import static io.fabric8.maven.core.util.ResourceFileType.yaml;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
 
 
@@ -90,7 +86,7 @@ import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MAN
  * installed and released to maven repositories like other build artifacts.
  */
 @Mojo(name = "resource", defaultPhase = LifecyclePhase.PROCESS_RESOURCES, requiresDependencyResolution = ResolutionScope.COMPILE)
-public class ResourceMojo extends AbstractFabric8Mojo {
+public class ResourceMojo extends AbstractResourceMojo {
     /**
      * Used to annotate a resource as being for a specific platform only such as "kubernetes" or "openshift"
      */
@@ -99,11 +95,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     // THe key how we got the the docker maven plugin
     private static final String DOCKER_MAVEN_PLUGIN_KEY = "io.fabric8:docker-maven-plugin";
     private static final String DOCKER_IMAGE_USER = "docker.image.user";
-    /**
-     * The generated kubernetes and openshift manifests
-     */
-    @Parameter(property = "fabric8.targetDir", defaultValue = "${project.build.outputDirectory}/META-INF/fabric8")
-    protected File targetDir;
 
     @Component(role = MavenFileFilter.class, hint = "default")
     private MavenFileFilter mavenFileFilter;
@@ -279,99 +270,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     private OpenShiftDependencyResources openshiftDependencyResources;
     private OpenShiftOverrideResources openShiftOverrideResources;
-    /**
-     * The artifact type for attaching the generated resource file to the project.
-     * Can be either 'json' or 'yaml'
-     */
-    @Parameter(property = "fabric8.resourceType")
-    private ResourceFileType resourceFileType = yaml;
-    @Component
-    private MavenProjectHelper projectHelper;
-
-    /**
-     * Returns the Template if the list contains a single Template only otherwise returns null
-     */
-    protected static Template getSingletonTemplate(KubernetesList resources) {
-        // if the list contains a single Template lets unwrap it
-        if (resources != null) {
-            List<HasMetadata> items = resources.getItems();
-            if (items != null && items.size() == 1) {
-                HasMetadata singleEntity = items.get(0);
-                if (singleEntity instanceof Template) {
-                    return (Template) singleEntity;
-                }
-            }
-        }
-        return null;
-    }
-
-    public static File writeResourcesIndividualAndComposite(KubernetesList resources, File resourceFileBase, ResourceFileType resourceFileType, Logger log, Boolean generateRoute) throws MojoExecutionException {
-
-        //Creating a new items list. This will be used to generate openshift.yml
-        List<HasMetadata> newItemList = new ArrayList<>();
-
-        if(!generateRoute) {
-
-            //if flag is set false, this will remove the Route resource from resources list
-            for (HasMetadata item : resources.getItems()) {
-                if (item.getKind().equalsIgnoreCase("Route")) {
-                    continue;
-                }
-                newItemList.add(item);
-            }
-
-            //update the resource with new list
-            resources.setItems(newItemList);
-
-        }
-
-        // entity is object which will be sent to writeResource for openshift.yml
-        // if generateRoute is false, this will be set to resources with new list
-        // otherwise it will be set to resources with old list.
-        Object entity = resources;
-
-        // if the list contains a single Template lets unwrap it
-        // in resources already new or old as per condition is set.
-        // no need to worry about this for dropping Route.
-        Template template = getSingletonTemplate(resources);
-        if (template != null) {
-            entity = template;
-        }
-
-        File file = writeResource(resourceFileBase, entity, resourceFileType);
-
-        // write separate files, one for each resource item
-        // resources passed to writeIndividualResources is also new one.
-        writeIndividualResources(resources, resourceFileBase, resourceFileType, log, generateRoute);
-        return file;
-    }
-
-    private static void writeIndividualResources(KubernetesList resources, File targetDir, ResourceFileType resourceFileType, Logger log, Boolean generateRoute) throws MojoExecutionException {
-        for (HasMetadata item : resources.getItems()) {
-            String name = KubernetesHelper.getName(item);
-            if (Strings.isNullOrBlank(name)) {
-                log.error("No name for generated item %s", item);
-                continue;
-            }
-            String itemFile = KubernetesResourceUtil.getNameWithSuffix(name, item.getKind());
-
-            // Here we are writing individual file for all the resources.
-            // if generateRoute is false and resource is route, we should not generate it.
-
-            if (!(item.getKind().equalsIgnoreCase("Route") && !generateRoute)){
-                File itemTarget = new File(targetDir, itemFile);
-                writeResource(itemTarget, item, resourceFileType);
-            }
-        }
-    }
-
-    private static File writeResource(File resourceFileBase, Object entity, ResourceFileType resourceFileType) throws MojoExecutionException {
-        try {
-            return KubernetesResourceUtil.writeResource(entity, resourceFileBase, resourceFileType);
-        } catch (IOException e) {
-            throw new MojoExecutionException("Failed to write resource to " + resourceFileBase + ". " + e, e);
-        }
-    }
 
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         clusterAccess = new ClusterAccess(namespace);
@@ -1056,25 +954,5 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     private boolean isPomProject() {
         return "pom".equals(project.getPackaging());
-    }
-
-    protected void writeResources(KubernetesList resources, ResourceClassifier classifier, Boolean generateRoute) throws MojoExecutionException {
-        // write kubernetes.yml / openshift.yml
-        File resourceFileBase = new File(this.targetDir, classifier.getValue());
-
-        File file = writeResourcesIndividualAndComposite(resources, resourceFileBase, this.resourceFileType, log, generateRoute);
-
-        // Attach it to the Maven reactor so that it will also get deployed
-        projectHelper.attachArtifact(project, this.resourceFileType.getArtifactType(), classifier.getValue(), file);
-
-        // TODO: Remove the following block when devops and other apps used by gofabric8 are migrated
-        // to fmp-v3. See also https://github.com/fabric8io/fabric8-maven-plugin/issues/167
-        if (this.resourceFileType.equals(yaml)) {
-            // lets generate JSON too to aid migration from version 2.x to 3.x for packaging templates
-            file = writeResource(resourceFileBase, resources, json);
-
-            // Attach it to the Maven reactor so that it will also get deployed
-            projectHelper.attachArtifact(project, json.getArtifactType(), classifier.getValue(), file);
-        }
     }
 }

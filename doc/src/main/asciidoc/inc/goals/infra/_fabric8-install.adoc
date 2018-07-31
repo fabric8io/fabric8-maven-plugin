@@ -1,0 +1,14 @@
+
+[[fabric8:install]]
+== *fabric8:install*
+
+Ensures that the fabric8 binaries are installed on the current machine such as https://github.com/fabric8io/gofabric8/[gofabric8] and for kubernetes: http://kubernetes.io/docs/user-guide/kubectl-overview/[kubectl] and https://github.com/kubernetes/minikube[minikube] or for OpenShift: https://docs.openshift.com/enterprise/latest/cli_reference/basic_cli_operations.html[oc] and https://github.com/jimmidyson/minishift[minishift]
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:install
+----
+
+An alternative is to just run the <<fabric8:cluster-start>> goal to install the binaries and start a local cluster
+
+By default the binaries are installed in `~/.fabric8/bin`

@@ -1,0 +1,6 @@
+[[goals-overview-internal]]
+# Internal Goals
+
+include::_fabric8-import.adoc[]
+include::_fabric8-helm-index.adoc[]
+include::_fabric8-manifest-index.adoc[]

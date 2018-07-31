@@ -1,0 +1,5 @@
+
+[[fabric8:helm-index]]
+== *fabric8:helm-index*
+
+Generates a Manifest index file by querying a maven repository to find all the Kubernetes and OpenShift manifests available and their releases.

@@ -1,0 +1,69 @@
+
+[[fabric8:run]]
+== *fabric8:run*
+
+This goal builds your application (generating the docker image and kubernetes manifest), deploys it on the current kubernetes cluster then tails the logs of the first pod that starts until you hit `Ctrl+C` then the application is stopped.
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:run
+----
+
+So this goal feels very much like the `run` goal in other maven plugins like spring-boot, tomcat, jetty, wildfly etc.
+
+You can think of this goal as being similar to performing:
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:deploy
+mvn fabric8:logs
+...
+^C
+mvn fabric8:stop
+----
+
+If you wish to <<fabric8:undeploy>> on the `Ctrl+C` keypress you can pass in the `fabric8.onExit` goal:
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:run -Dfabric8.onExit=undeploy
+----
+
+If you prefer Ctrl-C to just terminate the log tailing but leave your app running you can use:
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:run -Dfabric8.onExit=
+----
+
+Though its maybe just simpler to do:
+
+[source,sh,subs="attributes"]
+----
+mvn fabric8:deploy fabric8:log
+----
+
+
+
+**Note** that you must have the <<fabric8:resource>> and <<fabric8:build>> goals bound to your executions in your pom.xml. e.g. like this:
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>fabric8-maven-plugin</artifactId>
+  <version>{version}</version>
+
+  <!-- Connect fabric8:resource, fabric8:build and fabric8:helm to lifecycle phases -->
+  <executions>
+    <execution>
+       <id>fabric8</id>
+       <goals>
+         <goal>resource</goal>
+         <goal>build</goal>
+         <goal>helm</goal>
+       </goals>
+    </execution>
+  </executions>
+</plugin>
+----
