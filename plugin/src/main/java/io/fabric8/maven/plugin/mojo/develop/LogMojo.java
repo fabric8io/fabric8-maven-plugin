@@ -22,6 +22,8 @@ import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
+import io.fabric8.maven.core.service.PodLogService;
+import io.fabric8.maven.plugin.mojo.build.ApplyMojo;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -34,10 +36,14 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
  * <code>Ctrl+C</code>
  */
 @Mojo(name = "log", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.VALIDATE)
-public class LogMojo extends AbstractTailLogMojo {
+public class LogMojo extends ApplyMojo {
 
     @Parameter(property = "fabric8.log.follow", defaultValue = "true")
     private boolean followLog;
+    @Parameter(property = "fabric8.log.container")
+    private String logContainerName;
+    @Parameter(property = "fabric8.log.pod")
+    private String podName;
 
     @Override
     protected void applyEntities(Controller controller, final KubernetesClient kubernetes, final String namespace, String fileName, final Set<HasMetadata> entities) throws Exception {
@@ -45,4 +51,18 @@ public class LogMojo extends AbstractTailLogMojo {
     }
 
 
+    protected PodLogService getLogService() {
+        return new PodLogService(getLogServiceContext());
+    }
+
+    protected PodLogService.PodLogServiceContext getLogServiceContext() {
+        return new PodLogService.PodLogServiceContext.Builder()
+                .log(log)
+                .logContainerName(logContainerName)
+                .podName(podName)
+                .newPodLog(createLogger("[[C]][NEW][[C]] "))
+                .oldPodLog(createLogger("[[R]][OLD][[R]] "))
+                .s2iBuildNameSuffix(s2iBuildNameSuffix)
+                .build();
+    }
 }
