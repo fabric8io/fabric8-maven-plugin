@@ -59,7 +59,6 @@ import static io.fabric8.maven.generator.springboot.SpringBootGenerator.Config.c
  */
 public class SpringBootGenerator extends JavaExecGenerator {
 
-    private static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
     private static final String DEFAULT_SERVER_PORT = "8080";
 
     public enum Config implements Configs.Key {
@@ -75,7 +74,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
         return shouldAddImageConfiguration(configs)
-               && MavenUtil.hasPlugin(getProject(), SPRING_BOOT_MAVEN_PLUGIN_GA);
+               && MavenUtil.hasPluginOfAnyGroupId(getProject(), SpringBootConfigurationHelper.SPRING_BOOT_MAVEN_PLUGIN_ARTIFACT_ID);
     }
 
     @Override
@@ -266,7 +265,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
 
     private boolean isSpringBootRepackage() {
         MavenProject project = getProject();
-        Plugin plugin = project.getPlugin(SPRING_BOOT_MAVEN_PLUGIN_GA);
+        Plugin plugin = MavenUtil.getPluginOfAnyGroupId(project, SpringBootConfigurationHelper.SPRING_BOOT_MAVEN_PLUGIN_ARTIFACT_ID);
         if (plugin != null) {
             Map<String, PluginExecution> executionsAsMap = plugin.getExecutionsAsMap();
             if (executionsAsMap != null) {

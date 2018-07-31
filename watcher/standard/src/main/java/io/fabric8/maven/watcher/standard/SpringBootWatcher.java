@@ -46,8 +46,6 @@ import static io.fabric8.maven.core.util.SpringBootConfigurationHelper.DEV_TOOLS
 
 public class SpringBootWatcher extends BaseWatcher {
 
-    private static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
-
     private static final int DEFAULT_SERVER_PORT = 8080;
 
     // Available configuration keys
@@ -65,7 +63,7 @@ public class SpringBootWatcher extends BaseWatcher {
 
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs, Set<HasMetadata> resources, PlatformMode mode) {
-        return MavenUtil.hasPlugin(getContext().getProject(), SPRING_BOOT_MAVEN_PLUGIN_GA);
+        return MavenUtil.hasPluginOfAnyGroupId(getContext().getProject(), SpringBootConfigurationHelper.SPRING_BOOT_MAVEN_PLUGIN_ARTIFACT_ID);
     }
 
     @Override

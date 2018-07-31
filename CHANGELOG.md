@@ -23,6 +23,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1312: Container name should not be generated from maven group id
 * Feature 917: Add `timeoutSeconds` configuration option for SpringBootHealthCheck enricher
 * Fix 1073: Preserve file extension when copying file to helm chart folder
+* Fix 1340: spring-boot-maven-plugin is detected under any groupId
 
 ###3.5.40
 * Feature 1264: Added `osio` profile, with enricher to apply OpenShift.io space labels to resources
