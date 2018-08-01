@@ -67,7 +67,7 @@ You specify the properties like for any enricher within the enrichers configurat
 </configuration>
 -----
 
-[fmp-service-ports]
+[[fmp-service-ports]]
 .Port specification
 
 With the option `port` you can influence the mapping how ports are mapped from the pod to the service.
