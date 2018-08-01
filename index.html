@@ -2252,8 +2252,8 @@ the URL is:</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipBuildPom</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>false</code> the build step will not be skipped for modules of type <code>pom</code>. By default the plugin is not executed for modules with <code>pom</code> packaging.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip.build.pom</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set the build step will be skipped for modules of type <code>pom</code>. If not set, then by default projects of type <code>pom</code> will be skipped if there are no image configurations contained.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.skip.build.pom</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipTag</strong></p></td>
@@ -4727,7 +4727,7 @@ An explicit configuration always takes precedence over auto detection. For enric
 <span class="tag">&lt;/configuration&gt;</span></code></pre>
 </div>
 </div>
-<div class="paragraph">
+<div id="fmp-service-ports" class="paragraph">
 <div class="title">Port specification</div>
 <p>With the option <code>port</code> you can influence the mapping how ports are mapped from the pod to the service.
 By default and if this option is not given the ports exposed are dictated by the ports exposed from the Docker images contained in the pods.
@@ -6969,7 +6969,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.40<br>
-Last updated 2018-08-01 17:59:31 UTC
+Last updated 2018-08-01 20:22:00 UTC
 </div>
 </div>
 </body>
