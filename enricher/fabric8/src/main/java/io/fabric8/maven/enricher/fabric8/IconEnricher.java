@@ -19,6 +19,7 @@ package io.fabric8.maven.enricher.fabric8;
 import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
@@ -39,6 +40,7 @@ import java.util.Map;
 
 import static io.fabric8.maven.core.util.MavenUtil.hasClass;
 import static io.fabric8.maven.core.util.MavenUtil.hasPlugin;
+import static io.fabric8.maven.core.util.MavenUtil.hasPluginOfAnyGroupId;
 import static io.fabric8.utils.Files.guessMediaType;
 
 /**
@@ -158,7 +160,7 @@ public class IconEnricher extends BaseEnricher {
         if (hasClass(project, "org.apache.camel.CamelContext")) {
             return "camel";
         }
-        if (hasPlugin(project,"org.springframework.boot:spring-boot-maven-plugin")  ||
+        if (hasPluginOfAnyGroupId(project, SpringBootConfigurationHelper.SPRING_BOOT_MAVEN_PLUGIN_ARTIFACT_ID)  ||
             hasClass(project, "org.springframework.boot.SpringApplication")) {
             return "spring-boot";
         }
