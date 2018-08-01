@@ -10,6 +10,8 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
+###3.5.42
+
 ###3.5.41
 * Feature 1032: Improvements of the Vert.x Generator and enrichers
 * Fix 1313: Removed unused Maven goals. Please contact us if something's missing for you.
