@@ -44,7 +44,8 @@ import static io.fabric8.maven.core.util.SpringBootConfigurationHelper.DEV_TOOLS
 
 public class SpringBootWatcher extends BaseWatcher {
 
-    private static final int DEFAULT_SERVER_PORT = 8080;
+
+    private final PortForwardService portForwardService;
 
     // Available configuration keys
     private enum Config implements Configs.Key {
