@@ -23,10 +23,10 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.generator.api.support.BaseGenerator;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.GeneratorContext;
-import io.fabric8.utils.Strings;
+import io.fabric8.maven.generator.api.support.BaseGenerator;
+import org.apache.commons.lang3.StringUtils;
 
 public class KarafGenerator extends BaseGenerator {
 
@@ -79,7 +79,7 @@ public class KarafGenerator extends BaseGenerator {
     }
 
     private void addPortIfValid(List<String> list, String port) {
-        if (Strings.isNotBlank(port)) {
+        if (StringUtils.isNotBlank(port)) {
             list.add(port);
         }
     }

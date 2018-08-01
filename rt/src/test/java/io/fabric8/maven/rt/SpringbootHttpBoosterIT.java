@@ -16,9 +16,9 @@
 
 package io.fabric8.maven.rt;
 
-import io.fabric8.openshift.api.model.Route;
-
 import java.io.IOException;
+
+import io.fabric8.openshift.api.model.Route;
 import org.apache.http.HttpStatus;
 import org.eclipse.jgit.lib.Repository;
 import org.junit.After;

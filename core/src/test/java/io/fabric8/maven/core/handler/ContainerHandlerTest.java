@@ -16,21 +16,24 @@
 
 package io.fabric8.maven.core.handler;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.VolumeConfig;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.utils.Strings;
 import mockit.Mocked;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class ContainerHandlerTest {
 
@@ -241,7 +244,7 @@ public class ContainerHandlerTest {
 
         //Image Configuration without name and registry
         ImageConfiguration imageConfiguration4 = new ImageConfiguration.Builder().
-                alias("test-app").buildConfig(buildImageConfiguration1).build();
+                alias("test-app").buildConfig(buildImageConfiguration1).registry("docker.io").build();
 
         images.clear();
         images.add(imageConfiguration1);
@@ -429,7 +432,7 @@ public class ContainerHandlerTest {
         assertEquals(9,outputports.size());
         int protocolCount=0,tcpCount=0,udpCount=0,containerPortCount=0,hostIPCount=0,hostPortCount=0;
         for(int i=0;i<9;i++){
-            if(!Strings.isNullOrBlank(outputports.get(i).getProtocol())){
+            if(!StringUtils.isBlank(outputports.get(i).getProtocol())){
                 protocolCount++;
                 if(outputports.get(i).getProtocol().equalsIgnoreCase("tcp")){
                     tcpCount++;
@@ -438,7 +441,7 @@ public class ContainerHandlerTest {
                     udpCount++;
                 }
             }
-            if(!Strings.isNullOrBlank(outputports.get(i).getHostIP())){
+            if(!StringUtils.isBlank(outputports.get(i).getHostIP())){
                 hostIPCount++;
             }
             if(outputports.get(i).getContainerPort()!=null){

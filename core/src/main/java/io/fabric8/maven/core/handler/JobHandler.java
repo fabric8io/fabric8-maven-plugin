@@ -1,11 +1,16 @@
 package io.fabric8.maven.core.handler;
 
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.kubernetes.api.KubernetesHelper;
-
 import java.util.List;
+
+import io.fabric8.kubernetes.api.model.Job;
+import io.fabric8.kubernetes.api.model.JobBuilder;
+import io.fabric8.kubernetes.api.model.JobSpec;
+import io.fabric8.kubernetes.api.model.JobSpecBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.docker.config.ImageConfiguration;
 
 /**
  * Handler for Jobs

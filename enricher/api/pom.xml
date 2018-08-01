@@ -37,11 +37,6 @@
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>kubernetes-api</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>io.fabric8</groupId>
       <artifactId>docker-maven-plugin</artifactId>
     </dependency>
 
@@ -51,8 +46,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.eclipse.jgit</groupId>
-      <artifactId>org.eclipse.jgit</artifactId>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
     </dependency>
 
     <dependency>

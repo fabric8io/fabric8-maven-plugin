@@ -16,21 +16,23 @@
 
 package io.fabric8.maven.enricher.standard;
 
+import java.util.Map;
+
+import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
 import org.apache.maven.model.IssueManagement;
-import org.apache.maven.model.Scm;
 import org.apache.maven.project.MavenProject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.Map;
-
-import static junit.framework.TestCase.*;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertTrue;
 
 /**
  * @author kameshs
@@ -64,9 +66,9 @@ public class MavenIssueManagementEnricherTest {
         assertNotNull(scmAnnotations);
         Assert.assertEquals(2, scmAnnotations.size());
         assertEquals("GitHub",
-                scmAnnotations.get(MavenIssueManagementEnricher.ISSUE_MANAGEMENT_SYSTEM));
+                scmAnnotations.get(Fabric8Annotations.ISSUE_SYSTEM.value()));
         assertEquals("https://github.com/fabric8io/vertx-maven-plugin/issues/",
-                scmAnnotations.get(MavenIssueManagementEnricher.ISSUE_MANAGEMENT_URL));
+                scmAnnotations.get(Fabric8Annotations.ISSUE_TRACKER_URL.value()));
     }
 
     @Test

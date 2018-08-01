@@ -16,6 +16,9 @@
 
 package io.fabric8.maven.core.access;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.fabric8.kubernetes.api.model.RootPaths;
 import io.fabric8.kubernetes.client.Client;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -23,15 +26,13 @@ import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftMockServer;
+import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import mockit.*;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(JMockit.class)
 public class ClusterAccessTest {

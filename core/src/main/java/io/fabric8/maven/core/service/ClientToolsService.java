@@ -17,10 +17,8 @@ package io.fabric8.maven.core.service;
 
 import java.io.File;
 
-import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.maven.core.util.ProcessUtil;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.openshift.client.OpenShiftClient;
 
 /**
  * A service that manages the client tools.
@@ -30,30 +28,23 @@ public class ClientToolsService {
 
     private Logger log;
 
-    private Controller controller;
-
-    public ClientToolsService(Controller controller, Logger log) {
-        this.controller = controller;
+    public ClientToolsService(Logger log) {
         this.log = log;
     }
 
-    public File getKubeCtlExecutable() {
-        OpenShiftClient openShiftClient = controller.getOpenShiftClientOrNull();
-        String command = openShiftClient != null ? "oc" : "kubectl";
-
-        String missingCommandMessage;
-        File file = ProcessUtil.findExecutable(log, command);
-        if (file == null && command.equals("oc")) {
-            file = ProcessUtil.findExecutable(log, command);
-            missingCommandMessage = "commands oc or kubectl";
-        } else {
-            missingCommandMessage = "command " + command;
+    public File getKubeCtlExecutable(boolean preferOc) {
+        if (preferOc) {
+            File file = ProcessUtil.findExecutable(log, "oc");
+            if (file != null) {
+                return file;
+            }
         }
-        if (file == null) {
-            throw new IllegalStateException("Could not find " + missingCommandMessage +
-                    ". Please install the necessary binaries and ensure they get added to your $PATH");
+        File file = ProcessUtil.findExecutable(log, "kubectl");
+        if (file != null) {
+            return file;
         }
-        return file;
+        throw new IllegalStateException("Could not find " + (preferOc ? "oc or kubectl" : "kubectl") +
+                                        ". Please install the necessary binaries and ensure they get added to your $PATH");
     }
-
 }
+

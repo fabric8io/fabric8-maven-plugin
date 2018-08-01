@@ -16,22 +16,19 @@
 
 package io.fabric8.maven.enricher.standard;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
-import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import org.apache.maven.plugin.MojoExecutionException;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
-import static io.fabric8.utils.Lists.notNullList;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.EnricherContext;
+import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  * Merges local resources with dependent resources which have the same name.
@@ -52,12 +49,12 @@ public class MergeEnricher extends BaseEnricher {
 
     @Override
     public void adapt(KubernetesListBuilder builder) {
-        List<HasMetadata> items = notNullList(builder.getItems());
+        List<HasMetadata> items = builder.buildItems();
         Map<String, Map<String, HasMetadata>> kindMaps = new HashMap<>();
 
         List<HasMetadata> removeList = new ArrayList<>();
         for (HasMetadata item : items) {
-            String kind = getKind(item);
+            String kind = KubernetesHelper.getKind(item);
             String name = KubernetesHelper.getName(item);
             Map<String, HasMetadata> map = kindMaps.get(kind);
             if (map == null) {
@@ -92,7 +89,7 @@ public class MergeEnricher extends BaseEnricher {
         // we expect lots of duplicates when making an app catalog as we have the composites and individual manifests
         try {
             if (!getContext().runningWithGoal("fabric8:app-catalog")) {
-                log.warn("Duplicate resources for %s %s from %s and %s", getKind(item1), KubernetesHelper.getName(item1), KubernetesResourceUtil.getSourceUrlAnnotation(item1), KubernetesResourceUtil.getSourceUrlAnnotation(item2));
+                log.warn("Duplicate resources for %s %s from %s and %s", KubernetesHelper.getKind(item1), KubernetesHelper.getName(item1), KubernetesResourceUtil.getSourceUrlAnnotation(item1), KubernetesResourceUtil.getSourceUrlAnnotation(item2));
             }
         } catch (MojoExecutionException e) {
             log.warn("Failed to check if generated an app-catalog: %s", e);

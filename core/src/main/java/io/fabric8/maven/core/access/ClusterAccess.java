@@ -18,16 +18,19 @@ package io.fabric8.maven.core.access;
 
 import java.net.UnknownHostException;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.client.*;
+import io.fabric8.kubernetes.client.Config;
+import io.fabric8.kubernetes.client.ConfigBuilder;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftAPIGroups;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.fabric8.utils.Strings;
-
-import static io.fabric8.kubernetes.api.KubernetesHelper.DEFAULT_NAMESPACE;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author roland
@@ -46,11 +49,8 @@ public class ClusterAccess {
 
     public String setNamespace(String namespace){
         String ns=namespace;
-        if (Strings.isNullOrBlank(ns)) {
-            ns = KubernetesHelper.defaultNamespace();
-        }
-        if (Strings.isNullOrBlank(ns)) {
-            ns = DEFAULT_NAMESPACE;
+        if (StringUtils.isBlank(ns)) {
+            ns = KubernetesHelper.getDefaultNamespace();
         }
         return ns;
     }
@@ -105,18 +105,17 @@ public class ClusterAccess {
 
     public boolean isOpenShift(Logger log) {
         try {
-            if(this.client==null)
-                return KubernetesHelper.isOpenShift(createKubernetesClient());
-            else
-                return KubernetesHelper.isOpenShift(this.client);
+            return this.client == null ?
+                OpenshiftHelper.isOpenShift(createKubernetesClient()) :
+                OpenshiftHelper.isOpenShift(this.client);
         } catch (KubernetesClientException exp) {
             Throwable cause = exp.getCause();
             String prefix = cause instanceof UnknownHostException ? "Unknown host " : "";
             log.warn("Cannot access cluster for detecting mode: %s%s",
                      prefix,
                      cause != null ? cause.getMessage() : exp.getMessage());
-            return false;
         }
+        return false;
     }
 
     public PlatformMode resolvePlatformMode(PlatformMode mode, Logger log) {

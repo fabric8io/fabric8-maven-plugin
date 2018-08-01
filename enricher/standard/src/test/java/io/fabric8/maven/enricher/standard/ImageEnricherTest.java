@@ -19,24 +19,21 @@ package io.fabric8.maven.enricher.standard;
 import java.util.Arrays;
 import java.util.Collections;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.EnricherContext;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.jayway.jsonpath.matchers.JsonPathMatchers;
-
+import mockit.Expectations;
+import mockit.Mocked;
+import mockit.integration.junit4.JMockit;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -135,7 +132,7 @@ public class ImageEnricherTest {
     private void assertCorrectlyGeneratedResources(KubernetesList list, String kind) throws JsonProcessingException {
         assertEquals(list.getItems().size(),1);
 
-        String json = KubernetesResourceUtil.toJson(list.getItems().get(0));
+        String json = ResourceUtil.toJson(list.getItems().get(0));
         assertThat(json, JsonPathMatchers.isJson());
         assertThat(json, JsonPathMatchers.hasJsonPath("$.kind", Matchers.equalTo(kind)));
 

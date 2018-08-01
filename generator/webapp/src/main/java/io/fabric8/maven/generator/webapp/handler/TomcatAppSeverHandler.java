@@ -16,11 +16,11 @@
 
 package io.fabric8.maven.generator.webapp.handler;
 
-import io.fabric8.maven.core.util.MavenUtil;
-import org.apache.maven.project.MavenProject;
-
 import java.util.Arrays;
 import java.util.List;
+
+import io.fabric8.maven.core.util.MavenUtil;
+import org.apache.maven.project.MavenProject;
 
 /**
  * Detector for tomat app servers.

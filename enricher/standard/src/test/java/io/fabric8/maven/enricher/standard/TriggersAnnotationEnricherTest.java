@@ -16,6 +16,12 @@
 
 package io.fabric8.maven.enricher.standard;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.Job;
@@ -23,27 +29,27 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
-import io.fabric8.maven.core.util.JSONUtil;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.openshift.api.model.ImageChangeTrigger;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
+import net.minidev.json.JSONUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-
-import static junit.framework.TestCase.*;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertNull;
+import static junit.framework.TestCase.assertTrue;
 
 /**
  * @author nicola
  */
 @RunWith(JMockit.class)
 public class TriggersAnnotationEnricherTest {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Mocked
     private EnricherContext context;
@@ -71,7 +77,7 @@ public class TriggersAnnotationEnricherTest {
         String triggers = res.getMetadata().getAnnotations().get("image.openshift.io/triggers");
         assertNotNull(triggers);
 
-        List<ImageChangeTrigger> triggerList = JSONUtil.mapper().readValue(triggers, JSONUtil.mapper().getTypeFactory().constructCollectionType(List.class, ImageChangeTrigger.class));
+        List<ImageChangeTrigger> triggerList = OBJECT_MAPPER.readValue(triggers, OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, ImageChangeTrigger.class));
         assertEquals(1, triggerList.size());
 
         ImageChangeTrigger trigger = triggerList.get(0);
@@ -107,7 +113,7 @@ public class TriggersAnnotationEnricherTest {
         String triggers = res.getMetadata().getAnnotations().get("image.openshift.io/triggers");
         assertNotNull(triggers);
 
-        List<ImageChangeTrigger> triggerList = JSONUtil.mapper().readValue(triggers, JSONUtil.mapper().getTypeFactory().constructCollectionType(List.class, ImageChangeTrigger.class));
+        List<ImageChangeTrigger> triggerList = OBJECT_MAPPER.readValue(triggers, OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, ImageChangeTrigger.class));
         assertEquals(1, triggerList.size());
 
         ImageChangeTrigger trigger = triggerList.get(0);
@@ -145,7 +151,7 @@ public class TriggersAnnotationEnricherTest {
         String triggers = res.getMetadata().getAnnotations().get("image.openshift.io/triggers");
         assertNotNull(triggers);
 
-        List<ImageChangeTrigger> triggerList = JSONUtil.mapper().readValue(triggers, JSONUtil.mapper().getTypeFactory().constructCollectionType(List.class, ImageChangeTrigger.class));
+        List<ImageChangeTrigger> triggerList = OBJECT_MAPPER.readValue(triggers, OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, ImageChangeTrigger.class));
         assertEquals(1, triggerList.size());
 
         ImageChangeTrigger trigger = triggerList.get(0);
@@ -190,7 +196,7 @@ public class TriggersAnnotationEnricherTest {
         String triggers = res.getMetadata().getAnnotations().get("image.openshift.io/triggers");
         assertNotNull(triggers);
 
-        List<ImageChangeTrigger> triggerList = JSONUtil.mapper().readValue(triggers, JSONUtil.mapper().getTypeFactory().constructCollectionType(List.class, ImageChangeTrigger.class));
+        List<ImageChangeTrigger> triggerList = OBJECT_MAPPER.readValue(triggers, OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, ImageChangeTrigger.class));
         assertEquals(2, triggerList.size());
 
         ImageChangeTrigger trigger1 = triggerList.get(0);

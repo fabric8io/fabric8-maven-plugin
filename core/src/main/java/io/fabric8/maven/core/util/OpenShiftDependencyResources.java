@@ -15,22 +15,23 @@
  */
 package io.fabric8.maven.core.util;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.openshift.api.model.Parameter;
-import io.fabric8.openshift.api.model.Template;
-import io.fabric8.utils.Strings;
-
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
-import static io.fabric8.maven.core.util.KubernetesResourceUtil.getSourceUrlAnnotation;
-import static io.fabric8.maven.core.util.KubernetesResourceUtil.setSourceUrlAnnotationIfNotSet;
-import static io.fabric8.utils.Lists.notNullList;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.openshift.api.model.Parameter;
+import io.fabric8.openshift.api.model.Template;
+import org.apache.commons.lang3.StringUtils;
+
+import static io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil.getSourceUrlAnnotation;
+import static io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil.setSourceUrlAnnotationIfNotSet;
 
 /**
  */
@@ -50,7 +51,7 @@ public class OpenShiftDependencyResources {
                 if (!KubernetesResourceUtil.isAppCatalogResource(template) && !isAppCatalog) {
                     List<HasMetadata> objects = notNullList(template.getObjects());
                     String sourceUrl = getSourceUrlAnnotation(template);
-                    if (Strings.isNotBlank(sourceUrl)) {
+                    if (StringUtils.isNotBlank(sourceUrl)) {
                         for (HasMetadata object : objects) {
                             setSourceUrlAnnotationIfNotSet(object, sourceUrl);
                         }
@@ -73,7 +74,7 @@ public class OpenShiftDependencyResources {
     private void mergeParametersIntoMap(Map<String, Parameter> targetMap, Iterable<Parameter> parameters) {
         for (Parameter parameter : parameters) {
             String name = parameter.getName();
-            if (Strings.isNotBlank(name)) {
+            if (StringUtils.isNotBlank(name)) {
                 Parameter old = targetMap.get(name);
                 if (old != null) {
                     mergeParameters(old, parameter);
@@ -86,20 +87,20 @@ public class OpenShiftDependencyResources {
 
     private void mergeParameters(Parameter current, Parameter other) {
         String value = other.getValue();
-        if (Strings.isNotBlank(value)) {
-            if (Strings.isNullOrBlank(current.getValue())) {
+        if (StringUtils.isNotBlank(value)) {
+            if (StringUtils.isBlank(current.getValue())) {
                 current.setValue(value);
             }
         }
         String generate = other.getGenerate();
-        if (Strings.isNotBlank(generate)) {
-            if (Strings.isNullOrBlank(current.getGenerate())) {
+        if (StringUtils.isNotBlank(generate)) {
+            if (StringUtils.isBlank(current.getGenerate())) {
                 current.setGenerate(generate);
             }
         }
         String from = other.getFrom();
-        if (Strings.isNotBlank(from)) {
-            if (Strings.isNullOrBlank(current.getFrom())) {
+        if (StringUtils.isNotBlank(from)) {
+            if (StringUtils.isBlank(current.getFrom())) {
                 current.setFrom(from);
             }
         }
@@ -112,7 +113,7 @@ public class OpenShiftDependencyResources {
         KindAndName key = new KindAndName(item);
         HasMetadata answer = openshiftDependencyResources.get(key);
         if (answer == null && item instanceof Deployment) {
-            key = new KindAndName("DeploymentConfig", getName(item));
+            key = new KindAndName("DeploymentConfig", KubernetesHelper.getName(item));
             answer = openshiftDependencyResources.get(key);
         }
         return answer;
@@ -149,6 +150,14 @@ public class OpenShiftDependencyResources {
             if (!itemMap.containsKey(key)) {
                 objects.add(dependency);
             }
+        }
+    }
+
+    private <T> List<T> notNullList(List<T> list) {
+        if (list == null) {
+            return Collections.EMPTY_LIST;
+        } else {
+            return list;
         }
     }
 }

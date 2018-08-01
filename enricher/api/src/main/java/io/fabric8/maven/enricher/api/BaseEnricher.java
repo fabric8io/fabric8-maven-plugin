@@ -16,19 +16,17 @@
 
 package io.fabric8.maven.enricher.api;
 
-import io.fabric8.kubernetes.api.model.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.project.MavenProject;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import static io.fabric8.maven.core.util.Constants.*;
 
 /**
  * @author roland

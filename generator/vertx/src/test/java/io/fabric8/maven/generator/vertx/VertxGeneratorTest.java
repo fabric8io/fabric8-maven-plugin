@@ -1,5 +1,9 @@
 package io.fabric8.maven.generator.vertx;
 
+import java.io.File;
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.collect.ImmutableSet;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.GeneratorContext;
@@ -15,10 +19,6 @@ import org.apache.maven.project.MavenProject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.File;
-import java.util.List;
-import java.util.Map;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.entry;
  */
 @RunWith(JMockit.class)
 public class VertxGeneratorTest {
-    
+
     @Injectable
     private Logger logger;
 
@@ -58,7 +58,7 @@ public class VertxGeneratorTest {
 
     @Test
     public void testWithMetrics(@Mocked final MavenProject project) {
-        
+
         new Expectations() {{
             project.getBuild().getDirectory(); result = new File("target/tmp").getAbsolutePath();
             project.getBuild().getOutputDirectory(); result = new File("target/tmp/target").getAbsolutePath();

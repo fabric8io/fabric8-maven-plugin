@@ -15,18 +15,18 @@
  */
 package io.fabric8.maven.core.service;
 
-import io.fabric8.maven.core.util.ProcessUtil;
-import io.fabric8.maven.docker.util.Logger;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.shared.utils.io.FileUtils;
-import org.apache.maven.shared.utils.io.IOUtil;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+
+import io.fabric8.maven.core.util.ProcessUtil;
+import io.fabric8.maven.docker.util.Logger;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.shared.utils.io.FileUtils;
+import org.apache.maven.shared.utils.io.IOUtil;
 
 /*
 * Docker compose services for converting docker compose artifacts to kubernetes artifacts

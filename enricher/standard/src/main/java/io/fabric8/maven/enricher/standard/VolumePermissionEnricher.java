@@ -16,13 +16,19 @@
 
 package io.fabric8.maven.enricher.standard;
 
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.util.InitContainerHandler;
-import io.fabric8.utils.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 
 import java.util.*;
@@ -170,7 +176,7 @@ public class VolumePermissionEnricher extends BaseEnricher {
                     pvcBuilder.withNewMetadata().endMetadata();
                 }
                 String storageClass = getConfig(Config.defaultStorageClass);
-                if (Strings.isNotBlank(storageClass) && !pvcBuilder.buildMetadata().getAnnotations().containsKey(VOLUME_STORAGE_CLASS_ANNOTATION)) {
+                if (StringUtils.isNotBlank(storageClass) && !pvcBuilder.buildMetadata().getAnnotations().containsKey(VOLUME_STORAGE_CLASS_ANNOTATION)) {
                     pvcBuilder.editMetadata().addToAnnotations(VOLUME_STORAGE_CLASS_ANNOTATION, storageClass).endMetadata();
                 }
             }

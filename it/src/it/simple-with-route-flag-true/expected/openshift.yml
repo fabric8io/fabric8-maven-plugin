@@ -37,7 +37,7 @@ items:
       fabric8.io/git-commit: "@ignore@"
       fabric8.io/iconUrl: img/icons/spring-boot.svg
       fabric8.io/git-branch: "@ignore@"
-      fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=fabric8-maven-sample-zero-config&var-version=3.5-SNAPSHOT
+      fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json?var-project=fabric8-maven-sample-zero-config&var-version=3.5-SNAPSHOT
       fabric8.io/scm-tag: HEAD
       fabric8.io/scm-url: https://github.com/spring-projects/spring-boot/spring-boot-starter-parent/fabric8-maven-sample-zero-config
     labels:
@@ -61,7 +61,7 @@ items:
       metadata:
         annotations:
           fabric8.io/git-commit: "@ignore@"
-          fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=fabric8-maven-sample-zero-config&var-version=3.5-SNAPSHOT
+          fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json?var-project=fabric8-maven-sample-zero-config&var-version=3.5-SNAPSHOT
           fabric8.io/scm-url: https://github.com/spring-projects/spring-boot/spring-boot-starter-parent/fabric8-maven-sample-zero-config
           fabric8.io/iconUrl: img/icons/spring-boot.svg
           fabric8.io/git-branch: "@ignore@"

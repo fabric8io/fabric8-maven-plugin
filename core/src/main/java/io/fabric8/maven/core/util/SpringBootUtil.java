@@ -143,10 +143,7 @@ public class SpringBootUtil {
                 }
             }
             Object value = entry.getValue();
-            if (value instanceof String) {
-                result.put(key, value);
-            }
-            else if (value instanceof Map) {
+            if (value instanceof Map) {
 
                 Map<String, Object> map = (Map<String, Object>) value;
                 buildFlattenedMap(result, map, key);
@@ -160,7 +157,7 @@ public class SpringBootUtil {
                 }
             }
             else {
-                result.put(key, (value != null ? value : ""));
+                result.put(key, (value != null ? value.toString() : ""));
             }
         }
     }

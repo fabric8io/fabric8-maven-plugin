@@ -20,15 +20,13 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.fabric8.kubernetes.api.Annotations;
-import io.fabric8.kubernetes.api.ServiceNames;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.enricher.api.util.GitUtil;
+import io.fabric8.maven.core.util.GitUtil;
 import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.enricher.api.AbstractLiveEnricher;
+import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
-import io.fabric8.utils.*;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
@@ -48,10 +46,10 @@ public class CdEnricher extends AbstractLiveEnricher {
     // Available configuration keys
     private enum Config implements Configs.Key {
         gitService {{
-            d = ServiceNames.GOGS;
+            d ="gogs";
         }},
         jenkinsService {{
-            d = ServiceNames.JENKINS;
+            d = "jenkins";
         }},
         gitUserEnvVar {{
             d = "GIT_USER";
@@ -74,7 +72,16 @@ public class CdEnricher extends AbstractLiveEnricher {
         // when running in an Jenkins CD.
         // TODO: Isn't there a better datum to detect a CD build ? because BUILD_CD is set
         // also when you do a 'regular' CI job ....
-        return Systems.getEnvVarOrSystemProperty("BUILD_ID") != null;
+        String buildId = getBuildId();
+        return buildId != null;
+    }
+
+    private String getBuildId() {
+        String buildId = System.getenv("BUILD_ID");
+        if (buildId == null) {
+            buildId = System.getProperty("BUILD_ID");
+        }
+        return buildId;
     }
 
     @Override
@@ -112,22 +119,21 @@ public class CdEnricher extends AbstractLiveEnricher {
         String username = getGitUserName();
         // this requires online access to kubernetes so we should silently fail if no connection
         String gogsUrl = getExternalServiceURL(getConfig(Config.gitService), "http");
-        String rootGitUrl = URLUtils.pathJoin(gogsUrl, username, repoName);
-        rootGitUrl = URLUtils.pathJoin(rootGitUrl, "commit", gitCommitId);
-        if (Strings.isNotBlank(rootGitUrl)) {
-            annotations.put(Annotations.Builds.GIT_URL, rootGitUrl);
+        String rootGitUrl = String.format("%s/%s/%s",gogsUrl, username, repoName);
+        rootGitUrl = String.format("%s/%s/%s",rootGitUrl, "commit", gitCommitId);
+        if (StringUtils.isNotBlank(rootGitUrl)) {
+            annotations.put(Fabric8Annotations.GIT_URL.value(), rootGitUrl);
         }
     }
 
     private void addJenkinsServiceUrl(Map<String, String> annotations, String repoName) {
-        String buildId = Systems.getEnvVarOrSystemProperty("BUILD_ID");
+        String buildId = getBuildId();
         if (buildId != null) {
-            annotations.put(Annotations.Builds.BUILD_ID, buildId);
+            annotations.put(Fabric8Annotations.BUILD_ID.value(), buildId);
             String serviceUrl = getExternalServiceURL(getConfig(Config.jenkinsService), "http");
             if (serviceUrl != null) {
-                String jobUrl = URLUtils.pathJoin(serviceUrl, "/job", repoName);
-                jobUrl = URLUtils.pathJoin(jobUrl, buildId);
-                annotations.put(Annotations.Builds.BUILD_URL, jobUrl);
+                String jobUrl = String.format("%s/job/%s/%s",serviceUrl, repoName, buildId);
+                annotations.put(Fabric8Annotations.BUILD_URL.value(), jobUrl);
             }
         } else {
             log.debug("No Jenkins annotation as no BUILD_ID could be found");
@@ -137,9 +143,9 @@ public class CdEnricher extends AbstractLiveEnricher {
     private String getGitUserName() {
         String username;
         String userEnvVar = getConfig(Config.gitUserEnvVar);
-        username = Systems.getEnvVarOrSystemProperty(userEnvVar);
-        if (Strings.isNullOrBlank(username)) {
-            username = "gogsadmin";
+        username = System.getenv(userEnvVar);
+        if (username == null) {
+            username = System.getProperty(userEnvVar, "gogsadmin");
         }
         return username;
     }

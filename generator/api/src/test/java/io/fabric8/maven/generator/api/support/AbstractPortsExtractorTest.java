@@ -16,23 +16,22 @@
 
 package io.fabric8.maven.generator.api.support;
 
-import static io.fabric8.maven.core.util.FileUtil.getAbsolutePath;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-
 import java.util.Map;
-
-import org.apache.maven.project.MavenProject;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.generator.api.PortsExtractor;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
+import org.apache.maven.project.MavenProject;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static io.fabric8.maven.core.util.FileUtil.getAbsolutePath;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 @RunWith(JMockit.class)
 public class AbstractPortsExtractorTest {
@@ -46,7 +45,7 @@ public class AbstractPortsExtractorTest {
     @Test
     public void testReadConfigFromFile() throws Exception {
         for (String path : new String[] { ".json", ".yaml",
-                                          "-nested.yaml", 
+                                          "-nested.yaml",
                                           ".properties",
                                           "++suffix.yaml"}) {
             Map<String, Integer> map = extractFromFile("vertx.config", getClass().getSimpleName() + path);

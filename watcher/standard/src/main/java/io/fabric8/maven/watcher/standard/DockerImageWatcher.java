@@ -4,8 +4,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import io.fabric8.kubernetes.api.Controller;
-import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.PodSpec;
@@ -20,7 +18,9 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.PlatformMode;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.BuildService;
@@ -33,11 +33,8 @@ import io.fabric8.maven.watcher.api.WatcherContext;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.client.OpenShiftClient;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-
-import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
 
 /**
  *
@@ -162,7 +159,7 @@ public class DockerImageWatcher extends BaseWatcher {
             DeploymentConfigSpec spec = resource.getSpec();
             if (spec != null) {
                 if (updateImageName(entity, spec.getTemplate(), imagePrefix, imageName)) {
-                    OpenShiftClient openshiftClient = new Controller(kubernetes).getOpenShiftClientOrNull();
+                    OpenShiftClient openshiftClient = OpenshiftHelper.asOpenShiftClient(kubernetes);
                     if (openshiftClient == null) {
                         log.warn("Ignoring DeploymentConfig %s as not connected to an OpenShift cluster", name);
                     }
@@ -182,7 +179,7 @@ public class DockerImageWatcher extends BaseWatcher {
                     String image = container.getImage();
                     if (image != null && image.startsWith(imagePrefix)) {
                         container.setImage(imageName);
-                        log.info("Updating " + getKind(entity) + " " + KubernetesHelper.getName(entity) + " to use image: " + imageName);
+                        log.info("Updating " + KubernetesHelper.getKind(entity) + " " + KubernetesHelper.getName(entity) + " to use image: " + imageName);
                         answer = true;
                     }
                 }

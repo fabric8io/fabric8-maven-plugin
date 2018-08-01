@@ -1,13 +1,16 @@
 package io.fabric8.maven.core.handler;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
+import java.util.List;
+
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.extensions.*;
+import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
+import io.fabric8.kubernetes.api.model.extensions.StatefulSetBuilder;
+import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpec;
+import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpecBuilder;
 import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-
-import java.util.List;
 
 /**
  * Handler for StatefulSets

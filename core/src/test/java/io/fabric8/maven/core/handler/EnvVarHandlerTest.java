@@ -15,17 +15,21 @@
  */
 package io.fabric8.maven.core.handler;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.maven.core.extenvvar.ExternalEnvVarHandler;
-import org.apache.maven.project.MavenProject;
-
 import mockit.Expectations;
 import mockit.Mocked;
+import org.apache.maven.project.MavenProject;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
-import java.util.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class EnvVarHandlerTest {
 

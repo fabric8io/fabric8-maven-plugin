@@ -33,6 +33,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import com.google.common.base.Strings;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
@@ -41,9 +42,6 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.javaexec.FatJarDetector;
 import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
-
-import com.google.common.base.Strings;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;

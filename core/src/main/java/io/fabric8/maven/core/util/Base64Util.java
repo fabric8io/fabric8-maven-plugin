@@ -1,7 +1,8 @@
 package io.fabric8.maven.core.util;
 
-import javax.xml.bind.DatatypeConverter;
 import java.nio.charset.StandardCharsets;
+
+import javax.xml.bind.DatatypeConverter;
 
 /**
  * For java 7 or lower version, java.util doesn't provide a base64 encode/decode way

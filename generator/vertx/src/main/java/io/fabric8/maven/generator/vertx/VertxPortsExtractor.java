@@ -1,11 +1,10 @@
 package io.fabric8.maven.generator.vertx;
 
+import io.fabric8.maven.core.util.PrefixedLogger;
+import io.fabric8.maven.generator.api.support.AbstractPortsExtractor;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-
-import io.fabric8.maven.core.util.PrefixedLogger;
-import io.fabric8.maven.generator.api.support.AbstractPortsExtractor;
 
 
 public class VertxPortsExtractor extends AbstractPortsExtractor {

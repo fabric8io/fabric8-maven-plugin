@@ -15,14 +15,14 @@
  */
 package io.fabric8.maven.core.util;
 
+import java.util.Properties;
+
+import mockit.Expectations;
 import mockit.Mocked;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
-import mockit.Expectations;
 
-import java.util.Properties;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class ConfigsTest {
 

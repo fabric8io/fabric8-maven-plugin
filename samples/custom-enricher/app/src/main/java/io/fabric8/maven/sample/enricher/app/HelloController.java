@@ -16,8 +16,6 @@
 
 package io.fabric8.maven.sample.enricher.app;
 
-import java.io.*;
-
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

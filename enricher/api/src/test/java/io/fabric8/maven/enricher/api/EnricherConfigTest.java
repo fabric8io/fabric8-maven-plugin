@@ -16,7 +16,10 @@
 
 package io.fabric8.maven.enricher.api;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.Configs;

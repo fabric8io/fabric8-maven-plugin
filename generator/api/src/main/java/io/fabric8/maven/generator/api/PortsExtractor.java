@@ -1,8 +1,8 @@
 package io.fabric8.maven.generator.api;
 
-import org.apache.maven.project.MavenProject;
-
 import java.util.Map;
+
+import org.apache.maven.project.MavenProject;
 
 public interface PortsExtractor {
 

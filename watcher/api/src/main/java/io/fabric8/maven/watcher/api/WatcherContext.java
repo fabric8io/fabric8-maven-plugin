@@ -25,7 +25,6 @@ import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.WatchService;
 import io.fabric8.maven.docker.util.Logger;
-
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 

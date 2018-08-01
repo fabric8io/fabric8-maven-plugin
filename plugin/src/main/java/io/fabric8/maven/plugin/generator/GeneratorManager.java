@@ -21,10 +21,10 @@ import java.util.List;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.PluginServiceFactory;
+import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.Generator;
 import io.fabric8.maven.generator.api.GeneratorContext;
-import io.fabric8.maven.docker.config.ImageConfiguration;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**

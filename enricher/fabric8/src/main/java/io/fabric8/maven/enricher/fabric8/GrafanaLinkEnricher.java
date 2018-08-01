@@ -15,23 +15,23 @@
  */
 package io.fabric8.maven.enricher.fabric8;
 
-import io.fabric8.kubernetes.api.Annotations;
+import java.util.Collections;
+import java.util.Map;
+
 import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
-import io.fabric8.utils.Strings;
-import io.fabric8.utils.URLUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.project.MavenProject;
-
-import java.util.Collections;
-import java.util.Map;
 
 import static io.fabric8.maven.core.util.MavenUtil.hasClass;
 
 /**
  */
 public class GrafanaLinkEnricher extends BaseEnricher {
+
     public GrafanaLinkEnricher(EnricherContext buildContext) {
         super(buildContext, "f8-cd-grafana-link");
     }
@@ -47,7 +47,7 @@ public class GrafanaLinkEnricher extends BaseEnricher {
     public Map<String, String> getAnnotations(Kind kind) {
         if (kind.isController()) {
             String url = findGrafanaLink();
-            return url != null ? Collections.singletonMap(Annotations.Builds.METRICS_PATH, url) : null;
+            return url != null ? Collections.singletonMap(Fabric8Annotations.METRICS_PATH.value(), url) : null;
         } else {
             return null;
         }
@@ -61,28 +61,28 @@ public class GrafanaLinkEnricher extends BaseEnricher {
         String version = null;
 
         // TODO - use the docker names which may differ from project metadata!
-        if (Strings.isNullOrBlank(projectName)) {
+        if (StringUtils.isBlank(projectName)) {
             projectName = project.getArtifactId();
         }
-        if (Strings.isNullOrBlank(version)) {
+        if (StringUtils.isBlank(version)) {
             version = project.getVersion();
         }
 
-        if (Strings.isNotBlank(projectName)) {
+        if (StringUtils.isNotBlank(projectName)) {
             query += "&var-project=" + projectName;
         }
-        if (Strings.isNotBlank(version)) {
+        if (StringUtils.isNotBlank(version)) {
             query += "&var-version=" + version;
         }
         if (query.startsWith("&")) {
             query = "?" + query.substring(1);
         }
-        return URLUtils.pathJoin("dashboard/file", defaultDashboard, query);
+        return String.format("dashboard/file/%s%s", defaultDashboard, query);
     }
 
     protected String detectDefaultDashboard(MavenProject project) {
         String dashboard = getConfig(Config.metricsDashboard);
-        if (Strings.isNotBlank(dashboard)) {
+        if (StringUtils.isNotBlank(dashboard)) {
             return dashboard;
         }
         if (hasClass(project, "org.apache.camel.CamelContext")) {

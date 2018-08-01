@@ -26,8 +26,7 @@ import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.utils.PropertiesHelper;
-import io.fabric8.utils.Strings;
+import org.apache.commons.lang3.StringUtils;
 
 
 /**
@@ -42,7 +41,6 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
             "org.springframework.web.context.support.GenericWebApplicationContext"
     };
 
-    private static final int DEFAULT_SERVER_PORT = 8080;
     private static final String SCHEME_HTTPS = "HTTPS";
     private static final String SCHEME_HTTP = "HTTP";
 
@@ -90,21 +88,21 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
     protected Probe buildProbe(Properties springBootProperties, Integer initialDelay, Integer period, Integer timeout) {
         SpringBootConfigurationHelper propertyHelper = new SpringBootConfigurationHelper(SpringBootUtil.getSpringBootVersion(getContext().getProject()));
-        Integer managementPort = PropertiesHelper.getInteger(springBootProperties, propertyHelper.getManagementPortPropertyKey());
+        Integer managementPort = propertyHelper.getManagementPort(springBootProperties);
         boolean usingManagementPort = managementPort != null;
 
         Integer port = managementPort;
         if (port == null) {
-            port = PropertiesHelper.getInteger(springBootProperties, propertyHelper.getServerPortPropertyKey(), DEFAULT_SERVER_PORT);
+            port = propertyHelper.getServerPort(springBootProperties);
         }
 
         String scheme;
         String prefix;
         if (usingManagementPort) {
-            scheme = Strings.isNotBlank(springBootProperties.getProperty(propertyHelper.getManagementKeystorePropertyKey())) ? SCHEME_HTTPS : SCHEME_HTTP;
+            scheme = StringUtils.isNotBlank(springBootProperties.getProperty(propertyHelper.getManagementKeystorePropertyKey())) ? SCHEME_HTTPS : SCHEME_HTTP;
             prefix = springBootProperties.getProperty(propertyHelper.getManagementContextPathPropertyKey(), "");
         } else {
-            scheme = Strings.isNotBlank(springBootProperties.getProperty(propertyHelper.getServerKeystorePropertyKey())) ? SCHEME_HTTPS : SCHEME_HTTP;
+            scheme = StringUtils.isNotBlank(springBootProperties.getProperty(propertyHelper.getServerKeystorePropertyKey())) ? SCHEME_HTTPS : SCHEME_HTTP;
             prefix = springBootProperties.getProperty(propertyHelper.getServerContextPathPropertyKey(), "");
             prefix += springBootProperties.getProperty(propertyHelper.getServletPathPropertyKey(), "");
             prefix += springBootProperties.getProperty(propertyHelper.getManagementContextPathPropertyKey(), "");

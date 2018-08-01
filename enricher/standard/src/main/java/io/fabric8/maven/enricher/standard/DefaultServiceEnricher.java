@@ -17,22 +17,35 @@
 package io.fabric8.maven.enricher.standard;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.fabric8.ianaservicehelper.Helper;
-import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.ServiceFluent;
+import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.ServicePortBuilder;
+import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.utils.Strings;
 import org.apache.maven.shared.utils.StringUtils;
 
 /**
@@ -397,7 +410,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
 
     private String getDefaultServiceName(Service defaultService) {
         String defaultServiceName = KubernetesHelper.getName(defaultService);
-        if (Strings.isNullOrBlank(defaultServiceName)) {
+        if (StringUtils.isBlank(defaultServiceName)) {
             defaultServiceName = getProject().getArtifactId();
         }
         return defaultServiceName;
@@ -428,7 +441,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
 
     private String ensureServiceName(ObjectMeta serviceMetadata, ServiceBuilder service, String defaultServiceName) {
         String serviceName = KubernetesHelper.getName(serviceMetadata);
-        if (Strings.isNullOrBlank(serviceName)) {
+        if (StringUtils.isBlank(serviceName)) {
             service.buildMetadata().setName(defaultServiceName);
             serviceName = KubernetesHelper.getName(service.buildMetadata());
         }
@@ -468,14 +481,14 @@ public class DefaultServiceEnricher extends BaseEnricher {
     }
 
     private void ensurePortName(ServicePort port, String protocol) {
-        if (Strings.isNullOrBlank(port.getName())) {
+        if (StringUtils.isBlank(port.getName())) {
             port.setName(getDefaultPortName(port.getPort(), getProtocol(protocol)));
         }
     }
 
     private String ensureProtocol(ServicePort port) {
         String protocol = port.getProtocol();
-        if (Strings.isNullOrBlank(protocol)) {
+        if (StringUtils.isBlank(protocol)) {
             port.setProtocol("TCP");
             return "TCP";
         }

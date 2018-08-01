@@ -28,12 +28,10 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import io.fabric8.maven.docker.util.Logger;
-
-import org.apache.maven.plugin.MojoExecutionException;
-
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  *

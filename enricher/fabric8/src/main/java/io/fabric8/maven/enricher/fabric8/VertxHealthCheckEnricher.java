@@ -1,5 +1,14 @@
 package io.fabric8.maven.enricher.fabric8;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import io.fabric8.kubernetes.api.model.HTTPHeader;
@@ -11,9 +20,6 @@ import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import org.apache.maven.model.Plugin;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-
-import javax.annotation.Nullable;
-import java.util.*;
 
 
 /**

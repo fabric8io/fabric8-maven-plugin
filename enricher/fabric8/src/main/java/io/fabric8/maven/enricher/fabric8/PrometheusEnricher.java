@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.fabric8.kubernetes.api.Annotations;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -27,9 +26,14 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
-import io.fabric8.utils.Strings;
+import org.apache.commons.lang3.StringUtils;
+
 
 public class PrometheusEnricher extends BaseEnricher {
+
+    static final String ANNOTATION_PROMETHEUS_PORT = "prometheus.io/port";
+    static final String ANNOTATION_PROMETHEUS_SCRAPE = "prometheus.io/scrape";
+
     static final String ENRICHER_NAME = "f8-prometheus";
     static final String PROMETHEUS_PORT = "9779";
 
@@ -47,14 +51,14 @@ public class PrometheusEnricher extends BaseEnricher {
     public Map<String, String> getAnnotations(Kind kind) {
         if (kind == Kind.SERVICE) {
             String prometheusPort = findPrometheusPort();
-            if (Strings.isNotBlank(prometheusPort)) {
-                log.verbose("Add prometheus.io annotations: %s=%s, %s=%S",
-                    Annotations.Management.PROMETHEUS_SCRAPE, "true",
-                    Annotations.Management.PROMETHEUS_PORT, prometheusPort);
+            if (StringUtils.isNotBlank(prometheusPort)) {
+                log.verbose("Add prometheus.io annotations: %s=%s, %s=%s",
+                    ANNOTATION_PROMETHEUS_SCRAPE, "true",
+                    ANNOTATION_PROMETHEUS_PORT, prometheusPort);
 
                 Map<String, String> annotations = new HashMap<>();
-                MapUtil.putIfAbsent(annotations, Annotations.Management.PROMETHEUS_PORT, prometheusPort);
-                MapUtil.putIfAbsent(annotations, Annotations.Management.PROMETHEUS_SCRAPE, "true");
+                MapUtil.putIfAbsent(annotations, ANNOTATION_PROMETHEUS_PORT, prometheusPort);
+                MapUtil.putIfAbsent(annotations, ANNOTATION_PROMETHEUS_SCRAPE, "true");
                 return annotations;
             }
         }
@@ -64,7 +68,7 @@ public class PrometheusEnricher extends BaseEnricher {
 
     private String findPrometheusPort() {
         String prometheusPort = getConfig(Config.prometheusPort);
-        if (Strings.isNullOrBlank(prometheusPort)) {
+        if (StringUtils.isBlank(prometheusPort)) {
             for (ImageConfiguration configuration : getImages()) {
                 BuildImageConfiguration buildImageConfiguration = configuration.getBuildConfiguration();
                 if (buildImageConfiguration != null) {

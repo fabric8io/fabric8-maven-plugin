@@ -16,15 +16,16 @@
 
 package io.fabric8.maven.enricher.standard;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Scm;
 import org.apache.maven.project.MavenProject;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * This enricher will add the maven &gt;scm&lt; related metadata as annotations
@@ -40,10 +41,6 @@ import java.util.Map;
  */
 public class MavenScmEnricher extends BaseEnricher {
     static final String ENRICHER_NAME = "f8-maven-scm";
-    static final String SCM_CONNECTION = "fabric8.io/scm-con-url";
-    static final String SCM_DEVELOPER_CONNECTION = "fabric8.io/scm-devcon-url";
-    static final String SCM_TAG = "fabric8.io/scm-tag";
-    static final String SCM_URL = "fabric8.io/scm-url";
 
     public MavenScmEnricher(EnricherContext buildContext) {
         super(buildContext, ENRICHER_NAME);
@@ -62,16 +59,16 @@ public class MavenScmEnricher extends BaseEnricher {
                 String tag = scm.getTag();
 
                 if (StringUtils.isNotEmpty(connectionUrl)) {
-                    annotations.put(SCM_CONNECTION, connectionUrl);
+                    annotations.put(Fabric8Annotations.SCM_CONNECTION.value(), connectionUrl);
                 }
                 if (StringUtils.isNotEmpty(devConnectionUrl)) {
-                    annotations.put(SCM_DEVELOPER_CONNECTION, devConnectionUrl);
+                    annotations.put(Fabric8Annotations.SCM_DEVELOPER_CONNECTION.value(), devConnectionUrl);
                 }
                 if (StringUtils.isNotEmpty(tag)) {
-                    annotations.put(SCM_TAG, tag);
+                    annotations.put(Fabric8Annotations.SCM_TAG.value(), tag);
                 }
                 if (StringUtils.isNotEmpty(url)) {
-                    annotations.put(SCM_URL, url);
+                    annotations.put(Fabric8Annotations.SCM_URL.value(), url);
                 }
             }
         }

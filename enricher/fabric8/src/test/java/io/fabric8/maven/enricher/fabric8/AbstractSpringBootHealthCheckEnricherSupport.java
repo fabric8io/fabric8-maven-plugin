@@ -1,6 +1,11 @@
 package io.fabric8.maven.enricher.fabric8;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeMap;
 
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.maven.core.config.ProcessorConfig;
@@ -8,17 +13,15 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.enricher.api.EnricherContext;
-
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
+import mockit.Mocked;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.project.MavenProject;
 import org.junit.Before;
 import org.junit.Test;
-
-import mockit.Mocked;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

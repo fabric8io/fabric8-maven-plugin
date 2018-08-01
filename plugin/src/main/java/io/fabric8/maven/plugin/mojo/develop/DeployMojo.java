@@ -17,7 +17,10 @@
 package io.fabric8.maven.plugin.mojo.develop;
 
 import io.fabric8.maven.plugin.mojo.build.ApplyMojo;
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 
 /**
  * This goal forks the install goal then applies the generated kubernetes resources to the current cluster.

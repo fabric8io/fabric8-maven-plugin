@@ -1,5 +1,7 @@
 import io.fabric8.maven.it.Verify
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertNotNull
+import static org.junit.Assert.assertNull;
 
 /*
  * Copyright 2016 Red Hat, Inc.

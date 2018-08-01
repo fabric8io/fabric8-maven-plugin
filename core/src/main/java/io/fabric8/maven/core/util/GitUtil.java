@@ -14,13 +14,11 @@
  * permissions and limitations under the License.
  */
 
-package io.fabric8.maven.enricher.api.util;
+package io.fabric8.maven.core.util;
 
 import java.io.File;
 import java.io.IOException;
 
-import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.utils.GitHelpers;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -45,7 +43,7 @@ public class GitUtil {
             // TODO: Why is this check needed ?
             baseDir = new File(System.getProperty("basedir", "."));
         }
-        File gitFolder = GitHelpers.findGitFolder(baseDir);
+        File gitFolder = findGitFolder(baseDir);
         if (gitFolder == null) {
             // No git repository found
             return null;
@@ -56,6 +54,18 @@ public class GitUtil {
             .setGitDir(gitFolder)
             .build();
         return repository;
+    }
+
+    public static File findGitFolder(File basedir) {
+        File gitDir = new File(basedir, ".git");
+        if (gitDir.exists() && gitDir.isDirectory()) {
+            return gitDir;
+        }
+        File parent = basedir.getParentFile();
+        if (parent != null) {
+            return findGitFolder(parent);
+        }
+        return null;
     }
 
     public static String getGitCommitId(Repository repository) throws GitAPIException {

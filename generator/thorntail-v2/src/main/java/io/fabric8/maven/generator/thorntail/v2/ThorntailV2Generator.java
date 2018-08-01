@@ -15,14 +15,14 @@
  */
 package io.fabric8.maven.generator.thorntail.v2;
 
+import java.util.List;
+import java.util.Map;
+
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
 import org.apache.maven.plugin.MojoExecutionException;
-
-import java.util.List;
-import java.util.Map;
 
 public class ThorntailV2Generator extends JavaExecGenerator {
 
