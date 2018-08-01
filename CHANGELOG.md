@@ -26,7 +26,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 
 ###4.0-SNAPSHOT
 
-* Feature 1313: Removed unused Maven goals. Please contact us if something's missing for you.
+* Feature 1343: Removed unused Maven goals. Please contact us if something's missing for you.
 
 ###3.5.40
 * Feature 1264: Added `osio` profile, with enricher to apply OpenShift.io space labels to resources
