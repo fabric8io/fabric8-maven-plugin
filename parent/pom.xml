@@ -91,11 +91,11 @@
     <!-- =======================================================  -->
     <!-- Servlet container images -->
     <version.image.tomcat.upstream>1.2.0</version.image.tomcat.upstream>
-    <version.image.jetty.upstream>1.5.0</version.image.jetty.upstream>
+    <version.image.jetty.upstream>1.5.1</version.image.jetty.upstream>
     <version.image.wildfly.upstream>10.1.0.Final</version.image.wildfly.upstream>
 
     <!-- ============================================= -->
-    <!-- Default images used in the defult generators. Please note that the generators make some assumption about
+    <!-- Default images used in the default generators. Please note that the generators make some assumption about
          these images (e.g. where the deployment directory is), so don't change them arbitrarily -->
 
     <!-- java (java-exec, spring-boot, wildfly-swarm) -->
