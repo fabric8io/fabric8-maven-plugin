@@ -105,7 +105,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
     private File resourceDir;
 
-    @Parameter(property = "fabric8.skip.build.pom", defaultValue = "true")
+    @Parameter(property = "fabric8.skip.build.pom")
     private Boolean skipBuildPom;
 
     /**
