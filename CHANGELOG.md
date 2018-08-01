@@ -16,7 +16,6 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Feature 1032: Improvements of the Vert.x Generator and enrichers
 * Fix 1313: Removed unused Maven goals. Please contact us if something's missing for you.
 * Fix 1299: autotls feature doesn't work with OpenShift 3.9 (Kubernetes 1.8+) due to InitContainer annotation deprecation
-* Feature 1313: Removed unused Maven goals. Please contact us if something's missing for you.
 * Fix 1276: Proper inclusion of webapp's war regardless of the final name
 * Feature: New 'path' config option for the webapp generator to set the context path
 * Fix 1334: support for docker.pull.registry
@@ -26,6 +25,10 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1073: Preserve file extension when copying file to helm chart folder
 * Fix 1340: spring-boot-maven-plugin is detected under any groupId
 * Fix 1346: karaf-maven-plugin is detected under any groupId
+
+###4.0-SNAPSHOT
+
+* Feature 1344: Removed unused Maven goals. Please contact us if something's missing for you.
 
 ###3.5.40
 * Feature 1264: Added `osio` profile, with enricher to apply OpenShift.io space labels to resources
