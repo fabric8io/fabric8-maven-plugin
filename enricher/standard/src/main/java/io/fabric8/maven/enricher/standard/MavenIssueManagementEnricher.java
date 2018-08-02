@@ -16,15 +16,16 @@
 
 package io.fabric8.maven.enricher.standard;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.IssueManagement;
 import org.apache.maven.project.MavenProject;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * This enricher will add the maven &gt;IssueManagement&lt; related metadata as annotations
@@ -38,8 +39,6 @@ import java.util.Map;
  */
 public class MavenIssueManagementEnricher extends BaseEnricher {
     static final String ENRICHER_NAME = "f8-maven-issue-mgmt";
-    static final String ISSUE_MANAGEMENT_SYSTEM = "fabric8.io/issue-system";
-    static final String ISSUE_MANAGEMENT_URL = "fabric8.io/issue-tracker-url";
 
     public MavenIssueManagementEnricher(EnricherContext buildContext) {
         super(buildContext, ENRICHER_NAME);
@@ -55,8 +54,8 @@ public class MavenIssueManagementEnricher extends BaseEnricher {
                 String system = issueManagement.getSystem();
                 String url = issueManagement.getUrl();
                 if (StringUtils.isNotEmpty(system) && StringUtils.isNotEmpty(url)) {
-                    annotations.put(ISSUE_MANAGEMENT_SYSTEM, system);
-                    annotations.put(ISSUE_MANAGEMENT_URL, url);
+                    annotations.put(Fabric8Annotations.ISSUE_SYSTEM.value(), system);
+                    annotations.put(Fabric8Annotations.ISSUE_TRACKER_URL.value(), url);
                     return annotations;
                 }
             }

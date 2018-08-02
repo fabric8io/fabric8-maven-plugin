@@ -25,14 +25,18 @@ import java.net.URLDecoder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import mockit.Expectations;
+import mockit.Mocked;
+import org.apache.maven.project.MavenProject;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static io.fabric8.maven.core.util.KubernetesResourceUtil.API_VERSION;
-import static io.fabric8.maven.core.util.KubernetesResourceUtil.DEFAULT_RESOURCE_VERSIONING;
-import static io.fabric8.maven.core.util.KubernetesResourceUtil.JOB_VERSION;
-import static io.fabric8.maven.core.util.KubernetesResourceUtil.getResource;
+import static io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil.API_VERSION;
+import static io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil.DEFAULT_RESOURCE_VERSIONING;
+import static io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil.getResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -44,6 +48,9 @@ import static org.junit.Assert.fail;
 public class KubernetesResourceUtilTest {
 
     private static File fabric8Dir;
+
+    @Mocked
+    final MavenProject project = new MavenProject();
 
     @BeforeClass
     public static void initPath() throws UnsupportedEncodingException {
@@ -92,7 +99,7 @@ public class KubernetesResourceUtilTest {
     public void job() throws Exception {
         HasMetadata ret = getResource(DEFAULT_RESOURCE_VERSIONING, new File(fabric8Dir, "job.yml"), "app");
         assertEquals("Job", ret.getKind());
-        assertEquals(JOB_VERSION, ret.getApiVersion());
+        assertEquals(KubernetesResourceUtil.JOB_VERSION, ret.getApiVersion());
     }
 
     @Test
@@ -141,6 +148,25 @@ public class KubernetesResourceUtilTest {
             assertTrue(exp.getMessage().contains("json"));
             assertTrue(exp.getMessage().contains("yml"));
         }
+    }
+
+    @Test
+    public void containerName() {
+        new Expectations() {{
+            project.getGroupId();
+            result = "io.fabric8-test-";
+
+            project.getArtifactId();
+            result = "fabric8-maven-plugin-dummy";
+        }};
+
+        ImageConfiguration imageConfiguration = new ImageConfiguration.Builder()
+                .name("dummy-image")
+                .registry("example.com/someregistry")
+                .name("test")
+                .build();
+        String containerName = KubernetesResourceUtil.extractContainerName(project, imageConfiguration);
+        assertTrue(containerName.matches(KubernetesResourceUtil.CONTAINER_NAME_REGEX));
     }
 
     @Test

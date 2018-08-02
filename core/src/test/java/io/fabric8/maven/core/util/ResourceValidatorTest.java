@@ -15,6 +15,13 @@
  */
 package io.fabric8.maven.core.util;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Paths;
+
+import javax.validation.ConstraintViolationException;
+
 import com.jayway.jsonassert.impl.matcher.IsCollectionWithSize;
 import io.fabric8.maven.core.util.validator.ResourceValidator;
 import io.fabric8.maven.docker.util.Logger;
@@ -24,12 +31,6 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import javax.validation.ConstraintViolationException;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Paths;
 
 public class ResourceValidatorTest {
 

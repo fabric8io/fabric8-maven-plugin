@@ -2,7 +2,6 @@
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.fabric8/fabric8-maven-plugin/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/io.fabric8/fabric8-maven-plugin/)
 [![Travis](https://secure.travis-ci.org/fabric8io/fabric8-maven-plugin.png)](http://travis-ci.org/fabric8io/fabric8-maven-plugin)
-[![Circle CI](https://circleci.com/gh/fabric8io/fabric8-maven-plugin/tree/master.svg?style=shield)](https://circleci.com/gh/fabric8io/fabric8-maven-plugin/tree/master)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=io.fabric8%3Afabric8-maven-plugin-build&metric=coverage)](https://sonarcloud.io/dashboard?id=io.fabric8%3Afabric8-maven-plugin-build)
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=io.fabric8%3Afabric8-maven-plugin-build&metric=sqale_index)](https://sonarcloud.io/dashboard?id=io.fabric8%3Afabric8-maven-plugin-build)
 [![Dependency Status](https://dependencyci.com/github/fabric8io/fabric8-maven-plugin/badge)](https://dependencyci.com/github/fabric8io/fabric8-maven-plugin)
@@ -26,13 +25,13 @@ To enable fabric8 maven plugin on your project just add this to the plugins sect
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-plugin</artifactId>
-        <version>3.5.33</version>
+        <version>3.5.41</version>
       </plugin>
 ```
 
-You can also do it using maven command like this : `mvn io.fabric8:fabric8-maven-plugin:<version>:setup`. You can check for the latest released version from the [maven central](http://search.maven.org/#search%7Cga%7C1%7Cfabric8-maven-plugin).
+You can also do it using a maven command like this : `mvn io.fabric8:fabric8-maven-plugin:<version>:setup`. You can check for the latest released version from the [maven central](http://search.maven.org/#search%7Cga%7C1%7Cfabric8-maven-plugin).
 
-Now in order to use fabric8 maven plugin to build or deploy, make sure you have an OpenShift/Kubernetes cluster up and running. After making sure that, you can simply run your app in the cluster  :
+Now in order to use fabric8 maven plugin to build or deploy, make sure you have an OpenShift/Kubernetes cluster up and running. After making sure of that, you can simply run your app in the cluster :
 ```
       mvn fabric8:deploy
 ```
@@ -80,7 +79,7 @@ After you issue this command would start building resources and then deploy them
 [INFO] ------------------------------------------------------------------------
 
 ```
-After build is finished, your application pod gets created:
+After the build is finished, your application pod gets created:
 ```
 ~/work/repos/fabric8-maven-plugin/samples/spring-boot : $ kubectl get pods
 NAME                                                READY     STATUS    RESTARTS   AGE
@@ -118,15 +117,15 @@ The full documentation can be found in the [User Manual](http://maven.fabric8.io
 
 ##### OpenShift
 
-|     FMP     | OpenShift 3.7.0  | OpenShift 3.6.0  | OpenShift 3.5.0  | OpenShift 1.4.1  |
-|-------------|------------------|------------------|------------------|------------------|
-| FMP 3.5.38  |        ✓         |        ✓         |        x         |        x         |
-| FMP 3.5.37  |        ✓         |        ✓         |        x         |        x         |
-| FMP 3.5.36  |        ✓         |        ✓         |        x         |        x         |
-| FMP 3.5.35  |        ✓         |        ✓         |        x         |        x         |
-| FMP 3.5.34  |        ✓         |        ✓         |        x         |        x         |
-| FMP 3.5.33  |        ✓         |        ✓         |        x         |        x         |
-| FMP 3.5.32  |        ✓         |        ✓         |        ✓         |        ✓         |
+|     FMP     | OpenShift 3.9.0  | OpenShift 3.7.0  | OpenShift 3.6.0  | OpenShift 3.5.0  | OpenShift 1.4.1  |
+|-------------|------------------|------------------|------------------|------------------|------------------|
+| FMP 3.5.38  |        ✓         |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.37  |        ✓         |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.36  |        ✓         |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.35  |        ✓         |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.34  |        ✓         |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.33  |        ✓         |        ✓         |        ✓         |        x         |        x         |
+| FMP 3.5.32  |        ✓         |        ✓         |        ✓         |        ✓         |        ✓         |
 
 ##### Kubernetes
 
@@ -157,5 +156,4 @@ The full documentation can be found in the [User Manual](http://maven.fabric8.io
 There are the links of the CircleCI and Jenkins for the tests which run for every new Pull Request. You can view all the recent builds also.
 
 * [Travis: build](http://travis-ci.org/fabric8io/fabric8-maven-plugin)
-* [CircleCI: Regression Tests](https://circleci.com/gh/fabric8io/fabric8-maven-plugin/tree/master)
 * [Jenkins: Unit Tests](https://ci.fabric8.io/job/fabric8-maven-plugin-pullreq/)

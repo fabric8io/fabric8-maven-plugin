@@ -1,6 +1,11 @@
 package io.fabric8.maven.enricher.fabric8;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeMap;
 
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.maven.core.config.ProcessorConfig;
@@ -8,17 +13,15 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.enricher.api.EnricherContext;
-
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
+import mockit.Mocked;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.project.MavenProject;
 import org.junit.Before;
 import org.junit.Test;
-
-import mockit.Mocked;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -62,7 +65,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         SpringBootHealthCheckEnricher enricher = new SpringBootHealthCheckEnricher(context);
         Properties props = new Properties();
 
-        Probe probe = enricher.buildProbe(props, 10, null);
+        Probe probe = enricher.buildProbe(props, 10, null, null);
         assertNotNull(probe);
         assertNotNull(probe.getHttpGet());
         assertEquals(propertyHelper.getActuatorDefaultBasePath() + "/health", probe.getHttpGet().getPath());
@@ -75,7 +78,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         Properties props = new Properties();
         props.put(propertyHelper.getServerPortPropertyKey(), "8282");
 
-        Probe probe = enricher.buildProbe(props, 10, null);
+        Probe probe = enricher.buildProbe(props, 10, null, null);
         assertNotNull(probe);
         assertNotNull(probe.getHttpGet());
         assertEquals(propertyHelper.getActuatorDefaultBasePath() + "/health", probe.getHttpGet().getPath());
@@ -89,7 +92,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         props.put(propertyHelper.getServerPortPropertyKey(), "8282");
         props.put(propertyHelper.getManagementPortPropertyKey(), "8383");
 
-        Probe probe = enricher.buildProbe(props, 10, null);
+        Probe probe = enricher.buildProbe(props, 10, null, null);
         assertNotNull(probe);
         assertNotNull(probe.getHttpGet());
         assertEquals(propertyHelper.getActuatorDefaultBasePath() + "/health", probe.getHttpGet().getPath());
@@ -104,7 +107,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         props.put(propertyHelper.getManagementPortPropertyKey(), "8383");
         props.put(propertyHelper.getServerContextPathPropertyKey(), "/p1");
 
-        Probe probe = enricher.buildProbe(props, 10, null);
+        Probe probe = enricher.buildProbe(props, 10, null, null);
         assertNotNull(probe);
         assertNotNull(probe.getHttpGet());
         assertEquals(propertyHelper.getActuatorDefaultBasePath() + "/health", probe.getHttpGet().getPath());
@@ -120,7 +123,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         props.put(propertyHelper.getServerContextPathPropertyKey(), "/p1");
         props.put(propertyHelper.getManagementContextPathPropertyKey(), "/p2");
 
-        Probe probe = enricher.buildProbe(props, 10, null);
+        Probe probe = enricher.buildProbe(props, 10, null, null);
         assertNotNull(probe);
         assertNotNull(probe.getHttpGet());
         assertEquals("/p2" + propertyHelper.getActuatorDefaultBasePath() + "/health", probe.getHttpGet().getPath());
@@ -137,7 +140,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         props.put(propertyHelper.getManagementContextPathPropertyKey(), "/p2");
         props.put(propertyHelper.getServletPathPropertyKey(), "/servlet");
 
-        Probe probe = enricher.buildProbe(props, 10, null);
+        Probe probe = enricher.buildProbe(props, 10, null, null);
         assertNotNull(probe);
         assertNotNull(probe.getHttpGet());
         assertEquals("/p2" + propertyHelper.getActuatorDefaultBasePath() + "/health", probe.getHttpGet().getPath());
@@ -151,7 +154,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         props.put(propertyHelper.getServerPortPropertyKey(), "8282");
         props.put(propertyHelper.getManagementContextPathPropertyKey(), "/p1");
 
-        Probe probe = enricher.buildProbe(props, 10, null);
+        Probe probe = enricher.buildProbe(props, 10, null, null);
         assertNotNull(probe);
         assertNotNull(probe.getHttpGet());
         assertEquals("/p1" + propertyHelper.getActuatorDefaultBasePath() +"/health", probe.getHttpGet().getPath());
@@ -166,7 +169,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         props.put(propertyHelper.getManagementContextPathPropertyKey(), "/p1");
         props.put(propertyHelper.getServerContextPathPropertyKey(), "/p2");
 
-        Probe probe = enricher.buildProbe(props, 10, null);
+        Probe probe = enricher.buildProbe(props, 10, null, null);
         assertNotNull(probe);
         assertNotNull(probe.getHttpGet());
         assertEquals("/p2/p1" + propertyHelper.getActuatorDefaultBasePath() + "/health", probe.getHttpGet().getPath());
@@ -180,7 +183,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         props.put(propertyHelper.getServerPortPropertyKey(), "8282");
         props.put(propertyHelper.getServletPathPropertyKey(), "/servlet");
 
-        Probe probe = enricher.buildProbe(props, 10, null);
+        Probe probe = enricher.buildProbe(props, 10, null, null);
         assertNotNull(probe);
         assertNotNull(probe.getHttpGet());
         assertEquals("/servlet" + propertyHelper.getActuatorDefaultBasePath() + "/health", probe.getHttpGet().getPath());
@@ -195,7 +198,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         props.put(propertyHelper.getServletPathPropertyKey(), "/servlet");
         props.put(propertyHelper.getManagementContextPathPropertyKey(), "/p1");
 
-        Probe probe = enricher.buildProbe(props, 10, null);
+        Probe probe = enricher.buildProbe(props, 10, null, null);
         assertNotNull(probe);
         assertNotNull(probe.getHttpGet());
         assertEquals("/servlet/p1" + propertyHelper.getActuatorDefaultBasePath() + "/health", probe.getHttpGet().getPath());
@@ -211,7 +214,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         props.put(propertyHelper.getManagementContextPathPropertyKey(), "/p1");
         props.put(propertyHelper.getServerContextPathPropertyKey(), "/p2");
 
-        Probe probe = enricher.buildProbe(props, 10, null);
+        Probe probe = enricher.buildProbe(props, 10, null, null);
         assertNotNull(probe);
         assertNotNull(probe.getHttpGet());
         assertEquals("/p2/servlet/p1" + propertyHelper.getActuatorDefaultBasePath() + "/health", probe.getHttpGet().getPath());
@@ -224,7 +227,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         Properties props = new Properties();
         props.put(propertyHelper.getServerPortPropertyKey(), "8443");
 
-        Probe probe = enricher.buildProbe(props, 10, null);
+        Probe probe = enricher.buildProbe(props, 10, null, null);
         assertNotNull(probe);
         assertNotNull(probe.getHttpGet());
         assertEquals("HTTP", probe.getHttpGet().getScheme());
@@ -238,7 +241,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         props.put(propertyHelper.getServerPortPropertyKey(), "8080");
         props.put(propertyHelper.getManagementKeystorePropertyKey(), "classpath:keystore.p12");
 
-        Probe probe = enricher.buildProbe(props, 10, null);
+        Probe probe = enricher.buildProbe(props, 10, null, null);
         assertNotNull(probe);
         assertNotNull(probe.getHttpGet());
         assertEquals("HTTP", probe.getHttpGet().getScheme());
@@ -252,7 +255,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         props.put(propertyHelper.getServerPortPropertyKey(), "8443");
         props.put(propertyHelper.getServerKeystorePropertyKey(), "classpath:keystore.p12");
 
-        Probe probe = enricher.buildProbe(props, 10, null);
+        Probe probe = enricher.buildProbe(props, 10, null, null);
         assertNotNull(probe);
         assertNotNull(probe.getHttpGet());
         assertEquals("HTTPS", probe.getHttpGet().getScheme());
@@ -267,7 +270,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         props.put(propertyHelper.getManagementPortPropertyKey(), "8081");
         props.put(propertyHelper.getServerKeystorePropertyKey(), "classpath:keystore.p12");
 
-        Probe probe = enricher.buildProbe(props, 10, null);
+        Probe probe = enricher.buildProbe(props, 10, null, null);
         assertNotNull(probe);
         assertNotNull(probe.getHttpGet());
         assertEquals("HTTP", probe.getHttpGet().getScheme());
@@ -282,7 +285,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         props.put(propertyHelper.getManagementPortPropertyKey(), "8443");
         props.put(propertyHelper.getManagementKeystorePropertyKey(), "classpath:keystore.p12");
 
-        Probe probe = enricher.buildProbe(props, 10, null);
+        Probe probe = enricher.buildProbe(props, 10, null, null);
         assertNotNull(probe);
         assertNotNull(probe.getHttpGet());
         assertEquals("HTTPS", probe.getHttpGet().getScheme());
@@ -305,12 +308,13 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
     }
 
     @Test
-    public void testCustomInitialDelayForLivenessAndReadiness() {
+    public void testCustomInitialDelayForLivenessAndReadinessAndTimeout() {
         Map<String, TreeMap> globalConfig = new HashMap<>();
         TreeMap<String, String> enricherConfig = new TreeMap<>();
         globalConfig.put(SpringBootHealthCheckEnricher.ENRICHER_NAME, enricherConfig);
         enricherConfig.put("readinessProbeInitialDelaySeconds", "20");
         enricherConfig.put("livenessProbeInitialDelaySeconds", "360");
+        enricherConfig.put("timeoutSeconds", "120");
 
         final ProcessorConfig config = new ProcessorConfig(null,null, globalConfig);
         new Expectations() {{
@@ -325,11 +329,15 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         assertNotNull(probe);
         assertEquals(20, probe.getInitialDelaySeconds().intValue());
         assertNull(probe.getPeriodSeconds());
+        assertEquals(120, probe.getTimeoutSeconds().intValue());
 
         probe = enricher.getLivenessProbe();
         assertNotNull(probe);
         assertEquals(360, probe.getInitialDelaySeconds().intValue());
         assertNull(probe.getPeriodSeconds());
+        assertEquals(120, probe.getTimeoutSeconds().intValue());
+
+
     }
 
     @Test

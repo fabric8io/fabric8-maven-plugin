@@ -10,13 +10,52 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
+###3.5.42
+
+###3.5.41 (2018-08-01)
+* Feature 1032: Improvements of the Vert.x Generator and enrichers
+* Fix 1313: Removed unused Maven goals. Please contact us if something's missing for you.
+* Fix 1299: autotls feature doesn't work with OpenShift 3.9 (Kubernetes 1.8+) due to InitContainer annotation deprecation
+* Fix 1276: Proper inclusion of webapp's war regardless of the final name
+* Feature: New 'path' config option for the webapp generator to set the context path
+* Fix 1334: support for docker.pull.registry
+* Fix 1268: Java console for OpenShift builds reachable again.
+* Fix 1312: Container name should not be generated from maven group id
+* Feature 917: Add `timeoutSeconds` configuration option for SpringBootHealthCheck enricher
+* Fix 1073: Preserve file extension when copying file to helm chart folder
+* Fix 1340: spring-boot-maven-plugin is detected under any groupId
+* Fix 1346: karaf-maven-plugin is detected under any groupId
+
+###4.0-SNAPSHOT
+
+* Refactor 1344: Removed unused Maven goals. Please contact us if something's missing for you.
+* Refactor 949: Remove dependency from fabric8/fabric8
+* Feature 1214: Don't use a default for skipBuildPom. This might break backwards compatibility, so please specify the desired value in case
+* Fix 1093: Default tag for snapshot release is "latest", not the timestamp anymore
+
+###3.5.40
+* Feature 1264: Added `osio` profile, with enricher to apply OpenShift.io space labels to resources
+* Feature 1291: Added ImageStream triggers for StatefulSets, ReplicaSets and DaemonSets
+* Feature 1293: Added support to create pullSecret in buildConfig when pulling from private registry in Openshift.
+* Fix 1265: WildFly Swarm health check enricher now supports detecting MicroProfile Health
+* Fix 1298: WildFly Swarm was renamed to Thorntail
+* Fix 1284: Handle intermittent SocketTimeoutException while s2i build
+* Fix Unzip Issue - https://github.com/fabric8io/fabric8-maven-plugin/pull/1303
+* Bring Wildfly swarm documentation uptodate - https://github.com/fabric8io/fabric8-maven-plugin/pull/1297
+* Upgraded Kubernetes Client to 3.2.0 - https://github.com/fabric8io/fabric8-maven-plugin/pull/1304
+* Upgraded Fabric8 to 3.0.12 - https://github.com/fabric8io/fabric8-maven-plugin/pull/1307
+
 ###3.5.39
 * Feature 1206: Added support for spring-boot 2 health endpoint
 * Feature 1171: Added configuration options for delay and period on spring-boot health check probes
 * Fix 1173: disable the Prometheus agent for WildFly Swarm applications, because it uses Java logging too early; also reenable the Jolokia agent, which was disabled due to the same problem but was fixed a long time ago
 * Fix 1231: make helm artifact extension configurable with default value "tar.gz"
 * Fix 1247: do not try to install non-existent imagestream yml file
-* Fix 1093: Invocations of FMP goal are broken using docker image
+* Fix 1185: K8s: resource fragment containing compute resources for containers triggers a WARNING.
+* Fix 1237: When trimImageInContainerSpec is enabled, the generated yaml is incorrect
+* Fix 1245: Use released version of Booster in place of master always in regression test
+* Fix 1263: Display a warning in case of premature close of the build watcher by kubernetes client
+* Fix 886: Introduce extends for profiles
 
 ###3.5.38
 * Feature 1209: Added flag fabric8.openshift.generateRoute which if set to false will not generate route.yml and also will not add Route resource in openshift.yml. If set to true or not set, it will generate rou  te.yml and also add Route resource in openshift.yml. By default its value is true.

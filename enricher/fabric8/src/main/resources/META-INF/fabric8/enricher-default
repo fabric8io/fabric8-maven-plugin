@@ -13,6 +13,7 @@ io.fabric8.maven.enricher.fabric8.GrafanaLinkEnricher
 io.fabric8.maven.enricher.fabric8.IconEnricher
 io.fabric8.maven.enricher.fabric8.SpringBootHealthCheckEnricher
 io.fabric8.maven.enricher.fabric8.WildFlySwarmHealthCheckEnricher
+io.fabric8.maven.enricher.fabric8.ThorntailV2HealthCheckEnricher
 io.fabric8.maven.enricher.fabric8.KarafHealthCheckEnricher
 io.fabric8.maven.enricher.fabric8.VertxHealthCheckEnricher
 io.fabric8.maven.enricher.fabric8.PrometheusEnricher

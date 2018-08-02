@@ -16,23 +16,21 @@
 
 package io.fabric8.maven.enricher.fabric8;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServicePort;
-import io.fabric8.kubernetes.api.model.ServiceSpec;
-import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateLabels;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.ServiceSpec;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.EnricherContext;
 
 /**
  * Enricher for enabling exposing of HTTP / HTTPS based services
@@ -69,7 +67,7 @@ public class ExposeEnricher extends BaseEnricher {
                 metadata = new ObjectMeta();
                 service.setMetadata(metadata);
             }
-            Map<String, String> labels = getOrCreateLabels(service);
+            Map<String, String> labels = KubernetesHelper.getOrCreateLabels(service);
             if (!labels.containsKey(EXPOSE_LABEL)) {
                 labels.put(EXPOSE_LABEL, "true");
                 log.verbose("Adding Service label '%s:true' on service %s" +

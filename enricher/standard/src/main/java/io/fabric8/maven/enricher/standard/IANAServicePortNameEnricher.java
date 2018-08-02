@@ -16,14 +16,14 @@
 
 package io.fabric8.maven.enricher.standard;
 
+import java.io.IOException;
+import java.util.Set;
+
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
-
-import java.io.IOException;
-import java.util.Set;
 
 import static io.fabric8.ianaservicehelper.Helper.serviceNames;
 

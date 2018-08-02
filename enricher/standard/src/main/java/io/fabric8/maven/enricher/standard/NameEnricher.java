@@ -30,7 +30,7 @@ import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.utils.Strings;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Enricher for adding a "name" to the metadata to various objects we create.
@@ -60,7 +60,7 @@ public class NameEnricher extends BaseEnricher {
             @Override
             public void visit(HasMetadata resource) {
                 ObjectMeta metadata = getOrCreateMetadata(resource);
-                if (Strings.isNullOrBlank(metadata.getName())) {
+                if (StringUtils.isBlank(metadata.getName())) {
                     metadata.setName(defaultName);
                 }
             }
@@ -74,7 +74,7 @@ public class NameEnricher extends BaseEnricher {
                 if (metadata == null) {
                     resource.withNewMetadata().withName(defaultName).endMetadata();
                 } else {
-                    if (Strings.isNullOrBlank(metadata.getName())) {
+                    if (StringUtils.isBlank(metadata.getName())) {
                         metadata.withName(defaultName).endMetadata();
                     }
                 }
@@ -87,7 +87,7 @@ public class NameEnricher extends BaseEnricher {
                 if (metadata == null) {
                     resource.withNewMetadata().withName(defaultName).endMetadata();
                 } else {
-                    if (Strings.isNullOrBlank(metadata.getName())) {
+                    if (StringUtils.isBlank(metadata.getName())) {
                         metadata.withName(defaultName).endMetadata();
                     }
                 }
@@ -100,7 +100,7 @@ public class NameEnricher extends BaseEnricher {
                 if (metadata == null) {
                     resource.withNewMetadata().withName(defaultName).endMetadata();
                 } else {
-                    if (Strings.isNullOrBlank(metadata.getName())) {
+                    if (StringUtils.isBlank(metadata.getName())) {
                         metadata.withName(defaultName).endMetadata();
                     }
                 }

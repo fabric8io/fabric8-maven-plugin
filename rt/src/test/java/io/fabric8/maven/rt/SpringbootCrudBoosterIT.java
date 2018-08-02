@@ -16,22 +16,29 @@
 
 package io.fabric8.maven.rt;
 
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
 import io.fabric8.openshift.api.model.Route;
 import okhttp3.Response;
 import org.apache.http.HttpStatus;
 import org.eclipse.jgit.lib.Repository;
 import org.json.JSONObject;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
-
-import java.util.concurrent.TimeUnit;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
 public class SpringbootCrudBoosterIT extends BaseBoosterIT {
-    private final String SPRING_BOOT_CRUD_BOOSTER_GIT = "https://github.com/snowdrop/spring-boot-crud-booster.git";
 
-    private final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy -Dfabric8.openshift.trimImageInContainerSpec=true -DskipTests", EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
+    private final String SPRING_BOOT_CRUD_BOOSTER_BOOSTERYAMLURL = "https://raw.githubusercontent.com/fabric8-launcher/launcher-booster-catalog/master/spring-boot/current-redhat/crud/booster.yaml";
+
+    private String SPRING_BOOT_CRUD_BOOSTER_GIT;
+
+    private String RELEASED_VERSION_TAG;
+
+    private final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy -DskipTests", EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
 
     private final String TEST_ENDPOINT = "/api/fruits";
 
@@ -41,22 +48,32 @@ public class SpringbootCrudBoosterIT extends BaseBoosterIT {
 
     private final String ANNOTATION_KEY = "springboot-crud-testKey", ANNOTATION_VALUE = "springboot-crud-testValue";
 
+    private final ReadYaml readYaml = new ReadYaml();
+
+    @Before
+    public void set_repo_tag() throws IOException {
+
+        BoosterYaml boosterYaml = readYaml.readYaml(SPRING_BOOT_CRUD_BOOSTER_BOOSTERYAMLURL);
+        SPRING_BOOT_CRUD_BOOSTER_GIT = boosterYaml.getSource().getGitSource().getUrl();
+        RELEASED_VERSION_TAG = boosterYaml.getSource().getGitSource().getRef();
+
+    }
+
     @Test
     public void deploy_springboot_app_once() throws Exception {
-        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CRUD_BOOSTER_GIT, RELATIVE_POM_PATH);
+
+        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CRUD_BOOSTER_GIT, RELATIVE_POM_PATH, RELEASED_VERSION_TAG);
         deployDatabaseUsingCLI();
 
-        addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, "deploymentType", "deployOnce", fmpConfigurationFile);
-
         deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
-        waitTillApplicationPodStarts("deploymentType", "deployOnce");
-        TimeUnit.SECONDS.sleep(20);
+        waitAfterDeployment(false);
         assertApplication();
     }
 
     @Test
     public void redeploy_springboot_app() throws Exception {
-        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CRUD_BOOSTER_GIT, RELATIVE_POM_PATH);
+
+        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CRUD_BOOSTER_GIT, RELATIVE_POM_PATH, RELEASED_VERSION_TAG);
         deployDatabaseUsingCLI();
 
         // Make some changes in ConfigMap and rollout

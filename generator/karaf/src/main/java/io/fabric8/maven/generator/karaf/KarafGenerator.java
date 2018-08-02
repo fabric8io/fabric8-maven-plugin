@@ -23,12 +23,14 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.generator.api.support.BaseGenerator;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.GeneratorContext;
-import io.fabric8.utils.Strings;
+import io.fabric8.maven.generator.api.support.BaseGenerator;
+import org.apache.commons.lang3.StringUtils;
 
 public class KarafGenerator extends BaseGenerator {
+
+    private static final String KARAF_MAVEN_PLUGIN_ARTIFACT_ID = "karaf-maven-plugin";
 
     public KarafGenerator(GeneratorContext context) {
         super(context, "karaf", new FromSelector.Default(context,"karaf"));
@@ -66,7 +68,7 @@ public class KarafGenerator extends BaseGenerator {
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
         return shouldAddImageConfiguration(configs) &&
-               MavenUtil.hasPlugin(getProject(), "org.apache.karaf.tooling:karaf-maven-plugin");
+               MavenUtil.hasPluginOfAnyGroupId(getProject(), KARAF_MAVEN_PLUGIN_ARTIFACT_ID);
     }
 
     protected List<String> extractPorts() {
@@ -77,7 +79,7 @@ public class KarafGenerator extends BaseGenerator {
     }
 
     private void addPortIfValid(List<String> list, String port) {
-        if (Strings.isNotBlank(port)) {
+        if (StringUtils.isNotBlank(port)) {
             list.add(port);
         }
     }

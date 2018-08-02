@@ -22,10 +22,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
 import io.fabric8.mockwebserver.utils.ResponseProvider;
-
-import org.junit.Assert;
-
 import okhttp3.mockwebserver.RecordedRequest;
+import org.junit.Assert;
 
 /**
  * A utility class to record http request events.

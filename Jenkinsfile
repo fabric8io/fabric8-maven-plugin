@@ -67,18 +67,6 @@ clientsTemplate{
                     pipeline.release(stagedProject)
                 }
 
-                // Disabled for now as it probably doesn't work because of the different directory structure
-                // with a dedicated doc-module
-                // stage 'Website'
-                // pipeline.website(stagedProject)
-
-                stage('Update downstream dependencies') {
-
-                    // This will update the version of fmp
-                    // in the pom.xml of some downstream repos like
-                    // fabric8-services, quickstart etc.
-                    pipeline.updateDownstreamDependencies(stagedProject)
-                }
             }
     }
 }

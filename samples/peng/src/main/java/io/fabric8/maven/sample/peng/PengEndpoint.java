@@ -18,8 +18,6 @@ package io.fabric8.maven.sample.peng;
 
 import java.util.UUID;
 
-import javax.ws.rs.*;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

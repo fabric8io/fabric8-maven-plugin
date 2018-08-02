@@ -16,7 +16,10 @@
 
 package io.fabric8.maven.doc;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,16 +65,13 @@ public class ClasspathIncludeProcessor extends IncludeProcessor {
         }
 
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
-        StringBuilder ret = new StringBuilder();
-        String line = null;
+        String line;
         List<String> lines = new ArrayList<>();
         try {
             while ((line = bufferedReader.readLine()) != null) {
                 lines.add(line);
             }
             bufferedReader.close();
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException(e);
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }

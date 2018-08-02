@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 
-import io.fabric8.kubernetes.api.Controller;
+import com.google.common.base.Objects;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.EnvVar;
@@ -45,29 +45,26 @@ import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
+import io.fabric8.maven.core.service.PortForwardService;
 import io.fabric8.maven.core.util.DebugConstants;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.plugin.mojo.build.ApplyMojo;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.fabric8.utils.Objects;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
-import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
-import static io.fabric8.kubernetes.api.KubernetesHelper.isPodReady;
-import static io.fabric8.kubernetes.api.KubernetesHelper.isPodRunning;
-import static io.fabric8.maven.core.util.KubernetesClientUtil.getPodStatusDescription;
-import static io.fabric8.maven.core.util.KubernetesClientUtil.getPodStatusMessagePostfix;
-import static io.fabric8.maven.core.util.KubernetesClientUtil.withSelector;
-import static io.fabric8.maven.core.util.KubernetesResourceUtil.getPodLabelSelector;
+import static io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil.getPodStatusDescription;
+import static io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil.getPodStatusMessagePostfix;
+import static io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil.withSelector;
+import static io.fabric8.maven.core.util.kubernetes.KubernetesHelper.getName;
+import static io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil.getPodLabelSelector;
 
 /**
  * Ensures that the current app has debug enabled, then opens the debug port so that you can debug the latest pod
@@ -88,9 +85,14 @@ public class DebugMojo extends ApplyMojo {
     private Pod foundPod;
     private Logger podWaitLog;
     private String debugSuspendValue;
+    private PortForwardService portForwardService;
 
     @Override
-    protected void applyEntities(Controller controller, KubernetesClient kubernetes, String namespace, String fileName, Set<HasMetadata> entities) throws Exception {
+    protected void initServices(KubernetesClient kubernetes, Logger log) {
+        portForwardService = new PortForwardService(kubernetes, log);
+    }
+
+    protected void applyEntities(KubernetesClient kubernetes, String namespace, String fileName, Set<HasMetadata> entities) throws Exception {
         LabelSelector firstSelector = null;
         for (HasMetadata entity : entities) {
             String name = getName(entity);
@@ -127,7 +129,7 @@ public class DebugMojo extends ApplyMojo {
                 DeploymentConfigSpec spec = resource.getSpec();
                 if (spec != null) {
                     if (enableDebugging(entity, spec.getTemplate())) {
-                        OpenShiftClient openshiftClient = new Controller(kubernetes).getOpenShiftClientOrNull();
+                        OpenShiftClient openshiftClient = applyService.asOpenShiftClient();
                         if (openshiftClient == null) {
                             log.warn("Ignoring DeploymentConfig %s as not connected to an OpenShift cluster", name);
                             continue;
@@ -140,7 +142,7 @@ public class DebugMojo extends ApplyMojo {
             if (selector != null) {
                 firstSelector = selector;
             } else {
-                controller.apply(entity, fileName);
+                applyService.apply(entity, fileName);
             }
         }
         if (firstSelector != null) {
@@ -152,7 +154,7 @@ public class DebugMojo extends ApplyMojo {
             }
 
             String podName = waitForRunningPodWithEnvVar(kubernetes, namespace, firstSelector, envVars);
-            portForward(controller, podName);
+            portForward(podName);
         }
     }
 
@@ -173,7 +175,7 @@ public class DebugMojo extends ApplyMojo {
             public void eventReceived(Watcher.Action action, Pod pod) {
                 podWaitLog.info(getName(pod) + " status: " + getPodStatusDescription(pod) + getPodStatusMessagePostfix(action));
 
-                if (isAddOrModified(action) && isPodRunning(pod) && isPodReady(pod) &&
+                if (isAddOrModified(action) && KubernetesHelper.isPodRunning(pod) && KubernetesHelper.isPodReady(pod) &&
                         podHasEnvVars(pod, envVars)) {
                     foundPod = pod;
                     terminateLatch.countDown();
@@ -235,10 +237,9 @@ public class DebugMojo extends ApplyMojo {
     }
 
 
-    private void portForward(Controller controller, String podName) throws MojoExecutionException {
+    private void portForward(String podName) throws MojoExecutionException {
         try {
-            getFabric8ServiceHub(controller).getPortForwardService()
-                    .forwardPort(createExternalProcessLogger("[[B]]port-forward[[B]] "), podName, portToInt(remoteDebugPort, "remoteDebugPort"), portToInt(localDebugPort, "localDebugPort"));
+            portForwardService.forwardPort(createExternalProcessLogger("[[B]]port-forward[[B]] "), podName, portToInt(remoteDebugPort, "remoteDebugPort"), portToInt(localDebugPort, "localDebugPort"));
 
             log.info("");
             log.info("Now you can start a Remote debug execution in your IDE by using localhost and the debug port " + localDebugPort);
@@ -284,7 +285,7 @@ public class DebugMojo extends ApplyMojo {
                         KubernetesResourceUtil.setEnvVar(env, DebugConstants.ENV_VAR_JAVA_DEBUG_SESSION, this.debugSuspendValue);
                         container.setEnv(env);
                         if (container.getReadinessProbe() != null) {
-                            log.info("Readiness probe will be disabled on " + getKind(entity) + " " + getName(entity) + " to allow attaching a remote debugger during suspension");
+                            log.info("Readiness probe will be disabled on " + KubernetesHelper.getKind(entity) + " " + getName(entity) + " to allow attaching a remote debugger during suspension");
                             container.setReadinessProbe(null);
                         }
                         enabled = true;
@@ -296,7 +297,7 @@ public class DebugMojo extends ApplyMojo {
                     }
                 }
                 if (enabled) {
-                    log.info("Enabling debug on " + getKind(entity) + " " + getName(entity));
+                    log.info("Enabling debug on " + KubernetesHelper.getKind(entity) + " " + getName(entity));
                     return true;
                 }
             }

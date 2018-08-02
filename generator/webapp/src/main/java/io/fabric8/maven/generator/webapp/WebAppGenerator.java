@@ -16,6 +16,11 @@
  */
 package io.fabric8.maven.generator.webapp;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
@@ -26,11 +31,6 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
 import io.fabric8.maven.generator.webapp.handler.CustomAppServerHandler;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -53,6 +53,9 @@ public class WebAppGenerator extends BaseGenerator {
         // Command to execute. If null, the base image default command is used
         cmd,
 
+        // Context path under which the app will be available
+        path {{ d = "/"; }},
+
         // Ports to expose as a command separated list
         ports;
 
@@ -74,7 +77,8 @@ public class WebAppGenerator extends BaseGenerator {
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean prePackagePhase) {
         if (getContext().getMode() == PlatformMode.openshift &&
-            getContext().getStrategy() == OpenShiftBuildStrategy.s2i) {
+            getContext().getStrategy() == OpenShiftBuildStrategy.s2i &&
+            !prePackagePhase) {
             throw new IllegalArgumentException("S2I not yet supported for the webapp-generator. Use -Dfabric8.mode=kubernetes or " +
                                                "-Dfabric8.build.strategy=docker for OpenShift mode. Please refer to the reference manual at " +
                                                "https://maven.fabric8.io for details about build modes.");
@@ -130,6 +134,11 @@ public class WebAppGenerator extends BaseGenerator {
     }
 
     private AssemblyConfiguration createAssembly(AppServerHandler handler) {
+        String path = getConfig(Config.path);
+        if (path.equals("/")) {
+            path = "ROOT";
+        }
+        getProject().getProperties().setProperty("fabric8.generator.webapp.path",path);
         AssemblyConfiguration.Builder builder = new AssemblyConfiguration.Builder()
                 .targetDir(getDeploymentDir(handler))
                 .descriptorRef("webapp");

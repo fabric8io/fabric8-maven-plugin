@@ -16,30 +16,32 @@
 
 package io.fabric8.maven.enricher.fabric8;
 
-import io.fabric8.kubernetes.api.Annotations;
-import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
-import io.fabric8.utils.Base64Encoder;
-import io.fabric8.utils.Files;
-import io.fabric8.utils.Strings;
-import io.fabric8.utils.URLUtils;
-import org.apache.maven.model.Scm;
-import org.apache.maven.project.MavenProject;
-
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLConnection;
 import java.util.Collections;
 import java.util.Map;
 
+import com.google.common.io.Files;
+import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.FileUtil;
+import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
+import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
+import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.Kind;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.model.Scm;
+import org.apache.maven.project.MavenProject;
+
 import static io.fabric8.maven.core.util.MavenUtil.hasClass;
 import static io.fabric8.maven.core.util.MavenUtil.hasPlugin;
-import static io.fabric8.utils.Files.guessMediaType;
+import static io.fabric8.maven.core.util.MavenUtil.hasPluginOfAnyGroupId;
 
 /**
  * Enricher for adding icons to descriptors
@@ -84,7 +86,7 @@ public class IconEnricher extends BaseEnricher {
             if (iconUrl != null) {
                 log.info("Adding icon for %s", kind.toString().toLowerCase());
                 log.verbose("Icon URL: %s", iconUrl);
-                return Collections.singletonMap(Annotations.Builds.ICON_URL,iconUrl);
+                return Collections.singletonMap(Fabric8Annotations.ICON_URL.value(), iconUrl);
             } else {
                 log.debug("No icon file found for resources of type " + kind);
             }
@@ -96,7 +98,7 @@ public class IconEnricher extends BaseEnricher {
 
     private String extractIconRef() {
         String iconRef = getConfig(Config.ref);
-        if (Strings.isNullOrBlank(iconRef)) {
+        if (StringUtils.isBlank(iconRef)) {
             iconRef = getDefaultIconRef();
         }
         return iconRef;
@@ -104,7 +106,7 @@ public class IconEnricher extends BaseEnricher {
 
     protected String getIconUrl(String iconRef) {
         String answer = getConfig(Config.url);
-        if (Strings.isNullOrBlank(answer)) {
+        if (StringUtils.isBlank(answer)) {
             try {
                 if (templateTempDir != null) {
                     templateTempDir.mkdirs();
@@ -129,9 +131,9 @@ public class IconEnricher extends BaseEnricher {
                 log.warn("Failed to load icon file: %s", e);
             }
         }
-        if (Strings.isNullOrBlank(answer)) {
+        if (StringUtils.isBlank(answer)) {
             // maybe its a common icon that is embedded in fabric8-console
-            if (Strings.isNotBlank(iconRef)) {
+            if (StringUtils.isNotBlank(iconRef)) {
                 String embeddedIcon = embeddedIconsInConsole(iconRef, "img/icons/");
                 if (embeddedIcon != null) {
                     return embeddedIcon;
@@ -158,7 +160,7 @@ public class IconEnricher extends BaseEnricher {
         if (hasClass(project, "org.apache.camel.CamelContext")) {
             return "camel";
         }
-        if (hasPlugin(project,"org.springframework.boot:spring-boot-maven-plugin")  ||
+        if (hasPluginOfAnyGroupId(project, SpringBootConfigurationHelper.SPRING_BOOT_MAVEN_PLUGIN_ARTIFACT_ID)  ||
             hasClass(project, "org.springframework.boot.SpringApplication")) {
             return "spring-boot";
         }
@@ -173,11 +175,18 @@ public class IconEnricher extends BaseEnricher {
             MavenUtil.hasDependencyOnAnyArtifactOfGroup(project, "org.wildfly.swarm")) {
             return "wildfly-swarm";
         }
+        if (hasPlugin(project, "io.thorntail:thorntail-maven-plugin") ||
+            MavenUtil.hasDependencyOnAnyArtifactOfGroup(project, "io.thorntail")) {
+            // use the WildFly Swarm icon until there's a dedicated Thorntail icon
+            // Thorntail is a new name of WildFly Swarm
+            return "wildfly-swarm";
+        }
+
         return null;
     }
 
     private File copyIconToFolder(String iconRef, File appBuildDir) throws IOException {
-        if (Strings.isNotBlank(iconRef)) {
+        if (StringUtils.isNotBlank(iconRef)) {
             File[] icons = appBuildDir.listFiles(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
@@ -212,7 +221,7 @@ public class IconEnricher extends BaseEnricher {
                 if (in != null) {
                     String fileName = "icon." + Files.getFileExtension(iconRef);
                     File outFile = new File(appBuildDir, fileName);
-                    Files.copy(in, new FileOutputStream(outFile));
+                    FileUtils.copyInputStreamToFile(in, outFile);
                     log.info("Generated icon file " + outFile + " from icon reference: " + iconRef);
                     return outFile;
                 }
@@ -256,23 +265,23 @@ public class IconEnricher extends BaseEnricher {
 
         int sizeK = Math.round(length / 1024);
 
-        byte[] bytes = Files.readBytes(iconFile);
-        byte[] encoded = Base64Encoder.encode(bytes);
+        byte[] bytes = FileUtils.readFileToByteArray(iconFile);
+        byte[] encoded = Base64.encodeBase64(bytes);
 
         int base64SizeK = Math.round(encoded.length / 1024);
 
         if (base64SizeK < Configs.asInt(getConfig(Config.maximumDataUrlSizeK))) {
-            String mimeType = guessMediaType(iconFile);
+            String mimeType = URLConnection.guessContentTypeFromName(iconFile.getName());
             return "data:" + mimeType + ";charset=UTF-8;base64," + new String(encoded);
         } else {
             File iconSourceFile = new File(appConfigDir, iconFile.getName());
             if (iconSourceFile.exists()) {
                 File rootProjectFolder = getRootProjectFolder();
                 if (rootProjectFolder != null) {
-                    String relativePath = Files.getRelativePath(rootProjectFolder, iconSourceFile);
-                    String relativeParentPath = Files.getRelativePath(rootProjectFolder, getProject().getBasedir());
+                    String relativePath = FileUtil.getRelativePath(rootProjectFolder, iconSourceFile).toString();
+                    String relativeParentPath = FileUtil.getRelativePath(rootProjectFolder, getProject().getBasedir()).toString();
                     String urlPrefix = getConfig(Config.urlPrefix);
-                    if (Strings.isNullOrBlank(urlPrefix)) {
+                    if (StringUtils.isBlank(urlPrefix)) {
                         Scm scm = getProject().getScm();
                         if (scm != null) {
                             String url = scm.getUrl();
@@ -280,7 +289,7 @@ public class IconEnricher extends BaseEnricher {
                                 String[] prefixes = {"http://github.com/", "https://github.com/"};
                                 for (String prefix : prefixes) {
                                     if (url.startsWith(prefix)) {
-                                        url = URLUtils.pathJoin("https://cdn.rawgit.com/", url.substring(prefix.length()));
+                                        url = "https://cdn.rawgit.com/" + url.substring(prefix.length());
                                         break;
                                     }
                                 }
@@ -291,11 +300,10 @@ public class IconEnricher extends BaseEnricher {
                             }
                         }
                     }
-                    if (Strings.isNullOrBlank(urlPrefix)) {
+                    if (StringUtils.isBlank(urlPrefix)) {
                         log.warn("No iconUrlPrefix defined or could be found via SCM in the pom.xml so cannot add an icon URL!");
                     } else {
-                        String answer = URLUtils.pathJoin(urlPrefix, getConfig(Config.branch), relativePath);
-                        return answer;
+                        return String.format("%s/%s/%s", urlPrefix, getConfig(Config.branch), relativePath);
                     }
                 }
             } else {

@@ -1,17 +1,17 @@
 package io.fabric8.maven.core.util;
 
-import io.fabric8.utils.Strings;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class DockerServerUtil {
     public static Server getServer(final Settings settings, final String serverId) {
-        if (settings == null || Strings.isNullOrBlank(serverId)) {
+        if (settings == null || StringUtils.isBlank(serverId)) {
             return null;
         }
         return settings.getServer(serverId);
@@ -28,7 +28,7 @@ public class DockerServerUtil {
         auth.put("password", server.getPassword());
 
         String mail = getConfigurationValue(server, "email");
-        if (Strings.isNullOrBlank(mail)) {
+        if (StringUtils.isBlank(mail)) {
             mail = "foo@foo.com";
         }
         auth.put("email", mail);

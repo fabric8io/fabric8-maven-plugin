@@ -16,23 +16,27 @@
 
 package io.fabric8.maven.enricher.api.util;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
-import io.fabric8.maven.core.util.JSONUtil;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author roland
@@ -56,20 +60,20 @@ public class InitContainerHandlerTest {
     public void simple() {
         PodTemplateSpecBuilder builder = getPodTemplateBuilder();
         assertFalse(handler.hasInitContainer(builder, "blub"));
-        JSONObject initContainer = createInitContainer("blub", "foo/blub");
+        Container initContainer = createInitContainer("blub", "foo/blub");
         handler.appendInitContainer(builder, initContainer);
         assertTrue(handler.hasInitContainer(builder, "blub"));
-        verifyBuilder(builder,initContainer);
+        verifyBuilder(builder, Arrays.asList(initContainer));
     }
 
     @Test
     public void append() {
         PodTemplateSpecBuilder builder = getPodTemplateBuilder("bla", "foo/bla");
         assertFalse(handler.hasInitContainer(builder, "blub"));
-        JSONObject initContainer = createInitContainer("blub", "foo/blub");
+        Container initContainer = createInitContainer("blub", "foo/blub");
         handler.appendInitContainer(builder, initContainer);
         assertTrue(handler.hasInitContainer(builder, "blub"));
-        verifyBuilder(builder,createInitContainer("bla", "foo/bla"), initContainer);
+        verifyBuilder(builder, Arrays.asList(createInitContainer("bla", "foo/bla"), initContainer));
     }
 
     @Test
@@ -78,7 +82,7 @@ public class InitContainerHandlerTest {
         assertTrue(handler.hasInitContainer(builder, "bla"));
         handler.removeInitContainer(builder, "bla");
         assertFalse(handler.hasInitContainer(builder, "bla"));
-        verifyBuilder(builder);
+        verifyBuilder(builder, null);
     }
 
     @Test
@@ -89,7 +93,7 @@ public class InitContainerHandlerTest {
         handler.removeInitContainer(builder, "bla");
         assertFalse(handler.hasInitContainer(builder, "bla"));
         assertTrue(handler.hasInitContainer(builder, "blub"));
-        verifyBuilder(builder, createInitContainer("blub", "foo/blub"));
+        verifyBuilder(builder, Arrays.asList(createInitContainer("blub", "foo/blub")));
     }
 
     @Test
@@ -100,10 +104,10 @@ public class InitContainerHandlerTest {
 
         PodTemplateSpecBuilder builder = getPodTemplateBuilder("blub", "foo/blub");
         assertTrue(handler.hasInitContainer(builder, "blub"));
-        JSONObject initContainer = createInitContainer("blub", "foo/blub");
+        Container initContainer = createInitContainer("blub", "foo/blub");
         handler.appendInitContainer(builder, initContainer);
         assertTrue(handler.hasInitContainer(builder, "blub"));
-        verifyBuilder(builder, initContainer);
+        verifyBuilder(builder, Arrays.asList(initContainer));
     }
 
     @Test
@@ -111,7 +115,7 @@ public class InitContainerHandlerTest {
         try {
             PodTemplateSpecBuilder builder = getPodTemplateBuilder("blub", "foo/bla");
             assertTrue(handler.hasInitContainer(builder, "blub"));
-            JSONObject initContainer = createInitContainer("blub", "foo/blub");
+            Container initContainer = createInitContainer("blub", "foo/blub");
             handler.appendInitContainer(builder, initContainer);
             fail();
         } catch (IllegalArgumentException exp) {
@@ -119,44 +123,38 @@ public class InitContainerHandlerTest {
         }
     }
 
-    private void verifyBuilder(PodTemplateSpecBuilder builder, JSONObject ... initContainers) {
+    private void verifyBuilder(PodTemplateSpecBuilder builder, List<Container> initContainers) {
         PodTemplateSpec spec = builder.build();
-        String containers = spec.getMetadata().getAnnotations().get(InitContainerHandler.INIT_CONTAINER_ANNOTATION);
-        if (initContainers.length == 0) {
-            assertNull(containers);
+        List<Container> initContainersInSpec = spec.getSpec().getInitContainers();
+        if (initContainersInSpec.size() == 0) {
+            assertNull(initContainers);
         } else {
-            JSONArray got = new JSONArray(containers);
-            assertEquals(got.length(), initContainers.length);
-            for (int i = 0; i < initContainers.length; i++) {
-                assertTrue(JSONUtil.equals(got.getJSONObject(i), initContainers[i]));
+            assertEquals(initContainersInSpec.size(), initContainers.size());
+            for (int i = 0; i < initContainers.size(); i++) {
+                assertEquals(initContainersInSpec.get(i), initContainers.get(i));
             }
         }
     }
 
     private PodTemplateSpecBuilder getPodTemplateBuilder(String ... definitions) {
         PodTemplateSpecBuilder ret = new PodTemplateSpecBuilder();
-        ret.withNewMetadata()
-           .withAnnotations(getInitContainerAnnotation(definitions))
-           .endMetadata();
+        ret.withNewMetadata().withName("test-pod-templateSpec").endMetadata().withNewSpec().withInitContainers(getInitContainerList(definitions)).endSpec();
         return ret;
     }
 
-    private Map<String, String> getInitContainerAnnotation(String ... definitions) {
-        Map<String, String> ret = new HashMap<>();
-        JSONArray initContainers = new JSONArray();
+    private List<Container> getInitContainerList(String ... definitions) {
+        List<Container> ret = new ArrayList<>();
         for (int i = 0; i < definitions.length; i += 2 ) {
-            initContainers.put(createInitContainer(definitions[i], definitions[i+1]));
-        }
-        if (initContainers.length() > 0) {
-            ret.put(InitContainerHandler.INIT_CONTAINER_ANNOTATION, initContainers.toString());
+            ret.add(createInitContainer(definitions[i], definitions[i+1]));
         }
         return ret;
     }
 
-    private JSONObject createInitContainer(String name, String image) {
-        JSONObject initContainer = new JSONObject();
-        initContainer.put("name", name);
-        initContainer.put("image", image);
+    private Container createInitContainer(String name, String image) {
+        Container initContainer = new ContainerBuilder()
+                .withName(name)
+                .withImage(image)
+                .build();
         return initContainer;
     }
 }

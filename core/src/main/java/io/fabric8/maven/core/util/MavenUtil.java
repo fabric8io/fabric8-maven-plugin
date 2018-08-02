@@ -16,21 +16,6 @@
 
 package io.fabric8.maven.core.util;
 
-import io.fabric8.utils.Objects;
-import io.fabric8.utils.Strings;
-import io.fabric8.utils.Zips;
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.utils.StringUtils;
-import org.codehaus.plexus.archiver.jar.JarArchiver;
-import org.codehaus.plexus.archiver.tar.TarArchiver;
-import org.codehaus.plexus.archiver.tar.TarLongFileMode;
-import org.codehaus.plexus.archiver.zip.ZipArchiver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -38,7 +23,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -46,6 +30,19 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
+
+import com.google.common.base.Objects;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
+import org.apache.maven.model.Plugin;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.archiver.tar.TarArchiver;
+import org.codehaus.plexus.archiver.tar.TarLongFileMode;
+import org.codehaus.plexus.archiver.zip.ZipArchiver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author roland
@@ -69,15 +66,6 @@ public class MavenUtil {
             }
         }
         return false;
-    }
-
-    public static File extractKubernetesJson(File f, Path dir) throws IOException {
-        if (hasKubernetesJson(f)) {
-            Zips.unzip(new FileInputStream(f), dir.toFile());
-            File result = dir.resolve(DEFAULT_CONFIG_FILE_NAME).toFile();
-            return result.exists() ? result : null;
-        }
-        return null;
     }
 
     public static URLClassLoader getCompileClassLoader(MavenProject project) {
@@ -179,6 +167,36 @@ public class MavenUtil {
         return project.getPlugin(plugin) != null;
     }
 
+    public static boolean hasPluginOfAnyGroupId(MavenProject project, String pluginArtifact) {
+        return getPluginOfAnyGroupId(project, pluginArtifact) != null;
+    }
+
+    public static Plugin getPluginOfAnyGroupId(MavenProject project, String pluginArtifact) {
+        return getPlugin(project, null, pluginArtifact);
+    }
+
+    /**
+     * Returns the plugin with the given groupId (if present) and artifactId.
+     */
+    public static Plugin getPlugin(MavenProject project, String groupId, String artifactId) {
+        if (artifactId == null) {
+            throw new IllegalArgumentException("artifactId cannot be null");
+        }
+
+        List<Plugin> plugins = project.getBuildPlugins();
+        if (plugins != null) {
+            for (Plugin plugin : plugins) {
+                boolean matchesArtifactId = artifactId.equals(plugin.getArtifactId());
+                boolean matchesGroupId = groupId == null || groupId.equals(plugin.getGroupId());
+
+                if (matchesGroupId && matchesArtifactId) {
+                    return plugin;
+                }
+            }
+        }
+        return null;
+    }
+
     /**
      * Returns true if any of the given class names could be found on the given class loader
      */
@@ -188,6 +206,23 @@ public class MavenUtil {
             try {
                 compileClassLoader.loadClass(className);
                 return true;
+            } catch (Throwable e) {
+                // ignore
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns true if any of the given resources could be found on the given class loader
+     */
+    public static boolean hasResource(MavenProject project, String... paths) {
+        URLClassLoader compileClassLoader = getCompileClassLoader(project);
+        for (String path : paths) {
+            try {
+                if (compileClassLoader.getResource(path) != null) {
+                    return true;
+                }
             } catch (Throwable e) {
                 // ignore
             }
@@ -248,16 +283,6 @@ public class MavenUtil {
         }
     }
 
-    public static void createArchive(File sourceDir, File destinationFile, JarArchiver archiver) throws MojoExecutionException {
-        try {
-            archiver.addDirectory(sourceDir);
-            archiver.setDestFile(destinationFile);
-            archiver.createArchive();
-        } catch (IOException e) {
-            throw new MojoExecutionException("Failed to create archive " + destinationFile + ": " + e, e);
-        }
-    }
-
     /**
      * Returns the version from the list of pre-configured versions of common groupId/artifact pairs
      */
@@ -274,7 +299,7 @@ public class MavenUtil {
             throw new IOException("Failed to load " + path + ". " + e, e);
         }
         String version = properties.getProperty("version");
-        if (Strings.isNullOrBlank(version)) {
+        if (StringUtils.isBlank(version)) {
             throw new IOException("No version property in " + path);
 
         }

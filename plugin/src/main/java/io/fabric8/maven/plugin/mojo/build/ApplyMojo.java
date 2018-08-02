@@ -20,17 +20,15 @@ import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.Set;
-import java.util.TreeSet;
 
-import io.fabric8.kubernetes.api.Annotations;
-import io.fabric8.kubernetes.api.Controller;
-import io.fabric8.kubernetes.api.KubernetesHelper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.Service;
@@ -49,8 +47,13 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.maven.core.access.ClusterAccess;
-import io.fabric8.maven.core.service.Fabric8ServiceHub;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.service.ApplyService;
+import io.fabric8.maven.core.util.FileUtil;
+import io.fabric8.maven.core.util.ResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
 import io.fabric8.openshift.api.model.Route;
@@ -58,13 +61,8 @@ import io.fabric8.openshift.api.model.RouteList;
 import io.fabric8.openshift.api.model.RouteSpec;
 import io.fabric8.openshift.api.model.RouteTargetReference;
 import io.fabric8.openshift.api.model.RouteTargetReferenceBuilder;
-import io.fabric8.openshift.api.model.Template;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.fabric8.utils.Files;
-import io.fabric8.utils.Strings;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
@@ -73,11 +71,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-
-import static io.fabric8.kubernetes.api.KubernetesHelper.createIntOrString;
-import static io.fabric8.kubernetes.api.KubernetesHelper.getLabels;
-import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
-import static io.fabric8.kubernetes.api.KubernetesHelper.getOrCreateAnnotations;
 
 /**
  * Base class for goals which deploy the generated artifacts into the Kubernetes cluster
@@ -207,28 +200,108 @@ public class ApplyMojo extends AbstractFabric8Mojo {
     protected String s2iBuildNameSuffix;
 
     private ClusterAccess clusterAccess;
+    protected ApplyService applyService;
+
+    public void executeInternal() throws MojoExecutionException, MojoFailureException {
+        clusterAccess = new ClusterAccess(namespace);
+
+        try {
+            KubernetesClient kubernetes = clusterAccess.createDefaultClient(log);
+            applyService = new ApplyService(kubernetes, log);
+            initServices(kubernetes, log);
+
+            URL masterUrl = kubernetes.getMasterUrl();
+            File manifest;
+            if (OpenshiftHelper.isOpenShift(kubernetes)) {
+                manifest = openshiftManifest;
+            } else {
+                manifest = kubernetesManifest;
+            }
+            if (!manifest.exists() || !manifest.isFile()) {
+                if (failOnNoKubernetesJson) {
+                    throw new MojoFailureException("No such generated manifest file: " + manifest);
+                } else {
+                    log.warn("No such generated manifest file %s for this project so ignoring", manifest);
+                    return;
+                }
+            }
+
+            String clusterKind = "Kubernetes";
+            if (OpenshiftHelper.isOpenShift(kubernetes)) {
+                clusterKind = "OpenShift";
+            }
+            KubernetesResourceUtil.validateKubernetesMasterUrl(masterUrl);
+            log.info("Using %s at %s in namespace %s with manifest %s ", clusterKind, masterUrl, clusterAccess.getNamespace(), manifest);
+
+            applyService.setAllowCreate(createNewResources);
+            applyService.setServicesOnlyMode(servicesOnly);
+            applyService.setIgnoreServiceMode(ignoreServices);
+            applyService.setLogJsonDir(jsonLogDir);
+            applyService.setBasedir(getRootProjectFolder());
+            applyService.setIgnoreRunningOAuthClients(ignoreRunningOAuthClients);
+            applyService.setProcessTemplatesLocally(processTemplatesLocally);
+            applyService.setDeletePodsOnReplicationControllerUpdate(deletePodsOnReplicationControllerUpdate);
+            applyService.setRollingUpgrade(rollingUpgrades);
+            applyService.setRollingUpgradePreserveScale(isRollingUpgradePreserveScale());
+
+            boolean openShift = OpenshiftHelper.isOpenShift(kubernetes);
+            if (openShift) {
+                getLog().info("OpenShift platform detected");
+            } else {
+                disableOpenShiftFeatures(applyService);
+            }
+
+            // lets check we have created the namespace
+            String namespace = clusterAccess.getNamespace();
+            applyService.applyNamespace(namespace);
+            applyService.setNamespace(namespace);
+
+            Set<HasMetadata> entities = KubernetesResourceUtil.loadResources(manifest);
+
+            if (createExternalUrls) {
+                if (applyService.asOpenShiftClient() != null) {
+                    createRoutes(entities);
+                } else {
+                    createIngress(kubernetes, entities);
+                }
+            }
+            applyEntities(kubernetes, namespace, manifest.getName(), entities);
+
+        } catch (KubernetesClientException e) {
+            KubernetesResourceUtil.handleKubernetesClientException(e, this.log);
+        } catch (MojoExecutionException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new MojoExecutionException(e.getMessage(), e);
+        }
+    }
+
+    protected void initServices(KubernetesClient kubernetes, Logger log) {
+
+    }
 
     private Route createRouteForService(String routeDomainPostfix, String namespace, Service service) {
         Route route = null;
         String id = KubernetesHelper.getName(service);
-        if (Strings.isNotBlank(id) && hasExactlyOneService(service, id)) {
+        if (StringUtils.isNotBlank(id) && hasExactlyOneService(service, id)) {
             route = new Route();
-            String routeId = id;
-            KubernetesHelper.setName(route, namespace, routeId);
+            ObjectMeta routeMeta = KubernetesHelper.getOrCreateMetadata(route);
+            routeMeta.setName(id);
+            routeMeta.setNamespace(namespace);
+
             RouteSpec routeSpec = new RouteSpec();
             RouteTargetReference objectRef = new RouteTargetReferenceBuilder().withName(id).build();
             //objectRef.setNamespace(namespace);
             routeSpec.setTo(objectRef);
-            if (!Strings.isNullOrBlank(routeDomainPostfix)) {
-                String host = Strings.stripSuffix(Strings.stripSuffix(id, "-service"), ".");
-                routeSpec.setHost(host + "." + Strings.stripPrefix(routeDomainPostfix, "."));
+            if (StringUtils.isNotBlank(routeDomainPostfix)) {
+                routeSpec.setHost(prepareHostForRoute(routeDomainPostfix, id));
             } else {
                 routeSpec.setHost("");
             }
             route.setSpec(routeSpec);
             String json;
             try {
-                json = KubernetesHelper.toJson(route);
+                json = ResourceUtil.toJson(route);
             } catch (JsonProcessingException e) {
                 json = e.getMessage() + ". object: " + route;
             }
@@ -237,15 +310,24 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         return route;
     }
 
+    private String prepareHostForRoute(String routeDomainPostfix, String name) {
+        String ret = FileUtil.stripPostfix(name,"-service");
+        ret = FileUtil.stripPostfix(ret,".");
+        ret += ".";
+        ret += FileUtil.stripPrefix(routeDomainPostfix, ".");
+        return ret;
+    }
+
+
     private Ingress createIngressForService(String routeDomainPostfix, String namespace, Service service) {
         Ingress ingress = null;
         String serviceName = KubernetesHelper.getName(service);
         ServiceSpec serviceSpec = service.getSpec();
-        if (serviceSpec != null && Strings.isNotBlank(serviceName) && shouldCreateExternalURLForService(service, serviceName)) {
+        if (serviceSpec != null && StringUtils.isNotBlank(serviceName) && shouldCreateExternalURLForService(service, serviceName)) {
             String ingressId = serviceName;
             String host = "";
-            if (Strings.isNotBlank(routeDomainPostfix)) {
-                host = serviceName + "." + namespace + "." + Strings.stripPrefix(routeDomainPostfix, ".");
+            if (StringUtils.isNotBlank(routeDomainPostfix)) {
+                host = serviceName + "." + namespace + "." + FileUtil.stripPrefix(routeDomainPostfix, ".");
             }
             List<HTTPIngressPath> paths = new ArrayList<>();
             List<ServicePort> ports = serviceSpec.getPorts();
@@ -253,9 +335,13 @@ public class ApplyMojo extends AbstractFabric8Mojo {
                 for (ServicePort port : ports) {
                     Integer portNumber = port.getPort();
                     if (portNumber != null) {
-                        HTTPIngressPath path = new HTTPIngressPathBuilder().withNewBackend().
-                                withServiceName(serviceName).withServicePort(createIntOrString(portNumber.intValue())).
-                                endBackend().build();
+                        HTTPIngressPath path =
+                            new HTTPIngressPathBuilder()
+                                .withNewBackend()
+                                  .withServiceName(serviceName)
+                                  .withServicePort(KubernetesHelper.createIntOrString(portNumber))
+                                .endBackend()
+                                .build();
                         paths.add(path);
                     }
                 }
@@ -276,7 +362,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
 
             String json;
             try {
-                json = KubernetesHelper.toJson(ingress);
+                json = ResourceUtil.toJson(ingress);
             } catch (JsonProcessingException e) {
                 json = e.getMessage() + ". object: " + ingress;
             }
@@ -284,6 +370,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         }
         return ingress;
     }
+
 
     /**
      * Should we try to create an external URL for the given service?
@@ -296,7 +383,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         if ("kubernetes".equals(id) || "kubernetes-ro".equals(id)) {
             return false;
         }
-        Set<Integer> ports = KubernetesHelper.getPorts(service);
+        Set<Integer> ports = getPorts(service);
         log.debug("Service " + id + " has ports: " + ports);
         if (ports.size() == 1) {
             String type = null;
@@ -316,7 +403,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
     }
 
     private boolean hasExactlyOneService(Service service, String id) {
-        Set<Integer> ports = KubernetesHelper.getPorts(service);
+        Set<Integer> ports = getPorts(service);
         if (ports.size() != 1) {
             log.info("Not generating route for service " + id + " as only single port services are supported. Has ports: " +
                      ports);
@@ -326,92 +413,40 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         }
     }
 
-    public void executeInternal() throws MojoExecutionException, MojoFailureException {
-        clusterAccess = new ClusterAccess(namespace);
-
-        try {
-            KubernetesClient kubernetes = clusterAccess.createDefaultClient(log);
-            URL masterUrl = kubernetes.getMasterUrl();
-            File manifest;
-            if (KubernetesHelper.isOpenShift(kubernetes)) {
-                manifest = openshiftManifest;
-            } else {
-                manifest = kubernetesManifest;
+    private Set<Integer> getPorts(Service service) {
+        Set<Integer> answer = new HashSet<>();
+        if (service != null) {
+            ServiceSpec spec = getOrCreateSpec(service);
+            for (ServicePort port : spec.getPorts()) {
+                answer.add(port.getPort());
             }
-            if (!Files.isFile(manifest)) {
-                if (failOnNoKubernetesJson) {
-                    throw new MojoFailureException("No such generated manifest file: " + manifest);
-                } else {
-                    log.warn("No such generated manifest file %s for this project so ignoring", manifest);
-                    return;
-                }
-            }
-
-            String clusterKind = "Kubernetes";
-            if (KubernetesHelper.isOpenShift(kubernetes)) {
-                clusterKind = "OpenShift";
-            }
-            KubernetesResourceUtil.validateKubernetesMasterUrl(masterUrl);
-            log.info("Using %s at %s in namespace %s with manifest %s ", clusterKind, masterUrl, clusterAccess.getNamespace(), manifest);
-
-            Controller controller = createController();
-            controller.setAllowCreate(createNewResources);
-            controller.setServicesOnlyMode(servicesOnly);
-            controller.setIgnoreServiceMode(ignoreServices);
-            controller.setLogJsonDir(jsonLogDir);
-            controller.setBasedir(getRootProjectFolder());
-            controller.setIgnoreRunningOAuthClients(ignoreRunningOAuthClients);
-            controller.setProcessTemplatesLocally(processTemplatesLocally);
-            controller.setDeletePodsOnReplicationControllerUpdate(deletePodsOnReplicationControllerUpdate);
-            controller.setRollingUpgrade(rollingUpgrades);
-            controller.setRollingUpgradePreserveScale(isRollingUpgradePreserveScale());
-
-            boolean openShift = KubernetesHelper.isOpenShift(kubernetes);
-            if (openShift) {
-                getLog().info("OpenShift platform detected");
-            } else {
-                disableOpenShiftFeatures(controller);
-            }
-
-            // lets check we have created the namespace
-            String namespace = clusterAccess.getNamespace();
-            controller.applyNamespace(namespace);
-            controller.setNamespace(namespace);
-
-            Set<HasMetadata> entities = KubernetesResourceUtil.loadResources(manifest);
-
-            if (createExternalUrls) {
-                if (controller.getOpenShiftClientOrNull() != null) {
-                    createRoutes(controller, entities);
-                } else {
-                    createIngress(controller, kubernetes, entities);
-                }
-            }
-            applyEntities(controller, kubernetes, namespace, manifest.getName(), entities);
-
-        } catch (KubernetesClientException e) {
-            KubernetesResourceUtil.handleKubernetesClientException(e, this.log);
-        } catch (MojoExecutionException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new MojoExecutionException(e.getMessage(), e);
         }
+        return answer;
     }
 
-    protected void applyEntities(Controller controller, KubernetesClient kubernetes, String namespace, String fileName, Set<HasMetadata> entities) throws Exception {
+    public static ServiceSpec getOrCreateSpec(Service entity) {
+        ServiceSpec spec = entity.getSpec();
+        if (spec == null) {
+            spec = new ServiceSpec();
+            entity.setSpec(spec);
+        }
+        return spec;
+    }
+
+    protected void applyEntities(KubernetesClient kubernetes, String namespace, String fileName, Set<HasMetadata> entities) throws Exception {
         // Apply all items
         for (HasMetadata entity : entities) {
             if (entity instanceof Pod) {
                 Pod pod = (Pod) entity;
-                controller.applyPod(pod, fileName);
+                applyService.applyPod(pod, fileName);
             } else if (entity instanceof Service) {
                 Service service = (Service) entity;
-                controller.applyService(service, fileName);
+                applyService.applyService(service, fileName);
             } else if (entity instanceof ReplicationController) {
                 ReplicationController replicationController = (ReplicationController) entity;
-                controller.applyReplicationController(replicationController, fileName);
+                applyService.applyReplicationController(replicationController, fileName);
             } else if (entity != null) {
-                controller.apply(entity, fileName);
+                applyService.apply(entity, fileName);
             }
         }
 
@@ -423,7 +458,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         for (HasMetadata entity : entities) {
             if (entity instanceof Service) {
                 Service service = (Service) entity;
-                String name = getName(service);
+                String name = KubernetesHelper.getName(service);
                 Resource<Service, DoneableService> serviceResource = kubernetes.services().inNamespace(namespace).withName(name);
                 String url = null;
                 // lets wait a little while until there is a service URL in case the exposecontroller is running slow
@@ -434,7 +469,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
                     Service s = serviceResource.get();
                     if (s != null) {
                         url = getExternalServiceURL(s);
-                        if (Strings.isNotBlank(url)) {
+                        if (StringUtils.isNotBlank(url)) {
                             break;
                         }
                     }
@@ -445,30 +480,19 @@ public class ApplyMojo extends AbstractFabric8Mojo {
 
                 // lets not wait for other services
                 serviceUrlWaitTimeSeconds = 1;
-                if (Strings.isNotBlank(url) && url.startsWith("http")) {
+                if (StringUtils.isNotBlank(url) && url.startsWith("http")) {
                     serviceLogger.info("" + name + ": " + url);
                 }
             }
         }
     }
 
-    protected Fabric8ServiceHub.Builder getFabric8ServiceHubBuilder(Controller controller) {
-        return new Fabric8ServiceHub.Builder()
-                .log(log)
-                .clusterAccess(clusterAccess)
-                .controller(controller);
-    }
-
-    protected Fabric8ServiceHub getFabric8ServiceHub(Controller controller) {
-        return getFabric8ServiceHubBuilder(controller).build();
-    }
-
     protected String getExternalServiceURL(Service service) {
-        return getOrCreateAnnotations(service).get(Annotations.Service.EXPOSE_URL);
+        return KubernetesHelper.getOrCreateAnnotations(service).get(Fabric8Annotations.SERVICE_EXPOSE_URL.value());
     }
 
     protected boolean isExposeService(Service service) {
-        String expose = getLabels(service).get("expose");
+        String expose = KubernetesHelper.getLabels(service).get("expose");
         return expose != null && expose.toLowerCase().equals("true");
     }
 
@@ -487,61 +511,21 @@ public class ApplyMojo extends AbstractFabric8Mojo {
     /**
      * Lets disable OpenShift-only features if we are not running on OpenShift
      */
-    protected void disableOpenShiftFeatures(Controller controller) {
+    protected void disableOpenShiftFeatures(ApplyService applyService) {
         // TODO we could check if the Templates service is running and if so we could still support templates?
         this.processTemplatesLocally = true;
-        controller.setSupportOAuthClients(false);
-        controller.setProcessTemplatesLocally(true);
+        applyService.setSupportOAuthClients(false);
+        applyService.setProcessTemplatesLocally(true);
     }
 
-    protected static Object applyTemplates(Template template, KubernetesClient kubernetes, Controller controller, String namespace, String fileName, MavenProject project, Logger log) throws Exception {
-        KubernetesHelper.setNamespace(template, namespace);
-        overrideTemplateParameters(template, project, log);
-        return controller.applyTemplate(template, fileName);
-    }
 
-    /**
-     * Before applying the given template lets allow template parameters to be overridden via the maven
-     * properties - or optionally - via the command line if in interactive mode.
-     */
-    protected static void overrideTemplateParameters(Template template, MavenProject project, Logger log) {
-        List<io.fabric8.openshift.api.model.Parameter> parameters = template.getParameters();
-        if (parameters != null && project != null) {
-            Properties properties = getProjectAndFabric8Properties(project);
-            boolean missingProperty = false;
-            for (io.fabric8.openshift.api.model.Parameter parameter : parameters) {
-                String parameterName = parameter.getName();
-                String name = "fabric8.apply." + parameterName;
-                String propertyValue = properties.getProperty(name);
-                if (propertyValue != null) {
-                    log.info("Overriding template parameter " + name + " with value: " + propertyValue);
-                    parameter.setValue(propertyValue);
-                } else {
-                    missingProperty = true;
-                    log.info("No property defined for template parameter: " + name);
-                }
-            }
-            if (missingProperty) {
-                log.debug("Current properties " + new TreeSet<>(properties.keySet()));
-            }
-        }
-    }
-
-    protected static Properties getProjectAndFabric8Properties(MavenProject project) {
-        Properties properties = project.getProperties();
-        properties.putAll(project.getProperties());
-        // let system properties override so we can read from the command line
-        properties.putAll(System.getProperties());
-        return properties;
-    }
-
-    protected void createRoutes(Controller controller, Collection<HasMetadata> collection) {
+    protected void createRoutes(Collection<HasMetadata> collection) {
         String routeDomainPostfix = this.routeDomain;
         Log log = getLog();
         String namespace = clusterAccess.getNamespace();
         // lets get the routes first to see if we should bother
         try {
-            OpenShiftClient openshiftClient = controller.getOpenShiftClientOrNull();
+            OpenShiftClient openshiftClient = applyService.asOpenShiftClient();
             if (openshiftClient == null) {
                 return;
             }
@@ -566,7 +550,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         collection.addAll(routes);
     }
 
-    protected void createIngress(Controller controller, KubernetesClient kubernetesClient, Collection<HasMetadata> collection) {
+    protected void createIngress(KubernetesClient kubernetesClient, Collection<HasMetadata> collection) {
         String routeDomainPostfix = this.routeDomain;
         Log log = getLog();
         String namespace = clusterAccess.getNamespace();
@@ -637,26 +621,6 @@ public class ApplyMojo extends AbstractFabric8Mojo {
             }
         }
         return false;
-    }
-
-    protected Controller createController() {
-        Controller controller = new Controller(clusterAccess.createDefaultClient(log));
-        controller.setThrowExceptionOnError(failOnError);
-        controller.setRecreateMode(recreate);
-        getLog().debug("Using recreate mode: " + recreate);
-        return controller;
-    }
-
-    public String getRouteDomain() {
-        return routeDomain;
-    }
-
-    public boolean isFailOnError() {
-        return failOnError;
-    }
-
-    public boolean isRecreate() {
-        return recreate;
     }
 
     /**

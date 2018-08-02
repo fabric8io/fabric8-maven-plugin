@@ -1,23 +1,18 @@
 package io.fabric8.maven.enricher.fabric8;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.model.ContainerBuilder;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.PodSpecBuilder;
-import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
-import io.fabric8.kubernetes.api.model.Volume;
-import io.fabric8.kubernetes.api.model.VolumeMount;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 import io.fabric8.maven.enricher.api.util.InitContainerHandler;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Enriches declarations with auto-TLS annotations, required secrets reference,
@@ -143,40 +138,41 @@ public class AutoTLSEnricher extends BaseEnricher {
                 initContainerHandler.appendInitContainer(builder, createInitContainer());
             }
 
-            private JSONObject createInitContainer() {
-                JSONObject entry = new JSONObject();
-                entry.put("name", getConfig(Config.pemToJKSInitContainerName));
-                entry.put("image", getConfig(Config.pemToJKSInitContainerImage));
-                entry.put("imagePullPolicy","IfNotPresent");
-                entry.put("args", createArgsArray());
-                entry.put("volumeMounts", createMounts());
-                return entry;
+            private Container createInitContainer() {
+                return new ContainerBuilder()
+                        .withName(getConfig(Config.pemToJKSInitContainerName))
+                        .withImage(getConfig(Config.pemToJKSInitContainerImage))
+                        .withImagePullPolicy("IfNotPresent")
+                        .withArgs(createArgsArray())
+                        .withVolumeMounts(createMounts())
+                        .build();
             }
 
-            private JSONArray createArgsArray() {
-                JSONArray ret = new JSONArray();
-                ret.put("-cert-file");
-                ret.put(getConfig(Config.keystoreCertAlias) + "=/tls-pem/tls.crt");
-                ret.put("-key-file");
-                ret.put(getConfig(Config.keystoreCertAlias) + "=/tls-pem/tls.key");
-                ret.put("-keystore");
-                ret.put("/tls-jks/" + getConfig(Config.keystoreFileName));
-                ret.put("-keystore-password");
-                ret.put(getConfig(Config.keystorePassword));
+            private List<String> createArgsArray() {
+                List<String> ret = new ArrayList<>();
+                ret.add("-cert-file");
+                ret.add(getConfig(Config.keystoreCertAlias) + "=/tls-pem/tls.crt");
+                ret.add("-key-file");
+                ret.add(getConfig(Config.keystoreCertAlias) + "=/tls-pem/tls.key");
+                ret.add("-keystore");
+                ret.add("/tls-jks/" + getConfig(Config.keystoreFileName));
+                ret.add("-keystore-password");
+                ret.add(getConfig(Config.keystorePassword));
                 return ret;
             }
 
-            private JSONArray createMounts() {
-                JSONObject pemMountPoint = new JSONObject();
-                pemMountPoint.put("name", getConfig(Config.tlsSecretVolumeName));
-                pemMountPoint.put("mountPath", "/tls-pem");
-                JSONObject jksMountPoint = new JSONObject();
-                jksMountPoint.put("name", getConfig(Config.jksVolumeName));
-                jksMountPoint.put("mountPath", "/tls-jks");
-                JSONArray ret = new JSONArray();
-                ret.put(pemMountPoint);
-                ret.put(jksMountPoint);
-                return ret;
+            private List<VolumeMount> createMounts() {
+
+                VolumeMount pemMountPoint = new VolumeMountBuilder()
+                        .withName(getConfig(Config.tlsSecretVolumeName))
+                        .withMountPath("/tls-pem")
+                        .build();
+                VolumeMount jksMountPoint = new VolumeMountBuilder()
+                        .withName(getConfig(Config.jksVolumeName))
+                        .withMountPath("/tls-jks")
+                        .build();
+
+                return Arrays.asList(pemMountPoint, jksMountPoint);
             }
         });
     }

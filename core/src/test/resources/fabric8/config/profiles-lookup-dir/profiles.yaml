@@ -15,3 +15,13 @@
   enricher:
     excludes: [ fmp-project ]
     includes: [ fmp-image ]
+- name: minimal
+  extends: simple
+  enricher:
+    includes:
+      - fmp-name
+      - fmp-controller
+      - fmp-service
+      - fmp-image
+      - fmp-project
+      - fmp-debug

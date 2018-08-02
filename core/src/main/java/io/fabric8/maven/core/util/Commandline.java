@@ -16,7 +16,10 @@
 
 package io.fabric8.maven.core.util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.StringTokenizer;
 
 // Inspired from org.apache.maven.shared.utils.cli.CommandLineUtils#translateCommandline()
 // including a fixed for quoting

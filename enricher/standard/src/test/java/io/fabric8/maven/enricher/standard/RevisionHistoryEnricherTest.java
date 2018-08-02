@@ -16,13 +16,17 @@
 
 package io.fabric8.maven.enricher.standard;
 
+import java.util.Collections;
+import java.util.TreeMap;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.ResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
@@ -30,9 +34,6 @@ import mockit.integration.junit4.JMockit;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.util.Collections;
-import java.util.TreeMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -99,7 +100,7 @@ public class RevisionHistoryEnricherTest {
     private void assertRevisionHistory(KubernetesList list, Integer revisionNumber) throws JsonProcessingException {
         assertEquals(list.getItems().size(),1);
 
-        String kubeJson = KubernetesResourceUtil.toJson(list.getItems().get(0));
+        String kubeJson = ResourceUtil.toJson(list.getItems().get(0));
         assertThat(kubeJson, JsonPathMatchers.isJson());
         assertThat(kubeJson, JsonPathMatchers.hasJsonPath("$.spec.revisionHistoryLimit", Matchers.equalTo(revisionNumber)));
     }

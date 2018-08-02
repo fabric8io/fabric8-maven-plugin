@@ -15,14 +15,6 @@
  */
 package io.fabric8.maven.enricher.fabric8;
 
-import io.fabric8.kubernetes.api.Annotations;
-import io.fabric8.maven.enricher.api.*;
-import io.fabric8.utils.Strings;
-import io.fabric8.utils.URLUtils;
-import org.apache.maven.model.DistributionManagement;
-import org.apache.maven.model.Site;
-import org.apache.maven.project.MavenProject;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
@@ -30,11 +22,20 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
+import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.Kind;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.model.DistributionManagement;
+import org.apache.maven.model.Site;
+import org.apache.maven.project.MavenProject;
+
 /**
  * Adds a link to the generated documentation for this microservice so we can link to the versioned docs in the
  * annotations
  */
 public class DocLinkEnricher extends AbstractLiveEnricher {
+
     public DocLinkEnricher(EnricherContext buildContext) {
         super(buildContext, "f8-cd-doc-link");
     }
@@ -43,7 +44,7 @@ public class DocLinkEnricher extends AbstractLiveEnricher {
     public Map<String, String> getAnnotations(Kind kind) {
         if (kind.isController()) {
             String url = findDocumentationUrl();
-            return url != null ? Collections.singletonMap(Annotations.Builds.DOCS_URL, url) : null;
+            return url != null ? Collections.singletonMap(Fabric8Annotations.DOCS_URL.value(), url) : null;
         } else {
             return null;
         }
@@ -55,7 +56,7 @@ public class DocLinkEnricher extends AbstractLiveEnricher {
             Site site = distributionManagement.getSite();
             if (site != null) {
                 String url = site.getUrl();
-                if (Strings.isNotBlank(url)) {
+                if (StringUtils.isNotBlank(url)) {
                     // lets replace any properties...
                     MavenProject project = getProject();
                     if (project != null) {
@@ -79,8 +80,8 @@ public class DocLinkEnricher extends AbstractLiveEnricher {
                         if (isOnline()) {
                             // lets see if the host name is a service name in which case we'll resolve to the public URL
                             String publicUrl = getExternalServiceURL(serviceName, protocol);
-                            if (Strings.isNotBlank(publicUrl)) {
-                                return URLUtils.pathJoin(publicUrl, u.getPath());
+                            if (StringUtils.isNotBlank(publicUrl)) {
+                                return String.format("%s/%s",publicUrl, u.getPath());
                             }
                         }
                     } catch (MalformedURLException e) {
@@ -116,7 +117,7 @@ public class DocLinkEnricher extends AbstractLiveEnricher {
             Object value = entry.getValue();
             if (key != null && value != null) {
                 String pattern = "${" + key + "}";
-                text = Strings.replaceAllWithoutRegex(text, pattern, value.toString());
+                text = StringUtils.replace(text, pattern, value.toString());
             }
         }
         return text;

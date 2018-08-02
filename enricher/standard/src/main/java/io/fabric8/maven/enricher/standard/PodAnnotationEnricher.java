@@ -15,6 +15,8 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import java.util.List;
+
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -24,8 +26,6 @@ import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
 import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
-
-import java.util.List;
 
 /**
  * Enricher which copies the annotation from a Deployment to the annotations of

@@ -36,6 +36,7 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 
 * *Standard Enrichers* are used to add default resource object when they are missing or add common metadata extracted from the given build information
 * *Fabric8 Enrichers* are specific to the https://fabric8.io[fabric8 Microservice's platform]. It adds icon annotations which are visible in the fabric8 console or connections to the Continous Deliverys systems like Jenkins or Gogs.
+* *OpenShift.io Enrichers* are specific to the https://www.openshift.io[OpenShift.io development environment]. These enrichers can add metadata to resources to allow them to better integrate with OpenShift.io.
 
 . Default Enrichers Overview
 [cols="2,7"]
@@ -95,6 +96,9 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 
 | <<fmp-revision-history-enricher>>
 | Add revision history limit (https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#revision-history-limit[Kubernetes doc]) as a deployment spec property to the Kubernetes/OpenShift resources.
+
+| <<fmp-triggers-annotation>>
+| Add ImageStreamTag change triggers on Kubernetes resources such as StatefulSets, ReplicaSets and DaemonSets using the `image.openshift.io/triggers` annotation.
 |===
 
 [[enrichers-standard]]
@@ -298,18 +302,18 @@ This enricher adds kubernetes readiness and liveness probes with Spring Boot. Th
      <artifactId>spring-boot-starter-actuator</artifactId>
    </dependency>
 
-The enricher will try to discover the settings from the `application.properties` / `application.yaml` Spring Boot
- configuration file.
+The enricher will try to discover the settings from the `application.properties` / `application.yaml` Spring Boot configuration file.
 
 The port number is read from the `management.port` option, and will use the default value of `8080`
 The scheme will use HTTPS if `server.ssl.key-store` option is in use, and fallback to use `HTTP` otherwise.
 
 The enricher will use the following settings by default:
 
-- readinessProbeInitialDelaySeconds = `10`
-- readinessProbePeriodSeconds = <kubernetes-default>
-- livenessProbeInitialDelaySeconds = `180`
-- livenessProbePeriodSeconds = <kubernetes-default>
+* `readinessProbeInitialDelaySeconds` : `10`
+* `readinessProbePeriodSeconds` : _<kubernetes-default>_
+* `livenessProbeInitialDelaySeconds` : `180`
+* `livenessProbePeriodSeconds` : _<kubernetes-default>_
+* `timeoutSeconds` : _<kubernetes-default>_
 
 These values can be configured by the enricher in the `fabric8-maven-plugin` configuration as shown below:
 [source,xml]
@@ -331,6 +335,7 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
           <enricher>
             <config>
               <spring-boot-health-check>
+                <timeoutSeconds>5</timeoutSeconds>
                 <readinessProbeInitialDelaySeconds>30</readinessProbeInitialDelaySeconds>
               </spring-boot-health-check>
             </config>
@@ -349,7 +354,7 @@ This enricher adds kubernetes readiness and liveness probes with WildFly Swarm. 
 [source,xml]
    <dependency>
      <groupId>org.wildfly.swarm</groupId>
-     <artifactId>monitor</artifactId>
+     <artifactId>microprofile-health</artifactId>
    </dependency>
 
 The enricher will use the following settings by default:
@@ -388,109 +393,415 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
       </plugin>
 
 
-[[f8-vertx-health-check]]
-==== f8-vertx-health-check
+[[f8-thorntail-v2-health-check]]
+==== f8-thorntail-v2-health-check
 
-This enricher adds kubernetes readiness and liveness probes with Eclipse Vert.x. The readiness probe lets Kubernetes
-detects when the application is ready, while the liveness probe allows Kubernetes to verify that the application is
-still alive.
+This enricher adds kubernetes readiness and liveness probes with Thorntail v2. This requires the following fraction
+ has been enabled in Thorntail
 
-By default, this enricher use the same URL for liveness and readiness probes. But the readiness path can be explicitly
-configured to use different paths.
-
-The probes are added if the projects uses the Vert.x Maven Plugin or depends on the `io.vertx:vertx-core` artifact
-**and** the path is explicitly configured.
+[source,xml]
+   <dependency>
+     <groupId>io.thorntail</groupId>
+     <artifactId>microprofile-health</artifactId>
+   </dependency>
 
 The enricher will use the following settings by default:
 
 - port = `8080`
 - scheme = `HTTP`
-- path = _none_ (disabled)
-- readiness path = same as the path by default
+- path = `/health`
 
-To enable the health checks, configure the probed path using:
-
-* the `vertx.health.path` project properties (`<vertx.health.path>/ping</vertx.health.path>`)
-* the `path` in the `fabric8-maven-plugin` configuration:
-
-[source, xml]
-<plugin>
-    <groupId>io.fabric8</groupId>
-    <artifactId>fabric8-maven-plugin</artifactId>
-    <version>3.3.0</version>
-    <executions>
-    <execution>
-    <id>fmp</id>
-    <goals>
-      <goal>resource</goal>
-      <goal>helm</goal>
-      <goal>build</goal>
-    </goals>
-    </execution>
-    </executions>
-    <configuration>
-    <enricher>
-    <config>
-      <vertx-health-check>
-        <path>/health</path>
-      </vertx-health-check>
-    </config>
-    </enricher>
-    </configuration>
-</plugin>
-
-
-
-These path, port and scheme can be configured by the enricher in the `fabric8-maven-plugin` configuration as shown below:
-
+These values can be configured by the enricher in the `fabric8-maven-plugin` configuration as shown below:
 [source,xml]
-  <plugin>
-    <groupId>io.fabric8</groupId>
-    <artifactId>fabric8-maven-plugin</artifactId>
-    <version>3.3.0</version>
-    <executions>
-      <execution>
-        <id>fmp</id>
-        <goals>
-          <goal>resource</goal>
-          <goal>helm</goal>
-          <goal>build</goal>
-        </goals>
-      </execution>
-    </executions>
-    <configuration>
-      <enricher>
-        <config>
-          <vertx-health-check>
-            <port>4444</port>
-            <scheme>HTTPS</scheme>
-            <path>/ping</path>
-            <readiness>/ping</readiness>
-          </vertx-health-check>
-        </config>
-      </enricher>
-    </configuration>
-  </plugin>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-plugin</artifactId>
+        <version>3.3.0</version>
+        <executions>
+          <execution>
+            <id>fmp</id>
+            <goals>
+              <goal>resource</goal>
+              <goal>helm</goal>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <enricher>
+            <config>
+              <thorntail-v2-health-check>
+                <port>4444</port>
+                <scheme>HTTPS</scheme>
+                <path>health/myapp</path>
+              </thorntail-v2-health-check>
+            </config>
+          </enricher>
+        </configuration>
+      </plugin>
 
 
-Alternatively, you can use project's properties to configure the health checks:
+[[f8-vertx-health-check]]
+==== f8-vertx-health-check
 
-* `vertx.health.port` - the port, 8080 by default, a negative number disables the health check
-* `vertx.health.path` - the path, an empty (non null) value disables the health check.
-* `vertx.health.readiness.path` - the path used for the readiness probe, an empty (non null) value disables the readiness
-check. If not set it uses the regular path.
-* `vertx.health.scheme` - the scheme, HTTP by default, can be set to HTTPS (adjusts the port accordingly)
+This enricher adds kubernetes readiness and liveness probes with Eclipse Vert.x applications. The readiness probe lets Kubernetes
+detects when the application is ready, while the liveness probe allows Kubernetes to verify that the application is
+still alive.
 
-By playing with the `vertx.health.path` and ``vertx.health.readiness.path` properties (and also the `<path>` and
-`<readiness`> values in the configuration), you can enables or disables the check individually:
+This enricher allows configuring the readiness and liveness probes. Are supported: `http` (emit HTTP requests), `tcp` (open a socket), `exec` (execute a command).
 
-*  `vertx.health.path` not set => the health checks are disabled
-*  `vertx.health.path` set to "" (empty) and `vertx.health.readiness.path` set to "/ping => the liveness check is disabled,
- the readiness check uses `GET localhost:8080/ping`
-*  `vertx.health.path` set to "/ping" and `vertx.health.readiness.path` set to "" (empty) => the readiness check is
-disabled, the liveness check uses `GET localhost:8080/ping`
-*  `vertx.health.path` set to "/ping" and `vertx.health.readiness.path` set to "/ready"  => the readiness check uses
-`GET localhost:8080/ready` , the liveness check uses the `GET localhost:8080/ping`
+By default, this enricher uses the same configuration for liveness and readiness probes. But specific configurations can be provided. The configurations can be overridden using project's properties.
+
+===== Using the f8-vertx-health-check enricher
+
+The enricher is automatically executed if your project uses the `vertx-maven-plugin` or depends on `io.vertx:vertx-core`.
+However, by default, no health check will be added to your deployment.
+
+===== Minimal configuration
+
+The minimal configuration to add health checks is the following:
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-plugin</artifactId>
+        <version>{version}</version>
+        <executions>
+          <execution>
+            <id>fmp</id>
+            <goals>
+              <goal>resource</goal>
+              <goal>helm</goal>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <enricher>
+            <config>
+              <vertx-health-check>
+                  <path>/health</path>
+              </vertx-health-check>
+            </config>
+          </enricher>
+        </configuration>
+      </plugin>
+----
+
+It configures the readiness and liveness health checks using HTTP requests on the port `8080` (default port) and on the path `/health`. The defaults are:
+
+* port = `8080` (for HTTP)
+* scheme = `HTTP`
+* path = _none_ (disabled)
+
+the previous configuration can also be given use project's properties:
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+    <properties>
+        <vertx.health.path>/health</vertx.health.path>
+    </properties>
+----
+
+===== Configuring differently the readiness and liveness health checks
+
+You can provide two different configuration for the readiness and liveness checks:
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-plugin</artifactId>
+        <version>{version}</version>
+        <executions>
+          <execution>
+            <id>fmp</id>
+            <goals>
+              <goal>resource</goal>
+              <goal>helm</goal>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <enricher>
+            <config>
+              <vertx-health-check>
+                  <readiness>
+                    <path>/ready</path>
+                  </readiness>
+                  <liveness>
+                    <path>/health</path>
+                  </liveness>
+              </vertx-health-check>
+            </config>
+          </enricher>
+        </configuration>
+      </plugin>
+----
+
+You can also use the `readiness` and `liveness` chunks in user properties:
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+    <properties>
+        <vertx.health.readiness.path>/ready</vertx.health.readiness.path>
+        <vertx.health.liveness.path>/ready</vertx.health.liveness.path>
+    </properties>
+----
+
+Shared (generic) configuration can be set outside of the specific configuration. For instance, to use the port 8081:
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-plugin</artifactId>
+        <version>{version}</version>
+        <executions>
+          <execution>
+            <id>fmp</id>
+            <goals>
+              <goal>resource</goal>
+              <goal>helm</goal>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <enricher>
+            <config>
+              <vertx-health-check>
+                  <port>8081</port>
+                  <readiness>
+                    <path>/ready</path>
+                  </readiness>
+                  <liveness>
+                    <path>/health</path>
+                  </liveness>
+              </vertx-health-check>
+            </config>
+          </enricher>
+        </configuration>
+      </plugin>
+----
+
+Or:
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+    <properties>
+        <vertx.health.port>8081</vertx.health.port>
+        <vertx.health.readiness.path>/ready</vertx.health.readiness.path>
+        <vertx.health.liveness.path>/ready</vertx.health.liveness.path>
+    </properties>
+----
+
+===== Configuration Structure
+
+The configuration is structured as follows
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+    <config>
+        <vertx-health-check>
+            <!-- Generic configuration, applied to both liveness and readiness -->
+            <path>/both</path>
+            <liveness>
+                <!-- Specific configuration for the liveness probe -->
+                <port-name>ping</port-name>
+            </liveness>
+            <readiness>
+                <!-- Specific configuration for the readiness probe -->
+                <port-name>ready</port-name>
+            </readiness>
+        </vertx-health-check>
+    </config>
+----
+
+The same structured is used in project's properties:
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+    <!-- Generic configuration given as vertx.health.$attribute -->
+    <vertx.health.path>/both</vertx.health.path>
+    <!-- Specific liveness configuration given as vertx.health.liveness.$attribute -->
+    <vertx.health.liveness.port-name>ping</vertx.health.liveness.port-name>
+    <!-- Specific readiness configuration given as vertx.health.readiness.$attribute -->
+    <vertx.health.readiness.port-name>ready</vertx.health.readiness.port-name>
+----
+
+**Important**: Project's properties override the configuration provided in the plugin configuration. The overriding rules are:
+_specific properties_ > _generic properties_ > _specific configuration_ > _generic configuration_.
+
+===== Probe configuration
+
+You can configure the different aspect of the probes. These attributes can be configured for both the readiness and liveness probes or be specific to one.
+
+
+.Probe configuration
+|===
+|Name |Description
+
+|`type`
+|The probe type among `http` (default), `tcp` and `exec`.
+
+|`initial-delay`
+|Number of seconds after the container has started before probes are initiated.
+
+|`period`
+|How often (in seconds) to perform the probe.
+
+|`timeout`
+|Number of seconds after which the probe times out.
+
+|`success-threshold`
+|Minimum consecutive successes for the probe to be considered successful after having failed.
+
+|`failure-threshold`
+|Minimum consecutive failures for the probe to be considered failed after having succeeded.
+
+|===
+
+
+More details about probes are available on https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/.
+
+===== HTTP probe configuration
+
+When using HTTP `GET` requests to determine readiness or liveness, several aspects can be configured. HTTP probes are used by default. To be more specific set the `type` attribute to `http`.
+
+.HTTP probes configuration
+|===
+|Name |Description |Default
+
+|`scheme`
+|Scheme to use for connecting to the host.
+|`HTTP`
+
+|`path`
+|Path to access on the HTTP server. An empty path disable the check
+|
+
+|`headers`
+|Custom headers to set in the request. HTTP allows repeated headers. Cannot be configured using project's properties. An example is available below.
+|
+
+|`port`
+|Number of the port to access on the container. A 0 or negative number disable the check.
+|8080
+
+|`port-name`
+|Name of the port to access on the container. If neither the `port` or the `port-name` is set, the check is disabled. If both are set the configuration is considered invalid.
+|
+
+|===
+
+Here is an example of HTTP probe configuration:
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+    <config>
+        <vertx-health-check>
+            <initialDelay>3</initialDelay>
+            <period>3</period>
+            <liveness>
+                <port>8081</port>
+                <path>/ping</path>
+                <scheme>HTTPS</scheme>
+                <headers>
+                    <X-Custom-Header>Awesome</X-Custom-Header>
+                </headers>
+            </liveness>
+            <readiness>
+                <!-- disable the readiness probe -->
+                <port>-1</port>
+            </readiness>
+        </vertx-health-check>
+    </config>
+----
+
+===== TCP probe configuration
+
+You can also configure the probes to just open a socket on a specific port. The `type` attribute must be set to `tcp`.
+
+.TCP probes configuration
+|===
+|Name |Description
+
+|`port`
+|Number of the port to access on the container. A 0 or negative number disable the check.
+
+|`port-name`
+|Name of the port to access on the container. If neither the `port` or the `port-name` is set, the check is disabled. If both are set the configuration is considered invalid.
+
+|===
+
+For example:
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+    <config>
+        <vertx-health-check>
+            <initialDelay>3</initialDelay>
+            <period>3</period>
+            <liveness>
+                <type>tcp</type>
+                <port>8081</port>
+            </liveness>
+            <readiness>
+                <-- use HTTP Get probe -->
+                <path>/ping</path>
+                <port>8080</port>
+            </readiness>
+        </vertx-health-check>
+    </config>
+----
+
+===== Exec probe configuration
+
+You can also configure the probes to execute a command. If the command succeeds, it returns 0, and Kubernetes consider the pod to be alive and healthy. If the command returns a non-zero value, Kubernetes kills the pod and restarts it. To use a command, you must set the `type` attribute to `exec`:
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+    <config>
+        <vertx-health-check>
+            <initialDelay>3</initialDelay>
+            <period>3</period>
+            <liveness>
+                <type>exec</type>
+                <command>
+                    <cmd>cat</cmd>
+                    <cmd>/tmp/healthy</cmd>
+                </command>
+            </liveness>
+            <readiness>
+                <-- use HTTP Get probe -->
+                <path>/ping</path>
+                <port>8080</port>
+            </readiness>
+        </vertx-health-check>
+    </config>
+----
+
+As you can see in the snippet above the command is passed using the `command` attribute. This attribute cannot be configured using project's properties. An empty command disables the check.
+
+===== Disabling health checks
+
+You can disables the checks by setting:
+
+* the `port` to 0 or to a negative number for `http` and `tcp` probes
+* the `command` to an empty list for `exec`
+
+In the first case, you can use project's properties to disable them:
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+    <!-- Disables `tcp` and `http` probes -->
+    <vertx.health.port>-1</vertx.health.port>
+----
+
+For `http` probes, an empty or not set `path` also disable the probe.
 
 [[f8-maven-scm-enricher]]
 ==== f8-maven-scm-enricher
@@ -636,6 +947,97 @@ This information will be enriched as spec property in the generated manifest lik
 kind: Deployment
 spec:
   revisionHistoryLimit: 8
+...
+----
+
+[[enrichers-osio]]
+=== OpenShift.io Enrichers
+
+OpenShift.io enrichers add metadata to resources in order to better integrate them into https://openshift.io[OpenShift.io]. They are not enabled by default, but can be activated with the `osio` profile.
+
+[[osio-space-label-enricher]]
+==== osio-space-label
+
+This enricher adds a label named `space` to all resources generated by the `fabric8:resource` goal.
+The value of this label identifies the OpenShift.io space that this application belongs to. For more information
+about spaces, see the https://docs.openshift.io/user-guide.html#working_with_spaces[OpenShift.io documentation].
+
+To provide the value of the `space` label to be applied by this enricher, use one of the following:
+
+. Set the system property `fabric8.enricher.osio-space-label.space` when building:
+
+	mvn -Dfabric8.enricher.osio-space-label.space=mySpace fabric8:resource
+
+
+. Define property `fabric8.enricher.osio-space-label.space` in your project's pom.xml:
++
+[source,xml]
+----
+...
+  <properties>
+    <fabric8.enricher.osio-space-label.space>
+      mySpace
+    </fabric8.enricher.osio-space-label.space>
+  </properties>
+...
+----
+
+. Specify in the configuration for `fabric8-maven-plugin`:
++
+[source,xml]
+----
+...
+  <plugin>
+    <groupId>io.fabric8</groupId>
+    <artifactId>fabric8-maven-plugin</artifactId>
+    ...
+    <configuration>
+      <enricher>
+        <config>
+          <osio-space-label>
+            <space>mySpace</space>
+          </osio-space-label>
+        </config>
+      </enricher>
+    </configuration>
+  </plugin>
+...
+----
+
+Regardless of which above method you choose to configure the enricher, the resulting resources will have the `space`
+label applied, like the following:
+[source,yaml]
+----
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  ...
+  labels:
+    space: mySpace
+    app: myproject
+    provider: fabric8
+    version: 1.0.0-SNAPSHOT
+    group: com.example
+  ...
+----
+
+[[fmp-triggers-annotation]]
+==== fmp-triggers-annotation
+
+This enricher adds ImageStreamTag change triggers on Kubernetes resources that support the `image.openshift.io/triggers` annotation, such as StatefulSets, ReplicaSets and DaemonSets.
+
+The trigger is added to all containers that apply, but can be restricted to a limited set of containers using the following configuration:
+
+[source,xml]
+----
+...
+<enricher>
+    <config>
+        <fmp-triggers-annotation>
+            <containers>container-name-1,c2</containers>
+        </fmp-triggers-annotation>
+    </config>
+</enricher>
 ...
 ----
 

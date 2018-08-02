@@ -20,31 +20,45 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.builds.Builds;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.LocalObjectReferenceBuilder;
+import io.fabric8.kubernetes.api.model.ObjectReference;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Status;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
-import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.core.util.IoUtil;
-import io.fabric8.maven.core.util.KubernetesClientUtil;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.ResourceFileType;
+import io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
+import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.assembly.ArchiverCustomizer;
+import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
+import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.util.AuthConfigFactory;
+import io.fabric8.maven.docker.util.DockerFileUtil;
+import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.Build;
@@ -56,10 +70,11 @@ import io.fabric8.openshift.api.model.BuildSource;
 import io.fabric8.openshift.api.model.BuildStrategy;
 import io.fabric8.openshift.api.model.BuildStrategyBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
-
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.archiver.tar.TarArchiver;
+import org.json.JSONObject;
 
 /**
  * @author nicola
@@ -71,13 +86,9 @@ public class OpenshiftBuildService implements BuildService {
     private final Logger log;
     private ServiceHub dockerServiceHub;
     private BuildServiceConfig config;
-    private ClusterAccess clusterAccess;
+    private RegistryService.RegistryConfig registryConfig;
+    private AuthConfigFactory authConfigFactory;
 
-    /*
-     * Retry parameter
-     */
-    private static final int RESOURCE_CREATION_RETRIES = 5;
-    private static final int RESOURCE_CREATION_RETRY_TIMEOUT_IN_MILLIS = 1000;
 
     public OpenshiftBuildService(OpenShiftClient client, Logger log, ServiceHub dockerServiceHub, BuildServiceConfig config) {
         Objects.requireNonNull(client, "client");
@@ -89,12 +100,11 @@ public class OpenshiftBuildService implements BuildService {
         this.log = log;
         this.dockerServiceHub = dockerServiceHub;
         this.config = config;
-        this.clusterAccess = new ClusterAccess(null);
     }
 
     @Override
     public void build(ImageConfiguration imageConfig) throws Fabric8ServiceException {
-
+        String buildName = null;
         try {
             ImageName imageName = new ImageName(imageConfig.getName());
 
@@ -102,8 +112,15 @@ public class OpenshiftBuildService implements BuildService {
 
             KubernetesListBuilder builder = new KubernetesListBuilder();
 
-            // Check for buildconfig / imagestream and create them if necessary
-            String buildName = updateOrCreateBuildConfig(config, client, builder, imageConfig);
+            // Check for buildconfig / imagestream / pullSecret and create them if necessary
+            String openshiftPullSecret = config.getOpenshiftPullSecret();
+            Boolean usePullSecret = checkOrCreatePullSecret(config, client, builder, openshiftPullSecret, imageConfig);
+            if (usePullSecret) {
+                buildName = updateOrCreateBuildConfig(config, client, builder, imageConfig, openshiftPullSecret);
+            } else {
+                buildName = updateOrCreateBuildConfig(config, client, builder, imageConfig, null);
+            }
+
             checkOrCreateImageStream(config, client, builder, getImageStreamName(imageName));
             applyResourceObjects(config, client, builder);
 
@@ -118,7 +135,13 @@ public class OpenshiftBuildService implements BuildService {
         } catch (Fabric8ServiceException e) {
             throw e;
         } catch (Exception ex) {
-            throw new Fabric8ServiceException("Unable to build the image using the OpenShift build service", ex);
+            // Log additional details in case of any IOException
+            if (ex != null && ex.getCause() instanceof IOException) {
+                log.error("Build for %s failed: %s", buildName, ex.getCause().getMessage());
+                logBuildFailure(client, buildName);
+            } else {
+                throw new Fabric8ServiceException("Unable to build the image using the OpenShift build service", ex);
+            }
         }
     }
 
@@ -168,7 +191,7 @@ public class OpenshiftBuildService implements BuildService {
     }
 
     private File getImageStreamFile(BuildServiceConfig config) {
-        return ResourceFileType.yaml.addExtension(new File(config.getBuildDirectory(), String.format("%s-is", config.getArtifactId())));
+        return ResourceFileType.yaml.addExtensionIfMissing(new File(config.getBuildDirectory(), String.format("%s-is", config.getArtifactId())));
     }
 
     @Override
@@ -176,19 +199,19 @@ public class OpenshiftBuildService implements BuildService {
         config.attachArtifact("is", getImageStreamFile(config));
     }
 
-    private String updateOrCreateBuildConfig(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder, ImageConfiguration imageConfig) {
+    private String updateOrCreateBuildConfig(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder, ImageConfiguration imageConfig, String openshiftPullSecret) {
         ImageName imageName = new ImageName(imageConfig.getName());
         String buildName = getS2IBuildName(config, imageName);
         String imageStreamName = getImageStreamName(imageName);
         String outputImageStreamTag = imageStreamName + ":" + (imageName.getTag() != null ? imageName.getTag() : "latest");
 
-        BuildStrategy buildStrategyResource = createBuildStrategy(imageConfig, config.getOpenshiftBuildStrategy());
+        BuildStrategy buildStrategyResource = createBuildStrategy(imageConfig, config.getOpenshiftBuildStrategy(), openshiftPullSecret);
         BuildOutput buildOutput = new BuildOutputBuilder().withNewTo()
                 .withKind("ImageStreamTag")
                 .withName(outputImageStreamTag)
                 .endTo().build();
 
-        // Fetch exsting build config
+        // Fetch existing build config
         BuildConfig buildConfig = client.buildConfigs().withName(buildName).get();
         if (buildConfig != null) {
             // lets verify the BC
@@ -263,9 +286,19 @@ public class OpenshiftBuildService implements BuildService {
         return buildName;
     }
 
-    private BuildStrategy createBuildStrategy(ImageConfiguration imageConfig, OpenShiftBuildStrategy osBuildStrategy) {
+    private BuildStrategy createBuildStrategy(ImageConfiguration imageConfig, OpenShiftBuildStrategy osBuildStrategy, String openshiftPullSecret) {
         if (osBuildStrategy == OpenShiftBuildStrategy.docker) {
-            return new BuildStrategyBuilder().withType("Docker").build();
+            BuildStrategy buildStrategy = new BuildStrategyBuilder().withType("Docker")
+                    .withNewDockerStrategy()
+                    .endDockerStrategy().build();
+
+            if (openshiftPullSecret != null) {
+                buildStrategy.getDockerStrategy().setPullSecret(new LocalObjectReferenceBuilder()
+                .withName(openshiftPullSecret)
+                .build());
+            }
+
+            return buildStrategy;
         } else if (osBuildStrategy == OpenShiftBuildStrategy.s2i) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             Map<String, String> fromExt = buildConfig.getFromExt();
@@ -274,7 +307,7 @@ public class OpenshiftBuildService implements BuildService {
             String fromKind = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.kind, "DockerImage");
             String fromNamespace = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.namespace, "ImageStreamTag".equals(fromKind) ? "openshift" : null);
 
-            return new BuildStrategyBuilder()
+            BuildStrategy buildStrategy = new BuildStrategyBuilder()
                     .withType("Source")
                     .withNewSourceStrategy()
                     .withNewFrom()
@@ -284,9 +317,121 @@ public class OpenshiftBuildService implements BuildService {
                     .endFrom()
                     .endSourceStrategy()
                     .build();
+            if (openshiftPullSecret != null) {
+                buildStrategy.getSourceStrategy().setPullSecret(new LocalObjectReferenceBuilder()
+                .withName(openshiftPullSecret)
+                .build());
+            }
+
+            return buildStrategy;
+
         } else {
             throw new IllegalArgumentException("Unsupported BuildStrategy " + osBuildStrategy);
         }
+    }
+
+    private Boolean checkOrCreatePullSecret(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder, String pullSecretName, ImageConfiguration imageConfig)
+            throws MojoExecutionException, UnsupportedEncodingException {
+        io.fabric8.maven.docker.service.BuildService.BuildContext dockerBuildContext = config.getDockerBuildContext();
+        BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+
+        String fromImage;
+        if (buildConfig.isDockerFileMode()) {
+            fromImage = extractBaseFromDockerfile(buildConfig, dockerBuildContext);
+        } else {
+            fromImage = extractBaseFromConfiguration(buildConfig);
+        }
+
+        String pullRegistry = EnvUtil.findRegistry(new ImageName(fromImage).getRegistry(), dockerBuildContext.getPullRegistry(), dockerBuildContext.getRegistryConfig().getRegistry());;
+
+        if (pullRegistry != null) {
+            RegistryService.RegistryConfig registryConfig = dockerBuildContext.getRegistryConfig();
+            AuthConfig authConfig = registryConfig.getAuthConfigFactory().createAuthConfig(false, registryConfig.isSkipExtendedAuth(), registryConfig.getAuthConfig(),
+                    registryConfig.getSettings(), null, pullRegistry);
+
+            if (authConfig != null) {
+
+                JSONObject auths = new JSONObject();
+                JSONObject auth = new JSONObject();
+                JSONObject item = new JSONObject();
+
+                String authString = authConfig.getUsername() + ":" + authConfig.getPassword();
+                item.put("auth", Base64.encodeBase64String(authString.getBytes("UTF-8")));
+                auth.put(pullRegistry, item);
+                auths.put("auths", auth);
+
+                String credentials = Base64.encodeBase64String(auths.toString().getBytes("UTF-8"));
+
+                Map<String, String> data = new HashMap<>();
+                data.put(".dockerconfigjson", credentials);
+
+                boolean hasPullSecret = client.secrets().withName(pullSecretName).get() != null;
+
+                if (!hasPullSecret) {
+                    log.info("Creating Secret %s", hasPullSecret);
+                    builder.addNewSecretItem()
+                            .withNewMetadata()
+                            .withName(pullSecretName)
+                            .endMetadata()
+                            .withData(data)
+                            .withType("kubernetes.io/dockerconfigjson")
+                            .endSecretItem();
+                } else {
+                    log.info("Adding to Secret %s", pullSecretName);
+                    return updateSecret(client, pullSecretName, data);
+                }
+
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    private boolean updateSecret(OpenShiftClient client, String pullSecretName, Map<String, String> data) {
+        if (!Objects.equals(data, client.secrets().withName(pullSecretName).get().getData())) {
+            client.secrets().withName(pullSecretName).edit()
+                    .editMetadata()
+                    .withName(pullSecretName)
+                    .endMetadata()
+                    .withData(data)
+                    .withType("kubernetes.io/dockerconfigjson")
+                    .done();
+            log.info("Updating Secret %s", pullSecretName);
+        } else {
+            log.info("Using Secret %s", pullSecretName);
+        }
+        return true;
+    }
+
+
+    private String extractBaseFromConfiguration(BuildImageConfiguration buildConfig) {
+        String fromImage;
+        fromImage = buildConfig.getFrom();
+        if (fromImage == null) {
+            AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
+            if (assemblyConfig == null) {
+                fromImage = DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE;
+            }
+        }
+        return fromImage;
+    }
+
+    private String extractBaseFromDockerfile(BuildImageConfiguration buildConfig, io.fabric8.maven.docker.service.BuildService.BuildContext buildContext) {
+        String fromImage;
+        try {
+            File fullDockerFilePath = buildConfig.getAbsoluteDockerFilePath(buildContext.getMojoParameters());
+            fromImage = DockerFileUtil.extractBaseImage(
+                    fullDockerFilePath,
+                    buildContext.getMojoParameters().getProject().getProperties(),
+                    buildConfig.getFilter());
+        } catch (IOException e) {
+            // Cant extract base image, so we wont try an auto pull. An error will occur later anyway when
+            // building the image, so we are passive here.
+            fromImage = null;
+        }
+        return fromImage;
     }
 
     private void checkOrCreateImageStream(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder, String imageStreamName) {
@@ -313,44 +458,14 @@ public class OpenshiftBuildService implements BuildService {
     }
 
     private void applyResourceObjects(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder) throws Exception {
-        // Adding a workaround to handle intermittent Socket closed errors while
-        // building on OpenShift. See https://github.com/fabric8io/fabric8-maven-plugin/issues/1133
-        // for more details.
-        int nTries = 0;
-        boolean bResourcesCreated = false;
-        Exception buildException = null;
-        do {
-            try {
-                if (config.getEnricherTask() != null) {
-                    config.getEnricherTask().execute(builder);
-                }
-                if (builder.hasItems()) {
-                    KubernetesList k8sList = builder.build();
-                    client.lists().create(k8sList);
-                }
-                // If we are here, it means resources got created successfully.
-                bResourcesCreated = true;
-            } catch (Exception aException) {
-                // Handling the exception like this because we get a generic Exception from the above block.
-                // Retry only when Exception is of socket closed message.
-                if(aException.getMessage() != null && aException.getMessage().contains("Socket closed")) {
-                    log.warn("Problem encountered while applying resource objects, retrying..");
-                    buildException = aException;
-                    nTries++;
-                    Thread.sleep(RESOURCE_CREATION_RETRY_TIMEOUT_IN_MILLIS);
-                    // Make a connection to cluster again.
-                    client = clusterAccess.createDefaultClient(log);
-                }
-                else {
-                    // The exception caught is not related to closed socket, so let's break
-                    // and simply throw as it is.
-                    throw new MojoExecutionException(aException.getMessage());
-                }
-            }
-        } while (nTries < RESOURCE_CREATION_RETRIES && !bResourcesCreated);
+        if (config.getEnricherTask() != null) {
+            config.getEnricherTask().execute(builder);
+        }
 
-        if (!bResourcesCreated)
-            throw new MojoExecutionException(buildException.getMessage());
+        if (builder.hasItems()) {
+            KubernetesList k8sList = builder.build();
+            client.lists().create(k8sList);
+        }
     }
 
     private Build startBuild(OpenShiftClient client, File dockerTar, String buildName) {
@@ -366,7 +481,7 @@ public class OpenshiftBuildService implements BuildService {
             }
             if (exp.getCause() instanceof IOException && exp.getCause().getMessage().contains("Stream Closed")) {
                 log.error("Build for %s failed: %s", buildName, exp.getCause().getMessage());
-                logBuildBuildFailedDetails(client, buildName);
+                logBuildFailedDetails(client, buildName);
             }
             throw exp;
         }
@@ -389,8 +504,7 @@ public class OpenshiftBuildService implements BuildService {
             try (Watch watcher = client.builds().withName(buildName).watch(buildWatcher)) {
                 // Check if the build is already finished to avoid waiting indefinitely
                 Build lastBuild = client.builds().withName(buildName).get();
-                String lastStatus = KubernetesResourceUtil.getBuildStatusPhase(lastBuild);
-                if (Builds.isFinished(lastStatus)) {
+                if (OpenshiftHelper.isFinished(KubernetesResourceUtil.getBuildStatusPhase(lastBuild))) {
                     log.debug("Build %s is already finished", buildName);
                     buildHolder.set(lastBuild);
                     latch.countDown();
@@ -398,12 +512,22 @@ public class OpenshiftBuildService implements BuildService {
 
                 waitUntilBuildFinished(latch);
                 logTerminateLatch.countDown();
+
                 build = buildHolder.get();
-                String status = KubernetesResourceUtil.getBuildStatusPhase(build);
-                if (Builds.isFailed(status) || Builds.isCancelled(status)) {
-                    throw new MojoExecutionException("OpenShift Build " + buildName + ": " + KubernetesResourceUtil.getBuildStatusReason(build));
+                if (build == null) {
+                    log.debug("Build watcher on %s was closed prematurely", buildName);
+                    build = client.builds().withName(buildName).get();
                 }
-                log.info("Build " + buildName + " " + status);
+                String status = KubernetesResourceUtil.getBuildStatusPhase(build);
+                if (OpenshiftHelper.isFailed(status) || OpenshiftHelper.isCancelled(status)) {
+                    throw new MojoExecutionException("OpenShift Build " + buildName + " failed: " + KubernetesResourceUtil.getBuildStatusReason(build));
+                }
+
+                if (!OpenshiftHelper.isFinished(status)) {
+                    log.warn("Could not wait for the completion of build %s. It may be  may be still running (status=%s)", buildName, status);
+                } else {
+                    log.info("Build %s in status %s", buildName, status);
+                }
             }
         }
     }
@@ -461,7 +585,7 @@ public class OpenshiftBuildService implements BuildService {
                     lastStatus = status;
                     log.verbose("Build %s status: %s", buildName, status);
                 }
-                if (Builds.isFinished(status)) {
+                if (OpenshiftHelper.isFinished(status)) {
                     latch.countDown();
                 }
             }
@@ -481,7 +605,7 @@ public class OpenshiftBuildService implements BuildService {
         };
     }
 
-    private void logBuildBuildFailedDetails(OpenShiftClient client, String buildName) {
+    private void logBuildFailedDetails(OpenShiftClient client, String buildName) {
         try {
             BuildConfig build = client.buildConfigs().withName(buildName).get();
             ObjectReference ref = build.getSpec().getStrategy().getSourceStrategy().getFrom();
@@ -503,6 +627,24 @@ public class OpenshiftBuildService implements BuildService {
             }
         } catch (Exception ex) {
             log.error("Unable to get detailed information from the BuildServiceConfig: " + ex.getMessage());
+        }
+    }
+
+    private void logBuildFailure(OpenShiftClient client, String buildName) throws Fabric8ServiceException {
+        try {
+            List<Build> builds = client.builds().inNamespace(client.getNamespace()).list().getItems();
+            for(Build build : builds) {
+                if(build.getMetadata().getName().contains(buildName)) {
+                    log.error(build.getMetadata().getName() + "\t" + "\t" + build.getStatus().getReason() + "\t" + build.getStatus().getMessage());
+                    throw new Fabric8ServiceException("Unable to build the image using the OpenShift build service", new KubernetesClientException(build.getStatus().getReason() + " " + build.getStatus().getMessage()));
+                }
+            }
+
+            log.error("Also, check cluster events via `oc get events` to see what could have possibly gone wrong");
+        } catch (KubernetesClientException clientException) {
+            Status status = clientException.getStatus();
+            if (status != null)
+                log.error("OpenShift Error: [%d] %s", status.getCode(), status.getMessage());
         }
     }
 

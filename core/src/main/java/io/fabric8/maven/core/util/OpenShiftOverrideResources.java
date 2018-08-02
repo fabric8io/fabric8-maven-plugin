@@ -15,11 +15,12 @@
  */
 package io.fabric8.maven.core.util;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.maven.docker.util.Logger;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.docker.util.Logger;
 
 /**
  * Processs YAML fragments to override parts of the YAML for OpenShift specific clusters

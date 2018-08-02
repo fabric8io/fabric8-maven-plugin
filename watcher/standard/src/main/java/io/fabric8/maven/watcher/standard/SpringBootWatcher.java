@@ -13,8 +13,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.fabric8.kubernetes.api.Annotations;
-import io.fabric8.kubernetes.api.KubernetesHelper;
+import com.google.common.io.Closeables;
 import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.LabelSelector;
@@ -27,28 +26,26 @@ import io.fabric8.maven.core.service.PortForwardService;
 import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.IoUtil;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.core.util.SpringBootUtil;
+import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.watcher.api.BaseWatcher;
 import io.fabric8.maven.watcher.api.WatcherContext;
-import io.fabric8.utils.Closeables;
-import io.fabric8.utils.PropertiesHelper;
-import io.fabric8.utils.Strings;
-
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.project.MavenProject;
 
 import static io.fabric8.maven.core.util.SpringBootConfigurationHelper.DEV_TOOLS_REMOTE_SECRET;
 
 public class SpringBootWatcher extends BaseWatcher {
 
-    private static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
 
-    private static final int DEFAULT_SERVER_PORT = 8080;
+    private final PortForwardService portForwardService;
 
     // Available configuration keys
     private enum Config implements Configs.Key {
@@ -61,11 +58,12 @@ public class SpringBootWatcher extends BaseWatcher {
 
     public SpringBootWatcher(WatcherContext watcherContext) {
         super(watcherContext, "spring-boot");
+        portForwardService = new PortForwardService(watcherContext.getKubernetesClient(), watcherContext.getLogger());
     }
 
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs, Set<HasMetadata> resources, PlatformMode mode) {
-        return MavenUtil.hasPlugin(getContext().getProject(), SPRING_BOOT_MAVEN_PLUGIN_GA);
+        return MavenUtil.hasPluginOfAnyGroupId(getContext().getProject(), SpringBootConfigurationHelper.SPRING_BOOT_MAVEN_PLUGIN_ARTIFACT_ID);
     }
 
     @Override
@@ -102,20 +100,15 @@ public class SpringBootWatcher extends BaseWatcher {
         Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getContext().getProject());
         SpringBootConfigurationHelper propertyHelper = new SpringBootConfigurationHelper(SpringBootUtil.getSpringBootVersion(getContext().getProject()));
 
-        PortForwardService portForwardService = getContext().getFabric8ServiceHub().getPortForwardService();
         int port = IoUtil.getFreeRandomPort();
-        int containerPort = findSpringBootWebPort(propertyHelper, properties);
+        int containerPort = propertyHelper.getServerPort(properties);
         portForwardService.forwardPortAsync(getContext().getLogger(), selector, containerPort, port);
 
         return createForwardUrl(propertyHelper, properties, port);
     }
 
-    private int findSpringBootWebPort(SpringBootConfigurationHelper propertyHelper, Properties properties) {
-        return PropertiesHelper.getInteger(properties, propertyHelper.getServerPortPropertyKey(), DEFAULT_SERVER_PORT);
-    }
-
     private String createForwardUrl(SpringBootConfigurationHelper propertyHelper, Properties properties, int localPort) {
-        String scheme = Strings.isNotBlank(properties.getProperty(propertyHelper.getServerKeystorePropertyKey())) ? "https://" : "http://";
+        String scheme = StringUtils.isNotBlank(properties.getProperty(propertyHelper.getServerKeystorePropertyKey())) ? "https://" : "http://";
         String contextPath = properties.getProperty(propertyHelper.getServerContextPathPropertyKey(), "");
         return scheme + "localhost:" + localPort + contextPath;
     }
@@ -135,8 +128,8 @@ public class SpringBootWatcher extends BaseWatcher {
                     }
                     Service s = serviceResource.get();
                     if (s != null) {
-                        url = KubernetesHelper.getOrCreateAnnotations(s).get(Annotations.Service.EXPOSE_URL);
-                        if (Strings.isNotBlank(url)) {
+                        url = KubernetesHelper.getOrCreateAnnotations(s).get(Fabric8Annotations.SERVICE_EXPOSE_URL);
+                        if (StringUtils.isNotBlank(url)) {
                             break;
                         }
                     }
@@ -147,7 +140,7 @@ public class SpringBootWatcher extends BaseWatcher {
 
                 // lets not wait for other services
                 serviceUrlWaitTimeSeconds = 1;
-                if (Strings.isNotBlank(url) && url.startsWith("http")) {
+                if (StringUtils.isNotBlank(url) && url.startsWith("http")) {
                     return url;
                 }
             }
@@ -167,7 +160,7 @@ public class SpringBootWatcher extends BaseWatcher {
 
         Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getContext().getProject());
         String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET, System.getProperty(DEV_TOOLS_REMOTE_SECRET));
-        if (Strings.isNullOrBlank(remoteSecret)) {
+        if (StringUtils.isBlank(remoteSecret)) {
             log.warn("There is no `%s` property defined in your src/main/resources/application.properties. Please add one!", DEV_TOOLS_REMOTE_SECRET);
             throw new IllegalStateException("No " + DEV_TOOLS_REMOTE_SECRET + " property defined in application.properties or system properties");
         }

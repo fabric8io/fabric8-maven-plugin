@@ -19,7 +19,9 @@ import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.maven.core.config.ProbeConfig;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class ProbeHandlerTest {
     Probe probe;

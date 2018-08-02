@@ -28,7 +28,12 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.Profile;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author roland
@@ -42,7 +47,7 @@ public class ProfileUtilTest {
         assertNotNull(is);
         List<Profile> profiles = ProfileUtil.fromYaml(is);
         assertNotNull(profiles);
-        assertEquals(profiles.size(),2);
+        assertEquals(profiles.size(),3);
         Profile profile = profiles.get(0);
         assertEquals("simple", profile.getName());
         ProcessorConfig config = profile.getEnricherConfig();
@@ -124,5 +129,18 @@ public class ProfileUtilTest {
         assertTrue(mergeConfig.use("i2"));
         assertFalse(mergeConfig.use("spring.swarm"));
 
+    }
+
+    @Test
+    public void shouldExtend() throws Exception {
+        Profile aProfile = ProfileUtil.findProfile("minimal", getProfileDir());
+
+        assertEquals("minimal", aProfile.getName());
+        assertEquals("simple", aProfile.getParentProfile());
+
+        assertTrue(aProfile.getEnricherConfig().use("fmp-name"));
+        assertTrue(aProfile.getEnricherConfig().use("default.service"));
+        assertTrue(aProfile.getGeneratorConfig().use("spring.swarm"));
+        assertFalse(aProfile.getGeneratorConfig().use("java.app"));
     }
 }

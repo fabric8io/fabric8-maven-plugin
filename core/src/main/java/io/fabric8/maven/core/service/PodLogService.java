@@ -8,14 +8,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.PodStatusType;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
@@ -23,19 +21,17 @@ import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.kubernetes.client.dsl.PodResource;
-import io.fabric8.maven.core.util.KubernetesClientUtil;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.utils.Strings;
+import org.apache.commons.lang3.StringUtils;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
-import static io.fabric8.kubernetes.api.KubernetesHelper.getPodStatus;
-import static io.fabric8.kubernetes.api.KubernetesHelper.isPodRunning;
-import static io.fabric8.maven.core.util.KubernetesClientUtil.deleteEntities;
-import static io.fabric8.maven.core.util.KubernetesClientUtil.getPodStatusDescription;
-import static io.fabric8.maven.core.util.KubernetesClientUtil.getPodStatusMessagePostfix;
-import static io.fabric8.maven.core.util.KubernetesClientUtil.resizeApp;
-import static io.fabric8.maven.core.util.KubernetesClientUtil.withSelector;
+import static io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil.deleteEntities;
+import static io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil.getPodStatusDescription;
+import static io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil.getPodStatusMessagePostfix;
+import static io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil.resizeApp;
+import static io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil.withSelector;
 
 /**
  * Prints to the console the output of the pods.
@@ -70,7 +66,7 @@ public class PodLogService {
 
         if (selector != null) {
             String ctrlCMessage = "stop tailing the log";
-            if (Strings.isNotBlank(onExitOperation)) {
+            if (StringUtils.isNotBlank(onExitOperation)) {
                 final String onExitOperationLower = onExitOperation.toLowerCase().trim();
                 if (onExitOperationLower.equals(OPERATION_UNDEPLOY)) {
                     ctrlCMessage = "undeploy the app";
@@ -119,10 +115,7 @@ public class PodLogService {
             List<Pod> items = list.getItems();
             if (items != null) {
                 for (Pod pod : items) {
-                    PodStatusType status = getPodStatus(pod);
-                    switch (status) {
-                    case WAIT:
-                    case OK:
+                    if (KubernetesHelper.isPodRunning(pod) || KubernetesHelper.isPodWaiting(pod)) {
                         if (latestPod == null || KubernetesResourceUtil.isNewerResource(pod, latestPod)) {
                             if (ignorePodsOlderThan != null) {
                                 Date podCreateTime = KubernetesResourceUtil.getCreationTimestamp(pod);
@@ -134,11 +127,6 @@ public class PodLogService {
                             }
                         }
                         runningPod = true;
-                        break;
-
-                    case ERROR:
-                    default:
-                        continue;
                     }
                 }
             }
@@ -179,7 +167,7 @@ public class PodLogService {
     }
 
     private void onPod(Watcher.Action action, Pod pod, KubernetesClient kubernetes, String namespace, String ctrlCMessage, boolean followLog) {
-        String name = getName(pod);
+        String name = KubernetesHelper.getName(pod);
         if (action.equals(Watcher.Action.DELETED)) {
             addedPods.remove(name);
             if (Objects.equals(watchingPodName, name)) {
@@ -193,15 +181,15 @@ public class PodLogService {
         }
 
         Pod watchPod = KubernetesResourceUtil.getNewestPod(addedPods.values());
-        newestPodName = getName(watchPod);
+        newestPodName = KubernetesHelper.getName(watchPod);
 
         Logger statusLog = Objects.equals(name, newestPodName) ? context.getNewPodLog() : context.getOldPodLog();
         if (!action.equals(Watcher.Action.MODIFIED) || watchingPodName == null || !watchingPodName.equals(name)) {
             statusLog.info("%s status: %s%s", name, getPodStatusDescription(pod), getPodStatusMessagePostfix(action));
         }
 
-        if (watchPod != null && isPodRunning(watchPod)) {
-            watchLogOfPodName(kubernetes, namespace, ctrlCMessage, followLog, watchPod, getName(watchPod));
+        if (watchPod != null && KubernetesHelper.isPodRunning(watchPod)) {
+            watchLogOfPodName(kubernetes, namespace, ctrlCMessage, followLog, watchPod, KubernetesHelper.getName(watchPod));
         }
     }
 
@@ -246,7 +234,7 @@ public class PodLogService {
     }
 
     private String getLogContainerName(List<Container> containers) {
-        if (Strings.isNotBlank(context.getLogContainerName())) {
+        if (StringUtils.isNotBlank(context.getLogContainerName())) {
             for (Container container : containers) {
                 if (Objects.equals(context.getLogContainerName(), container.getName())) {
                     return context.getLogContainerName();
@@ -276,7 +264,7 @@ public class PodLogService {
     }
 
     private String containerNameMessage(String containerName) {
-        if (Strings.isNotBlank(containerName)) {
+        if (StringUtils.isNotBlank(containerName)) {
             return " container: " + containerName;
         }
         return "";

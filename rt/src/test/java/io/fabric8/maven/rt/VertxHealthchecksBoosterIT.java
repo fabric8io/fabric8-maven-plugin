@@ -16,42 +16,59 @@
 
 package io.fabric8.maven.rt;
 
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
 import io.fabric8.openshift.api.model.Route;
 import okhttp3.Response;
 import org.apache.http.HttpStatus;
 import org.eclipse.jgit.lib.Repository;
 import org.json.JSONObject;
 import org.junit.After;
-
-import java.util.concurrent.TimeUnit;
+import org.junit.Before;
 import org.junit.Test;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
 public class VertxHealthchecksBoosterIT extends BaseBoosterIT {
-    private final String SPRING_BOOT_HTTP_BOOSTER_GIT = "https://github.com/openshiftio-vertx-boosters/vertx-health-checks-booster.git";
 
-    private final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy -Dfabric8.openshift.trimImageInContainerSpec=true", EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
+    private final String VERTX_HEALTHCHECK_BOOSTER_BOOSTERYAMLURL = "https://raw.githubusercontent.com/fabric8-launcher/launcher-booster-catalog/master/vert.x/redhat/health-check/booster.yaml";
+
+    private String VERTX_HEALTHCHECK_BOOSTER_GIT;
+
+    private String RELEASED_VERSION_TAG;
+
+    private final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy", EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
 
     private final String RELATIVE_POM_PATH = "/pom.xml";
 
     private final String ANNOTATION_KEY = "vertx-healthcheck-testKey", ANNOTATION_VALUE = "vertx-healthcheck-testValue";
 
+    private final ReadYaml readYaml = new ReadYaml();
+
+    @Before
+    public void set_repo_tag() throws IOException {
+
+        BoosterYaml boosterYaml = readYaml.readYaml(VERTX_HEALTHCHECK_BOOSTER_BOOSTERYAMLURL);
+        VERTX_HEALTHCHECK_BOOSTER_GIT = boosterYaml.getSource().getGitSource().getUrl();
+        RELEASED_VERSION_TAG = boosterYaml.getEnvironment().getProduction().getSource().getGitSource().getRef();
+
+    }
+
     @Test
     public void deploy_vertx_app_once() throws Exception {
-        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_HTTP_BOOSTER_GIT, RELATIVE_POM_PATH);
 
-        addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, "deploymentType", "deployOnce", fmpConfigurationFile);
+        Repository testRepository = setupSampleTestRepository(VERTX_HEALTHCHECK_BOOSTER_GIT, RELATIVE_POM_PATH, RELEASED_VERSION_TAG);
 
         deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
-        waitTillApplicationPodStarts("deploymentType", "deployOnce");
-        TimeUnit.SECONDS.sleep(20);
+        waitAfterDeployment(false);
         assertDeployment();
     }
 
     @Test
     public void redeploy_vertx_app() throws Exception {
-        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_HTTP_BOOSTER_GIT, RELATIVE_POM_PATH);
+
+        Repository testRepository = setupSampleTestRepository(VERTX_HEALTHCHECK_BOOSTER_GIT, RELATIVE_POM_PATH, RELEASED_VERSION_TAG);
 
         // change the source code
         updateSourceCode(testRepository, RELATIVE_POM_PATH);

@@ -22,16 +22,14 @@ import io.fabric8.maven.core.service.openshift.OpenshiftBuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.OpenShiftClient;
-
+import mockit.Expectations;
+import mockit.Mocked;
+import mockit.integration.junit4.JMockit;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.repository.RepositorySystem;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -134,28 +132,6 @@ public class Fabric8ServiceHubTest {
 
         assertNotNull(buildService);
         assertTrue(buildService instanceof OpenshiftBuildService);
-    }
-
-    @Test
-    public void testObtainClientToolsService() {
-        Fabric8ServiceHub hub = new Fabric8ServiceHub.Builder()
-                .clusterAccess(clusterAccess)
-                .log(logger)
-                .platformMode(PlatformMode.kubernetes)
-                .build();
-
-        assertNotNull(hub.getClientToolsService());
-    }
-
-    @Test
-    public void testObtainPortForwardService() {
-        Fabric8ServiceHub hub = new Fabric8ServiceHub.Builder()
-                .clusterAccess(clusterAccess)
-                .log(logger)
-                .platformMode(PlatformMode.kubernetes)
-                .build();
-
-        assertNotNull(hub.getPortForwardService());
     }
 
     @Test

@@ -17,6 +17,7 @@
 package io.fabric8.maven.core.config;
 
 import java.util.List;
+
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**

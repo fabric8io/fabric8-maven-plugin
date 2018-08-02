@@ -16,6 +16,20 @@
 
 package io.fabric8.maven.rt;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
@@ -26,9 +40,18 @@ import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteList;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
-import okhttp3.*;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import org.apache.commons.io.FileUtils;
-import org.apache.maven.model.*;
+import org.apache.maven.model.Build;
+import org.apache.maven.model.Dependency;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.Plugin;
+import org.apache.maven.model.PluginExecution;
+import org.apache.maven.model.Profile;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.arquillian.smart.testing.rules.git.GitCloner;
@@ -36,19 +59,11 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.codehaus.plexus.util.xml.Xpp3DomBuilder;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.jboss.shrinkwrap.resolver.api.maven.embedded.EmbeddedMaven;
 import org.json.JSONObject;
-
-import java.io.*;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class BaseBoosterIT {
 
@@ -64,9 +79,9 @@ public class BaseBoosterIT {
 
     protected final String fmpConfigurationFile = "/fmp-plugin-config.xml";
 
-    protected final int APPLICATION_POD_WAIT_POLLS = 400;
-
     protected OpenShiftClient openShiftClient;
+
+    protected final int APPLICATION_POD_WAIT_POLLS = 100;
 
     protected final static Logger logger = Logger.getLogger(BaseBoosterIT.class.getSimpleName());
 
@@ -76,9 +91,11 @@ public class BaseBoosterIT {
         GET, POST, PUT, DELETE;
     };
 
-    private Repository cloneRepositoryUsingHttp(String repositoryUrl) throws IOException, GitAPIException {
+    private Repository cloneRepositoryUsingHttp(String repositoryUrl, String releasedVersionTag) throws IOException, GitAPIException {
         gitCloner = new GitCloner(repositoryUrl);
-        return gitCloner.cloneRepositoryToTempFolder();
+        Repository repository =  gitCloner.cloneRepositoryToTempFolder();
+        Git.wrap(repository).checkout().setCreateBranch(true).setName("test-branch").setStartPoint("tags/" +releasedVersionTag).call();
+        return repository;
     }
 
     private void modifyPomFileToProjectVersion(Repository aRepository, String relativePomPath) throws IOException, XmlPullParserException {
@@ -185,18 +202,24 @@ public class BaseBoosterIT {
         model.getArtifactId();
     }
 
-    protected Repository setupSampleTestRepository(String repositoryUrl, String relativePomPath) throws IOException, GitAPIException, XmlPullParserException {
+    protected Repository setupSampleTestRepository(String repositoryUrl, String relativePomPath, String releasedVersionTag) throws IOException, GitAPIException, XmlPullParserException {
         openShiftClient = new DefaultOpenShiftClient(new ConfigBuilder().build());
         testsuiteNamespace = openShiftClient.getNamespace();
-        Repository repository = cloneRepositoryUsingHttp(repositoryUrl);
+        Repository repository = cloneRepositoryUsingHttp(repositoryUrl, releasedVersionTag);
+
         modifyPomFileToProjectVersion(repository, relativePomPath);
         return repository;
+    }
+
+    protected String getCurrentFMPVersion() throws Exception{
+        return readPomModelFromFile(new File("pom.xml")).getVersion();
     }
 
     protected void runEmbeddedMavenBuild(Repository sampleRepository, String goals, String profiles) {
         String baseDir = sampleRepository.getWorkTree().getAbsolutePath();
         EmbeddedMaven.forProject(baseDir + "/pom.xml")
                 .setGoals(goals)
+                .setQuiet(true)
                 .setProfiles(profiles)
                 .build();
     }
@@ -223,7 +246,7 @@ public class BaseBoosterIT {
      * @return
      * @throws Exception
      */
-    protected Response makeHttpRequest(HttpRequestType requestType, String hostUrl, String params) throws IOException, IllegalStateException {
+    protected Response makeHttpRequest(HttpRequestType requestType, String hostUrl, String params) throws IOException {
         OkHttpClient okHttpClient = new OkHttpClient();
         MediaType json = MediaType.parse("application/json; charset=utf-8");
         params = (params == null ? new JSONObject().toString() : params);
@@ -247,18 +270,12 @@ public class BaseBoosterIT {
                 logger.info("No valid Http request type specified, using GET instread.");
                 request = new Request.Builder().url(hostUrl).get().build();
         }
-
-        // Sometimes nip.io is not up, so handling that case too.
-        try {
-            Response response = okHttpClient.newCall(request).execute();
-            if (logger.isLoggable(Level.INFO)) {
-                logger.info(String.format("[%s] %s %s", requestType.name(), hostUrl, HttpStatus.getCode(response.code())));
-            }
-
-            return response;
-        } catch (UnknownHostException unknownHostException) {
-            throw new IllegalStateException("No Host with name " + hostUrl + "found, maybe nip.io is down!");
+        Response response = okHttpClient.newCall(request).execute();
+        if (logger.isLoggable(Level.INFO)) {
+            logger.info(String.format("[%s] %s %s", requestType.name(), hostUrl, HttpStatus.getCode(response.code())));
         }
+
+        return response;
     }
 
     protected int exec(String command) throws IOException, InterruptedException {
@@ -358,7 +375,7 @@ public class BaseBoosterIT {
                     return;
                 }
             }
-            TimeUnit.SECONDS.sleep(10);
+            TimeUnit.SECONDS.sleep(5);
             nPolls++;
         }
         throw new AssertionError("Pod wait timeout! Could not find application pod for " + testsuiteRepositoryArtifactId);
@@ -397,7 +414,7 @@ public class BaseBoosterIT {
                 }
             }
             nPolls++;
-            TimeUnit.SECONDS.sleep(10);
+            TimeUnit.SECONDS.sleep(5);
         }
         throw new AssertionError("Pod wait timeout! Could not find application pod for " + testsuiteRepositoryArtifactId);
     }

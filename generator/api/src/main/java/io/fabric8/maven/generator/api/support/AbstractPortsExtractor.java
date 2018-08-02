@@ -1,11 +1,5 @@
 package io.fabric8.maven.generator.api.support;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
-import io.fabric8.maven.core.util.Configs;
-import org.apache.maven.project.MavenProject;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -15,9 +9,13 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.generator.api.PortsExtractor;
-import io.fabric8.utils.Strings;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.project.MavenProject;
 
 public abstract class AbstractPortsExtractor implements PortsExtractor {
 
@@ -56,7 +54,7 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
 
     public File getConfigLocation(MavenProject project) {
         String propertyName = getConfigPathPropertyName();
-        if (Strings.isNullOrBlank(propertyName)) {
+        if (StringUtils.isBlank(propertyName)) {
             return null;
         }
         // The system property / Maven property has priority over what is specified in the pom.
@@ -64,7 +62,7 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
         if (configPath == null) {
             configPath = getConfigPathFromProject(project);
         }
-        if (Strings.isNullOrBlank(configPath)) {
+        if (StringUtils.isBlank(configPath)) {
             return null;
         }
         return Paths.get(configPath).toFile();
@@ -180,7 +178,7 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
      * @param port  The candidate port.
      */
     private void addPortIfValid(Map<String, Integer> map, String key, String port) {
-        if (Strings.isNotBlank(port)) {
+        if (StringUtils.isNotBlank(port)) {
             String t = port.trim();
             if (t.matches(NUMBER_REGEX)) {
                 map.put(key, Integer.parseInt(t));

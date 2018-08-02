@@ -19,13 +19,13 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>fabric8-maven-plugin-build</artifactId>
-  <version>3.5-SNAPSHOT</version>
+  <version>4.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>fabric8-maven-parent</artifactId>
-    <version>3.5-SNAPSHOT</version>
+    <version>4.0-SNAPSHOT</version>
     <relativePath>parent/pom.xml</relativePath>
   </parent>
 
@@ -39,10 +39,12 @@
     <module>enricher/api</module>
     <module>enricher/standard</module>
     <module>enricher/fabric8</module>
+    <module>enricher/osio</module>
     <module>generator/api</module>
     <module>generator/java-exec</module>
     <module>generator/spring-boot</module>
     <module>generator/wildfly-swarm</module>
+    <module>generator/thorntail-v2</module>
     <module>generator/karaf</module>
     <module>generator/webapp</module>
     <module>generator/vertx</module>

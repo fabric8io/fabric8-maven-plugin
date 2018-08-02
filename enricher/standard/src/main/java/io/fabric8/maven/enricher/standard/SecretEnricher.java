@@ -1,13 +1,13 @@
 package io.fabric8.maven.enricher.standard;
 
+import java.util.Map;
+
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.maven.core.util.Base64Util;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
-
-import java.util.Map;
 
 public abstract class SecretEnricher extends BaseEnricher {
 

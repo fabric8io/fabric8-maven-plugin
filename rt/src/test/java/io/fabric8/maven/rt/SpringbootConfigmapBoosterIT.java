@@ -16,46 +16,62 @@
 
 package io.fabric8.maven.rt;
 
-import io.fabric8.openshift.api.model.Route;
-import okhttp3.Response;
-import org.apache.http.HttpStatus;
-import org.eclipse.jgit.lib.Repository;
-import org.json.JSONObject;
-import org.junit.After;
-import org.junit.Ignore;
-import org.junit.Test;
-
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import io.fabric8.openshift.api.model.Route;
+import okhttp3.Response;
+import org.eclipse.jgit.lib.Repository;
+import org.json.JSONObject;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static io.fabric8.kubernetes.assertions.Assertions.assertThat;
 
 public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
 
-    private final String SPRING_BOOT_CONFIGMAP_BOOSTER_GIT = "https://github.com/snowdrop/spring-boot-configmap-booster.git";
+    private final String SPRING_BOOT_CONFIGMAP_BOOSTER_BOOSTERYAMLURL = "https://raw.githubusercontent.com/fabric8-launcher/launcher-booster-catalog/master/spring-boot/current-redhat/configmap/booster.yaml";
+
+    private String SPRING_BOOT_CONFIGMAP_BOOSTER_GIT;
+
+    private String RELEASED_VERSION_TAG;
 
     private final String TESTSUITE_CONFIGMAP_NAME = "app-config";
 
-    private final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy -Dfabric8.openshift.trimImageInContainerSpec=true -DskipTests", EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
+    private final String EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL = "fabric8:deploy -DskipTests -Dfabric8-maven-plugin.version=" , EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE = "openshift";
 
     private final String TEST_ENDPOINT = "/api/greeting";
 
-    private final String RELATIVE_POM_PATH = "/greeting-service/pom.xml";
+    private final String RELATIVE_POM_PATH = "/pom.xml";
 
     private final String ANNOTATION_KEY = "springboot-configmap-testKey", ANNOTATION_VALUE = "springboot-configmap-testValue";
 
+    private final ReadYaml readYaml = new ReadYaml();
+
+    @Before
+    public void set_repo_tag() throws IOException {
+
+        BoosterYaml boosterYaml = readYaml.readYaml(SPRING_BOOT_CONFIGMAP_BOOSTER_BOOSTERYAMLURL);
+        SPRING_BOOT_CONFIGMAP_BOOSTER_GIT = boosterYaml.getSource().getGitSource().getUrl();
+        RELEASED_VERSION_TAG = boosterYaml.getSource().getGitSource().getRef();
+
+    }
+
     @Test
     public void deploy_springboot_app_once() throws Exception {
-        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH);
+
+
+        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH, RELEASED_VERSION_TAG);
 
         createViewRoleToServiceAccount();
         createConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Hello World from a ConfigMap!");
-        addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, "deploymentType", "deployOnce", fmpConfigurationFile);
 
-        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
-        waitTillApplicationPodStarts("deploymentType", "deployOnce");
-        TimeUnit.SECONDS.sleep(20);
+        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL + getCurrentFMPVersion(), EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        waitAfterDeployment(false);
+
         assertApplication(false);
 
         openShiftClient.configMaps().inNamespace(testsuiteNamespace).withName(TESTSUITE_CONFIGMAP_NAME).delete();
@@ -63,16 +79,19 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
 
     @Test
     public void redeploy_springboot_app() throws Exception {
-        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH);
+
+
+        Repository testRepository = setupSampleTestRepository(SPRING_BOOT_CONFIGMAP_BOOSTER_GIT, RELATIVE_POM_PATH, RELEASED_VERSION_TAG);
+
 
         createConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Hello World from a ConfigMap!");
         // Make some changes in ConfigMap and rollout
         updateSourceCode(testRepository, RELATIVE_POM_PATH);
         addRedeploymentAnnotations(testRepository, RELATIVE_POM_PATH, ANNOTATION_KEY, ANNOTATION_VALUE, fmpConfigurationFile);
+        editConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Bonjour World from a ConfigMap!");
 
         // 2. Re-Deployment
-        editConfigMapResourceForApp(TESTSUITE_CONFIGMAP_NAME, "greeting.message: Bonjour World from a ConfigMap!");
-        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL, EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
+        deploy(testRepository, EMBEDDED_MAVEN_FABRIC8_BUILD_GOAL + getCurrentFMPVersion(), EMBEDDED_MAVEN_FABRIC8_BUILD_PROFILE);
         waitAfterDeployment(true);
         assertApplication(true);
 
@@ -106,17 +125,10 @@ public class SpringbootConfigmapBoosterIT extends BaseBoosterIT {
     }
 
     private void assertApplicationEndpoint(String key, String value) throws Exception {
-        int nTries = 0;
-        Response readResponse = null;
-        String responseContent = null;
         Route applicationRoute = getApplicationRouteWithName(testsuiteRepositoryArtifactId);
         String hostUrl = applicationRoute.getSpec().getHost() + TEST_ENDPOINT;
-        do {
-            readResponse = makeHttpRequest(HttpRequestType.GET, "http://" + hostUrl, null);
-            responseContent = new JSONObject(readResponse.body().string()).getString(key);
-            nTries++;
-            TimeUnit.SECONDS.sleep(10);
-        } while(nTries < 3 && readResponse.code() != HttpStatus.SC_OK);
+        Response response = makeHttpRequest(HttpRequestType.GET, "http://" + hostUrl, null);
+        String responseContent = new JSONObject(response.body().string()).getString(key);
 
         if (!responseContent.equals(value))
             throw new AssertionError(String.format("Actual : %s, Expected : %s", responseContent, value));

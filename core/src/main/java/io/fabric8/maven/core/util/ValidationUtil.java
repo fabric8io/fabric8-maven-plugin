@@ -15,11 +15,12 @@
  */
 package io.fabric8.maven.core.util;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
+import java.util.Set;
 
 import javax.validation.ConstraintViolation;
-import java.util.Set;
+
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 
 /**
  */

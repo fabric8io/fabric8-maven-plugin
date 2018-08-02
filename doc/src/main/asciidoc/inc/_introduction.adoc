@@ -20,7 +20,7 @@ That images can then be pushed to public or private Docker registries with <<fab
 
 Depending on the operational mode, for building the actual image either a Docker daemon is used directly or an https://docs.openshift.com/enterprise/3.0/architecture/core_concepts/builds_and_image_streams.html#docker-build[OpenShift Docker Build] is performed.
 
-A special <<fabric8:watch>> goal allows for reacting to code changes and automatic recreation of images or copying new artifacts into running containers.
+A special <<fabric8:watch>> goal allows for reacting to code changes to automatically recreate images or copy new artifacts into running containers.
 
 These image related features are inherited from the https://github.com/fabric8io/docker-maven-plugin[fabric8io/docker-maven-plugin] which is part of this plugin.
 
@@ -56,15 +56,15 @@ The following table gives an overview of the different models
 | Model | Docker Images | Resource Descriptors
 
 | *Zero-Config*
-| <<generators, Generators>> are used to create Docker image configurations. Generators can detect certain aspects of the build (e.g. whether Spring Boot is used) and then choose some default like the base image, which ports to expose and the startup command. The can be configured, but offer only a few options.
+| <<generators, Generators>> are used to create Docker image configurations. Generators can detect certain aspects of the build (e.g. whether Spring Boot is used) and then choose some default like the base image, which ports to expose and the startup command. They can be configured, but offer only a few options.
 | Default <<enrichers, Enrichers>> will create a default _Service_ and _Deployment_ (_DeploymentConfig_ for OpenShift) when no other resource objects are provided. Depending on the image they can detect which port to expose in the service. As with Generators, Enrichers support a limited set of configuration options.
 
 | *XML configuration*
 | f8-m-p inherits the XML based configuration for building images from the https://fabric8io.github.io/docker-maven-plugin/#docker:build[docker-maven-plugin] and provides the same functionality. It supports an http://maven.apache.org/components/plugins/maven-assembly-plugin/assembly.html[assembly descriptor] for specifying the content of the Docker image.
-| A subset of possible resource objects can be configured with a dedicated XML syntax. With a decent IDE you get autocompletion on most object and inline documentation for the available configuration elements. The provide configuration can be still enhanced by Enhancers which is useful for adding e.g. labels and annotation containing build or other information.
+| A subset of possible resource objects can be configured with a dedicated XML syntax. With a decent IDE you get autocompletion on most object and inline documentation for the available configuration elements. The provided configuration can be still enhanced by Enhancers which is useful for adding e.g. labels and annotations containing build or other information.
 
 | *Resource Fragments* and *Dockerfiles*
-| Like the docker-maven-plugin f8-m-p supports <<external-dockerfile,external Dockerfiles>> too, which are referenced from the plugin configuration.
+| Similarly to the docker-maven-plugin, f8-m-p supports <<external-dockerfile,external Dockerfiles>> too, which are referenced from the plugin configuration.
 | Resource descriptors can be provided as external YAML files which specify a skeleton. This skeleton is then filled by Enrichers which add labels and more. Maven properties within these files are resolved to thier values. With this model you can use every Kubernetes / OpenShift resource object with all their flexibility, but still get the benefit of adding build information.
 
 | *Docker Compose*
@@ -142,7 +142,7 @@ To start the Docker image build, you simply run
 mvn package fabric8:build
 ----
 
-This will create the Docker image against a running Docker daemon (which must be accessible either via Unix Socker or with the URL set in `DOCKER_HOST`). Alternatively, when using `mvn -Dfabric8.mode=openshift package fabric8:build` and connected to an OpenShift cluster, then a Docker build will be performed on OpenShift which at the end creates an https://docs.openshift.com/enterprise/3.1/architecture/core_concepts/builds_and_image_streams.html[ImageStream].
+This will create the Docker image against a running Docker daemon (which must be accessible either via Unix Socket or with the URL set in `DOCKER_HOST`). Alternatively, when connected to an OpenShift cluster (or using the `openshift` <<build-mode,mode>> explicitly), then a Docker build will be performed on OpenShift which at the end creates an https://docs.openshift.com/enterprise/3.1/architecture/core_concepts/builds_and_image_streams.html[ImageStream].
 
 To deploy the resources to the cluster call
 
@@ -200,19 +200,20 @@ If you'd also like to automatically deploy to Kubernetes each time you do a `mvn
 
 === XML Configuration
 
-WARNING: XML based configuration is implemented only partially and not recommended to use right now.
+WARNING: XML based configuration is only partially implemented and is not recommended for use right now.
 
-Although the Zero-config mode with its generators can be tweaked with options up to a certain degree. In many cases more flexibility and power is required, though. For this an XML based plugin configuration can be use, much similar to the https://fabric8io.github.io/docker-maven-plugin/#configuration[XML configuration] used by `docker-maven-plugin`.
+Although the Zero-config mode and its generators can be tweaked with options up to a certain degree, many cases require more flexibility. For such instances, an XML-based plugin configuration can be used, in a way similar to the
+https://fabric8io.github.io/docker-maven-plugin/#configuration[XML configuration] used by `docker-maven-plugin`.
 
 The plugin configuration can be roughly divided into the following sections:
 
-* A global configuration options are responsible for tuning the behaviour of plugin goals
-* ``<images>`` section which defines the Docker <<image-configuratuon,images>> to build. It has the https://fabric8io.github.io/docker-maven-plugin/#image-configuration[same syntax] as the similar configuration of `docker-maven-plugin` (except that `<run>` and `<external>` sub-elements are ignored)
-* `<resource>` is used to defined the resource descriptors for deploying on an OpenShift or Kuberneres cluster.
-* `<generator>` is for configuring <<generators,generators>> which are responsible for creating images. Generators are used as an alternative to a dedicates `<images>` section.
-* `<enricher>` is used to configure various aspects of <<enrichers,enrichers>> for creating or enhancing resource descriptors.
+* Global configuration options are responsible for tuning the behaviour of plugin goals
+* `<images>` defines which Docker <<image-configuration,images>> are used and configured. This section is similar to the https://fabric8io.github.io/docker-maven-plugin/#image-configuration[image configuration] of the `docker-maven-plugin`, except that `<run>` and `<external>` sub-elements are ignored)
+* `<resource>` defines the resource descriptors for deploying on an OpenShift or Kuberneres cluster.
+* `<generator>` configures <<generators,generators>> which are responsible for creating images. Generators are used as an alternative to a dedicated `<images>` section.
+* `<enricher>` configures various aspects of <<enrichers,enrichers>> for creating or enhancing resource descriptors.
 
-A working example can be found in the  https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/xml-config[samples/xml-config] directory. An extract of the plugin configuration is shown in the next example
+A working example can be found in the  https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/xml-config[samples/xml-config] directory. An extract of the plugin configuration is shown below:
 
 .Example for an XML configuration
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
@@ -281,18 +282,20 @@ A working example can be found in the  https://github.com/fabric8io/fabric8-mave
 <2> Kubernetes / OpenShift resources to create
 <3> Labels which should be applied globally to all resource objects
 <4> Definition of a http://kubernetes.io/docs/user-guide/deployments/[Deployment] to create
-<5> Container to include in the deployment
+<5> Containers to include in the deployment
 <6> An _alias_ is used to correlate a container's image with the image definition in the `<images>` section where each image carry an alias. Can be omitted if only a single image is used
 <7> http://kubernetes.io/docs/user-guide/volumes/[Volume] definitions used in a Deployment's _ReplicaSet_
 <8> One or more http://kubernetes.io/docs/user-guide/services/[Service] definitions.
 
-The XML resource configuration is based on plain Kubernetes resource objects. For creating OpenShift resource descriptor an automatic conversion will happen, e.g. from Kubernetes http://kubernetes.io/docs/user-guide/deployments/[Deployment] to an OpenShift https://docs.openshift.com/enterprise/3.0/dev_guide/deployments.html[DeploymentConfig].
+The XML resource configuration is based on plain Kubernetes resource objects. When targeting OpenShift, Kubernetes resource descriptors will be automatically converted to their OpenShift counterparts, e.g. a Kubernetes http://kubernetes.io/docs/user-guide/deployments/[Deployment] will be converted to an OpenShift https://docs.openshift.org/latest/architecture/core_concepts/deployments.html#deployments-and-deployment-configurations[DeploymentConfig].
 
 === Resource Fragments
 
-The third configuration option is to use an external configuration in form of YAML resource descriptors which are located in the  `src/main/fabric8` directory. Each resource get is own file, which contains some skeleton of a resource description. The plugin will pick up the resource, enriches it and the combines all to a single `kubernetes.yml` and `openshift.yml`. Within these descriptor files you are can freely use any Kubernetes feature. Note, that in order to support simultaneously both OpenShift and Kubernetes, there is currently no way to specify OpenShift feature only this way (but this might change).
+The third configuration option is to use an external configuration in form of YAML resource descriptors which are located in the  `src/main/fabric8` directory. Each resource get its own file, which contains a skeleton of a resource descriptor. The plugin will pick up the resource, enrich it and then combine all to a single `kubernetes.yml` and `openshift.yml` file. Within these descriptor files you are can freely use any Kubernetes feature.
 
-Let's have a look at an example from https://github.com/rhuss/fabric8-maven-plugin/tree/master/samples/external-resources[samples/external-resources]. This is a plain spring-boot application, whose images are auto generated like in the <<zero-config, Zero-Config>> case. The resource fragments are in `src/mainfabric8`.
+Note: In order to support simultaneously both OpenShift and Kubernetes, there is currently no way to specify OpenShift-only features this way, though this might change in future releases.
+
+Let's have a look at an example from https://github.com/rhuss/fabric8-maven-plugin/tree/master/samples/external-resources[samples/external-resources]. This is a plain Spring Boot application, whose images are auto generated like in the <<zero-config, Zero-Config>> case. The resource fragments are in `src/main/fabric8`.
 
 .Example fragment "deployment.yml"
 [source,yaml,indent=0,subs="verbatim,quotes,attributes"]
@@ -320,9 +323,14 @@ Let's have a look at an example from https://github.com/rhuss/fabric8-maven-plug
         serviceAccount: ribbon
 ----
 
-As you can see, there is no `metadata` section as expected for each Kubernetes resource object. This section will be created automatically by fabric8-maven-plugin. The object's `Kind`, if not given, will be extracted from the filename. In this case its a `Deployment` because the file is called `deployment.xml`. For each supported resource type such a mapping exists. In addition you could specify a name in like in `myapp-deployment.xml` to give the resource a fixed name. Otherwise it will be automatically extracted from project information (i.e. the artificact id).
+As you can see, there is no `metadata` section as would be expected for Kubernetes resources because it will be automatically added by the `fabric8-maven-plugin`. The object's `Kind`, if not given, is automatically derived from the
+filename. In this case, the `fabric8-maven-plugin` will create a `Deployment` because the file is called `deployment.yml`. Similar mappings between file names and resource type exist for each supported resource kind, the
+complete list of which (along with associated abbreviations) can be found at https://github.com/fabric8io/fabric8-maven-plugin/blob/master/core/src/main/java/io/fabric8/maven/core/util/KubernetesResourceUtil.java#L234-L280.
 
-Here also the reference to the image is missing. In this case it will be automatically connected to the image you are building with this plugin (And you already know, that the image definition comes either from a generator or by a dedicated image plugin configuration).
+Additionally, if you name your fragment using a name prefix followed by a dash and the mapped file name, the plugin will automatically use that name for your resource. So, for example, if you name your deployment fragment
+`myapp-deployment.yml`, the plugin will name your resource `myapp`. In the absence of such provided name for your resource, a name will be automatically derived from your project's metadata (in particular, its `artifactId` as specified in your POM).
+
+No image is also referenced in this example because the plugin also fills in the image details based on the configured image you are building with (either from a generator or from a dedicated image plugin configuration, as seen before).
 
 === Docker Compose
 
@@ -370,6 +378,6 @@ NOTE: For building images there is also an alternative mode using external Docke
 
 '''
 
-Enrichment of resource fragments can be fine tune by using profile sub-directories. For more details see <<profiles, Profiles>>.
+Enrichment of resource fragments can be fine-tuned by using profile sub-directories. For more details see <<profiles, Profiles>>.
 
 Now that we have seen some examples for the various ways how this plugin can be used, the following sections will describe the plugin goals and extension points in detail.

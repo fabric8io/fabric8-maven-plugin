@@ -16,14 +16,14 @@
 
 package io.fabric8.maven.generator.webapp;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+
 import io.fabric8.maven.generator.webapp.handler.JettyAppSeverHandler;
 import io.fabric8.maven.generator.webapp.handler.TomcatAppSeverHandler;
 import io.fabric8.maven.generator.webapp.handler.WildFlyAppSeverHandler;
 import org.apache.maven.project.MavenProject;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * @author kameshs

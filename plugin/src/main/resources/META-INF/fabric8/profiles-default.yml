@@ -32,6 +32,7 @@
     - fmp-openshift-route
     - spring-boot-health-check
     - wildfly-swarm-health-check
+    - thorntail-v2-health-check
     - karaf-health-check
     - vertx-health-check
     - docker-health-check
@@ -42,13 +43,15 @@
     - fmp-dependency
     - f8-watch
     - fmp-revision-history
-    - fmp-docker-registry-secret    
+    - fmp-docker-registry-secret
+    - fmp-triggers-annotation
 
   generator:
     # The order given in "includes" is the order in which generators are called
     includes:
     - spring-boot
     - wildfly-swarm
+    - thorntail-v2
     - karaf
     - vertx
     - java-exec
@@ -76,6 +79,7 @@
     includes:
     - spring-boot
     - wildfly-swarm
+    - thorntail-v2
     - karaf
     - vertx
     - java-exec
@@ -107,3 +111,10 @@
   enricher:
     excludes:
       - f8-expose
+# Includes everything from 'default', plus enrichers/generators
+# only useful to OpenShift.io
+- name: osio
+  extends: default
+  enricher:
+    includes:
+    - osio-space-label

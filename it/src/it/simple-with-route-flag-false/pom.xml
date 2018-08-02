@@ -29,11 +29,6 @@
         <version>1.3.6.RELEASE</version>
     </parent>
 
-    <issueManagement>
-        <system>GitHub</system>
-        <url>https://github.com/fabric8io/vertx-maven-plugin/issues/</url>
-    </issueManagement>
-
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>

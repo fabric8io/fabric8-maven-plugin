@@ -15,6 +15,8 @@
  */
 package io.fabric8.maven.core.util;
 
+import java.util.Properties;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +30,7 @@ public class SpringBootConfigurationHelper {
     public static final String SPRING_BOOT_GROUP_ID = "org.springframework.boot";
     public static final String SPRING_BOOT_ARTIFACT_ID = "spring-boot";
     public static final String SPRING_BOOT_DEVTOOLS_ARTIFACT_ID = "spring-boot-devtools";
+    public static final String SPRING_BOOT_MAVEN_PLUGIN_ARTIFACT_ID = "spring-boot-maven-plugin";
     public static final String DEV_TOOLS_REMOTE_SECRET = "spring.devtools.remote.secret";
     public static final String DEV_TOOLS_REMOTE_SECRET_ENV = "SPRING_DEVTOOLS_REMOTE_SECRET";
 
@@ -46,6 +49,8 @@ public class SpringBootConfigurationHelper {
 
     private int propertyOffset;
 
+    private static final int DEFAULT_SERVER_PORT = 8080;
+
     public SpringBootConfigurationHelper(String springBootVersion) {
         this.propertyOffset = propertyOffset(springBootVersion);
     }
@@ -54,9 +59,20 @@ public class SpringBootConfigurationHelper {
         return lookup(MANAGEMENT_PORT);
     }
 
+    public Integer getManagementPort(Properties properties) {
+        String value = properties.getProperty(getManagementPortPropertyKey());
+        return value != null ? Integer.parseInt(value) : null;
+    }
+
     public String getServerPortPropertyKey() {
         return lookup(SERVER_PORT);
     }
+
+    public Integer getServerPort(Properties properties) {
+        String value = properties.getProperty(getServerPortPropertyKey());
+        return value != null ? Integer.parseInt(value) : DEFAULT_SERVER_PORT;
+    }
+
 
     public String getServerKeystorePropertyKey() {
         return lookup(SERVER_KEYSTORE);
@@ -108,6 +124,5 @@ public class SpringBootConfigurationHelper {
         }
         return null;
     }
-
 
 }

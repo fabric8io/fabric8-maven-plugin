@@ -63,3 +63,6 @@ io.fabric8.maven.enricher.standard.DockerRegistrySecretEnricher
 
 # Add an enricher for adding revision history limit for deployment resources
 io.fabric8.maven.enricher.standard.RevisionHistoryEnricher
+
+# Add an enricher for adding trigger annotations to Kubernetes resources
+io.fabric8.maven.enricher.standard.TriggersAnnotationEnricher
