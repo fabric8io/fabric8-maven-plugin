@@ -169,7 +169,11 @@ abstract public class BaseGenerator implements Generator {
      * @return Docker image name which is never null
      */
     protected String getImageName() {
-        return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", getDefaultImageUser());
+        if (PlatformMode.isOpenShiftMode(getProject().getProperties())) {
+            return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", "%a:%l");
+        } else {
+            return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", "%g/%a:%l");
+        }
     }
 
     /**
@@ -184,14 +188,6 @@ abstract public class BaseGenerator implements Generator {
         }
 
         return null;
-    }
-
-    private String getDefaultImageUser() {
-        if (PlatformMode.isOpenShiftMode(getProject().getProperties())) {
-            return "%a:%l";
-        } else {
-            return "%g/%a:%t";
-        }
     }
 
     /**
