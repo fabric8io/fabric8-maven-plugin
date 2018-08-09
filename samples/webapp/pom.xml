@@ -20,7 +20,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.fabric8</groupId>
   <artifactId>fabric8-maven-sample-webapp</artifactId>
-  <version>3.5-SNAPSHOT</version>
+  <version>4.0-SNAPSHOT</version>
   <packaging>war</packaging>
   <build>
     <plugins>
@@ -34,7 +34,7 @@
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-plugin</artifactId>
-        <version>3.5-SNAPSHOT</version>
+        <version>4.0-SNAPSHOT</version>
       </plugin>
     </plugins>
   </build>
