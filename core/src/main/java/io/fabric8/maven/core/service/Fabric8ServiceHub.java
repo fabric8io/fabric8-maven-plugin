@@ -53,6 +53,8 @@ public class Fabric8ServiceHub {
 
     private MavenProject mavenProject;
 
+    private BinaryInputArchiveBuilder binaryInputArchiveBuilder;
+
     /**
     /*
      * Computed resources
@@ -95,7 +97,7 @@ public class Fabric8ServiceHub {
                         throw new IllegalStateException("Openshift platform has been specified but Openshift has not been detected!");
                     }
                     // Openshift services
-                    buildService = new OpenshiftBuildService((OpenShiftClient) client, log, dockerServiceHub, buildServiceConfig);
+                    buildService = new OpenshiftBuildService((OpenShiftClient) client, log, dockerServiceHub, buildServiceConfig, binaryInputArchiveBuilder);
                 } else {
                     // Kubernetes services
                     buildService = new DockerBuildService(dockerServiceHub, buildServiceConfig);
@@ -114,6 +116,10 @@ public class Fabric8ServiceHub {
 
     public BuildService getBuildService() {
         return (BuildService) this.services.get(BuildService.class).get();
+    }
+
+    public ServiceHub getDockerServiceHub() {
+        return dockerServiceHub;
     }
 
     public ArtifactResolverService getArtifactResolverService() {
@@ -162,6 +168,11 @@ public class Fabric8ServiceHub {
 
         public Builder mavenProject(MavenProject mavenProject) {
             hub.mavenProject = mavenProject;
+            return this;
+        }
+
+        public Builder binaryInputArchiveBuilder(BinaryInputArchiveBuilder binaryInputArchiveBuilder) {
+            hub.binaryInputArchiveBuilder = binaryInputArchiveBuilder;
             return this;
         }
 

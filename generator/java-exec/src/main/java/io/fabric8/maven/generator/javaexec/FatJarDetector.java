@@ -16,12 +16,12 @@
 package io.fabric8.maven.generator.javaexec;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
+import io.fabric8.maven.core.util.ResourceUtil;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
@@ -46,12 +46,7 @@ public class FatJarDetector {
                 // No directory to check found so we return null here ...
                 return null;
             }
-            String[] jarOrWars = directory.list(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return name.endsWith(".war") || name.endsWith(".jar");
-                }
-            });
+            String[] jarOrWars = ResourceUtil.getFileListOfExtension(directory, ".war", ".jar");
             if (jarOrWars == null || jarOrWars.length == 0) {
                 return null;
             }

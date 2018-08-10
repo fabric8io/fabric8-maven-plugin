@@ -16,6 +16,7 @@
 package io.fabric8.maven.core.util;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -68,6 +69,20 @@ public class FileUtil {
             return url != null ? Paths.get(url.toURI()).toAbsolutePath().toString() : null;
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static void deleteFilesInDirectory(File parentDir, FilenameFilter filterNameFilter) {
+        String[] files = parentDir.list(filterNameFilter);
+
+        if(files == null || files.length == 0) {
+            return;
+        }
+
+        File fileToDelete;
+        for(String file : files) {
+            fileToDelete = new File(parentDir, file);
+            fileToDelete.delete();
         }
     }
 }

@@ -58,6 +58,9 @@ public class Fabric8ServiceHubTest {
     @Mocked
     private RepositorySystem repositorySystem;
 
+    @Mocked
+    private BinaryInputArchiveBuilder binaryInputArchiveBuilder;
+
     @Before
     public void init() throws Exception {
         new Expectations() {{
@@ -110,6 +113,7 @@ public class Fabric8ServiceHubTest {
                 .platformMode(PlatformMode.kubernetes)
                 .dockerServiceHub(dockerServiceHub)
                 .buildServiceConfig(buildServiceConfig)
+                .binaryInputArchiveBuilder(binaryInputArchiveBuilder)
                 .build();
 
         BuildService buildService = hub.getBuildService();
@@ -126,6 +130,7 @@ public class Fabric8ServiceHubTest {
                 .platformMode(PlatformMode.openshift)
                 .dockerServiceHub(dockerServiceHub)
                 .buildServiceConfig(buildServiceConfig)
+                .binaryInputArchiveBuilder(binaryInputArchiveBuilder)
                 .build();
 
         BuildService buildService = hub.getBuildService();

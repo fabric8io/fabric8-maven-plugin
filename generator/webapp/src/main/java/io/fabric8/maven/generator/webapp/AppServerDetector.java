@@ -19,7 +19,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.generator.webapp.handler.JettyAppSeverHandler;
+import io.fabric8.maven.generator.webapp.handler.WarS2IHandler;
 import io.fabric8.maven.generator.webapp.handler.TomcatAppSeverHandler;
 import io.fabric8.maven.generator.webapp.handler.WildFlyAppSeverHandler;
 import org.apache.maven.project.MavenProject;
@@ -39,8 +41,14 @@ class AppServerDetector {
             Arrays.asList(
                 new JettyAppSeverHandler(project),
                 new WildFlyAppSeverHandler(project),
-                defaultHandler = new TomcatAppSeverHandler(project)
-                         );
+                new TomcatAppSeverHandler(project),
+                new WarS2IHandler(project));
+        if(PlatformMode.isOpenShiftMode(project.getProperties())) {
+            defaultHandler = serverHandlers.get(3);
+        } else {
+            defaultHandler = serverHandlers.get(2);
+        }
+
         serverHandlerMap = new HashMap<>();
         for (AppServerHandler handler : serverHandlers) {
             serverHandlerMap.put(handler.getName(), handler);

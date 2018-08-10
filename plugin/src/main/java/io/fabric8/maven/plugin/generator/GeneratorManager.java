@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.plugin.generator;
 
+import java.util.Collections;
 import java.util.List;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
@@ -38,20 +39,10 @@ public class GeneratorManager {
                                                     boolean prePackagePhase) throws MojoExecutionException {
 
         List<ImageConfiguration> ret = imageConfigs;
-
-        PluginServiceFactory<GeneratorContext> pluginFactory =
-            genCtx.isUseProjectClasspath() ?
-            new PluginServiceFactory<GeneratorContext>(genCtx, ClassUtil.createProjectClassLoader(genCtx.getProject(), genCtx.getLogger())) :
-            new PluginServiceFactory<GeneratorContext>(genCtx);
-
-        List<Generator> generators =
-            pluginFactory.createServiceObjects("META-INF/fabric8/generator-default",
-                                               "META-INF/fabric8/fabric8-generator-default",
-                                               "META-INF/fabric8/generator",
-                                               "META-INF/fabric8-generator");
-        ProcessorConfig config = genCtx.getConfig();
         Logger log = genCtx.getLogger();
-        List<Generator> usableGenerators = config.prepareProcessors(generators, "generator");
+
+
+        List<Generator> usableGenerators = getUsableGenerators(genCtx);
         log.verbose("Generators:");
         for (Generator generator : usableGenerators) {
             log.verbose(" - %s",generator.getName());
@@ -61,5 +52,31 @@ public class GeneratorManager {
             }
         }
         return ret;
+    }
+
+    public static List<Generator> getUsableGenerators(GeneratorContext generatorContext) {
+        PluginServiceFactory<GeneratorContext> pluginFactory =
+                generatorContext.isUseProjectClasspath() ?
+                        new PluginServiceFactory<GeneratorContext>(generatorContext, ClassUtil.createProjectClassLoader(generatorContext.getProject(), generatorContext.getLogger())) :
+                        new PluginServiceFactory<GeneratorContext>(generatorContext);
+
+        List<Generator> generators =
+                pluginFactory.createServiceObjects("META-INF/fabric8/generator-default",
+                        "META-INF/fabric8/fabric8-generator-default",
+                        "META-INF/fabric8/generator",
+                        "META-INF/fabric8-generator");
+        ProcessorConfig config = generatorContext.getConfig();
+        return config.prepareProcessors(generators, "generator");
+    }
+
+    public static Generator getApplicableGenerator(GeneratorContext generatorContext) throws MojoExecutionException{
+        List<Generator> usableGenerators = getUsableGenerators(generatorContext);
+        for(Generator generator : usableGenerators) {
+            if(generator.isApplicable(Collections.<ImageConfiguration>emptyList())) {
+                return generator;
+            }
+        }
+        generatorContext.getLogger().info("returning null");
+        return null;
     }
 }

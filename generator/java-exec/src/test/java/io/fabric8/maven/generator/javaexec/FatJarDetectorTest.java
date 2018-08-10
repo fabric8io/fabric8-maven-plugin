@@ -35,10 +35,10 @@ public class FatJarDetectorTest {
     public void simple() throws MojoExecutionException {
         URL testDirUrl = getClass().getResource("/fatjar-simple");
         FatJarDetector detector = new FatJarDetector(getAbsolutePath(testDirUrl));
-        FatJarDetector.Result result = detector.scan();
-        assertNotNull(result);
-        assertEquals(new File(getAbsolutePath(testDirUrl) + "/test.jar"), result.getArchiveFile());
-        assertEquals("org.springframework.boot.loader.JarLauncher", result.getMainClass());
-        assertEquals("Plexus Archiver", result.getManifestEntry("Archiver-Version"));
+        FatJarDetector.Result fatJarScanResult = detector.scan();
+        assertNotNull(fatJarScanResult);
+        assertEquals(new File(getAbsolutePath(testDirUrl) + "/test.jar"), fatJarScanResult.getArchiveFile());
+        assertEquals("org.springframework.boot.loader.JarLauncher", fatJarScanResult.getMainClass());
+        assertEquals("Plexus Archiver", fatJarScanResult.getManifestEntry("Archiver-Version"));
     }
 }

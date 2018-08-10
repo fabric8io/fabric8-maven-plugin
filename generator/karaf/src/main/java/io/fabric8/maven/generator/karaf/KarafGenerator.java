@@ -18,6 +18,9 @@ package io.fabric8.maven.generator.karaf;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.fabric8.maven.core.service.BinaryInputArchiveBuilder;
+import io.fabric8.maven.core.service.BuildService;
+import io.fabric8.maven.core.service.WarBinaryInputArchiveBuilder;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
@@ -69,6 +72,11 @@ public class KarafGenerator extends BaseGenerator {
     public boolean isApplicable(List<ImageConfiguration> configs) {
         return shouldAddImageConfiguration(configs) &&
                MavenUtil.hasPluginOfAnyGroupId(getProject(), KARAF_MAVEN_PLUGIN_ARTIFACT_ID);
+    }
+
+    @Override
+    public BinaryInputArchiveBuilder getBinaryInputArchiveBuilder(final BuildService.BuildServiceConfig config) {
+        return new WarBinaryInputArchiveBuilder(config);
     }
 
     protected List<String> extractPorts() {

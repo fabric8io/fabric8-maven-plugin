@@ -18,6 +18,8 @@ package io.fabric8.maven.generator.api;
 import java.util.List;
 
 import io.fabric8.maven.core.config.Named;
+import io.fabric8.maven.core.service.BinaryInputArchiveBuilder;
+import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import org.apache.maven.plugin.MojoExecutionException;
 
@@ -44,6 +46,14 @@ public interface Generator extends Named {
      * @return list of image configurations
      */
     List<ImageConfiguration> customize(List<ImageConfiguration> existingConfigs, boolean prePackagePhase) throws MojoExecutionException;
+
+    /**
+     * Method to fetch Openshift S2I Binary input archive builder
+     *
+     * @param config Build Service config
+     * @return Binary Input archive builder which would be used during S2I build
+     */
+    BinaryInputArchiveBuilder getBinaryInputArchiveBuilder(BuildService.BuildServiceConfig config);
 }
 
 

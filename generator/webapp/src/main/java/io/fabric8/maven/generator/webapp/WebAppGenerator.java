@@ -13,6 +13,7 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
 package io.fabric8.maven.generator.webapp;
 
 import java.util.Arrays;
@@ -20,8 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.service.BinaryInputArchiveBuilder;
+import io.fabric8.maven.core.service.BuildService;
+import io.fabric8.maven.core.service.WarBinaryInputArchiveBuilder;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
@@ -30,7 +32,6 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
 import io.fabric8.maven.generator.webapp.handler.CustomAppServerHandler;
-
 
 /**
  * A generator for WAR apps
@@ -75,13 +76,13 @@ public class WebAppGenerator extends BaseGenerator {
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean prePackagePhase) {
-        if (getContext().getMode() == PlatformMode.openshift &&
-            getContext().getStrategy() == OpenShiftBuildStrategy.s2i &&
-            !prePackagePhase) {
-            throw new IllegalArgumentException("S2I not yet supported for the webapp-generator. Use -Dfabric8.mode=kubernetes or " +
-                                               "-Dfabric8.build.strategy=docker for OpenShift mode. Please refer to the reference manual at " +
-                                               "https://maven.fabric8.io for details about build modes.");
-        }
+//        if (getContext().getMode() == PlatformMode.openshift &&
+//            getContext().getStrategy() == OpenShiftBuildStrategy.s2i &&
+//            !prePackagePhase) {
+//            throw new IllegalArgumentException("S2I not yet supported for the webapp-generator. Use -Dfabric8.mode=kubernetes or " +
+//                                               "-Dfabric8.build.strategy=docker for OpenShift mode. Please refer to the reference manual at " +
+//                                               "https://maven.fabric8.io for details about build modes.");
+//        }
 
         // Late initialization to avoid unnecessary directory scanning
         AppServerHandler handler = getAppServerHandler(getContext());
@@ -106,6 +107,11 @@ public class WebAppGenerator extends BaseGenerator {
         configs.add(imageBuilder.build());
 
         return configs;
+    }
+
+    @Override
+    public BinaryInputArchiveBuilder getBinaryInputArchiveBuilder(final BuildService.BuildServiceConfig config) {
+        return new WarBinaryInputArchiveBuilder(config);
     }
 
     private AppServerHandler getAppServerHandler(GeneratorContext context) {

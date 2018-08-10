@@ -18,11 +18,12 @@ package io.fabric8.maven.generator.webapp.handler;
 import java.util.Arrays;
 import java.util.List;
 
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.MavenUtil;
 import org.apache.maven.project.MavenProject;
 
 /**
- * Detector for tomat app servers.
+ * Detector for tomcat app servers.
  *
  * @author kameshs
  */
@@ -34,9 +35,13 @@ public class TomcatAppSeverHandler extends AbstractAppServerHandler {
 
     @Override
     public boolean isApplicable() {
-        return hasOneOf("**/META-INF/context.xml") ||
-                MavenUtil.hasPlugin(project, "org.apache.tomcat.maven:tomcat6-maven-plugin") ||
-                MavenUtil.hasPlugin(project, "org.apache.tomcat.maven:tomcat7-maven-plugin");
+        if(!PlatformMode.isOpenShiftMode(project.getProperties())) {
+            return hasOneOf("**/META-INF/context.xml") ||
+                    MavenUtil.hasPlugin(project, "org.apache.tomcat.maven:tomcat6-maven-plugin") ||
+                    MavenUtil.hasPlugin(project, "org.apache.tomcat.maven:tomcat7-maven-plugin");
+        } else {
+            return false;
+        }
     }
 
     @Override

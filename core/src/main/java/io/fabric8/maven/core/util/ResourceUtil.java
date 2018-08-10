@@ -18,7 +18,6 @@ package io.fabric8.maven.core.util;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -70,13 +69,37 @@ public class ResourceUtil {
         return output;
     }
 
-
     public static String toYaml(Object resource) throws JsonProcessingException {
         return serializeAsString(resource, ResourceFileType.yaml);
     }
 
     public static String toJson(Object resource) throws JsonProcessingException {
         return serializeAsString(resource, ResourceFileType.json);
+    }
+
+    public static File getArchiveFile(File directory, String[] jarOrWars) {
+        long maxSize = 0;
+        File projectArchiveId = null;
+        for (String jarOrWar : jarOrWars) {
+            File archiveFile = new File(directory, jarOrWar);
+            long size = archiveFile.length();
+            // Take the largest jar / war file found
+            if (size > maxSize) {
+                maxSize = size;
+                projectArchiveId = archiveFile;
+            }
+        }
+        return projectArchiveId;
+    }
+
+    public static String[] getFileListOfExtension(File directory, String... extensions) {
+        return directory.list((file, s) -> {
+            boolean result = false;
+            for(int index = 0; index < extensions.length; index++) {
+                result |= s.endsWith(extensions[index]);
+            }
+            return result;
+        });
     }
 
     private static String serializeAsString(Object resource, ResourceFileType resourceFileType) throws JsonProcessingException {

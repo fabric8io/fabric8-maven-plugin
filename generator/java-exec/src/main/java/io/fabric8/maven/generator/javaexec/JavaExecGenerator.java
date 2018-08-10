@@ -21,11 +21,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.fabric8.maven.core.service.BuildService;
+import io.fabric8.maven.core.service.DefaultBinaryInputArchiveBuilder;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.core.service.BinaryInputArchiveBuilder;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
@@ -131,6 +134,11 @@ public class JavaExecGenerator extends BaseGenerator {
             .buildConfig(buildBuilder.build());
         configs.add(imageBuilder.build());
         return configs;
+    }
+
+    @Override
+    public BinaryInputArchiveBuilder getBinaryInputArchiveBuilder(BuildService.BuildServiceConfig config) {
+        return new DefaultBinaryInputArchiveBuilder(config);
     }
 
     /**

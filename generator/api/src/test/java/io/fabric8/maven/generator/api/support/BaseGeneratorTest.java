@@ -24,6 +24,8 @@ import java.util.Properties;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.service.BinaryInputArchiveBuilder;
+import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.FromSelector;
@@ -332,6 +334,11 @@ public class BaseGeneratorTest {
         @Override
         public List<ImageConfiguration> customize(List<ImageConfiguration> existingConfigs, boolean prePackagePhase) throws MojoExecutionException {
             return existingConfigs;
+        }
+
+        @Override
+        public BinaryInputArchiveBuilder getBinaryInputArchiveBuilder(BuildService.BuildServiceConfig config) {
+            return null;
         }
     }
 

@@ -82,8 +82,7 @@ public class JavaExecGeneratorMainClassDeterminationTest {
             }
 
             FatJarDetector detector = invocation.getInvokedInstance();
-            return detector.new Result(
-                    new File("/the/archive/file"),
+            return detector.new Result(new File("/the/archive/file"),
                     "the.fatjar.main.ClassName",
                     new Attributes()
             );

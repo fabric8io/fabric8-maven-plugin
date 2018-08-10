@@ -29,7 +29,6 @@ import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.Gofabric8Util;
@@ -40,7 +39,6 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.DockerAccessFactory;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.Task;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
@@ -228,6 +226,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .dockerServiceHub(hub)
                 .buildServiceConfig(getBuildServiceConfig())
                 .repositorySystem(repositorySystem)
+                .binaryInputArchiveBuilder(GeneratorManager.getApplicableGenerator(getGeneratorContext()).getBinaryInputArchiveBuilder(getBuildServiceConfig()))
                 .mavenProject(project)
                 .build();
 
@@ -287,21 +286,13 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .s2iBuildNameSuffix(s2iBuildNameSuffix)
                 .s2iImageStreamLookupPolicyLocal(s2iImageStreamLookupPolicyLocal)
                 .buildDirectory(project.getBuild().getDirectory())
-                .attacher(new BuildService.BuildServiceConfig.Attacher() {
-                    @Override
-                    public void attach(String classifier, File destFile) {
+                .attacher((String classifier, File destFile) ->  {
                         if (destFile.exists()) {
                             projectHelper.attachArtifact(project, "yml", classifier, destFile);
                         }
-                    }
-                })
-                .enricherTask(new Task<KubernetesListBuilder>() {
-                    @Override
-                    public void execute(KubernetesListBuilder builder) throws Exception {
+                    }).enricherTask((KubernetesListBuilder builder) -> {
                         new EnricherManager(resources, getEnricherContext()).enrich(builder);
-                    }
-                })
-                .build();
+                    }).build();
     }
 
     /**

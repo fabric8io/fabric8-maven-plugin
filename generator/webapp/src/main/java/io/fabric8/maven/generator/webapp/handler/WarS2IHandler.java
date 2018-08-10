@@ -15,61 +15,48 @@
  */
 package io.fabric8.maven.generator.webapp.handler;
 
+import io.fabric8.maven.core.config.PlatformMode;
+import org.apache.maven.project.MavenProject;
+
+import java.util.Arrays;
 import java.util.List;
 
-import io.fabric8.maven.generator.webapp.AppServerHandler;
-
-/**
- * A custom app server handler used when use explicitly configures the base image
- *
- * @author roland
- * @since 05/10/16
- */
-public class CustomAppServerHandler implements AppServerHandler {
-
-    private String from, deploymentDir, command, user;
-    private List<String> ports;
-
-    public CustomAppServerHandler(String from, String deploymentDir, String command, String user, List<String> ports) {
-        this.from = from;
-        this.deploymentDir = deploymentDir;
-        this.command = command;
-        this.user = user;
-        this.ports = ports;
+public class WarS2IHandler extends AbstractAppServerHandler {
+    public WarS2IHandler(MavenProject project) {
+        super("webapp", project);
     }
 
     @Override
     public boolean isApplicable() {
-        return true;
-    }
-
-    @Override
-    public String getName() {
-        return "custom";
+        if(PlatformMode.isOpenShiftMode(project.getProperties())) {
+            return hasOneOf("**/META-INF/context.xml") || project.getPackaging().equals("war");
+        } else {
+            return false;
+        }
     }
 
     @Override
     public String getFrom() {
-        return from;
-    }
-
-    @Override
-    public String getDeploymentDir() {
-        return deploymentDir;
-    }
-
-    @Override
-    public String getCommand() {
-        return command;
-    }
-
-    @Override
-    public String getUser() {
-        return user;
+        return imageLookup.getImageName("wildfly.upstream.s2i");
     }
 
     @Override
     public List<String> exposedPorts() {
-        return ports;
+        return Arrays.asList("8080");
+    }
+
+    @Override
+    public String getDeploymentDir() {
+        return "/wildfly/standalone/deployments";
+    }
+
+    @Override
+    public String getCommand() {
+        return "./s2i/bin/usage";
+    }
+
+    @Override
+    public String getUser() {
+        return "1001";
     }
 }

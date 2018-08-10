@@ -41,7 +41,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Feature 1363: Added a Thorntail V2 sample for checking Jolokia/Prometheus issues
 * Fix 894: Keep Service parameters stable after redeployment
 * Fix 1372: Filename to type mappings should be more flexible than a string array
-
+* Fix #825 : More flexible S2I binary build data format
 
 ###3.5.40
 * Feature 1264: Added `osio` profile, with enricher to apply OpenShift.io space labels to resources

@@ -16,9 +16,7 @@
 package io.fabric8.maven.core.service.openshift;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
@@ -39,16 +37,16 @@ import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
+import io.fabric8.maven.core.service.BinaryInputArchiveBuilder;
 import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
-import io.fabric8.maven.core.util.IoUtil;
+import io.fabric8.maven.core.util.FileUtil;
 import io.fabric8.maven.core.util.ResourceFileType;
 import io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.docker.access.AuthConfig;
-import io.fabric8.maven.docker.assembly.ArchiverCustomizer;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -87,27 +85,37 @@ public class OpenshiftBuildService implements BuildService {
     private BuildServiceConfig config;
     private RegistryService.RegistryConfig registryConfig;
     private AuthConfigFactory authConfigFactory;
+    private BinaryInputArchiveBuilder binaryInputArchiveBuilder;
 
 
-    public OpenshiftBuildService(OpenShiftClient client, Logger log, ServiceHub dockerServiceHub, BuildServiceConfig config) {
+    public OpenshiftBuildService(OpenShiftClient client, Logger log, ServiceHub dockerServiceHub, BuildServiceConfig config, BinaryInputArchiveBuilder binaryInputArchiveBuilder) {
         Objects.requireNonNull(client, "client");
         Objects.requireNonNull(log, "log");
         Objects.requireNonNull(dockerServiceHub, "dockerServiceHub");
         Objects.requireNonNull(config, "config");
+        Objects.requireNonNull(binaryInputArchiveBuilder, "binaryInputArchiveBuilder");
 
         this.client = client;
         this.log = log;
         this.dockerServiceHub = dockerServiceHub;
         this.config = config;
+        this.binaryInputArchiveBuilder = binaryInputArchiveBuilder;
     }
 
     @Override
     public void build(ImageConfiguration imageConfig) throws Fabric8ServiceException {
         String buildName = null;
         try {
-            ImageName imageName = new ImageName(imageConfig.getName());
+            // Create an empty directory
+            File targetDir = createEmptyTargetDir();
 
-            File dockerTar = createBuildArchive(imageConfig);
+            // Fill the directory with the data in the right directory structure
+            binaryInputArchiveBuilder.createBinaryInput(dockerServiceHub, targetDir, imageConfig);
+
+            // Create the tar archive by tarring the directory
+            File dockerTar = binaryInputArchiveBuilder.getBinaryInputTar() != null ? binaryInputArchiveBuilder.getBinaryInputTar() :  createTar(targetDir);
+
+            ImageName imageName = new ImageName(imageConfig.getName());
 
             KubernetesListBuilder builder = new KubernetesListBuilder();
 
@@ -144,49 +152,26 @@ public class OpenshiftBuildService implements BuildService {
         }
     }
 
-    protected File createBuildArchive(ImageConfiguration imageConfig) throws Fabric8ServiceException {
-        // Adding S2I artifacts such as environment variables in S2I mode
-        ArchiverCustomizer customizer = getS2ICustomizer(imageConfig);
-
-        try {
-            // Create tar file with Docker archive
-            File dockerTar;
-            if (customizer != null) {
-                dockerTar = dockerServiceHub.getArchiveService().createDockerBuildArchive(imageConfig, config.getDockerMojoParameters(), customizer);
-            } else {
-                dockerTar = dockerServiceHub.getArchiveService().createDockerBuildArchive(imageConfig, config.getDockerMojoParameters());
-            }
-            return dockerTar;
-        } catch (MojoExecutionException e) {
-            throw new Fabric8ServiceException("Unable to create the build archive", e);
+    private File createEmptyTargetDir() throws MojoExecutionException {
+        File targetDir = new File(config.getBuildDirectory(), "s2i");
+        if (!targetDir.exists() && !targetDir.mkdirs()) {
+            throw new MojoExecutionException("Can't create build working directory " + targetDir);
         }
+        return targetDir;
     }
 
-    private ArchiverCustomizer getS2ICustomizer(ImageConfiguration imageConfiguration) throws Fabric8ServiceException {
-        try {
-            if (imageConfiguration.getBuildConfiguration() != null && imageConfiguration.getBuildConfiguration().getEnv() != null) {
-                String fileName = IoUtil.sanitizeFileName("s2i-env-" + imageConfiguration.getName());
-                final File environmentFile = new File(config.getBuildDirectory(), fileName);
+    private File createTar(File targetDir) throws IOException, MojoExecutionException {
+        TarArchiver tarArchiver = new TarArchiver();
+        tarArchiver.addDirectory(targetDir);
 
-                try (PrintWriter out = new PrintWriter(new FileWriter(environmentFile))) {
-                    for (Map.Entry<String, String> e : imageConfiguration.getBuildConfiguration().getEnv().entrySet()) {
-                        out.println(e.getKey() + "=" + e.getValue());
-                    }
-                }
+        // Delete previously existing tar files, if any
+        FileUtil.deleteFilesInDirectory(targetDir, (file, s) -> { return s.endsWith(".tar"); });
 
-                return new ArchiverCustomizer() {
-                    @Override
-                    public TarArchiver customize(TarArchiver tarArchiver) throws IOException {
-                        tarArchiver.addFile(environmentFile, ".s2i/environment");
-                        return tarArchiver;
-                    }
-                };
-            } else {
-                return null;
-            }
-        } catch (IOException e) {
-            throw new Fabric8ServiceException("Unable to add environment variables to the S2I build archive", e);
-        }
+        File tarFile = File.createTempFile(config.getArtifactId().toString(), ".tar");
+        File destFile = new File(targetDir, config.getArtifactId() + ".tar");
+        tarArchiver.setDestFile(destFile);
+        tarArchiver.createArchive();
+        return tarFile;
     }
 
     private File getImageStreamFile(BuildServiceConfig config) {

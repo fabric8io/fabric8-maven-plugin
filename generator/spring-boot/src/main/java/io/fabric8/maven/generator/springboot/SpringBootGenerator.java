@@ -151,11 +151,11 @@ public class SpringBootGenerator extends JavaExecGenerator {
     }
 
     private File getFatJarFile() throws MojoExecutionException {
-        FatJarDetector.Result fatJarDetectResult = detectFatJar();
-        if (fatJarDetectResult == null) {
+        FatJarDetector.Result fatJarDetectFatJarScanResult = detectFatJar();
+        if (fatJarDetectFatJarScanResult == null) {
             throw new MojoExecutionException("No fat jar built yet. Please ensure that the 'package' phase has run");
         }
-        return fatJarDetectResult.getArchiveFile();
+        return fatJarDetectFatJarScanResult.getArchiveFile();
     }
 
     private void copyFilesToFatJar(List<File> libs, List<File> classes, File target) throws IOException {

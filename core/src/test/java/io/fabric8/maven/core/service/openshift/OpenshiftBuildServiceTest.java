@@ -28,6 +28,7 @@ import io.fabric8.kubernetes.api.model.WatchEvent;
 import io.fabric8.maven.core.config.BuildRecreateMode;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.service.BuildService;
+import io.fabric8.maven.core.service.DefaultBinaryInputArchiveBuilder;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.core.util.WebServerEventCollector;
 import io.fabric8.maven.docker.assembly.ArchiverCustomizer;
@@ -45,7 +46,6 @@ import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.ImageStreamBuilder;
 import io.fabric8.openshift.api.model.ImageStreamStatusBuilder;
 import io.fabric8.openshift.api.model.NamedTagEventListBuilder;
-import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftMockServer;
 import mockit.Expectations;
@@ -160,25 +160,11 @@ public class OpenshiftBuildServiceTest {
                 nTries++;
                 BuildService.BuildServiceConfig config = defaultConfig.build();
                 WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, true, 50, false, false);
-                OpenShiftMockServer mockServer = collector.getMockServer();
 
-                DefaultOpenShiftClient client = (DefaultOpenShiftClient) mockServer.createOpenShiftClient();
-                LOG.info("Current write timeout is : {}", client.getHttpClient().writeTimeoutMillis());
-                LOG.info("Current read timeout is : {}", client.getHttpClient().readTimeoutMillis());
-                LOG.info("Retry on failure : {}", client.getHttpClient().retryOnConnectionFailure());
-                OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
-                service.build(image);
-
-                // we should Foadd a better way to assert that a certain call has been made
-                assertTrue(mockServer.getRequestCount() > 8);
-                collector.assertEventsRecordedInOrder("build-config-check", "new-build-config", "pushed");
-                collector.assertEventsNotRecorded("patch-build-config");
+                assertSuccessfulBuild(collector, runOpenshiftS2IBuild(collector, config, null));
                 bTestComplete = true;
             } catch (Fabric8ServiceException exception) {
-                Throwable rootCause = getRootCause(exception);
-                logger.warn("A problem encountered while running test {}, retrying..", exception.getMessage());
-                // Let's wait for a while, and then retry again
-                if (rootCause != null && rootCause instanceof IOException) {
+                if(isUnexpectedException(exception)) {
                     continue;
                 }
             }
@@ -194,25 +180,11 @@ public class OpenshiftBuildServiceTest {
                 nTries++;
                 BuildService.BuildServiceConfig config = defaultConfigSecret.build();
                 WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, true, 50, false, false);
-                OpenShiftMockServer mockServer = collector.getMockServer();
 
-                DefaultOpenShiftClient client = (DefaultOpenShiftClient) mockServer.createOpenShiftClient();
-                LOG.info("Current write timeout is : {}", client.getHttpClient().writeTimeoutMillis());
-                LOG.info("Current read timeout is : {}", client.getHttpClient().readTimeoutMillis());
-                LOG.info("Retry on failure : {}", client.getHttpClient().retryOnConnectionFailure());
-                OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
-                service.build(image);
-
-                // we should Foadd a better way to assert that a certain call has been made
-                assertTrue(mockServer.getRequestCount() > 8);
-                collector.assertEventsRecordedInOrder("build-config-check", "new-build-config", "pushed");
-                collector.assertEventsNotRecorded("patch-build-config");
+                assertSuccessfulBuild(collector, runOpenshiftS2IBuild(collector, config, null));
                 bTestComplete = true;
             } catch (Fabric8ServiceException exception) {
-                Throwable rootCause = getRootCause(exception);
-                logger.warn("A problem encountered while running test {}, retrying..", exception.getMessage());
-                // Let's wait for a while, and then retry again
-                if (rootCause != null && rootCause instanceof IOException) {
+                if(isUnexpectedException(exception)) {
                     continue;
                 }
             }
@@ -223,26 +195,18 @@ public class OpenshiftBuildServiceTest {
     public void testFailedBuild() throws Exception {
         BuildService.BuildServiceConfig config = defaultConfig.build();
         WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, false, 50, false, false);
-        OpenShiftMockServer mockServer = collector.getMockServer();
-
-        OpenShiftClient client = mockServer.createOpenShiftClient();
-        OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
-        service.build(image);
+        runOpenshiftS2IBuild(collector, config, null);
     }
 
     @Test(expected = Fabric8ServiceException.class)
     public void testFailedBuildSecret() throws Exception {
         BuildService.BuildServiceConfig config = defaultConfigSecret.build();
         WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, false, 50, false, false);
-        OpenShiftMockServer mockServer = collector.getMockServer();
-
-        OpenShiftClient client = mockServer.createOpenShiftClient();
-        OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
-        service.build(image);
+        runOpenshiftS2IBuild(collector, config, null);
     }
 
     @Test
-    public void testSuccessfulSecondBuild() throws Exception {
+    public void testSuccessfulSecondBuild() {
         int nTries = 0;
         boolean bTestComplete = false;
         do {
@@ -250,21 +214,11 @@ public class OpenshiftBuildServiceTest {
                 nTries++;
                 BuildService.BuildServiceConfig config = defaultConfig.build();
                 WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, true, 50, true, true);
-                OpenShiftMockServer mockServer = collector.getMockServer();
 
-                OpenShiftClient client = mockServer.createOpenShiftClient();
-                OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
-                service.build(image);
-
-                assertTrue(mockServer.getRequestCount() > 8);
-                collector.assertEventsRecordedInOrder("build-config-check", "patch-build-config", "pushed");
-                collector.assertEventsNotRecorded("new-build-config");
+                assertSuccessfulBuild(collector, runOpenshiftS2IBuild(collector, config, null));
                 bTestComplete = true;
             } catch (Fabric8ServiceException exception) {
-                Throwable rootCause = getRootCause(exception);
-                logger.warn("A problem encountered while running test {}, retrying..", exception.getMessage());
-                // Let's wait for a while, and then retry again
-                if (rootCause != null && rootCause instanceof IOException) {
+                if(isUnexpectedException(exception)) {
                     continue;
                 }
             }
@@ -283,7 +237,7 @@ public class OpenshiftBuildServiceTest {
                 OpenShiftMockServer mockServer = collector.getMockServer();
 
                 OpenShiftClient client = mockServer.createOpenShiftClient();
-                final OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
+                final OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config, new DefaultBinaryInputArchiveBuilder(config));
 
                 ImageConfiguration imageWithEnv = new ImageConfiguration.Builder(image)
                         .buildConfig(new BuildImageConfiguration.Builder(image.getBuildConfiguration())
@@ -291,7 +245,7 @@ public class OpenshiftBuildServiceTest {
                                 .build()
                         ).build();
 
-                service.createBuildArchive(imageWithEnv);
+                service.build(imageWithEnv);
 
                 final List<ArchiverCustomizer> customizer = new LinkedList<>();
                 new Verifications() {{
@@ -318,10 +272,7 @@ public class OpenshiftBuildServiceTest {
                 assertTrue(lines.contains("FOO=BAR"));
                 bTestComplete = true;
             } catch (Fabric8ServiceException exception) {
-                Throwable rootCause = getRootCause(exception);
-                logger.warn("A problem encountered while running test {}, retrying..", exception.getMessage());
-                // Let's wait for a while, and then retry again
-                if (rootCause != null && rootCause instanceof IOException) {
+                if(isUnexpectedException(exception)) {
                     continue;
                 }
             }
@@ -337,18 +288,13 @@ public class OpenshiftBuildServiceTest {
                 nTries++;
                 BuildService.BuildServiceConfig config = defaultConfigSecret.build();
                 WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, true, 50, true, true);
-                OpenShiftMockServer mockServer = collector.getMockServer();
-
-                OpenShiftClient client = mockServer.createOpenShiftClient();
-                final OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
-
                 ImageConfiguration imageWithEnv = new ImageConfiguration.Builder(image)
                         .buildConfig(new BuildImageConfiguration.Builder(image.getBuildConfiguration())
                                 .env(Collections.singletonMap("FOO", "BAR"))
                                 .build()
                         ).build();
 
-                service.createBuildArchive(imageWithEnv);
+                runOpenshiftS2IBuild(collector, config, imageWithEnv);
 
                 final List<ArchiverCustomizer> customizer = new LinkedList<>();
                 new Verifications() {{
@@ -375,10 +321,7 @@ public class OpenshiftBuildServiceTest {
                 assertTrue(lines.contains("FOO=BAR"));
                 bTestComplete = true;
             } catch (Fabric8ServiceException exception) {
-                Throwable rootCause = getRootCause(exception);
-                logger.warn("A problem encountered while running test {}, retrying..", exception.getMessage());
-                // Let's wait for a while, and then retry again
-                if (rootCause != null && rootCause instanceof IOException) {
+                if(isUnexpectedException(exception)) {
                     continue;
                 }
             }
@@ -509,4 +452,26 @@ public class OpenshiftBuildServiceTest {
         return result;
     }
 
+    private void assertSuccessfulBuild(WebServerEventCollector<OpenShiftMockServer> collector, OpenShiftMockServer mockServer) {
+        assertTrue(mockServer.getRequestCount() > 8);
+        collector.assertEventsRecordedInOrder("build-config-check", "patch-build-config", "pushed");
+        collector.assertEventsNotRecorded("new-build-config");
+    }
+
+    private OpenShiftMockServer runOpenshiftS2IBuild(WebServerEventCollector<OpenShiftMockServer> collector, BuildService.BuildServiceConfig config, ImageConfiguration imageConfiguration) throws Fabric8ServiceException {
+        OpenShiftMockServer mockServer = collector.getMockServer();
+
+        OpenShiftClient client = mockServer.createOpenShiftClient();
+        OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config, new DefaultBinaryInputArchiveBuilder(config));
+        service.build(imageConfiguration != null ? imageConfiguration : image);
+        return mockServer;
+    }
+
+    private boolean isUnexpectedException(Exception exception) {
+        Throwable rootCause = getRootCause(exception);
+        logger.warn("A problem encountered while running test {}, retrying..", exception.getMessage());
+
+        // Is it some unexpected failure on CI?, if so we should retry again
+        return rootCause != null && rootCause instanceof IOException;
+    }
 }
