@@ -452,8 +452,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     }
 
     private void lateInit() throws MojoExecutionException {
-        if (goalFinder.runningWithGoal(project, session, "fabric8:watch") ||
-                goalFinder.runningWithGoal(project, session, "fabric8:watch")) {
+        if (goalFinder.runningWithGoal(project, session, "fabric8:watch")) {
             Properties properties = project.getProperties();
             properties.setProperty("fabric8.watch", "true");
         }
