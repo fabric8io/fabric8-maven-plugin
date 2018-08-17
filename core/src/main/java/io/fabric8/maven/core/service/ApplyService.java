@@ -95,9 +95,11 @@ public class ApplyService {
     private String namespace = KubernetesHelper.getDefaultNamespace();
     private boolean rollingUpgradePreserveScale = true;
     private boolean recreateMode;
+    private PatchService patchService;
 
     public ApplyService(KubernetesClient kubernetesClient, Logger log) {
         this.kubernetesClient = kubernetesClient;
+        this.patchService = new PatchService(kubernetesClient, log);
         this.log = log;
     }
 
@@ -399,7 +401,7 @@ public class ApplyService {
                 } else {
                     log.info("Updating a PersistentVolumeClaim from " + sourceName);
                     try {
-                        Object answer = kubernetesClient.persistentVolumeClaims().inNamespace(namespace).withName(id).replace(entity);
+                        Object answer = patchService.compareAndPatchEntity(namespace, entity, old);
                         logGeneratedEntity("Updated PersistentVolumeClaim: ", namespace, entity, answer);
                     } catch (Exception e) {
                         onApplyError("Failed to update PersistentVolumeClaim from " + sourceName + ". " + e + ". " + entity, e);
@@ -459,7 +461,7 @@ public class ApplyService {
                 } else {
                     log.info("Updating a Secret from " + sourceName);
                     try {
-                        Object answer = kubernetesClient.secrets().inNamespace(namespace).withName(id).replace(secret);
+                        Object answer = patchService.compareAndPatchEntity(namespace, secret, old);
                         logGeneratedEntity("Updated Secret:", namespace, secret, answer);
                     } catch (Exception e) {
                         onApplyError("Failed to update secret from " + sourceName + ". " + e + ". " + secret, e);
@@ -610,7 +612,7 @@ public class ApplyService {
                             ObjectMeta metadata = getOrCreateMetadata(entity);
                             metadata.setNamespace(namespace);
                             metadata.setResourceVersion(resourceVersion);
-                            Object answer = openShiftClient.buildConfigs().inNamespace(namespace).withName(id).replace(entity);
+                            Object answer = patchService.compareAndPatchEntity(namespace, entity, old);
                             logGeneratedEntity("Updated BuildConfig: ", namespace, entity, answer);
                         } catch (Exception e) {
                             onApplyError("Failed to update BuildConfig from " + sourceName + ". " + e + ". " + entity, e);
@@ -763,7 +765,7 @@ public class ApplyService {
                 } else {
                     log.info("Updating " + kind + " " + name + " from " + sourceName);
                     copyAllImageStreamTags(entity, old);
-                    resource.replace(old);
+                    patchService.compareAndPatchEntity(namespace, entity, old);
                 }
                 openShiftClient.resource(entity).inNamespace(namespace).createOrReplace();
             } catch (Exception e) {
@@ -846,7 +848,7 @@ public class ApplyService {
                 } else {
                     log.info("Updating a Service from " + sourceName);
                     try {
-                        Object answer = kubernetesClient.services().inNamespace(namespace).withName(id).replace(service);
+                        Object answer = patchService.compareAndPatchEntity(namespace, service, old);
                         logGeneratedEntity("Updated Service: ", namespace, service, answer);
                     } catch (Exception e) {
                         onApplyError("Failed to update Service from " + sourceName + ". " + e + ". " + service, e);
@@ -1088,7 +1090,7 @@ public class ApplyService {
                 } else {
                     log.info("Updating ReplicationController from " + sourceName + " namespace " + namespace + " name " + getName(replicationController));
                     try {
-                        Object answer = kubernetesClient.replicationControllers().inNamespace(namespace).withName(id).replace(replicationController);
+                        Object answer = patchService.compareAndPatchEntity(namespace, replicationController, old);
                         logGeneratedEntity("Updated replicationController: ", namespace, replicationController, answer);
 
                         if (deletePodsOnReplicationControllerUpdate) {
@@ -1146,7 +1148,7 @@ public class ApplyService {
                 } else {
                     log.info("Updating a Pod from " + sourceName + " namespace " + namespace + " name " + getName(pod));
                     try {
-                        Object answer = kubernetesClient.pods().inNamespace(namespace).withName(id).replace(pod);
+                        Object answer = patchService.compareAndPatchEntity(namespace, pod, old);
                         log.info("Updated Pod result: " + answer);
                     } catch (Exception e) {
                         onApplyError("Failed to update Pod from " + sourceName + ". " + e + ". " + pod, e);
