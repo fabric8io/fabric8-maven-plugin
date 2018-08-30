@@ -90,11 +90,13 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         @Override
         public void visit(DeploymentSpecBuilder item) {
             Map<String, String> selectorMatchLabels = enricherManager.extractSelector(getConfig(), Kind.DEPLOYMENT);
-            LabelSelector selector = item.buildSelector();
-            if (selector == null) {
-                item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
-            } else {
-                selector.getMatchLabels().putAll(selectorMatchLabels);
+            if(!selectorMatchLabels.isEmpty()) {
+                LabelSelector selector = item.buildSelector();
+                if (selector == null) {
+                    item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
+                } else {
+                    selector.getMatchLabels().putAll(selectorMatchLabels);
+                }
             }
         }
     }
