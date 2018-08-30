@@ -15,6 +15,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Refactor 1370: Removed Jenkinsshift support
 
 ###3.5.42
+* Fix 1021: Avoids empty deployment selector value in generated yaml resource
 
 ###3.5.41 (2018-08-01)
 * Feature 1032: Improvements of the Vert.x Generator and enrichers
