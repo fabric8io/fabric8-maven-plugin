@@ -129,7 +129,7 @@ public class DebugMojo extends ApplyMojo {
                 DeploymentConfigSpec spec = resource.getSpec();
                 if (spec != null) {
                     if (enableDebugging(entity, spec.getTemplate())) {
-                        OpenShiftClient openshiftClient = applyService.asOpenShiftClient();
+                        OpenShiftClient openshiftClient = applyService.getOpenShiftClient();
                         if (openshiftClient == null) {
                             log.warn("Ignoring DeploymentConfig %s as not connected to an OpenShift cluster", name);
                             continue;

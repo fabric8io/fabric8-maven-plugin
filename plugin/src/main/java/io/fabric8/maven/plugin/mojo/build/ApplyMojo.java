@@ -259,7 +259,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
             Set<HasMetadata> entities = KubernetesResourceUtil.loadResources(manifest);
 
             if (createExternalUrls) {
-                if (applyService.asOpenShiftClient() != null) {
+                if (applyService.getOpenShiftClient() != null) {
                     createRoutes(entities);
                 } else {
                     createIngress(kubernetes, entities);
@@ -525,7 +525,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         String namespace = clusterAccess.getNamespace();
         // lets get the routes first to see if we should bother
         try {
-            OpenShiftClient openshiftClient = applyService.asOpenShiftClient();
+            OpenShiftClient openshiftClient = applyService.getOpenShiftClient();
             if (openshiftClient == null) {
                 return;
             }
