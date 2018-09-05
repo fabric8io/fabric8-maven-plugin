@@ -10,6 +10,10 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
+###4.0.0
+
+* Refactor 1370: Removed Jenkinsshift support
+
 ###3.5.42
 
 ###3.5.41 (2018-08-01)
