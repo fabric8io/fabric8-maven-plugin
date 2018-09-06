@@ -13,6 +13,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 ###4.0.0
 
 * Refactor 1370: Removed Jenkinsshift support
+* Feature 1363: Added a Thorntail V2 sample for checking Jolokia/Prometheus issues
 
 ###3.5.42
 
