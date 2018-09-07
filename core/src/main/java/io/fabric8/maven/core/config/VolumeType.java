@@ -29,7 +29,7 @@ public enum VolumeType {
         public Volume fromConfig(VolumeConfig config) {
             return new VolumeBuilder()
                     .withName(config.getName())
-                    .withNewHostPath(config.getPath())
+                    .withNewHostPath(config.getPath(), HOST_PATH.getType())
                     .build();
         }
     }, EMPTY_DIR("emptyDir") {
