@@ -153,7 +153,7 @@ The full documentation can be found in the [User Manual](http://maven.fabric8.io
 > but migration should be straight forward - please use the [fabric8:migrate goal from 2.x of the plugin](http://fabric8.io/guide/mavenFabric8Migrate.html).
 
 ### Tests we run for every new Pull Request
-There are the links of the CircleCI and Jenkins for the tests which run for every new Pull Request. You can view all the recent builds also.
+There are the links of the Travis and Jenkins for the tests which run for every new Pull Request. You can view all the recent builds also.
 
 * [Travis: build](http://travis-ci.org/fabric8io/fabric8-maven-plugin)
 * [Jenkins: Unit Tests](https://ci.fabric8.io/job/fabric8-maven-plugin-pullreq/)
