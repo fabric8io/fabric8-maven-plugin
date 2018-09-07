@@ -17,7 +17,7 @@ items:
       provider: fabric8
       group: io.fabric8
     type: NodePort
-- apiVersion: extensions/v1beta1
+- apiVersion: apps/v1
   kind: Deployment
   metadata:
     labels:

@@ -35,10 +35,10 @@ import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
@@ -129,7 +129,7 @@ public class DebugMojo extends ApplyMojo {
                 DeploymentConfigSpec spec = resource.getSpec();
                 if (spec != null) {
                     if (enableDebugging(entity, spec.getTemplate())) {
-                        OpenShiftClient openshiftClient = applyService.asOpenShiftClient();
+                        OpenShiftClient openshiftClient = applyService.getOpenShiftClient();
                         if (openshiftClient == null) {
                             log.warn("Ignoring DeploymentConfig %s as not connected to an OpenShift cluster", name);
                             continue;

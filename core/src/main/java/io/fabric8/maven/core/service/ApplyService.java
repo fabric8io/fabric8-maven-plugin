@@ -36,15 +36,14 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DaemonSet;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.maven.core.service.openshift.JenkinShiftClient;
 import io.fabric8.maven.core.util.FileUtil;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
@@ -140,7 +139,7 @@ public class ApplyService {
             applyBuildConfig((BuildConfig) dto, sourceName);
         } else if (dto instanceof DeploymentConfig) {
             DeploymentConfig resource = (DeploymentConfig) dto;
-            OpenShiftClient openShiftClient = asOpenShiftClient();
+            OpenShiftClient openShiftClient = getOpenShiftClient();
             if (openShiftClient != null) {
                 applyResource(resource, sourceName, openShiftClient.deploymentConfigs());
             } else {
@@ -152,7 +151,7 @@ public class ApplyService {
             applyRoleBinding((RoleBinding) dto, sourceName);
         } else if (dto instanceof Role) {
             Role resource = (Role) dto;
-            OpenShiftClient openShiftClient = asOpenShiftClient();
+            OpenShiftClient openShiftClient = getOpenShiftClient();
             if (openShiftClient != null) {
                 applyResource(resource, sourceName, openShiftClient.roles());
             } else {
@@ -196,7 +195,7 @@ public class ApplyService {
     }
 
     public void applyOAuthClient(OAuthClient entity, String sourceName) {
-        OpenShiftClient openShiftClient = asOpenShiftClient();
+        OpenShiftClient openShiftClient = getOpenShiftClient();
         if (openShiftClient != null) {
             if (supportOAuthClients) {
                 String id = getName(entity);
@@ -238,7 +237,7 @@ public class ApplyService {
     }
 
     protected void doCreateOAuthClient(OAuthClient entity, String sourceName) {
-        OpenShiftClient openShiftClient = asOpenShiftClient();
+        OpenShiftClient openShiftClient = getOpenShiftClient();
         if (openShiftClient != null) {
             Object result = null;
             try {
@@ -261,7 +260,7 @@ public class ApplyService {
      * Installs the template into the namespace without processing it
      */
     public void installTemplate(Template entity, String sourceName) {
-        OpenShiftClient openShiftClient = asOpenShiftClient();
+        OpenShiftClient openShiftClient = getOpenShiftClient();
         if (openShiftClient == null) {
             // lets not install the template on Kubernetes!
             return;
@@ -301,27 +300,12 @@ public class ApplyService {
         }
     }
 
-    public OpenShiftClient asOpenShiftClient() {
+    public OpenShiftClient getOpenShiftClient() {
         return OpenshiftHelper.asOpenShiftClient(kubernetesClient);
     }
 
-    public OpenShiftClient getOpenShiftClientOrJenkinshift() {
-        OpenShiftClient openShiftClient = asOpenShiftClient();
-        if (openShiftClient == null) {
-            // lets try talk to the jenkinshift service which provides a BuildConfig REST API based on Jenkins
-            // for when using vanilla Kubernetes
-            String jenkinshiftUrl = System.getenv("JENKINSHIFT_URL");
-            if (jenkinshiftUrl == null) {
-                jenkinshiftUrl = "http://jenkinshift/";
-            }
-            log.debug("Using jenkinshift URL: " + jenkinshiftUrl);
-            openShiftClient = new JenkinShiftClient(jenkinshiftUrl);
-        }
-        return openShiftClient;
-    }
-
     protected void doCreateTemplate(Template entity, String namespace, String sourceName) {
-        OpenShiftClient openShiftClient = asOpenShiftClient();
+        OpenShiftClient openShiftClient = getOpenShiftClient();
         if (openShiftClient != null) {
             log.info("Creating a Template from " + sourceName + " namespace " + namespace + " name " + getName(entity));
             try {
@@ -576,7 +560,7 @@ public class ApplyService {
 
 
     public void applyRoute(Route entity, String sourceName) {
-        OpenShiftClient openShiftClient = asOpenShiftClient();
+        OpenShiftClient openShiftClient = getOpenShiftClient();
         if (openShiftClient != null) {
             String id = getName(entity);
             Objects.requireNonNull(id, "No name for " + entity + " " + sourceName);
@@ -600,7 +584,7 @@ public class ApplyService {
     }
 
     public void applyBuildConfig(BuildConfig entity, String sourceName) {
-        OpenShiftClient openShiftClient = getOpenShiftClientOrJenkinshift();
+        OpenShiftClient openShiftClient = getOpenShiftClient();
         if (openShiftClient != null) {
             String id = getName(entity);
 
@@ -644,7 +628,7 @@ public class ApplyService {
     }
 
     public void doCreateBuildConfig(BuildConfig entity, String namespace , String sourceName) {
-        OpenShiftClient openShiftClient = getOpenShiftClientOrJenkinshift();
+        OpenShiftClient openShiftClient = getOpenShiftClient();
         if (openShiftClient != null) {
             try {
                 openShiftClient.buildConfigs().inNamespace(namespace).create(entity);
@@ -655,7 +639,7 @@ public class ApplyService {
     }
 
     public void applyRoleBinding(RoleBinding entity, String sourceName) {
-        OpenShiftClient openShiftClient = asOpenShiftClient();
+        OpenShiftClient openShiftClient = getOpenShiftClient();
         if (openShiftClient != null) {
             String id = getName(entity);
 
@@ -699,7 +683,7 @@ public class ApplyService {
     }
 
     public void doCreateRoleBinding(RoleBinding entity, String namespace , String sourceName) {
-        OpenShiftClient openShiftClient = asOpenShiftClient();
+        OpenShiftClient openShiftClient = getOpenShiftClient();
         if (openShiftClient != null) {
             try {
                 openShiftClient.roleBindings().inNamespace(namespace).create(entity);
@@ -710,7 +694,7 @@ public class ApplyService {
     }
 
     public void applyPolicyBinding(PolicyBinding entity, String sourceName) {
-        OpenShiftClient openShiftClient = asOpenShiftClient();
+        OpenShiftClient openShiftClient = getOpenShiftClient();
         if (openShiftClient != null) {
             String id = getName(entity);
 
@@ -754,7 +738,7 @@ public class ApplyService {
     }
 
     public void doCreatePolicyBinding(PolicyBinding entity, String namespace , String sourceName) {
-        OpenShiftClient openShiftClient = asOpenShiftClient();
+        OpenShiftClient openShiftClient = getOpenShiftClient();
         if (openShiftClient != null) {
             try {
                 openShiftClient.policyBindings().inNamespace(namespace).create(entity);
@@ -765,7 +749,7 @@ public class ApplyService {
     }
 
     public void applyImageStream(ImageStream entity, String sourceName) {
-        OpenShiftClient openShiftClient = asOpenShiftClient();
+        OpenShiftClient openShiftClient = getOpenShiftClient();
         if (openShiftClient != null) {
             String kind = getKind(entity);
             String name = getName(entity);
@@ -950,7 +934,7 @@ public class ApplyService {
         if (StringUtils.isBlank(namespaceName)) {
             return false;
         }
-        OpenShiftClient openshiftClient = asOpenShiftClient();
+        OpenShiftClient openshiftClient = getOpenShiftClient();
         if (openshiftClient != null) {
             // It is preferable to iterate on the list of projects as regular user with the 'basic-role' bound
             // are not granted permission get operation on non-existing project resource that returns 403
@@ -972,7 +956,7 @@ public class ApplyService {
         if (!checkNamespace(namespaceName)) {
             return false;
         }
-        OpenShiftClient openshiftClient = asOpenShiftClient();
+        OpenShiftClient openshiftClient = getOpenShiftClient();
         if (openshiftClient != null) {
             return openshiftClient.projects().withName(namespaceName).delete();
         } else {
@@ -988,7 +972,7 @@ public class ApplyService {
         if (StringUtils.isBlank(namespaceName)) {
             return;
         }
-        OpenShiftClient openshiftClient = asOpenShiftClient();
+        OpenShiftClient openshiftClient = getOpenShiftClient();
         if (openshiftClient != null) {
             ProjectRequest entity = new ProjectRequest();
             ObjectMeta metadata = getOrCreateMetadata(entity);
@@ -1052,7 +1036,7 @@ public class ApplyService {
         log.info("Using project: " + namespace);
         String name = getName(entity);
         Objects.requireNonNull(name, "No name for " + entity);
-        OpenShiftClient openshiftClient = asOpenShiftClient();
+        OpenShiftClient openshiftClient = getOpenShiftClient();
         if (openshiftClient == null) {
             log.warn("Cannot check for Project " + namespace + " as not running against OpenShift!");
             return false;

@@ -19,14 +19,12 @@ package io.fabric8.maven.plugin.enricher;
 import java.util.Map;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.model.JobSpecBuilder;
-import io.fabric8.kubernetes.api.model.LabelSelector;
-import io.fabric8.kubernetes.api.model.ReplicationControllerSpecBuilder;
-import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSetSpecBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpecBuilder;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpecBuilder;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpecBuilder;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.apps.DaemonSetSpecBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentSpecBuilder;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetSpecBuilder;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetSpecBuilder;
+import io.fabric8.kubernetes.api.model.batch.JobSpecBuilder;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.enricher.api.Kind;
 
@@ -96,11 +94,13 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         @Override
         public void visit(DeploymentSpecBuilder item) {
             Map<String, String> selectorMatchLabels = enricherManager.extractSelector(getConfig(), Kind.DEPLOYMENT);
-            LabelSelector selector = item.buildSelector();
-            if (selector == null) {
-                item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
-            } else {
-                selector.getMatchLabels().putAll(selectorMatchLabels);
+            if(!selectorMatchLabels.isEmpty()) {
+                LabelSelector selector = item.buildSelector();
+                if (selector == null) {
+                    item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
+                } else {
+                    selector.getMatchLabels().putAll(selectorMatchLabels);
+                }
             }
         }
     }
