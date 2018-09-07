@@ -1121,7 +1121,7 @@ XML based configuration is only partially implemented and is not recommended for
 <div class="paragraph">
 <p>As you can see, there is no <code>metadata</code> section as would be expected for Kubernetes resources because it will be automatically added by the <code>fabric8-maven-plugin</code>. The object&#8217;s <code>Kind</code>, if not given, is automatically derived from the
 filename. In this case, the <code>fabric8-maven-plugin</code> will create a <code>Deployment</code> because the file is called <code>deployment.yml</code>. Similar mappings between file names and resource type exist for each supported resource kind, the
-complete list of which (along with associated abbreviations) can be found at <a href="https://github.com/fabric8io/fabric8-maven-plugin/blob/master/core/src/main/java/io/fabric8/maven/core/util/KubernetesResourceUtil.java#L234-L280" class="bare">https://github.com/fabric8io/fabric8-maven-plugin/blob/master/core/src/main/java/io/fabric8/maven/core/util/KubernetesResourceUtil.java#L234-L280</a>.</p>
+complete list of which (along with associated abbreviations) can be found at <a href="https://github.com/fabric8io/fabric8-maven-plugin/blob/master/core/src/main/java/io/fabric8/maven/core/util/kubernetes/KubernetesResourceUtil.java#L198-L244" class="bare">https://github.com/fabric8io/fabric8-maven-plugin/blob/master/core/src/main/java/io/fabric8/maven/core/util/kubernetes/KubernetesResourceUtil.java#L198-L244</a>.</p>
 </div>
 <div class="paragraph">
 <p>Additionally, if you name your fragment using a name prefix followed by a dash and the mapped file name, the plugin will automatically use that name for your resource. So, for example, if you name your deployment fragment
@@ -6969,7 +6969,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.40<br>
-Last updated 2018-09-07 14:30:21 UTC
+Last updated 2018-09-07 14:32:18 UTC
 </div>
 </div>
 </body>
