@@ -22,33 +22,23 @@ import io.fabric8.kubernetes.api.model.DoneableReplicationController;
 import io.fabric8.kubernetes.api.model.DoneableSecret;
 import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesResource;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaimSpec;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.core.util.kubernetes.UserConfigurationCompare;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.BuildConfig;
-import io.fabric8.openshift.api.model.BuildConfigSpec;
 import io.fabric8.openshift.api.model.DoneableBuildConfig;
-import io.fabric8.openshift.api.model.DoneableImage;
 import io.fabric8.openshift.api.model.DoneableImageStream;
 import io.fabric8.openshift.api.model.ImageStream;
-import io.fabric8.openshift.api.model.ImageStreamSpec;
 import io.fabric8.openshift.client.OpenShiftClient;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static io.fabric8.maven.core.util.kubernetes.KubernetesHelper.getName;
 
 public class PatchService {
     private final KubernetesClient kubernetesClient;
@@ -154,7 +144,7 @@ public class PatchService {
             DoneableService entity =
                 client.services()
                       .inNamespace(namespace)
-                      .withName(oldObj.getMetadata().getName())
+                      .withName(newObj.getMetadata().getName())
                       .edit();
 
             if (!UserConfigurationCompare.configEqual(newObj.getMetadata(), oldObj.getMetadata())) {
@@ -162,13 +152,13 @@ public class PatchService {
             }
 
             if(!UserConfigurationCompare.configEqual(newObj.getSpec(), oldObj.getSpec())) {
-                    entity.withSpec(newObj.getSpec());
+                entity.withSpec(newObj.getSpec());
             }
             return entity.done();
         };
     }
 
-        private static EntityPatcher<Secret> secretPatcher() {
+    private static EntityPatcher<Secret> secretPatcher() {
         return (KubernetesClient client, String namespace, Secret newObj, Secret oldObj) -> {
             if (UserConfigurationCompare.configEqual(newObj, oldObj)) {
                 return oldObj;
