@@ -28,6 +28,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1346: karaf-maven-plugin is detected under any groupId
 
 ###4.0-SNAPSHOT
+* Feature: Move to Java 1.8 as minimal requirement
 * Refactor 1344: Removed unused Maven goals. Please contact us if something's missing for you.
 * Refactor 949: Remove dependency from fabric8/fabric8
 * Feature 1214: Don't use a default for skipBuildPom. This might break backwards compatibility, so please specify the desired value in case
@@ -36,6 +37,8 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Updated sample project versions to 4.0-SNAPSHOT
 * Refactor 1370: Removed Jenkinsshift support
 * Feature 1363: Added a Thorntail V2 sample for checking Jolokia/Prometheus issues
+* Fix 894: Keep Service parameters stable after redeployment
+
 
 ###3.5.40
 * Feature 1264: Added `osio` profile, with enricher to apply OpenShift.io space labels to resources

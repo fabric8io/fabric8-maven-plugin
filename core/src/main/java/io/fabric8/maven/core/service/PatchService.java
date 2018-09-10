@@ -16,13 +16,17 @@
 
 package io.fabric8.maven.core.service;
 
+import io.fabric8.kubernetes.api.model.DoneablePersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.DoneablePod;
+import io.fabric8.kubernetes.api.model.DoneableReplicationController;
+import io.fabric8.kubernetes.api.model.DoneableSecret;
+import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaimSpec;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -34,6 +38,9 @@ import io.fabric8.maven.core.util.kubernetes.UserConfigurationCompare;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.BuildConfigSpec;
+import io.fabric8.openshift.api.model.DoneableBuildConfig;
+import io.fabric8.openshift.api.model.DoneableImage;
+import io.fabric8.openshift.api.model.DoneableImageStream;
 import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.ImageStreamSpec;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -41,235 +48,224 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.fabric8.maven.core.util.kubernetes.KubernetesHelper.getKind;
 import static io.fabric8.maven.core.util.kubernetes.KubernetesHelper.getName;
 
 public class PatchService {
     private final KubernetesClient kubernetesClient;
     private final Logger log;
 
+    private static Map<String, EntityPatcher<? extends HasMetadata>> patchers;
+
+
+    // Interface for patching entities
+    interface EntityPatcher<T extends HasMetadata> {
+
+        /**
+         * Patch a given entity with new value and edit it on the server
+         *
+         * @param client kubernetes client used for patching the entity
+         * @param namespace namespace where the entity lives
+         * @param newEntity the new, possibly changed entity
+         * @param oldEntity the original entity
+         * @return the patched entity, or the old entity if nothing has changed.
+         */
+        T patch(KubernetesClient client, String namespace, T newEntity, T oldEntity);
+    }
+
+
+    static {
+        patchers = new HashMap<>();
+        patchers.put("Pod", podPatcher());
+        patchers.put("ReplicationController", rcPatcher());
+        patchers.put("Service", servicePatcher());
+        patchers.put("BuildConfig", bcPatcher());
+        patchers.put("ImageStream", isPatcher());
+        patchers.put("Secret", secretPatcher());
+        patchers.put("PersistentVolumeClaim", pvcPatcher());
+    }
+
+
     public PatchService(KubernetesClient client, Logger log) {
         this.kubernetesClient = client;
         this.log = log;
     }
 
-    public HasMetadata compareAndPatchEntity(String namespace, Object newDto, Object oldDto) {
-        if (newDto instanceof Pod) {
-            return patchPod(namespace, (Pod) newDto, (Pod) oldDto);
-        } else if (newDto instanceof ReplicationController) {
-            return patchReplicationController(namespace, (ReplicationController) newDto, (ReplicationController)oldDto);
-        } else if (newDto instanceof Service) {
-            return patchService(namespace, (Service) newDto, (Service) oldDto);
-        } else if (newDto instanceof BuildConfig) {
-            return patchBuildConfig(namespace, (BuildConfig) newDto, (BuildConfig) oldDto);
-        } else if (newDto instanceof ImageStream) {
-            return patchImageStream(namespace, (ImageStream) newDto, (ImageStream) oldDto);
-        } else if (newDto instanceof Secret) {
-            return patchSecret(namespace, (Secret) newDto, (Secret) oldDto);
-        } else if (newDto instanceof PersistentVolumeClaim) {
-            return patchPersistentVolumeClaim(namespace, (PersistentVolumeClaim) newDto, (PersistentVolumeClaim) oldDto);
-        } else if (newDto instanceof HasMetadata) {
-            HasMetadata entity = (HasMetadata) newDto;
-            try {
-                log.info("Patching " + getKind(entity) + " " + getName(entity));
-                return kubernetesClient.resource(entity).inNamespace(namespace).createOrReplace();
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to patch " + getKind(entity) + e, e);
+
+    public <T extends HasMetadata> T compareAndPatchEntity(String namespace, T newDto, T oldDto) {
+        EntityPatcher<T> dispatcher = (EntityPatcher<T>) patchers.get(newDto.getKind());
+        if (dispatcher == null) {
+            throw new IllegalArgumentException("Internal: No patcher for " + newDto.getKind() + " found");
+        }
+        return dispatcher.patch(kubernetesClient, namespace, newDto, oldDto);
+    }
+
+    private static EntityPatcher<Pod> podPatcher() {
+        return (KubernetesClient client, String namespace, Pod newObj, Pod oldObj) -> {
+            if (UserConfigurationCompare.configEqual(newObj, oldObj)) {
+                return oldObj;
             }
-        } else {
-            throw new IllegalArgumentException("Unknown entity type " + newDto);
-        }
+
+            DoneablePod entity =
+                client.pods()
+                      .inNamespace(namespace)
+                      .withName(oldObj.getMetadata().getName())
+                      .edit();
+
+            if (!UserConfigurationCompare.configEqual(newObj.getMetadata(), oldObj.getMetadata())) {
+                entity.withMetadata(newObj.getMetadata());
+            }
+
+            if(!UserConfigurationCompare.configEqual(newObj.getSpec(), oldObj.getSpec())) {
+                    entity.withSpec(newObj.getSpec());
+            }
+            return entity.done();
+        };
     }
 
-    private HasMetadata patchPod(String namespace, Pod newObj, Pod oldObj) {
-        KubernetesResource toUpdateMetadata = null, toUpdateSpec = null;
+    private static EntityPatcher<ReplicationController> rcPatcher() {
+        return (KubernetesClient client, String namespace, ReplicationController newObj, ReplicationController oldObj) -> {
+            if (UserConfigurationCompare.configEqual(newObj, oldObj)) {
+                return oldObj;
+            }
 
-        if(!UserConfigurationCompare.configEqual(newObj.getMetadata(), oldObj.getMetadata())) {
-            toUpdateMetadata = newObj.getMetadata();
-        }
-        if(!UserConfigurationCompare.configEqual(newObj.getSpec(), oldObj.getSpec())) {
-            toUpdateSpec = newObj.getSpec();
-        }
-        if(toUpdateMetadata != null && toUpdateSpec != null) {
-            return kubernetesClient.pods().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withMetadata((ObjectMeta)toUpdateMetadata)
-                    .withSpec((PodSpec)toUpdateSpec)
-                    .done();
-        } else if(toUpdateMetadata != null) {
-            return kubernetesClient.pods().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withMetadata((ObjectMeta)toUpdateMetadata)
-                    .done();
-        } else if(toUpdateSpec != null) {
-            return kubernetesClient.pods().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withSpec((PodSpec)toUpdateSpec)
-                    .done();
-        } else {
-            return oldObj;
-        }
+            DoneableReplicationController entity =
+                client.replicationControllers()
+                      .inNamespace(namespace)
+                      .withName(oldObj.getMetadata().getName())
+                      .edit();
+
+            if (!UserConfigurationCompare.configEqual(newObj.getMetadata(), oldObj.getMetadata())) {
+                entity.withMetadata(newObj.getMetadata());
+            }
+
+            if(!UserConfigurationCompare.configEqual(newObj.getSpec(), oldObj.getSpec())) {
+                    entity.withSpec(newObj.getSpec());
+            }
+            return entity.done();
+        };
     }
 
-    private HasMetadata patchReplicationController(String namespace, ReplicationController newObj, ReplicationController oldObj) {
-        KubernetesResource toUpdateMetadata = null, toUpdateSpec = null;
+    private static EntityPatcher<Service> servicePatcher() {
+        return (KubernetesClient client, String namespace, Service newObj, Service oldObj) -> {
+            if (UserConfigurationCompare.configEqual(newObj, oldObj)) {
+                return oldObj;
+            }
 
-        if(!UserConfigurationCompare.configEqual(newObj.getMetadata(), oldObj.getMetadata())) {
-            toUpdateMetadata = newObj.getMetadata();
-        }
-        if(!UserConfigurationCompare.configEqual(newObj.getSpec(), oldObj.getSpec())) {
-            toUpdateSpec = newObj.getSpec();
-        }
-        if(toUpdateMetadata != null && toUpdateSpec != null) {
-            return kubernetesClient.replicationControllers().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withMetadata((ObjectMeta)toUpdateMetadata)
-                    .withSpec((ReplicationControllerSpec)toUpdateSpec)
-                    .done();
-        } else if(toUpdateMetadata != null) {
-            return kubernetesClient.replicationControllers().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withMetadata((ObjectMeta)toUpdateMetadata)
-                    .done();
-        } else if(toUpdateSpec != null) {
-            return kubernetesClient.replicationControllers().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withSpec((ReplicationControllerSpec) toUpdateSpec)
-                    .done();
-        } else {
-            return oldObj;
-        }
+            DoneableService entity =
+                client.services()
+                      .inNamespace(namespace)
+                      .withName(oldObj.getMetadata().getName())
+                      .edit();
+
+            if (!UserConfigurationCompare.configEqual(newObj.getMetadata(), oldObj.getMetadata())) {
+                entity.withMetadata(newObj.getMetadata());
+            }
+
+            if(!UserConfigurationCompare.configEqual(newObj.getSpec(), oldObj.getSpec())) {
+                    entity.withSpec(newObj.getSpec());
+            }
+            return entity.done();
+        };
     }
 
-    private HasMetadata patchService(String namespace, Service newObj, Service oldObj) {
-        KubernetesResource toUpdateMetadata = null, toUpdateSpec = null;
+        private static EntityPatcher<Secret> secretPatcher() {
+        return (KubernetesClient client, String namespace, Secret newObj, Secret oldObj) -> {
+            if (UserConfigurationCompare.configEqual(newObj, oldObj)) {
+                return oldObj;
+            }
+            DoneableSecret entity =
+                client.secrets()
+                      .inNamespace(namespace)
+                      .withName(oldObj.getMetadata().getName())
+                      .edit();
 
-        if(!UserConfigurationCompare.configEqual(newObj.getMetadata(), oldObj.getMetadata())) {
-            toUpdateMetadata = newObj.getMetadata();
-        }
-        if(!UserConfigurationCompare.configEqual(newObj.getSpec(), oldObj.getSpec())) {
-            toUpdateSpec = newObj.getSpec();
-        }
-        if(toUpdateMetadata != null && toUpdateSpec != null) {
-            return kubernetesClient.services().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withMetadata((ObjectMeta)toUpdateMetadata)
-                    .withSpec((ServiceSpec)toUpdateSpec)
-                    .done();
-        } else if(toUpdateMetadata != null) {
-            return kubernetesClient.services().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withMetadata((ObjectMeta)toUpdateMetadata)
-                    .done();
-        } else if(toUpdateSpec != null) {
-            return kubernetesClient.services().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withSpec((ServiceSpec) toUpdateSpec)
-                    .done();
-        } else {
-            return oldObj;
-        }
+            if (!UserConfigurationCompare.configEqual(newObj.getMetadata(), oldObj.getMetadata())) {
+                entity.withMetadata(newObj.getMetadata());
+            }
+
+            if(!UserConfigurationCompare.configEqual(newObj.getData(), oldObj.getData())) {
+                    entity.withData(newObj.getData());
+            }
+            return entity.done();
+        };
     }
 
-    private HasMetadata patchBuildConfig(String namespace, BuildConfig newObj, BuildConfig oldObj) {
-        OpenShiftClient openShiftClient = OpenshiftHelper.asOpenShiftClient(kubernetesClient);
-        KubernetesResource toUpdateMetadata = null, toUpdateSpec = null;
+    private static EntityPatcher<PersistentVolumeClaim> pvcPatcher() {
+        return (KubernetesClient client, String namespace, PersistentVolumeClaim newObj, PersistentVolumeClaim oldObj) -> {
+            if (UserConfigurationCompare.configEqual(newObj, oldObj)) {
+                return oldObj;
+            }
+            DoneablePersistentVolumeClaim entity =
+                client.persistentVolumeClaims()
+                      .inNamespace(namespace)
+                      .withName(oldObj.getMetadata().getName())
+                      .edit();
 
-        if(!UserConfigurationCompare.configEqual(newObj.getMetadata(), oldObj.getMetadata())) {
-            toUpdateMetadata = newObj.getMetadata();
-        }
-        if(!UserConfigurationCompare.configEqual(newObj.getSpec(), oldObj.getSpec())) {
-            toUpdateSpec = newObj.getSpec();
-        }
-        if(toUpdateMetadata != null && toUpdateSpec != null) {
-            return openShiftClient.buildConfigs().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withMetadata((ObjectMeta)toUpdateMetadata)
-                    .withSpec((BuildConfigSpec)toUpdateSpec)
-                    .done();
-        } else if(toUpdateMetadata != null) {
-            return openShiftClient.buildConfigs().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withMetadata((ObjectMeta)toUpdateMetadata)
-                    .done();
-        } else if(toUpdateSpec != null) {
-            return openShiftClient.buildConfigs().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withSpec((BuildConfigSpec) toUpdateSpec)
-                    .done();
-        } else {
-            return oldObj;
-        }
+            if (!UserConfigurationCompare.configEqual(newObj.getMetadata(), oldObj.getMetadata())) {
+                entity.withMetadata(newObj.getMetadata());
+            }
+
+            if(!UserConfigurationCompare.configEqual(newObj.getSpec(), oldObj.getSpec())) {
+                    entity.withSpec(newObj.getSpec());
+            }
+            return entity.done();
+        };
     }
 
-    private HasMetadata patchImageStream(String namespace, ImageStream newObj, ImageStream oldObj) {
-        OpenShiftClient openShiftClient = OpenshiftHelper.asOpenShiftClient(kubernetesClient);
-        KubernetesResource toUpdateMetadata = null, toUpdateSpec = null;
+    // ================================================================================
+    // OpenShift objects:
+    // =================
 
-        if(!UserConfigurationCompare.configEqual(newObj.getMetadata(), oldObj.getMetadata())) {
-            toUpdateMetadata = newObj.getMetadata();
-        }
-        if(!UserConfigurationCompare.configEqual(newObj.getSpec(), oldObj.getSpec())) {
-            toUpdateSpec = newObj.getSpec();
-        }
-        if(toUpdateMetadata != null && toUpdateSpec != null) {
-            return openShiftClient.imageStreams().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withMetadata((ObjectMeta)toUpdateMetadata)
-                    .withSpec((ImageStreamSpec)toUpdateSpec)
-                    .done();
-        } else if(toUpdateMetadata != null) {
-            return openShiftClient.imageStreams().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withMetadata((ObjectMeta)toUpdateMetadata)
-                    .done();
-        } else if(toUpdateSpec != null) {
-            return openShiftClient.imageStreams().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withSpec((ImageStreamSpec) toUpdateSpec)
-                    .done();
-        } else {
-            return oldObj;
-        }
+    private static EntityPatcher<BuildConfig> bcPatcher() {
+        return (KubernetesClient client, String namespace, BuildConfig newObj, BuildConfig oldObj) -> {
+            if (UserConfigurationCompare.configEqual(newObj, oldObj)) {
+                return oldObj;
+            }
+            OpenShiftClient openShiftClient = OpenshiftHelper.asOpenShiftClient(client);
+            if (openShiftClient == null) {
+                throw new IllegalArgumentException("BuildConfig can only be patched when connected to an OpenShift cluster");
+            }
+            DoneableBuildConfig entity =
+                openShiftClient.buildConfigs()
+                      .inNamespace(namespace)
+                      .withName(oldObj.getMetadata().getName())
+                      .edit();
+
+            if (!UserConfigurationCompare.configEqual(newObj.getMetadata(), oldObj.getMetadata())) {
+                entity.withMetadata(newObj.getMetadata());
+            }
+
+            if(!UserConfigurationCompare.configEqual(newObj.getSpec(), oldObj.getSpec())) {
+                    entity.withSpec(newObj.getSpec());
+            }
+            return entity.done();
+        };
     }
 
-    private HasMetadata patchSecret(String namespace, Secret newObj, Secret oldObj) {
-        KubernetesResource toUpdateMetadata = null;
-        Map<String, String> toUpdateSpec = new HashMap<>();
+    private static EntityPatcher<ImageStream> isPatcher() {
+        return (KubernetesClient client, String namespace, ImageStream newObj, ImageStream oldObj) -> {
+            if (UserConfigurationCompare.configEqual(newObj, oldObj)) {
+                return oldObj;
+            }
+            OpenShiftClient openShiftClient = OpenshiftHelper.asOpenShiftClient(client);
+            if (openShiftClient == null) {
+                throw new IllegalArgumentException("ImageStream can only be patched when connected to an OpenShift cluster");
+            }
+            DoneableImageStream entity =
+                openShiftClient.imageStreams()
+                      .inNamespace(namespace)
+                      .withName(oldObj.getMetadata().getName())
+                      .edit();
 
-        if(!UserConfigurationCompare.configEqual(newObj.getMetadata(), oldObj.getMetadata())) {
-            toUpdateMetadata = newObj.getMetadata();
-        }
-        if(!UserConfigurationCompare.configEqual(newObj.getData(), oldObj.getData())) {
-            toUpdateSpec = newObj.getData();
-        }
-        if(toUpdateMetadata != null && toUpdateSpec != null) {
-            return kubernetesClient.secrets().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withMetadata((ObjectMeta)toUpdateMetadata)
-                    .withData(toUpdateSpec)
-                    .done();
-        } else if(toUpdateMetadata != null) {
-            return kubernetesClient.secrets().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withMetadata((ObjectMeta)toUpdateMetadata)
-                    .done();
-        } else if(toUpdateSpec != null) {
-            return kubernetesClient.secrets().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withData(toUpdateSpec)
-                    .done();
-        } else {
-            return oldObj;
-        }
+            if (!UserConfigurationCompare.configEqual(newObj.getMetadata(), oldObj.getMetadata())) {
+                entity.withMetadata(newObj.getMetadata());
+            }
+
+            if(!UserConfigurationCompare.configEqual(newObj.getSpec(), oldObj.getSpec())) {
+                    entity.withSpec(newObj.getSpec());
+            }
+            return entity.done();
+        };
     }
 
-    private HasMetadata patchPersistentVolumeClaim(String namespace, PersistentVolumeClaim newObj, PersistentVolumeClaim oldObj) {
-        KubernetesResource toUpdateMetadata = null, toUpdateSpec = null;
-
-        if(!UserConfigurationCompare.configEqual(newObj.getMetadata(), oldObj.getMetadata())) {
-            toUpdateMetadata = newObj.getMetadata();
-        }
-        if(!UserConfigurationCompare.configEqual(newObj.getSpec(), oldObj.getSpec())) {
-            toUpdateSpec = newObj.getSpec();
-        }
-        if(toUpdateMetadata != null && toUpdateSpec != null) {
-            return kubernetesClient.persistentVolumeClaims().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withMetadata((ObjectMeta)toUpdateMetadata)
-                    .withSpec((PersistentVolumeClaimSpec)toUpdateSpec)
-                    .done();
-        } else if(toUpdateMetadata != null) {
-            return kubernetesClient.persistentVolumeClaims().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withMetadata((ObjectMeta)toUpdateMetadata)
-                    .done();
-        } else if(toUpdateSpec != null) {
-            return kubernetesClient.persistentVolumeClaims().inNamespace(namespace).withName(oldObj.getMetadata().getName()).edit()
-                    .withSpec((PersistentVolumeClaimSpec)toUpdateSpec)
-                    .done();
-        } else {
-            return oldObj;
-        }
-    }
 }
