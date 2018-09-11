@@ -26,7 +26,6 @@ import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.HealthCheckConfiguration;
 import io.fabric8.maven.docker.config.HealthCheckMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 
 import static io.fabric8.maven.enricher.api.util.GoTimeUtil.durationSeconds;
@@ -38,7 +37,7 @@ import static io.fabric8.maven.enricher.api.util.GoTimeUtil.durationSeconds;
 public class DockerHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
     public DockerHealthCheckEnricher(EnricherContext buildContext) {
-        super(buildContext, "docker-health-check");
+        super(buildContext, "f8-healthcheck-docker");
     }
 
     @Override

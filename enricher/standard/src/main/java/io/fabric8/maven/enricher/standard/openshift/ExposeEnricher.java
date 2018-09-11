@@ -13,7 +13,8 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.enricher.fabric8;
+
+package io.fabric8.maven.enricher.standard.openshift;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -37,7 +38,7 @@ import io.fabric8.maven.enricher.api.EnricherContext;
 public class ExposeEnricher extends BaseEnricher {
 
     public ExposeEnricher(EnricherContext buildContext) {
-        super(buildContext, "f8-expose");
+        super(buildContext, "fmp-openshift-service-expose");
     }
 
     private Set<Integer> webPorts = new HashSet<>(Arrays.asList(80, 443, 8080, 9090));
@@ -46,14 +47,12 @@ public class ExposeEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
-        int serviceCount = 0;
         List<HasMetadata> items = builder.getItems();
         if (items != null) {
             for (HasMetadata item : items) {
                 if (item instanceof Service) {
                     Service service = (Service) item;
                     enrichService(service);
-                    serviceCount++;
                 }
             }
         }

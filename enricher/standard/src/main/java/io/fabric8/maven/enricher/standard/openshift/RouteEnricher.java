@@ -13,7 +13,8 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.enricher.fabric8;
+
+package io.fabric8.maven.enricher.standard.openshift;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,9 +39,9 @@ import io.fabric8.openshift.api.model.RoutePort;
 /**
  * Enricher which generates a Route for each exposed Service
  */
-public class OpenShiftRouteEnricher extends BaseEnricher {
+public class RouteEnricher extends BaseEnricher {
 
-    public OpenShiftRouteEnricher(EnricherContext buildContext) {
+    public RouteEnricher(EnricherContext buildContext) {
         super(buildContext, "fmp-openshift-route");
     }
 

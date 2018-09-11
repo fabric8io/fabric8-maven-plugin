@@ -13,7 +13,8 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.enricher.fabric8;
+
+package io.fabric8.maven.enricher.deprecated;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -62,7 +63,7 @@ public class CdEnricher extends AbstractLiveEnricher {
     }
 
     public CdEnricher(EnricherContext buildContext) {
-        super(buildContext, "f8-cd");
+        super(buildContext, "f8-deprecated-cd");
     }
 
     @Override

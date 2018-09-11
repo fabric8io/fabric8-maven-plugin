@@ -40,6 +40,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Refactor 1370: Removed Jenkinsshift support
 * Feature 1363: Added a Thorntail V2 sample for checking Jolokia/Prometheus issues
 * Fix 894: Keep Service parameters stable after redeployment
+* Fix 1330: Disable enrichers specific to the fabric8 platform by default
 * Fix 1372: Filename to type mappings should be more flexible than a string array
 
 

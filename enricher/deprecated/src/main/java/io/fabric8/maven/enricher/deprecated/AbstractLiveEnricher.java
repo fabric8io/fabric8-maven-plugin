@@ -13,7 +13,8 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.enricher.fabric8;
+
+package io.fabric8.maven.enricher.deprecated;
 
 import java.net.ConnectException;
 import java.util.Stack;

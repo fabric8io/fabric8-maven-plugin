@@ -39,7 +39,7 @@ import org.apache.maven.project.MavenProject;
  * @author kameshs
  */
 public class MavenScmEnricher extends BaseEnricher {
-    static final String ENRICHER_NAME = "f8-maven-scm";
+    static final String ENRICHER_NAME = "fmp-maven-scm";
 
     public MavenScmEnricher(EnricherContext buildContext) {
         super(buildContext, ENRICHER_NAME);
@@ -52,17 +52,9 @@ public class MavenScmEnricher extends BaseEnricher {
             MavenProject rootProject = getProject();
             if (hasScm(rootProject)) {
                 Scm scm = rootProject.getScm();
-                String connectionUrl = scm.getConnection();
-                String devConnectionUrl = scm.getDeveloperConnection();
                 String url = scm.getUrl();
                 String tag = scm.getTag();
 
-                if (StringUtils.isNotEmpty(connectionUrl)) {
-                    annotations.put(Fabric8Annotations.SCM_CONNECTION.value(), connectionUrl);
-                }
-                if (StringUtils.isNotEmpty(devConnectionUrl)) {
-                    annotations.put(Fabric8Annotations.SCM_DEVELOPER_CONNECTION.value(), devConnectionUrl);
-                }
                 if (StringUtils.isNotEmpty(tag)) {
                     annotations.put(Fabric8Annotations.SCM_TAG.value(), tag);
                 }

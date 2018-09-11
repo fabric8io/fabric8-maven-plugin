@@ -133,9 +133,9 @@ public class VertxHealthCheckEnricherTest {
         Plugin plugin = new Plugin();
         plugin.setArtifactId("fabric8-maven-plugin");
         plugin.setGroupId("io.fabric8");
-        String content = "<configuration><enricher><config><vertx-health-check>"
+        String content = "<configuration><enricher><config><f8-healthcheck-vertx>"
                 + config
-                + "</vertx-health-check></config></enricher></configuration>";
+                + "</f8-healthcheck-vertx></config></enricher></configuration>";
         Xpp3Dom dom;
         try {
             dom = Xpp3DomBuilder.build(new StringReader(content));

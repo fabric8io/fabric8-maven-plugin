@@ -10,7 +10,7 @@ There are a lot of similarities to Generators:
 * Enrichers are looked up automatically from the plugin dependencies and there is a set of default enrichers delivered with this plugin.
 * Enrichers are configured the same ways as generators
 
-The <<generator-example,Generator example>> is a good bluebprint, simply replace `<generator>` with `<enricher>`. The configuration is structural identical:
+The <<generator-example,Generator example>> is a good blueprint, simply replace `<generator>` with `<enricher>`. The configuration is structural identical:
 
 .Enricher configuration
 [cols="2,6"]
@@ -42,18 +42,6 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 [cols="2,7"]
 |===
 | Enricher | Description
-
-| <<f8-cd>>
-| Add CD metadata as annotations.
-
-| <<f8-doc-link>>
-| Add URL to documentation configured in the POM as annotation.
-
-| <<f8-grafana-link>>
-| Add a Grafana Dashboard URL as annotation.
-
-| <<f8-icon>>
-| Add an URL to icons for well known application types.
 
 | <<f8-prometheus>>
 | Add Prometheus annotations.
@@ -154,7 +142,7 @@ The `fmp-project` enricher supports the following configuration options:
 Enricher which fixes the permission of persistent volume mount with the help of an init container.
 
 [[fmp-autotls]]
-==== fmp-autotls
+==== fmp-openshift-autotls
 
 Enricher which adds appropriate annotations and volumes to enable OpenShift's automatic https://docs.openshift.org/latest/dev_guide/secrets.html#service-serving-certificate-secrets[Service Serving Certificate Secrets].
 This enricher adds an init container to convert the service serving certificates from PEM (the format that OpenShift generates them in) to
@@ -178,12 +166,12 @@ This enricher is disabled by default. In order to use it, you must configure the
   <configuration>
     <enricher>
       <includes>
-        <include>fmp-autotls</include>
+        <include>fmp-openshift-autotls</include>
       </includes>
       <config>
-        <fmp-autotls>
+        <fmp-openshift-autotls>
           ...
-        </fmp-autotls>
+        </fmp-openshift-autotls>
       </config>
     </enricher>
   </configuration>
@@ -242,20 +230,8 @@ The auto-TLS enricher supports the following configuration options:
 
 Fabric8 enrichers are used for providing the connection to other components of the fabric8 Microservices platform. They are useful to add icons to to application or links to documentation sites.
 
-[[f8-cd]]
-==== f8-cd
-
-[[f8-doc-link]]
-==== f8-doc-link
-
-[[f8-grafana-link]]
-==== f8-grafana-link
-
-[[f8-icon]]
-==== f8-icon
-
-[[f8-karaf-health-check]]
-==== f8-karaf-health-check
+[[f8-healthcheck-karaf]]
+==== f8-healthcheck-karaf
 
 This enricher adds kubernetes readiness and liveness probes with Apache Karaf. This requires that
  `fabric8-karaf-checks` has been enabled in the Karaf startup features.
@@ -290,8 +266,8 @@ items:
 By default the enricher inspects the images' BuildConfiguration and add the annotations if the port 9779 is listed.
 You can force the plugin to add annotations by setting enricher's config ```prometheusPort```
 
-[[f8-spring-boot-health-check]]
-==== f8-spring-boot-health-check
+[[f8-healthcheck-spring-boot]]
+==== f8-healthcheck-spring-boot
 
 This enricher adds kubernetes readiness and liveness probes with Spring Boot. This requires the following dependency
  has been enabled in Spring Boot
@@ -334,10 +310,10 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
         <configuration>
           <enricher>
             <config>
-              <spring-boot-health-check>
+              <f8-healthcheck-spring-boot>
                 <timeoutSeconds>5</timeoutSeconds>
                 <readinessProbeInitialDelaySeconds>30</readinessProbeInitialDelaySeconds>
-              </spring-boot-health-check>
+              </f8-healthcheck-spring-boot>
             </config>
           </enricher>
         </configuration>
@@ -345,8 +321,8 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
 
 
 
-[[f8-wildfly-swarm-health-check]]
-==== f8-wildfly-swarm-health-check
+[[f8-healthcheck-wildfly-swarm]]
+==== f8-f8-healthcheck-wildfly-swarm
 
 This enricher adds kubernetes readiness and liveness probes with WildFly Swarm. This requires the following fraction
  has been enabled in WildFly Swarm
@@ -382,19 +358,19 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
         <configuration>
           <enricher>
             <config>
-              <wildfly-swarm-health-check>
+              <f8-healthcheck-wildfly-swarm>
                 <port>4444</port>
                 <scheme>HTTPS</scheme>
                 <path>health/myapp</path>
-              </wildfly-swarm-health-check>
+              </f8-healthcheck-wildfly-swarm>
             </config>
           </enricher>
         </configuration>
       </plugin>
 
 
-[[f8-thorntail-v2-health-check]]
-==== f8-thorntail-v2-health-check
+[[f8-healthcheck-thorntail-v2]]
+==== f8-healthcheck-thorntail-v2
 
 This enricher adds kubernetes readiness and liveness probes with Thorntail v2. This requires the following fraction
  has been enabled in Thorntail
@@ -430,19 +406,19 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
         <configuration>
           <enricher>
             <config>
-              <thorntail-v2-health-check>
+              <f8-healthcheck-thorntail>
                 <port>4444</port>
                 <scheme>HTTPS</scheme>
                 <path>health/myapp</path>
-              </thorntail-v2-health-check>
+              </f8-healthcheck-thorntail>
             </config>
           </enricher>
         </configuration>
       </plugin>
 
 
-[[f8-vertx-health-check]]
-==== f8-vertx-health-check
+[[f8-healthcheck-vertx]]
+==== f8-healthcheck-vertx
 
 This enricher adds kubernetes readiness and liveness probes with Eclipse Vert.x applications. The readiness probe lets Kubernetes
 detects when the application is ready, while the liveness probe allows Kubernetes to verify that the application is
@@ -452,7 +428,7 @@ This enricher allows configuring the readiness and liveness probes. Are supporte
 
 By default, this enricher uses the same configuration for liveness and readiness probes. But specific configurations can be provided. The configurations can be overridden using project's properties.
 
-===== Using the f8-vertx-health-check enricher
+===== Using the f8-healthcheck-vertx enricher
 
 The enricher is automatically executed if your project uses the `vertx-maven-plugin` or depends on `io.vertx:vertx-core`.
 However, by default, no health check will be added to your deployment.
@@ -480,9 +456,9 @@ The minimal configuration to add health checks is the following:
         <configuration>
           <enricher>
             <config>
-              <vertx-health-check>
+              <f8-healthcheck-vertx>
                   <path>/health</path>
-              </vertx-health-check>
+              </f8-healthcheck-vertx>
             </config>
           </enricher>
         </configuration>
@@ -527,14 +503,14 @@ You can provide two different configuration for the readiness and liveness check
         <configuration>
           <enricher>
             <config>
-              <vertx-health-check>
+              <f8-healthcheck-vertx>
                   <readiness>
                     <path>/ready</path>
                   </readiness>
                   <liveness>
                     <path>/health</path>
                   </liveness>
-              </vertx-health-check>
+              </f8-healthcheck-vertx>
             </config>
           </enricher>
         </configuration>
@@ -572,7 +548,7 @@ Shared (generic) configuration can be set outside of the specific configuration.
         <configuration>
           <enricher>
             <config>
-              <vertx-health-check>
+              <f8-healthcheck-vertx>
                   <port>8081</port>
                   <readiness>
                     <path>/ready</path>
@@ -580,7 +556,7 @@ Shared (generic) configuration can be set outside of the specific configuration.
                   <liveness>
                     <path>/health</path>
                   </liveness>
-              </vertx-health-check>
+              </f8-healthcheck-vertx>
             </config>
           </enricher>
         </configuration>
@@ -605,7 +581,7 @@ The configuration is structured as follows
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
     <config>
-        <vertx-health-check>
+        <f8-healthcheck-vertx>
             <!-- Generic configuration, applied to both liveness and readiness -->
             <path>/both</path>
             <liveness>
@@ -616,7 +592,7 @@ The configuration is structured as follows
                 <!-- Specific configuration for the readiness probe -->
                 <port-name>ready</port-name>
             </readiness>
-        </vertx-health-check>
+        </f8-healthcheck-vertx>
     </config>
 ----
 
@@ -702,7 +678,7 @@ Here is an example of HTTP probe configuration:
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
     <config>
-        <vertx-health-check>
+        <f8-healthcheck-vertx>>
             <initialDelay>3</initialDelay>
             <period>3</period>
             <liveness>
@@ -717,7 +693,7 @@ Here is an example of HTTP probe configuration:
                 <!-- disable the readiness probe -->
                 <port>-1</port>
             </readiness>
-        </vertx-health-check>
+        </f8-healthcheck-vertx>
     </config>
 ----
 
@@ -742,7 +718,7 @@ For example:
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
     <config>
-        <vertx-health-check>
+        <f8-healthcheck-vertx>
             <initialDelay>3</initialDelay>
             <period>3</period>
             <liveness>
@@ -754,7 +730,7 @@ For example:
                 <path>/ping</path>
                 <port>8080</port>
             </readiness>
-        </vertx-health-check>
+        </f8-healthcheck>
     </config>
 ----
 
@@ -765,7 +741,7 @@ You can also configure the probes to execute a command. If the command succeeds,
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
     <config>
-        <vertx-health-check>
+        <f8-healthcheck-vertx>
             <initialDelay>3</initialDelay>
             <period>3</period>
             <liveness>
@@ -780,7 +756,7 @@ You can also configure the probes to execute a command. If the command succeeds,
                 <path>/ping</path>
                 <port>8080</port>
             </readiness>
-        </vertx-health-check>
+        </f8-healthcheck-vertx>
     </config>
 ----
 
@@ -804,7 +780,7 @@ In the first case, you can use project's properties to disable them:
 For `http` probes, an empty or not set `path` also disable the probe.
 
 [[f8-maven-scm-enricher]]
-==== f8-maven-scm-enricher
+==== fmp-maven-scm-enricher
 
 This enricher adds additional https://maven.apache.org/pom.html#SCM[SCM] related metadata to all objects supporting annotations.
 These metadata will be added only if https://maven.apache.org/pom.html#SCM[SCM] information is present in the maven `pom.xml` of the project.
@@ -860,7 +836,7 @@ This infomation will be enriched as annotations in the generated manifest like,
 ----
 
 [[fmp-maven-issue-mgmt-enricher]]
-==== f8-maven-issue-mgmt
+==== fmp-maven-issue-mgmt
 
 This enricher adds additional https://maven.apache.org/pom.html#Issue_Management[Issue Management] related metadata to all objects supporting annotations.
 These metadata will be added only if the https://maven.apache.org/pom.html#Issue_Management[Issue Management] information in available in maven `pom.xml` of the project.
