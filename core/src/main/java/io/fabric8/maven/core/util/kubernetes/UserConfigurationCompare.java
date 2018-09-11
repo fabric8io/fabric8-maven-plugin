@@ -139,7 +139,7 @@ public class UserConfigurationCompare {
                 if (readMethod != null) {
                     Object value1 = invokeMethod(entity1, readMethod);
                     Object value2 = invokeMethod(entity2, readMethod);
-                    if (!configEqual(value1, value2)) {
+                    if (value1 != null && value2 != null && !configEqual(value1, value2)) {
                         return false;
                     }
                 }
