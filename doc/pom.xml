@@ -37,6 +37,11 @@
 
     <dependency>
       <groupId>io.fabric8</groupId>
+      <artifactId>fabric8-maven-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.fabric8</groupId>
       <artifactId>docker-maven-plugin</artifactId>
     </dependency>
 

@@ -1,0 +1,6 @@
+[[appendix]]
+= Appendix
+
+== Kind/Filename Mapping
+
+include::classpath:/fabric8/default-kind-filename-mapping.adoc[]
