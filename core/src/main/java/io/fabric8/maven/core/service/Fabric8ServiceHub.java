@@ -110,6 +110,9 @@ public class Fabric8ServiceHub {
                 BuildService buildService;
                 // Creating platform-dependent services
                 if (resolvedMode == PlatformMode.openshift) {
+                    if (!(client instanceof OpenShiftClient)) {
+                        throw new IllegalStateException("Openshift platform has been specified but Openshift has not been detected!");
+                    }
                     // Openshift services
                     buildService = new OpenshiftBuildService((OpenShiftClient) client, log, dockerServiceHub, buildServiceConfig);
                 } else {
