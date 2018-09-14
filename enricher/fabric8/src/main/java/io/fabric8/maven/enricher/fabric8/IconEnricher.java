@@ -352,7 +352,7 @@ public class IconEnricher extends BaseEnricher {
         }
 
         // special for fabric8 as its in a different dir
-        if (iconRef.contains("fabric8")) {
+        if (iconRef.contains("META-INF/fabric8")) {
             return "img/fabric8_icon.svg";
         }
 

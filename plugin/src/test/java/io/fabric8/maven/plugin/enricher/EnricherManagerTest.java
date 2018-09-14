@@ -94,6 +94,6 @@ public class EnricherManagerTest {
         assertNotNull(metadata);
         Map<String, String> labels = metadata.getLabels();
         assertNotNull(labels);
-        assertEquals("fabric8", labels.get("provider"));
+        assertEquals("META-INF/fabric8", labels.get("provider"));
     }
 }

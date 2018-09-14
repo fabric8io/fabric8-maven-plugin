@@ -16,39 +16,33 @@
 
 package io.fabric8.maven.core.util.kubernetes;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class KindFilenameMapperUtilTest {
-
-
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
+public class KubernetesResourceUtilTest {
 
     @Test
-    public void should_load_default_mapping_file() {
+    public void should_load_kid_filename_mapper_in_bimap_fashion() {
 
         // Given
 
         // When
 
-        final Map<String, List<String>> mappings = KindFilenameMapperUtil.loadMappings();
+        final Map<String, String> filenameToKindMapper = KubernetesResourceUtil.FILENAME_TO_KIND_MAPPER;
+        final Map<String, String> kindToFilenameMapper = KubernetesResourceUtil.KIND_TO_FILENAME_MAPPER;
 
         // Then
-        final Map<String, List<String>> expectedSerlializedContent = new HashMap<>();
-        expectedSerlializedContent.put("ConfigMap", Arrays.asList("cm", "configmap"));
-        expectedSerlializedContent.put("CronJob", Arrays.asList("cronjob", "cj"));
-        assertThat(mappings).containsAllEntriesOf(expectedSerlializedContent);
+        assertThat(filenameToKindMapper)
+            .containsEntry("cm", "ConfigMap")
+            .containsEntry("configmap", "ConfigMap")
+            .containsEntry("secret", "Secret");
+
+        assertThat(kindToFilenameMapper)
+            .containsEntry("ConfigMap", "configmap")
+            .containsEntry("Secret", "secret");
 
     }
-
-
 
 }

@@ -182,16 +182,29 @@ public class KubernetesResourceUtil {
 
     // ========================================================================================================
 
-    private final static Map<String,String> FILENAME_TO_KIND_MAPPER = new HashMap<>();
-    private final static Map<String,String> KIND_TO_FILENAME_MAPPER = new HashMap<>();
+    protected final static Map<String,String> FILENAME_TO_KIND_MAPPER = new HashMap<>();
+    protected final static Map<String,String> KIND_TO_FILENAME_MAPPER = new HashMap<>();
 
     static {
+        initializeKindFilenameMapper();
+    }
 
-        final String[] mappings = KindFilenameMapperUtil.loadMappings();
+    protected final static void initializeKindFilenameMapper() {
+        final Map<String, List<String>> mappings = KindFilenameMapperUtil.loadMappings();
 
-        for (int i = 0; i < mappings.length; i+=2) {
-            FILENAME_TO_KIND_MAPPER.put(mappings[i], mappings[i+1]);
-            KIND_TO_FILENAME_MAPPER.put(mappings[i+1], mappings[i]);
+        final Set<Map.Entry<String, List<String>>> entries = mappings.entrySet();
+
+        for (Map.Entry<String, List<String>> entry : entries) {
+
+            final List<String> filenameTypes = entry.getValue();
+            final String kind = entry.getKey();
+            for (String filenameType : filenameTypes) {
+                FILENAME_TO_KIND_MAPPER.put(filenameType, kind);
+            }
+
+            // In previous version, last one wins, so we do the same.
+            KIND_TO_FILENAME_MAPPER.put(kind, filenameTypes.get(filenameTypes.size() - 1));
+
         }
     }
 

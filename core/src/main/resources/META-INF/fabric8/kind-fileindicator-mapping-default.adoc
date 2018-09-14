@@ -1,0 +1,102 @@
+|===
+|Kind |Filename Type
+
+|ConfigMap
+a|`cm`, `configmap`
+
+|CronJob
+a|`cronjob`, `cj`
+
+|ClusterRole
+a|`cr`, `crole`, `clusterrole`
+
+|CustomResourceDefinition
+a|`crd`
+
+|ClusterRoleBinding
+a|`crb`, `clusterrb`
+
+|Deployment
+a|`deployment`
+
+|ImageStream
+a|`is`
+
+|ImageStreamTag
+a|`istag`
+
+|Job
+a|`job`
+
+|LimitRange
+a|`lr`, `limitrange`
+
+|Namespace
+a|`ns`, `clusterrb`
+
+|OAuthClient
+a|`oauthclient`
+
+|PolicyBinding
+a|`pb`
+
+|PersistentVolume
+a|`pv`
+
+|PersistentVolumeClaim
+a|`pvc`
+
+|Project
+a|`project`
+
+|ProjectRequest
+a|`pr`
+
+|ResourceQuota
+a|`rq`
+
+|ResourceQuota
+a|`resourcequota`
+
+|Role
+a|`role`
+
+|RoleBinding
+a|`rb`, `rolebinding`
+
+|RoleBindingRestriction
+a|`rbr`, `rolebindingrestriction`
+
+|Secret
+a|`secret`
+
+|Service
+a|`service`, `svc`
+
+|ServiceAccount
+a|`sa`
+
+|ReplicationController
+a|`rc`
+
+|ReplicaSet
+a|`rs`
+
+|DaemonSet
+a|`daemonset`, `ds`
+
+|StatefulSet
+a|`statefulset`
+
+|BuildConfig
+a|`bc`
+
+|DeploymentConfig
+a|`dc`, `deploymentconfig`
+
+|Route
+a|`route`
+
+|Template
+a|`template`
+|===

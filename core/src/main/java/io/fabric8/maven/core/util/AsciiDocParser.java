@@ -20,7 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * AsciiDoc utils for parsing specific elements coded in AsciiDoc format.
@@ -37,14 +39,14 @@ public class AsciiDocParser {
      * <pre>
      * [cols=2*,options="header"]
      * |===
-     * |Kind
      * |Filename
+     * |Kind
      *
-     * |cm
      * a|ConfigMap
+     * a|`cm`
      *
-     * |cronjob
      * |CronJob
+     * |cronjob
      * |===
      * </pre>
      *
@@ -57,9 +59,9 @@ public class AsciiDocParser {
      * @param table definition in AsciiDoc format.
      * @return A serialization of all columns, being pair elements the first column and the odd elements the second column. In previous example @code{"cm","ConfigMap","cronjob","CronJob"}
      */
-    public String[] serializeKindFilenameTable(final InputStream table) {
+    public Map<String, List<String>> serializeKindFilenameTable(final InputStream table) {
 
-        final List<String> serializedContent = new ArrayList<>();
+        final Map<String, List<String>> serializedContent = new HashMap<>();
 
         try (final BufferedReader tableContent = new BufferedReader(new InputStreamReader(table))) {
 
@@ -68,11 +70,11 @@ public class AsciiDocParser {
             boolean endTable = false;
 
             while (!endTable) {
-                final String[] readRow = readRow(tableContent);
+                final List<String> readRow = readRow(tableContent);
                 final String separator = readEmptyLineOrEndTable(tableContent);
 
-                serializedContent.add(readRow[0]);
-                serializedContent.add(readRow[1]);
+                String kind = readRow.get(0);
+                serializedContent.put(kind, readRow.subList(1, readRow.size()));
 
                 if (END_TABLE.equals(separator)) {
                     endTable = true;
@@ -84,18 +86,23 @@ public class AsciiDocParser {
             throw new IllegalStateException(e);
         }
 
-        return serializedContent.toArray(new String[serializedContent.size()]);
+        return serializedContent;
 
     }
 
-    private String[] readRow(final BufferedReader tableContent) throws IOException {
-        final String[] content = new String[2];
+    private List<String> readRow(final BufferedReader tableContent) throws IOException {
+        final List<String> content = new ArrayList<>();
 
         final String firstColumn = readColumn(tableContent);
         final String secondColumn = readColumn(tableContent);
 
-        content[0] = firstColumn;
-        content[1] = secondColumn;
+        content.add(firstColumn);
+        final String[] filenameTypes = secondColumn.split(",");
+
+        for (String filenameType : filenameTypes) {
+            content.add(filenameType.trim());
+        }
+
         return content;
     }
 
@@ -111,7 +118,8 @@ public class AsciiDocParser {
             throw new IllegalArgumentException(String.format("Expected the initial of a column with (|) but %s found.", column));
         }
 
-        return column.trim().substring(separator + 1);
+        return column.trim().substring(separator + 1)
+            .replaceAll("[`_*]", "");
 
     }
 
