@@ -26,7 +26,7 @@ public class KindFilenameMapperUtil {
 
     public static Map<String, List<String>> loadMappings() {
 
-        final String location = "/META-INF/fabric8/kind-fileindicator-mapping-default.adoc";
+        final String location = "/META-INF/fabric8/kind-filename-type-mapping-default.adoc";
 
         try (final InputStream mappingFile = loadContent(location)) {
             final AsciiDocParser asciiDocParser = new AsciiDocParser();

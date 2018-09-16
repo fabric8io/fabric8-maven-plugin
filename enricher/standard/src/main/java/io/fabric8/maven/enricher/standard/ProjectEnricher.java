@@ -96,7 +96,7 @@ public class ProjectEnricher extends BaseEnricher {
         }
 
         ret.put("group", project.getGroupId());
-        ret.put("provider", "META-INF/fabric8");
+        ret.put("provider", "fabric8");
         if (!withoutVersion) {
             ret.put("version", project.getVersion());
         }
