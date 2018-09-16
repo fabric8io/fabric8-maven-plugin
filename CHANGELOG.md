@@ -10,6 +10,10 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
+###4.0.0
+
+* Fix 1372: Filename to type mappings should be more flexible than a string array 
+
 ###3.5.42
 * Fix 1021: Avoids empty deployment selector value in generated yaml resource
 
