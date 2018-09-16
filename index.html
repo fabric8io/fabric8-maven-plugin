@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.41,</span>
-<span id="revdate">2018-09-13</span>
+<span id="revdate">2018-09-16</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -656,6 +656,11 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#how-do-i-use-a-persistent-volume">14.1.4. How do I use a Persistent Volume?</a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li><a href="#appendix">15. Appendix</a>
+<ul class="sectlevel2">
+<li><a href="#kind-filename-type-mapping">15.1. Kind/Filename Type Mapping</a></li>
 </ul>
 </li>
 </ul>
@@ -6965,11 +6970,225 @@ mvn fabric8:migrate
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="appendix">15. Appendix</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="kind-filename-type-mapping">15.1. Kind/Filename Type Mapping</h3>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Kind</th>
+<th class="tableblock halign-left valign-top">Filename Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ClusterRole</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>cr</code>, <code>crole</code>, <code>clusterrole</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ConfigMap</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>cm</code>, <code>configmap</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ClusterRoleBinding</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>crb</code>, <code>clusterrb</code>, <code>clusterrolebinding</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CronJob</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>cj</code>, <code>cronjob</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CustomResourceDefinition</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>crd</code>, customerresourcedefinition</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">DaemonSet</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>ds</code>, <code>daemonset</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Deployment</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>deployment</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ImageStream</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>is</code>, <code>imagestream</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ImageStreamTag</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>istag</code>, <code>imagestreamtag</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Job</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>job</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LimitRange</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>lr</code>, <code>limitrange</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Namespace</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>ns</code>, <code>namespace</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">OAuthClient</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>oauthclient</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PolicyBinding</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>pb</code>, <code>policybinding</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PersistentVolume</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>pv</code>, <code>persistentvolume</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PersistentVolumeClaim</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>pvc</code>, <code>persistemtvolumeclaim</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Project</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>project</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ProjectRequest</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>pr</code>, <code>projectrequest</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ReplicationController</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>rc</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ReplicaSet</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>rs</code>, <code>replicaset</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ResourceQuota</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>rq</code>, <code>resourcequota</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Role</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>role</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">RoleBinding</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>rb</code>, <code>rolebinding</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">RoleBindingRestriction</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>rbr</code>, <code>rolebindingrestriction</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Secret</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>secret</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Service</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>svc</code>, <code>service</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ServiceAccount</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>sa</code>, <code>serviceaccount</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">StatefulSet</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>statefulset</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">BuildConfig</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>bc</code>, <code>buildconfig</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">DeploymentConfig</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>dc</code>, <code>deploymentconfig</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Route</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>route</code></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Template</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p><code>template</code></p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 3.5.41<br>
-Last updated 2018-09-13 14:54:10 UTC
+Last updated 2018-09-16 16:10:16 UTC
 </div>
 </div>
 </body>
