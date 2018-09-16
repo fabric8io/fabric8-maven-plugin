@@ -42,8 +42,8 @@ public class AsciiDocParserTest {
 
     private static final String NONE_END_VALID_TABLE = "cols=2*,options=\"header\"]" + System.lineSeparator()
         + "|===" + System.lineSeparator()
-        + "|Kind" + System.lineSeparator()
         + "|Filename" + System.lineSeparator()
+        + "|Kind" + System.lineSeparator()
         + System.lineSeparator()
         + "|cm" + System.lineSeparator()
         + "a|ConfigMap" + System.lineSeparator()
@@ -53,8 +53,8 @@ public class AsciiDocParserTest {
 
     private static final String INVALID_TABLE_WITH_THREE_COLUMNS = "cols=2*,options=\"header\"]" + System.lineSeparator()
         + "|===" + System.lineSeparator()
-        + "|Kind" + System.lineSeparator()
         + "|Filename" + System.lineSeparator()
+        + "|Kind" + System.lineSeparator()
         + System.lineSeparator()
         + "|cm" + System.lineSeparator()
         + "a|ConfigMap" + System.lineSeparator()

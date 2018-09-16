@@ -20,17 +20,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class KindFilenameMapperUtilTest {
-
-
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
     public void should_load_default_mapping_file() {
@@ -44,7 +38,7 @@ public class KindFilenameMapperUtilTest {
         // Then
         final Map<String, List<String>> expectedSerlializedContent = new HashMap<>();
         expectedSerlializedContent.put("ConfigMap", Arrays.asList("cm", "configmap"));
-        expectedSerlializedContent.put("CronJob", Arrays.asList("cronjob", "cj"));
+        expectedSerlializedContent.put("CronJob", Arrays.asList("cj", "cronjob"));
         assertThat(mappings).containsAllEntriesOf(expectedSerlializedContent);
 
     }

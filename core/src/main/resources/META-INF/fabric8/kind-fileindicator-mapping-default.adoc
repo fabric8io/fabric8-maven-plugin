@@ -1,29 +1,37 @@
+// There should be a new line between rows
+// 1 Kind can be mapped to N Filename types
+// Columns might be ordered alphabetical by type (for better reading)
+// OpenShift elements go last ones
+// Last filename type must be the canonical one ( full kind in all lowercase)
 |===
 |Kind |Filename Type
-
-|ConfigMap
-a|`cm`, `configmap`
-
-|CronJob
-a|`cronjob`, `cj`
 
 |ClusterRole
 a|`cr`, `crole`, `clusterrole`
 
-|CustomResourceDefinition
-a|`crd`
+|ConfigMap
+a|`cm`, `configmap`
 
 |ClusterRoleBinding
-a|`crb`, `clusterrb`
+a|`crb`, `clusterrb`, `clusterrolebinding`
+
+|CronJob
+a|`cj`, `cronjob`
+
+|CustomResourceDefinition
+a|`crd`, customerresourcedefinition
+
+|DaemonSet
+a|`ds`, `daemonset`
 
 |Deployment
 a|`deployment`
 
 |ImageStream
-a|`is`
+a|`is`, `imagestream`
 
 |ImageStreamTag
-a|`istag`
+a|`istag`, `imagestreamtag`
 
 |Job
 a|`job`
@@ -32,31 +40,34 @@ a|`job`
 a|`lr`, `limitrange`
 
 |Namespace
-a|`ns`, `clusterrb`
+a|`ns`, `namespace`
 
 |OAuthClient
 a|`oauthclient`
 
 |PolicyBinding
-a|`pb`
+a|`pb`, `policybinding`
 
 |PersistentVolume
-a|`pv`
+a|`pv`, `persistentvolume`
 
 |PersistentVolumeClaim
-a|`pvc`
+a|`pvc`, `persistemtvolumeclaim`
 
 |Project
 a|`project`
 
 |ProjectRequest
-a|`pr`
+a|`pr`, `projectrequest`
+
+|ReplicationController
+a|`rc`
+
+|ReplicaSet
+a|`rs`, `replicaset`
 
 |ResourceQuota
-a|`rq`
-
-|ResourceQuota
-a|`resourcequota`
+a|`rq`, `resourcequota`
 
 |Role
 a|`role`
@@ -71,25 +82,16 @@ a|`rbr`, `rolebindingrestriction`
 a|`secret`
 
 |Service
-a|`service`, `svc`
+a|`svc`, `service`
 
 |ServiceAccount
-a|`sa`
-
-|ReplicationController
-a|`rc`
-
-|ReplicaSet
-a|`rs`
-
-|DaemonSet
-a|`daemonset`, `ds`
+a|`sa`, `serviceaccount`
 
 |StatefulSet
 a|`statefulset`
 
 |BuildConfig
-a|`bc`
+a|`bc`, `buildconfig`
 
 |DeploymentConfig
 a|`dc`, `deploymentconfig`

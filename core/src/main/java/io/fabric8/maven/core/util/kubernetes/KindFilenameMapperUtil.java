@@ -40,7 +40,7 @@ public class KindFilenameMapperUtil {
         InputStream resourceAsStream = KindFilenameMapperUtil.class.getResourceAsStream(location);
 
         if (resourceAsStream == null) {
-            throw new IllegalArgumentException(String.format("%s cannotbe foind in classpath", location));
+            throw new IllegalArgumentException(String.format("%s cannot be found in classpath", location));
         }
 
         return resourceAsStream;

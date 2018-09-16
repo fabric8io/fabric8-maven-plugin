@@ -119,7 +119,8 @@ public class AsciiDocParser {
         }
 
         return column.trim().substring(separator + 1)
-            .replaceAll("[`_*]", "");
+            .replaceAll("[`_*]", "")
+            .trim();
 
     }
 
@@ -137,7 +138,7 @@ public class AsciiDocParser {
             throw new IllegalArgumentException(String.format("Trying to read an empty line for end of row, but content %s was found or EOF", column));
         }
 
-        return column.trim();
+        return "";
     }
 
     /**
