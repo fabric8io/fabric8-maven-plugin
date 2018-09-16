@@ -182,64 +182,29 @@ public class KubernetesResourceUtil {
 
     // ========================================================================================================
 
-    private final static Map<String,String> FILENAME_TO_KIND_MAPPER = new HashMap<>();
-    private final static Map<String,String> KIND_TO_FILENAME_MAPPER = new HashMap<>();
-    private static String mappings[] =
-        {
-            // lets put the abbreviation we want to use first
-            "cm", "ConfigMap",
-            "configmap", "ConfigMap",
-            "cronjob", "CronJob",
-            "cr", "ClusterRole",
-            "crole", "ClusterRole",
-            "clusterrole", "ClusterRole",
-            "crd", "CustomResourceDefinition",
-            "crb", "ClusterRoleBinding",
-            "clusterrb", "ClusterRoleBinding",
-            "cj", "CronJob",
-            "deployment", "Deployment",
-            "is", "ImageStream",
-            "istag", "ImageStreamTag",
-            "job", "Job",
-            "lr", "LimitRange",
-            "limitrange", "LimitRange",
-            "ns", "Namespace",
-            "namespace", "Namespace",
-            "oauthclient", "OAuthClient",
-            "pb", "PolicyBinding",
-            "pv", "PersistentVolume",
-            "pvc", "PersistentVolumeClaim",
-            "project", "Project",
-            "pr", "ProjectRequest",
-            "rq", "ResourceQuota",
-            "resourcequota", "ResourceQuota",
-            "role", "Role",
-            "rb", "RoleBinding",
-            "rolebinding", "RoleBinding",
-            "rbr", "RoleBindingRestriction",
-            "rolebindingrestriction", "RoleBindingRestriction",
-            "secret", "Secret",
-            "service", "Service",
-            "svc", "Service",
-            "sa", "ServiceAccount",
-            "rc", "ReplicationController",
-            "rs", "ReplicaSet",
-            "daemonset", "DaemonSet",
-            "ds", "DaemonSet",
-            "statefulset", "StatefulSet",
-
-            // OpenShift Resources:
-            "bc", "BuildConfig",
-            "dc", "DeploymentConfig",
-            "deploymentconfig", "DeploymentConfig",
-            "route", "Route",
-            "template", "Template",
-        };
+    protected final static Map<String,String> FILENAME_TO_KIND_MAPPER = new HashMap<>();
+    protected final static Map<String,String> KIND_TO_FILENAME_MAPPER = new HashMap<>();
 
     static {
-        for (int i = 0; i < mappings.length; i+=2) {
-            FILENAME_TO_KIND_MAPPER.put(mappings[i], mappings[i+1]);
-            KIND_TO_FILENAME_MAPPER.put(mappings[i+1], mappings[i]);
+        initializeKindFilenameMapper();
+    }
+
+    protected final static void initializeKindFilenameMapper() {
+        final Map<String, List<String>> mappings = KindFilenameMapperUtil.loadMappings();
+
+        final Set<Map.Entry<String, List<String>>> entries = mappings.entrySet();
+
+        for (Map.Entry<String, List<String>> entry : entries) {
+
+            final List<String> filenameTypes = entry.getValue();
+            final String kind = entry.getKey();
+            for (String filenameType : filenameTypes) {
+                FILENAME_TO_KIND_MAPPER.put(filenameType, kind);
+            }
+
+            // In previous version, last one wins, so we do the same.
+            KIND_TO_FILENAME_MAPPER.put(kind, filenameTypes.get(filenameTypes.size() - 1));
+
         }
     }
 

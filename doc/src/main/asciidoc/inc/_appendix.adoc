@@ -1,0 +1,6 @@
+[[appendix]]
+= Appendix
+
+== Kind/Filename Type Mapping
+
+include::classpath:/META-INF/fabric8/kind-fileindicator-mapping-default.adoc[]
