@@ -91,14 +91,17 @@ public class ClusterAccess {
      */
     public boolean isOpenShiftImageStream(Logger log) {
         if (isOpenShift(log)) {
+            OpenShiftClient openShiftClient = null;
             if (this.client == null) {
-                OpenShiftClient openShiftClient = createOpenShiftClient();
-                return openShiftClient.supportsOpenShiftAPIGroup(OpenShiftAPIGroups.IMAGE);
+                openShiftClient = createOpenShiftClient();
+            } else if (this.client instanceof OpenShiftClient) {
+                openShiftClient = (OpenShiftClient) this.client;
+            } else if (this.client.isAdaptable(OpenShiftClient.class)) {
+                openShiftClient = client.adapt(OpenShiftClient.class);
+            } else {
+                return false;
             }
-            else{
-                OpenShiftClient openShiftClient = (OpenShiftClient)this.client;
-                return openShiftClient.supportsOpenShiftAPIGroup(OpenShiftAPIGroups.IMAGE);
-            }
+            return openShiftClient.supportsOpenShiftAPIGroup(OpenShiftAPIGroups.IMAGE);
         }
         return false;
     }

@@ -12,6 +12,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 
 ###3.5-SNAPSHOT
 * Fix 1021: Avoids empty deployment selector value in generated yaml resource
+* Fix 1383: Check if instanceof Openshift before casting and handle failures.
 
 ###3.5.41 (2018-08-01)
 * Feature 1032: Improvements of the Vert.x Generator and enrichers

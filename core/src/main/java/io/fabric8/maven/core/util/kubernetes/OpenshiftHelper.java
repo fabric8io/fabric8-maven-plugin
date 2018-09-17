@@ -1,20 +1,15 @@
 package io.fabric8.maven.core.util.kubernetes;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.RootPaths;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.maven.core.util.ResourceUtil;
@@ -33,8 +28,6 @@ public class OpenshiftHelper {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final String DEFAULT_API_VERSION = "v1";
 
-    private static final ConcurrentMap<URL, Boolean> IS_OPENSHIFT = new ConcurrentHashMap<>();
-
     public static OpenShiftClient asOpenShiftClient(KubernetesClient client) {
         if (client instanceof OpenShiftClient) {
             return (OpenShiftClient) client;
@@ -47,25 +40,7 @@ public class OpenshiftHelper {
     }
 
     public static boolean isOpenShift(KubernetesClient client) {
-        URL masterUrl = client.getMasterUrl();
-        if (IS_OPENSHIFT.containsKey(masterUrl)) {
-            return IS_OPENSHIFT.get(masterUrl);
-        } else {
-            RootPaths rootPaths = client.rootPaths();
-            if (rootPaths != null) {
-                List<String> paths = rootPaths.getPaths();
-                if (paths != null) {
-                    for (String path : paths) {
-                        if (java.util.Objects.equals("/oapi", path) || java.util.Objects.equals("oapi", path)) {
-                            IS_OPENSHIFT.putIfAbsent(masterUrl, true);
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        IS_OPENSHIFT.putIfAbsent(masterUrl, false);
-        return false;
+        return client.isAdaptable(OpenShiftClient.class);
     }
 
 
