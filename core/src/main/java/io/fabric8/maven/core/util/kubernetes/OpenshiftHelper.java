@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -55,7 +56,7 @@ public class OpenshiftHelper {
         List<Parameter> parameters = entity != null ? entity.getParameters() : null;
         if (parameters != null && !parameters.isEmpty()) {
             String json = "{\"kind\": \"List\", \"apiVersion\": \"" + DEFAULT_API_VERSION + "\",\n" +
-                          "  \"items\": " + ResourceUtil.toJson(objects) + " }";
+                    "  \"items\": " + ResourceUtil.toJson(objects) + " }";
 
             // lets make a few passes in case there's expressions in values
             for (int i = 0; i < 5; i++) {
