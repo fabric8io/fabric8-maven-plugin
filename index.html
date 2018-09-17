@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.41,</span>
-<span id="revdate">2018-09-16</span>
+<span id="revdate">2018-09-17</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -1126,7 +1126,7 @@ XML based configuration is only partially implemented and is not recommended for
 <div class="paragraph">
 <p>As you can see, there is no <code>metadata</code> section as would be expected for Kubernetes resources because it will be automatically added by the <code>fabric8-maven-plugin</code>. The object&#8217;s <code>Kind</code>, if not given, is automatically derived from the
 filename. In this case, the <code>fabric8-maven-plugin</code> will create a <code>Deployment</code> because the file is called <code>deployment.yml</code>. Similar mappings between file names and resource type exist for each supported resource kind, the
-complete list of which (along with associated abbreviations) can be found at <a href="https://github.com/fabric8io/fabric8-maven-plugin/blob/master/core/src/main/java/io/fabric8/maven/core/util/kubernetes/KubernetesResourceUtil.java#L198-L244" class="bare">https://github.com/fabric8io/fabric8-maven-plugin/blob/master/core/src/main/java/io/fabric8/maven/core/util/kubernetes/KubernetesResourceUtil.java#L198-L244</a>.</p>
+complete list of which (along with associated abbreviations) can be found in the <a href="#appendix-kind-mapping">Appendix</a>.</p>
 </div>
 <div class="paragraph">
 <p>Additionally, if you name your fragment using a name prefix followed by a dash and the mapped file name, the plugin will automatically use that name for your resource. So, for example, if you name your deployment fragment
@@ -6975,7 +6975,7 @@ mvn fabric8:migrate
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="kind-filename-type-mapping">15.1. Kind/Filename Type Mapping</h3>
-<table class="tableblock frame-all grid-all spread">
+<table id="appendix-kind-mapping" class="tableblock frame-all grid-all spread">
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -6988,196 +6988,132 @@ mvn fabric8:migrate
 </thead>
 <tbody>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">BuildConfig</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>bc</code>, <code>buildconfig</code></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">ClusterRole</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>cr</code>, <code>crole</code>, <code>clusterrole</code></p>
-</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cr</code>, <code>crole</code>, <code>clusterrole</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">ConfigMap</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>cm</code>, <code>configmap</code></p>
-</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cm</code>, <code>configmap</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">ClusterRoleBinding</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>crb</code>, <code>clusterrb</code>, <code>clusterrolebinding</code></p>
-</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>crb</code>, <code>clusterrb</code>, <code>clusterrolebinding</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">CronJob</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>cj</code>, <code>cronjob</code></p>
-</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cj</code>, <code>cronjob</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">CustomResourceDefinition</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>crd</code>, customerresourcedefinition</p>
-</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>crd</code>, <code>customerresourcedefinition</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">DaemonSet</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>ds</code>, <code>daemonset</code></p>
-</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ds</code>, <code>daemonset</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Deployment</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>deployment</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">ImageStream</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>is</code>, <code>imagestream</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">ImageStreamTag</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>istag</code>, <code>imagestreamtag</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Job</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>job</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">LimitRange</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>lr</code>, <code>limitrange</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Namespace</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>ns</code>, <code>namespace</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">OAuthClient</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>oauthclient</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">PolicyBinding</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>pb</code>, <code>policybinding</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">PersistentVolume</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>pv</code>, <code>persistentvolume</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">PersistentVolumeClaim</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>pvc</code>, <code>persistemtvolumeclaim</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Project</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>project</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">ProjectRequest</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>pr</code>, <code>projectrequest</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">ReplicationController</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>rc</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">ReplicaSet</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>rs</code>, <code>replicaset</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">ResourceQuota</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>rq</code>, <code>resourcequota</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Role</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>role</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">RoleBinding</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>rb</code>, <code>rolebinding</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">RoleBindingRestriction</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>rbr</code>, <code>rolebindingrestriction</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Secret</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>secret</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Service</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>svc</code>, <code>service</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">ServiceAccount</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>sa</code>, <code>serviceaccount</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">StatefulSet</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>statefulset</code></p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">BuildConfig</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>bc</code>, <code>buildconfig</code></p>
-</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>deployment</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">DeploymentConfig</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>dc</code>, <code>deploymentconfig</code></p>
-</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>dc</code>, <code>deploymentconfig</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ImageStream</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>is</code>, <code>imagestream</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ImageStreamTag</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>istag</code>, <code>imagestreamtag</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Job</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>job</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LimitRange</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>lr</code>, <code>limitrange</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Namespace</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ns</code>, <code>namespace</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">OAuthClient</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>oauthclient</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PolicyBinding</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>pb</code>, <code>policybinding</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PersistentVolume</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>pv</code>, <code>persistentvolume</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PersistentVolumeClaim</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>pvc</code>, <code>persistemtvolumeclaim</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Project</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>project</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ProjectRequest</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>pr</code>, <code>projectrequest</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ReplicaSet</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>rs</code>, <code>replicaset</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ReplicationController</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>rc</code>, <code>replicationcontroller</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ResourceQuota</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>rq</code>, <code>resourcequota</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Role</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>role</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">RoleBinding</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>rb</code>, <code>rolebinding</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">RoleBindingRestriction</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>rbr</code>, <code>rolebindingrestriction</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Route</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>route</code></p>
-</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>route</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Secret</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>secret</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Service</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>svc</code>, <code>service</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ServiceAccount</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>sa</code>, <code>serviceaccount</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">StatefulSet</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statefulset</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Template</p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p><code>template</code></p>
-</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>template</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -7188,7 +7124,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.41<br>
-Last updated 2018-09-16 16:10:16 UTC
+Last updated 2018-09-17 08:42:25 UTC
 </div>
 </div>
 </body>
