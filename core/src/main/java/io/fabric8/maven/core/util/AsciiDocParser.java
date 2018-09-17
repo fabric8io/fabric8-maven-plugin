@@ -39,8 +39,8 @@ public class AsciiDocParser {
      * <pre>
      * [cols=2*,options="header"]
      * |===
-     * |Filename
      * |Kind
+     * |File type
      *
      * a|ConfigMap
      * a|`cm`

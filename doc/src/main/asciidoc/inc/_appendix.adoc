@@ -3,4 +3,5 @@
 
 == Kind/Filename Type Mapping
 
-include::classpath:/META-INF/fabric8/kind-fileindicator-mapping-default.adoc[]
+[[appendix-kind-mapping]]
+include::classpath:/META-INF/fabric8/kind-filename-type-mapping-default.adoc[]

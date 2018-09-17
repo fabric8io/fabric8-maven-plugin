@@ -10,11 +10,7 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
-###4.0.0
-
-* Fix 1372: Filename to type mappings should be more flexible than a string array 
-
-###3.5.42
+###3.5-SNAPSHOT
 * Fix 1021: Avoids empty deployment selector value in generated yaml resource
 
 ###3.5.41 (2018-08-01)
@@ -42,6 +38,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Refactor 1370: Removed Jenkinsshift support
 * Feature 1363: Added a Thorntail V2 sample for checking Jolokia/Prometheus issues
 * Fix 894: Keep Service parameters stable after redeployment
+* Fix 1372: Filename to type mappings should be more flexible than a string array
 
 
 ###3.5.40
