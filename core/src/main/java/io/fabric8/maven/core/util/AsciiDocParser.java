@@ -57,7 +57,7 @@ public class AsciiDocParser {
      * This method returns an @code{IllegalArgumentException} if does not contain two columns.
      *
      * @param table definition in AsciiDoc format.
-     * @return A serialization of all columns, being pair elements the first column and the odd elements the second column. In previous example @code{"cm","ConfigMap","cronjob","CronJob"}
+     * @return A serialization of all columns.
      */
     public Map<String, List<String>> serializeKindFilenameTable(final InputStream table) {
 
