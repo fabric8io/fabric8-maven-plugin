@@ -39,6 +39,7 @@
     - f8-prometheus
     - f8-maven-scm
     - f8-maven-issue-mgmt
+    - f8-camel-dsl
     # Dependencies shouldn't be enriched anymore, therefor it's last in the list
     - fmp-dependency
     - f8-watch
