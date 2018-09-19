@@ -133,7 +133,16 @@ public class SpringBootUtil {
     @SuppressWarnings("unchecked")
     private static void buildFlattenedMap(Map<String, Object> result, Map<String, Object> source, String path) {
         for (Map.Entry<String, Object> entry : source.entrySet()) {
-            String key = entry.getKey();
+            Object keyObject = entry.getKey();
+
+            // If user creates a wrong application.yml then we get a runtime classcastexception
+            if (!(keyObject instanceof String)) {
+                throw new IllegalArgumentException(String.format("Expected to find a String but %s with content %s found.",
+                    keyObject.getClass(), keyObject.toString()));
+            }
+
+            String key = (String) keyObject;
+
             if (path !=null && path.trim().length()>0) {
                 if (key.startsWith("[")) {
                     key = path + key;
