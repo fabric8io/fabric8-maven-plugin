@@ -11,7 +11,7 @@ camel:
 management:
   port: 8081
 
-# disable all management enpoints except health
+# disable all management endpoints except health
 endpoints:
   enabled: false
   health:

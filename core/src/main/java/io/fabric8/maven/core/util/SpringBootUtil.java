@@ -97,7 +97,12 @@ public class SpringBootUtil {
                 SortedMap<String, Object> source = yaml.loadAs(yamlStream, SortedMap.class);
                 Properties properties = new Properties();
                 if (source != null) {
-                    properties.putAll(getFlattenedMap(source));
+                    try {
+                        properties.putAll(getFlattenedMap(source));
+                    } catch (IllegalArgumentException e) {
+                        throw new IllegalArgumentException(String.format("Spring Boot configuration file %s is not formatted correctly. %s",
+                            resource.toString(), e.getMessage()));
+                    }
                 }
                 return properties;
             } catch (IOException e) {
@@ -137,7 +142,7 @@ public class SpringBootUtil {
 
             // If user creates a wrong application.yml then we get a runtime classcastexception
             if (!(keyObject instanceof String)) {
-                throw new IllegalArgumentException(String.format("Expected to find a String but %s with content %s found.",
+                throw new IllegalArgumentException(String.format("Expected to find a key of type String but %s with content %s found.",
                     keyObject.getClass(), keyObject.toString()));
             }
 
