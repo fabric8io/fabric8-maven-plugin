@@ -24,13 +24,13 @@ import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
 import io.fabric8.maven.generator.webapp.handler.CustomAppServerHandler;
-
 
 /**
  * A generator for WAR apps
@@ -93,7 +93,7 @@ public class WebAppGenerator extends BaseGenerator {
         BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
             .from(getFrom(handler))
             .ports(handler.exposedPorts())
-            .cmd(getDockerRunCommand(handler))
+            .cmd(new Arguments(getDockerRunCommand(handler)))
             .env(getEnv(handler));
         if (!prePackagePhase) {
             buildBuilder.assembly(createAssembly(handler));

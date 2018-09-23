@@ -21,6 +21,7 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.BuildRecreateMode;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.Task;
 
@@ -66,6 +67,8 @@ public interface BuildService {
 
         private Attacher attacher;
 
+        private ImagePullManager imagePullManager;
+
         private boolean s2iImageStreamLookupPolicyLocal;
 
         public BuildServiceConfig() {
@@ -106,6 +109,8 @@ public interface BuildService {
         public Object getArtifactId() {
             return dockerMojoParameters.getProject().getArtifactId();
         }
+
+        public ImagePullManager getImagePullManager() { return imagePullManager; }
 
         public boolean isS2iImageStreamLookupPolicyLocal() {
             return s2iImageStreamLookupPolicyLocal;
@@ -175,6 +180,11 @@ public interface BuildService {
 
             public Builder attacher(Attacher attacher) {
                 config.attacher = attacher;
+                return this;
+            }
+
+            public Builder imagePullManager(ImagePullManager imagePullManager) {
+                config.imagePullManager = imagePullManager;
                 return this;
             }
 

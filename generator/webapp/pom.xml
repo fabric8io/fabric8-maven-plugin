@@ -36,6 +36,13 @@
       <groupId>io.fabric8</groupId>
       <artifactId>fabric8-maven-generator-api</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <build>

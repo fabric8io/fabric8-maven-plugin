@@ -43,7 +43,11 @@
       <groupId>io.fabric8</groupId>
       <artifactId>fabric8-maven-generator-java-exec</artifactId>
     </dependency>
-
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.jmockit</groupId>
       <artifactId>jmockit</artifactId>
