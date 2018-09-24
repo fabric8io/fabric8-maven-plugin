@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring       http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+    <camelContext xmlns="http://camel.apache.org/schema/spring">
+
+        <onException>
+            <exception>java.lang.Exception</exception>
+            <handled><constant>true</constant></handled>
+            <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+                <constant>500</constant>
+            </setHeader>
+            <setBody>
+                <simple>My Exception Message</simple>
+            </setBody>
+        </onException>
+
+        <restConfiguration component="servlet" scheme="https"
+              contextPath="myapi" apiContextPath="myapi/openapi.json"/>
+
+        <rest path="/openapi.json" enableCORS="true">
+            <get id="openapi.json" produces="application/json" uri="openapi.json">
+                <description>Gets the openapi document for this service</description>
+                <route>
+                    <setBody>
+                        <simple>resource:classpath:openapi.json</simple>
+                    </setBody>
+                </route>
+            </get>
+        </rest>
+
+        <route>
+            <from uri="{{.}}"/>
+            <to uri="direct:501"/>
+        </route>
+
+        <route>
+            <from uri="direct:501"/>
+            <log message="API operation not yet implemented: GET /"/>
+            <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+                <constant>501</constant>
+            </setHeader>
+            <setBody><simple>API operation not implemented: GET /</simple></setBody>
+        </route>
+
+    </camelContext>
+</beans>
