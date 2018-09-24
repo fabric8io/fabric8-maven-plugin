@@ -97,7 +97,7 @@ public class ContainerHandlerTest {
                 ports(ports).from("fabric8/maven:latest").cleanup("try").tags(tags).compression("gzip").build();
 
         ImageConfiguration imageConfiguration = new ImageConfiguration.Builder().
-                name("test").alias("test-app").buildConfig(buildImageConfiguration).registry("docker.io").build();
+                name("docker.io/test/test-app").alias("test-app").buildConfig(buildImageConfiguration).registry("docker.io").build();
 
         images.clear();
         images.add(imageConfiguration);
@@ -105,7 +105,7 @@ public class ContainerHandlerTest {
         containers = handler.getContainers(config, images);
         assertNotNull(containers);
         assertEquals("test-app", containers.get(0).getName());
-        assertEquals("docker.io/test", containers.get(0).getImage());
+        assertEquals("docker.io/test/test-app", containers.get(0).getImage());
         assertEquals("IfNotPresent", containers.get(0).getImagePullPolicy());
     }
 

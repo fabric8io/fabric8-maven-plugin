@@ -97,14 +97,15 @@ class ContainerHandler {
         if (StringUtils.isBlank(imageConfiguration.getName())) {
             return null;
         }
+        ImageName imageName = new ImageName(imageConfiguration.getName());
         String configuredRegistry = EnvUtil.fistRegistryOf(
-            StringUtils.isBlank(imageConfiguration.getName()) ? null : new ImageName(imageConfiguration.getName()).getRegistry(),
+            StringUtils.isBlank(imageConfiguration.getName()) ? null : imageName.getRegistry(),
             imageConfiguration.getRegistry(),
             project.getProperties().getProperty("docker.pull.registry"),
             project.getProperties().getProperty("docker.registry"));
 
         String prefix = "";
-        if (StringUtils.isNotBlank(configuredRegistry)) {
+        if (StringUtils.isNotBlank(configuredRegistry) && imageName.getRegistry() == null) {
             prefix = configuredRegistry + "/";
         }
 
