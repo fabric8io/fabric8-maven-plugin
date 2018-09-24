@@ -730,7 +730,7 @@ For example:
                 <path>/ping</path>
                 <port>8080</port>
             </readiness>
-        </f8-healthcheck>
+        </f8-healthcheck-vertx>
     </config>
 ----
 
