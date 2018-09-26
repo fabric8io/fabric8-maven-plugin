@@ -913,6 +913,7 @@ This enricher can be used to add service annotations to facilitate automated dis
 the service by 3scale for Camel RestDSL projects. Other project types may follow at a later time.
 The enricher extracts the needed information from the camel-context.xml, and the restConfiguration element in particular.
 
+[source,xml]
 -----
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -930,14 +931,13 @@ The enricher extracts the needed information from the camel-context.xml, and the
 The enricher looks for the `scheme`, `contextPath` and `apiContextPath` attributes, and it will add the following
 label and annotations:
 
-LABEL
-    discovery.3scale.net/discoverable. The value of the label can be set to "true" or "false", and was added to take part in the selector definition executed by 3scale to find all services that need discovery. Also it can act as a switch as well, to temporary turn off 3scale discovery integration by setting it to "false".
+* The label `discovery.3scale.net/discoverable`. The value of the label can be set to "true" or "false", and was added to take part in the selector definition executed by 3scale to find all services that need discovery. Also it can act as a switch as well, to temporary turn off 3scale discovery integration by setting it to "false".
 
-ANNOTATIONS
-    discovery.3scale.net/discovery-version: the version of the 3scale discovery process.
-    discovery.3scale.net/scheme: this can be "http" or "https"
-    discovery.3scale.net/path: (optional) the contextPath of the service if it's not at the root.
-    discovery.3scale.net/description-path: (optional) the path to the service description document (OpenAPI/Swagger). The path can either be relative or an external full URL.
+* The following annotations:
+  - `discovery.3scale.net/discovery-version`: (optional) the version of the 3scale discovery process. By default its "v1"
+  - `discovery.3scale.net/scheme`: (optional) this can be "http" or "https". "http" by default.
+  - `discovery.3scale.net/path`: (optional) the contextPath of the service if it's not at the root.
+  - `discovery.3scale.net/description-path`: (optional) the path to the service description document (OpenAPI/Swagger). The path can either be relative or an external full URL. By default the description is picked up from the root context (/)
 
 The following configuration parameters can be used to override the behavior of this enricher:
 
