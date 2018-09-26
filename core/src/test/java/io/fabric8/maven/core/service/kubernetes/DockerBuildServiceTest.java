@@ -17,8 +17,11 @@ package io.fabric8.maven.core.service.kubernetes;
 
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.ImagePullPolicy;
 import io.fabric8.maven.docker.service.BuildService;
+import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.util.AutoPullMode;
 import mockit.Expectations;
 import mockit.FullVerificationsInOrder;
 import mockit.Mocked;
@@ -48,6 +51,7 @@ public class DockerBuildServiceTest {
 
         final io.fabric8.maven.core.service.BuildService.BuildServiceConfig config = new io.fabric8.maven.core.service.BuildService.BuildServiceConfig.Builder()
                 .dockerBuildContext(context)
+                .imagePullManager(new ImagePullManager(new TestCacheStore(), ImagePullPolicy.Always.name(), AutoPullMode.ALWAYS.name()))
                 .build();
 
         final String imageName = "image-name";
@@ -62,9 +66,24 @@ public class DockerBuildServiceTest {
         service.build(image);
 
         new FullVerificationsInOrder() {{
-            buildService.buildImage(image, context);
+            buildService.buildImage(image, config.getImagePullManager(), context);
             buildService.tagImage(imageName, image);
         }};
+    }
+
+    private class TestCacheStore implements ImagePullManager.CacheStore {
+
+        String cache;
+
+        @Override
+        public String get(String key) {
+            return cache;
+        }
+
+        @Override
+        public void put(String key, String value) {
+            cache = value;
+        }
     }
 
 }

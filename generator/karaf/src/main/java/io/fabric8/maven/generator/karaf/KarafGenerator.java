@@ -20,6 +20,7 @@ import java.util.List;
 
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -51,7 +52,7 @@ public class KarafGenerator extends BaseGenerator {
         ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
         BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
             .ports(extractPorts())
-            .cmd(getConfig(Config.cmd));
+            .cmd(new Arguments(getConfig(Config.cmd)));
         addFrom(buildBuilder);
         if (!prePackagePhase) {
             buildBuilder.assembly(createAssembly());

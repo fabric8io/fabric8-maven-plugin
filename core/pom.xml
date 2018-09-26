@@ -132,6 +132,10 @@
       <artifactId>json-path-assert</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-interpolation</artifactId>
+    </dependency>
   </dependencies>
 
   <build>

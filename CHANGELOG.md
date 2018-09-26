@@ -41,6 +41,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Feature 1363: Added a Thorntail V2 sample for checking Jolokia/Prometheus issues
 * Fix 894: Keep Service parameters stable after redeployment
 * Fix 1372: Filename to type mappings should be more flexible than a string array
+* Fix 1327: Update docker maven plugin version
 
 
 ###3.5.40
