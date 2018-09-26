@@ -23,6 +23,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.util.ResourceUtil;
+import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.HealthCheckConfiguration;
 import io.fabric8.maven.docker.config.HealthCheckMode;
@@ -57,7 +58,7 @@ public class DockerHealthCheckEnricherTest {
                             .buildConfig(new BuildImageConfiguration.Builder()
                                     .healthCheck(new HealthCheckConfiguration.Builder()
                                             .mode(HealthCheckMode.cmd)
-                                            .cmd("/bin/check")
+                                            .cmd(new Arguments("/bin/check"))
                                             .timeout("1s")
                                             .interval("1h1s")
                                             .retries(3)
@@ -69,7 +70,7 @@ public class DockerHealthCheckEnricherTest {
                             .buildConfig(new BuildImageConfiguration.Builder()
                                     .healthCheck(new HealthCheckConfiguration.Builder()
                                             .mode(HealthCheckMode.cmd)
-                                            .cmd("/xxx/check")
+                                            .cmd(new Arguments("/xxx/check"))
                                             .timeout("3s")
                                             .interval("3h1s")
                                             .retries(9)
@@ -99,7 +100,7 @@ public class DockerHealthCheckEnricherTest {
                             .buildConfig(new BuildImageConfiguration.Builder()
                                     .healthCheck(new HealthCheckConfiguration.Builder()
                                             .mode(HealthCheckMode.cmd)
-                                            .cmd("/bin/check")
+                                            .cmd(new Arguments("/bin/check"))
                                             .timeout("1s")
                                             .interval("1h1s")
                                             .retries(3)
@@ -111,7 +112,7 @@ public class DockerHealthCheckEnricherTest {
                             .buildConfig(new BuildImageConfiguration.Builder()
                                     .healthCheck(new HealthCheckConfiguration.Builder()
                                             .mode(HealthCheckMode.cmd)
-                                            .cmd("/xxx/check")
+                                            .cmd(new Arguments("/xxx/check"))
                                             .timeout("3s")
                                             .interval("3h1s")
                                             .retries(9)
@@ -168,7 +169,7 @@ public class DockerHealthCheckEnricherTest {
                     .buildConfig(new BuildImageConfiguration.Builder()
                             .healthCheck(new HealthCheckConfiguration.Builder()
                                     .mode(HealthCheckMode.cmd)
-                                    .cmd("/bin/check")
+                                    .cmd(new Arguments("/bin/check"))
                                     .timeout("1s")
                                     .interval("1h1s")
                                     .retries(3)

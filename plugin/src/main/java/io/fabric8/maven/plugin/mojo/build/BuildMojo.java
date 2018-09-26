@@ -15,7 +15,6 @@
  */
 package io.fabric8.maven.plugin.mojo.build;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -286,6 +285,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .openshiftPullSecret(openshiftPullSecret)
                 .s2iBuildNameSuffix(s2iBuildNameSuffix)
                 .s2iImageStreamLookupPolicyLocal(s2iImageStreamLookupPolicyLocal)
+                .imagePullManager(getImagePullManager(imagePullPolicy, autoPull))
                 .buildDirectory(project.getBuild().getDirectory())
                 .attacher(new BuildService.BuildServiceConfig.Attacher() {
                     @Override

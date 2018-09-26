@@ -97,7 +97,7 @@ class ContainerHandler {
         if (StringUtils.isBlank(imageConfiguration.getName())) {
             return null;
         }
-        String configuredRegistry = EnvUtil.findRegistry(
+        String configuredRegistry = EnvUtil.fistRegistryOf(
             StringUtils.isBlank(imageConfiguration.getName()) ? null : new ImageName(imageConfiguration.getName()).getRegistry(),
             imageConfiguration.getRegistry(),
             project.getProperties().getProperty("docker.pull.registry"),
