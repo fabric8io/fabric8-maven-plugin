@@ -292,14 +292,14 @@ public class HelmMojo extends AbstractFabric8Mojo {
                 throw new MojoExecutionException("Failed to load kubernetes YAML " + kubernetesManifest + ". " + e, e);
             }
             if (dto instanceof HasMetadata) {
-                answer = KubernetesHelper.getOrCreateAnnotations((HasMetadata) dto).get(Fabric8Annotations.ICON_URL.value());
+                answer = KubernetesHelper.getOrCreateAnnotations((HasMetadata) dto).get("fabric8.io/iconUrl");
             }
             if (StringUtils.isBlank(answer) && dto instanceof KubernetesList) {
                 KubernetesList list = (KubernetesList) dto;
                 List<HasMetadata> items = list.getItems();
                 if (items != null) {
                     for (HasMetadata item : items) {
-                        answer = KubernetesHelper.getOrCreateAnnotations(item).get(Fabric8Annotations.ICON_URL.value());
+                        answer = KubernetesHelper.getOrCreateAnnotations(item).get("fabric8.io/iconUrl");
                         if (StringUtils.isNotBlank(answer)) {
                             break;
                         }

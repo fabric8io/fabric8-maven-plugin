@@ -50,7 +50,6 @@ items:
   metadata:
     annotations:
       fabric8.io/git-commit: "@ignore@"
-      fabric8.io/metrics-path: "@matches('.*dashboard.*fabric8-maven-sample-zero-config.*var-version.*')@"
       fabric8.io/git-branch: "@ignore@"
     labels:
       provider: fabric8
@@ -68,7 +67,6 @@ items:
       metadata:
         annotations:
           fabric8.io/git-commit: "@ignore@"
-          fabric8.io/metrics-path: "@matches('.*dashboard.*fabric8-maven-sample-zero-config.*var-version.*')@"
           fabric8.io/git-branch: "@ignore@"
         labels:
           provider: fabric8

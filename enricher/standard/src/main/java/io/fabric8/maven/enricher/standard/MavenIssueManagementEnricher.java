@@ -37,7 +37,7 @@ import org.apache.maven.project.MavenProject;
  * @author kameshs
  */
 public class MavenIssueManagementEnricher extends BaseEnricher {
-    static final String ENRICHER_NAME = "f8-maven-issue-mgmt";
+    static final String ENRICHER_NAME = "fmp-maven-issue-mgmt";
 
     public MavenIssueManagementEnricher(EnricherContext buildContext) {
         super(buildContext, ENRICHER_NAME);

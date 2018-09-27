@@ -18,7 +18,6 @@ package io.fabric8.maven.enricher.fabric8;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 
 import static io.fabric8.maven.core.util.MavenUtil.hasDependency;
@@ -29,7 +28,7 @@ import static io.fabric8.maven.core.util.MavenUtil.hasDependency;
 public class WildFlySwarmHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
     public WildFlySwarmHealthCheckEnricher(EnricherContext buildContext) {
-        super(buildContext, "wildfly-swarm-health-check");
+        super(buildContext, "f8-healthcheck-wildfly-swarm");
     }
 
     // Available configuration keys
@@ -54,14 +53,12 @@ public class WildFlySwarmHealthCheckEnricher extends AbstractHealthCheckEnricher
 
     @Override
     protected Probe getReadinessProbe() {
-        Probe probe = discoverWildFlySwarmHealthCheck(10);
-        return probe;
+        return discoverWildFlySwarmHealthCheck(10);
     }
 
     @Override
     protected Probe getLivenessProbe() {
-        Probe probe = discoverWildFlySwarmHealthCheck(180);
-        return probe;
+        return discoverWildFlySwarmHealthCheck(180);
     }
 
     private Probe discoverWildFlySwarmHealthCheck(int initialDelay) {

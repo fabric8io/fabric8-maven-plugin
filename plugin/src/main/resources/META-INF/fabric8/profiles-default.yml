@@ -32,32 +32,31 @@
     - fmp-dependency
     - fmp-pod-annotations
     - fmp-git
+    - fmp-maven-scm
+    - fmp-maven-issue-mgmt
     # TODO: Documents and verify enrichers below
     - fmp-debug
     - fmp-merge
     - fmp-remove-build-annotations
     - fmp-volume-permission
-    # -----------------------------------------
-    - f8-cd
-    - f8-cd-doc-link
-    - f8-cd-grafana-link
-    - f8-icon
-    # TODO: Document and verify enrichers below
-    - f8-expose
-    # Health checks
+
+    # Route exposure
+    - fmp-openshift-service-expose
     - fmp-openshift-route
-    - spring-boot-health-check
-    - wildfly-swarm-health-check
-    - thorntail-v2-health-check
-    - karaf-health-check
-    - vertx-health-check
-    - docker-health-check
+
+    # -----------------------------------------
+    # TODO: Document and verify enrichers below
+    # Health checks
+    - f8-healthcheck-spring-boot
+    - f8-healthcheck-wildfly-swarm
+    - f8-healthcheck-thorntail-v2
+    - f8-healthcheck-karaf
+    - f8-healthcheck-vertx
+    - f8-healthcheck-docker
     - f8-prometheus
-    - f8-maven-scm
-    - f8-maven-issue-mgmt
     # Dependencies shouldn't be enriched anymore, therefor it's last in the list
     - fmp-dependency
-    - f8-watch
+    - fmp-watch
     - fmp-revision-history
     - fmp-docker-registry-secret
     - fmp-triggers-annotation
@@ -122,11 +121,12 @@
       - spring-boot
 # does not expose services by default
 - name: internal-microservice
+  extends: default
   generator:
     excludes: []
   enricher:
     excludes:
-      - f8-expose
+      - fmp-openshift-service-expose
 # Includes everything from 'default', plus enrichers/generators
 # only useful to OpenShift.io
 - name: osio

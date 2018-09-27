@@ -83,7 +83,7 @@
                 <configuration>
                     <enricher>
                         <config>
-                            <vertx-health-check>
+                            <f8-healthcheck-vertx>
                                 <path>/</path>
                                 <liveness>
                                     <initial-delay>180</initial-delay>
@@ -91,7 +91,7 @@
                                 <readiness>
                                     <initial-delay>10</initial-delay>
                                 </readiness>
-                            </vertx-health-check>
+                            </f8-healthcheck-vertx>
                         </config>
                     </enricher>
                 </configuration>

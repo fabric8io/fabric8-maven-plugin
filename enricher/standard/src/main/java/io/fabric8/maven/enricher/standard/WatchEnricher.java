@@ -13,7 +13,8 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.enricher.fabric8;
+
+package io.fabric8.maven.enricher.standard;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
@@ -34,7 +35,7 @@ import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 public class WatchEnricher extends BaseEnricher {
 
     public WatchEnricher(EnricherContext buildContext) {
-        super(buildContext, "f8-watch");
+        super(buildContext, "fmp-watch");
     }
 
     @Override

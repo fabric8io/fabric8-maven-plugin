@@ -13,7 +13,7 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.enricher.fabric8;
+package io.fabric8.maven.enricher.standard.openshift;
 
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +37,7 @@ import java.util.*;
  * OpenShift.
  */
 public class AutoTLSEnricher extends BaseEnricher {
-    static final String ENRICHER_NAME = "fmp-autotls";
+    static final String ENRICHER_NAME = "fmp-openshift-autotls";
     static final String AUTOTLS_ANNOTATION_KEY = "service.alpha.openshift.io/serving-cert-secret-name";
 
     private String secretName;
@@ -95,7 +95,7 @@ public class AutoTLSEnricher extends BaseEnricher {
                 String tlsSecretVolumeName = getConfig(Config.tlsSecretVolumeName);
                 if (!isVolumeAlreadyExists(builder.buildVolumes(), tlsSecretVolumeName)) {
                     builder.addNewVolume().withName(tlsSecretVolumeName).withNewSecret()
-                            .withSecretName(AutoTLSEnricher.this.secretName).endSecret().endVolume();
+                           .withSecretName(AutoTLSEnricher.this.secretName).endSecret().endVolume();
                 }
                 String jksSecretVolumeName = getConfig(Config.jksVolumeName);
                 if (!isVolumeAlreadyExists(builder.buildVolumes(), jksSecretVolumeName)) {

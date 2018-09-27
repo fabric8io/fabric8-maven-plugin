@@ -23,7 +23,6 @@ import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.core.util.SpringBootUtil;
-import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import org.apache.commons.lang3.StringUtils;
 
@@ -33,7 +32,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
-    public static final String ENRICHER_NAME = "spring-boot-health-check";
+    public static final String ENRICHER_NAME = "f8-healthcheck-spring-boot";
 
     private static final String[] REQUIRED_CLASSES = {
             "org.springframework.boot.actuate.health.HealthIndicator",

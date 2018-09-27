@@ -13,7 +13,7 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.enricher.fabric8;
+package io.fabric8.maven.enricher.deprecated;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -37,7 +37,7 @@ import org.apache.maven.project.MavenProject;
 public class DocLinkEnricher extends AbstractLiveEnricher {
 
     public DocLinkEnricher(EnricherContext buildContext) {
-        super(buildContext, "f8-cd-doc-link");
+        super(buildContext, "f8-deprecated-link");
     }
 
     @Override
