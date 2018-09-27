@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.41,</span>
-<span id="revdate">2018-09-26</span>
+<span id="revdate">2018-09-27</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -4597,7 +4597,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </ul>
 </div>
 <div class="paragraph">
-<p>The <a href="#generator-example">Generator example</a> is a good bluebprint, simply replace <code>&lt;generator&gt;</code> with <code>&lt;enricher&gt;</code>. The configuration is structural identical:</p>
+<p>The <a href="#generator-example">Generator example</a> is a good blueprint, simply replace <code>&lt;generator&gt;</code> with <code>&lt;enricher&gt;</code>. The configuration is structural identical:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 31. Enricher configuration</caption>
@@ -4667,27 +4667,11 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#f8-cd">f8-cd</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Add CD metadata as annotations.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#f8-doc-link">f8-doc-link</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Add URL to documentation configured in the POM as annotation.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#f8-grafana-link">f8-grafana-link</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Add a Grafana Dashboard URL as annotation.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#f8-icon">f8-icon</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Add an URL to icons for well known application types.</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#f8-prometheus">f8-prometheus</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add Prometheus annotations.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#f8-maven-scm-enricher">f8-maven-scm-enricher</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#f8-maven-scm-enricher">fmp-maven-scm-enricher</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add Maven SCM information as annotations to the kubernetes/openshift resources</p></td>
 </tr>
 <tr>
@@ -4731,7 +4715,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <td class="tableblock halign-left valign-top"><p class="tableblock">Create a default service if missing and extrac ports from the Docker image configuration.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-maven-issue-mgmt-enricher">f8-maven-issue-mgmt</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-maven-issue-mgmt-enricher">fmp-maven-issue-mgmt</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add Maven Issue Management information as annotations to the kubernetes/openshift resources</p></td>
 </tr>
 <tr>
@@ -5004,7 +4988,7 @@ Assuming that the image exposes ports <code>8080</code> and <code>8778</code> (e
 </div>
 </div>
 <div class="sect4">
-<h5 id="fmp-autotls">fmp-autotls</h5>
+<h5 id="fmp-autotls">fmp-openshift-autotls</h5>
 <div class="paragraph">
 <p>Enricher which adds appropriate annotations and volumes to enable OpenShift&#8217;s automatic <a href="https://docs.openshift.org/latest/dev_guide/secrets.html#service-serving-certificate-secrets">Service Serving Certificate Secrets</a>.
 This enricher adds an init container to convert the service serving certificates from PEM (the format that OpenShift generates them in) to
@@ -5029,12 +5013,12 @@ a JKS-format Java keystore ready for consumption in Java services.</p>
   <span class="tag">&lt;configuration&gt;</span>
     <span class="tag">&lt;enricher&gt;</span>
       <span class="tag">&lt;includes&gt;</span>
-        <span class="tag">&lt;include&gt;</span>fmp-autotls<span class="tag">&lt;/include&gt;</span>
+        <span class="tag">&lt;include&gt;</span>fmp-openshift-autotls<span class="tag">&lt;/include&gt;</span>
       <span class="tag">&lt;/includes&gt;</span>
       <span class="tag">&lt;config&gt;</span>
-        <span class="tag">&lt;fmp-autotls&gt;</span>
+        <span class="tag">&lt;fmp-openshift-autotls&gt;</span>
           ...
-        <span class="tag">&lt;/fmp-autotls&gt;</span>
+        <span class="tag">&lt;/fmp-openshift-autotls&gt;</span>
       <span class="tag">&lt;/config&gt;</span>
     <span class="tag">&lt;/enricher&gt;</span>
   <span class="tag">&lt;/configuration&gt;</span>
@@ -5118,23 +5102,7 @@ a JKS-format Java keystore ready for consumption in Java services.</p>
 <p>Fabric8 enrichers are used for providing the connection to other components of the fabric8 Microservices platform. They are useful to add icons to to application or links to documentation sites.</p>
 </div>
 <div class="sect4">
-<h5 id="f8-cd">f8-cd</h5>
-
-</div>
-<div class="sect4">
-<h5 id="f8-doc-link">f8-doc-link</h5>
-
-</div>
-<div class="sect4">
-<h5 id="f8-grafana-link">f8-grafana-link</h5>
-
-</div>
-<div class="sect4">
-<h5 id="f8-icon">f8-icon</h5>
-
-</div>
-<div class="sect4">
-<h5 id="f8-karaf-health-check">f8-karaf-health-check</h5>
+<h5 id="f8-healthcheck-karaf">f8-healthcheck-karaf</h5>
 <div class="paragraph">
 <p>This enricher adds kubernetes readiness and liveness probes with Apache Karaf. This requires that
  <code>fabric8-karaf-checks</code> has been enabled in the Karaf startup features.</p>
@@ -5183,7 +5151,7 @@ You can force the plugin to add annotations by setting enricher&#8217;s config <
 </div>
 </div>
 <div class="sect4">
-<h5 id="f8-spring-boot-health-check">f8-spring-boot-health-check</h5>
+<h5 id="f8-healthcheck-spring-boot">f8-healthcheck-spring-boot</h5>
 <div class="paragraph">
 <p>This enricher adds kubernetes readiness and liveness probes with Spring Boot. This requires the following dependency
  has been enabled in Spring Boot</p>
@@ -5247,10 +5215,10 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
         <span class="tag">&lt;configuration&gt;</span>
           <span class="tag">&lt;enricher&gt;</span>
             <span class="tag">&lt;config&gt;</span>
-              <span class="tag">&lt;spring-boot-health-check&gt;</span>
+              <span class="tag">&lt;f8-healthcheck-spring-boot&gt;</span>
                 <span class="tag">&lt;timeoutSeconds&gt;</span>5<span class="tag">&lt;/timeoutSeconds&gt;</span>
                 <span class="tag">&lt;readinessProbeInitialDelaySeconds&gt;</span>30<span class="tag">&lt;/readinessProbeInitialDelaySeconds&gt;</span>
-              <span class="tag">&lt;/spring-boot-health-check&gt;</span>
+              <span class="tag">&lt;/f8-healthcheck-spring-boot&gt;</span>
             <span class="tag">&lt;/config&gt;</span>
           <span class="tag">&lt;/enricher&gt;</span>
         <span class="tag">&lt;/configuration&gt;</span>
@@ -5259,7 +5227,7 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
 </div>
 </div>
 <div class="sect4">
-<h5 id="f8-wildfly-swarm-health-check">f8-wildfly-swarm-health-check</h5>
+<h5 id="f8-healthcheck-wildfly-swarm">f8-f8-healthcheck-wildfly-swarm</h5>
 <div class="paragraph">
 <p>This enricher adds kubernetes readiness and liveness probes with WildFly Swarm. This requires the following fraction
  has been enabled in WildFly Swarm</p>
@@ -5310,11 +5278,11 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
         <span class="tag">&lt;configuration&gt;</span>
           <span class="tag">&lt;enricher&gt;</span>
             <span class="tag">&lt;config&gt;</span>
-              <span class="tag">&lt;wildfly-swarm-health-check&gt;</span>
+              <span class="tag">&lt;f8-healthcheck-wildfly-swarm&gt;</span>
                 <span class="tag">&lt;port&gt;</span>4444<span class="tag">&lt;/port&gt;</span>
                 <span class="tag">&lt;scheme&gt;</span>HTTPS<span class="tag">&lt;/scheme&gt;</span>
                 <span class="tag">&lt;path&gt;</span>health/myapp<span class="tag">&lt;/path&gt;</span>
-              <span class="tag">&lt;/wildfly-swarm-health-check&gt;</span>
+              <span class="tag">&lt;/f8-healthcheck-wildfly-swarm&gt;</span>
             <span class="tag">&lt;/config&gt;</span>
           <span class="tag">&lt;/enricher&gt;</span>
         <span class="tag">&lt;/configuration&gt;</span>
@@ -5323,7 +5291,7 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
 </div>
 </div>
 <div class="sect4">
-<h5 id="f8-thorntail-v2-health-check">f8-thorntail-v2-health-check</h5>
+<h5 id="f8-healthcheck-thorntail-v2">f8-healthcheck-thorntail-v2</h5>
 <div class="paragraph">
 <p>This enricher adds kubernetes readiness and liveness probes with Thorntail v2. This requires the following fraction
  has been enabled in Thorntail</p>
@@ -5374,11 +5342,11 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
         <span class="tag">&lt;configuration&gt;</span>
           <span class="tag">&lt;enricher&gt;</span>
             <span class="tag">&lt;config&gt;</span>
-              <span class="tag">&lt;thorntail-v2-health-check&gt;</span>
+              <span class="tag">&lt;f8-healthcheck-thorntail&gt;</span>
                 <span class="tag">&lt;port&gt;</span>4444<span class="tag">&lt;/port&gt;</span>
                 <span class="tag">&lt;scheme&gt;</span>HTTPS<span class="tag">&lt;/scheme&gt;</span>
                 <span class="tag">&lt;path&gt;</span>health/myapp<span class="tag">&lt;/path&gt;</span>
-              <span class="tag">&lt;/thorntail-v2-health-check&gt;</span>
+              <span class="tag">&lt;/f8-healthcheck-thorntail&gt;</span>
             <span class="tag">&lt;/config&gt;</span>
           <span class="tag">&lt;/enricher&gt;</span>
         <span class="tag">&lt;/configuration&gt;</span>
@@ -5387,7 +5355,7 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
 </div>
 </div>
 <div class="sect4">
-<h5 id="f8-vertx-health-check">f8-vertx-health-check</h5>
+<h5 id="f8-healthcheck-vertx">f8-healthcheck-vertx</h5>
 <div class="paragraph">
 <p>This enricher adds kubernetes readiness and liveness probes with Eclipse Vert.x applications. The readiness probe lets Kubernetes
 detects when the application is ready, while the liveness probe allows Kubernetes to verify that the application is
@@ -5400,7 +5368,7 @@ still alive.</p>
 <p>By default, this enricher uses the same configuration for liveness and readiness probes. But specific configurations can be provided. The configurations can be overridden using project&#8217;s properties.</p>
 </div>
 <div class="sect5">
-<h6 id="using-the-f8-vertx-health-check-enricher">Using the f8-vertx-health-check enricher</h6>
+<h6 id="using-the-f8-healthcheck-vertx-enricher">Using the f8-healthcheck-vertx enricher</h6>
 <div class="paragraph">
 <p>The enricher is automatically executed if your project uses the <code>vertx-maven-plugin</code> or depends on <code>io.vertx:vertx-core</code>.
 However, by default, no health check will be added to your deployment.</p>
@@ -5430,9 +5398,9 @@ However, by default, no health check will be added to your deployment.</p>
   <span class="tag">&lt;configuration&gt;</span>
     <span class="tag">&lt;enricher&gt;</span>
       <span class="tag">&lt;config&gt;</span>
-        <span class="tag">&lt;vertx-health-check&gt;</span>
+        <span class="tag">&lt;f8-healthcheck-vertx&gt;</span>
             <span class="tag">&lt;path&gt;</span>/health<span class="tag">&lt;/path&gt;</span>
-        <span class="tag">&lt;/vertx-health-check&gt;</span>
+        <span class="tag">&lt;/f8-healthcheck-vertx&gt;</span>
       <span class="tag">&lt;/config&gt;</span>
     <span class="tag">&lt;/enricher&gt;</span>
   <span class="tag">&lt;/configuration&gt;</span>
@@ -5490,14 +5458,14 @@ However, by default, no health check will be added to your deployment.</p>
   <span class="tag">&lt;configuration&gt;</span>
     <span class="tag">&lt;enricher&gt;</span>
       <span class="tag">&lt;config&gt;</span>
-        <span class="tag">&lt;vertx-health-check&gt;</span>
+        <span class="tag">&lt;f8-healthcheck-vertx&gt;</span>
             <span class="tag">&lt;readiness&gt;</span>
               <span class="tag">&lt;path&gt;</span>/ready<span class="tag">&lt;/path&gt;</span>
             <span class="tag">&lt;/readiness&gt;</span>
             <span class="tag">&lt;liveness&gt;</span>
               <span class="tag">&lt;path&gt;</span>/health<span class="tag">&lt;/path&gt;</span>
             <span class="tag">&lt;/liveness&gt;</span>
-        <span class="tag">&lt;/vertx-health-check&gt;</span>
+        <span class="tag">&lt;/f8-healthcheck-vertx&gt;</span>
       <span class="tag">&lt;/config&gt;</span>
     <span class="tag">&lt;/enricher&gt;</span>
   <span class="tag">&lt;/configuration&gt;</span>
@@ -5537,7 +5505,7 @@ However, by default, no health check will be added to your deployment.</p>
   <span class="tag">&lt;configuration&gt;</span>
     <span class="tag">&lt;enricher&gt;</span>
       <span class="tag">&lt;config&gt;</span>
-        <span class="tag">&lt;vertx-health-check&gt;</span>
+        <span class="tag">&lt;f8-healthcheck-vertx&gt;</span>
             <span class="tag">&lt;port&gt;</span>8081<span class="tag">&lt;/port&gt;</span>
             <span class="tag">&lt;readiness&gt;</span>
               <span class="tag">&lt;path&gt;</span>/ready<span class="tag">&lt;/path&gt;</span>
@@ -5545,7 +5513,7 @@ However, by default, no health check will be added to your deployment.</p>
             <span class="tag">&lt;liveness&gt;</span>
               <span class="tag">&lt;path&gt;</span>/health<span class="tag">&lt;/path&gt;</span>
             <span class="tag">&lt;/liveness&gt;</span>
-        <span class="tag">&lt;/vertx-health-check&gt;</span>
+        <span class="tag">&lt;/f8-healthcheck-vertx&gt;</span>
       <span class="tag">&lt;/config&gt;</span>
     <span class="tag">&lt;/enricher&gt;</span>
   <span class="tag">&lt;/configuration&gt;</span>
@@ -5573,7 +5541,7 @@ However, by default, no health check will be added to your deployment.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;config&gt;</span>
-    <span class="tag">&lt;vertx-health-check&gt;</span>
+    <span class="tag">&lt;f8-healthcheck-vertx&gt;</span>
         <span class="comment">&lt;!-- Generic configuration, applied to both liveness and readiness --&gt;</span>
         <span class="tag">&lt;path&gt;</span>/both<span class="tag">&lt;/path&gt;</span>
         <span class="tag">&lt;liveness&gt;</span>
@@ -5584,7 +5552,7 @@ However, by default, no health check will be added to your deployment.</p>
             <span class="comment">&lt;!-- Specific configuration for the readiness probe --&gt;</span>
             <span class="tag">&lt;port-name&gt;</span>ready<span class="tag">&lt;/port-name&gt;</span>
         <span class="tag">&lt;/readiness&gt;</span>
-    <span class="tag">&lt;/vertx-health-check&gt;</span>
+    <span class="tag">&lt;/f8-healthcheck-vertx&gt;</span>
 <span class="tag">&lt;/config&gt;</span></code></pre>
 </div>
 </div>
@@ -5707,7 +5675,7 @@ However, by default, no health check will be added to your deployment.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;config&gt;</span>
-    <span class="tag">&lt;vertx-health-check&gt;</span>
+    <span class="tag">&lt;f8-healthcheck-vertx&gt;</span><span class="error">&gt;</span>
         <span class="tag">&lt;initialDelay&gt;</span>3<span class="tag">&lt;/initialDelay&gt;</span>
         <span class="tag">&lt;period&gt;</span>3<span class="tag">&lt;/period&gt;</span>
         <span class="tag">&lt;liveness&gt;</span>
@@ -5722,7 +5690,7 @@ However, by default, no health check will be added to your deployment.</p>
             <span class="comment">&lt;!-- disable the readiness probe --&gt;</span>
             <span class="tag">&lt;port&gt;</span>-1<span class="tag">&lt;/port&gt;</span>
         <span class="tag">&lt;/readiness&gt;</span>
-    <span class="tag">&lt;/vertx-health-check&gt;</span>
+    <span class="tag">&lt;/f8-healthcheck-vertx&gt;</span>
 <span class="tag">&lt;/config&gt;</span></code></pre>
 </div>
 </div>
@@ -5761,7 +5729,7 @@ However, by default, no health check will be added to your deployment.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;config&gt;</span>
-    <span class="tag">&lt;vertx-health-check&gt;</span>
+    <span class="tag">&lt;f8-healthcheck-vertx&gt;</span>
         <span class="tag">&lt;initialDelay&gt;</span>3<span class="tag">&lt;/initialDelay&gt;</span>
         <span class="tag">&lt;period&gt;</span>3<span class="tag">&lt;/period&gt;</span>
         <span class="tag">&lt;liveness&gt;</span>
@@ -5773,7 +5741,7 @@ However, by default, no health check will be added to your deployment.</p>
             <span class="tag">&lt;path&gt;</span>/ping<span class="tag">&lt;/path&gt;</span>
             <span class="tag">&lt;port&gt;</span>8080<span class="tag">&lt;/port&gt;</span>
         <span class="tag">&lt;/readiness&gt;</span>
-    <span class="tag">&lt;/vertx-health-check&gt;</span>
+    <span class="tag">&lt;/f8-healthcheck-vertx&gt;</span>
 <span class="tag">&lt;/config&gt;</span></code></pre>
 </div>
 </div>
@@ -5786,7 +5754,7 @@ However, by default, no health check will be added to your deployment.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;config&gt;</span>
-    <span class="tag">&lt;vertx-health-check&gt;</span>
+    <span class="tag">&lt;f8-healthcheck-vertx&gt;</span>
         <span class="tag">&lt;initialDelay&gt;</span>3<span class="tag">&lt;/initialDelay&gt;</span>
         <span class="tag">&lt;period&gt;</span>3<span class="tag">&lt;/period&gt;</span>
         <span class="tag">&lt;liveness&gt;</span>
@@ -5801,7 +5769,7 @@ However, by default, no health check will be added to your deployment.</p>
             <span class="tag">&lt;path&gt;</span>/ping<span class="tag">&lt;/path&gt;</span>
             <span class="tag">&lt;port&gt;</span>8080<span class="tag">&lt;/port&gt;</span>
         <span class="tag">&lt;/readiness&gt;</span>
-    <span class="tag">&lt;/vertx-health-check&gt;</span>
+    <span class="tag">&lt;/f8-healthcheck-vertx&gt;</span>
 <span class="tag">&lt;/config&gt;</span></code></pre>
 </div>
 </div>
@@ -5839,7 +5807,7 @@ However, by default, no health check will be added to your deployment.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="f8-maven-scm-enricher">f8-maven-scm-enricher</h5>
+<h5 id="f8-maven-scm-enricher">fmp-maven-scm-enricher</h5>
 <div class="paragraph">
 <p>This enricher adds additional <a href="https://maven.apache.org/pom.html#SCM">SCM</a> related metadata to all objects supporting annotations.
 These metadata will be added only if <a href="https://maven.apache.org/pom.html#SCM">SCM</a> information is present in the maven <code>pom.xml</code> of the project.</p>
@@ -5914,7 +5882,7 @@ These metadata will be added only if <a href="https://maven.apache.org/pom.html#
 </div>
 </div>
 <div class="sect4">
-<h5 id="fmp-maven-issue-mgmt-enricher">f8-maven-issue-mgmt</h5>
+<h5 id="fmp-maven-issue-mgmt-enricher">fmp-maven-issue-mgmt</h5>
 <div class="paragraph">
 <p>This enricher adds additional <a href="https://maven.apache.org/pom.html#Issue_Management">Issue Management</a> related metadata to all objects supporting annotations.
 These metadata will be added only if the <a href="https://maven.apache.org/pom.html#Issue_Management">Issue Management</a> information in available in maven <code>pom.xml</code> of the project.</p>
@@ -6495,32 +6463,31 @@ label applied, like the following:</p>
     - <span class="string"><span class="content">fmp-dependency</span></span>
     - <span class="string"><span class="content">fmp-pod-annotations</span></span>
     - <span class="string"><span class="content">fmp-git</span></span>
+    - <span class="string"><span class="content">fmp-maven-scm</span></span>
+    - <span class="string"><span class="content">fmp-maven-issue-mgmt</span></span>
     <span class="comment"># TODO: Documents and verify enrichers below</span>
     - <span class="string"><span class="content">fmp-debug</span></span>
     - <span class="string"><span class="content">fmp-merge</span></span>
     - <span class="string"><span class="content">fmp-remove-build-annotations</span></span>
     - <span class="string"><span class="content">fmp-volume-permission</span></span>
-    <span class="comment"># -----------------------------------------</span>
-    - <span class="string"><span class="content">f8-cd</span></span>
-    - <span class="string"><span class="content">f8-cd-doc-link</span></span>
-    - <span class="string"><span class="content">f8-cd-grafana-link</span></span>
-    - <span class="string"><span class="content">f8-icon</span></span>
-    <span class="comment"># TODO: Document and verify enrichers below</span>
-    - <span class="string"><span class="content">f8-expose</span></span>
-    <span class="comment"># Health checks</span>
+
+    <span class="comment"># Route exposure</span>
+    - <span class="string"><span class="content">fmp-openshift-service-expose</span></span>
     - <span class="string"><span class="content">fmp-openshift-route</span></span>
-    - <span class="string"><span class="content">spring-boot-health-check</span></span>
-    - <span class="string"><span class="content">wildfly-swarm-health-check</span></span>
-    - <span class="string"><span class="content">thorntail-v2-health-check</span></span>
-    - <span class="string"><span class="content">karaf-health-check</span></span>
-    - <span class="string"><span class="content">vertx-health-check</span></span>
-    - <span class="string"><span class="content">docker-health-check</span></span>
+
+    <span class="comment"># -----------------------------------------</span>
+    <span class="comment"># TODO: Document and verify enrichers below</span>
+    <span class="comment"># Health checks</span>
+    - <span class="string"><span class="content">f8-healthcheck-spring-boot</span></span>
+    - <span class="string"><span class="content">f8-healthcheck-wildfly-swarm</span></span>
+    - <span class="string"><span class="content">f8-healthcheck-thorntail-v2</span></span>
+    - <span class="string"><span class="content">f8-healthcheck-karaf</span></span>
+    - <span class="string"><span class="content">f8-healthcheck-vertx</span></span>
+    - <span class="string"><span class="content">f8-healthcheck-docker</span></span>
     - <span class="string"><span class="content">f8-prometheus</span></span>
-    - <span class="string"><span class="content">f8-maven-scm</span></span>
-    - <span class="string"><span class="content">f8-maven-issue-mgmt</span></span>
     <span class="comment"># Dependencies shouldn't be enriched anymore, therefor it's last in the list</span>
     - <span class="string"><span class="content">fmp-dependency</span></span>
-    - <span class="string"><span class="content">f8-watch</span></span>
+    - <span class="string"><span class="content">fmp-watch</span></span>
     - <span class="string"><span class="content">fmp-revision-history</span></span>
     - <span class="string"><span class="content">fmp-docker-registry-secret</span></span>
     - <span class="string"><span class="content">fmp-triggers-annotation</span></span>
@@ -7240,7 +7207,7 @@ mvn fabric8:migrate
 <div id="footer">
 <div id="footer-text">
 Version 3.5.41<br>
-Last updated 2018-09-26 14:33:04 UTC
+Last updated 2018-09-27 07:26:19 UTC
 </div>
 </div>
 </body>
