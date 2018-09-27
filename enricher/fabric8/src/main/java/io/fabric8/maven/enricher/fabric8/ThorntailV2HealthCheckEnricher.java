@@ -18,7 +18,6 @@ package io.fabric8.maven.enricher.fabric8;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 
 import static io.fabric8.maven.core.util.MavenUtil.hasDependency;
@@ -29,7 +28,7 @@ import static io.fabric8.maven.core.util.MavenUtil.hasDependency;
 public class ThorntailV2HealthCheckEnricher extends AbstractHealthCheckEnricher {
 
     public ThorntailV2HealthCheckEnricher(EnricherContext buildContext) {
-        super(buildContext, "thorntail-v2-health-check");
+        super(buildContext, "f8-healthcheck-thorntail-v2");
     }
 
     // Available configuration keys
@@ -54,14 +53,12 @@ public class ThorntailV2HealthCheckEnricher extends AbstractHealthCheckEnricher 
 
     @Override
     protected Probe getReadinessProbe() {
-        Probe probe = discoverThorntailHealthCheck(10);
-        return probe;
+        return discoverThorntailHealthCheck(10);
     }
 
     @Override
     protected Probe getLivenessProbe() {
-        Probe probe = discoverThorntailHealthCheck(180);
-        return probe;
+        return discoverThorntailHealthCheck(180);
     }
 
     private Probe discoverThorntailHealthCheck(int initialDelay) {
@@ -95,6 +92,4 @@ public class ThorntailV2HealthCheckEnricher extends AbstractHealthCheckEnricher 
     protected String getPath() {
         return Configs.asString(getConfig(Config.path));
     }
-
-
 }

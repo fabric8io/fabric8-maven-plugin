@@ -1,0 +1,11 @@
+# Deprecated enrichers
+# ==========================
+
+# The enrichers found here are connected to the now deprecated Fabric8 platform
+# with its CD platform and UI
+# ----------------------------------------------------------------
+
+io.fabric8.maven.enricher.deprecated.CdEnricher
+io.fabric8.maven.enricher.deprecated.DocLinkEnricher
+io.fabric8.maven.enricher.deprecated.GrafanaLinkEnricher
+io.fabric8.maven.enricher.deprecated.IconEnricher

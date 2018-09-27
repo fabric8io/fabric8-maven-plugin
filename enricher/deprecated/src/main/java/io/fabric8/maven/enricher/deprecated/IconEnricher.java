@@ -13,7 +13,8 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.enricher.fabric8;
+
+package io.fabric8.maven.enricher.deprecated;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -71,7 +72,7 @@ public class IconEnricher extends BaseEnricher {
     }
 
     public IconEnricher(EnricherContext buildContext) {
-        super(buildContext, "f8-icon");
+        super(buildContext, "f8-deprecated-icon");
 
         String baseDir = getProject().getBasedir().getAbsolutePath();
         templateTempDir = new File(getConfig(Config.templateTempDir, baseDir + "/target/fabric8/template-workdir"));
@@ -85,7 +86,7 @@ public class IconEnricher extends BaseEnricher {
             if (iconUrl != null) {
                 log.info("Adding icon for %s", kind.toString().toLowerCase());
                 log.verbose("Icon URL: %s", iconUrl);
-                return Collections.singletonMap(Fabric8Annotations.ICON_URL.value(), iconUrl);
+                return Collections.singletonMap("fabric8.io/iconUrl", iconUrl);
             } else {
                 log.debug("No icon file found for resources of type " + kind);
             }

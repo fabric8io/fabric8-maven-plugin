@@ -13,7 +13,7 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.enricher.fabric8;
+package io.fabric8.maven.enricher.deprecated;
 
 import java.util.Collections;
 import java.util.Map;
@@ -33,7 +33,7 @@ import static io.fabric8.maven.core.util.MavenUtil.hasClass;
 public class GrafanaLinkEnricher extends BaseEnricher {
 
     public GrafanaLinkEnricher(EnricherContext buildContext) {
-        super(buildContext, "f8-cd-grafana-link");
+        super(buildContext, "f8-deprecated-cd-grafana-link");
     }
 
     private enum Config implements Configs.Key {
@@ -47,7 +47,7 @@ public class GrafanaLinkEnricher extends BaseEnricher {
     public Map<String, String> getAnnotations(Kind kind) {
         if (kind.isController()) {
             String url = findGrafanaLink();
-            return url != null ? Collections.singletonMap(Fabric8Annotations.METRICS_PATH.value(), url) : null;
+            return url != null ? Collections.singletonMap("fabric8.io/metrics-path", url) : null;
         } else {
             return null;
         }

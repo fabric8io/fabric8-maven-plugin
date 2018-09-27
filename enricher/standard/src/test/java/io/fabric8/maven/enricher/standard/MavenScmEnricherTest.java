@@ -67,11 +67,7 @@ public class MavenScmEnricherTest {
         Map<String, String> scmAnnotations = mavenScmEnricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
         assertNotNull(scmAnnotations);
 
-        Assert.assertEquals(4, scmAnnotations.size());
-        assertEquals("scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git",
-                scmAnnotations.get(Fabric8Annotations.SCM_CONNECTION.value()));
-        assertEquals("scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git",
-                scmAnnotations.get(Fabric8Annotations.SCM_DEVELOPER_CONNECTION.value()));
+        Assert.assertEquals(2, scmAnnotations.size());
         assertEquals("HEAD",
                 scmAnnotations.get(Fabric8Annotations.SCM_TAG.value()));
         assertEquals("git://github.com/fabric8io/fabric8-maven-plugin.git",
@@ -101,9 +97,7 @@ public class MavenScmEnricherTest {
         Map<String, String> scmAnnotations = mavenScmEnricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
         assertNotNull(scmAnnotations);
 
-        Assert.assertEquals(2, scmAnnotations.size());
-        assertEquals("scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git",
-                scmAnnotations.get(Fabric8Annotations.SCM_CONNECTION.value()));
+        Assert.assertEquals(1, scmAnnotations.size());
         assertEquals("HEAD",
                 scmAnnotations.get(Fabric8Annotations.SCM_TAG.value()));
 
@@ -161,9 +155,7 @@ public class MavenScmEnricherTest {
         Map<String, String> scmAnnotations = mavenScmEnricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
         assertNotNull(scmAnnotations);
 
-        Assert.assertEquals(2, scmAnnotations.size());
-        assertEquals("scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git",
-                scmAnnotations.get(Fabric8Annotations.SCM_DEVELOPER_CONNECTION.value()));
+        Assert.assertEquals(1, scmAnnotations.size());
         assertEquals("HEAD",
                 scmAnnotations.get(Fabric8Annotations.SCM_TAG.value()));
 

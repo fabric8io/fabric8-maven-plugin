@@ -26,12 +26,9 @@ items:
       prometheus.io/scrape: "true"
       fabric8.io/git-branch: "@ignore@"
       prometheus.io/port: "9779"
-      fabric8.io/scm-con-url: "scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git"
-      fabric8.io/scm-devcon-url: "scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git"
       fabric8.io/scm-tag: "HEAD"
       fabric8.io/scm-url: "git://github.com/fabric8io/fabric8-maven-plugin.git"
     labels:
-      expose: "true"
       provider: fabric8
       app: fabric8-maven-sample-zero-config
       version: "@ignore@"
@@ -52,8 +49,9 @@ items:
   metadata:
     annotations:
       fabric8.io/git-commit: "@ignore@"
-      fabric8.io/metrics-path: "@matches('.*dashboard.*fabric8-maven-sample-zero-config.*var-version.*')@"
       fabric8.io/git-branch: "@ignore@"
+      fabric8.io/scm-tag: "HEAD"
+      fabric8.io/scm-url: "git://github.com/fabric8io/fabric8-maven-plugin.git"
     labels:
       provider: fabric8
       app: fabric8-maven-sample-zero-config
@@ -71,8 +69,9 @@ items:
       metadata:
         annotations:
           fabric8.io/git-commit: "@ignore@"
-          fabric8.io/metrics-path: "@matches('.*dashboard.*fabric8-maven-sample-zero-config.*var-version.*')@"
           fabric8.io/git-branch: "@ignore@"
+          fabric8.io/scm-tag: "HEAD"
+          fabric8.io/scm-url: "git://github.com/fabric8io/fabric8-maven-plugin.git"
         labels:
           provider: fabric8
           app: fabric8-maven-sample-zero-config

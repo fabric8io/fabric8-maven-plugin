@@ -34,15 +34,9 @@ public enum Fabric8Annotations {
 
     DOCS_URL("docs-url"),
 
-    METRICS_PATH("metrics-path"),
-
-    ICON_URL("iconUrl"),
-
     ISSUE_SYSTEM("issue-system"),
     ISSUE_TRACKER_URL("issue-tracker-url"),
 
-    SCM_CONNECTION("scm-con-url"),
-    SCM_DEVELOPER_CONNECTION("scm-devcon-url"),
     SCM_TAG("scm-tag"),
     SCM_URL("scm-url"),
 

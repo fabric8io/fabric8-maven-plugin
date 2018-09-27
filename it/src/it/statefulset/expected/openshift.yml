@@ -22,7 +22,6 @@ items:
   kind: Service
   metadata:
     labels:
-      expose: "true"
       provider: fabric8
       app: fabric8-maven-sample-statefulset
       version: "@ignore@"
@@ -42,7 +41,6 @@ items:
   kind: Route
   metadata:
     labels:
-      expose: "true"
       provider: fabric8
       app: fabric8-maven-sample-statefulset
       version: "@ignore@"

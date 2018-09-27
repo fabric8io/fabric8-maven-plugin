@@ -46,6 +46,9 @@ io.fabric8.maven.enricher.standard.VolumePermissionEnricher
 # Add an enricher for enabling debug information
 io.fabric8.maven.enricher.standard.DebugEnricher
 
+# Add an enricher for enabling watch functionality
+io.fabric8.maven.enricher.standard.WatchEnricher
+
 # Add an enricher for merging duplicates
 io.fabric8.maven.enricher.standard.MergeEnricher
 
@@ -66,3 +69,13 @@ io.fabric8.maven.enricher.standard.RevisionHistoryEnricher
 
 # Add an enricher for adding trigger annotations to Kubernetes resources
 io.fabric8.maven.enricher.standard.TriggersAnnotationEnricher
+
+# Provide cluster generated CERTs to a pod
+# (see https://docs.okd.io/latest/dev_guide/secrets.html#service-serving-certificate-secrets)
+io.fabric8.maven.enricher.standard.openshift.AutoTLSEnricher
+
+# Add a route on demand when on OpenShift
+io.fabric8.maven.enricher.standard.openshift.RouteEnricher
+
+# Add an "expose" label to every service (TODO: Combine this with a Route/Ingress enricher)
+io.fabric8.maven.enricher.standard.openshift.ExposeEnricher

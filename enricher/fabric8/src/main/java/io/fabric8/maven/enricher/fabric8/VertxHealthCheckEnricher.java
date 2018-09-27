@@ -31,7 +31,6 @@ import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.kubernetes.api.model.ProbeFluent;
 import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import org.apache.maven.model.Plugin;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
@@ -69,7 +68,7 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
     };
 
     public VertxHealthCheckEnricher(EnricherContext buildContext) {
-        super(buildContext, "vertx-health-check");
+        super(buildContext, "f8-healthcheck-vertx");
     }
 
     @Override
@@ -342,7 +341,7 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
             return Optional.absent();
         }
 
-        String[] roots = new String[]{"enricher", "config", "vertx-health-check"};
+        String[] roots = new String[]{"enricher", "config", "f8-healthcheck-vertx"};
         List<String> absolute = new ArrayList<>();
         absolute.addAll(Arrays.asList(roots));
         absolute.addAll(Arrays.asList(path));
