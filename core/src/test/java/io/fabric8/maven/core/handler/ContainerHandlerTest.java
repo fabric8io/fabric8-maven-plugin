@@ -136,13 +136,13 @@ public class ContainerHandlerTest {
             null,
             "docker-pull.io",
             "docker-default.io",
-            "docker-pull.io/test/test-app:latest",
+            "docker-pull.io/test/test-app",
 
             "test/test-app",
             null,
             null,
             "docker-default.io",
-            "docker-default.io/test/test-app:latest"
+            "docker-default.io/test/test-app"
         };
 
         for (int i = 0; i < testData.length; i += 5) {
@@ -205,7 +205,7 @@ public class ContainerHandlerTest {
         containers = handler.getContainers(config, images);
         assertNotNull(containers);
         assertEquals("test-group-test-artifact", containers.get(0).getName());
-        assertEquals("docker.io/test:latest", containers.get(0).getImage());
+        assertEquals("docker.io/test", containers.get(0).getImage());
         assertEquals("IfNotPresent", containers.get(0).getImagePullPolicy());
     }
     @Test
@@ -322,8 +322,8 @@ public class ContainerHandlerTest {
 
         containers = handler.getContainers(config1, images);
 
-        assertEquals("docker.io/test:latest",containers.get(0).getImage());
-        assertEquals("test:latest",containers.get(1).getImage());
+        assertEquals("docker.io/test",containers.get(0).getImage());
+        assertEquals("test",containers.get(1).getImage());
         assertNull(containers.get(2).getImage());
         assertNull(containers.get(3).getImage());
     }
@@ -342,7 +342,7 @@ public class ContainerHandlerTest {
         containers = handler.getContainers(config1, images);
 
         project1.getProperties().remove("docker.pull.registry");
-        assertEquals("push.me/test:latest", containers.get(0).getImage());
+        assertEquals("push.me/test", containers.get(0).getImage());
     }
 
     @Test

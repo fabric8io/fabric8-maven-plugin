@@ -19,6 +19,8 @@ package io.fabric8.maven.core.handler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -41,9 +43,6 @@ import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author roland
@@ -102,13 +101,17 @@ class ContainerHandler {
         if (Strings.isNullOrBlank(imageConfiguration.getName())) {
             return null;
         }
-        Properties props = EnvUtil.getPropertiesWithSystemOverrides(project);
         String configuredRegistry = EnvUtil.findRegistry(
             imageConfiguration.getRegistry(),
-            props.getProperty("docker.pull.registry"),
-            props.getProperty("docker.registry"));
+            project.getProperties().getProperty("docker.pull.registry"),
+            project.getProperties().getProperty("docker.registry"));
 
-        return new ImageName(imageConfiguration.getName()).getFullName(configuredRegistry);
+        String name = imageConfiguration.getName();
+        ImageName imageName = new ImageName(name);
+        Matcher matcher = Pattern.compile("^(.+?)(?::([^:/]+))?$").matcher(name);
+
+        boolean hasTag = matcher.matches() && matcher.group(2) != null;
+        return hasTag ? imageName.getFullName(configuredRegistry) : imageName.getNameWithoutTag(configuredRegistry);
     }
 
     private SecurityContext createSecurityContext(ResourceConfig config) {
