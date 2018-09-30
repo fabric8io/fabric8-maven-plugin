@@ -16,7 +16,21 @@
 
 package io.fabric8.maven.core.handler;
 
-import io.fabric8.kubernetes.api.model.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.ContainerPort;
+import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.Probe;
+import io.fabric8.kubernetes.api.model.SecurityContext;
+import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
+import io.fabric8.kubernetes.api.model.VolumeMount;
+import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.VolumeConfig;
 import io.fabric8.maven.core.util.KubernetesResourceUtil;
@@ -29,9 +43,6 @@ import io.fabric8.utils.Strings;
 import org.apache.maven.project.MavenProject;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author roland
@@ -91,17 +102,16 @@ class ContainerHandler {
             return null;
         }
         String configuredRegistry = EnvUtil.findRegistry(
-                Strings.isNullOrBlank(imageConfiguration.getName()) ? null : new ImageName(imageConfiguration.getName()).getRegistry(),
-                imageConfiguration.getRegistry(),
-                project.getProperties().getProperty("docker.pull.registry"),
-                project.getProperties().getProperty("docker.registry"));
+            imageConfiguration.getRegistry(),
+            project.getProperties().getProperty("docker.pull.registry"),
+            project.getProperties().getProperty("docker.registry"));
 
-        String prefix = "";
-        if (Strings.isNotBlank(configuredRegistry)) {
-            prefix = configuredRegistry + "/";
-        }
+        String name = imageConfiguration.getName();
+        ImageName imageName = new ImageName(name);
+        Matcher matcher = Pattern.compile("^(.+?)(?::([^:/]+))?$").matcher(name);
 
-        return prefix + imageConfiguration.getName();
+        boolean hasTag = matcher.matches() && matcher.group(2) != null;
+        return hasTag ? imageName.getFullName(configuredRegistry) : imageName.getNameWithoutTag(configuredRegistry);
     }
 
     private SecurityContext createSecurityContext(ResourceConfig config) {
