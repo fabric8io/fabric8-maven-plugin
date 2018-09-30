@@ -17,6 +17,7 @@ package io.fabric8.maven.core.handler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -97,19 +98,13 @@ class ContainerHandler {
         if (StringUtils.isBlank(imageConfiguration.getName())) {
             return null;
         }
-        ImageName imageName = new ImageName(imageConfiguration.getName());
+        Properties props = EnvUtil.getPropertiesWithSystemOverrides(project);
         String configuredRegistry = EnvUtil.fistRegistryOf(
-            StringUtils.isBlank(imageConfiguration.getName()) ? null : imageName.getRegistry(),
             imageConfiguration.getRegistry(),
-            project.getProperties().getProperty("docker.pull.registry"),
-            project.getProperties().getProperty("docker.registry"));
+            props.getProperty("docker.pull.registry"),
+            props.getProperty("docker.registry"));
 
-        String prefix = "";
-        if (StringUtils.isNotBlank(configuredRegistry) && imageName.getRegistry() == null) {
-            prefix = configuredRegistry + "/";
-        }
-
-        return prefix + imageConfiguration.getName();
+        return new ImageName(imageConfiguration.getName()).getFullName(configuredRegistry);
     }
 
     private SecurityContext createSecurityContext(ResourceConfig config) {

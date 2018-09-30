@@ -102,7 +102,7 @@ public class PodTemplateHandlerTest {
         assertNotNull(podTemplateSpec.getSpec().getContainers());
         assertEquals("test-app", podTemplateSpec.getSpec()
                 .getContainers().get(0).getName());
-        assertEquals("docker.io/test", podTemplateSpec.getSpec()
+        assertEquals("docker.io/test:latest", podTemplateSpec.getSpec()
                 .getContainers().get(0).getImage());
         assertEquals("IfNotPresent", podTemplateSpec.getSpec()
                 .getContainers().get(0).getImagePullPolicy());
