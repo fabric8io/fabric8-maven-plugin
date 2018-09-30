@@ -7,7 +7,7 @@ items:
     template:
       spec:
         containers:
-        - image: img1
+        - image: img1:latest
           livenessProbe:
             exec:
               command:
@@ -19,7 +19,7 @@ items:
               command:
               - echo
               - '"hello"'
-        - image: img2
+        - image: img2:latest
           livenessProbe:
             exec:
               command:

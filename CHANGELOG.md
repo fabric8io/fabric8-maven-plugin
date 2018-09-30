@@ -15,12 +15,12 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1021: Avoids empty deployment selector value in generated yaml resource
 * Fix 1383: Check if instanceof Openshift before casting and handle failures.
 * Feature ENTESB-9252: Add Service Annotations to facilitate automated service discovery by 3scale.
+* Fix 1365: Generated image reference in deployment.yml contains duplicate registry name
 
-###3.5.41
+###3.5.41 (2018-08-01)
 * Feature 1032: Improvements of the Vert.x Generator and enrichers
 * Fix 1313: Removed unused Maven goals. Please contact us if something's missing for you.
 * Fix 1299: autotls feature doesn't work with OpenShift 3.9 (Kubernetes 1.8+) due to InitContainer annotation deprecation
-* Feature 1313: Removed unused Maven goals. Please contact us if something's missing for you.
 * Fix 1276: Proper inclusion of webapp's war regardless of the final name
 * Feature: New 'path' config option for the webapp generator to set the context path
 * Fix 1334: support for docker.pull.registry

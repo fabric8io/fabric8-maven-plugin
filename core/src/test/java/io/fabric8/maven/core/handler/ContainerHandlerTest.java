@@ -16,6 +16,10 @@
 
 package io.fabric8.maven.core.handler;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.maven.core.config.ResourceConfig;
@@ -95,7 +99,7 @@ public class ContainerHandlerTest {
                 ports(ports).from("fabric8/maven:latest").cleanup("try").tags(tags).compression("gzip").build();
 
         ImageConfiguration imageConfiguration = new ImageConfiguration.Builder().
-                name("test").alias("test-app").buildConfig(buildImageConfiguration).registry("docker.io").build();
+                name("docker.io/test/test-app:1.2").alias("test-app").buildConfig(buildImageConfiguration).registry("docker-alternate.io").build();
 
         images.clear();
         images.add(imageConfiguration);
@@ -103,9 +107,76 @@ public class ContainerHandlerTest {
         containers = handler.getContainers(config, images);
         assertNotNull(containers);
         assertEquals("test-app", containers.get(0).getName());
-        assertEquals("docker.io/test", containers.get(0).getImage());
+        assertEquals("docker.io/test/test-app:1.2", containers.get(0).getImage());
         assertEquals("IfNotPresent", containers.get(0).getImagePullPolicy());
     }
+
+    @Test
+    public void registryHandling() {
+
+        //container name with alias
+        BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().build();
+
+
+
+        String[] testData = {
+            "docker.io/test/test-app:1.2",
+            "docker-alternate.io",
+            null,
+            null,
+            "docker.io/test/test-app:1.2",
+
+            "test/test-app:1.2",
+            "docker-image-config.io",
+            "docker-pull.io",
+            "docker-default.io",
+            "docker-image-config.io/test/test-app:1.2",
+
+            "test/test-app",
+            null,
+            "docker-pull.io",
+            "docker-default.io",
+            "docker-pull.io/test/test-app:latest",
+
+            "test/test-app",
+            null,
+            null,
+            "docker-default.io",
+            "docker-default.io/test/test-app:latest"
+        };
+
+        for (int i = 0; i < testData.length; i += 5) {
+            MavenProject testProject = new MavenProject();
+            Properties testProps = new Properties();
+            if (testData[i+2] != null) {
+                testProps.put("docker.pull.registry", testData[i + 2]);
+            }
+            if (testData[i+3] != null) {
+                testProps.put("docker.registry", testData[i + 3]);
+            }
+
+            testProject.getModel().setProperties(testProps);
+            ContainerHandler handler = new ContainerHandler(testProject,
+                                                            envVarHandler,
+                                                            probeHandler);
+
+            //container name with alias
+            ImageConfiguration imageConfiguration =
+                new ImageConfiguration.Builder()
+                    .buildConfig(buildImageConfiguration)
+                    .name(testData[i])
+                    .registry(testData[i+1])
+                    .build();
+
+            images.clear();
+            images.add(imageConfiguration);
+
+            containers = handler.getContainers(config, images);
+            assertNotNull(containers);
+            assertEquals(testData[i+4], containers.get(0).getImage());
+        }
+    }
+
 
     @Test
     public void getContainerWithGroupArtifactTest() {
@@ -134,7 +205,7 @@ public class ContainerHandlerTest {
         containers = handler.getContainers(config, images);
         assertNotNull(containers);
         assertEquals("test-group-test-artifact", containers.get(0).getName());
-        assertEquals("docker.io/test", containers.get(0).getImage());
+        assertEquals("docker.io/test:latest", containers.get(0).getImage());
         assertEquals("IfNotPresent", containers.get(0).getImagePullPolicy());
     }
     @Test
@@ -251,8 +322,8 @@ public class ContainerHandlerTest {
 
         containers = handler.getContainers(config1, images);
 
-        assertEquals("docker.io/test",containers.get(0).getImage());
-        assertEquals("test",containers.get(1).getImage());
+        assertEquals("docker.io/test:latest",containers.get(0).getImage());
+        assertEquals("test:latest",containers.get(1).getImage());
         assertNull(containers.get(2).getImage());
         assertNull(containers.get(3).getImage());
     }
@@ -271,7 +342,7 @@ public class ContainerHandlerTest {
         containers = handler.getContainers(config1, images);
 
         project1.getProperties().remove("docker.pull.registry");
-        assertEquals("push.me/test", containers.get(0).getImage());
+        assertEquals("push.me/test:latest", containers.get(0).getImage());
     }
 
     @Test
