@@ -241,6 +241,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     private List<ImageConfiguration> resolvedImages;
 
     // Mapping for kind filenames
+    @Parameter
     private List<MappingConfig> mappings;
 
     // Services
