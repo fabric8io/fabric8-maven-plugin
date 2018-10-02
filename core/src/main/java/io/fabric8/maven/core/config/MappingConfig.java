@@ -1,24 +1,28 @@
 package io.fabric8.maven.core.config;
 
-import org.apache.maven.plugins.annotations.Parameter;
-
 public class MappingConfig {
 
-    @Parameter(required = true)
     private String kind;
 
-    @Parameter(required = true)
-    private String filenames;
+    private String filenameTypes;
 
     public String getKind() {
         return kind;
     }
 
-    public String getFilenames() {
-        return filenames;
+    public String getFilenameTypes() {
+        return filenameTypes;
     }
 
     public String[] getFilenamesAsArray() {
-        return filenames.split(",\\s*");
+        if (this.filenameTypes == null) {
+            return new String[0];
+        }
+        return filenameTypes.split(",\\s*");
     }
+
+    public boolean isValid() {
+        return kind != null &&  filenameTypes.length() > 0;
+    }
+
 }

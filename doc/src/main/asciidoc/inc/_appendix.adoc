@@ -25,7 +25,7 @@ By default if no environment variable nor system property is set, scan for a fil
     <mappings>
       <mapping>
         <kind>Var</kind>
-        <filenames>foo, bar</filenames>
+        <filenameTypes>foo, bar</filenameTypes>
       </mapping>
     </mappings>
   </configuration>

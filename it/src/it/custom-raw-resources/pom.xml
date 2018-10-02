@@ -34,7 +34,7 @@
           <mappings>
             <mapping>
               <kind>Service</kind>
-              <filenames>foo</filenames>
+              <filenameTypes>foo</filenameTypes>
             </mapping>
           </mappings>
         </configuration>
