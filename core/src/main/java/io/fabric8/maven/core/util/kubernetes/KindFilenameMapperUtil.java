@@ -16,6 +16,11 @@
 package io.fabric8.maven.core.util.kubernetes;
 
 import io.fabric8.maven.core.util.AsciiDocParser;
+import io.fabric8.maven.core.util.EnvUtil;
+import io.fabric8.maven.core.util.PropertiesMappingParser;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -26,10 +31,20 @@ public class KindFilenameMapperUtil {
     public static Map<String, List<String>> loadMappings() {
 
         final String location = "/META-INF/fabric8/kind-filename-type-mapping-default.adoc";
+        final String locationMappingProperties =
+            EnvUtil.getEnvVarOrSystemProperty("fabric8.mapping", "/META-INF/fabric8/kind-filename-type-mapping-default.properties");
 
-        try (final InputStream mappingFile = loadContent(location)) {
+        try (final InputStream mappingFile = loadContent(location); final InputStream mappingPropertiesFile = loadContent(locationMappingProperties)) {
             final AsciiDocParser asciiDocParser = new AsciiDocParser();
-            return asciiDocParser.serializeKindFilenameTable(mappingFile);
+            final Map<String, List<String>> defaultMapping = asciiDocParser.serializeKindFilenameTable(mappingFile);
+
+            if (mappingPropertiesFile != null) {
+                PropertiesMappingParser propertiesMappingParser = new PropertiesMappingParser();
+                defaultMapping.putAll(propertiesMappingParser.parse(mappingPropertiesFile));
+            }
+
+            return defaultMapping;
+
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
@@ -39,7 +54,13 @@ public class KindFilenameMapperUtil {
         InputStream resourceAsStream = KindFilenameMapperUtil.class.getResourceAsStream(location);
 
         if (resourceAsStream == null) {
-            throw new IllegalArgumentException(String.format("%s cannot be found in classpath", location));
+            final File locationFile = new File(location);
+
+            try {
+                return new FileInputStream(locationFile);
+            } catch (FileNotFoundException e) {
+                return null;
+            }
         }
 
         return resourceAsStream;

@@ -15,7 +15,11 @@
  */
 package io.fabric8.maven.core.util.kubernetes;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import org.junit.After;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class KubernetesResourceUtilTest {
 
     @Test
-    public void should_load_kid_filename_mapper_in_bimap_fashion() {
+    public void should_load_kind_filename_mapper_in_bimap_fashion() {
 
         // Given
 
@@ -42,6 +46,40 @@ public class KubernetesResourceUtilTest {
             .containsEntry("ConfigMap", "configmap")
             .containsEntry("Secret", "secret");
 
+    }
+
+    @Test
+    public void should_update_kind_filename_mapper_in_bimap_fashion() {
+
+        // Given
+
+        final Map<String, List<String>> updated = new HashMap<>();
+        updated.put("Var", Arrays.asList("foo"));
+
+        // When
+
+        KubernetesResourceUtil.updateKindFilenameMapper(updated);
+
+        final Map<String, String> filenameToKindMapper = KubernetesResourceUtil.FILENAME_TO_KIND_MAPPER;
+        final Map<String, String> kindToFilenameMapper = KubernetesResourceUtil.KIND_TO_FILENAME_MAPPER;
+
+        // Then
+        assertThat(filenameToKindMapper)
+            .containsEntry("cm", "ConfigMap")
+            .containsEntry("configmap", "ConfigMap")
+            .containsEntry("secret", "Secret")
+            .containsEntry("foo", "Var");
+
+        assertThat(kindToFilenameMapper)
+            .containsEntry("ConfigMap", "configmap")
+            .containsEntry("Secret", "secret")
+            .containsEntry("Var", "foo");
+
+    }
+
+    @After
+    public void cleanCustomAdditions() {
+        KubernetesResourceUtil.remove("Var", "foo");
     }
 
 }
