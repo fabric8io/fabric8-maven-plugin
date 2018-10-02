@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.41,</span>
-<span id="revdate">2018-09-30</span>
+<span id="revdate">2018-10-02</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -661,6 +661,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#appendix">15. Appendix</a>
 <ul class="sectlevel2">
 <li><a href="#kind-filename-type-mapping">15.1. Kind/Filename Type Mapping</a></li>
+<li><a href="#custom-kind-filename-mapping">15.2. Custom Kind/Filename Mapping</a></li>
 </ul>
 </li>
 </ul>
@@ -7201,13 +7202,47 @@ mvn fabric8:migrate
 </tbody>
 </table>
 </div>
+<div class="sect2">
+<h3 id="custom-kind-filename-mapping">15.2. Custom Kind/Filename Mapping</h3>
+<div class="paragraph">
+<p>You can add your custom <code>Kind/Filename</code> mappings.
+To do it you have two approaches:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Setting an environment variable or system property called <code>fabric8.mapping</code> pointing out to a <code>.properties</code> files with pairs <code>&lt;kind&gt;&#8658;filename1&gt;, &lt;filename2&gt;</code>
+By default if no environment variable nor system property is set, scan for a file located at classpath <code>/META-INF/fabric8/kind-filename-type-mapping-default.properties</code>.</p>
+</li>
+<li>
+<p>By embedding in MOJO configuration the mapping:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="tag">&lt;configuration&gt;</span>
+    <span class="tag">&lt;mappings&gt;</span>
+      <span class="tag">&lt;mapping&gt;</span>
+        <span class="tag">&lt;kind&gt;</span>Var<span class="tag">&lt;/kind&gt;</span>
+        <span class="tag">&lt;filenameTypes&gt;</span>foo, bar<span class="tag">&lt;/filenameTypes&gt;</span>
+      <span class="tag">&lt;/mapping&gt;</span>
+    <span class="tag">&lt;/mappings&gt;</span>
+  <span class="tag">&lt;/configuration&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 3.5.41<br>
-Last updated 2018-09-30 07:48:06 UTC
+Last updated 2018-10-02 15:44:31 UTC
 </div>
 </div>
 </body>
