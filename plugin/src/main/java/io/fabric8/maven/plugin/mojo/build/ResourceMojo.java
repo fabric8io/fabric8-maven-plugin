@@ -433,6 +433,9 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             for(MappingConfig mappingConfig : this.mappings) {
                 if (mappingConfig.isValid()) {
                     mappingKindFilename.put(mappingConfig.getKind(), Arrays.asList(mappingConfig.getFilenamesAsArray()));
+                } else {
+                    throw new IllegalArgumentException(String.format("Invalid mapping for Kind %s and Filename Types %s",
+                        mappingConfig.getKind(), mappingConfig.getFilenameTypes()));
                 }
             }
             KubernetesResourceUtil.updateKindFilenameMapper(mappingKindFilename);
