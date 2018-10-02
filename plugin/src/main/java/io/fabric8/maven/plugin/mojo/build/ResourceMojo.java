@@ -15,12 +15,14 @@
  */
 package io.fabric8.maven.plugin.mojo.build;
 
+import io.fabric8.maven.core.config.MappingConfig;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -238,6 +240,10 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     // The image configuration after resolving and customization
     private List<ImageConfiguration> resolvedImages;
 
+    // Mapping for kind filenames
+    @Parameter
+    private List<MappingConfig> mappings;
+
     // Services
     private HandlerHub handlerHub;
 
@@ -392,8 +398,9 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         clusterAccess = new ClusterAccess(namespace);
-
+        updateKindFilenameMappings();
         try {
+
             lateInit();
 
             // Resolve the Docker image build configuration
@@ -417,6 +424,21 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
+        }
+    }
+
+    private void updateKindFilenameMappings() {
+        if (mappings != null) {
+            final Map<String, List<String>> mappingKindFilename = new HashMap<>();
+            for(MappingConfig mappingConfig : this.mappings) {
+                if (mappingConfig.isValid()) {
+                    mappingKindFilename.put(mappingConfig.getKind(), Arrays.asList(mappingConfig.getFilenamesAsArray()));
+                } else {
+                    throw new IllegalArgumentException(String.format("Invalid mapping for Kind %s and Filename Types %s",
+                        mappingConfig.getKind(), mappingConfig.getFilenameTypes()));
+                }
+            }
+            KubernetesResourceUtil.updateKindFilenameMapper(mappingKindFilename);
         }
     }
 
@@ -1094,5 +1116,9 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             // Attach it to the Maven reactor so that it will also get deployed
             projectHelper.attachArtifact(project, json.getArtifactType(), classifier.getValue(), file);
         }
+    }
+
+    protected List<MappingConfig> getMappings() {
+        return mappings;
     }
 }

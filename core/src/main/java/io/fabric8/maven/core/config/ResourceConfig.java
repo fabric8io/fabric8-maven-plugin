@@ -35,7 +35,6 @@ public class ResourceConfig {
 
     @Parameter
     private MetaDataConfig annotations = new MetaDataConfig();
-    ;
 
     @Parameter
     private List<VolumeConfig> volumes;

@@ -190,6 +190,15 @@ public class KubernetesResourceUtil {
 
     protected final static void initializeKindFilenameMapper() {
         final Map<String, List<String>> mappings = KindFilenameMapperUtil.loadMappings();
+        updateKindFilenameMapper(mappings);
+    }
+
+    protected final static void remove(String kind, String filename) {
+        FILENAME_TO_KIND_MAPPER.remove(filename);
+        KIND_TO_FILENAME_MAPPER.remove(kind);
+    }
+
+    public final static void updateKindFilenameMapper(final Map<String, List<String>> mappings) {
 
         final Set<Map.Entry<String, List<String>>> entries = mappings.entrySet();
 
@@ -205,6 +214,7 @@ public class KubernetesResourceUtil {
             KIND_TO_FILENAME_MAPPER.put(kind, filenameTypes.get(filenameTypes.size() - 1));
 
         }
+
     }
 
     private static final String FILENAME_PATTERN = "^(?<name>.*?)(-(?<type>[^-]+))?\\.(?<ext>yaml|yml|json)$";

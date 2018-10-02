@@ -14,6 +14,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1021: Avoids empty deployment selector value in generated yaml resource
 * Fix 1383: Check if instanceof Openshift before casting and handle failures.
 * Fix 1390: Provides better exception message in case of invalid `application.yml` in Spring Boot
+* Fix 1382: Allow to provide additional fragment filename mappings
 
 ###3.5.41 (2018-08-01)
 * Feature 1032: Improvements of the Vert.x Generator and enrichers

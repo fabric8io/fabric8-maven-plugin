@@ -1,0 +1,18 @@
+<project>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-plugin</artifactId>
+        <configuration>
+          <mappings>
+            <mapping>
+              <kind>Var</kind>
+              <filenames>foo, bar</filenames>
+            </mapping>
+          </mappings>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
