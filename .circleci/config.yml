@@ -81,8 +81,14 @@ workflows:
         filters:
           branches:
             only: master
-    - build
-    - sonar-pr
+    - build:
+        filters:
+          branches:
+            ignore: gh-pages
+    - sonar-pr:
+        filters:
+          branches:
+            ignore: gh-pages
     - sonar:
         filters:
           branches:
