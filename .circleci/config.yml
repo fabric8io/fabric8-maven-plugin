@@ -11,7 +11,6 @@ jobs:
         fingerprints:
         - "4d:16:cc:b2:2c:0a:e6:52:9b:ac:8e:51:23:88:91:57"
     - checkout
-    - checkout
     - run: git config --global user.email "circleci@fabric8.io"
     - run: git config --global user.name "CircleCI"
     - run: ./doc/ci-docs.sh
