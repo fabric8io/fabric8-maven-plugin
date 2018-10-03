@@ -83,14 +83,7 @@ public class MergeEnricher extends BaseEnricher {
                     return item1;
             */
         }
-        // we expect lots of duplicates when making an app catalog as we have the composites and individual manifests
-        try {
-            if (!getContext().runningWithGoal("fabric8:app-catalog")) {
-                log.warn("Duplicate resources for %s %s from %s and %s", KubernetesHelper.getKind(item1), KubernetesHelper.getName(item1), KubernetesResourceUtil.getSourceUrlAnnotation(item1), KubernetesResourceUtil.getSourceUrlAnnotation(item2));
-            }
-        } catch (IllegalStateException e) {
-            log.warn("Failed to check if generated an app-catalog: %s", e);
-        }
+        log.warn("Duplicate resources for %s %s from %s and %s", KubernetesHelper.getKind(item1), KubernetesHelper.getName(item1), KubernetesResourceUtil.getSourceUrlAnnotation(item1), KubernetesResourceUtil.getSourceUrlAnnotation(item2));
         return null;
     }
 

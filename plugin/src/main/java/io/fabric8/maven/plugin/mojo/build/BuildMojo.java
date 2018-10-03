@@ -31,13 +31,10 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceHub;
-import io.fabric8.maven.core.util.GoalFinder;
-import io.fabric8.maven.core.util.Gofabric8Util;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.service.DockerAccessFactory;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Task;
@@ -175,10 +172,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter(property = "fabric8.namespace")
     private String namespace;
 
-    // Used for determining which mojos are called during a run
-    @Component
-    protected GoalFinder goalFinder;
-
     @Component
     private MavenProjectHelper projectHelper;
 
@@ -253,13 +246,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             }
         }
         return true;
-    }
-
-    @Override
-    protected DockerAccessFactory.DockerAccessContext getDockerAccessContext() {
-        return new DockerAccessFactory.DockerAccessContext.Builder(super.getDockerAccessContext())
-                .dockerHostProviders(Gofabric8Util.extractDockerHostProvider(log))
-                .build();
     }
 
     @Override
@@ -346,11 +332,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         return new GeneratorContext.Builder()
                 .config(extractGeneratorConfig())
                 .project(project)
-                .session(session)
-                .goalFinder(goalFinder)
-                .goalName("fabric8:build")
                 .logger(log)
-                .mode(platformMode)
+                .platformMode(platformMode)
                 .strategy(buildStrategy)
                 .useProjectClasspath(useProjectClasspath)
                 .artifactResolver(getFabric8ServiceHub().getArtifactResolverService())
@@ -381,7 +364,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         return new MavenEnricherContext.Builder()
                 .project(project)
                 .session(session)
-                .goalFinder(goalFinder)
                 .config(extractEnricherConfig())
                 .images(getResolvedImages())
                 .resources(resources)

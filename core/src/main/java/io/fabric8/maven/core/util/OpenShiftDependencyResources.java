@@ -44,11 +44,11 @@ public class OpenShiftDependencyResources {
         this.log = log;
     }
 
-    public void addOpenShiftResources(List<HasMetadata> items, boolean isAppCatalog) {
+    public void addOpenShiftResources(List<HasMetadata> items) {
         for (HasMetadata item : items) {
             if (item instanceof Template) {
                 Template template = (Template) item;
-                if (!KubernetesResourceUtil.isAppCatalogResource(template) && !isAppCatalog) {
+                if (!KubernetesResourceUtil.isAppCatalogResource(template)) {
                     List<HasMetadata> objects = notNullList(template.getObjects());
                     String sourceUrl = getSourceUrlAnnotation(template);
                     if (StringUtils.isNotBlank(sourceUrl)) {
@@ -56,7 +56,7 @@ public class OpenShiftDependencyResources {
                             setSourceUrlAnnotationIfNotSet(object, sourceUrl);
                         }
                     }
-                    addOpenShiftResources(objects, isAppCatalog);
+                    addOpenShiftResources(objects);
                     mergeParametersIntoMap(templateParameters, notNullList(template.getParameters()));
                     continue;
                 }
@@ -64,7 +64,7 @@ public class OpenShiftDependencyResources {
 
             KindAndName key = new KindAndName(item);
             HasMetadata old = openshiftDependencyResources.get(key);
-            if (old != null && !isAppCatalog) {
+            if (old != null) {
                 log.warn("Duplicate OpenShift resources for %s at %s and %s", key, getSourceUrlAnnotation(old), getSourceUrlAnnotation(item));
             }
             openshiftDependencyResources.put(key, item);

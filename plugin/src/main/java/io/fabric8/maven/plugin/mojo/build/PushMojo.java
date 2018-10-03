@@ -22,14 +22,12 @@ import java.util.List;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -87,10 +85,6 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     @Parameter(property = "fabric8.build.strategy" )
     private OpenShiftBuildStrategy buildStrategy = OpenShiftBuildStrategy.s2i;
 
-    // Used for determining which mojos are called during a run
-    @Component
-    protected GoalFinder goalFinder;
-
     @Override
     protected String getLogPrefix() {
         return "F8> ";
@@ -118,11 +112,8 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
             GeneratorContext ctx = new GeneratorContext.Builder()
                 .config(generatorConfig)
                 .project(project)
-                .session(session)
-                .goalFinder(goalFinder)
-                .goalName("fabric8:push")
                 .logger(log)
-                .mode(mode)
+                .platformMode(mode)
                 .strategy(buildStrategy)
                 .useProjectClasspath(false)
                 .build();

@@ -39,6 +39,7 @@ import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
+import io.fabric8.maven.generator.api.GeneratorMode;
 import io.fabric8.maven.generator.javaexec.FatJarDetector;
 import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
 import org.apache.commons.io.FileUtils;
@@ -76,7 +77,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean isPrePackagePhase) throws MojoExecutionException {
-        if (getContext().isWatchMode()) {
+        if (getContext().getGeneratorMode() == GeneratorMode.watch) {
             ensureSpringDevToolSecretToken();
             if (!isPrePackagePhase ) {
                 addDevToolsFilesToFatJar(configs);
@@ -88,7 +89,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
     @Override
     protected Map<String, String> getEnv(boolean prePackagePhase) throws MojoExecutionException {
         Map<String, String> res = super.getEnv(prePackagePhase);
-        if (getContext().isWatchMode()) {
+        if (getContext().getGeneratorMode() == GeneratorMode.watch) {
             // adding dev tools token to env variables to prevent override during recompile
             String secret = SpringBootUtil.getSpringBootApplicationProperties(MavenUtil.getCompileClassLoader(getProject())).getProperty(SpringBootConfigurationHelper.DEV_TOOLS_REMOTE_SECRET);
             if (secret != null) {

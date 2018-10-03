@@ -30,20 +30,18 @@ import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.service.Fabric8ServiceHub;
-import io.fabric8.maven.core.util.GoalFinder;
-import io.fabric8.maven.core.util.Gofabric8Util;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.BuildService;
-import io.fabric8.maven.docker.service.DockerAccessFactory;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.WatchService;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.GeneratorContext;
+import io.fabric8.maven.generator.api.GeneratorMode;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.maven.plugin.watcher.WatcherManager;
 import io.fabric8.maven.watcher.api.WatcherContext;
@@ -59,6 +57,11 @@ import org.apache.maven.repository.RepositorySystem;
 
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_KUBERNETES_MANIFEST;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
+
+
+// TODO: Similar to the DebugMojo the WatchMojo should scale down any deployment to 1 replica (or ensure that its running only with one replica)
+// The WatchEnricher has been removed since the enrichment shouldn't know anything about the mode running and should
+// always create the same resources
 
 /**
  * Used to automatically rebuild Docker images and restart containers in case of updates.
@@ -86,7 +89,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     @Parameter(property = "fabric8.openshiftManifest", defaultValue = DEFAULT_OPENSHIFT_MANIFEST)
     private File openshiftManifest;
     /**
-     * Whether to perform a Kubernetes build (i.e. agains a vanilla Docker daemon) or
+     * Whether to perform a Kubernetes build (i.e. against a vanilla Docker daemon) or
      * an OpenShift build (with a Docker build against the OpenShift API server.
      */
     @Parameter(property = "fabric8.mode")
@@ -142,10 +145,6 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     // For verbose output
     @Parameter(property = "fabric8.verbose", defaultValue = "false")
     protected boolean verbose;
-
-    // Used for determining which mojos are called during a run
-    @Component
-    protected GoalFinder goalFinder;
 
     @Component
     protected RepositorySystem repositorySystem;
@@ -205,14 +204,11 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
                 .buildContext(buildContext)
                 .watchContext(watchContext)
                 .config(extractWatcherConfig())
-                .goalName("fabric8:watch")
                 .logger(log)
                 .newPodLogger(createLogger("[[C]][NEW][[C]] "))
                 .oldPodLogger(createLogger("[[R]][OLD][[R]] "))
                 .mode(mode)
                 .project(project)
-                .session(session)
-                .strategy(buildStrategy)
                 .useProjectClasspath(useProjectClasspath)
                 .namespace(clusterAccess.getNamespace())
                 .kubernetesClient(kubernetes)
@@ -232,27 +228,18 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     }
 
     @Override
-    protected DockerAccessFactory.DockerAccessContext getDockerAccessContext() {
-        return new DockerAccessFactory.DockerAccessContext.Builder(super.getDockerAccessContext())
-                .dockerHostProviders(Gofabric8Util.extractDockerHostProvider(log))
-                .build();
-    }
-
-    @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
         try {
             Fabric8ServiceHub serviceHub = getFabric8ServiceHub();
             GeneratorContext ctx = new GeneratorContext.Builder()
                     .config(extractGeneratorConfig())
                     .project(project)
-                    .session(session)
-                    .goalFinder(goalFinder)
-                    .goalName("fabric8:watch")
                     .logger(log)
-                    .mode(mode)
+                    .platformMode(mode)
                     .strategy(buildStrategy)
                     .useProjectClasspath(useProjectClasspath)
                     .artifactResolver(serviceHub.getArtifactResolverService())
+                    .generatorMode(GeneratorMode.watch)
                     .build();
             return GeneratorManager.generate(configs, ctx, false);
         } catch (MojoExecutionException e) {

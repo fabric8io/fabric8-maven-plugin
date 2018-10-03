@@ -111,7 +111,7 @@ abstract public class BaseGenerator implements Generator {
      * @param builder for the build image configuration to add the from to.
      */
     protected void addFrom(BuildImageConfiguration.Builder builder) {
-        String fromMode = getConfigWithSystemFallbackAndDefault(Config.fromMode, "fabric8.generator.fromMode", getFromModeDefault(context.getMode()));
+        String fromMode = getConfigWithSystemFallbackAndDefault(Config.fromMode, "fabric8.generator.fromMode", getFromModeDefault(context.getPlatformMode()));
         String from = getConfigWithSystemFallbackAndDefault(Config.from, "fabric8.generator.from", null);
         if ("docker".equalsIgnoreCase(fromMode)) {
             String fromImage = from;
