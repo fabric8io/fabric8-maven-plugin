@@ -13,7 +13,7 @@ jobs:
       - git config --global user.name "CircleCI"
     - run: ./doc/ci-docs.sh
 
-  # Run unit tests
+  # Run build with jacoco enabled
   build:
     working_directory: ~/fabric8io/fabric8-maven-plugin
     docker:
