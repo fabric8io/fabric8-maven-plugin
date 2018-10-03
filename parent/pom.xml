@@ -628,7 +628,7 @@
         <plugin>
           <groupId>org.codehaus.plexus</groupId>
           <artifactId>plexus-component-metadata</artifactId>
-          <version>1.6</version>
+          <version>1.7</version>
         </plugin>
 
         <plugin>
