@@ -76,7 +76,10 @@ workflows:
   version: 2
   all:
     jobs:
-    - doc
+    - doc:
+        filters:
+          branches:
+            only: master
     - build
     - sonar-pr
     - sonar:
