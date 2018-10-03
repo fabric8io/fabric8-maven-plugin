@@ -8,9 +8,8 @@ jobs:
     - image: circleci/node:8-browsers
     steps:
     - checkout
-    - run:
-      - git config --global user.email "circleci@fabric8.io"
-      - git config --global user.name "CircleCI"
+    - run: git config --global user.email "circleci@fabric8.io"
+    - run: git config --global user.name "CircleCI"
     - run: ./doc/ci-docs.sh
 
   # Run build with jacoco enabled
