@@ -5,7 +5,7 @@ jobs:
   doc:
     working_directory: ~/fabric8io/fmp-docs
     docker:
-    - image: circleci/node:8-browsers
+    - image: circleci/openjdk:8-node-browsers
     steps:
     - checkout
     - run: git config --global user.email "circleci@fabric8.io"
