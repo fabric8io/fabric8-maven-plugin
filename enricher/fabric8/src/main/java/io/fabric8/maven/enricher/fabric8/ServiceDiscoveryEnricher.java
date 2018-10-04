@@ -35,11 +35,9 @@ import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
 
 public class ServiceDiscoveryEnricher extends BaseEnricher {
     static final String ENRICHER_NAME        = "f8-service-discovery";
-    private boolean tried = false;
 
     //Default Prefix
     static final String PREFIX    = "discovery.3scale.net";
@@ -53,7 +51,7 @@ public class ServiceDiscoveryEnricher extends BaseEnricher {
     static final String DISCOVERABLE      = "discoverable";
 
     private File springConfigDir;
-    private String path             = "/";
+    private String path             = null;
     private String port             = "80";
     private String scheme           = "http";
     private String descriptionPath  = null;
@@ -81,79 +79,68 @@ public class ServiceDiscoveryEnricher extends BaseEnricher {
     }
 
     @Override
-    public Map<String, String> getAnnotations(Kind kind) {
-
-        if (kind == Kind.SERVICE) {
-
-            if (!tried) {
-                tryCamelDSLProject();
-                //try more project types in future, last match wins
-                tried = true;
-            }
-
-            if (discoverable != null) {
-                Map<String, String> annotations = new HashMap<>();
-                annotations.put(PREFIX + "/" + DISCOVERY_VERSION, getConfig(Config.discoveryVersion, discoveryVersion));
-                annotations.put(PREFIX + "/" + SCHEME           , getConfig(Config.scheme, scheme));
-                if (getConfig(Config.path, path) != null) {
-                    annotations.put(PREFIX + "/" + PATH             , getConfig(Config.path, path));
-                }
-                annotations.put(PREFIX + "/" + PORT           , getConfig(Config.port, port));
-                if (getConfig(Config.descriptionPath, descriptionPath) != null) {
-                    annotations.put(PREFIX + "/" + DESCRIPTION_PATH , getConfig(Config.descriptionPath, descriptionPath));
-                }
-                for (String annotationName : annotations.keySet()) {
-                    log.info("Add %s annotation: \"%s\" : \"%s\"", PREFIX, 
-                            annotationName, annotations.get(annotationName));
-                }
-                return annotations;
-            }
-        }
-
-        return super.getAnnotations(kind);
-    }
-
-    @Override
-    public Map<String, String> getLabels(Kind kind) {
-
-        if (kind == Kind.SERVICE) {
-
-            if (!tried) {
-                tryCamelDSLProject();
-                //try more project types in future, last match wins
-                tried = true;
-            }
-
-            if (discoverable != null) {
-                Map<String, String> labels = new HashMap<>();
-                String labelName = PREFIX;
-                labels.put(labelName, getConfig(Config.discoverable, discoverable));
-                log.info("Add %s label: \"%s\" : \"%s\"", PREFIX, 
-                        labelName, labels.get(labelName));
-                return labels;
-            }
-        }
-        return super.getLabels(kind);
-    }
-
-    @Override
     public void addMissingResources(final KubernetesListBuilder listBuilder) {
         listBuilder.accept(new TypedVisitor<ServiceBuilder>() {
 
             @Override
             public void visit(ServiceBuilder serviceBuilder) {
-                
-                List<ServicePort> ports = serviceBuilder.buildSpec().getPorts();
-                if (! ports.isEmpty()) {
-                    ServicePort firstServicePort = ports.iterator().next();
-                    port = firstServicePort.getPort().toString();
-                    log.info("Using first mentioned service port '%s' " , port);
-                }
+                addAnnotations(serviceBuilder);
             }
 
         });
+        
+        
     }
-    
+
+    protected void addAnnotations(ServiceBuilder serviceBuilder) {
+
+        if (serviceBuilder.buildSpec() != null) {
+            List<ServicePort> ports = serviceBuilder.buildSpec().getPorts();
+            if (! ports.isEmpty()) {
+                ServicePort firstServicePort = ports.iterator().next();
+                port = firstServicePort.getPort().toString();
+                log.info("Using first mentioned service port '%s' " , port);
+            } else {
+                log.warn("No service port was found");
+            }
+        }
+        
+        tryCamelDSLProject();
+        
+        if (discoverable != null) {
+
+            String labelName = PREFIX;
+            String labelValue = getConfig(Config.discoverable, discoverable);
+            serviceBuilder.editOrNewMetadata().addToLabels(
+                    labelName, labelValue).and().buildMetadata();
+            log.info("Add %s label: \"%s\" : \"%s\"", PREFIX, 
+                    labelName, labelValue);
+
+            Map<String, String> annotations = new HashMap<>();
+            annotations.put(PREFIX + "/" + DISCOVERY_VERSION, getConfig(Config.discoveryVersion, discoveryVersion));
+            annotations.put(PREFIX + "/" + SCHEME           , getConfig(Config.scheme, scheme));
+            String resolvedPath = getConfig(Config.path, path);
+            if (resolvedPath != null) {
+                if (!resolvedPath.startsWith("/")) {
+                    resolvedPath = "/" + resolvedPath;
+                }
+                annotations.put(PREFIX + "/" + PATH          , resolvedPath);
+            }
+            annotations.put(PREFIX + "/" + PORT              , getConfig(Config.port, port));
+            String resolvedDescriptionPath = getConfig(Config.descriptionPath, descriptionPath);
+            if (resolvedDescriptionPath != null) {
+                if (!resolvedDescriptionPath.toLowerCase().startsWith("http") && !resolvedDescriptionPath.startsWith("/")) {
+                    resolvedDescriptionPath = "/" + resolvedDescriptionPath;
+                }
+                annotations.put(PREFIX + "/" + DESCRIPTION_PATH , resolvedDescriptionPath);
+            }
+            for (String annotationName : annotations.keySet()) {
+                log.info("Add %s annotation: \"%s\" : \"%s\"", PREFIX, 
+                        annotationName, annotations.get(annotationName));
+            }
+            serviceBuilder.editMetadata().addToAnnotations(annotations).and().buildMetadata();
+        }
+    }
     public void tryCamelDSLProject(){
         File camelContextXmlFile = new File(springConfigDir.getAbsoluteFile() + "/camel-context.xml");
         if (camelContextXmlFile.exists()) {

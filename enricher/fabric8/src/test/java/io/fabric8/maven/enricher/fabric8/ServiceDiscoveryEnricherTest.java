@@ -16,15 +16,18 @@
 package io.fabric8.maven.enricher.fabric8;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -73,16 +76,24 @@ public class ServiceDiscoveryEnricherTest {
         }};
 
         ServiceDiscoveryEnricher enricher = new ServiceDiscoveryEnricher(context);
-        Map<String, String> annotations = enricher.getAnnotations(Kind.SERVICE);
+        ServicePort servicePort = new ServicePort();
+        servicePort.setPort(443);
+        List<ServicePort> servicePorts = new ArrayList<>();
+        servicePorts.add(servicePort);
+        ServiceBuilder serviceBuilder = new ServiceBuilder();
+        
+        serviceBuilder.editOrNewSpec().addAllToPorts(servicePorts).and().build();
+        enricher.addAnnotations(serviceBuilder);
+        Map<String, String> annotations = serviceBuilder.buildMetadata().getAnnotations();
 
         assertEquals(5, annotations.size());
-        assertEquals("v1",                annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.DISCOVERY_VERSION ));
-        assertEquals("https",             annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.SCHEME ));
-        assertEquals("myapi",             annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.PATH ));
-        assertEquals("80",                annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.PORT ));
-        assertEquals("myapi/openapi.json",annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.DESCRIPTION_PATH ));
+        assertEquals("v1",                 annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.DISCOVERY_VERSION ));
+        assertEquals("https",              annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.SCHEME ));
+        assertEquals("/myapi",             annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.PATH ));
+        assertEquals("443",                annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.PORT ));
+        assertEquals("/myapi/openapi.json",annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.DESCRIPTION_PATH ));
 
-        Map<String, String> labels = enricher.getLabels(Kind.SERVICE);
+        Map<String, String> labels = serviceBuilder.buildMetadata().getLabels();
         assertEquals(1, labels.size());
         assertEquals("true", labels.get(ServiceDiscoveryEnricher.PREFIX));
     }
@@ -109,16 +120,20 @@ public class ServiceDiscoveryEnricherTest {
         }};
 
         ServiceDiscoveryEnricher enricher = new ServiceDiscoveryEnricher(context);
-        Map<String, String> annotations = enricher.getAnnotations(Kind.SERVICE);
+        ServiceBuilder serviceBuilder = new ServiceBuilder();
+        serviceBuilder.editOrNewSpec().and().build();
+        enricher.addAnnotations(serviceBuilder);
+        
+        Map<String, String> annotations = serviceBuilder.buildMetadata().getAnnotations();
 
         assertEquals(5, annotations.size());
-        assertEquals("v1",                annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.DISCOVERY_VERSION ));
-        assertEquals("https",             annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.SCHEME ));
-        assertEquals("myapi",             annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.PATH ));
-        assertEquals("80",                annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.PORT ));
-        assertEquals("myapi/openapi.json",annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.DESCRIPTION_PATH ));
+        assertEquals("v1",                 annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.DISCOVERY_VERSION ));
+        assertEquals("https",              annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.SCHEME ));
+        assertEquals("/myapi",             annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.PATH ));
+        assertEquals("80",                 annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.PORT ));
+        assertEquals("/myapi/openapi.json",annotations.get(ServiceDiscoveryEnricher.PREFIX + "/" + ServiceDiscoveryEnricher.DESCRIPTION_PATH ));
 
-        Map<String, String> labels = enricher.getLabels(Kind.SERVICE);
+        Map<String, String> labels = serviceBuilder.buildMetadata().getLabels();
         assertEquals(1, labels.size());
         assertEquals("false", labels.get(ServiceDiscoveryEnricher.PREFIX));
     }

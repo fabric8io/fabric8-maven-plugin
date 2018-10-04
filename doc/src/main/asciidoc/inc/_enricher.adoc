@@ -938,9 +938,9 @@ label and annotations:
 
 * The following annotations:
   - `discovery.3scale.net/discovery-version`: the version of the 3scale discovery process. By default its "v1"
-  - `discovery.3scale.net/scheme`: this can be "http" or "https". "http" by default.
-  - `discovery.3scale.net/path`: the contextPath of the service if it's not at the root.
-  - `discovery.3scale.net/port`: the contextPath of the service if it's not at the root.
+  - `discovery.3scale.net/scheme`: the scheme of the service, this can be "http" or "https". "http" by default.
+  - `discovery.3scale.net/path`: the contextPath of the service, defaults to "/".
+  - `discovery.3scale.net/port`: the port of the service. The enricher obtains the port from the first service definition it encounters. Please override in the plugin configuration if a different port is desired.
   - `discovery.3scale.net/description-path`: the path to the service description document (OpenAPI/Swagger). The path can either be relative or an external full URL. By default the description is picked up from the root context (/)
 
 The following configuration parameters can be used to override the behavior of this enricher:
@@ -961,9 +961,9 @@ The following configuration parameters can be used to override the behavior of t
 
 | *path*
 | The `path` part of the URL where the service is hosted.
-| `/`
+| 
 
-| *path*
+| *port*
 | The `port` part of the URL where the service is hosted.
 | `80`
 
@@ -1006,7 +1006,7 @@ kind: Service
 name:
 metadata:
   labels:
-    discovery.3scale.net/discoverable : "true"
+    discovery.3scale.net : "true"
   annotations:
     discovery.3scale.net/discovery-version : "v1"
     discovery.3scale.net/scheme : "https"
