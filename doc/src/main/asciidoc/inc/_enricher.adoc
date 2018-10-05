@@ -975,9 +975,9 @@ The following configuration parameters can be used to override the behavior of t
 | The version of the 3scale discovery implementation.
 | `v1`
 
-| *discovery.3scale.net*
-| Sets the discovery.3scale.net label to either "true" or "false". If set to "true" 3scale will try to discover this service.
-| `true`
+| *discoverable*
+| Sets the discovery.3scale.net label to either "true" or "false". If set to "true" 3scale will try to discover this service. If not given then the enricher tries to autodetect the whether it can make the service discoverable. Currently project using camel-rest can be auto exposed this way. If not set and nothing can be autodetected this enricher is a no-op.
+| 
 
 |===
 
