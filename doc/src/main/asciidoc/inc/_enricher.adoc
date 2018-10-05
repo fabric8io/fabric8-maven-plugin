@@ -58,6 +58,9 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 | <<f8-prometheus>>
 | Add Prometheus annotations.
 
+| <<f8-service-discovery>>
+| Add 3scale service discovery annotations.
+
 | <<f8-maven-scm-enricher>>
 | Add Maven SCM information as annotations to the kubernetes/openshift resources
 
@@ -931,13 +934,14 @@ The enricher extracts the needed information from the camel-context.xml, and the
 The enricher looks for the `scheme`, `contextPath` and `apiContextPath` attributes, and it will add the following
 label and annotations:
 
-* The label `discovery.3scale.net/discoverable`. The value of the label can be set to "true" or "false", and was added to take part in the selector definition executed by 3scale to find all services that need discovery. Also it can act as a switch as well, to temporary turn off 3scale discovery integration by setting it to "false".
+* The label `discovery.3scale.net`. The value of the label can be set to "true" or "false", and was added to take part in the selector definition executed by 3scale to find all services that need discovery. Also it can act as a switch as well, to temporary turn off 3scale discovery integration by setting it to "false".
 
 * The following annotations:
-  - `discovery.3scale.net/discovery-version`: (optional) the version of the 3scale discovery process. By default its "v1"
-  - `discovery.3scale.net/scheme`: (optional) this can be "http" or "https". "http" by default.
-  - `discovery.3scale.net/path`: (optional) the contextPath of the service if it's not at the root.
-  - `discovery.3scale.net/description-path`: (optional) the path to the service description document (OpenAPI/Swagger). The path can either be relative or an external full URL. By default the description is picked up from the root context (/)
+  - `discovery.3scale.net/discovery-version`: the version of the 3scale discovery process. By default its "v1"
+  - `discovery.3scale.net/scheme`: the scheme of the service, this can be "http" or "https". "http" by default.
+  - `discovery.3scale.net/path`: the contextPath of the service, defaults to "/".
+  - `discovery.3scale.net/port`: the port of the service. The enricher obtains the port from the first service definition it encounters. Please override in the plugin configuration if a different port is desired.
+  - `discovery.3scale.net/description-path`: the path to the service description document (OpenAPI/Swagger). The path can either be relative or an external full URL. By default the description is picked up from the root context (/)
 
 The following configuration parameters can be used to override the behavior of this enricher:
 
@@ -957,7 +961,11 @@ The following configuration parameters can be used to override the behavior of t
 
 | *path*
 | The `path` part of the URL where the service is hosted.
-| `/`
+| 
+
+| *port*
+| The `port` part of the URL where the service is hosted.
+| `80`
 
 | *descriptionPath*
 | The path to a location where the service description document is hosted. This path can be either a relative path if the document is self-hosted, or a full URL if the document is hosted externally.
@@ -968,8 +976,8 @@ The following configuration parameters can be used to override the behavior of t
 | `v1`
 
 | *discoverable*
-| Sets the discoverable label to either true or false. If it's set to "false" 3scale will not try to discover this service.
-| `true`
+| Sets the discovery.3scale.net label to either "true" or "false". If set to "true" 3scale will try to discover this service. If not given then the enricher tries to autodetect the whether it can make the service discoverable. Currently project using camel-rest can be auto exposed this way. If not set and nothing can be autodetected this enricher is a no-op.
+| 
 
 |===
 
@@ -998,11 +1006,12 @@ kind: Service
 name:
 metadata:
   labels:
-    discovery.3scale.net/discoverable : "true"
+    discovery.3scale.net : "true"
   annotations:
     discovery.3scale.net/discovery-version : "v1"
     discovery.3scale.net/scheme : "https"
     discovery.3scale.net/path : "/api"
+    discovery.3scale.net/port : "443"
     discovery.3scale.net/description-path : "/api/openapi.json"
 spec:
   type: LoadBalancer

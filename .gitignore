@@ -12,3 +12,4 @@ velocity.log
 /.metadata/
 /.recommenders/
 .factorypath
+bin/
