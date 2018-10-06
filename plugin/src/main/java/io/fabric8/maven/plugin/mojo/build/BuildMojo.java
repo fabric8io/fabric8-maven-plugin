@@ -202,29 +202,33 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
     @Override
-    protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-        if (shouldSkipBecauseOfPomPackaging()) {
-            getLog().info("Disabling docker build for pom packaging");
-            return;
+    protected void executeInternal(ServiceHub hub) throws MojoExecutionException {
+        try {
+            if (shouldSkipBecauseOfPomPackaging()) {
+                getLog().info("Disabling docker build for pom packaging");
+                return;
+            }
+            if (getResolvedImages().size() == 0) {
+                log.warn("No image build configuration found or detected");
+            }
+
+            // Build the fabric8 service hub
+            fabric8ServiceHub = new Fabric8ServiceHub.Builder()
+                    .log(log)
+                    .clusterAccess(clusterAccess)
+                    .platformMode(mode)
+                    .dockerServiceHub(hub)
+                    .buildServiceConfig(getBuildServiceConfig())
+                    .repositorySystem(repositorySystem)
+                    .mavenProject(project)
+                    .build();
+
+            super.executeInternal(hub);
+
+            fabric8ServiceHub.getBuildService().postProcess(getBuildServiceConfig());
+        } catch(IOException e) {
+            throw new MojoExecutionException(e.getMessage());
         }
-        if (getResolvedImages().size() == 0) {
-            log.warn("No image build configuration found or detected");
-        }
-
-        // Build the fabric8 service hub
-        fabric8ServiceHub = new Fabric8ServiceHub.Builder()
-                .log(log)
-                .clusterAccess(clusterAccess)
-                .platformMode(mode)
-                .dockerServiceHub(hub)
-                .buildServiceConfig(getBuildServiceConfig())
-                .repositorySystem(repositorySystem)
-                .mavenProject(project)
-                .build();
-
-        super.executeInternal(hub);
-
-        fabric8ServiceHub.getBuildService().postProcess(getBuildServiceConfig());
     }
 
     private boolean shouldSkipBecauseOfPomPackaging() {

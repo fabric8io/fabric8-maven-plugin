@@ -966,7 +966,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         }
         try {
             return EnvUtil.loadTimestamp(tsFile);
-        } catch (MojoExecutionException e) {
+        } catch (IOException e) {
             throw new MojoExecutionException("Cannot read timestamp from " + tsFile,e);
         }
     }
