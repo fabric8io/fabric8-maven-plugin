@@ -23,7 +23,7 @@ import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 import io.fabric8.maven.enricher.api.util.InitContainerHandler;
 
@@ -68,10 +68,10 @@ public class AutoTLSEnricher extends BaseEnricher {
         public String def() { return d; } protected String d;
     }
 
-    public AutoTLSEnricher(EnricherContext buildContext) {
+    public AutoTLSEnricher(MavenEnricherContext buildContext) {
         super(buildContext, ENRICHER_NAME);
 
-        this.secretName = getConfig(Config.tlsSecretName, getProject().getArtifactId() + "-tls");
+        this.secretName = getConfig(Config.tlsSecretName, getContext().getArtifactId() + "-tls");
         this.initContainerHandler = new InitContainerHandler(buildContext.getLog());
     }
 

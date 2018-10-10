@@ -15,6 +15,21 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.base.Function;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.KindAndName;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.Dependency;
+import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.openshift.api.model.Template;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,21 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.google.common.base.Function;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.KindAndName;
-import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
-import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
-import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.openshift.api.model.Template;
-import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
@@ -78,7 +78,7 @@ public class DependencyEnricher extends BaseEnricher {
         }
     }
 
-    public DependencyEnricher(EnricherContext buildContext) {
+    public DependencyEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-dependency");
 
         addArtifactsWithYaml(buildContext, kubernetesDependencyArtifacts, DEPENDENCY_KUBERNETES_YAML);
@@ -88,12 +88,11 @@ public class DependencyEnricher extends BaseEnricher {
     }
 
     private void addArtifactsWithYaml(EnricherContext buildContext, Set<URL> artifactSet, String dependencyYaml) {
-        Set<Artifact> artifacts = isIncludeTransitive() ?
-                buildContext.getProject().getArtifacts() : buildContext.getProject().getDependencyArtifacts();
+        final List<Dependency> artifacts = getContext().getDependencies(isIncludeTransitive());
 
-        for (Artifact artifact : artifacts) {
-            if (Artifact.SCOPE_COMPILE.equals(artifact.getScope()) && "jar".equals(artifact.getType())) {
-                File file = artifact.getFile();
+        for (Dependency artifact : artifacts) {
+            if ("compile".equals(artifact.getScope()) && "jar".equals(artifact.getType())) {
+                File file = artifact.getLocation();
                 try {
                     URL url = new URL("jar:" + file.toURI().toURL() + "!/" + dependencyYaml);
                     artifactSet.add(url);
@@ -159,7 +158,7 @@ public class DependencyEnricher extends BaseEnricher {
                 boolean isAppCatalog = false;
                 try {
                     isAppCatalog = getContext().runningWithGoal("fabric8:app-catalog");
-                } catch (MojoExecutionException e) {
+                } catch (IllegalStateException e) {
                     log.warn("Caught: %s", e);
                 }
                 getContext().getOpenshiftDependencyResources().addOpenShiftResources(items, isAppCatalog);

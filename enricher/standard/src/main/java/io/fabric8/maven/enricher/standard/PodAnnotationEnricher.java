@@ -25,14 +25,14 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
 import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 
 /**
  * Enricher which copies the annotation from a Deployment to the annotations of
  * container Pod spec.
  */
 public class PodAnnotationEnricher extends BaseEnricher {
-    public PodAnnotationEnricher(EnricherContext buildContext) {
+    public PodAnnotationEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-pod-annotations");
     }
 

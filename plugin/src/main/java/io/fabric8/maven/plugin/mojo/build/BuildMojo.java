@@ -40,7 +40,7 @@ import io.fabric8.maven.docker.service.DockerAccessFactory;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Task;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
@@ -376,8 +376,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
     // Get enricher context
-    public EnricherContext getEnricherContext() {
-        return new EnricherContext.Builder()
+    public MavenEnricherContext getEnricherContext() {
+        return new MavenEnricherContext.Builder()
                 .project(project)
                 .session(session)
                 .goalFinder(goalFinder)

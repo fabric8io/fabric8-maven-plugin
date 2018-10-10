@@ -32,11 +32,11 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 public class GitUtil {
 
 
-    public static Repository getGitRepository(MavenProject project) throws IOException {
-        MavenProject rootProject = MavenUtil.getRootProject(project);
-        File baseDir = rootProject.getBasedir();
+    public static Repository getGitRepository(File rootDir, File currentDir) throws IOException {
+
+        File baseDir = rootDir;
         if (baseDir == null) {
-            baseDir = project.getBasedir();
+            baseDir = currentDir;
         }
         if (baseDir == null) {
             // TODO: Why is this check needed ?

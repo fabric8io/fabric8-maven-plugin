@@ -15,12 +15,12 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import io.fabric8.maven.core.util.DockerServerUtil;
 import io.fabric8.maven.core.util.SecretConstants;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.DockerRegistryAuthentication;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 
 public class DockerRegistrySecretEnricher extends SecretEnricher {
@@ -28,7 +28,7 @@ public class DockerRegistrySecretEnricher extends SecretEnricher {
     final private static String ENRICHER_NAME = "fmp-docker-registry-secret";
 
 
-    public DockerRegistrySecretEnricher(EnricherContext buildContext) {
+    public DockerRegistrySecretEnricher(MavenEnricherContext buildContext) {
         super(buildContext, ENRICHER_NAME);
     }
 
@@ -39,7 +39,13 @@ public class DockerRegistrySecretEnricher extends SecretEnricher {
 
     @Override
     protected Map<String, String> generateData(String dockerId) {
-        String dockerSecret = DockerServerUtil.getDockerJsonConfigString(getContext().getSettings(), dockerId);
+        final DockerRegistryAuthentication dockerRegistryAuth = getContext().getDockerRegistryAuth(dockerId);
+
+        if (dockerRegistryAuth == null) {
+            return null;
+        }
+
+        String dockerSecret = DockerServerUtil.getDockerJsonConfigString(dockerId, dockerRegistryAuth.asMap());
         if (StringUtils.isBlank(dockerSecret)) {
             return null;
         }

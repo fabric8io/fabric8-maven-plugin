@@ -20,7 +20,7 @@ import java.util.Map;
 
 import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.IssueManagement;
@@ -39,7 +39,7 @@ import org.apache.maven.project.MavenProject;
 public class MavenIssueManagementEnricher extends BaseEnricher {
     static final String ENRICHER_NAME = "fmp-maven-issue-mgmt";
 
-    public MavenIssueManagementEnricher(EnricherContext buildContext) {
+    public MavenIssueManagementEnricher(MavenEnricherContext buildContext) {
         super(buildContext, ENRICHER_NAME);
     }
 

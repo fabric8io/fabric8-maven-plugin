@@ -16,6 +16,14 @@
 
 package io.fabric8.maven.enricher.deprecated;
 
+import com.google.common.io.Files;
+import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.FileUtil;
+import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
+import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.maven.enricher.api.Kind;
+import io.fabric8.maven.enricher.api.Scm;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -23,25 +31,9 @@ import java.io.InputStream;
 import java.net.URLConnection;
 import java.util.Collections;
 import java.util.Map;
-
-import com.google.common.io.Files;
-import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.FileUtil;
-import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
-import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
-import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.maven.model.Scm;
-import org.apache.maven.project.MavenProject;
-
-import static io.fabric8.maven.core.util.MavenUtil.hasClass;
-import static io.fabric8.maven.core.util.MavenUtil.hasPlugin;
-import static io.fabric8.maven.core.util.MavenUtil.hasPluginOfAnyGroupId;
 
 /**
  * Enricher for adding icons to descriptors
@@ -71,10 +63,10 @@ public class IconEnricher extends BaseEnricher {
         public String def() { return d; } protected String d;
     }
 
-    public IconEnricher(EnricherContext buildContext) {
+    public IconEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "f8-deprecated-icon");
 
-        String baseDir = getProject().getBasedir().getAbsolutePath();
+        String baseDir = getContext().getCurrentDir().getAbsolutePath();
         templateTempDir = new File(getConfig(Config.templateTempDir, baseDir + "/target/fabric8/template-workdir"));
         appConfigDir = new File(getConfig(Config.sourceDir, baseDir + "/src/main/fabric8"));
     }
@@ -151,32 +143,30 @@ public class IconEnricher extends BaseEnricher {
      * @return the icon ref if we can detect one or return null
      */
     private String getDefaultIconRef() {
-        MavenProject project = getProject();
-        EnricherContext context = getContext();
-
-        if (hasClass(project, "io.fabric8.funktion.runtime.Main") || MavenUtil.hasDependencyOnAnyArtifactOfGroup(project, "io.fabric8.funktion")) {
+        if (getContext().isClassInCompileClasspath(false, "io.fabric8.funktion.runtime.Main") ||
+            getContext().hasDependencyOnAnyArtifactOfGroup( "io.fabric8.funktion")) {
             return "funktion";
         }
-        if (hasClass(project, "org.apache.camel.CamelContext")) {
+        if (getContext().isClassInCompileClasspath(false, "org.apache.camel.CamelContext")) {
             return "camel";
         }
-        if (hasPluginOfAnyGroupId(project, SpringBootConfigurationHelper.SPRING_BOOT_MAVEN_PLUGIN_ARTIFACT_ID)  ||
-            hasClass(project, "org.springframework.boot.SpringApplication")) {
+        if (getContext().hasPluginOfAnyGroupId( SpringBootConfigurationHelper.SPRING_BOOT_MAVEN_PLUGIN_ARTIFACT_ID)  ||
+            getContext().isClassInCompileClasspath(false, "org.springframework.boot.SpringApplication")) {
             return "spring-boot";
         }
-        if (hasClass(project, "org.springframework.core.Constants")) {
+        if (getContext().isClassInCompileClasspath(false, "org.springframework.core.Constants")) {
             return "spring";
         }
-        if (hasClass(project, "org.vertx.java.core.Handler", "io.vertx.core.Handler")) {
+        if (getContext().isClassInCompileClasspath(false, "org.vertx.java.core.Handler", "io.vertx.core.Handler")) {
             return "vertx";
         }
 
-        if (hasPlugin(project, "org.wildfly.swarm:wildfly-swarm-plugin") ||
-            MavenUtil.hasDependencyOnAnyArtifactOfGroup(project, "org.wildfly.swarm")) {
+        if (getContext().hasPlugin("org.wildfly.swarm:wildfly-swarm-plugin") ||
+            getContext().hasDependencyOnAnyArtifactOfGroup( "org.wildfly.swarm")) {
             return "wildfly-swarm";
         }
-        if (hasPlugin(project, "io.thorntail:thorntail-maven-plugin") ||
-            MavenUtil.hasDependencyOnAnyArtifactOfGroup(project, "io.thorntail")) {
+        if (getContext().hasPlugin( "io.thorntail:thorntail-maven-plugin") ||
+            getContext().hasDependencyOnAnyArtifactOfGroup( "io.thorntail")) {
             // use the WildFly Swarm icon until there's a dedicated Thorntail icon
             // Thorntail is a new name of WildFly Swarm
             return "wildfly-swarm";
@@ -233,7 +223,7 @@ public class IconEnricher extends BaseEnricher {
     private InputStream loadPluginResource(String iconRef) {
         InputStream answer = Thread.currentThread().getContextClassLoader().getResourceAsStream(iconRef);
         if (answer == null) {
-            answer = MavenUtil.getTestClassLoader(getProject()).getResourceAsStream(iconRef);
+            answer = getContext().getTestClassLoader().getClassLoader().getResourceAsStream(iconRef);
         }
         if (answer == null) {
             answer = this.getClass().getResourceAsStream(iconRef);
@@ -279,10 +269,10 @@ public class IconEnricher extends BaseEnricher {
                 File rootProjectFolder = getRootProjectFolder();
                 if (rootProjectFolder != null) {
                     String relativePath = FileUtil.getRelativePath(rootProjectFolder, iconSourceFile).toString();
-                    String relativeParentPath = FileUtil.getRelativePath(rootProjectFolder, getProject().getBasedir()).toString();
+                    String relativeParentPath = FileUtil.getRelativePath(rootProjectFolder, getContext().getCurrentDir()).toString();
                     String urlPrefix = getConfig(Config.urlPrefix);
                     if (StringUtils.isBlank(urlPrefix)) {
-                        Scm scm = getProject().getScm();
+                        Scm scm = getContext().getScm();
                         if (scm != null) {
                             String url = scm.getUrl();
                             if (url != null) {
@@ -322,16 +312,7 @@ public class IconEnricher extends BaseEnricher {
      * Returns the root project folder
      */
     protected File getRootProjectFolder() {
-        File answer = null;
-        MavenProject project = getProject();
-        while (project != null) {
-            File basedir = project.getBasedir();
-            if (basedir != null) {
-                answer = basedir;
-            }
-            project = project.getParent();
-        }
-        return answer;
+        return getContext().getRootDir();
     }
 
 

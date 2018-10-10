@@ -15,6 +15,12 @@
  */
 package io.fabric8.maven.enricher.api;
 
+import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.enricher.api.util.MavenConfigurationExtractor;
+import java.io.File;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -25,7 +31,16 @@ import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
+import java.util.Set;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.model.DistributionManagement;
+import org.apache.maven.model.Plugin;
+import org.apache.maven.model.Site;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.settings.Server;
+import org.apache.maven.settings.Settings;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 /**
  * @author roland
@@ -35,11 +50,11 @@ public abstract class BaseEnricher implements Enricher {
 
     private final EnricherConfig config;
     private final String name;
-    private EnricherContext buildContext;
+    private MavenEnricherContext buildContext;
 
     protected Logger log;
 
-    public BaseEnricher(EnricherContext buildContext, String name) {
+    public BaseEnricher(MavenEnricherContext buildContext, String name) {
         this.buildContext = buildContext;
         // Pick the configuration which is for us
         this.config = new EnricherConfig(buildContext.getProject().getProperties(),

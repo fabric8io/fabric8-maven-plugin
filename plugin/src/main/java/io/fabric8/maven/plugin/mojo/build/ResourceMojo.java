@@ -72,7 +72,7 @@ import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.util.InitContainerHandler;
 import io.fabric8.maven.enricher.standard.VolumePermissionEnricher;
 import io.fabric8.maven.generator.api.GeneratorContext;
@@ -400,16 +400,12 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         clusterAccess = new ClusterAccess(namespace);
         updateKindFilenameMappings();
         try {
-
             lateInit();
-
             // Resolve the Docker image build configuration
             resolvedImages = getResolvedImages(images, log);
-
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
                 // Extract and generate resources which can be a mix of Kubernetes and OpenShift resources
                 KubernetesList resources = generateResources(resolvedImages);
-
                 // Adapt list to use OpenShift specific resource objects
                 KubernetesList openShiftResources = convertToOpenShiftResources(resources);
                 writeResources(openShiftResources, ResourceClassifier.OPENSHIFT, generateRoute);
@@ -491,7 +487,8 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         openShiftConverters.put("DeploymentConfig", new DeploymentConfigOpenShiftConverter(getOpenshiftDeployTimeoutSeconds()));
         openShiftConverters.put("Namespace", new NamespaceOpenShiftConverter());
 
-        handlerHub = new HandlerHub(project);
+        handlerHub = new HandlerHub(MavenUtil.getCompileClassLoader(project), project.getBuild().getOutputDirectory(),
+            project.getGroupId(), project.getArtifactId(), project.getVersion(), project.getProperties());
     }
 
     private boolean isOpenShiftMode() {
@@ -598,7 +595,8 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
         loadOpenShiftOverrideResources();
 
-        EnricherContext.Builder ctxBuilder = new EnricherContext.Builder()
+
+        MavenEnricherContext.Builder ctxBuilder = new MavenEnricherContext.Builder()
             .project(project)
             .session(session)
             .goalFinder(goalFinder)
@@ -611,6 +609,8 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         if (resources != null) {
             ctxBuilder.namespace(resources.getNamespace());
         }
+
+
         EnricherManager enricherManager = new EnricherManager(resources, ctxBuilder.build());
 
         // Generate all resources from the main resource directory, configuration and enrich them accordingly
@@ -628,7 +628,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         if (resourceDirOpenShiftOverride.isDirectory() && resourceDirOpenShiftOverride.exists()) {
             File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDirOpenShiftOverride);
             if (resourceFiles.length > 0) {
-                String defaultName = MavenUtil.createDefaultResourceName(project);
+                String defaultName = MavenUtil.createDefaultResourceName(project.getGroupId(), project.getArtifactId());
                 KubernetesListBuilder builder = KubernetesResourceUtil.readResourceFragmentsFrom(
                         KubernetesResourceUtil.DEFAULT_RESOURCE_VERSIONING,
                         defaultName,
@@ -754,7 +754,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     private KubernetesListBuilder readResourceFragments(File[] resourceFiles) throws IOException, MojoExecutionException {
         KubernetesListBuilder builder;
-        String defaultName = MavenUtil.createDefaultResourceName(project);
+        String defaultName = MavenUtil.createDefaultResourceName(project.getArtifactId());
         builder = KubernetesResourceUtil.readResourceFragmentsFrom(
             KubernetesResourceUtil.DEFAULT_RESOURCE_VERSIONING,
             defaultName,

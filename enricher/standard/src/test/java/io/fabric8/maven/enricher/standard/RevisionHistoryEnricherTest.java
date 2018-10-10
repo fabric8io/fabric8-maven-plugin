@@ -25,8 +25,7 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.ResourceUtil;
-import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -41,7 +40,7 @@ import static org.junit.Assert.assertThat;
 public class RevisionHistoryEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     @Test
     public void testDefaultRevisionHistoryLimit() throws JsonProcessingException {

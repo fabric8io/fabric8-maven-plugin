@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.plugin.enricher;
 
+import io.fabric8.maven.enricher.api.EnricherContext;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,7 @@ import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.PluginServiceFactory;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.Enricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 
 import static io.fabric8.maven.plugin.enricher.EnricherManager.Extractor.ANNOTATION_EXTRACTOR;
@@ -58,7 +59,7 @@ public class EnricherManager {
     private final MetadataVisitor<?>[] metaDataVisitors;
     private final SelectorVisitor<?>[] selectorVisitorCreators;
 
-    public EnricherManager(ResourceConfig resourceConfig, EnricherContext enricherContext) {
+    public EnricherManager(ResourceConfig resourceConfig, MavenEnricherContext enricherContext) {
         PluginServiceFactory<EnricherContext> pluginFactory = new PluginServiceFactory<>(enricherContext);
 
         if (enricherContext.isUseProjectClasspath()) {

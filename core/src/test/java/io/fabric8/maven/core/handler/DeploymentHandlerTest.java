@@ -84,7 +84,7 @@ public class DeploymentHandlerTest {
     public void deploymentTemplateHandlerTest() {
 
         ContainerHandler containerHandler =
-                new ContainerHandler(project, envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), project.getGroupId(), project.getArtifactId(), project.getVersion(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -121,7 +121,7 @@ public class DeploymentHandlerTest {
     public void deploymentTemplateHandlerWithInvalidNameTest() {
         //invalid controller name
         ContainerHandler containerHandler =
-                new ContainerHandler(project, envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), project.getGroupId(), project.getArtifactId(), project.getVersion(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -143,7 +143,7 @@ public class DeploymentHandlerTest {
     public void deploymentTemplateHandlerWithoutControllerTest() {
         //without controller name
         ContainerHandler containerHandler = new
-                ContainerHandler(project, envVarHandler, probeHandler);
+                ContainerHandler(project.getProperties(), project.getGroupId(), project.getArtifactId(), project.getVersion(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 

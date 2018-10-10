@@ -16,18 +16,15 @@
 
 package io.fabric8.maven.enricher.deprecated;
 
+import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.GitUtil;
+import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.maven.enricher.api.Kind;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
-import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.GitUtil;
-import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.maven.project.MavenProject;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 
@@ -62,7 +59,7 @@ public class CdEnricher extends AbstractLiveEnricher {
         protected String d;
     }
 
-    public CdEnricher(EnricherContext buildContext) {
+    public CdEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "f8-deprecated-cd");
     }
 
@@ -88,9 +85,8 @@ public class CdEnricher extends AbstractLiveEnricher {
     public Map<String, String> getAnnotations(Kind kind) {
         if (isOnline() && (kind.isController() || kind == Kind.SERVICE)) {
             Map<String, String> annotations = new HashMap<>();
-            MavenProject rootProject = MavenUtil.getRootProject(getProject());
-            String repoName = rootProject.getArtifactId();
-            try (Repository repository = GitUtil.getGitRepository(getProject())) {
+            String repoName = getContext().getRootArtifactId();
+            try (Repository repository = GitUtil.getGitRepository(getContext().getRootDir(), getContext().getCurrentDir())) {
                 // Git annotations (if git is used as SCM)
                 if (repository != null) {
                     String gitCommitId = GitUtil.getGitCommitId(repository);

@@ -15,24 +15,19 @@
  */
 package io.fabric8.maven.enricher.deprecated;
 
+import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.maven.enricher.api.Kind;
 import java.util.Collections;
 import java.util.Map;
-
-import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
-import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.maven.project.MavenProject;
-
-import static io.fabric8.maven.core.util.MavenUtil.hasClass;
 
 /**
  */
 public class GrafanaLinkEnricher extends BaseEnricher {
 
-    public GrafanaLinkEnricher(EnricherContext buildContext) {
+    public GrafanaLinkEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "f8-deprecated-cd-grafana-link");
     }
 
@@ -54,18 +49,17 @@ public class GrafanaLinkEnricher extends BaseEnricher {
     }
 
     private String findGrafanaLink() {
-        MavenProject project = getProject();
-        String defaultDashboard = detectDefaultDashboard(project);
+        String defaultDashboard = detectDefaultDashboard();
         String query = "";
         String projectName = null;
         String version = null;
 
         // TODO - use the docker names which may differ from project metadata!
         if (StringUtils.isBlank(projectName)) {
-            projectName = project.getArtifactId();
+            projectName = getContext().getArtifactId();
         }
         if (StringUtils.isBlank(version)) {
-            version = project.getVersion();
+            version = getContext().getVersion();
         }
 
         if (StringUtils.isNotBlank(projectName)) {
@@ -80,12 +74,12 @@ public class GrafanaLinkEnricher extends BaseEnricher {
         return String.format("dashboard/file/%s%s", defaultDashboard, query);
     }
 
-    protected String detectDefaultDashboard(MavenProject project) {
+    protected String detectDefaultDashboard() {
         String dashboard = getConfig(Config.metricsDashboard);
         if (StringUtils.isNotBlank(dashboard)) {
             return dashboard;
         }
-        if (hasClass(project, "org.apache.camel.CamelContext")) {
+        if (getContext().isClassInCompileClasspath(false,"org.apache.camel.CamelContext")) {
             return "camel-routes.json";
         }
         return "kubernetes-pods.json";

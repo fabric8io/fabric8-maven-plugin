@@ -20,7 +20,7 @@ import java.util.Properties;
 
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 import mockit.Expectations;
 import mockit.Mocked;
@@ -43,7 +43,7 @@ import static org.junit.Assert.assertNull;
 public class MavenProjectEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     @Mocked
     private MavenProject mavenProject;
@@ -51,14 +51,11 @@ public class MavenProjectEnricherTest {
     @Before
     public void setupExpectations() {
         new Expectations() {{
-            context.getProject();
-            result = mavenProject;
-
-            mavenProject.getGroupId();
+            context.getGroupId();
             result = "groupId";
-            mavenProject.getArtifactId();
+            context.getArtifactId();
             result = "artifactId";
-            mavenProject.getVersion();
+            context.getVersion();
             result = "version";
         }};
     }

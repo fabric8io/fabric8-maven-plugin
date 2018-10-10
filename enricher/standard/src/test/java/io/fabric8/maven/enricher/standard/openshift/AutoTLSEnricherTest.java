@@ -26,9 +26,8 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplate;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
-import io.fabric8.maven.enricher.standard.openshift.AutoTLSEnricher;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -45,7 +44,7 @@ import static org.junit.Assert.assertNull;
 public class AutoTLSEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
     @Mocked
     MavenProject project;
 
@@ -92,6 +91,8 @@ public class AutoTLSEnricherTest {
                     result = project;
                     context.getConfig();
                     result = config;
+                    context.getArtifactId();
+                    result = "projectA";
                 }
             };
 

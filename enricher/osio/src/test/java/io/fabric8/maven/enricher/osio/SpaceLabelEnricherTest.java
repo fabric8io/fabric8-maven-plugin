@@ -22,7 +22,7 @@ import java.util.TreeMap;
 
 import com.google.common.collect.ImmutableMap;
 import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 import mockit.Expectations;
 import mockit.Mock;
@@ -40,7 +40,7 @@ import static org.junit.Assert.assertNull;
 public class SpaceLabelEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     private static final String SPACE_KEY = "fabric8.enricher.osio-space-label.space";
     private static final String SPACE_VALUE = "test";

@@ -17,7 +17,6 @@ package io.fabric8.maven.core.util;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
@@ -32,13 +31,30 @@ public class DockerServerUtil {
         return settings.getServer(serverId);
     }
 
+    public static String getDockerJsonConfigString(final String serverId, final Map<String, String> auth) {
+
+        if (auth == null || auth.isEmpty()) {
+            return "";
+        }
+
+
+        if (!auth.containsKey("email") || StringUtils.isBlank(auth.get("email"))) {
+            auth.put("email", "foo@foo.com");
+        }
+
+        JSONObject json = new JSONObject()
+                .put(serverId, auth);
+        return json.toString();
+    }
+
+    //Method used in MOJO
     public static String getDockerJsonConfigString(final Settings settings, final String serverId) {
         Server server = getServer(settings, serverId);
         if (server == null) {
             return new String();
         }
 
-        Map<String, String> auth = new HashMap();
+        Map<String, String> auth = new HashMap<>();
         auth.put("username", server.getUsername());
         auth.put("password", server.getPassword());
 
@@ -49,7 +65,7 @@ public class DockerServerUtil {
         auth.put("email", mail);
 
         JSONObject json = new JSONObject()
-                .put(serverId, auth);
+            .put(serverId, auth);
         return json.toString();
     }
 

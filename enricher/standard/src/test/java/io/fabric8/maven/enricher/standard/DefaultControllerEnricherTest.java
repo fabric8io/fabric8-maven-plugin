@@ -15,10 +15,6 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.TreeMap;
-
 import com.google.common.io.Files;
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.KubernetesList;
@@ -27,12 +23,19 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.maven.enricher.api.util.ClassLoaderWrapper;
+import java.net.URLClassLoader;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.TreeMap;
 import mockit.Expectations;
+import mockit.Injectable;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
 import org.apache.maven.project.MavenProject;
 import org.hamcrest.Matchers;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -47,7 +50,7 @@ import static org.junit.Assert.assertThat;
 public class DefaultControllerEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     @Mocked
     ImageConfiguration imageConfiguration;
@@ -91,12 +94,13 @@ public class DefaultControllerEnricherTest {
     }
 
     protected void setupExpectations(final BuildImageConfiguration buildConfig, final TreeMap controllerConfig) {
+
         new Expectations() {{
 
-            project.getArtifactId();
+            context.getArtifactId();
             result = "fmp-controller-test";
 
-            project.getBuild().getOutputDirectory();
+            context.getBuildOuptDirectory();
             result = Files.createTempDir().getAbsolutePath();
 
             context.getProject();
@@ -114,6 +118,9 @@ public class DefaultControllerEnricherTest {
 
             context.getImages();
             result = Arrays.asList(imageConfiguration);
+
+            context.getCompileClassLoader();
+            result = new ClassLoaderWrapper((URLClassLoader) DefaultControllerEnricherTest.class.getClassLoader());
         }};
     }
 }

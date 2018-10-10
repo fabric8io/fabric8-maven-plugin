@@ -84,7 +84,7 @@ public class StatefulSetHandlerTest {
     public void statefulSetHandlerTest() {
 
         ContainerHandler containerHandler =
-                new ContainerHandler(project, envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), project.getGroupId(), project.getArtifactId(), project.getVersion(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -122,7 +122,7 @@ public class StatefulSetHandlerTest {
     public void statefulSetHandlerWithInvalidNameTest() {
         //invalid controller name
         ContainerHandler containerHandler =
-                new ContainerHandler(project, envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), project.getGroupId(), project.getArtifactId(), project.getVersion(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -144,7 +144,7 @@ public class StatefulSetHandlerTest {
     public void statefulSetHandlerWithoutControllerTest() {
         //without controller name
         ContainerHandler containerHandler = new
-                ContainerHandler(project, envVarHandler, probeHandler);
+                ContainerHandler(project.getProperties(), project.getGroupId(), project.getArtifactId(), project.getVersion(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 

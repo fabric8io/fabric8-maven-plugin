@@ -164,7 +164,7 @@ public class KubernetesResourceUtilTest {
                 .registry("example.com/someregistry")
                 .name("test")
                 .build();
-        String containerName = KubernetesResourceUtil.extractContainerName(project, imageConfiguration);
+        String containerName = KubernetesResourceUtil.extractContainerName(project.getGroupId(), project.getArtifactId(), imageConfiguration);
         assertTrue(containerName.matches(KubernetesResourceUtil.CONTAINER_NAME_REGEX));
     }
 

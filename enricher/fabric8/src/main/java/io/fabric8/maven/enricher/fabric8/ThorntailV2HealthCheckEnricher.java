@@ -18,16 +18,14 @@ package io.fabric8.maven.enricher.fabric8;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.enricher.api.EnricherContext;
-
-import static io.fabric8.maven.core.util.MavenUtil.hasDependency;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 
 /**
  * Enriches thorntail-v2 containers with health checks if the monitoring fraction is present.
  */
 public class ThorntailV2HealthCheckEnricher extends AbstractHealthCheckEnricher {
 
-    public ThorntailV2HealthCheckEnricher(EnricherContext buildContext) {
+    public ThorntailV2HealthCheckEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "f8-healthcheck-thorntail-v2");
     }
 
@@ -62,13 +60,13 @@ public class ThorntailV2HealthCheckEnricher extends AbstractHealthCheckEnricher 
     }
 
     private Probe discoverThorntailHealthCheck(int initialDelay) {
-        if (hasDependency(this.getProject(), "io.thorntail", "thorntail-kernel")) {
+        if (getContext().hasDependency("io.thorntail", "thorntail-kernel")) {
             // if there's thorntail-kernel, it's Thorntail v4
             return null;
         }
 
-        if (hasDependency(this.getProject(), "io.thorntail", "monitor")
-                || hasDependency(this.getProject(), "io.thorntail", "microprofile-health")) {
+        if (getContext().hasDependency("io.thorntail", "monitor")
+                || getContext().hasDependency( "io.thorntail", "microprofile-health")) {
             Integer port = getPort();
             // scheme must be in upper case in k8s
             String scheme = getScheme().toUpperCase();

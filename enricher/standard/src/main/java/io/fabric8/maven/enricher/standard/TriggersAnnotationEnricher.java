@@ -35,7 +35,7 @@ import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.ImageChangeTrigger;
 import io.fabric8.openshift.api.model.ImageChangeTriggerBuilder;
 
@@ -63,7 +63,7 @@ public class TriggersAnnotationEnricher extends BaseEnricher {
     }
 
 
-    public TriggersAnnotationEnricher(EnricherContext buildContext) {
+    public TriggersAnnotationEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-triggers-annotation");
     }
 

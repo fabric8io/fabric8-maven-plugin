@@ -15,18 +15,6 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import io.fabric8.ianaservicehelper.Helper;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.IntOrString;
@@ -44,7 +32,18 @@ import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.maven.shared.utils.StringUtils;
 
 /**
@@ -92,7 +91,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
         public String def() { return d; } protected String d;
     }
 
-    public DefaultServiceEnricher(EnricherContext buildContext) {
+    public DefaultServiceEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-service");
     }
 
@@ -121,7 +120,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
 
         ServiceBuilder builder = new ServiceBuilder()
             .withNewMetadata()
-              .withName(getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject())))
+              .withName(getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getArtifactId())))
               .withLabels(extractLabels())
             .endMetadata();
         ServiceFluent.SpecNested<ServiceBuilder> specBuilder = builder.withNewSpec();
@@ -410,7 +409,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
     private String getDefaultServiceName(Service defaultService) {
         String defaultServiceName = KubernetesHelper.getName(defaultService);
         if (StringUtils.isBlank(defaultServiceName)) {
-            defaultServiceName = getProject().getArtifactId();
+            defaultServiceName = getContext().getArtifactId();
         }
         return defaultServiceName;
     }

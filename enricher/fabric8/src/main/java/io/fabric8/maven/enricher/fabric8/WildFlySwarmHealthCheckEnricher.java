@@ -18,16 +18,14 @@ package io.fabric8.maven.enricher.fabric8;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.enricher.api.EnricherContext;
-
-import static io.fabric8.maven.core.util.MavenUtil.hasDependency;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 
 /**
  * Enriches wildfly-swarm containers with health checks if the monitoring fraction is present.
  */
 public class WildFlySwarmHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
-    public WildFlySwarmHealthCheckEnricher(EnricherContext buildContext) {
+    public WildFlySwarmHealthCheckEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "f8-healthcheck-wildfly-swarm");
     }
 
@@ -62,8 +60,8 @@ public class WildFlySwarmHealthCheckEnricher extends AbstractHealthCheckEnricher
     }
 
     private Probe discoverWildFlySwarmHealthCheck(int initialDelay) {
-        if (hasDependency(this.getProject(), "org.wildfly.swarm", "monitor")
-                || hasDependency(this.getProject(), "org.wildfly.swarm", "microprofile-health")) {
+        if (getContext().hasDependency("org.wildfly.swarm", "monitor")
+                || getContext().hasDependency("org.wildfly.swarm", "microprofile-health")) {
             Integer port = getPort();
             // scheme must be in upper case in k8s
             String scheme = getScheme().toUpperCase();

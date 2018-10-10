@@ -112,7 +112,7 @@ public class SpringBootWatcher extends BaseWatcher {
             return null;
         }
 
-        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getContext().getProject());
+        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(MavenUtil.getCompileClassLoader(getContext().getProject()));
         SpringBootConfigurationHelper propertyHelper = new SpringBootConfigurationHelper(SpringBootUtil.getSpringBootVersion(getContext().getProject()));
 
         int port = IoUtil.getFreeRandomPort();
@@ -173,7 +173,7 @@ public class SpringBootWatcher extends BaseWatcher {
     private void runRemoteSpringApplication(String url) {
         log.info("Running RemoteSpringApplication against endpoint: " + url);
 
-        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getContext().getProject());
+        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(MavenUtil.getCompileClassLoader(getContext().getProject()));
         String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET, System.getProperty(DEV_TOOLS_REMOTE_SECRET));
         if (StringUtils.isBlank(remoteSecret)) {
             log.warn("There is no `%s` property defined in your src/main/resources/application.properties. Please add one!", DEV_TOOLS_REMOTE_SECRET);

@@ -22,11 +22,11 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.maven.core.util.Base64Util;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 
 public abstract class SecretEnricher extends BaseEnricher {
 
-    public SecretEnricher(EnricherContext buildContext, String name) {
+    public SecretEnricher(MavenEnricherContext buildContext, String name) {
         super(buildContext, name);
     }
 

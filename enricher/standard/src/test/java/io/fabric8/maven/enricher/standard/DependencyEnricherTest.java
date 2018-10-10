@@ -20,6 +20,7 @@ package io.fabric8.maven.enricher.standard;
  * @since 06/11/17
  */
 
+import io.fabric8.maven.enricher.api.Dependency;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -37,7 +38,7 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.util.KindAndName;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -55,7 +56,7 @@ import static org.junit.Assert.assertTrue;
 public class DependencyEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     @Mocked
     private ImageConfiguration imageConfiguration;
@@ -110,18 +111,17 @@ public class DependencyEnricherTest {
             context.getProject();
             result = project;
 
-            context.getProject().getArtifacts();
+            context.getDependencies(true);
             result = getDummyArtifacts();
         }};
     }
 
-    private Set<Artifact> getDummyArtifacts() {
-        Set<Artifact> artifacts = new TreeSet<>();
+    private List<Dependency> getDummyArtifacts() {
+        List<Dependency> artifacts = new ArrayList<>();
 
-        Artifact artifact = new DefaultArtifact("io.fabric8.tenant.apps", "jenkins",
-                "1.0.0-SNAPSHOT", "compile", "jar", null, new DefaultArtifactHandler("jar"));
+
         File aFile = new File(getClass().getResource(artifactFilePath).getFile());
-        artifact.setFile(aFile);
+        Dependency artifact = new Dependency("jar", "compile", aFile);
         artifacts.add(artifact);
         return artifacts;
     }

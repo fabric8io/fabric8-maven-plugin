@@ -324,15 +324,15 @@ public class KubernetesResourceUtil {
         return suffix != null ? name +  "-" + suffix : name;
     }
 
-    public static String extractContainerName(MavenProject project, ImageConfiguration imageConfig) {
+    public static String extractContainerName(String groupId, String artifactId, ImageConfiguration imageConfig) {
         String alias = imageConfig.getAlias();
-        return alias != null ? alias : extractImageUser(imageConfig.getName(), project) + "-" + project.getArtifactId();
+        return alias != null ? alias : extractImageUser(imageConfig.getName(), groupId) + "-" + artifactId;
     }
 
-    private static String extractImageUser(String image, MavenProject project) {
+    private static String extractImageUser(String image, String groupId) {
         ImageName name = new ImageName(image);
         String imageUser = name.getUser();
-        String projectGroupId = project.getGroupId();
+        String projectGroupId = groupId;
         if(imageUser != null) {
             return imageUser;
         } else {

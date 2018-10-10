@@ -21,14 +21,14 @@ import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 
 /**
  * Enriches containers with health check probes.
  */
 public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
 
-    public AbstractHealthCheckEnricher(EnricherContext buildContext, String name) {
+    public AbstractHealthCheckEnricher(MavenEnricherContext buildContext, String name) {
         super(buildContext, name);
     }
 
