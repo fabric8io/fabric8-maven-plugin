@@ -62,7 +62,7 @@
     <fabric8.maven.plugin.version>3.5.41</fabric8.maven.plugin.version>
 
     <version.maven>3.3.1</version.maven>
-    <version.jacoco>0.7.8</version.jacoco>
+    <version.jacoco>0.8.2</version.jacoco>
     <version.kubernetes-client>4.0.4</version.kubernetes-client>
     <version.openshift-client>${version.kubernetes-client}</version.openshift-client>
     <version.mockwebserver>0.0.13</version.mockwebserver>
@@ -628,7 +628,7 @@
         <plugin>
           <groupId>org.codehaus.plexus</groupId>
           <artifactId>plexus-component-metadata</artifactId>
-          <version>1.6</version>
+          <version>1.7</version>
         </plugin>
 
         <plugin>
@@ -675,6 +675,7 @@
           <artifactId>jacoco-maven-plugin</artifactId>
           <version>${version.jacoco}</version>
         </plugin>
+
         <plugin>
           <groupId>com.mycila</groupId>
           <artifactId>license-maven-plugin</artifactId>
