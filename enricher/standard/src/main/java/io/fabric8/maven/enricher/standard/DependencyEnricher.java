@@ -27,7 +27,6 @@ import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.Dependency;
-import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.Template;
 import java.io.File;
@@ -44,7 +43,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  * Enricher for embedding dependency descriptors to single package.
@@ -81,13 +79,13 @@ public class DependencyEnricher extends BaseEnricher {
     public DependencyEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-dependency");
 
-        addArtifactsWithYaml(buildContext, kubernetesDependencyArtifacts, DEPENDENCY_KUBERNETES_YAML);
-        addArtifactsWithYaml(buildContext, kubernetesTemplateDependencyArtifacts, DEPENDENCY_KUBERNETES_TEMPLATE_YAML);
-        addArtifactsWithYaml(buildContext, openshiftDependencyArtifacts, DEPENDENCY_OPENSHIFT_YAML);
+        addArtifactsWithYaml(kubernetesDependencyArtifacts, DEPENDENCY_KUBERNETES_YAML);
+        addArtifactsWithYaml(kubernetesTemplateDependencyArtifacts, DEPENDENCY_KUBERNETES_TEMPLATE_YAML);
+        addArtifactsWithYaml(openshiftDependencyArtifacts, DEPENDENCY_OPENSHIFT_YAML);
 
     }
 
-    private void addArtifactsWithYaml(EnricherContext buildContext, Set<URL> artifactSet, String dependencyYaml) {
+    private void addArtifactsWithYaml(Set<URL> artifactSet, String dependencyYaml) {
         final List<Dependency> artifacts = getContext().getDependencies(isIncludeTransitive());
 
         for (Dependency artifact : artifacts) {

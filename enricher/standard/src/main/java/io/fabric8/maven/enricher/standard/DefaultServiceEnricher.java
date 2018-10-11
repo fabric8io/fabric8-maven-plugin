@@ -120,7 +120,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
 
         ServiceBuilder builder = new ServiceBuilder()
             .withNewMetadata()
-              .withName(getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getArtifactId())))
+              .withName(getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getArtifact().getArtifactId())))
               .withLabels(extractLabels())
             .endMetadata();
         ServiceFluent.SpecNested<ServiceBuilder> specBuilder = builder.withNewSpec();
@@ -409,7 +409,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
     private String getDefaultServiceName(Service defaultService) {
         String defaultServiceName = KubernetesHelper.getName(defaultService);
         if (StringUtils.isBlank(defaultServiceName)) {
-            defaultServiceName = getContext().getArtifactId();
+            defaultServiceName = getContext().getArtifact().getArtifactId();
         }
         return defaultServiceName;
     }

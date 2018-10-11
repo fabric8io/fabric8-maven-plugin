@@ -61,6 +61,7 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
             return input == null ? null : input.trim();
         }
     };
+    public static final String ERROR_MESSAGE = "Location of %s should return a String but found %s with value %s";
 
     public VertxHealthCheckEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "f8-healthcheck-vertx");
@@ -282,7 +283,8 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
                     return elements;
                 } else {
-                    throw new IllegalArgumentException(String.format("Location of %s should return a String but found %s with value %s",
+                    throw new IllegalArgumentException(String.format(
+                        ERROR_MESSAGE,
                         attribute, input.getClass(), input.toString()));
                 }
 
@@ -301,15 +303,13 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
             element = getElement(attribute);
         }
 
-        return element.transform(new Function<Object, Map<String, String>>() {
-            @Override
-            public Map<String, String> apply(Object input) {
-                if (input instanceof Map) {
-                    return (Map<String, String>) input;
-                } else {
-                    throw new IllegalArgumentException(String.format("Location of %s should return a String but found %s with value %s",
-                        attribute, input.getClass(), input.toString()));
-                }
+        return element.transform(input -> {
+            if (input instanceof Map) {
+                return (Map<String, String>) input;
+            } else {
+                throw new IllegalArgumentException(String.format(
+                    ERROR_MESSAGE,
+                    attribute, input.getClass(), input.toString()));
             }
         });
     }
@@ -317,12 +317,7 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
     private Optional<Integer> getIntegerValue(String attribute, boolean readiness) {
         return getStringValue(attribute, readiness)
-                .transform(new Function<String, Integer>() {
-                    @Override
-                    public Integer apply(String input) {
-                        return Integer.parseInt(input);
-                    }
-                });
+                .transform(Integer::parseInt);
     }
 
     private Optional<String> getValueFromConfig(String... keys) {
@@ -333,7 +328,8 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
                 if (input instanceof String) {
                     return (String) input;
                 } else {
-                    throw new IllegalArgumentException(String.format("Location of %s should return a String but found %s with value %s",
+                    throw new IllegalArgumentException(String.format(
+                        ERROR_MESSAGE,
                     Arrays.toString(keys), input.getClass(), input.toString()));
                 }
             }

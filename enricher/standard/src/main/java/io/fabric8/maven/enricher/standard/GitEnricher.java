@@ -50,7 +50,7 @@ public class GitEnricher extends BaseEnricher {
         try {
             if (kind.isController() || kind == Kind.SERVICE) {
                 // Git annotations (if git is used as SCM)
-                repository = GitUtil.getGitRepository(getContext().getRootDir(), getContext().getCurrentDir());
+                repository = GitUtil.getGitRepository(getContext().getCurrentDir());
                 if (repository != null) {
                     String branch = repository.getBranch();
                     if (branch != null) {

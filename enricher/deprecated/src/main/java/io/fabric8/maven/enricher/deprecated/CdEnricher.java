@@ -86,7 +86,7 @@ public class CdEnricher extends AbstractLiveEnricher {
         if (isOnline() && (kind.isController() || kind == Kind.SERVICE)) {
             Map<String, String> annotations = new HashMap<>();
             String repoName = getContext().getRootArtifactId();
-            try (Repository repository = GitUtil.getGitRepository(getContext().getRootDir(), getContext().getCurrentDir())) {
+            try (Repository repository = GitUtil.getGitRepository(getContext().getCurrentDir())) {
                 // Git annotations (if git is used as SCM)
                 if (repository != null) {
                     String gitCommitId = GitUtil.getGitCommitId(repository);

@@ -15,13 +15,11 @@
  */
 package io.fabric8.maven.enricher.fabric8;
 
-import io.fabric8.maven.enricher.api.util.ClassLoaderWrapper;
+import io.fabric8.maven.enricher.api.util.ProjectClassLoader;
 import java.net.URLClassLoader;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.TreeMap;
 
 import io.fabric8.kubernetes.api.model.Probe;
@@ -34,8 +32,6 @@ import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
 import mockit.Mocked;
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.project.MavenProject;
 import org.junit.Before;
 import org.junit.Test;
@@ -310,9 +306,9 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         new Expectations(){{
             context.isClassInCompileClasspath(true, SpringBootHealthCheckEnricher.REQUIRED_CLASSES);
             result = true;
-            context.getCompileClassLoader();
-            result = new ClassLoaderWrapper(
-                (URLClassLoader) AbstractSpringBootHealthCheckEnricherSupport.class.getClassLoader());
+            context.getProjectClassLoader();
+            result = new ProjectClassLoader(
+                (URLClassLoader) AbstractSpringBootHealthCheckEnricherSupport.class.getClassLoader(), (URLClassLoader) AbstractSpringBootHealthCheckEnricherSupport.class.getClassLoader());
         }};
 
 
@@ -339,9 +335,9 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
             context.getConfig(); result = config;
             context.isClassInCompileClasspath(true, SpringBootHealthCheckEnricher.REQUIRED_CLASSES);
             result = true;
-            context.getCompileClassLoader();
-            result = new ClassLoaderWrapper(
-                (URLClassLoader) AbstractSpringBootHealthCheckEnricherSupport.class.getClassLoader());
+            context.getProjectClassLoader();
+            result = new ProjectClassLoader(
+                (URLClassLoader) AbstractSpringBootHealthCheckEnricherSupport.class.getClassLoader(), (URLClassLoader) AbstractSpringBootHealthCheckEnricherSupport.class.getClassLoader());
         }};
         withAllRequiredClasses();
         withProjectProperties(new Properties());
@@ -379,9 +375,9 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
             context.getConfig(); result = config;
             context.isClassInCompileClasspath(true, SpringBootHealthCheckEnricher.REQUIRED_CLASSES);
             result = true;
-            context.getCompileClassLoader();
-            result = new ClassLoaderWrapper(
-                (URLClassLoader) AbstractSpringBootHealthCheckEnricherSupport.class.getClassLoader());
+            context.getProjectClassLoader();
+            result = new ProjectClassLoader(
+                (URLClassLoader) AbstractSpringBootHealthCheckEnricherSupport.class.getClassLoader(), (URLClassLoader) AbstractSpringBootHealthCheckEnricherSupport.class.getClassLoader());
         }};
         withAllRequiredClasses();
         withProjectProperties(new Properties());

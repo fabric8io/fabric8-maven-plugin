@@ -25,6 +25,8 @@ import io.fabric8.maven.enricher.api.MavenEnricherContext;
  */
 public class ThorntailV2HealthCheckEnricher extends AbstractHealthCheckEnricher {
 
+    public static final String IO_THORNTAIL = "io.thorntail";
+
     public ThorntailV2HealthCheckEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "f8-healthcheck-thorntail-v2");
     }
@@ -60,13 +62,13 @@ public class ThorntailV2HealthCheckEnricher extends AbstractHealthCheckEnricher 
     }
 
     private Probe discoverThorntailHealthCheck(int initialDelay) {
-        if (getContext().hasDependency("io.thorntail", "thorntail-kernel")) {
+        if (getContext().hasDependency(IO_THORNTAIL, "thorntail-kernel")) {
             // if there's thorntail-kernel, it's Thorntail v4
             return null;
         }
 
-        if (getContext().hasDependency("io.thorntail", "monitor")
-                || getContext().hasDependency( "io.thorntail", "microprofile-health")) {
+        if (getContext().hasDependency(IO_THORNTAIL, "monitor")
+                || getContext().hasDependency(IO_THORNTAIL, "microprofile-health")) {
             Integer port = getPort();
             // scheme must be in upper case in k8s
             String scheme = getScheme().toUpperCase();

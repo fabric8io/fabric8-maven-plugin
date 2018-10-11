@@ -15,19 +15,19 @@
  */
 package io.fabric8.maven.enricher.standard.openshift;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TreeMap;
-
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplate;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.maven.core.model.Artifact;
 import io.fabric8.maven.enricher.api.Kind;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -82,17 +82,15 @@ public class AutoTLSEnricherTest {
             // Setup mock behaviour
             new Expectations() {
                 {
-                    project.getProperties();
+                    context.getProperties();
                     result = projectProps;
                     project.getArtifactId();
                     result = "projectA";
                     minTimes = 0;
-                    context.getProject();
-                    result = project;
                     context.getConfig();
                     result = config;
-                    context.getArtifactId();
-                    result = "projectA";
+                    context.getArtifact();
+                    result = new Artifact("", "projectA", "0");
                 }
             };
 
@@ -165,13 +163,11 @@ public class AutoTLSEnricherTest {
             // Setup mock behaviour
             new Expectations() {
                 {
-                    project.getProperties();
+                    context.getProperties();
                     result = projectProps;
                     project.getArtifactId();
                     result = "projectA";
                     minTimes = 0;
-                    context.getProject();
-                    result = project;
                     context.getConfig();
                     result = config;
                 }

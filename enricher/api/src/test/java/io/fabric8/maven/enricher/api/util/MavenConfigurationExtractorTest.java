@@ -50,6 +50,37 @@ public class MavenConfigurationExtractorTest {
     }
 
     @Test
+    public void should_parse_deep_inner_objects() {
+
+        // Given
+        final Plugin fakePlugin = createFakePlugin("<a>"
+            + "<b>"
+            + "<c>"
+            + "<d>"
+            + "<e>e1</e>"
+            + "</d>"
+            + "</c>"
+            + "</b>"
+            + "</a>");
+
+        // When
+        final Map<String, Object> config = MavenConfigurationExtractor.extract((Xpp3Dom) fakePlugin.getConfiguration());
+
+        // Then
+        final Map<String, Object> e = new HashMap<>();
+        e.put("e", "e1");
+        final Map<String, Object> d = new HashMap<>();
+        d.put("d", e);
+        final Map<String, Object> c = new HashMap<>();
+        c.put("c", d);
+        final Map<String, Object> expected = new HashMap<>();
+        expected.put("b", c);
+        assertThat(config)
+            .containsEntry("a", expected);
+
+    }
+
+    @Test
     public void should_parse_list_of_elements() {
 
         // Given
@@ -65,6 +96,31 @@ public class MavenConfigurationExtractorTest {
         // Then
         final Map<String, Object> expectedC = new HashMap<>();
         expectedC.put("c", Arrays.asList("c1", "c2"));
+        final Map<String, Object> expected = new HashMap<>();
+        expected.put("b", expectedC);
+
+        assertThat(config)
+            .containsEntry("a",expected);
+
+    }
+
+    @Test
+    public void should_parse_list_of_mixed_elements() {
+
+        // Given
+        final Plugin fakePlugin = createFakePlugin("<a>"
+            + "<b>"
+            + "<c>c1</c><d>d1</d><c>c2</c>"
+            + "</b>"
+            + "</a>");
+
+        // When
+        final Map<String, Object> config = MavenConfigurationExtractor.extract((Xpp3Dom) fakePlugin.getConfiguration());
+
+        // Then
+        final Map<String, Object> expectedC = new HashMap<>();
+        expectedC.put("c", Arrays.asList("c1", "c2"));
+        expectedC.put("d", "d1");
         final Map<String, Object> expected = new HashMap<>();
         expected.put("b", expectedC);
 

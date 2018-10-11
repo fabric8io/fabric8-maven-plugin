@@ -15,11 +15,6 @@
  */
 package io.fabric8.maven.plugin.enricher;
 
-import io.fabric8.maven.enricher.api.EnricherContext;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.base.Function;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.MetaDataConfig;
@@ -29,8 +24,11 @@ import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.PluginServiceFactory;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.Enricher;
-import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static io.fabric8.maven.plugin.enricher.EnricherManager.Extractor.ANNOTATION_EXTRACTOR;
 import static io.fabric8.maven.plugin.enricher.EnricherManager.Extractor.LABEL_EXTRACTOR;
@@ -59,11 +57,11 @@ public class EnricherManager {
     private final MetadataVisitor<?>[] metaDataVisitors;
     private final SelectorVisitor<?>[] selectorVisitorCreators;
 
-    public EnricherManager(ResourceConfig resourceConfig, MavenEnricherContext enricherContext) {
+    public EnricherManager(ResourceConfig resourceConfig, EnricherContext enricherContext) {
         PluginServiceFactory<EnricherContext> pluginFactory = new PluginServiceFactory<>(enricherContext);
 
         if (enricherContext.isUseProjectClasspath()) {
-            pluginFactory.addAdditionalClassLoader(ClassUtil.createProjectClassLoader(enricherContext.getProject(), enricherContext.getLog()));
+            pluginFactory.addAdditionalClassLoader(ClassUtil.createProjectClassLoader(enricherContext.getCompileClasspathElements(), enricherContext.getLog()));
         }
 
         this.log = enricherContext.getLog();

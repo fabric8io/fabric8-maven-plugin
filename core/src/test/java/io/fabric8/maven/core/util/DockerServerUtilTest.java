@@ -60,14 +60,6 @@ public class DockerServerUtilTest {
     }
 
     @Test
-    public void testDockerUtilGetServer() {
-        Server server = DockerServerUtil.getServer(settings, "docker.io");
-        assertEquals("docker.io", server.getId());
-        assertEquals("username", server.getUsername());
-        assertEquals("password", server.getPassword());
-    }
-
-    @Test
     public void testDockerUtilGetServerJson() {
 
         Map<String, String> params = new HashMap<>();

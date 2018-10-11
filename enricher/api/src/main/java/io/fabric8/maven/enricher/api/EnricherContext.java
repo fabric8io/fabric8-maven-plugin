@@ -1,10 +1,13 @@
 package io.fabric8.maven.enricher.api;
 
+import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.model.Artifact;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
-import io.fabric8.maven.enricher.api.util.ClassLoaderWrapper;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.enricher.api.util.ProjectClassLoader;
 import java.io.File;
-import java.net.URLClassLoader;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -28,7 +31,7 @@ public interface EnricherContext {
     boolean runningWithGoal(String... goals);
 
     /**
-     * Getproperties of current project. Usually in case of Maven, they are the project properties.
+     * Get properties of current project. Usually in case of Maven, they are the project properties.
      * @return Properties of project.
      */
     Properties getProperties();
@@ -41,28 +44,16 @@ public interface EnricherContext {
     Map<String, Object> getConfiguration(String id);
 
     /**
-     * Gets artifact identifier.
+     * Gets artifact.
      * @return Artifact.
      */
-    String getArtifactId();
+    Artifact getArtifact();
 
     /**
      * Gets artifact identifier of root project.
      * @return Root artifact id.
      */
     String getRootArtifactId();
-
-    /**
-     * Gets group identifier.
-     * @return Group.
-     */
-    String getGroupId();
-
-    /**
-     * Gets version of artifact.
-     * @return version.
-     */
-    String getVersion();
 
     /**
      * Returns the rot dir of project. Notice that in a submodule project, current dir is not the roor dir.
@@ -80,7 +71,7 @@ public interface EnricherContext {
      * Gets output directory.
      * @return Output Directory.
      */
-    String getBuildOuptDirectory();
+    String getBuildOutputDirectory();
 
     /**
      * Gets a map with fields username, password and email set.
@@ -148,20 +139,32 @@ public interface EnricherContext {
     String getDependencyVersion(String groupId, String artifactId);
 
     /**
-     * Gets Compile Classloader.
+     * Gets Project Classloader.
      * @return Classloader.
      */
-    ClassLoaderWrapper getCompileClassLoader();
+    ProjectClassLoader getProjectClassLoader();
 
     /**
-     * Gets Test ClassLoader
-     * @return ClassLoader
+     *
+     * Gets processor Config
+     * @return processor config
      */
-    ClassLoaderWrapper getTestClassLoader();
+    ProcessorConfig getConfig();
 
     /**
-     * Gets Scm information.
-     * @return scm info.
+     * Get Logger.
+     * @return Logger.
      */
-    Scm getScm();
+    Logger getLog();
+
+    /**
+     * Get List of images
+     * @return
+     */
+    List<ImageConfiguration> getImages();
+
+    boolean isUseProjectClasspath();
+
+    List<String> getCompileClasspathElements();
+
 }

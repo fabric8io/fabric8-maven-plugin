@@ -71,7 +71,7 @@ public class AutoTLSEnricher extends BaseEnricher {
     public AutoTLSEnricher(MavenEnricherContext buildContext) {
         super(buildContext, ENRICHER_NAME);
 
-        this.secretName = getConfig(Config.tlsSecretName, getContext().getArtifactId() + "-tls");
+        this.secretName = getConfig(Config.tlsSecretName, getContext().getArtifact().getArtifactId() + "-tls");
         this.initContainerHandler = new InitContainerHandler(buildContext.getLog());
     }
 

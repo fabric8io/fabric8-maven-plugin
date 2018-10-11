@@ -53,6 +53,7 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.watcher.api.BaseWatcher;
 import io.fabric8.maven.watcher.api.WatcherContext;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.project.MavenProject;
 
 import static io.fabric8.maven.core.util.SpringBootConfigurationHelper.DEV_TOOLS_REMOTE_SECRET;
@@ -183,7 +184,13 @@ public class SpringBootWatcher extends BaseWatcher {
         ClassLoader classLoader = getClass().getClassLoader();
         if (classLoader instanceof URLClassLoader) {
             URLClassLoader pluginClassLoader = (URLClassLoader) classLoader;
-            URLClassLoader projectClassLoader = ClassUtil.createProjectClassLoader(getContext().getProject(), log);
+            URLClassLoader projectClassLoader = null;
+            try {
+                projectClassLoader =
+                    ClassUtil.createProjectClassLoader(getContext().getProject().getCompileClasspathElements(), log);
+            } catch (DependencyResolutionRequiredException e) {
+                log.warn("Instructed to use project classpath, but cannot. Continuing build if we can: ", e);
+            }
             URLClassLoader[] classLoaders = {projectClassLoader, pluginClassLoader};
 
             StringBuilder buffer = new StringBuilder("java -cp ");

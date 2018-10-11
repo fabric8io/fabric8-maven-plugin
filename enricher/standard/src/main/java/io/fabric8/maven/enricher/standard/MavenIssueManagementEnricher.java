@@ -15,13 +15,12 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.IssueManagement;
 import org.apache.maven.project.MavenProject;
@@ -47,15 +46,18 @@ public class MavenIssueManagementEnricher extends BaseEnricher {
     public Map<String, String> getAnnotations(Kind kind) {
         Map<String, String> annotations = new HashMap<>();
         if (kind.isController() || kind == Kind.SERVICE) {
-            MavenProject rootProject = getProject();
-            if (hasIssueManagement(rootProject)) {
-                IssueManagement issueManagement = rootProject.getIssueManagement();
-                String system = issueManagement.getSystem();
-                String url = issueManagement.getUrl();
-                if (StringUtils.isNotEmpty(system) && StringUtils.isNotEmpty(url)) {
-                    annotations.put(Fabric8Annotations.ISSUE_SYSTEM.value(), system);
-                    annotations.put(Fabric8Annotations.ISSUE_TRACKER_URL.value(), url);
-                    return annotations;
+            if (getContext() instanceof MavenEnricherContext) {
+                MavenEnricherContext mavenEnricherContext = (MavenEnricherContext) getContext();
+                MavenProject rootProject = mavenEnricherContext.getProject();
+                if (hasIssueManagement(rootProject)) {
+                    IssueManagement issueManagement = rootProject.getIssueManagement();
+                    String system = issueManagement.getSystem();
+                    String url = issueManagement.getUrl();
+                    if (StringUtils.isNotEmpty(system) && StringUtils.isNotEmpty(url)) {
+                        annotations.put(Fabric8Annotations.ISSUE_SYSTEM.value(), system);
+                        annotations.put(Fabric8Annotations.ISSUE_TRACKER_URL.value(), url);
+                        return annotations;
+                    }
                 }
             }
         }

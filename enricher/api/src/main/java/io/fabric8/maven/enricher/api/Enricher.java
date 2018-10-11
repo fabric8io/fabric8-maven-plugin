@@ -15,14 +15,9 @@
  */
 package io.fabric8.maven.enricher.api;
 
-import java.io.File;
-import java.net.URLClassLoader;
-import java.util.List;
-import java.util.Map;
-
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.Named;
-import java.util.Properties;
+import java.util.Map;
 
 /**
  * Interface describing enrichers which add to kubernetes descriptors

@@ -26,6 +26,7 @@ import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.VolumeConfig;
+import io.fabric8.maven.core.model.Artifact;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -48,17 +49,13 @@ class ContainerHandler {
     private final EnvVarHandler envVarHandler;
     private final ProbeHandler probeHandler;
     private final Properties configurationProperties;
-    private final String groupId;
-    private final String artifactId;
-    private final String version;
+    private final Artifact artifact;
 
-    public ContainerHandler(Properties configurationProperties, String groupId, String artifactId, String version, EnvVarHandler envVarHandler, ProbeHandler probeHandler) {
+    public ContainerHandler(Properties configurationProperties, Artifact artifact, EnvVarHandler envVarHandler, ProbeHandler probeHandler) {
         this.envVarHandler = envVarHandler;
         this.probeHandler = probeHandler;
         this.configurationProperties = configurationProperties;
-        this.groupId = groupId;
-        this.artifactId = artifactId;
-        this.version = version;
+        this.artifact = artifact;
     }
 
     List<Container> getContainers(ResourceConfig config, List<ImageConfiguration> images)  {
@@ -70,7 +67,7 @@ class ContainerHandler {
                 Probe readinessProbe = probeHandler.getProbe(config.getReadiness());
 
                 Container container = new ContainerBuilder()
-                    .withName(KubernetesResourceUtil.extractContainerName(this.groupId, this.artifactId, imageConfig))
+                    .withName(KubernetesResourceUtil.extractContainerName(this.artifact, imageConfig))
                     .withImage(getImageName(imageConfig))
                     .withImagePullPolicy(getImagePullPolicy(config))
                     .withEnv(envVarHandler.getEnvironmentVariables(config.getEnv()))
@@ -90,7 +87,7 @@ class ContainerHandler {
     private String getImagePullPolicy(ResourceConfig config) {
         String pullPolicy = config.getImagePullPolicy();
         if (StringUtils.isBlank(pullPolicy) &&
-            version != null && version.endsWith("SNAPSHOT")) {
+            this.artifact.getVersion() != null && this.artifact.getVersion().endsWith("SNAPSHOT")) {
             // TODO: Is that what we want ?
             return "PullAlways";
         }

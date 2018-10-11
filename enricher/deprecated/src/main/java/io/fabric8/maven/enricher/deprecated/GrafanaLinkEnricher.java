@@ -56,10 +56,10 @@ public class GrafanaLinkEnricher extends BaseEnricher {
 
         // TODO - use the docker names which may differ from project metadata!
         if (StringUtils.isBlank(projectName)) {
-            projectName = getContext().getArtifactId();
+            projectName = getContext().getArtifact().getArtifactId();
         }
         if (StringUtils.isBlank(version)) {
-            version = getContext().getVersion();
+            version = getContext().getArtifact().getVersion();
         }
 
         if (StringUtils.isNotBlank(projectName)) {

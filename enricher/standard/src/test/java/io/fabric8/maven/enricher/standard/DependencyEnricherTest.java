@@ -20,7 +20,14 @@ package io.fabric8.maven.enricher.standard;
  * @since 06/11/17
  */
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.util.KindAndName;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.Dependency;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -29,22 +36,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.maven.core.util.KindAndName;
-import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.DefaultArtifact;
-import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -108,8 +102,6 @@ public class DependencyEnricherTest {
     private void setupExpectations() {
         // Setup Mock behaviour
         new Expectations() {{
-            context.getProject();
-            result = project;
 
             context.getDependencies(true);
             result = getDummyArtifacts();

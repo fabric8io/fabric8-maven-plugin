@@ -23,7 +23,6 @@ import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
-import io.fabric8.maven.enricher.api.Scm;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -223,7 +222,7 @@ public class IconEnricher extends BaseEnricher {
     private InputStream loadPluginResource(String iconRef) {
         InputStream answer = Thread.currentThread().getContextClassLoader().getResourceAsStream(iconRef);
         if (answer == null) {
-            answer = getContext().getTestClassLoader().getClassLoader().getResourceAsStream(iconRef);
+            answer = getContext().getProjectClassLoader().getTestClassLoader().getResourceAsStream(iconRef);
         }
         if (answer == null) {
             answer = this.getClass().getResourceAsStream(iconRef);
@@ -269,31 +268,36 @@ public class IconEnricher extends BaseEnricher {
                 File rootProjectFolder = getRootProjectFolder();
                 if (rootProjectFolder != null) {
                     String relativePath = FileUtil.getRelativePath(rootProjectFolder, iconSourceFile).toString();
-                    String relativeParentPath = FileUtil.getRelativePath(rootProjectFolder, getContext().getCurrentDir()).toString();
+                    String relativeParentPath =
+                        FileUtil.getRelativePath(rootProjectFolder, getContext().getCurrentDir()).toString();
                     String urlPrefix = getConfig(Config.urlPrefix);
                     if (StringUtils.isBlank(urlPrefix)) {
-                        Scm scm = getContext().getScm();
-                        if (scm != null) {
-                            String url = scm.getUrl();
-                            if (url != null) {
-                                String[] prefixes = {"http://github.com/", "https://github.com/"};
-                                for (String prefix : prefixes) {
-                                    if (url.startsWith(prefix)) {
-                                        url = "https://cdn.rawgit.com/" + url.substring(prefix.length());
-                                        break;
+                        if (getContext() instanceof MavenEnricherContext) {
+                            MavenEnricherContext mavenEnricherContext = (MavenEnricherContext) getContext();
+                            final org.apache.maven.model.Scm scm = mavenEnricherContext.getProject().getScm();
+                            if (scm != null) {
+                                String url = scm.getUrl();
+                                if (url != null) {
+                                    String[] prefixes = {"http://github.com/", "https://github.com/"};
+                                    for (String prefix : prefixes) {
+                                        if (url.startsWith(prefix)) {
+                                            url = "https://cdn.rawgit.com/" + url.substring(prefix.length());
+                                            break;
+                                        }
                                     }
+                                    if (url.endsWith(relativeParentPath)) {
+                                        url = url.substring(0, url.length() - relativeParentPath.length());
+                                    }
+                                    urlPrefix = url;
                                 }
-                                if (url.endsWith(relativeParentPath)) {
-                                    url = url.substring(0, url.length() - relativeParentPath.length());
-                                }
-                                urlPrefix = url;
                             }
                         }
-                    }
-                    if (StringUtils.isBlank(urlPrefix)) {
-                        log.warn("No iconUrlPrefix defined or could be found via SCM in the pom.xml so cannot add an icon URL!");
-                    } else {
-                        return String.format("%s/%s/%s", urlPrefix, getConfig(Config.branch), relativePath);
+                        if (StringUtils.isBlank(urlPrefix)) {
+                            log.warn(
+                                "No iconUrlPrefix defined or could be found via SCM in the pom.xml so cannot add an icon URL!");
+                        } else {
+                            return String.format("%s/%s/%s", urlPrefix, getConfig(Config.branch), relativePath);
+                        }
                     }
                 }
             } else {

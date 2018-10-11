@@ -53,7 +53,7 @@ public class NameEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
-        final String defaultName = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getArtifactId()));
+        final String defaultName = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getArtifact().getArtifactId()));
 
         builder.accept(new TypedVisitor<HasMetadata>() {
             @Override

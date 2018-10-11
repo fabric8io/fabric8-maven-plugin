@@ -15,11 +15,6 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -30,6 +25,10 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.batch.Job;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.ImageChangeTrigger;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -166,7 +165,7 @@ public class TriggersAnnotationEnricherTest {
         final Properties props = new Properties();
         props.put("fabric8.enricher.fmp-triggers-annotation.containers", "c2, c3, anotherc");
         new Expectations() {{
-            context.getProject().getProperties();
+            context.getProperties();
             result = props;
         }};
 

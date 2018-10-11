@@ -82,9 +82,8 @@ public class DefaultControllerEnricher extends BaseEnricher {
     public DefaultControllerEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-controller");
 
-        HandlerHub handlers = new HandlerHub(getContext().getCompileClassLoader().getClassLoader(),
-            getContext().getBuildOuptDirectory(), getContext().getGroupId(), getContext().getArtifactId(),
-            getContext().getVersion(), getContext().getProperties());
+        HandlerHub handlers = new HandlerHub(getContext().getProjectClassLoader().getCompileClassLoader(),
+            getContext().getBuildOutputDirectory(), getContext().getArtifact(), getContext().getProperties());
         rcHandler = handlers.getReplicationControllerHandler();
         rsHandler = handlers.getReplicaSetHandler();
         deployHandler = handlers.getDeploymentHandler();
@@ -95,7 +94,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
-        final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getArtifactId()));
+        final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getArtifact().getArtifactId()));
         final ResourceConfig config = new ResourceConfig.Builder()
                     .controllerName(name)
                     .imagePullPolicy(getConfig(Config.pullPolicy))

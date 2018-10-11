@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.core.util.kubernetes;
 
+import io.fabric8.maven.core.model.Artifact;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -324,9 +325,9 @@ public class KubernetesResourceUtil {
         return suffix != null ? name +  "-" + suffix : name;
     }
 
-    public static String extractContainerName(String groupId, String artifactId, ImageConfiguration imageConfig) {
+    public static String extractContainerName(Artifact artifact, ImageConfiguration imageConfig) {
         String alias = imageConfig.getAlias();
-        return alias != null ? alias : extractImageUser(imageConfig.getName(), groupId) + "-" + artifactId;
+        return alias != null ? alias : extractImageUser(imageConfig.getName(), artifact.getGroupId()) + "-" + artifact.getArtifactId();
     }
 
     private static String extractImageUser(String image, String groupId) {

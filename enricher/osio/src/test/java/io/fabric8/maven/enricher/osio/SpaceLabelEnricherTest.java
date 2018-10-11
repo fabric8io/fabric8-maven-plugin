@@ -15,15 +15,14 @@
  */
 package io.fabric8.maven.enricher.osio;
 
+import com.google.common.collect.ImmutableMap;
+import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.enricher.api.Kind;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
-
-import com.google.common.collect.ImmutableMap;
-import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
@@ -49,7 +48,7 @@ public class SpaceLabelEnricherTest {
     public void testDefaultConfiguration() {
         final Properties props = new Properties();
         new Expectations() {{
-            context.getProject().getProperties();
+            context.getProperties();
             result = props;
         }};
 
@@ -71,7 +70,7 @@ public class SpaceLabelEnricherTest {
 
         final Properties props = new Properties();
         new Expectations() {{
-            context.getProject().getProperties();
+            context.getProperties();
             result = props;
         }};
 
@@ -85,7 +84,7 @@ public class SpaceLabelEnricherTest {
         final Properties props = new Properties();
         props.put(SPACE_KEY, SPACE_VALUE);
         new Expectations() {{
-            context.getProject().getProperties();
+            context.getProperties();
             result = props;
         }};
 

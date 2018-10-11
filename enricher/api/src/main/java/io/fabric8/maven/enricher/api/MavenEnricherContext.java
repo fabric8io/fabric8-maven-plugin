@@ -22,10 +22,9 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.enricher.api.util.ClassLoaderWrapper;
 import io.fabric8.maven.enricher.api.util.MavenConfigurationExtractor;
+import io.fabric8.maven.enricher.api.util.ProjectClassLoader;
 import java.io.File;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +33,7 @@ import java.util.Properties;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.DistributionManagement;
 import org.apache.maven.model.Plugin;
@@ -73,6 +73,7 @@ public class MavenEnricherContext implements EnricherContext {
         return project;
     }
 
+    @Override
     public List<ImageConfiguration> getImages() {
         return images;
     }
@@ -81,6 +82,7 @@ public class MavenEnricherContext implements EnricherContext {
         return log;
     }
 
+    @Override
     public ProcessorConfig getConfig() {
         return config;
     }
@@ -95,6 +97,7 @@ public class MavenEnricherContext implements EnricherContext {
         return namespace;
     }
 
+    @Override
     public boolean isUseProjectClasspath() {
         return useProjectClasspath;
     }
@@ -129,11 +132,11 @@ public class MavenEnricherContext implements EnricherContext {
 
     @Override
     public Properties getProperties() {
-        final MavenProject project = getProject();
-        if (project == null) {
+        final MavenProject currentProject = getProject();
+        if (currentProject == null) {
             return new Properties();
         }
-        return project.getProperties();
+        return currentProject.getProperties();
     }
 
     @Override
@@ -148,23 +151,14 @@ public class MavenEnricherContext implements EnricherContext {
     }
 
     @Override
-    public String getArtifactId() {
-        return getProject().getArtifactId();
+    public io.fabric8.maven.core.model.Artifact getArtifact() {
+
+        return new io.fabric8.maven.core.model.Artifact(getProject().getGroupId(),getProject().getArtifactId(), getProject().getVersion());
     }
 
     @Override
     public String getRootArtifactId() {
         return MavenUtil.getRootProject(getProject()).getArtifactId();
-    }
-
-    @Override
-    public String getGroupId() {
-        return getProject().getGroupId();
-    }
-
-    @Override
-    public String getVersion() {
-        return getProject().getVersion();
     }
 
     @Override
@@ -178,7 +172,7 @@ public class MavenEnricherContext implements EnricherContext {
     }
 
     @Override
-    public String getBuildOuptDirectory() {
+    public String getBuildOutputDirectory() {
         return getProject().getBuild().getOutputDirectory();
     }
 
@@ -226,13 +220,13 @@ public class MavenEnricherContext implements EnricherContext {
     }
 
     private DistributionManagement findProjectDistributionManagement() {
-        MavenProject project = getProject();
-        while (project != null) {
-            DistributionManagement distributionManagement = project.getDistributionManagement();
+        MavenProject currentProject = getProject();
+        while (currentProject != null) {
+            DistributionManagement distributionManagement = currentProject.getDistributionManagement();
             if (distributionManagement != null) {
                 return distributionManagement;
             }
-            project = project.getParent();
+            currentProject = currentProject.getParent();
         }
         return null;
     }
@@ -277,24 +271,18 @@ public class MavenEnricherContext implements EnricherContext {
     }
 
     @Override
-    public ClassLoaderWrapper getCompileClassLoader() {
-        return new ClassLoaderWrapper(MavenUtil.getCompileClassLoader(getProject()));
+    public ProjectClassLoader getProjectClassLoader() {
+        return new ProjectClassLoader(MavenUtil.getCompileClassLoader(getProject()), MavenUtil.getTestClassLoader(getProject()));
     }
 
     @Override
-    public ClassLoaderWrapper getTestClassLoader() {
-        return new ClassLoaderWrapper(MavenUtil.getTestClassLoader(getProject()));
-    }
-
-    @Override
-    public Scm getScm() {
-        final org.apache.maven.model.Scm scm = getProject().getScm();
-
-        if (scm != null) {
-            return new Scm(scm.getUrl(), scm.getTag());
+    public List<String> getCompileClasspathElements() {
+        try {
+            return getProject().getCompileClasspathElements();
+        } catch (DependencyResolutionRequiredException e) {
+            log.warn("Instructed to use project classpath, but cannot. Continuing build if we can: ", e);
         }
-
-        return null;
+        return new ArrayList<>();
     }
 
     // =======================================================================================================
@@ -305,7 +293,7 @@ public class MavenEnricherContext implements EnricherContext {
         public Builder session(MavenSession session) {
             ctx.session = session;
             return this;
-        };
+        }
 
         public Builder goalFinder(GoalFinder goalFinder) {
             ctx.goalFinder = goalFinder;

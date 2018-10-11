@@ -8,6 +8,18 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 public class MavenConfigurationExtractor {
 
+    private MavenConfigurationExtractor() {
+    }
+
+    /**
+     * Transforms the Dom object into a Map.
+     * This Map can contain pairs key/value where value can be a simple type, another Map (Inner objects)
+     * and a list of simple types.
+     *
+     * Currently it is NOT supported List of complex objects.
+     * @param root object.
+     * @return Map of DOM structure.
+     */
     public static Map<String, Object> extract(Xpp3Dom root) {
         if (root == null) {
             return new HashMap<>();

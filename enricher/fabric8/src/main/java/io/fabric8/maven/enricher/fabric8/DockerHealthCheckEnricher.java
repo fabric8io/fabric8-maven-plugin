@@ -87,7 +87,7 @@ public class DockerHealthCheckEnricher extends AbstractHealthCheckEnricher {
         List<ImageConfiguration> images = getImages();
         if (images != null) {
             for (ImageConfiguration image : images) {
-                String imageContainerName = KubernetesResourceUtil.extractContainerName(getContext().getGroupId(), getContext().getArtifactId(), image);
+                String imageContainerName = KubernetesResourceUtil.extractContainerName(getContext().getArtifact(), image);
                 if (Objects.equal(containerName, imageContainerName)) {
                     return image;
                 }

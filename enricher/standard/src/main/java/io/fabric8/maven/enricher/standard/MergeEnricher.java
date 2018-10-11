@@ -15,11 +15,6 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.util.Configs;
@@ -27,7 +22,10 @@ import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import org.apache.maven.plugin.MojoExecutionException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Merges local resources with dependent resources which have the same name.

@@ -236,7 +236,7 @@ public class ImageEnricher extends BaseEnricher {
 
     private void mergeContainerName(ImageConfiguration imageConfiguration, Container container) {
         if (StringUtils.isBlank(container.getName())) {
-            String containerName = extractContainerName(getContext().getGroupId(),getContext(). getArtifactId(), imageConfiguration);
+            String containerName = extractContainerName(getContext().getArtifact(), imageConfiguration);
             log.verbose("Setting container name %s",containerName);
             container.setName(containerName);
         }
