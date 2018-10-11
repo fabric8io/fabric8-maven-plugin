@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.plugin.mojo.build;
 
+import io.fabric8.maven.enricher.api.EnricherContext;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -376,7 +377,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
     // Get enricher context
-    public MavenEnricherContext getEnricherContext() {
+    public EnricherContext getEnricherContext() {
         return new MavenEnricherContext.Builder()
                 .project(project)
                 .session(session)
