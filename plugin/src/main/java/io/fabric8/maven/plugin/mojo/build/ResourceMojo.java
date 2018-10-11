@@ -1046,7 +1046,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     public String getDockerJsonConfigString(final Settings settings, final String serverId) {
         Server server = getServer(settings, serverId);
         if (server == null) {
-            return new String();
+            return "";
         }
 
         Map<String, String> auth = new HashMap<>();
