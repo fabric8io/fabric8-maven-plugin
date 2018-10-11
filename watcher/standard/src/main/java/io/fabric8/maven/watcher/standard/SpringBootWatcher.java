@@ -53,6 +53,7 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.watcher.api.BaseWatcher;
 import io.fabric8.maven.watcher.api.WatcherContext;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.project.MavenProject;
 
 import static io.fabric8.maven.core.util.SpringBootConfigurationHelper.DEV_TOOLS_REMOTE_SECRET;
@@ -112,7 +113,7 @@ public class SpringBootWatcher extends BaseWatcher {
             return null;
         }
 
-        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getContext().getProject());
+        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(MavenUtil.getCompileClassLoader(getContext().getProject()));
         SpringBootConfigurationHelper propertyHelper = new SpringBootConfigurationHelper(SpringBootUtil.getSpringBootVersion(getContext().getProject()));
 
         int port = IoUtil.getFreeRandomPort();
@@ -173,7 +174,7 @@ public class SpringBootWatcher extends BaseWatcher {
     private void runRemoteSpringApplication(String url) {
         log.info("Running RemoteSpringApplication against endpoint: " + url);
 
-        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getContext().getProject());
+        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(MavenUtil.getCompileClassLoader(getContext().getProject()));
         String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET, System.getProperty(DEV_TOOLS_REMOTE_SECRET));
         if (StringUtils.isBlank(remoteSecret)) {
             log.warn("There is no `%s` property defined in your src/main/resources/application.properties. Please add one!", DEV_TOOLS_REMOTE_SECRET);
@@ -183,67 +184,75 @@ public class SpringBootWatcher extends BaseWatcher {
         ClassLoader classLoader = getClass().getClassLoader();
         if (classLoader instanceof URLClassLoader) {
             URLClassLoader pluginClassLoader = (URLClassLoader) classLoader;
-            URLClassLoader projectClassLoader = ClassUtil.createProjectClassLoader(getContext().getProject(), log);
-            URLClassLoader[] classLoaders = {projectClassLoader, pluginClassLoader};
+            try(
+                URLClassLoader projectClassLoader =
+                    ClassUtil.createProjectClassLoader(getContext().getProject().getCompileClasspathElements(), log)) {
 
-            StringBuilder buffer = new StringBuilder("java -cp ");
-            int count = 0;
-            for (URLClassLoader urlClassLoader : classLoaders) {
-                URL[] urLs = urlClassLoader.getURLs();
-                for (URL u : urLs) {
-                    if (count++ > 0) {
-                        buffer.append(File.pathSeparator);
-                    }
-                    try {
-                        URI uri = u.toURI();
-                        File file = new File(uri);
-                        buffer.append(file.getCanonicalPath());
-                    } catch (Exception e) {
-                        throw new IllegalStateException("Failed to create classpath: " + e, e);
+                URLClassLoader[] classLoaders = {projectClassLoader, pluginClassLoader};
+
+                StringBuilder buffer = new StringBuilder("java -cp ");
+                int count = 0;
+                for (URLClassLoader urlClassLoader : classLoaders) {
+                    URL[] urLs = urlClassLoader.getURLs();
+                    for (URL u : urLs) {
+                        if (count++ > 0) {
+                            buffer.append(File.pathSeparator);
+                        }
+                        try {
+                            URI uri = u.toURI();
+                            File file = new File(uri);
+                            buffer.append(file.getCanonicalPath());
+                        } catch (Exception e) {
+                            throw new IllegalStateException("Failed to create classpath: " + e, e);
+                        }
                     }
                 }
-            }
-            // Add dev tools to the classpath (the main class is not read from BOOT-INF/lib)
-            try {
-                File devtools = getSpringBootDevToolsJar(getContext().getProject());
-                buffer.append(File.pathSeparator);
-                buffer.append(devtools.getCanonicalPath());
-            } catch (Exception e) {
-                throw new IllegalStateException("Failed to include devtools in the classpath: " + e, e);
-            }
 
-            buffer.append(" -Dspring.devtools.remote.secret=");
-            buffer.append(remoteSecret);
-            buffer.append(" org.springframework.boot.devtools.RemoteSpringApplication ");
-            buffer.append(url);
-
-            try {
-                String command = buffer.toString();
-                log.debug("Running: " + command);
-                final Process process = Runtime.getRuntime().exec(command);
-
-                final AtomicBoolean outputEnabled = new AtomicBoolean(true);
-                Runtime.getRuntime().addShutdownHook(new Thread("fabric8:watch [spring-boot] shutdown hook") {
-                    @Override
-                    public void run() {
-                        log.info("Terminating the Spring remote client...");
-                        outputEnabled.set(false);
-                        process.destroy();
-                    }
-                });
-                Logger logger = new PrefixedLogger("Spring-Remote", log);
-                Thread stdOutPrinter = startOutputProcessor(logger, process.getInputStream(), false, outputEnabled);
-                Thread stdErrPrinter = startOutputProcessor(logger, process.getErrorStream(), true, outputEnabled);
-                int status = process.waitFor();
-                stdOutPrinter.join();
-                stdErrPrinter.join();
-                if (status != 0) {
-                    log.warn("Process returned status: %s", status);
+                // Add dev tools to the classpath (the main class is not read from BOOT-INF/lib)
+                try {
+                    File devtools = getSpringBootDevToolsJar(getContext().getProject());
+                    buffer.append(File.pathSeparator);
+                    buffer.append(devtools.getCanonicalPath());
+                } catch (Exception e) {
+                    throw new IllegalStateException("Failed to include devtools in the classpath: " + e, e);
                 }
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to run RemoteSpringApplication: " + e, e);
-            }
 
+                buffer.append(" -Dspring.devtools.remote.secret=");
+                buffer.append(remoteSecret);
+                buffer.append(" org.springframework.boot.devtools.RemoteSpringApplication ");
+                buffer.append(url);
+
+                try {
+                    String command = buffer.toString();
+                    log.debug("Running: " + command);
+                    final Process process = Runtime.getRuntime().exec(command);
+
+                    final AtomicBoolean outputEnabled = new AtomicBoolean(true);
+                    Runtime.getRuntime().addShutdownHook(new Thread("fabric8:watch [spring-boot] shutdown hook") {
+                        @Override
+                        public void run() {
+                            log.info("Terminating the Spring remote client...");
+                            outputEnabled.set(false);
+                            process.destroy();
+                        }
+                    });
+                    Logger logger = new PrefixedLogger("Spring-Remote", log);
+                    Thread stdOutPrinter = startOutputProcessor(logger, process.getInputStream(), false, outputEnabled);
+                    Thread stdErrPrinter = startOutputProcessor(logger, process.getErrorStream(), true, outputEnabled);
+                    int status = process.waitFor();
+                    stdOutPrinter.join();
+                    stdErrPrinter.join();
+                    if (status != 0) {
+                        log.warn("Process returned status: %s", status);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to run RemoteSpringApplication: " + e, e);
+                }
+            } catch (DependencyResolutionRequiredException e) {
+                log.warn("Instructed to use project classpath, but cannot. Continuing build if we can: ", e);
+            } catch (IOException e) {
+                log.warn("Instructed to use project classpath, but cannot. Continuing build if we can: ", e);
+            }
         } else {
             throw new IllegalStateException("ClassLoader must be a URLClassLoader but it is: " + classLoader.getClass().getName());
         }

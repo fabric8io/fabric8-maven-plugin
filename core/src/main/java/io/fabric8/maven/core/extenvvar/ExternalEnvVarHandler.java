@@ -18,6 +18,7 @@ package io.fabric8.maven.core.extenvvar;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,17 +36,17 @@ public class ExternalEnvVarHandler {
     public static final String ENVIRONMENT_SCHEMA_FILE = "io/fabric8/environment/schema.json";
     private static ObjectMapper objectMapper = createObjectMapper();
 
-    public static Map<String, String> getExportedEnvironmentVariables(MavenProject project, Map<String, String> envVars) {
-        Map<String, String> ret = getEnvironmentVarsFromJsonSchema(project, envVars);
+    public static Map<String, String> getExportedEnvironmentVariables(URLClassLoader compileClassloader, String outputDirectory, Map<String, String> envVars) {
+        Map<String, String> ret = getEnvironmentVarsFromJsonSchema(compileClassloader, outputDirectory,  envVars);
         ret.putAll(envVars);
         return ret;
     }
 
     // ==================================================================================================
 
-    private static Map<String, String> getEnvironmentVarsFromJsonSchema(MavenProject project, Map<String, String> envVars) {
+    private static Map<String, String> getEnvironmentVarsFromJsonSchema(URLClassLoader compileClassloader, String outputDirectory, Map<String, String> envVars) {
         Map<String, String> ret = new TreeMap<>();
-        JsonSchema schema = getEnvironmentVariableJsonSchema(project, envVars);
+        JsonSchema schema = getEnvironmentVariableJsonSchema(compileClassloader, outputDirectory, envVars);
         Map<String, JsonSchemaProperty> properties = schema.getProperties();
         Set<Map.Entry<String, JsonSchemaProperty>> entries = properties.entrySet();
         for (Map.Entry<String, JsonSchemaProperty> entry : entries) {
@@ -56,10 +57,10 @@ public class ExternalEnvVarHandler {
         return ret;
     }
 
-    private static JsonSchema getEnvironmentVariableJsonSchema(MavenProject project, Map<String, String> envVars) {
+    private static JsonSchema getEnvironmentVariableJsonSchema(URLClassLoader compileClassloader, String outputDirectory, Map<String, String> envVars) {
         try {
-            JsonSchema schema = ExternalEnvVarHandler.loadEnvironmentSchemas(MavenUtil.getCompileClassLoader(project),
-                                                                             project.getBuild().getOutputDirectory());
+            JsonSchema schema = ExternalEnvVarHandler.loadEnvironmentSchemas(compileClassloader,
+                                                                             outputDirectory);
             if (schema == null) {
                 schema = new JsonSchema();
             }

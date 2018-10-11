@@ -15,12 +15,13 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import io.fabric8.maven.core.model.Artifact;
 import java.util.Map;
 import java.util.Properties;
 
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 import mockit.Expectations;
 import mockit.Mocked;
@@ -43,7 +44,7 @@ import static org.junit.Assert.assertNull;
 public class MavenProjectEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     @Mocked
     private MavenProject mavenProject;
@@ -51,15 +52,8 @@ public class MavenProjectEnricherTest {
     @Before
     public void setupExpectations() {
         new Expectations() {{
-            context.getProject();
-            result = mavenProject;
-
-            mavenProject.getGroupId();
-            result = "groupId";
-            mavenProject.getArtifactId();
-            result = "artifactId";
-            mavenProject.getVersion();
-            result = "version";
+            context.getArtifact();
+            result = new Artifact( "groupId", "artifactId", "version");
         }};
     }
 
@@ -92,7 +86,7 @@ public class MavenProjectEnricherTest {
         final Properties properties = new Properties();
         properties.setProperty("fabric8.enricher.fmp-project.useProjectLabel", "true");
         new Expectations() {{
-            mavenProject.getProperties();
+            context.getProperties();
             result = properties;
         }};
 

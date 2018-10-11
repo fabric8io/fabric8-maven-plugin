@@ -22,7 +22,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 
 import static io.fabric8.maven.core.util.Constants.RESOURCE_SOURCE_URL_ANNOTATION;
 
@@ -31,7 +31,7 @@ import static io.fabric8.maven.core.util.Constants.RESOURCE_SOURCE_URL_ANNOTATIO
  */
 public class RemoveBuildAnnotationsEnricher extends BaseEnricher {
 
-    public RemoveBuildAnnotationsEnricher(EnricherContext buildContext) {
+    public RemoveBuildAnnotationsEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-remove-build-annotations");
     }
 

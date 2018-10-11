@@ -24,7 +24,7 @@ import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 import org.apache.commons.lang3.StringUtils;
 
@@ -43,7 +43,7 @@ public class PrometheusEnricher extends BaseEnricher {
         public String def() { return d; } protected String d;
     }
 
-    public PrometheusEnricher(EnricherContext buildContext) {
+    public PrometheusEnricher(MavenEnricherContext buildContext) {
         super(buildContext, ENRICHER_NAME);
     }
 

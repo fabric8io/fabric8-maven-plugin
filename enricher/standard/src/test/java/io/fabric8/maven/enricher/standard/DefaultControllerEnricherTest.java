@@ -15,19 +15,21 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.TreeMap;
-
 import com.google.common.io.Files;
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.model.Artifact;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.maven.enricher.api.util.ProjectClassLoader;
+import java.net.URLClassLoader;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.TreeMap;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -47,7 +49,7 @@ import static org.junit.Assert.assertThat;
 public class DefaultControllerEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     @Mocked
     ImageConfiguration imageConfiguration;
@@ -91,16 +93,14 @@ public class DefaultControllerEnricherTest {
     }
 
     protected void setupExpectations(final BuildImageConfiguration buildConfig, final TreeMap controllerConfig) {
+
         new Expectations() {{
 
-            project.getArtifactId();
-            result = "fmp-controller-test";
+            context.getArtifact();
+            result = new Artifact("", "fmp-controller-test", "0");
 
-            project.getBuild().getOutputDirectory();
+            context.getBuildOutputDirectory();
             result = Files.createTempDir().getAbsolutePath();
-
-            context.getProject();
-            result = project;
 
             context.getConfig();
             result = new ProcessorConfig(null, null,
@@ -114,6 +114,9 @@ public class DefaultControllerEnricherTest {
 
             context.getImages();
             result = Arrays.asList(imageConfiguration);
+
+            context.getProjectClassLoader();
+            result = new ProjectClassLoader((URLClassLoader) DefaultControllerEnricherTest.class.getClassLoader(), (URLClassLoader) DefaultControllerEnricherTest.class.getClassLoader());
         }};
     }
 }

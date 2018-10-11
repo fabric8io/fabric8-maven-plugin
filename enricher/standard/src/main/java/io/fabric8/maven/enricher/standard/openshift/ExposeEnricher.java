@@ -30,14 +30,14 @@ import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 
 /**
  * Enricher for enabling exposing of HTTP / HTTPS based services
  */
 public class ExposeEnricher extends BaseEnricher {
 
-    public ExposeEnricher(EnricherContext buildContext) {
+    public ExposeEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-openshift-service-expose");
     }
 

@@ -15,8 +15,6 @@
  */
 package io.fabric8.maven.enricher.fabric8;
 
-import java.util.List;
-
 import com.google.common.base.Objects;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ExecAction;
@@ -26,7 +24,8 @@ import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.HealthCheckConfiguration;
 import io.fabric8.maven.docker.config.HealthCheckMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import java.util.List;
 
 import static io.fabric8.maven.enricher.api.util.GoTimeUtil.durationSeconds;
 
@@ -36,7 +35,7 @@ import static io.fabric8.maven.enricher.api.util.GoTimeUtil.durationSeconds;
  */
 public class DockerHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
-    public DockerHealthCheckEnricher(EnricherContext buildContext) {
+    public DockerHealthCheckEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "f8-healthcheck-docker");
     }
 
@@ -88,7 +87,7 @@ public class DockerHealthCheckEnricher extends AbstractHealthCheckEnricher {
         List<ImageConfiguration> images = getImages();
         if (images != null) {
             for (ImageConfiguration image : images) {
-                String imageContainerName = KubernetesResourceUtil.extractContainerName(getProject(), image);
+                String imageContainerName = KubernetesResourceUtil.extractContainerName(getContext().getArtifact(), image);
                 if (Objects.equal(containerName, imageContainerName)) {
                     return image;
                 }

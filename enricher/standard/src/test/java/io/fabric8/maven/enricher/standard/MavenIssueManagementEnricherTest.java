@@ -18,7 +18,7 @@ package io.fabric8.maven.enricher.standard;
 import java.util.Map;
 
 import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 import mockit.Expectations;
 import mockit.Mocked;
@@ -40,7 +40,7 @@ import static junit.framework.TestCase.assertTrue;
 public class MavenIssueManagementEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     @Test
     public void testMavenIssueManagementAll() {

@@ -15,18 +15,17 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MapUtil;
+import io.fabric8.maven.core.model.Artifact;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
-import org.apache.maven.project.MavenProject;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Add project labels to any object.
@@ -57,7 +56,7 @@ public class ProjectEnricher extends BaseEnricher {
         }
     }
 
-    public ProjectEnricher(EnricherContext buildContext) {
+    public ProjectEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-project");
     }
 
@@ -83,21 +82,21 @@ public class ProjectEnricher extends BaseEnricher {
     }
 
     private Map<String, String> createLabels(boolean withoutVersion) {
-        MavenProject project = getProject();
         Map<String, String> ret = new HashMap<>();
 
         boolean enableProjectLabel = Configs.asBoolean(getConfig(Config.useProjectLabel));
+        final Artifact artifact = getContext().getArtifact();
         if (enableProjectLabel) {
-            ret.put("project", project.getArtifactId());
+            ret.put("project", artifact.getArtifactId());
         } else {
             // default label is app
-            ret.put("app", project.getArtifactId());
+            ret.put("app", artifact.getArtifactId());
         }
 
-        ret.put("group", project.getGroupId());
+        ret.put("group", artifact.getGroupId());
         ret.put("provider", "fabric8");
         if (!withoutVersion) {
-            ret.put("version", project.getVersion());
+            ret.put("version", artifact.getVersion());
         }
         return ret;
     }

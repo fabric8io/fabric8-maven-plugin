@@ -15,11 +15,6 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.EnvVar;
@@ -29,16 +24,31 @@ import io.fabric8.kubernetes.api.model.PodTemplateSpecFluent;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ReplicationControllerFluent;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpecFluent;
-import io.fabric8.kubernetes.api.model.apps.*;
+import io.fabric8.kubernetes.api.model.apps.DaemonSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.DaemonSetFluent;
+import io.fabric8.kubernetes.api.model.apps.DaemonSetSpecFluent;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentFluent;
+import io.fabric8.kubernetes.api.model.apps.DeploymentSpecFluent;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetFluent;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetSpecFluent;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetFluent;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetSpecFluent;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfigFluent;
 import io.fabric8.openshift.api.model.DeploymentConfigSpecFluent;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 
 import static io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil.extractContainerName;
@@ -61,7 +71,7 @@ import static io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil.extra
  */
 public class ImageEnricher extends BaseEnricher {
 
-    public ImageEnricher(EnricherContext buildContext) {
+    public ImageEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-image");
     }
 
@@ -226,7 +236,7 @@ public class ImageEnricher extends BaseEnricher {
 
     private void mergeContainerName(ImageConfiguration imageConfiguration, Container container) {
         if (StringUtils.isBlank(container.getName())) {
-            String containerName = extractContainerName(getProject(), imageConfiguration);
+            String containerName = extractContainerName(getContext().getArtifact(), imageConfiguration);
             log.verbose("Setting container name %s",containerName);
             container.setName(containerName);
         }

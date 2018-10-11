@@ -20,7 +20,7 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 
 /**
  * This enricher adds the 'revisionHistoryLimit' property to deployment spec of RCs / RSs for KuberNetes/OpenShift resource descriptors.
@@ -40,7 +40,7 @@ public class RevisionHistoryEnricher extends BaseEnricher {
         public String def() { return d; }
     }
 
-    public RevisionHistoryEnricher(EnricherContext buildContext) {
+    public RevisionHistoryEnricher(MavenEnricherContext buildContext) {
         super(buildContext, DEFAULT_NAME);
     }
 

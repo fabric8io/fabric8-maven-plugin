@@ -15,15 +15,14 @@
  */
 package io.fabric8.maven.core.handler;
 
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.maven.core.extenvvar.ExternalEnvVarHandler;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import io.fabric8.kubernetes.api.model.EnvVar;
-import io.fabric8.kubernetes.api.model.EnvVarBuilder;
-import io.fabric8.maven.core.extenvvar.ExternalEnvVarHandler;
-import org.apache.maven.project.MavenProject;
 
 /**
  * @author roland
@@ -31,17 +30,19 @@ import org.apache.maven.project.MavenProject;
  */
 class EnvVarHandler {
 
-    private MavenProject project;
+    private URLClassLoader urlClassLoader;
+    private String outputDirectory;
 
-    EnvVarHandler(MavenProject project) {
-        this.project = project;
+    EnvVarHandler(URLClassLoader compileClassloader, String outputDirectory) {
+        this.urlClassLoader = compileClassloader;
+        this.outputDirectory = outputDirectory;
     }
 
     List<EnvVar> getEnvironmentVariables(Map<String, String> envVars)  {
 
         List<EnvVar> ret = new ArrayList<>();
 
-        Map<String, String> envs = ExternalEnvVarHandler.getExportedEnvironmentVariables(project, envVars);
+        Map<String, String> envs = ExternalEnvVarHandler.getExportedEnvironmentVariables(this.urlClassLoader, this.outputDirectory, envVars);
         Map<String, EnvVar> envMap = convertToEnvVarMap(envs);
         ret.addAll(envMap.values());
 

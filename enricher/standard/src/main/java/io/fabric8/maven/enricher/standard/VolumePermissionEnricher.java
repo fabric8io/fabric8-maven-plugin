@@ -25,7 +25,7 @@ import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.util.InitContainerHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
@@ -50,7 +50,7 @@ public class VolumePermissionEnricher extends BaseEnricher {
         public String def() { return d; } protected String d;
     }
 
-    public VolumePermissionEnricher(EnricherContext buildContext) {
+    public VolumePermissionEnricher(MavenEnricherContext buildContext) {
         super(buildContext, ENRICHER_NAME);
         initContainerHandler = new InitContainerHandler(buildContext.getLog());
     }

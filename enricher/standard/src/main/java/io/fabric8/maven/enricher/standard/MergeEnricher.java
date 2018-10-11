@@ -15,19 +15,17 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import org.apache.maven.plugin.MojoExecutionException;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Merges local resources with dependent resources which have the same name.
@@ -42,7 +40,7 @@ import org.apache.maven.plugin.MojoExecutionException;
  */
 public class MergeEnricher extends BaseEnricher {
 
-    public MergeEnricher(EnricherContext buildContext) {
+    public MergeEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-merge");
     }
 
@@ -90,7 +88,7 @@ public class MergeEnricher extends BaseEnricher {
             if (!getContext().runningWithGoal("fabric8:app-catalog")) {
                 log.warn("Duplicate resources for %s %s from %s and %s", KubernetesHelper.getKind(item1), KubernetesHelper.getName(item1), KubernetesResourceUtil.getSourceUrlAnnotation(item1), KubernetesResourceUtil.getSourceUrlAnnotation(item2));
             }
-        } catch (MojoExecutionException e) {
+        } catch (IllegalStateException e) {
             log.warn("Failed to check if generated an app-catalog: %s", e);
         }
         return null;
