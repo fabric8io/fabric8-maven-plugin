@@ -20,6 +20,8 @@ echo ============================================
 echo Deploying fabric8-maven-plugin documentation
 echo ============================================
 
+export MAVEN_OPTS="-Xmx3000m"
+
 mvn -B install -DskipTests=true
 cd doc
 mvn -B -Phtml,pdf package
