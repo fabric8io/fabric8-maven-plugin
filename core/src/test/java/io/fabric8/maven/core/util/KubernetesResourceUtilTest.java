@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.core.util;
 
+import io.fabric8.maven.core.model.Artifact;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -151,20 +152,13 @@ public class KubernetesResourceUtilTest {
 
     @Test
     public void containerName() {
-        new Expectations() {{
-            project.getGroupId();
-            result = "io.fabric8-test-";
-
-            project.getArtifactId();
-            result = "fabric8-maven-plugin-dummy";
-        }};
 
         ImageConfiguration imageConfiguration = new ImageConfiguration.Builder()
                 .name("dummy-image")
                 .registry("example.com/someregistry")
                 .name("test")
                 .build();
-        String containerName = KubernetesResourceUtil.extractContainerName(project, imageConfiguration);
+        String containerName = KubernetesResourceUtil.extractContainerName(new Artifact("io.fabric8-test-", "fabric8-maven-plugin-dummy", "0"), imageConfiguration);
         assertTrue(containerName.matches(KubernetesResourceUtil.CONTAINER_NAME_REGEX));
     }
 

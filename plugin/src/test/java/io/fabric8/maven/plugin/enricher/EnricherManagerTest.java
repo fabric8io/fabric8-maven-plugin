@@ -15,20 +15,28 @@
  */
 package io.fabric8.maven.plugin.enricher;
 
-import java.util.*;
-
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.maven.enricher.api.util.ProjectClassLoader;
+import java.net.URLClassLoader;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author roland
@@ -38,13 +46,16 @@ import static org.junit.Assert.*;
 public class EnricherManagerTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     @Test
     public void createDefaultResources() {
         new Expectations() {{
            context.getConfig(); result = new ProcessorConfig(Arrays.asList("fmp-controller"), null, null);
            context.getImages(); result = new ImageConfiguration.Builder().alias("img1").name("img1").build();
+           context.getProjectClassLoader();
+           result = new ProjectClassLoader(
+                (URLClassLoader) EnricherManagerTest.class.getClassLoader(), (URLClassLoader) EnricherManagerTest.class.getClassLoader());
         }};
         EnricherManager manager = new EnricherManager(null, context);
 
@@ -57,6 +68,9 @@ public class EnricherManagerTest {
     public void enrichEmpty() {
         new Expectations() {{
            context.getConfig(); result = ProcessorConfig.EMPTY;
+            context.getProjectClassLoader();
+            result = new ProjectClassLoader(
+                (URLClassLoader) EnricherManagerTest.class.getClassLoader(), (URLClassLoader) EnricherManagerTest.class.getClassLoader());
         }};
         EnricherManager manager = new EnricherManager(null, context);
 
@@ -69,6 +83,9 @@ public class EnricherManagerTest {
     public void enrichSimple() {
         new Expectations() {{
            context.getConfig(); result = new ProcessorConfig(Arrays.asList("fmp-project"),null,new HashMap<String, TreeMap>());
+            context.getProjectClassLoader();
+            result = new ProjectClassLoader(
+                (URLClassLoader) EnricherManagerTest.class.getClassLoader(), (URLClassLoader) EnricherManagerTest.class.getClassLoader());
         }};
         EnricherManager manager = new EnricherManager(null, context);
 
@@ -95,4 +112,5 @@ public class EnricherManagerTest {
         assertNotNull(labels);
         assertEquals("fabric8", labels.get("provider"));
     }
+
 }

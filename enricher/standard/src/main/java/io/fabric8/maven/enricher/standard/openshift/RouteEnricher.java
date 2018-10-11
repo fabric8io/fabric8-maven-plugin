@@ -31,7 +31,7 @@ import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteBuilder;
 import io.fabric8.openshift.api.model.RoutePort;
@@ -41,7 +41,7 @@ import io.fabric8.openshift.api.model.RoutePort;
  */
 public class RouteEnricher extends BaseEnricher {
 
-    public RouteEnricher(EnricherContext buildContext) {
+    public RouteEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-openshift-route");
     }
 

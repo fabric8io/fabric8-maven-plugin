@@ -15,13 +15,16 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import java.util.List;
-
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
-import io.fabric8.kubernetes.api.model.apps.*;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentFluent;
+import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetFluent;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetSpec;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.handler.DaemonSetHandler;
 import io.fabric8.maven.core.handler.DeploymentHandler;
@@ -35,7 +38,8 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import java.util.List;
 
 /**
  * Enrich with controller if not already present.
@@ -75,10 +79,11 @@ public class DefaultControllerEnricher extends BaseEnricher {
         public String def() { return d; } protected String d;
     }
 
-    public DefaultControllerEnricher(EnricherContext buildContext) {
+    public DefaultControllerEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-controller");
 
-        HandlerHub handlers = new HandlerHub(buildContext.getProject());
+        HandlerHub handlers = new HandlerHub(getContext().getProjectClassLoader().getCompileClassLoader(),
+            getContext().getBuildOutputDirectory(), getContext().getArtifact(), getContext().getProperties());
         rcHandler = handlers.getReplicationControllerHandler();
         rsHandler = handlers.getReplicaSetHandler();
         deployHandler = handlers.getDeploymentHandler();
@@ -89,7 +94,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
-        final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject()));
+        final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getArtifact().getArtifactId()));
         final ResourceConfig config = new ResourceConfig.Builder()
                     .controllerName(name)
                     .imagePullPolicy(getConfig(Config.pullPolicy))

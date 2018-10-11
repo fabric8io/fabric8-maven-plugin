@@ -26,7 +26,7 @@ import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.core.util.kubernetes.ServiceUrlUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import org.apache.commons.lang3.StringUtils;
 
 abstract public class AbstractLiveEnricher extends BaseEnricher {
@@ -39,7 +39,7 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
         public String def() { return d; } protected String d;
     }
 
-    public AbstractLiveEnricher(EnricherContext buildContext, String name) {
+    public AbstractLiveEnricher(MavenEnricherContext buildContext, String name) {
         super(buildContext, name);
     }
 
@@ -135,7 +135,7 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
 
     // Check a global prop from the project or system props
     protected Boolean asBooleanFromGlobalProp(String prop) {
-        String value = getProject().getProperties().getProperty(prop);
+        String value = getContext().getProperties().getProperty(prop);
         if (value == null) {
             value = System.getProperty(prop);
         }

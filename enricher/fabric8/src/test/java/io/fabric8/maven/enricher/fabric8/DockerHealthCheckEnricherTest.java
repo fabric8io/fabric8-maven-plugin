@@ -28,7 +28,7 @@ import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.HealthCheckConfiguration;
 import io.fabric8.maven.docker.config.HealthCheckMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -46,7 +46,7 @@ import static org.junit.Assert.assertThat;
 public class DockerHealthCheckEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     @Test
     public void testEnrichFromSingleImage() throws Exception {

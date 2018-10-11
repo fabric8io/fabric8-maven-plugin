@@ -22,7 +22,7 @@ import java.util.Map;
 import io.fabric8.maven.core.util.GitUtil;
 import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
@@ -39,7 +39,7 @@ import org.eclipse.jgit.lib.Repository;
  */
 public class GitEnricher extends BaseEnricher {
 
-    public GitEnricher(EnricherContext buildContext) {
+    public GitEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-git");
     }
 
@@ -50,7 +50,7 @@ public class GitEnricher extends BaseEnricher {
         try {
             if (kind.isController() || kind == Kind.SERVICE) {
                 // Git annotations (if git is used as SCM)
-                repository = GitUtil.getGitRepository(getProject());
+                repository = GitUtil.getGitRepository(getContext().getCurrentDir());
                 if (repository != null) {
                     String branch = repository.getBranch();
                     if (branch != null) {

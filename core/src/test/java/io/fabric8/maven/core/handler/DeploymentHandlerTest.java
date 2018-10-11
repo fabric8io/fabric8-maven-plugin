@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.core.handler;
 
+import io.fabric8.maven.core.model.Artifact;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -84,7 +85,7 @@ public class DeploymentHandlerTest {
     public void deploymentTemplateHandlerTest() {
 
         ContainerHandler containerHandler =
-                new ContainerHandler(project, envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -121,7 +122,7 @@ public class DeploymentHandlerTest {
     public void deploymentTemplateHandlerWithInvalidNameTest() {
         //invalid controller name
         ContainerHandler containerHandler =
-                new ContainerHandler(project, envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -143,7 +144,7 @@ public class DeploymentHandlerTest {
     public void deploymentTemplateHandlerWithoutControllerTest() {
         //without controller name
         ContainerHandler containerHandler = new
-                ContainerHandler(project, envVarHandler, probeHandler);
+                ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 

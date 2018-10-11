@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import io.fabric8.maven.enricher.api.DockerRegistryAuthentication;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,7 +25,7 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.maven.core.util.SecretConstants;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -42,7 +43,7 @@ import static junit.framework.TestCase.assertEquals;
 public class DockerRegistrySecretEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     private String dockerUrl = "docker.io";
     private String annotation = "maven.fabric8.io/dockerServerId";
@@ -52,8 +53,8 @@ public class DockerRegistrySecretEnricherTest {
         new Expectations() {
             {
                 {
-                    context.getSettings();
-                    result = createSettings();
+                    context.getDockerRegistryAuth(dockerUrl);
+                    result = createDockerRegistry();
                 }
             }
         };
@@ -77,8 +78,8 @@ public class DockerRegistrySecretEnricherTest {
         new Expectations() {
             {
                 {
-                    context.getSettings();
-                    result = createSettings();
+                    context.getDockerRegistryAuth(dockerUrl);
+                    result = createDockerRegistry();
                 }
             }
         };
@@ -101,8 +102,8 @@ public class DockerRegistrySecretEnricherTest {
         new Expectations() {
             {
                 {
-                    context.getSettings();
-                    returns(new Settings());
+                    context.getDockerRegistryAuth(dockerUrl);
+                    result = createDockerRegistry();
                 }
             }
         };
@@ -144,9 +145,7 @@ public class DockerRegistrySecretEnricherTest {
         return server;
     }
 
-    public Settings createSettings() {
-        Settings settings = new Settings();
-        settings.addServer(createBaseServer());
-        return settings;
+    public DockerRegistryAuthentication createDockerRegistry() {
+        return new DockerRegistryAuthentication("username", "password", null);
     }
 }

@@ -25,7 +25,7 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -45,7 +45,7 @@ import static org.junit.Assert.assertThat;
 public class ImageEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     @Mocked
     ImageConfiguration imageConfiguration;

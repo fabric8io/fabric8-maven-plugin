@@ -15,13 +15,13 @@
  */
 package io.fabric8.maven.core.handler;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.maven.core.extenvvar.ExternalEnvVarHandler;
+import io.fabric8.maven.core.util.MavenUtil;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import mockit.Expectations;
 import mockit.Mocked;
 import org.apache.maven.project.MavenProject;
@@ -53,12 +53,12 @@ public class EnvVarHandlerTest {
     @Test
     public void emptyEnvVarHandlerTest(){
         //Empty Environment Variable in Config
-        EnvVarHandler envVarHandler = new EnvVarHandler(project);
+        EnvVarHandler envVarHandler = new EnvVarHandler(null, project.getBuild().getOutputDirectory());
 
         env.clear();
 
         new Expectations(){{
-            externalEnvVarHandler.getExportedEnvironmentVariables(project,env);
+            externalEnvVarHandler.getExportedEnvironmentVariables(null, project.getBuild().getOutputDirectory(),env);
             ret.putAll(env);
             result = ret;
         }};
@@ -83,10 +83,10 @@ public class EnvVarHandlerTest {
         env.put(var2.getName(), var2.getValue());
         env.put(var3.getName(), var3.getValue());
 
-        EnvVarHandler envVarHandler = new EnvVarHandler(project);
+        EnvVarHandler envVarHandler = new EnvVarHandler(null, project.getBuild().getOutputDirectory());
 
         new Expectations(){{
-            externalEnvVarHandler.getExportedEnvironmentVariables(project,env);
+            externalEnvVarHandler.getExportedEnvironmentVariables(null, project.getBuild().getOutputDirectory(),env);
             ret.putAll(env);
             result = ret;
         }};
@@ -109,10 +109,10 @@ public class EnvVarHandlerTest {
         env.clear();
         env.put(null, var1.getValue());
 
-        EnvVarHandler envVarHandler = new EnvVarHandler(project);
+        EnvVarHandler envVarHandler = new EnvVarHandler(null, project.getBuild().getOutputDirectory());
 
         new Expectations(){{
-            externalEnvVarHandler.getExportedEnvironmentVariables(project,env);
+            externalEnvVarHandler.getExportedEnvironmentVariables(null, project.getBuild().getOutputDirectory(),env);
             ret.put(null,"OK");
             result = ret;
         }};

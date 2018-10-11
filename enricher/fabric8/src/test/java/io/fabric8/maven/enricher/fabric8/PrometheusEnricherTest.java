@@ -24,7 +24,7 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 import mockit.Expectations;
 import mockit.Mocked;
@@ -39,7 +39,7 @@ import static org.junit.Assert.assertNull;
 public class PrometheusEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
     @Mocked
     ImageConfiguration imageConfiguration;
 

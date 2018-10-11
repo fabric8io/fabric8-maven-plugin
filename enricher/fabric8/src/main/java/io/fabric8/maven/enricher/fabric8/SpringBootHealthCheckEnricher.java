@@ -15,15 +15,13 @@
  */
 package io.fabric8.maven.enricher.fabric8;
 
-import java.util.Properties;
-
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.core.util.SpringBootUtil;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
 
 
@@ -34,7 +32,7 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
     public static final String ENRICHER_NAME = "f8-healthcheck-spring-boot";
 
-    private static final String[] REQUIRED_CLASSES = {
+    protected static final String[] REQUIRED_CLASSES = {
             "org.springframework.boot.actuate.health.HealthIndicator",
             "org.springframework.web.context.support.GenericWebApplicationContext"
     };
@@ -52,7 +50,7 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
         public String def() { return d; } protected String d;
     }
 
-    public SpringBootHealthCheckEnricher(EnricherContext buildContext) {
+    public SpringBootHealthCheckEnricher(MavenEnricherContext buildContext) {
         super(buildContext, ENRICHER_NAME);
     }
 
@@ -74,8 +72,8 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
     protected Probe discoverSpringBootHealthCheck(Integer initialDelay, Integer period, Integer timeout) {
         try {
-            if (MavenUtil.hasAllClasses(this.getProject(), REQUIRED_CLASSES)) {
-                Properties properties = SpringBootUtil.getSpringBootApplicationProperties(this.getProject());
+            if (getContext().isClassInCompileClasspath(true, REQUIRED_CLASSES)) {
+                Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getContext().getProjectClassLoader().getCompileClassLoader());
                 return buildProbe(properties, initialDelay, period, timeout);
             }
         } catch (Exception ex) {
@@ -85,7 +83,7 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
     }
 
     protected Probe buildProbe(Properties springBootProperties, Integer initialDelay, Integer period, Integer timeout) {
-        SpringBootConfigurationHelper propertyHelper = new SpringBootConfigurationHelper(SpringBootUtil.getSpringBootVersion(getContext().getProject()));
+        SpringBootConfigurationHelper propertyHelper = new SpringBootConfigurationHelper(getContext().getDependencyVersion(SpringBootConfigurationHelper.SPRING_BOOT_GROUP_ID, SpringBootConfigurationHelper.SPRING_BOOT_ARTIFACT_ID));
         Integer managementPort = propertyHelper.getManagementPort(springBootProperties);
         boolean usingManagementPort = managementPort != null;
 

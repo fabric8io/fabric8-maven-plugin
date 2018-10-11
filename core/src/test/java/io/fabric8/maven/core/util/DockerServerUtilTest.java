@@ -15,6 +15,8 @@
  */
 package io.fabric8.maven.core.util;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
@@ -58,25 +60,25 @@ public class DockerServerUtilTest {
     }
 
     @Test
-    public void testDockerUtilGetServer() {
-        Server server = DockerServerUtil.getServer(settings, "docker.io");
-        assertEquals("docker.io", server.getId());
-        assertEquals("username", server.getUsername());
-        assertEquals("password", server.getPassword());
-    }
-
-    @Test
     public void testDockerUtilGetServerJson() {
-        String server = DockerServerUtil.getDockerJsonConfigString(settings, "docker.io");
+
+        Map<String, String> params = new HashMap<>();
+        params.put("username", "username");
+        params.put("password", "password");
+
+        String server = DockerServerUtil.getDockerJsonConfigString("docker.io", params);
         assertEquals("{\"docker.io\":{\"password\":\"password\",\"email\":\"foo@foo.com\",\"username\":\"username\"}}", server);
 
-        String server1 = DockerServerUtil.getDockerJsonConfigString(settings, "docker1.io");
+        Map<String, String> params1 = new HashMap<>();
+        params1.put("username", "username1");
+        params1.put("password", "password1");
+        params1.put("email", "bar@bar.com");
+
+        String server1 = DockerServerUtil.getDockerJsonConfigString("docker1.io", params1);
         assertEquals("{\"docker1.io\":{\"password\":\"password1\",\"email\":\"bar@bar.com\",\"username\":\"username1\"}}", server1);
 
-        String server2 = DockerServerUtil.getDockerJsonConfigString(null,"docker.io");
+        String server2 = DockerServerUtil.getDockerJsonConfigString("docker.io", null);
         assertEquals("",server2);
 
-        String server3 = DockerServerUtil.getDockerJsonConfigString(settings,"docker2.io");
-        assertEquals("{\"docker2.io\":{\"password\":\"password2\",\"email\":\"foo@foo.com\",\"username\":\"username2\"}}",server3);
     }
 }

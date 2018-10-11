@@ -1,175 +1,170 @@
-/**
- * Copyright 2016 Red Hat, Inc.
- *
- * Red Hat licenses this file to you under the Apache License, version
- * 2.0 (the "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- * implied.  See the License for the specific language governing
- * permissions and limitations under the License.
- */
 package io.fabric8.maven.enricher.api;
-
-import java.util.List;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.maven.core.util.GoalFinder;
+import io.fabric8.maven.core.model.Artifact;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
-import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.settings.Settings;
+import io.fabric8.maven.enricher.api.util.ProjectClassLoader;
+import java.io.File;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
-/**
- * The context given to each enricher from where it can extract build specific information.
- *
- * @author roland
- * @since 01/04/16
- */
-public class EnricherContext {
+public interface EnricherContext {
 
-    private MavenProject project;
-    private Logger log;
+    String getNamespace();
 
-    private List<ImageConfiguration> images;
-    private String namespace;
-
-    private ProcessorConfig config = ProcessorConfig.EMPTY;
-
-    private ResourceConfig resources;
-
-    private boolean useProjectClasspath;
-    private OpenShiftDependencyResources openshiftDependencyResources;
-    private MavenSession session;
-    private GoalFinder goalFinder;
-
-    private EnricherContext() {}
-
-    public MavenProject getProject() {
-        return project;
-    }
-
-    public List<ImageConfiguration> getImages() {
-        return images;
-    }
-
-    public Logger getLog() {
-        return log;
-    }
-
-    public ProcessorConfig getConfig() {
-        return config;
-    }
-
-    public ResourceConfig getResources() {
-        return resources;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public boolean isUseProjectClasspath() {
-        return useProjectClasspath;
-    }
-
-    public Settings getSettings() {
-        return session != null ? session.getSettings() : null;
-    }
-
-    public OpenShiftDependencyResources getOpenshiftDependencyResources() {
-        return openshiftDependencyResources;
-    }
+    ResourceConfig getResources();
 
     /**
      * Returns true if we are in watch mode
      */
-    public boolean isWatchMode() {
-        try {
-            return runningWithGoal("fabric8:watch-spring-boot", "fabric8:watch");
-        } catch (MojoExecutionException e) {
-            throw new IllegalStateException("Cannot determine maven goals", e);
-        }
-    }
+    boolean isWatchMode();
+
+    OpenShiftDependencyResources getOpenshiftDependencyResources();
 
     /**
      * Returns true if maven is running with any of the given goals
      */
-    public boolean runningWithGoal(String... goals) throws MojoExecutionException {
-        for (String goal : goals) {
-            if (goalFinder.runningWithGoal(project, session,  goal)) {
-                return true;
-            }
-        }
-        return false;
-    }
+    boolean runningWithGoal(String... goals);
 
-    // =======================================================================================================
-    public static class Builder {
+    /**
+     * Get properties of current project. Usually in case of Maven, they are the project properties.
+     * @return Properties of project.
+     */
+    Properties getProperties();
 
-        private EnricherContext ctx = new EnricherContext();
+    /**
+     * Gets configuration values. Since there can be inner values, it returns a Map of Objects where an Object can be a simple type, List or another Map.
+     * @param id where to pick configuration. In case of Maven, plugin id.
+     * @return Configuration value.
+     */
+    Map<String, Object> getConfiguration(String id);
 
-        public Builder session(MavenSession session) {
-            ctx.session = session;
-            return this;
-        };
+    /**
+     * Gets artifact.
+     * @return Artifact.
+     */
+    Artifact getArtifact();
 
-        public Builder goalFinder(GoalFinder goalFinder) {
-            ctx.goalFinder = goalFinder;
-            return this;
-        }
+    /**
+     * Gets artifact identifier of root project.
+     * @return Root artifact id.
+     */
+    String getRootArtifactId();
 
-        public Builder log(Logger log) {
-            ctx.log = log;
-            return this;
-        }
+    /**
+     * Returns the rot dir of project. Notice that in a submodule project, current dir is not the roor dir.
+     * @return Root dir.
+     */
+    File getRootDir();
 
-        public Builder project(MavenProject project) {
-            ctx.project = project;
-            return this;
-        }
+    /**
+     * Gets current directory.
+     * @return Current directory.
+     */
+    File getCurrentDir();
 
-        public Builder config(ProcessorConfig config) {
-            ctx.config = config;
-            return this;
-        }
+    /**
+     * Gets output directory.
+     * @return Output Directory.
+     */
+    String getBuildOutputDirectory();
 
-        public Builder resources(ResourceConfig resources) {
-            ctx.resources = resources;
-            return this;
-        }
+    /**
+     * Gets a map with fields username, password and email set.
+     * @param serverId Identifier to get the info.
+     * @return Docker Registry authentication parameters.
+     */
+    DockerRegistryAuthentication getDockerRegistryAuth(String serverId);
 
-        public Builder images(List<ImageConfiguration> images) {
-            ctx.images = images;
-            return this;
-        }
+    /**
+     * Returns if class is in compile classpath.
+     * @param all True if all of them must be there.
+     * @param clazz fully qualified class name.
+     * @return True if present, false otherwise.
+     */
+    boolean isClassInCompileClasspath(boolean all, String... clazz);
 
-        public Builder namespace(String namespace) {
-            ctx.namespace = namespace;
-            return this;
-        }
+    /**
+     * Gets documentation url or null.
+     * @return Gets documentation url or null if not specified.
+     */
+    String getDocumentationUrl();
 
-        public Builder useProjectClasspath(boolean useProjectClasspath) {
-            ctx.useProjectClasspath = useProjectClasspath;
-            return this;
-        }
+    /**
+     * Gets dependencies defined in build tool
+     * @param transitive if transitive deps should be returned.
+     * @return List of dependencies.
+     */
+    List<Dependency> getDependencies(boolean transitive);
 
-        public Builder openshiftDependencyResources(OpenShiftDependencyResources openShiftDependencyResources) {
-            ctx.openshiftDependencyResources = openShiftDependencyResources;
-            return this;
-        }
+    /**
+     * Checks if given dependency is defined.
+     * @param groupId of dependency.
+     * @param artifactId of dependency.
+     * @return True if present, flse otherwise.
+     */
+    boolean hasDependency(String groupId, String artifactId);
 
-        public EnricherContext build() {
-            return ctx;
-        }
+    /**
+     * Returns if given plugin is present
+     * @param plugin to check.
+     * @return True if present, false otherwise.
+     */
+    boolean hasPlugin(String plugin);
 
-    }
+    /**
+     * Checks if there is a dependency of given group id.
+     * @param groupId to search.
+     * @return True if there is a dependency, false otherwise.
+     */
+    boolean hasDependencyOnAnyArtifactOfGroup(String groupId);
+
+    /**
+     * Checks if there is a plugin of given group id.
+     * @param groupId to search.
+     * @return True if there is a plugin, false otherwise.
+     */
+    boolean hasPluginOfAnyGroupId(String groupId);
+
+    /**
+     * Gets version of given dependency.
+     * @param groupId of the dependency.
+     * @param artifactId of the dependency.
+     * @return Version number.
+     */
+    String getDependencyVersion(String groupId, String artifactId);
+
+    /**
+     * Gets Project Classloader.
+     * @return Classloader.
+     */
+    ProjectClassLoader getProjectClassLoader();
+
+    /**
+     *
+     * Gets processor Config
+     * @return processor config
+     */
+    ProcessorConfig getConfig();
+
+    /**
+     * Get Logger.
+     * @return Logger.
+     */
+    Logger getLog();
+
+    /**
+     * Get List of images
+     * @return
+     */
+    List<ImageConfiguration> getImages();
+
+    boolean isUseProjectClasspath();
+
+    List<String> getCompileClasspathElements();
+
 }

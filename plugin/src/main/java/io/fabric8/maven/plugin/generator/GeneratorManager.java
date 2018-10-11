@@ -24,6 +24,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.Generator;
 import io.fabric8.maven.generator.api.GeneratorContext;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
@@ -40,9 +41,13 @@ public class GeneratorManager {
         List<ImageConfiguration> ret = imageConfigs;
 
         PluginServiceFactory<GeneratorContext> pluginFactory =
-            genCtx.isUseProjectClasspath() ?
-            new PluginServiceFactory<GeneratorContext>(genCtx, ClassUtil.createProjectClassLoader(genCtx.getProject(), genCtx.getLogger())) :
+            null;
+        try {
+            pluginFactory = genCtx.isUseProjectClasspath() ?
+            new PluginServiceFactory<GeneratorContext>(genCtx, ClassUtil.createProjectClassLoader(genCtx.getProject().getCompileClasspathElements(), genCtx.getLogger())) :
             new PluginServiceFactory<GeneratorContext>(genCtx);
+        } catch (DependencyResolutionRequiredException e) {
+        }
 
         List<Generator> generators =
             pluginFactory.createServiceObjects("META-INF/fabric8/generator-default",

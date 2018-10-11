@@ -180,13 +180,13 @@ public class ClassUtil {
     }
 
 
-    public static URLClassLoader createProjectClassLoader(final MavenProject project, Logger log) {
+    public static URLClassLoader createProjectClassLoader(List<String> elements, Logger log) {
 
         try {
 
             List<URL> compileJars = new ArrayList<>();
 
-            for (String element : project.getCompileClasspathElements()) {
+            for (String element : elements) {
                 compileJars.add(new File(element).toURI().toURL());
             }
 

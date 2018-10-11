@@ -20,7 +20,7 @@ import java.util.Map;
 
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 
 /**
@@ -41,7 +41,7 @@ public class SpaceLabelEnricher extends BaseEnricher {
         }
     }
 
-    public SpaceLabelEnricher(EnricherContext buildContext) {
+    public SpaceLabelEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "osio-space-label");
     }
 

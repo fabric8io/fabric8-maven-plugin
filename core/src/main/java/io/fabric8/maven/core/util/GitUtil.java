@@ -32,17 +32,13 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 public class GitUtil {
 
 
-    public static Repository getGitRepository(MavenProject project) throws IOException {
-        MavenProject rootProject = MavenUtil.getRootProject(project);
-        File baseDir = rootProject.getBasedir();
-        if (baseDir == null) {
-            baseDir = project.getBasedir();
-        }
-        if (baseDir == null) {
+    public static Repository getGitRepository(File currentDir) throws IOException {
+
+        if (currentDir == null) {
             // TODO: Why is this check needed ?
-            baseDir = new File(System.getProperty("basedir", "."));
+            currentDir = new File(System.getProperty("basedir", "."));
         }
-        File gitFolder = findGitFolder(baseDir);
+        File gitFolder = findGitFolder(currentDir);
         if (gitFolder == null) {
             // No git repository found
             return null;

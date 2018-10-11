@@ -23,7 +23,7 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSetBuilder;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 
 /**
@@ -34,7 +34,7 @@ import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
  */
 public class WatchEnricher extends BaseEnricher {
 
-    public WatchEnricher(EnricherContext buildContext) {
+    public WatchEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-watch");
     }
 
