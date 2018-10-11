@@ -18,17 +18,7 @@ public interface EnricherContext {
 
     ResourceConfig getResources();
 
-    /**
-     * Returns true if we are in watch mode
-     */
-    boolean isWatchMode();
-
     OpenShiftDependencyResources getOpenshiftDependencyResources();
-
-    /**
-     * Returns true if maven is running with any of the given goals
-     */
-    boolean runningWithGoal(String... goals);
 
     /**
      * Get properties of current project. Usually in case of Maven, they are the project properties.
