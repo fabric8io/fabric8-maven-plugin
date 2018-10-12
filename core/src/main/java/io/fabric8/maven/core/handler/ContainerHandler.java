@@ -26,7 +26,7 @@ import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.VolumeConfig;
-import io.fabric8.maven.core.model.Artifact;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -34,6 +34,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
@@ -49,13 +50,13 @@ class ContainerHandler {
     private final EnvVarHandler envVarHandler;
     private final ProbeHandler probeHandler;
     private final Properties configurationProperties;
-    private final Artifact artifact;
+    private final GroupArtifactVersion groupArtifactVersion;
 
-    public ContainerHandler(Properties configurationProperties, Artifact artifact, EnvVarHandler envVarHandler, ProbeHandler probeHandler) {
+    public ContainerHandler(Properties configurationProperties, GroupArtifactVersion groupArtifactVersion, EnvVarHandler envVarHandler, ProbeHandler probeHandler) {
         this.envVarHandler = envVarHandler;
         this.probeHandler = probeHandler;
         this.configurationProperties = configurationProperties;
-        this.artifact = artifact;
+        this.groupArtifactVersion = groupArtifactVersion;
     }
 
     List<Container> getContainers(ResourceConfig config, List<ImageConfiguration> images)  {
@@ -67,10 +68,10 @@ class ContainerHandler {
                 Probe readinessProbe = probeHandler.getProbe(config.getReadiness());
 
                 Container container = new ContainerBuilder()
-                    .withName(KubernetesResourceUtil.extractContainerName(this.artifact, imageConfig))
+                    .withName(KubernetesResourceUtil.extractContainerName(this.groupArtifactVersion, imageConfig))
                     .withImage(getImageName(imageConfig))
                     .withImagePullPolicy(getImagePullPolicy(config))
-                    .withEnv(envVarHandler.getEnvironmentVariables(config.getEnv()))
+                    .withEnv(envVarHandler.getEnvironmentVariables(config.getEnv().orElse(Collections.emptyMap())))
                     .withSecurityContext(createSecurityContext(config))
                     .withPorts(getContainerPorts(imageConfig))
                     .withVolumeMounts(getVolumeMounts(config))
@@ -87,7 +88,7 @@ class ContainerHandler {
     private String getImagePullPolicy(ResourceConfig config) {
         String pullPolicy = config.getImagePullPolicy();
         if (StringUtils.isBlank(pullPolicy) &&
-            this.artifact.getVersion() != null && this.artifact.getVersion().endsWith("SNAPSHOT")) {
+            this.groupArtifactVersion.getVersion() != null && this.groupArtifactVersion.getVersion().endsWith("SNAPSHOT")) {
             // TODO: Is that what we want ?
             return "PullAlways";
         }

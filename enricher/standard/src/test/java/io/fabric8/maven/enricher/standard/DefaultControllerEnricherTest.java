@@ -20,12 +20,13 @@ import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.core.model.Artifact;
+import io.fabric8.maven.core.model.Configuration;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.maven.enricher.api.util.ProjectClassLoader;
+import io.fabric8.maven.enricher.api.util.ProjectClassLoaders;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.Collections;
@@ -96,15 +97,20 @@ public class DefaultControllerEnricherTest {
 
         new Expectations() {{
 
-            context.getArtifact();
-            result = new Artifact("", "fmp-controller-test", "0");
+            context.getGav();
+            result = new GroupArtifactVersion("", "fmp-controller-test", "0");
 
-            context.getBuildOutputDirectory();
+            context.getOutputDirectory();
             result = Files.createTempDir().getAbsolutePath();
 
-            context.getConfig();
-            result = new ProcessorConfig(null, null,
-                    Collections.singletonMap("fmp-controller", controllerConfig));
+            Configuration config =
+                new Configuration.Builder()
+                    .processorConfig(new ProcessorConfig(null, null,
+                                                         Collections.singletonMap("fmp-controller", controllerConfig)))
+                    .images(Arrays.asList(imageConfiguration))
+                    .build();
+            context.getConfiguration();
+            result = config;
 
             imageConfiguration.getBuildConfiguration();
             result = buildConfig;
@@ -112,11 +118,8 @@ public class DefaultControllerEnricherTest {
             imageConfiguration.getName();
             result = "helloworld";
 
-            context.getImages();
-            result = Arrays.asList(imageConfiguration);
-
-            context.getProjectClassLoader();
-            result = new ProjectClassLoader((URLClassLoader) DefaultControllerEnricherTest.class.getClassLoader(), (URLClassLoader) DefaultControllerEnricherTest.class.getClassLoader());
+            context.getProjectClassLoaders();
+            result = new ProjectClassLoaders((URLClassLoader) DefaultControllerEnricherTest.class.getClassLoader(), (URLClassLoader) DefaultControllerEnricherTest.class.getClassLoader());
         }};
     }
 }

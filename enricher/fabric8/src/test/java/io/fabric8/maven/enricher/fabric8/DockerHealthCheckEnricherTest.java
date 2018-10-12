@@ -16,12 +16,14 @@
 package io.fabric8.maven.enricher.fabric8;
 
 import java.util.Arrays;
+import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -32,6 +34,7 @@ import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
+import org.assertj.core.api.ListAssert;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,8 +55,7 @@ public class DockerHealthCheckEnricherTest {
     public void testEnrichFromSingleImage() throws Exception {
         // Setup mock behaviour
         new Expectations() {{
-            context.getImages();
-            result = Arrays.asList(new ImageConfiguration.Builder()
+            List<ImageConfiguration> images =  Arrays.asList(new ImageConfiguration.Builder()
                             .alias("myImage")
                             .buildConfig(new BuildImageConfiguration.Builder()
                                     .healthCheck(new HealthCheckConfiguration.Builder()
@@ -65,7 +67,7 @@ public class DockerHealthCheckEnricherTest {
                                             .build())
                                     .build())
                             .build(),
-                    new ImageConfiguration.Builder()
+                                                   new ImageConfiguration.Builder()
                             .alias("myImage2")
                             .buildConfig(new BuildImageConfiguration.Builder()
                                     .healthCheck(new HealthCheckConfiguration.Builder()
@@ -77,6 +79,8 @@ public class DockerHealthCheckEnricherTest {
                                             .build())
                                     .build())
                             .build());
+            context.getConfiguration();
+            result = new Configuration.Builder().images(images).build();
         }};
 
         KubernetesListBuilder builder = createDeployment("myImage");
@@ -94,8 +98,7 @@ public class DockerHealthCheckEnricherTest {
     public void testEnrichFromDoubleImage() throws Exception {
         // Setup mock behaviour
         new Expectations() {{
-            context.getImages();
-            result = Arrays.asList(new ImageConfiguration.Builder()
+            List<ImageConfiguration> images = Arrays.asList(new ImageConfiguration.Builder()
                             .alias("myImage")
                             .buildConfig(new BuildImageConfiguration.Builder()
                                     .healthCheck(new HealthCheckConfiguration.Builder()
@@ -119,6 +122,8 @@ public class DockerHealthCheckEnricherTest {
                                             .build())
                                     .build())
                             .build());
+            context.getConfiguration();
+            result = new Configuration.Builder().images(images).build();
         }};
 
         KubernetesListBuilder builder = addDeployment(createDeployment("myImage"), "myImage2");
@@ -138,8 +143,7 @@ public class DockerHealthCheckEnricherTest {
     public void testInvalidHealthCheck() throws Exception {
         // Setup mock behaviour
         new Expectations() {{
-            context.getImages();
-            result = Arrays.asList(new ImageConfiguration.Builder()
+            List<ImageConfiguration> images = Arrays.asList(new ImageConfiguration.Builder()
                     .alias("myImage")
                     .buildConfig(new BuildImageConfiguration.Builder()
                             .healthCheck(new HealthCheckConfiguration.Builder()
@@ -147,6 +151,8 @@ public class DockerHealthCheckEnricherTest {
                                     .build())
                             .build())
                     .build());
+            context.getConfiguration();
+            result = new Configuration.Builder().images(images).build();
         }};
 
         KubernetesListBuilder builder = createDeployment("myImage");
@@ -163,8 +169,7 @@ public class DockerHealthCheckEnricherTest {
     public void testUnmatchingHealthCheck() throws Exception {
         // Setup mock behaviour
         new Expectations() {{
-            context.getImages();
-            result = Arrays.asList(new ImageConfiguration.Builder()
+            List<ImageConfiguration> images = Arrays.asList(new ImageConfiguration.Builder()
                     .alias("myImage")
                     .buildConfig(new BuildImageConfiguration.Builder()
                             .healthCheck(new HealthCheckConfiguration.Builder()
@@ -176,6 +181,8 @@ public class DockerHealthCheckEnricherTest {
                                     .build())
                             .build())
                     .build());
+            context.getConfiguration();
+            result = new Configuration.Builder().images(images).build();
         }};
 
         KubernetesListBuilder builder = createDeployment("myUnmatchingImage");

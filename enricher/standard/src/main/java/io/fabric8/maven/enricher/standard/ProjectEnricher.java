@@ -20,7 +20,7 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MapUtil;
-import io.fabric8.maven.core.model.Artifact;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
@@ -85,18 +85,18 @@ public class ProjectEnricher extends BaseEnricher {
         Map<String, String> ret = new HashMap<>();
 
         boolean enableProjectLabel = Configs.asBoolean(getConfig(Config.useProjectLabel));
-        final Artifact artifact = getContext().getArtifact();
+        final GroupArtifactVersion groupArtifactVersion = getContext().getGav();
         if (enableProjectLabel) {
-            ret.put("project", artifact.getArtifactId());
+            ret.put("project", groupArtifactVersion.getArtifactId());
         } else {
             // default label is app
-            ret.put("app", artifact.getArtifactId());
+            ret.put("app", groupArtifactVersion.getArtifactId());
         }
 
-        ret.put("group", artifact.getGroupId());
+        ret.put("group", groupArtifactVersion.getGroupId());
         ret.put("provider", "fabric8");
         if (!withoutVersion) {
-            ret.put("version", artifact.getVersion());
+            ret.put("version", groupArtifactVersion.getVersion());
         }
         return ret;
     }

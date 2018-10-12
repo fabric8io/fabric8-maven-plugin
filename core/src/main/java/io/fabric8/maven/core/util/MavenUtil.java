@@ -25,13 +25,16 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
 import com.google.common.base.Objects;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.MavenExecutionException;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.model.Plugin;
@@ -127,13 +130,6 @@ public class MavenUtil {
 
 
     /**
-     * Returns true if the maven project has a dependency with the given groupId
-     */
-    public static boolean hasDependencyOnAnyArtifactOfGroup(MavenProject project, String groupId) {
-        return hasDependency(project, groupId, null);
-    }
-
-    /**
      * Returns true if the maven project has a dependency with the given groupId and artifactId (if not null)
      */
     public static boolean hasDependency(MavenProject project, String groupId, String artifactId) {
@@ -162,8 +158,8 @@ public class MavenUtil {
         return null;
     }
 
-    public static boolean hasPlugin(MavenProject project, String plugin) {
-        return project.getPlugin(plugin) != null;
+    public static boolean hasPlugin(MavenProject project, String groupId, String artifactId) {
+        return project.getPlugin(groupId + ":" + artifactId) != null;
     }
 
     public static boolean hasPluginOfAnyGroupId(MavenProject project, String pluginArtifact) {
@@ -197,22 +193,6 @@ public class MavenUtil {
     }
 
     /**
-     * Returns true if any of the given class names could be found on the given class loader
-     */
-    public static boolean hasClass(MavenProject project, String ... classNames) {
-        URLClassLoader compileClassLoader = getCompileClassLoader(project);
-        for (String className : classNames) {
-            try {
-                compileClassLoader.loadClass(className);
-                return true;
-            } catch (Throwable e) {
-                // ignore
-            }
-        }
-        return false;
-    }
-
-    /**
      * Returns true if any of the given resources could be found on the given class loader
      */
     public static boolean hasResource(MavenProject project, String... paths) {
@@ -227,36 +207,6 @@ public class MavenUtil {
             }
         }
         return false;
-    }
-
-    /**
-     * Returns true if all the given class names could be found on the given class loader
-     */
-    public static boolean hasAllClasses(MavenProject project, String ... classNames) {
-        URLClassLoader compileClassLoader = getCompileClassLoader(project);
-        for (String className : classNames) {
-            try {
-                compileClassLoader.loadClass(className);
-            } catch (Throwable e) {
-                // ignore message
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Returns the root maven project or null if there is no maven project
-     */
-    public static MavenProject getRootProject(MavenProject project) {
-        while (project != null) {
-            MavenProject parent = project.getParent();
-            if (parent == null) {
-                break;
-            }
-            project = parent;
-        }
-        return project;
     }
 
     public static void createArchive(File sourceDir, File destinationFile, TarArchiver archiver) throws MojoExecutionException {
@@ -305,4 +255,15 @@ public class MavenUtil {
         return version;
     }
 
+    public static Optional<List<String>> getCompileClasspathElementsIfRequested(MavenProject project, boolean useProjectClasspath) throws MojoExecutionException {
+        if (!useProjectClasspath) {
+            return Optional.empty();
+        }
+
+        try {
+            return Optional.of(project.getCompileClasspathElements());
+        } catch (DependencyResolutionRequiredException e) {
+            throw new MojoExecutionException("Cannot extra compile class path elements", e);
+        }
+    }
 }

@@ -15,9 +15,15 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecFluent;
@@ -38,17 +44,12 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSetFluent;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetSpecFluent;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfigFluent;
 import io.fabric8.openshift.api.model.DeploymentConfigSpecFluent;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 
 import static io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil.extractContainerName;
@@ -210,16 +211,17 @@ public class ImageEnricher extends BaseEnricher {
     // Add missing information to the given containers as found
     // configured
     private void mergeImageConfigurationWithContainerSpec(List<Container> containers) {
-        List<ImageConfiguration> images = getImages();
-        int idx = 0;
-        for (ImageConfiguration imageConfiguration : images) {
-            Container container = getContainer(idx, containers);
-            mergeImagePullPolicy(imageConfiguration, container);
-            mergeImage(imageConfiguration, container);
-            mergeContainerName(imageConfiguration, container);
-            mergeEnvVariables(container);
-            idx++;
-        }
+        getImages().ifPresent(images -> {
+            int idx = 0;
+            for (ImageConfiguration image : images) {
+                Container container = getContainer(idx, containers);
+                mergeImagePullPolicy(image, container);
+                mergeImage(image, container);
+                mergeContainerName(image, container);
+                mergeEnvVariables(container);
+                idx++;
+            }
+        });
     }
 
     private Container getContainer(int idx, List<Container> containers) {
@@ -236,7 +238,7 @@ public class ImageEnricher extends BaseEnricher {
 
     private void mergeContainerName(ImageConfiguration imageConfiguration, Container container) {
         if (StringUtils.isBlank(container.getName())) {
-            String containerName = extractContainerName(getContext().getArtifact(), imageConfiguration);
+            String containerName = extractContainerName(getContext().getGav(), imageConfiguration);
             log.verbose("Setting container name %s",containerName);
             container.setName(containerName);
         }
@@ -270,25 +272,41 @@ public class ImageEnricher extends BaseEnricher {
     }
 
     private void mergeEnvVariables(Container container) {
-        List<EnvVar> env = container.getEnv();
-        if (env == null) {
-            env = new LinkedList<>();
-            container.setEnv(env);
-        }
+        getConfiguration().getResource().flatMap(ResourceConfig::getEnv).ifPresent(resourceEnv -> {
+            List<EnvVar> containerEnvVars = container.getEnv();
+            if (containerEnvVars == null) {
+                containerEnvVars = new LinkedList<>();
+                container.setEnv(containerEnvVars);
+            }
 
-        ResourceConfig resource = getContext().getResources();
-        Map<String, String> userEnv = resource != null ? resource.getEnv() : null;
-        if (userEnv != null) {
-            for(Map.Entry<String, String> entry : userEnv.entrySet()) {
-                EnvVar existingVariable = KubernetesResourceUtil.setEnvVarNoOverride(env, entry.getKey(), entry.getValue());
-                if (existingVariable != null) {
-                    String actualValue = existingVariable.getValue();
-                    if (actualValue == null) {
-                        actualValue = "retrieved using the downward API";
-                    }
-                    log.warn("Environment variable %s will not be overridden: trying to set the value %s, but its actual value will be %s", entry.getKey(), entry.getValue(), actualValue);
+            for (Map.Entry<String, String> resourceEnvEntry : resourceEnv.entrySet()) {
+                EnvVar newEnvVar =
+                    new EnvVarBuilder()
+                        .withName(resourceEnvEntry.getKey())
+                        .withValue(resourceEnvEntry.getValue())
+                        .build();
+                if (!hasEnvWithName(containerEnvVars, newEnvVar.getName())) {
+                    containerEnvVars.add(newEnvVar);
+                } else {
+                    log.warn(
+                        "Environment variable %s will not be overridden: trying to set the value %s, but its actual value is %s",
+                        newEnvVar.getName(), newEnvVar.getValue(), getEnvValue(containerEnvVars, newEnvVar.getName()));
                 }
             }
-        }
+        });
     }
+
+    private String getEnvValue(List<EnvVar> envVars, String name) {
+        for (EnvVar var : envVars) {
+            if (var.getName().equals(name)) {
+                return var.getValue();
+            }
+        }
+        return "(not found)";
+    }
+
+    private boolean hasEnvWithName(List<EnvVar> envVars, String name) {
+        return envVars.stream().anyMatch(e -> e.getName().equals(name));
+    }
+
 }

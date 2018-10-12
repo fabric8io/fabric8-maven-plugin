@@ -15,7 +15,7 @@
  */
 package io.fabric8.maven.core.util.kubernetes;
 
-import io.fabric8.maven.core.model.Artifact;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -86,7 +86,6 @@ import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.api.model.Template;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
 import org.slf4j.LoggerFactory;
 
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
@@ -325,9 +324,9 @@ public class KubernetesResourceUtil {
         return suffix != null ? name +  "-" + suffix : name;
     }
 
-    public static String extractContainerName(Artifact artifact, ImageConfiguration imageConfig) {
+    public static String extractContainerName(GroupArtifactVersion groupArtifactVersion, ImageConfiguration imageConfig) {
         String alias = imageConfig.getAlias();
-        return alias != null ? alias : extractImageUser(imageConfig.getName(), artifact.getGroupId()) + "-" + artifact.getArtifactId();
+        return alias != null ? alias : extractImageUser(imageConfig.getName(), groupArtifactVersion.getGroupId()) + "-" + groupArtifactVersion.getArtifactId();
     }
 
     private static String extractImageUser(String image, String groupId) {
@@ -384,32 +383,6 @@ public class KubernetesResourceUtil {
         return true;
     }
 
-    /**
-     * Try to set an environment variable in the list or return the old value
-     * if present and different from the current one.
-     *
-     * Environment variables will not be overridden.
-     *
-     * @param envVarList the list of environment variables
-     * @param name the environment variable
-     * @param value the value to set
-     * @return the old value, if present, or null
-     */
-    public static EnvVar setEnvVarNoOverride(List<EnvVar> envVarList, String name, String value) {
-        for (EnvVar envVar : envVarList) {
-            String envVarName = envVar.getName();
-            if (Objects.equals(name, envVarName)) {
-                String oldValue = envVar.getValue();
-                if (Objects.equals(value, oldValue)) {
-                    return null; // identical values
-                }
-                return envVar;
-            }
-        }
-        EnvVar env = new EnvVarBuilder().withName(name).withValue(value).build();
-        envVarList.add(env);
-        return null;
-    }
 
     public static boolean setEnvVar(List<EnvVar> envVarList, String name, String value) {
         for (EnvVar envVar : envVarList) {

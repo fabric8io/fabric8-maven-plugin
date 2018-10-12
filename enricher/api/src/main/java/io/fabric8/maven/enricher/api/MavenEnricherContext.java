@@ -17,27 +17,26 @@ package io.fabric8.maven.enricher.api;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+import java.util.Optional;
 import java.util.Set;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.model.Configuration;
+import io.fabric8.maven.core.model.Dependency;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.util.MavenConfigurationExtractor;
-import io.fabric8.maven.enricher.api.util.ProjectClassLoader;
+import io.fabric8.maven.enricher.api.util.ProjectClassLoaders;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.model.DistributionManagement;
 import org.apache.maven.model.Plugin;
-import org.apache.maven.model.Site;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
@@ -51,58 +50,27 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
  */
 public class MavenEnricherContext implements EnricherContext {
 
+    // overall configuration for the build
+    private Configuration configuration;
+
     private MavenProject project;
     private Logger log;
 
-    private List<ImageConfiguration> images;
-    private String namespace;
-
-    private ProcessorConfig config = ProcessorConfig.EMPTY;
-
-    private ResourceConfig resources;
-
-    private boolean useProjectClasspath;
     private OpenShiftDependencyResources openshiftDependencyResources;
     private MavenSession session;
 
     private MavenEnricherContext() {}
 
-    public MavenProject getProject() {
-        return project;
+    @Override
+    public Configuration getConfiguration() {
+        return configuration;
     }
 
     @Override
-    public List<ImageConfiguration> getImages() {
-        return images;
-    }
-
     public Logger getLog() {
         return log;
     }
 
-    @Override
-    public ProcessorConfig getConfig() {
-        return config;
-    }
-
-    @Override
-    public ResourceConfig getResources() {
-        return resources;
-    }
-
-    @Override
-    public String getNamespace() {
-        return namespace;
-    }
-
-    @Override
-    public boolean isUseProjectClasspath() {
-        return useProjectClasspath;
-    }
-
-    public Settings getSettings() {
-        return session != null ? session.getSettings() : null;
-    }
 
     @Override
     public OpenShiftDependencyResources getOpenshiftDependencyResources() {
@@ -110,48 +78,21 @@ public class MavenEnricherContext implements EnricherContext {
     }
 
     @Override
-    public Properties getProperties() {
-        final MavenProject currentProject = getProject();
-        if (currentProject == null) {
-            return new Properties();
-        }
-        return currentProject.getProperties();
+    public GroupArtifactVersion getGav() {
+
+        return new GroupArtifactVersion(project.getGroupId(),
+                                        project.getArtifactId(),
+                                        project.getVersion());
     }
 
-    @Override
-    public Map<String, Object> getConfiguration(String id) {
-        final Plugin plugin = getProject().getPlugin(id);
-
-        if (plugin == null) {
-            return new HashMap<>();
-        }
-
-        return MavenConfigurationExtractor.extract((Xpp3Dom) plugin.getConfiguration());
-    }
 
     @Override
-    public io.fabric8.maven.core.model.Artifact getArtifact() {
-
-        return new io.fabric8.maven.core.model.Artifact(getProject().getGroupId(),getProject().getArtifactId(), getProject().getVersion());
-    }
-
-    @Override
-    public String getRootArtifactId() {
-        return MavenUtil.getRootProject(getProject()).getArtifactId();
-    }
-
-    @Override
-    public File getRootDir() {
-        return MavenUtil.getRootProject(getProject()).getBasedir();
-    }
-
-    @Override
-    public File getCurrentDir() {
+    public File getProjectDirectory() {
         return getProject().getBasedir();
     }
 
     @Override
-    public String getBuildOutputDirectory() {
+    public String getOutputDirectory() {
         return getProject().getBuild().getOutputDirectory();
     }
 
@@ -170,46 +111,6 @@ public class MavenEnricherContext implements EnricherContext {
         return new DockerRegistryAuthentication(server.getUsername(), server.getPassword(), mail);
     }
 
-    private Server getServer(final Settings settings, final String serverId) {
-        if (settings == null || StringUtils.isBlank(serverId)) {
-            return null;
-        }
-        return settings.getServer(serverId);
-    }
-
-    @Override
-    public boolean isClassInCompileClasspath(boolean all, String... clazz) {
-        if (all) {
-            return  MavenUtil.hasAllClasses(getProject(), clazz);
-        } else {
-            return MavenUtil.hasClass(getProject(), clazz);
-        }
-    }
-
-    @Override
-    public String getDocumentationUrl() {
-        DistributionManagement distributionManagement = findProjectDistributionManagement();
-        if (distributionManagement != null) {
-            Site site = distributionManagement.getSite();
-            if (site != null) {
-                return site.getUrl();
-            }
-        }
-        return null;
-    }
-
-    private DistributionManagement findProjectDistributionManagement() {
-        MavenProject currentProject = getProject();
-        while (currentProject != null) {
-            DistributionManagement distributionManagement = currentProject.getDistributionManagement();
-            if (distributionManagement != null) {
-                return distributionManagement;
-            }
-            currentProject = currentProject.getParent();
-        }
-        return null;
-    }
-
     @Override
     public List<Dependency> getDependencies(boolean transitive) {
         final Set<Artifact> artifacts = transitive ?
@@ -218,56 +119,61 @@ public class MavenEnricherContext implements EnricherContext {
         final List<Dependency> dependencies = new ArrayList<>();
 
         for (Artifact artifact : artifacts) {
-            dependencies.add(new Dependency(artifact.getType(), artifact.getScope(), artifact.getFile()));
+            dependencies.add(
+                new Dependency(new GroupArtifactVersion(artifact.getGroupId(),
+                                                        artifact.getArtifactId(),
+                                                        artifact.getVersion()),
+                               artifact.getType(),
+                               artifact.getScope(),
+                               artifact.getFile()));
         }
 
         return dependencies;
     }
 
     @Override
-    public boolean hasDependency(String groupId, String artifactId) {
-        return MavenUtil.hasDependency(getProject(), groupId, artifactId);
-    }
-
-    @Override
-    public boolean hasPlugin(String plugin) {
-        return MavenUtil.hasPlugin(getProject(), plugin);
-    }
-
-    @Override
-    public boolean hasDependencyOnAnyArtifactOfGroup(String groupId) {
-        return MavenUtil.hasDependencyOnAnyArtifactOfGroup(getProject(), groupId);
-    }
-
-    @Override
-    public boolean hasPluginOfAnyGroupId(String groupId) {
-        return MavenUtil.hasPluginOfAnyGroupId(getProject(), groupId);
-    }
-
-    @Override
-    public String getDependencyVersion(String groupId, String artifactId) {
-        return MavenUtil.getDependencyVersion(getProject(), groupId, artifactId);
-    }
-
-    @Override
-    public ProjectClassLoader getProjectClassLoader() {
-        return new ProjectClassLoader(MavenUtil.getCompileClassLoader(getProject()), MavenUtil.getTestClassLoader(getProject()));
-    }
-
-    @Override
-    public List<String> getCompileClasspathElements() {
-        try {
-            return getProject().getCompileClasspathElements();
-        } catch (DependencyResolutionRequiredException e) {
-            log.warn("Instructed to use project classpath, but cannot. Continuing build if we can: ", e);
+    public boolean hasPlugin(String groupId, String artifactId) {
+        if (groupId != null) {
+            return MavenUtil.hasPlugin(getProject(), groupId, artifactId);
+        } else {
+            return MavenUtil.hasPluginOfAnyGroupId(getProject(), artifactId);
         }
-        return new ArrayList<>();
     }
+
+    @Override
+    public ProjectClassLoaders getProjectClassLoaders() {
+        return new ProjectClassLoaders(MavenUtil.getCompileClassLoader(getProject()),
+                                       MavenUtil.getTestClassLoader(getProject()));
+    }
+
+
+    // ========================================================================
+    // Maven specific methods, only available after casting
+    public MavenProject getProject() {
+        return project;
+    }
+
+    public Settings getSettings() {
+        return session != null ? session.getSettings() : null;
+    }
+
+
+    private Server getServer(final Settings settings, final String serverId) {
+        if (settings == null || StringUtils.isBlank(serverId)) {
+            return null;
+        }
+        return settings.getServer(serverId);
+    }
+
 
     // =======================================================================================================
     public static class Builder {
 
         private MavenEnricherContext ctx = new MavenEnricherContext();
+
+        private ResourceConfig resources;
+        private List<ImageConfiguration> images;
+        private ProcessorConfig processorConfig;
 
         public Builder session(MavenSession session) {
             ctx.session = session;
@@ -285,27 +191,17 @@ public class MavenEnricherContext implements EnricherContext {
         }
 
         public Builder config(ProcessorConfig config) {
-            ctx.config = config;
+            this.processorConfig = config;
             return this;
         }
 
         public Builder resources(ResourceConfig resources) {
-            ctx.resources = resources;
+            this.resources = resources;
             return this;
         }
 
         public Builder images(List<ImageConfiguration> images) {
-            ctx.images = images;
-            return this;
-        }
-
-        public Builder namespace(String namespace) {
-            ctx.namespace = namespace;
-            return this;
-        }
-
-        public Builder useProjectClasspath(boolean useProjectClasspath) {
-            ctx.useProjectClasspath = useProjectClasspath;
+            this.images = images;
             return this;
         }
 
@@ -315,6 +211,24 @@ public class MavenEnricherContext implements EnricherContext {
         }
 
         public MavenEnricherContext build() {
+            ctx.configuration =
+                new Configuration.Builder()
+                    .properties(ctx.project.getProperties())
+                    .images(images)
+                    .resource(resources)
+                    .processorConfig(processorConfig)
+                    .pluginConfigLookup(
+                                  (system, id) -> {
+                                      if (!"maven".equals(system)) {
+                                          return Optional.empty();
+                                      }
+                                      final Plugin plugin = ctx.project.getPlugin(id);
+                                      if (plugin == null) {
+                                          return Optional.empty();
+                                      }
+                                      return Optional.of(MavenConfigurationExtractor.extract((Xpp3Dom) plugin.getConfiguration()));
+                                  })
+                    .build();
             return ctx;
         }
 

@@ -15,7 +15,7 @@
  */
 package io.fabric8.maven.core.handler;
 
-import io.fabric8.maven.core.model.Artifact;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -85,7 +85,7 @@ public class ReplicationControllerHandlerTest {
     public void replicationControllerHandlerTest() {
 
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -122,7 +122,7 @@ public class ReplicationControllerHandlerTest {
     public void replicationControllerHandlerWithInvalidNameTest() {
         //invalid controller name
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -144,7 +144,7 @@ public class ReplicationControllerHandlerTest {
     public void replicationControllerHandlerWithoutControllerTest() {
         //without controller name
         ContainerHandler containerHandler = new
-                ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
+                ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 

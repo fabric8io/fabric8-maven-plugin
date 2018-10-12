@@ -15,89 +15,72 @@
  */
 package io.fabric8.maven.enricher.api;
 
-import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.maven.core.model.Artifact;
-import io.fabric8.maven.core.util.OpenShiftDependencyResources;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.enricher.api.util.ProjectClassLoader;
 import java.io.File;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.Optional;
+
+import io.fabric8.maven.core.model.Configuration;
+import io.fabric8.maven.core.model.Dependency;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
+import io.fabric8.maven.core.util.OpenShiftDependencyResources;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.enricher.api.util.ProjectClassLoaders;
 
 public interface EnricherContext {
 
-    String getNamespace();
-
-    ResourceConfig getResources();
-
-    OpenShiftDependencyResources getOpenshiftDependencyResources();
+    /**
+     * Get the current artifact with its parameters
+     *
+     * @return the artifact
+     */
+    GroupArtifactVersion getGav();
 
     /**
-     * Get properties of current project. Usually in case of Maven, they are the project properties.
-     * @return Properties of project.
+     * Get Logger.
+     * @return Logger.
      */
-    Properties getProperties();
+    Logger getLog();
 
     /**
-     * Gets configuration values. Since there can be inner values, it returns a Map of Objects where an Object can be a simple type, List or another Map.
-     * @param id where to pick configuration. In case of Maven, plugin id.
-     * @return Configuration value.
+     * The configuration specific to the enricher.
+     *
+     * @return configuration to use
      */
-    Map<String, Object> getConfiguration(String id);
+    Configuration getConfiguration();
 
     /**
-     * Gets artifact.
-     * @return Artifact.
+     * Base directory of the project. E.g. for Maven that's the directory
+     * where the pom.xml is placed in
+     * @return the projects based directory
      */
-    Artifact getArtifact();
+    File getProjectDirectory();
 
     /**
-     * Gets artifact identifier of root project.
-     * @return Root artifact id.
+     * Output directory where created files should be placed to.
+     * For Maven that's e.g. the "target" directory.
+     * @return the output directory.
      */
-    String getRootArtifactId();
+    String getOutputDirectory();
 
     /**
-     * Returns the rot dir of project. Notice that in a submodule project, current dir is not the roor dir.
-     * @return Root dir.
+     * Get various class loaders used in the projects
+     *
+     * @return compile and test class loader
      */
-    File getRootDir();
+    ProjectClassLoaders getProjectClassLoaders();
 
     /**
-     * Gets current directory.
-     * @return Current directory.
+     * Check if a given plugin is present
+     *
+     * @param groupId group id of plugin to check. If null any group will be considered.
+     * @param artifactId of plugin to check
+     * @return true if a plugin exists, false otherwise.
      */
-    File getCurrentDir();
+    boolean hasPlugin(String groupId, String artifactId);
 
-    /**
-     * Gets output directory.
-     * @return Output Directory.
-     */
-    String getBuildOutputDirectory();
 
-    /**
-     * Gets a map with fields username, password and email set.
-     * @param serverId Identifier to get the info.
-     * @return Docker Registry authentication parameters.
-     */
-    DockerRegistryAuthentication getDockerRegistryAuth(String serverId);
-
-    /**
-     * Returns if class is in compile classpath.
-     * @param all True if all of them must be there.
-     * @param clazz fully qualified class name.
-     * @return True if present, false otherwise.
-     */
-    boolean isClassInCompileClasspath(boolean all, String... clazz);
-
-    /**
-     * Gets documentation url or null.
-     * @return Gets documentation url or null if not specified.
-     */
-    String getDocumentationUrl();
+    // ===========================================================================================
+    // Dependency management
 
     /**
      * Gets dependencies defined in build tool
@@ -109,31 +92,12 @@ public interface EnricherContext {
     /**
      * Checks if given dependency is defined.
      * @param groupId of dependency.
-     * @param artifactId of dependency.
-     * @return True if present, flse otherwise.
-     */
-    boolean hasDependency(String groupId, String artifactId);
-
-    /**
-     * Returns if given plugin is present
-     * @param plugin to check.
+     * @param artifactId of dependency. If null, check if there is any dependency with the given group
      * @return True if present, false otherwise.
      */
-    boolean hasPlugin(String plugin);
-
-    /**
-     * Checks if there is a dependency of given group id.
-     * @param groupId to search.
-     * @return True if there is a dependency, false otherwise.
-     */
-    boolean hasDependencyOnAnyArtifactOfGroup(String groupId);
-
-    /**
-     * Checks if there is a plugin of given group id.
-     * @param groupId to search.
-     * @return True if there is a plugin, false otherwise.
-     */
-    boolean hasPluginOfAnyGroupId(String groupId);
+    default boolean hasDependency(String groupId, String artifactId) {
+        return getDependencyVersion(groupId, artifactId).isPresent();
+    }
 
     /**
      * Gets version of given dependency.
@@ -141,35 +105,32 @@ public interface EnricherContext {
      * @param artifactId of the dependency.
      * @return Version number.
      */
-    String getDependencyVersion(String groupId, String artifactId);
+    default Optional<String> getDependencyVersion(String groupId, String artifactId) {
+        List<Dependency> dependencies = getDependencies(true);
+        for (Dependency dep : dependencies) {
+            String scope = dep.getScope();
+            if ("test".equals(scope)) {
+                continue;
+            }
+            if (artifactId != null && !artifactId.equals(dep.getGav().getArtifactId())) {
+                continue;
+            }
+            if (dep.getGav().getGroupId().equals(groupId)) {
+                return Optional.of(dep.getGav().getVersion());
+            }
+        }
+        return Optional.empty();
+    }
+
+    // ===========================================================================================
+    // To be removed:
+
+    OpenShiftDependencyResources getOpenshiftDependencyResources();
 
     /**
-     * Gets Project Classloader.
-     * @return Classloader.
+     * Gets a map with fields username, password and email set.
+     * @param serverId Identifier to get the info.
+     * @return Docker Registry authentication parameters.
      */
-    ProjectClassLoader getProjectClassLoader();
-
-    /**
-     *
-     * Gets processor Config
-     * @return processor config
-     */
-    ProcessorConfig getConfig();
-
-    /**
-     * Get Logger.
-     * @return Logger.
-     */
-    Logger getLog();
-
-    /**
-     * Get List of images
-     * @return
-     */
-    List<ImageConfiguration> getImages();
-
-    boolean isUseProjectClasspath();
-
-    List<String> getCompileClasspathElements();
-
+    DockerRegistryAuthentication getDockerRegistryAuth(String serverId);
 }

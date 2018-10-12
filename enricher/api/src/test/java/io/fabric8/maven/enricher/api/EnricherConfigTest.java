@@ -21,6 +21,7 @@ import java.util.Properties;
 import java.util.TreeMap;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.Configs;
 import org.junit.Test;
 
@@ -44,7 +45,9 @@ public class EnricherConfigTest {
         TreeMap map = new TreeMap();
         map.put("type","LoadBalancer");
         configMap.put("default.service", map);
-        EnricherConfig config = new EnricherConfig(new Properties(), "default.service", new ProcessorConfig(null, null, configMap));
+        EnricherConfig config = new EnricherConfig(
+            "default.service",
+            new Configuration.Builder().processorConfig(new ProcessorConfig(null, null, configMap)).build());
         assertEquals("LoadBalancer",config.get(Config.type));
     }
 }

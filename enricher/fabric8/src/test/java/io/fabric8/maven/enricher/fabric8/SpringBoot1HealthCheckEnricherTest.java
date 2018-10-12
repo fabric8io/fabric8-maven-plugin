@@ -19,7 +19,7 @@ import mockit.integration.junit4.JMockit;
 import org.junit.runner.RunWith;
 
 @RunWith(JMockit.class)
-public class SpringBoot1HealthCheckEnricherTest extends AbstractSpringBootHealthCheckEnricherSupport {
+public class SpringBoot1HealthCheckEnricherTest extends AbstractSpringBootHealthCheckEnricherTestSupport {
 
     @Override
     protected String getSpringBootVersion() {

@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.core.util;
 
+import java.util.Optional;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -51,7 +52,7 @@ public class SpringBootConfigurationHelper {
 
     private static final int DEFAULT_SERVER_PORT = 8080;
 
-    public SpringBootConfigurationHelper(String springBootVersion) {
+    public SpringBootConfigurationHelper(Optional<String> springBootVersion) {
         this.propertyOffset = propertyOffset(springBootVersion);
     }
 
@@ -106,23 +107,23 @@ public class SpringBootConfigurationHelper {
         return keys[propertyOffset];
     }
 
-    private int propertyOffset(String springBootVersion) {
-        Integer majorVersion = majorVersion(springBootVersion);
-        int idx = majorVersion != null ? majorVersion - 1 : 0;
+    private int propertyOffset(Optional<String> springBootVersion) {
+        Optional<Integer> majorVersion = majorVersion(springBootVersion);
+        int idx = majorVersion.map(v -> v - 1).orElse(0);
         idx = Math.min(idx, 1);
         idx = Math.max(idx, 0);
         return idx;
     }
 
-    private Integer majorVersion(String version) {
-        if (version != null) {
+    private Optional<Integer> majorVersion(Optional<String> version) {
+        if (version.isPresent()) {
             try {
-                return Integer.parseInt(version.substring(0, version.indexOf(".")));
+                return Optional.of(Integer.parseInt(version.get().substring(0, version.get().indexOf("."))));
             } catch (Exception e) {
                 LOG.warn("Cannot spring boot major version from {}", version);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
 }

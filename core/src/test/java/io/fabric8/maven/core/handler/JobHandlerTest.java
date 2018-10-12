@@ -18,7 +18,7 @@ package io.fabric8.maven.core.handler;
 import io.fabric8.kubernetes.api.model.batch.Job;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.VolumeConfig;
-import io.fabric8.maven.core.model.Artifact;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import java.util.ArrayList;
@@ -84,7 +84,7 @@ public class JobHandlerTest {
     public void jobHandlerTest() {
 
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -119,7 +119,7 @@ public class JobHandlerTest {
     public void daemonTemplateHandlerWithInvalidNameTest() {
         //invalid controller name
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -140,7 +140,7 @@ public class JobHandlerTest {
     public void daemonTemplateHandlerWithoutControllerTest() {
         //without controller name
         ContainerHandler containerHandler = new
-                ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
+                ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 

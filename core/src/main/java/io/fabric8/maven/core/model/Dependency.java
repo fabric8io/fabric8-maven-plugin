@@ -13,20 +13,33 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.enricher.api;
+package io.fabric8.maven.core.model;
 
 import java.io.File;
 
 public class Dependency {
 
+    // GAV coordinates of dependency
+    private GroupArtifactVersion gav;
+
+    // Dependency type ("jar", "war", ...)
     private String type;
+
+    // Scope of the dependency ("compile", "runtime", ...)
     private String scope;
+
+    // Location where the dependent jar is located
     private File location;
 
-    public Dependency(String type, String scope, File location) {
+    public Dependency(GroupArtifactVersion gav, String type, String scope, File location) {
+        this.gav = gav;
         this.type = type;
         this.scope = scope;
         this.location = location;
+    }
+
+    public GroupArtifactVersion getGav() {
+        return gav;
     }
 
     public String getType() {

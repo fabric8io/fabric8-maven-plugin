@@ -18,7 +18,7 @@ package io.fabric8.maven.core.handler;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.VolumeConfig;
-import io.fabric8.maven.core.model.Artifact;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import java.util.ArrayList;
@@ -84,7 +84,7 @@ public class ReplicaSetHandlerTest {
     public void replicaSetHandlerTest() {
 
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -121,7 +121,7 @@ public class ReplicaSetHandlerTest {
     public void replicaSetHandlerWithInvalidNameTest() {
         //invalid controller name
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -143,7 +143,7 @@ public class ReplicaSetHandlerTest {
     public void replicaSetHandlerWithoutControllerTest() {
         //without controller name
         ContainerHandler containerHandler = new
-                ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
+                ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 

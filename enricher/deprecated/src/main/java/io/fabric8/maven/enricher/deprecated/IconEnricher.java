@@ -30,6 +30,8 @@ import java.io.InputStream;
 import java.net.URLConnection;
 import java.util.Collections;
 import java.util.Map;
+
+import io.fabric8.maven.enricher.api.util.ProjectClassLoaders;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -65,7 +67,7 @@ public class IconEnricher extends BaseEnricher {
     public IconEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "f8-deprecated-icon");
 
-        String baseDir = getContext().getCurrentDir().getAbsolutePath();
+        String baseDir = getContext().getProjectDirectory().getAbsolutePath();
         templateTempDir = new File(getConfig(Config.templateTempDir, baseDir + "/target/fabric8/template-workdir"));
         appConfigDir = new File(getConfig(Config.sourceDir, baseDir + "/src/main/fabric8"));
     }
@@ -142,30 +144,31 @@ public class IconEnricher extends BaseEnricher {
      * @return the icon ref if we can detect one or return null
      */
     private String getDefaultIconRef() {
-        if (getContext().isClassInCompileClasspath(false, "io.fabric8.funktion.runtime.Main") ||
-            getContext().hasDependencyOnAnyArtifactOfGroup( "io.fabric8.funktion")) {
+        ProjectClassLoaders cls = getContext().getProjectClassLoaders();
+        if (cls.isClassInCompileClasspath(false, "io.fabric8.funktion.runtime.Main") ||
+            getContext().hasDependency( "io.fabric8.funktion", null)) {
             return "funktion";
         }
-        if (getContext().isClassInCompileClasspath(false, "org.apache.camel.CamelContext")) {
+        if (cls.isClassInCompileClasspath(false, "org.apache.camel.CamelContext")) {
             return "camel";
         }
-        if (getContext().hasPluginOfAnyGroupId( SpringBootConfigurationHelper.SPRING_BOOT_MAVEN_PLUGIN_ARTIFACT_ID)  ||
-            getContext().isClassInCompileClasspath(false, "org.springframework.boot.SpringApplication")) {
+        if (getContext().hasPlugin(null, SpringBootConfigurationHelper.SPRING_BOOT_MAVEN_PLUGIN_ARTIFACT_ID)  ||
+            cls.isClassInCompileClasspath(false, "org.springframework.boot.SpringApplication")) {
             return "spring-boot";
         }
-        if (getContext().isClassInCompileClasspath(false, "org.springframework.core.Constants")) {
+        if (cls.isClassInCompileClasspath(false, "org.springframework.core.Constants")) {
             return "spring";
         }
-        if (getContext().isClassInCompileClasspath(false, "org.vertx.java.core.Handler", "io.vertx.core.Handler")) {
+        if (cls.isClassInCompileClasspath(false, "org.vertx.java.core.Handler", "io.vertx.core.Handler")) {
             return "vertx";
         }
 
-        if (getContext().hasPlugin("org.wildfly.swarm:wildfly-swarm-plugin") ||
-            getContext().hasDependencyOnAnyArtifactOfGroup( "org.wildfly.swarm")) {
+        if (getContext().hasPlugin("org.wildfly.swarm", "wildfly-swarm-plugin") ||
+            getContext().hasDependency( "org.wildfly.swarm", null)) {
             return "wildfly-swarm";
         }
-        if (getContext().hasPlugin( "io.thorntail:thorntail-maven-plugin") ||
-            getContext().hasDependencyOnAnyArtifactOfGroup( "io.thorntail")) {
+        if (getContext().hasPlugin( "io.thorntail", "thorntail-maven-plugin") ||
+            getContext().hasDependency( "io.thorntail", null)) {
             // use the WildFly Swarm icon until there's a dedicated Thorntail icon
             // Thorntail is a new name of WildFly Swarm
             return "wildfly-swarm";
@@ -222,7 +225,7 @@ public class IconEnricher extends BaseEnricher {
     private InputStream loadPluginResource(String iconRef) {
         InputStream answer = Thread.currentThread().getContextClassLoader().getResourceAsStream(iconRef);
         if (answer == null) {
-            answer = getContext().getProjectClassLoader().getTestClassLoader().getResourceAsStream(iconRef);
+            answer = getContext().getProjectClassLoaders().getTestClassLoader().getResourceAsStream(iconRef);
         }
         if (answer == null) {
             answer = this.getClass().getResourceAsStream(iconRef);
@@ -265,13 +268,17 @@ public class IconEnricher extends BaseEnricher {
         } else {
             File iconSourceFile = new File(appConfigDir, iconFile.getName());
             if (iconSourceFile.exists()) {
-                File rootProjectFolder = getRootProjectFolder();
+                // The next line was 'rootDir' and thats probably wrong now,
+                // but then after all the icon enricher is not used anymore anyway,
+                // so don't bother much with this.
+                // We should remove the deprecated package asap.
+                File rootProjectFolder = getContext().getProjectDirectory();
                 if (rootProjectFolder != null) {
-                    String relativePath = FileUtil.getRelativePath(rootProjectFolder, iconSourceFile).toString();
-                    String relativeParentPath =
-                        FileUtil.getRelativePath(rootProjectFolder, getContext().getCurrentDir()).toString();
                     String urlPrefix = getConfig(Config.urlPrefix);
                     if (StringUtils.isBlank(urlPrefix)) {
+                        String relativePath = FileUtil.getRelativePath(rootProjectFolder, iconSourceFile).toString();
+                        String relativeParentPath =
+                            FileUtil.getRelativePath(rootProjectFolder, getContext().getProjectDirectory()).toString();
                         if (getContext() instanceof MavenEnricherContext) {
                             MavenEnricherContext mavenEnricherContext = (MavenEnricherContext) getContext();
                             final org.apache.maven.model.Scm scm = mavenEnricherContext.getProject().getScm();
@@ -310,13 +317,6 @@ public class IconEnricher extends BaseEnricher {
             }
         }
         return null;
-    }
-
-    /**
-     * Returns the root project folder
-     */
-    protected File getRootProjectFolder() {
-        return getContext().getRootDir();
     }
 
 

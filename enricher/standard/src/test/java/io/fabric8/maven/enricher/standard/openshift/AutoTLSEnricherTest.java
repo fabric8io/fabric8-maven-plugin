@@ -20,7 +20,8 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplate;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.core.model.Artifact;
+import io.fabric8.maven.core.model.Configuration;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.enricher.api.Kind;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.util.Collections;
@@ -82,15 +83,15 @@ public class AutoTLSEnricherTest {
             // Setup mock behaviour
             new Expectations() {
                 {
-                    context.getProperties();
-                    result = projectProps;
+                    Configuration configuration =
+                        new Configuration.Builder().properties(projectProps).processorConfig(config).build();
+                    context.getConfiguration();
+                    result = configuration;
                     project.getArtifactId();
                     result = "projectA";
                     minTimes = 0;
-                    context.getConfig();
-                    result = config;
-                    context.getArtifact();
-                    result = new Artifact("", "projectA", "0");
+                    context.getGav();
+                    result = new GroupArtifactVersion("", "projectA", "0");
                 }
             };
 
@@ -163,13 +164,16 @@ public class AutoTLSEnricherTest {
             // Setup mock behaviour
             new Expectations() {
                 {
-                    context.getProperties();
-                    result = projectProps;
+                    Configuration configuration =
+                        new Configuration.Builder()
+                            .properties(projectProps)
+                            .processorConfig(config)
+                            .build();
+                    context.getConfiguration();
+                    result = configuration;
                     project.getArtifactId();
                     result = "projectA";
                     minTimes = 0;
-                    context.getConfig();
-                    result = config;
                 }
             };
 
