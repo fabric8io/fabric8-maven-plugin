@@ -20,7 +20,6 @@ import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.service.ArtifactResolverService;
 import io.fabric8.maven.docker.util.Logger;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -38,7 +37,7 @@ public class GeneratorContext {
     private boolean prePackagePhase;
     private ArtifactResolverService artifactResolver;
 
-    private GeneratorMode generatorMode = GeneratorMode.build;
+    private GeneratorMode generatorMode = GeneratorMode.BUILD;
 
     private GeneratorContext() {
     }

@@ -11,15 +11,15 @@ public enum GeneratorMode {
     /**
      * Regular build mode. Image will be created which are used in production
      */
-    build,
+    BUILD,
 
     /**
      * Special generation mode used for watching
      */
-    watch,
+    WATCH,
 
     /**
      * Generate image suitable for remote debugging
      */
-    debug
+    DEBUG
 }

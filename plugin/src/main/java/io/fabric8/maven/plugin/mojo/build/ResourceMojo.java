@@ -465,7 +465,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         }
     }
 
-    private void lateInit() throws MojoExecutionException {
+    private void lateInit() {
         platformMode = clusterAccess.resolvePlatformMode(mode, log);
         log.info("Running in [[B]]%s[[B]] mode", platformMode.getLabel());
 

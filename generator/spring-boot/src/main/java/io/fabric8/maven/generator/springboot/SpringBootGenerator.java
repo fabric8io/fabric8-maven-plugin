@@ -77,7 +77,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean isPrePackagePhase) throws MojoExecutionException {
-        if (getContext().getGeneratorMode() == GeneratorMode.watch) {
+        if (getContext().getGeneratorMode() == GeneratorMode.WATCH) {
             ensureSpringDevToolSecretToken();
             if (!isPrePackagePhase ) {
                 addDevToolsFilesToFatJar(configs);
@@ -89,7 +89,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
     @Override
     protected Map<String, String> getEnv(boolean prePackagePhase) throws MojoExecutionException {
         Map<String, String> res = super.getEnv(prePackagePhase);
-        if (getContext().getGeneratorMode() == GeneratorMode.watch) {
+        if (getContext().getGeneratorMode() == GeneratorMode.WATCH) {
             // adding dev tools token to env variables to prevent override during recompile
             String secret = SpringBootUtil.getSpringBootApplicationProperties(MavenUtil.getCompileClassLoader(getProject())).getProperty(SpringBootConfigurationHelper.DEV_TOOLS_REMOTE_SECRET);
             if (secret != null) {
