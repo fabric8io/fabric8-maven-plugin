@@ -80,9 +80,8 @@ public class FromSelectorTest {
             GeneratorContext ctx = new GeneratorContext.Builder()
                 .project(project)
                 .config(new ProcessorConfig())
-                .goalName("fabric8:testing")
                 .logger(logger)
-                .mode((PlatformMode) data[i])
+                .platformMode((PlatformMode) data[i])
                 .strategy((OpenShiftBuildStrategy) data[i + 1])
                 .build();
 

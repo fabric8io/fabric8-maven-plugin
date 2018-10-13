@@ -34,14 +34,11 @@ import org.apache.maven.project.MavenProject;
 public class WatcherContext {
 
     private MavenProject project;
-    private MavenSession session;
     private ProcessorConfig config;
-    private String goalName;
     private Logger logger;
     private Logger newPodLogger;
     private Logger oldPodLogger;
     private PlatformMode mode;
-    private OpenShiftBuildStrategy strategy;
     private boolean useProjectClasspath;
     private ServiceHub serviceHub;
     private WatchService.WatchContext watchContext;
@@ -57,16 +54,8 @@ public class WatcherContext {
         return project;
     }
 
-    public MavenSession getSession() {
-        return session;
-    }
-
     public ProcessorConfig getConfig() {
         return config;
-    }
-
-    public String getGoalName() {
-        return goalName;
     }
 
     public Logger getLogger() {
@@ -75,10 +64,6 @@ public class WatcherContext {
 
     public PlatformMode getMode() {
         return mode;
-    }
-
-    public OpenShiftBuildStrategy getStrategy() {
-        return strategy;
     }
 
     public boolean isUseProjectClasspath() {
@@ -128,18 +113,8 @@ public class WatcherContext {
             return this;
         }
 
-        public Builder session(MavenSession session) {
-            ctx.session = session;
-            return this;
-        }
-
         public Builder config(ProcessorConfig config) {
             ctx.config = config;
-            return this;
-        }
-
-        public Builder goalName(String goalName) {
-            ctx.goalName = goalName;
             return this;
         }
 
@@ -160,11 +135,6 @@ public class WatcherContext {
 
         public Builder mode(PlatformMode mode) {
             ctx.mode = mode;
-            return this;
-        }
-
-        public Builder strategy(OpenShiftBuildStrategy strategy) {
-            ctx.strategy = strategy;
             return this;
         }
 

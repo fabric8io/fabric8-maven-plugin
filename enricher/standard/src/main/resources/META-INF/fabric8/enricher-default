@@ -46,9 +46,6 @@ io.fabric8.maven.enricher.standard.VolumePermissionEnricher
 # Add an enricher for enabling debug information
 io.fabric8.maven.enricher.standard.DebugEnricher
 
-# Add an enricher for enabling watch functionality
-io.fabric8.maven.enricher.standard.WatchEnricher
-
 # Add an enricher for merging duplicates
 io.fabric8.maven.enricher.standard.MergeEnricher
 

@@ -465,11 +465,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         }
     }
 
-    private void lateInit() throws MojoExecutionException {
-        if (goalFinder.runningWithGoal(project, session, "fabric8:watch")) {
-            Properties properties = project.getProperties();
-            properties.setProperty("fabric8.watch", "true");
-        }
+    private void lateInit() {
         platformMode = clusterAccess.resolvePlatformMode(mode, log);
         log.info("Running in [[B]]%s[[B]] mode", platformMode.getLabel());
 
@@ -604,7 +600,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         MavenEnricherContext.Builder ctxBuilder = new MavenEnricherContext.Builder()
             .project(project)
             .session(session)
-            .goalFinder(goalFinder)
             .config(extractEnricherConfig())
             .resources(resources)
             .images(resolvedImages)
@@ -942,11 +937,8 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                         GeneratorContext ctx = new GeneratorContext.Builder()
                             .config(extractGeneratorConfig())
                             .project(project)
-                            .session(session)
-                            .goalFinder(goalFinder)
-                            .goalName("fabric8:resource")
                             .logger(log)
-                            .mode(mode)
+                            .platformMode(mode)
                             .strategy(buildStrategy)
                             .useProjectClasspath(useProjectClasspath)
                             .build();
@@ -972,23 +964,15 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     // get a reference date
     private Date getBuildReferenceDate() throws MojoExecutionException {
-        if (goalFinder.runningWithGoal(project, session, "fabric8:build") ||
-                goalFinder.runningWithGoal(project, session, "fabric8:deploy") ||
-                goalFinder.runningWithGoal(project, session, "fabric8:run")) {
-            // we are running together with fabric8:build, but since fabric8:build is running later we
-            // are creating the build date here which is reused by fabric8:build
+        // Pick up an existing build date created by fabric8:build previously
+        File tsFile = new File(project.getBuild().getDirectory(), AbstractDockerMojo.DOCKER_BUILD_TIMESTAMP);
+        if (!tsFile.exists()) {
             return new Date();
-        } else {
-            // Pick up an existing build date created by fabric8:build previously
-            File tsFile = new File(project.getBuild().getDirectory(),AbstractDockerMojo.DOCKER_BUILD_TIMESTAMP);
-            if (!tsFile.exists()) {
-                return new Date();
-            }
-            try {
-                return EnvUtil.loadTimestamp(tsFile);
-            } catch (MojoExecutionException e) {
-                throw new MojoExecutionException("Cannot read timestamp from " + tsFile,e);
-            }
+        }
+        try {
+            return EnvUtil.loadTimestamp(tsFile);
+        } catch (MojoExecutionException e) {
+            throw new MojoExecutionException("Cannot read timestamp from " + tsFile,e);
         }
     }
 
