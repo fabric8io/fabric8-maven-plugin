@@ -77,7 +77,7 @@ public class JavaRunGeneratorTest {
             ctx.getProject(); result = project;
             project.getPlugin("io.fabric8:fabric8-maven-plugin"); result = plugin;
             plugin.getVersion(); result = version;
-            ctx.getMode(); result = mode;
+            ctx.getPlatformMode();result = mode;
             ctx.getStrategy(); result = strategy;
         }};
     }

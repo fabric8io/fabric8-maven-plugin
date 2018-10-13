@@ -152,14 +152,7 @@ public class DependencyEnricher extends BaseEnricher {
         processArtifactSetResources(this.openshiftDependencyArtifacts, new Function<List<HasMetadata>, Void>() {
             @Override
             public Void apply(List<HasMetadata> items) {
-                // lets store the openshift resources so we can later on use them if need be...
-                boolean isAppCatalog = false;
-                try {
-                    isAppCatalog = getContext().runningWithGoal("fabric8:app-catalog");
-                } catch (IllegalStateException e) {
-                    log.warn("Caught: %s", e);
-                }
-                getContext().getOpenshiftDependencyResources().addOpenShiftResources(items, isAppCatalog);
+                getContext().getOpenshiftDependencyResources().addOpenShiftResources(items);
                 return null;
             }
         });

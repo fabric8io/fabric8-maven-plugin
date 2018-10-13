@@ -56,7 +56,6 @@
     - f8-prometheus
     # Dependencies shouldn't be enriched anymore, therefor it's last in the list
     - fmp-dependency
-    - fmp-watch
     - fmp-revision-history
     - fmp-docker-registry-secret
     - fmp-triggers-annotation
