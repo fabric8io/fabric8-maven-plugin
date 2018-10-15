@@ -80,8 +80,7 @@ public class JobHandlerTest {
     @Test
     public void jobHandlerTest() {
 
-        ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
+        ContainerHandler containerHandler = getContainerHandler();
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -112,11 +111,14 @@ public class JobHandlerTest {
 
     }
 
+    private ContainerHandler getContainerHandler() {
+        return new ContainerHandler(project.getProperties(), new GroupArtifactVersion("g","a","v"), probeHandler);
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void daemonTemplateHandlerWithInvalidNameTest() {
         //invalid controller name
-        ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
+        ContainerHandler containerHandler = getContainerHandler();
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -136,8 +138,7 @@ public class JobHandlerTest {
     @Test(expected = IllegalArgumentException.class)
     public void daemonTemplateHandlerWithoutControllerTest() {
         //without controller name
-        ContainerHandler containerHandler = new
-                ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
+        ContainerHandler containerHandler = getContainerHandler();
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 

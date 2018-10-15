@@ -153,8 +153,7 @@ public class ContainerHandlerTest {
             }
 
             testProject.getModel().setProperties(testProps);
-            ContainerHandler handler = new ContainerHandler(testProject.getProperties(), new GroupArtifactVersion(),
-                                                            probeHandler);
+            ContainerHandler handler = createContainerHandler(testProject);
 
             //container name with alias
             ImageConfiguration imageConfiguration =
@@ -171,6 +170,13 @@ public class ContainerHandlerTest {
             assertNotNull(containers);
             assertEquals(testData[i+4], containers.get(0).getImage());
         }
+    }
+
+    private ContainerHandler createContainerHandler(MavenProject testProject) {
+        return new ContainerHandler(
+            testProject.getProperties(),
+            new GroupArtifactVersion("g","a","v"),
+            probeHandler);
     }
 
 
@@ -247,8 +253,8 @@ public class ContainerHandlerTest {
         project2.setVersion("3.5-NEW");
 
         //creating container Handler for all
-        ContainerHandler handler1 = new ContainerHandler(project1.getProperties(), new GroupArtifactVersion("3.5-SNAPSHOT"), probeHandler);
-        ContainerHandler handler2 = new ContainerHandler(project2.getProperties(), new GroupArtifactVersion("3.5-NEW"), probeHandler);
+        ContainerHandler handler1 = new ContainerHandler(project1.getProperties(), new GroupArtifactVersion("g","a","3.5-SNAPSHOT"), probeHandler);
+        ContainerHandler handler2 = new ContainerHandler(project2.getProperties(), new GroupArtifactVersion("g","a", "3.5-NEW"), probeHandler);
 
         images.clear();
         images.add(imageConfiguration1);
@@ -269,11 +275,11 @@ public class ContainerHandlerTest {
         project2.setVersion("3.5-NEW");
 
         //creating container Handler for two
-        ContainerHandler handler1 = new ContainerHandler(project1.getProperties(), new GroupArtifactVersion("3.5-SNAPSHOT"), probeHandler);
-        ContainerHandler handler2 = new ContainerHandler(project2.getProperties(), new GroupArtifactVersion("3.5-NEW"), probeHandler);
+        ContainerHandler handler1 = new ContainerHandler(project1.getProperties(), new GroupArtifactVersion("g", "a", "3.5-SNAPSHOT"), probeHandler);
+        ContainerHandler handler2 = new ContainerHandler(project2.getProperties(), new GroupArtifactVersion("g" , "a", "3.5-NEW"), probeHandler);
 
         //project without version
-        ContainerHandler handler3 = new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
+        ContainerHandler handler3 = createContainerHandler(project);
 
         images.clear();
         images.add(imageConfiguration1);
@@ -296,7 +302,7 @@ public class ContainerHandlerTest {
     @Test
     public void getImageNameTest(){
 
-        ContainerHandler handler = new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         //Image Configuration with name and without registry
         ImageConfiguration imageConfiguration2 = new ImageConfiguration.Builder().
@@ -326,7 +332,7 @@ public class ContainerHandlerTest {
 
     @Test
     public void getRegistryTest() {
-        ContainerHandler handler = new ContainerHandler(project1.getProperties(), new GroupArtifactVersion(), probeHandler);
+        ContainerHandler handler = createContainerHandler(project1);
 
         ImageConfiguration imageConfig = new ImageConfiguration.Builder().
                 name("test").alias("test-app").buildConfig(buildImageConfiguration1).build();
@@ -343,7 +349,7 @@ public class ContainerHandlerTest {
 
     @Test
     public void getVolumeMountWithoutMountTest() {
-        ContainerHandler handler = new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         images.clear();
         images.add(imageConfiguration1);
@@ -359,7 +365,7 @@ public class ContainerHandlerTest {
     @Test
     public void getVolumeMountWithoutNameTest() {
 
-        ContainerHandler handler = new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         images.clear();
         images.add(imageConfiguration1);
@@ -381,7 +387,7 @@ public class ContainerHandlerTest {
 
     @Test
     public void getVolumeMountWithNameAndMountTest() {
-        ContainerHandler handler = new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         List<String> mounts = new ArrayList<>();
         mounts.add("/path/etc");
@@ -402,7 +408,7 @@ public class ContainerHandlerTest {
 
     @Test
     public void getVolumeMountWithMultipleMountTest() {
-        ContainerHandler handler = new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         images.clear();
         images.add(imageConfiguration1);
@@ -425,7 +431,7 @@ public class ContainerHandlerTest {
 
     @Test
     public void getVolumeMountWithEmptyVolumeTest() {
-        ContainerHandler handler = new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         images.clear();
         images.add(imageConfiguration1);
@@ -438,7 +444,7 @@ public class ContainerHandlerTest {
 
     @Test
     public void containerEmptyPortsTest() {
-        ContainerHandler handler = new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         images.clear();
         images.add(imageConfiguration1);
@@ -451,7 +457,7 @@ public class ContainerHandlerTest {
     @Test
     public void containerPortsWithoutPortTest() {
 
-        ContainerHandler handler = new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         //without Ports
         BuildImageConfiguration buildImageConfiguration2 = new BuildImageConfiguration.Builder().
@@ -489,7 +495,7 @@ public class ContainerHandlerTest {
         images.clear();
         images.add(imageConfiguration1);
 
-        ContainerHandler handler = new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         containers = handler.getContainers(config, images);
         List<ContainerPort> outputports = containers.get(0).getPorts();

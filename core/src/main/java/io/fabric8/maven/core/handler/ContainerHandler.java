@@ -105,7 +105,7 @@ class ContainerHandler {
     private String getImagePullPolicy(ResourceConfig config) {
         String pullPolicy = config.getImagePullPolicy();
         if (StringUtils.isBlank(pullPolicy) &&
-            this.groupArtifactVersion.getVersion() != null && this.groupArtifactVersion.getVersion().endsWith("SNAPSHOT")) {
+            this.groupArtifactVersion.isSnapshot()) {
             // TODO: Is that what we want ?
             return "PullAlways";
         }

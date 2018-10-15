@@ -21,15 +21,6 @@ public class GroupArtifactVersion {
     private String artifactId;
     private String version;
 
-    public GroupArtifactVersion() {
-        this("unknown", "empty-project", "0");
-    }
-
-    public GroupArtifactVersion(String version) {
-        this();
-        this.version = version;
-    }
-
     public GroupArtifactVersion(String groupId, String artifactId, String version) {
         this.groupId = groupId;
         this.artifactId = artifactId;
@@ -48,4 +39,7 @@ public class GroupArtifactVersion {
         return version;
     }
 
+    public boolean isSnapshot() {
+        return getVersion() != null && getVersion().endsWith("SNAPSHOT");
+    }
 }
