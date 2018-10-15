@@ -16,6 +16,7 @@
 package io.fabric8.maven.core.handler;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -41,14 +42,7 @@ import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.maven.project.MavenProject;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 /**
  * @author roland
