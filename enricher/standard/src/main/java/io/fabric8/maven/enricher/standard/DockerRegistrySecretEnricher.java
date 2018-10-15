@@ -15,13 +15,16 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import io.fabric8.maven.core.util.DockerServerUtil;
+import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.SecretConstants;
-import io.fabric8.maven.enricher.api.DockerRegistryAuthentication;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.lang3.StringUtils;
+import java.util.Optional;
+
+import org.json.JSONObject;
 
 public class DockerRegistrySecretEnricher extends SecretEnricher {
     final private static String ANNOTATION_KEY = "maven.fabric8.io/dockerServerId";
@@ -39,19 +42,22 @@ public class DockerRegistrySecretEnricher extends SecretEnricher {
 
     @Override
     protected Map<String, String> generateData(String dockerId) {
-        final DockerRegistryAuthentication dockerRegistryAuth = getContext().getDockerRegistryAuth(dockerId);
-
-        if (dockerRegistryAuth == null) {
+        final Configuration config = getContext().getConfiguration();
+        final Optional<Map<String,Object>> secretConfig = config.getSecretConfiguration(dockerId);
+        if (!secretConfig.isPresent()) {
             return null;
         }
 
-        String dockerSecret = DockerServerUtil.getDockerJsonConfigString(dockerId, dockerRegistryAuth.asMap());
-        if (StringUtils.isBlank(dockerSecret)) {
-            return null;
+        Map<String, String> params = new HashMap<>();
+        for (String key : new String[] { "username", "password", "email" }) {
+            if  (secretConfig.get().containsKey(key)) {
+                params.put(key, secretConfig.get().get(key).toString());
+            }
         }
 
-        Map<String, String> data = new HashMap<>();
-        data.put(SecretConstants.DOCKER_DATA_KEY, encode(dockerSecret));
-        return data;
+        return Collections.singletonMap(
+            SecretConstants.DOCKER_DATA_KEY,
+            encode(new JSONObject().put(dockerId, params).toString()));
     }
 }
+

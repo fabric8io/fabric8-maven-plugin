@@ -116,11 +116,11 @@ public class DefaultServiceEnricher extends BaseEnricher {
         }
 
         // Create service only for all images which are supposed to live in a single pod
-        List<ServicePort> ports = extractPorts(getImages());
+        List<ServicePort> ports = getImages().map(this::extractPorts).orElse(Collections.emptyList());
 
         ServiceBuilder builder = new ServiceBuilder()
             .withNewMetadata()
-              .withName(getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getArtifact().getArtifactId())))
+              .withName(getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getArtifactId())))
               .withLabels(extractLabels())
             .endMetadata();
         ServiceFluent.SpecNested<ServiceBuilder> specBuilder = builder.withNewSpec();
@@ -247,7 +247,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
             return Collections.emptyList();
         }
 
-        return buildConfig.getPorts() != null ? new LinkedList<>(buildConfig.getPorts()) : Collections.<String>emptyList();
+        return buildConfig.getPorts();
     }
 
     // Config can override ports
@@ -409,7 +409,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
     private String getDefaultServiceName(Service defaultService) {
         String defaultServiceName = KubernetesHelper.getName(defaultService);
         if (StringUtils.isBlank(defaultServiceName)) {
-            defaultServiceName = getContext().getArtifact().getArtifactId();
+            defaultServiceName = getContext().getGav().getArtifactId();
         }
         return defaultServiceName;
     }

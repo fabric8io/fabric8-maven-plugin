@@ -15,9 +15,13 @@
  */
 package io.fabric8.maven.plugin.enricher;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import com.google.common.base.Function;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.maven.core.config.MetaDataConfig;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.ClassUtil;
@@ -26,9 +30,6 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.Enricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import static io.fabric8.maven.plugin.enricher.EnricherManager.Extractor.ANNOTATION_EXTRACTOR;
 import static io.fabric8.maven.plugin.enricher.EnricherManager.Extractor.LABEL_EXTRACTOR;
@@ -40,10 +41,6 @@ import static io.fabric8.maven.plugin.enricher.EnricherManager.Extractor.SELECTO
  * @since 08/04/16
  */
 public class EnricherManager {
-
-    // Meta data from config
-    private final MetaDataConfig labelConfig;
-    private final MetaDataConfig annotationConfig;
 
     // List of enrichers used for customizing the generated deployment descriptors
     private List<Enricher> enrichers;
@@ -57,28 +54,19 @@ public class EnricherManager {
     private final MetadataVisitor<?>[] metaDataVisitors;
     private final SelectorVisitor<?>[] selectorVisitorCreators;
 
-    public EnricherManager(ResourceConfig resourceConfig, EnricherContext enricherContext) {
+    public EnricherManager(ResourceConfig resourceConfig, EnricherContext enricherContext, Optional<List<String>> extraClasspathElements) {
         PluginServiceFactory<EnricherContext> pluginFactory = new PluginServiceFactory<>(enricherContext);
 
-        if (enricherContext.isUseProjectClasspath()) {
-            pluginFactory.addAdditionalClassLoader(ClassUtil.createProjectClassLoader(enricherContext.getCompileClasspathElements(), enricherContext.getLog()));
-        }
+        extraClasspathElements.ifPresent(
+            cpElements -> pluginFactory.addAdditionalClassLoader(ClassUtil.createProjectClassLoader(cpElements, enricherContext.getLog())));
 
         this.log = enricherContext.getLog();
-        this.defaultEnricherConfig = enricherContext.getConfig();
+        this.defaultEnricherConfig = enricherContext.getConfiguration().getProcessorConfig().orElse(ProcessorConfig.EMPTY);
 
         this.enrichers = pluginFactory.createServiceObjects("META-INF/fabric8-enricher-default",
                                                             "META-INF/fabric8/enricher-default",
                                                             "META-INF/fabric8-enricher",
                                                             "META-INF/fabric8/enricher");
-
-        if (resourceConfig != null) {
-            labelConfig = resourceConfig.getLabels();
-            annotationConfig = resourceConfig.getAnnotations();
-        } else {
-            labelConfig = null;
-            annotationConfig = null;
-        }
 
         logEnrichers(filterEnrichers(defaultEnricherConfig, enrichers));
 
@@ -110,12 +98,9 @@ public class EnricherManager {
 
     public void createDefaultResources(ProcessorConfig enricherConfig, final KubernetesListBuilder builder) {
         // Add default resources
-        loop(enricherConfig, new Function<Enricher, Void>() {
-            @Override
-            public Void apply(Enricher enricher) {
-                enricher.addMissingResources(builder);
-                return null;
-            }
+        loop(enricherConfig, enricher -> {
+            enricher.addMissingResources(builder);
+            return null;
         });
     }
 

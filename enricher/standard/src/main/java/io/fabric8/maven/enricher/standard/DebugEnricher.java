@@ -81,7 +81,7 @@ public class DebugEnricher extends BaseEnricher {
     }
 
     private boolean debugEnabled() {
-        String value = getContext().getProperties().getProperty(ENABLE_DEBUG_MAVEN_PROPERTY);
+        String value = getContext().getConfiguration().getProperties().getProperty(ENABLE_DEBUG_MAVEN_PROPERTY);
         if (value != null && isTrueFlag(value)) {
             return true;
         }

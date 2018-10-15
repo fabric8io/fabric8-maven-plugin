@@ -23,6 +23,7 @@ import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
@@ -56,13 +57,17 @@ public class ImageEnricherTest {
     public void prepareMock() {
         // Setup mock behaviour
         new Expectations() {{
-            context.getResources(); result = new ResourceConfig.Builder()
-                    .env(Collections.singletonMap("MY_KEY", "MY_VALUE"))
-                    .build();
+            Configuration configuration =
+                new Configuration.Builder()
+                    .resource(new ResourceConfig.Builder()
+                                  .env(Collections.singletonMap("MY_KEY", "MY_VALUE"))
+                                  .build())
+                .images(Collections.singletonList(imageConfiguration))
+                .build();
+            context.getConfiguration(); result = configuration;
 
             imageConfiguration.getName(); result = "busybox";
             imageConfiguration.getAlias(); result = "busybox";
-            context.getImages(); result = Arrays.asList(imageConfiguration);
         }};
 
         imageEnricher = new ImageEnricher(context);

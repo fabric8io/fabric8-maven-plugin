@@ -18,7 +18,7 @@ package io.fabric8.maven.core.handler;
 import io.fabric8.kubernetes.api.model.apps.DaemonSet;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.VolumeConfig;
-import io.fabric8.maven.core.model.Artifact;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import java.util.ArrayList;
@@ -33,9 +33,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 public class DaemonSetHandlerTest {
-
-    @Mocked
-    EnvVarHandler envVarHandler;
 
     @Mocked
     ProbeHandler probeHandler;
@@ -82,8 +79,7 @@ public class DaemonSetHandlerTest {
 
     @Test
     public void daemonTemplateHandlerTest() {
-        ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
+        ContainerHandler containerHandler = getContainerHandler();
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -114,11 +110,14 @@ public class DaemonSetHandlerTest {
 
     }
 
+    private ContainerHandler getContainerHandler() {
+        return new ContainerHandler(project.getProperties(), new GroupArtifactVersion("g","a","v"), probeHandler);
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void daemonTemplateHandlerWithInvalidNameTest() {
         //invalid controller name
-        ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
+        ContainerHandler containerHandler = getContainerHandler();
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -138,8 +137,7 @@ public class DaemonSetHandlerTest {
     @Test(expected = IllegalArgumentException.class)
     public void daemonTemplateHandlerWithoutControllerTest() {
         //without controller name
-        ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
+        ContainerHandler containerHandler = getContainerHandler();
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 

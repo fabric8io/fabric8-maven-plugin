@@ -15,7 +15,7 @@
  */
 package io.fabric8.maven.core.handler;
 
-import io.fabric8.maven.core.model.Artifact;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,9 +34,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 public class ReplicationControllerHandlerTest {
-
-    @Mocked
-    EnvVarHandler envVarHandler;
 
     @Mocked
     ProbeHandler probeHandler;
@@ -84,8 +81,7 @@ public class ReplicationControllerHandlerTest {
     @Test
     public void replicationControllerHandlerTest() {
 
-        ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
+        ContainerHandler containerHandler = getContainerHandler();
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -118,11 +114,14 @@ public class ReplicationControllerHandlerTest {
 
     }
 
+    private ContainerHandler getContainerHandler() {
+        return new ContainerHandler(project.getProperties(), new GroupArtifactVersion("g","a","v"), probeHandler);
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void replicationControllerHandlerWithInvalidNameTest() {
         //invalid controller name
-        ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
+        ContainerHandler containerHandler = getContainerHandler();
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -143,8 +142,7 @@ public class ReplicationControllerHandlerTest {
     @Test(expected = IllegalArgumentException.class)
     public void replicationControllerHandlerWithoutControllerTest() {
         //without controller name
-        ContainerHandler containerHandler = new
-                ContainerHandler(project.getProperties(), new Artifact(), envVarHandler, probeHandler);
+        ContainerHandler containerHandler = getContainerHandler();
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 

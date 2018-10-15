@@ -23,6 +23,7 @@ import io.fabric8.kubernetes.api.model.apps.DaemonSet;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.batch.Job;
+import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.ImageChangeTrigger;
 import java.io.IOException;
@@ -165,8 +166,7 @@ public class TriggersAnnotationEnricherTest {
         final Properties props = new Properties();
         props.put("fabric8.enricher.fmp-triggers-annotation.containers", "c2, c3, anotherc");
         new Expectations() {{
-            context.getProperties();
-            result = props;
+            context.getConfiguration(); result = new Configuration.Builder().properties(props).build();
         }};
 
         KubernetesListBuilder builder = new KubernetesListBuilder()

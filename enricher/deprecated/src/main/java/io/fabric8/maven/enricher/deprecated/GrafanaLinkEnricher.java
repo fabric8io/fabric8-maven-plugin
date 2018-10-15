@@ -56,10 +56,10 @@ public class GrafanaLinkEnricher extends BaseEnricher {
 
         // TODO - use the docker names which may differ from project metadata!
         if (StringUtils.isBlank(projectName)) {
-            projectName = getContext().getArtifact().getArtifactId();
+            projectName = getContext().getGav().getArtifactId();
         }
         if (StringUtils.isBlank(version)) {
-            version = getContext().getArtifact().getVersion();
+            version = getContext().getGav().getVersion();
         }
 
         if (StringUtils.isNotBlank(projectName)) {
@@ -79,7 +79,7 @@ public class GrafanaLinkEnricher extends BaseEnricher {
         if (StringUtils.isNotBlank(dashboard)) {
             return dashboard;
         }
-        if (getContext().isClassInCompileClasspath(false,"org.apache.camel.CamelContext")) {
+        if (getContext().getProjectClassLoaders().isClassInCompileClasspath(false,"org.apache.camel.CamelContext")) {
             return "camel-routes.json";
         }
         return "kubernetes-pods.json";

@@ -13,31 +13,29 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.enricher.api;
+package io.fabric8.maven.core.model;
 
-import java.io.File;
+import org.junit.Test;
 
-public class Dependency {
+import static org.assertj.core.api.Assertions.assertThat;
 
-    private String type;
-    private String scope;
-    private File location;
+/**
+ * @author roland
+ * @since 15.10.18
+ */
+public class GroupArtifactVersionTest {
 
-    public Dependency(String type, String scope, File location) {
-        this.type = type;
-        this.scope = scope;
-        this.location = location;
-    }
+    @Test
+    public void checkSnapshot() {
+        Object[] data = new Object[] {
+            "1.0-SNAPSHOT", true,
+            "1.2.3", false,
+            "4.2-GA", false
+        };
+        for (int i = 0; i < data.length; i+=2) {
+            GroupArtifactVersion gav = new GroupArtifactVersion("group", "artifact", (String) data[i]);
+            assertThat(gav.isSnapshot()).isEqualTo(data[i+1]);
+        }
 
-    public String getType() {
-        return type;
-    }
-
-    public String getScope() {
-        return scope;
-    }
-
-    public File getLocation() {
-        return location;
     }
 }

@@ -25,6 +25,8 @@ import io.fabric8.maven.docker.config.HealthCheckConfiguration;
 import io.fabric8.maven.docker.config.HealthCheckMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
+
+import java.util.Collections;
 import java.util.List;
 
 import static io.fabric8.maven.enricher.api.util.GoTimeUtil.durationSeconds;
@@ -84,14 +86,12 @@ public class DockerHealthCheckEnricher extends AbstractHealthCheckEnricher {
         if (containerName == null) {
             return null;
         }
-        List<ImageConfiguration> images = getImages();
-        if (images != null) {
-            for (ImageConfiguration image : images) {
-                String imageContainerName = KubernetesResourceUtil.extractContainerName(getContext().getArtifact(), image);
+        List<ImageConfiguration> images = getImages().orElse(Collections.emptyList());
+        for (ImageConfiguration image : images) {
+            String imageContainerName = KubernetesResourceUtil.extractContainerName(getContext().getGav(), image);
                 if (Objects.equal(containerName, imageContainerName)) {
                     return image;
                 }
-            }
         }
         return null;
     }

@@ -20,14 +20,16 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.maven.enricher.api.util.ProjectClassLoader;
+import io.fabric8.maven.enricher.api.util.ProjectClassLoaders;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.Optional;
+
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -51,13 +53,13 @@ public class EnricherManagerTest {
     @Test
     public void createDefaultResources() {
         new Expectations() {{
-           context.getConfig(); result = new ProcessorConfig(Arrays.asList("fmp-controller"), null, null);
-           context.getImages(); result = new ImageConfiguration.Builder().alias("img1").name("img1").build();
-           context.getProjectClassLoader();
-           result = new ProjectClassLoader(
-                (URLClassLoader) EnricherManagerTest.class.getClassLoader(), (URLClassLoader) EnricherManagerTest.class.getClassLoader());
+            context.getConfiguration();
+            result = new Configuration.Builder()
+                .processorConfig(new ProcessorConfig(Arrays.asList("fmp-controller"), null, null))
+                .images(Arrays.asList(new ImageConfiguration.Builder().alias("img1").name("img1").build()))
+                .build();
         }};
-        EnricherManager manager = new EnricherManager(null, context);
+        EnricherManager manager = new EnricherManager(null, context, Optional.empty());
 
         KubernetesListBuilder builder = new KubernetesListBuilder();
         manager.createDefaultResources(builder);
@@ -67,12 +69,12 @@ public class EnricherManagerTest {
     @Test
     public void enrichEmpty() {
         new Expectations() {{
-           context.getConfig(); result = ProcessorConfig.EMPTY;
-            context.getProjectClassLoader();
-            result = new ProjectClassLoader(
-                (URLClassLoader) EnricherManagerTest.class.getClassLoader(), (URLClassLoader) EnricherManagerTest.class.getClassLoader());
+            context.getConfiguration();
+            result = new Configuration.Builder()
+                .processorConfig(ProcessorConfig.EMPTY)
+                .build();
         }};
-        EnricherManager manager = new EnricherManager(null, context);
+        EnricherManager manager = new EnricherManager(null, context, Optional.empty());
 
         KubernetesListBuilder builder = new KubernetesListBuilder();
         manager.enrich(builder);
@@ -82,12 +84,12 @@ public class EnricherManagerTest {
     @Test
     public void enrichSimple() {
         new Expectations() {{
-           context.getConfig(); result = new ProcessorConfig(Arrays.asList("fmp-project"),null,new HashMap<String, TreeMap>());
-            context.getProjectClassLoader();
-            result = new ProjectClassLoader(
-                (URLClassLoader) EnricherManagerTest.class.getClassLoader(), (URLClassLoader) EnricherManagerTest.class.getClassLoader());
+            context.getConfiguration();
+            result = new Configuration.Builder()
+                .processorConfig(new ProcessorConfig(Arrays.asList("fmp-project"),null,new HashMap<>()))
+                .build();
         }};
-        EnricherManager manager = new EnricherManager(null, context);
+        EnricherManager manager = new EnricherManager(null, context, Optional.empty());
 
         KubernetesListBuilder builder = new KubernetesListBuilder();
         builder.addNewReplicaSetItem()

@@ -35,8 +35,8 @@ public class TomcatAppSeverHandler extends AbstractAppServerHandler {
     @Override
     public boolean isApplicable() {
         return hasOneOf("**/META-INF/context.xml") ||
-                MavenUtil.hasPlugin(project, "org.apache.tomcat.maven:tomcat6-maven-plugin") ||
-                MavenUtil.hasPlugin(project, "org.apache.tomcat.maven:tomcat7-maven-plugin");
+                MavenUtil.hasPlugin(project, "org.apache.tomcat.maven", "tomcat6-maven-plugin") ||
+                MavenUtil.hasPlugin(project, "org.apache.tomcat.maven", "tomcat7-maven-plugin");
     }
 
     @Override

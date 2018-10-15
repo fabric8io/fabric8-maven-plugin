@@ -60,7 +60,7 @@ public abstract class SecretEnricher extends BaseEnricher {
         });
     }
 
-    abstract protected String getAnnotationKey();
+    protected abstract String getAnnotationKey();
 
-    abstract protected Map<String, String> generateData(String key);
+    protected abstract Map<String, String> generateData(String key);
 }

@@ -39,6 +39,8 @@ import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
+
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -82,8 +84,8 @@ public class DefaultControllerEnricher extends BaseEnricher {
     public DefaultControllerEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-controller");
 
-        HandlerHub handlers = new HandlerHub(getContext().getProjectClassLoader().getCompileClassLoader(),
-            getContext().getBuildOutputDirectory(), getContext().getArtifact(), getContext().getProperties());
+        HandlerHub handlers = new HandlerHub(
+            getContext().getGav(), getContext().getConfiguration().getProperties());
         rcHandler = handlers.getReplicationControllerHandler();
         rsHandler = handlers.getReplicaSetHandler();
         deployHandler = handlers.getDeploymentHandler();
@@ -94,19 +96,19 @@ public class DefaultControllerEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
-        final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getArtifact().getArtifactId()));
+        final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getArtifactId()));
         final ResourceConfig config = new ResourceConfig.Builder()
                     .controllerName(name)
                     .imagePullPolicy(getConfig(Config.pullPolicy))
                     .withReplicas(Configs.asInt(getConfig(Config.replicaCount)))
                     .build();
 
-        final List<ImageConfiguration> images = getImages();
+        final List<ImageConfiguration> images = getImages().orElse(Collections.emptyList());
 
         // Check if at least a replica set is added. If not add a default one
         if (!KubernetesResourceUtil.checkForKind(builder, POD_CONTROLLER_KINDS)) {
             // At least one image must be present, otherwise the resulting config will be invalid
-            if (images != null && !images.isEmpty()) {
+            if (!images.isEmpty()) {
                 String type = getConfig(Config.type);
                 if ("deployment".equalsIgnoreCase(type)) {
                     log.info("Adding a default Deployment");

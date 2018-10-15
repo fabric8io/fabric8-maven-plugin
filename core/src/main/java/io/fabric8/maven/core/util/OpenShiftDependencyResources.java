@@ -128,7 +128,7 @@ public class OpenShiftDependencyResources {
         for (Parameter parameter : parameters) {
             map.put(parameter.getName(), parameter);
         }
-        mergeParametersIntoMap(map, parameters);
+        mergeParametersIntoMap(map, templateParameters.values());
         for (Parameter parameter : map.values()) {
             if (!parameters.contains(parameter)) {
                 parameters.add(parameter);

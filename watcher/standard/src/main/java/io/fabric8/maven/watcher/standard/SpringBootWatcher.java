@@ -289,10 +289,7 @@ public class SpringBootWatcher extends BaseWatcher {
     }
 
     private File getSpringBootDevToolsJar(MavenProject project) throws IOException {
-        String version = SpringBootUtil.getSpringBootDevToolsVersion(project);
-        if (version == null) {
-            throw new IllegalStateException("Unable to find the spring-boot version");
-        }
+        String version = SpringBootUtil.getSpringBootDevToolsVersion(project).orElseThrow(() -> new IllegalStateException("Unable to find the spring-boot version"));
         return getContext().getFabric8ServiceHub().getArtifactResolverService().resolveArtifact(SpringBootConfigurationHelper.SPRING_BOOT_GROUP_ID, SpringBootConfigurationHelper.SPRING_BOOT_DEVTOOLS_ARTIFACT_ID, version, "jar");
     }
 

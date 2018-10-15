@@ -15,16 +15,17 @@
  */
 package io.fabric8.maven.enricher.fabric8;
 
-import io.fabric8.maven.enricher.api.util.ProjectClassLoader;
+import io.fabric8.maven.core.model.Configuration;
+import io.fabric8.maven.enricher.api.util.ProjectClassLoaders;
 import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.TreeMap;
 
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
@@ -32,7 +33,6 @@ import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
 import mockit.Mocked;
-import org.apache.maven.project.MavenProject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,7 +45,7 @@ import static org.junit.Assert.assertNull;
  *
  * @author nicola
  */
-public abstract class AbstractSpringBootHealthCheckEnricherSupport {
+public abstract class AbstractSpringBootHealthCheckEnricherTestSupport {
 
     @Mocked
     protected MavenEnricherContext context;
@@ -55,11 +55,11 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
     @Before
     public void init() {
         String version = getSpringBootVersion();
-        this.propertyHelper = new SpringBootConfigurationHelper(version);
+        this.propertyHelper = new SpringBootConfigurationHelper(Optional.of(version));
 
         new Expectations() {{
             context.getDependencyVersion(SpringBootConfigurationHelper.SPRING_BOOT_GROUP_ID, SpringBootConfigurationHelper.SPRING_BOOT_ARTIFACT_ID);
-            result = version;
+            result = Optional.of(version);
         }};
     }
 
@@ -300,15 +300,17 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
     @Test
     public void testDefaultInitialDelayForLivenessAndReadiness() {
         SpringBootHealthCheckEnricher enricher = new SpringBootHealthCheckEnricher(context);
-        withAllRequiredClasses();
         withProjectProperties(new Properties());
 
         new Expectations(){{
-            context.isClassInCompileClasspath(true, SpringBootHealthCheckEnricher.REQUIRED_CLASSES);
-            result = true;
-            context.getProjectClassLoader();
-            result = new ProjectClassLoader(
-                (URLClassLoader) AbstractSpringBootHealthCheckEnricherSupport.class.getClassLoader(), (URLClassLoader) AbstractSpringBootHealthCheckEnricherSupport.class.getClassLoader());
+            context.getProjectClassLoaders();
+            result = new ProjectClassLoaders(
+                (URLClassLoader) AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader()) {
+                @Override
+                public boolean isClassInCompileClasspath(boolean all, String... clazz) {
+                    return true;
+                }
+            };
         }};
 
 
@@ -331,17 +333,20 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         enricherConfig.put("timeoutSeconds", "120");
 
         final ProcessorConfig config = new ProcessorConfig(null,null, globalConfig);
-        new Expectations() {{
-            context.getConfig(); result = config;
-            context.isClassInCompileClasspath(true, SpringBootHealthCheckEnricher.REQUIRED_CLASSES);
-            result = true;
-            context.getProjectClassLoader();
-            result = new ProjectClassLoader(
-                (URLClassLoader) AbstractSpringBootHealthCheckEnricherSupport.class.getClassLoader(), (URLClassLoader) AbstractSpringBootHealthCheckEnricherSupport.class.getClassLoader());
-        }};
-        withAllRequiredClasses();
+        new Expectations() {
+            {
+                context.getConfiguration();
+                result = new Configuration.Builder().processorConfig(config).build();
+                context.getProjectClassLoaders();
+                result = new ProjectClassLoaders(
+                    (URLClassLoader) AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader()) {
+                    @Override
+                    public boolean isClassInCompileClasspath(boolean all, String... clazz) {
+                        return true;
+                    }
+                };
+            }};
         withProjectProperties(new Properties());
-        withCompileClasslaoder();
 
         SpringBootHealthCheckEnricher enricher = new SpringBootHealthCheckEnricher(context);
 
@@ -372,16 +377,17 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
 
         final ProcessorConfig config = new ProcessorConfig(null,null, globalConfig);
         new Expectations() {{
-            context.getConfig(); result = config;
-            context.isClassInCompileClasspath(true, SpringBootHealthCheckEnricher.REQUIRED_CLASSES);
-            result = true;
-            context.getProjectClassLoader();
-            result = new ProjectClassLoader(
-                (URLClassLoader) AbstractSpringBootHealthCheckEnricherSupport.class.getClassLoader(), (URLClassLoader) AbstractSpringBootHealthCheckEnricherSupport.class.getClassLoader());
+            context.getConfiguration(); result = new Configuration.Builder().processorConfig(config).build();
+            context.getProjectClassLoaders();
+            result = new ProjectClassLoaders(
+                (URLClassLoader) AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader()) {
+                @Override
+                public boolean isClassInCompileClasspath(boolean all, String... clazz) {
+                    return true;
+                }
+            };
         }};
-        withAllRequiredClasses();
         withProjectProperties(new Properties());
-        withCompileClasslaoder();
         SpringBootHealthCheckEnricher enricher = new SpringBootHealthCheckEnricher(context);
 
         Probe probe = enricher.getReadinessProbe();
@@ -395,29 +401,11 @@ public abstract class AbstractSpringBootHealthCheckEnricherSupport {
         assertEquals(50, probe.getPeriodSeconds().intValue());
     }
 
-    private void withAllRequiredClasses() {
-        new MockUp<MavenUtil>() {
-            @Mock
-            public boolean hasAllClasses(MavenProject project, String ... classNames) {
-                return true;
-            }
-        };
-    }
-
     private void withProjectProperties(final Properties properties) {
         new MockUp<SpringBootUtil>() {
             @Mock
             public Properties getSpringBootApplicationProperties(URLClassLoader urlClassLoader) {
                 return properties;
-            }
-        };
-    }
-
-    private void withCompileClasslaoder() {
-        new MockUp<MavenUtil>() {
-            @Mock
-            public URLClassLoader getCompileClassLoader(MavenProject project) {
-                return (URLClassLoader) this.getClass().getClassLoader();
             }
         };
     }
