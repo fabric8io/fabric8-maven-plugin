@@ -342,7 +342,7 @@ public class OpenshiftBuildService implements BuildService {
             fromImage = extractBaseFromConfiguration(buildConfig);
         }
 
-        String pullRegistry = EnvUtil.firstRegistryOf(new ImageName(fromImage).getRegistry(), dockerBuildContext.getRegistryConfig().getRegistry(), dockerBuildContext.getRegistryConfig().getRegistry());;
+        String pullRegistry = EnvUtil.firstRegistryOf(new ImageName(fromImage).getRegistry(), dockerBuildContext.getRegistryConfig().getRegistry(), dockerBuildContext.getRegistryConfig().getRegistry());
 
         if (pullRegistry != null) {
             RegistryService.RegistryConfig registryConfig = dockerBuildContext.getRegistryConfig();
