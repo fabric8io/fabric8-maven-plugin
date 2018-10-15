@@ -690,6 +690,14 @@
               <exclude>.editorconfig</exclude>
               <exclude>license.txt</exclude>
               <exclude>**/test-kubeconfig</exclude>
+              <exclude>**/*-services</exclude>
+              <exclude>**/*-default</exclude>
+              <exclude>**/*.adoc</exclude>
+              <exclude>**/enricher</exclude>
+              <exclude>.lgtm</exclude>
+              <exclude>**/.gitkeep</exclude>
+              <exclude>Jenkinsfile</exclude>
+              <exclude>mvnw</exclude>
             </excludes>
           </configuration>
         </plugin>
