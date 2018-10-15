@@ -24,7 +24,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import org.json.JSONObject;
+import com.google.gson.JsonObject;
 
 /**
  * Utility for resource file handling
@@ -34,7 +34,7 @@ import org.json.JSONObject;
  */
 public class ResourceUtil {
 
-    public static boolean jsonEquals(JSONObject first, JSONObject second) {
+    public static boolean jsonEquals(JsonObject first, JsonObject second) {
         final ObjectMapper mapper = new ObjectMapper();
 
         try {

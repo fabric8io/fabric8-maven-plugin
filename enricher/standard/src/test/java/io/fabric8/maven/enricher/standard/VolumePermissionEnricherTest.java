@@ -15,10 +15,16 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
 
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
@@ -32,8 +38,6 @@ import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -127,19 +131,20 @@ public class VolumePermissionEnricherTest {
                 continue;
             }
 
-            JSONArray ja = new JSONArray(initContainers);
-            assertEquals(1, ja.length());
+            Gson gson = new Gson();
+            JsonArray ja = new JsonParser().parse(gson.toJson(initContainers, new TypeToken<Collection<Container>>() {}.getType())).getAsJsonArray();
+            assertEquals(1, ja.size());
 
-            JSONObject jo = ja.getJSONObject(0);
-            assertEquals(tc.initContainerName, jo.get("name"));
+            JsonObject jo = ja.get(0).getAsJsonObject();
+            assertEquals(tc.initContainerName, jo.get("name").getAsString());
             String permission = StringUtils.isBlank(tc.permission) ? "777" : tc.permission;
-            JSONArray chmodCmd = new JSONArray();
-            chmodCmd.put("chmod");
-            chmodCmd.put(permission);
+            JsonArray chmodCmd = new JsonArray();
+            chmodCmd.add("chmod");
+            chmodCmd.add(permission);
             for (String vn : tc.volumeNames) {
-              chmodCmd.put("/tmp/" + vn);
+              chmodCmd.add("/tmp/" + vn);
             }
-            assertEquals(chmodCmd.toString(), jo.getJSONArray("command").toString());
+            assertEquals(chmodCmd.toString(), jo.getAsJsonArray("command").toString());
         }
     }
 

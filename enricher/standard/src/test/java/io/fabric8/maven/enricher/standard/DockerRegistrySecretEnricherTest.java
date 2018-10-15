@@ -15,6 +15,8 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import io.fabric8.maven.core.model.Configuration;
 
 import java.util.HashMap;
@@ -36,6 +38,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author yuwzho
@@ -72,16 +75,22 @@ public class DockerRegistrySecretEnricherTest {
         setupExpectations();
         DockerRegistrySecretEnricher enricher = new DockerRegistrySecretEnricher(context);
         KubernetesListBuilder builder = new KubernetesListBuilder();
-        builder.addToSecretItems(createBaseSecret(true));
+        Secret secretEnriched = createBaseSecret(true);
+        builder.addToSecretItems(secretEnriched);
         enricher.addMissingResources(builder);
 
-        KubernetesListBuilder expectedBuilder = new KubernetesListBuilder();
-        Secret expectedSecret = createBaseSecret(false);
-        expectedSecret.getData().put(
-            SecretConstants.DOCKER_DATA_KEY,
-            Base64.encodeBase64String("{\"docker.io\":{\"password\":\"password\",\"username\":\"username\"}}".getBytes()));
-        expectedBuilder.addToSecretItems(expectedSecret);
-        assertEquals(expectedBuilder.build(), builder.build());
+        secretEnriched = (Secret) builder.buildItem(0);
+        Map<String, String> enrichedData = secretEnriched.getData();
+        assertThat(enrichedData.size()).isEqualTo(1);
+        String data = enrichedData.get(SecretConstants.DOCKER_DATA_KEY);
+        assertThat(data).isNotNull();
+        JsonObject auths = (JsonObject) new JsonParser().parse(new String(Base64.decodeBase64(data)));
+        assertThat(auths.size()).isEqualTo(1);
+        JsonObject auth = auths.getAsJsonObject("docker.io");
+        assertThat(auth.size()).isEqualTo(2);
+
+        assertThat(auth.get("username").getAsString()).isEqualTo("username");
+        assertThat(auth.get("password").getAsString()).isEqualTo("password");
     }
 
     @Test
