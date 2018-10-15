@@ -36,9 +36,6 @@ import static org.junit.Assert.assertNotNull;
 public class StatefulSetHandlerTest {
 
     @Mocked
-    EnvVarHandler envVarHandler;
-
-    @Mocked
     ProbeHandler probeHandler;
 
     MavenProject project = new MavenProject();
@@ -85,7 +82,7 @@ public class StatefulSetHandlerTest {
     public void statefulSetHandlerTest() {
 
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -123,7 +120,7 @@ public class StatefulSetHandlerTest {
     public void statefulSetHandlerWithInvalidNameTest() {
         //invalid controller name
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -145,7 +142,7 @@ public class StatefulSetHandlerTest {
     public void statefulSetHandlerWithoutControllerTest() {
         //without controller name
         ContainerHandler containerHandler = new
-                ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
+                ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 

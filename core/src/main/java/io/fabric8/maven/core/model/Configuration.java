@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
@@ -43,8 +44,12 @@ public class Configuration {
     // Configuration influencing the resource generation
     private ResourceConfig resource;
 
-    // Lookup other project configuration
+    // Lookup plugin project configuration
     private BiFunction<String, String, Optional<Map<String,Object>>> pluginConfigLookup;
+
+    // Lookup secret configuration
+    private Function<String, Optional<Map<String,Object>>> secretConfigLookup;
+
 
     // Processor config which holds all the configuration for processors / enrichers
     private ProcessorConfig processorConfig;
@@ -69,7 +74,7 @@ public class Configuration {
     }
 
     /**
-     * Gets configuration values. Since there can be inner values,
+     * Gets plugin configuration values. Since there can be inner values,
      * it returns a Map of Objects where an Object can be a
      * simple type, List or another Map.
      *
@@ -79,6 +84,18 @@ public class Configuration {
      */
     public Optional<Map<String, Object>> getPluginConfiguration(String system, String id) {
         return pluginConfigLookup.apply(system, id);
+    }
+
+    /**
+     * Gets configuration values. Since there can be inner values,
+     * it returns a Map of Objects where an Object can be a
+     * simple type, List or another Map.
+     *
+     * @param id id specific to the secret store
+     * @return configuration map specific to this id
+     */
+    public Optional<Map<String, Object>> getSecretConfiguration(String id) {
+        return secretConfigLookup.apply(id);
     }
 
     public String getProperty(String name) {
@@ -118,6 +135,11 @@ public class Configuration {
 
         public Builder pluginConfigLookup(BiFunction<String, String, Optional<Map<String,Object>>> pluginConfigLookup) {
             cfg.pluginConfigLookup = pluginConfigLookup;
+            return this;
+        }
+
+        public Builder secretConfigLookup(Function<String, Optional<Map<String,Object>>> secretConfigLookup) {
+            cfg.secretConfigLookup = secretConfigLookup;
             return this;
         }
 

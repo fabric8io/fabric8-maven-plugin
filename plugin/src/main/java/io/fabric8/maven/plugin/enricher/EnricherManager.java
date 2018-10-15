@@ -22,7 +22,6 @@ import java.util.Optional;
 
 import com.google.common.base.Function;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.maven.core.config.MetaDataConfig;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.ClassUtil;

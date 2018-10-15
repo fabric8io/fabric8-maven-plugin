@@ -20,19 +20,13 @@ import java.net.URLClassLoader;
 public class ProjectClassLoaders {
 
     private URLClassLoader compileClassLoader;
-    private URLClassLoader testClassLoader;
 
-    public ProjectClassLoaders(URLClassLoader compileClassLoader, URLClassLoader testClassLoader) {
+    public ProjectClassLoaders(URLClassLoader compileClassLoader) {
         this.compileClassLoader = compileClassLoader;
-        this.testClassLoader = testClassLoader;
     }
 
     public URLClassLoader getCompileClassLoader() {
         return compileClassLoader;
-    }
-
-    public URLClassLoader getTestClassLoader() {
-        return testClassLoader;
     }
 
     /**

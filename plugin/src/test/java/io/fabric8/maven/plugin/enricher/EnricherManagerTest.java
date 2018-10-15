@@ -58,9 +58,6 @@ public class EnricherManagerTest {
                 .processorConfig(new ProcessorConfig(Arrays.asList("fmp-controller"), null, null))
                 .images(Arrays.asList(new ImageConfiguration.Builder().alias("img1").name("img1").build()))
                 .build();
-            context.getProjectClassLoaders();
-            result = new ProjectClassLoaders(
-                (URLClassLoader) EnricherManagerTest.class.getClassLoader(), (URLClassLoader) EnricherManagerTest.class.getClassLoader());
         }};
         EnricherManager manager = new EnricherManager(null, context, Optional.empty());
 
@@ -76,10 +73,6 @@ public class EnricherManagerTest {
             result = new Configuration.Builder()
                 .processorConfig(ProcessorConfig.EMPTY)
                 .build();
-
-            context.getProjectClassLoaders();
-            result = new ProjectClassLoaders(
-                (URLClassLoader) EnricherManagerTest.class.getClassLoader(), (URLClassLoader) EnricherManagerTest.class.getClassLoader());
         }};
         EnricherManager manager = new EnricherManager(null, context, Optional.empty());
 
@@ -95,9 +88,6 @@ public class EnricherManagerTest {
             result = new Configuration.Builder()
                 .processorConfig(new ProcessorConfig(Arrays.asList("fmp-project"),null,new HashMap<>()))
                 .build();
-            context.getProjectClassLoaders();
-            result = new ProjectClassLoaders(
-                (URLClassLoader) EnricherManagerTest.class.getClassLoader(), (URLClassLoader) EnricherManagerTest.class.getClassLoader());
         }};
         EnricherManager manager = new EnricherManager(null, context, Optional.empty());
 

@@ -305,7 +305,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherTestSupport {
         new Expectations(){{
             context.getProjectClassLoaders();
             result = new ProjectClassLoaders(
-                (URLClassLoader) AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader(), (URLClassLoader) AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader()) {
+                (URLClassLoader) AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader()) {
                 @Override
                 public boolean isClassInCompileClasspath(boolean all, String... clazz) {
                     return true;
@@ -339,7 +339,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherTestSupport {
                 result = new Configuration.Builder().processorConfig(config).build();
                 context.getProjectClassLoaders();
                 result = new ProjectClassLoaders(
-                    (URLClassLoader) AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader(), (URLClassLoader) AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader()) {
+                    (URLClassLoader) AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader()) {
                     @Override
                     public boolean isClassInCompileClasspath(boolean all, String... clazz) {
                         return true;
@@ -380,7 +380,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherTestSupport {
             context.getConfiguration(); result = new Configuration.Builder().processorConfig(config).build();
             context.getProjectClassLoaders();
             result = new ProjectClassLoaders(
-                (URLClassLoader) AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader(), (URLClassLoader) AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader()) {
+                (URLClassLoader) AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader()) {
                 @Override
                 public boolean isClassInCompileClasspath(boolean all, String... clazz) {
                     return true;

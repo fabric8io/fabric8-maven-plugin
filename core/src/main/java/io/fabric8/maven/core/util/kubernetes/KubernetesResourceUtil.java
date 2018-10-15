@@ -34,6 +34,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -429,6 +430,25 @@ public class KubernetesResourceUtil {
             }
         }
         return removed;
+    }
+
+    /**
+     * Convert a map of env vars to a list of K8s EnvVar objects.
+     * @param envVars the name-value map containing env vars which must not be null
+     * @return list of converted env vars
+     */
+    public static List<EnvVar> convertToEnvVarList(Map<String, String> envVars) {
+        List<EnvVar> envList = new LinkedList<>();
+        for (Map.Entry<String, String> entry : envVars.entrySet()) {
+            String name = entry.getKey();
+            String value = entry.getValue();
+
+            if (name != null) {
+                EnvVar env = new EnvVarBuilder().withName(name).withValue(value).build();
+                envList.add(env);
+            }
+        }
+        return envList;
     }
 
     public static void validateKubernetesMasterUrl(URL masterUrl) throws MojoExecutionException {

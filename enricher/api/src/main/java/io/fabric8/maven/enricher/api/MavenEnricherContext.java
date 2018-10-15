@@ -92,26 +92,6 @@ public class MavenEnricherContext implements EnricherContext {
     }
 
     @Override
-    public String getOutputDirectory() {
-        return getProject().getBuild().getOutputDirectory();
-    }
-
-    @Override
-    public DockerRegistryAuthentication getDockerRegistryAuth(String serverId) {
-        Server server = getServer(getSettings(), serverId);
-
-        if (server == null) {
-            return null;
-        }
-
-        final Map<String, Object> conf = MavenConfigurationExtractor.extract((Xpp3Dom) server.getConfiguration());
-
-        String mail = (String) conf.get("email");
-
-        return new DockerRegistryAuthentication(server.getUsername(), server.getPassword(), mail);
-    }
-
-    @Override
     public List<Dependency> getDependencies(boolean transitive) {
         final Set<Artifact> artifacts = transitive ?
             getProject().getArtifacts() : getProject().getDependencyArtifacts();
@@ -142,8 +122,8 @@ public class MavenEnricherContext implements EnricherContext {
 
     @Override
     public ProjectClassLoaders getProjectClassLoaders() {
-        return new ProjectClassLoaders(MavenUtil.getCompileClassLoader(getProject()),
-                                       MavenUtil.getTestClassLoader(getProject()));
+        return new ProjectClassLoaders(MavenUtil.getCompileClassLoader(getProject())
+        );
     }
 
 
@@ -152,19 +132,6 @@ public class MavenEnricherContext implements EnricherContext {
     public MavenProject getProject() {
         return project;
     }
-
-    public Settings getSettings() {
-        return session != null ? session.getSettings() : null;
-    }
-
-
-    private Server getServer(final Settings settings, final String serverId) {
-        if (settings == null || StringUtils.isBlank(serverId)) {
-            return null;
-        }
-        return settings.getServer(serverId);
-    }
-
 
     // =======================================================================================================
     public static class Builder {
@@ -218,16 +185,32 @@ public class MavenEnricherContext implements EnricherContext {
                     .resource(resources)
                     .processorConfig(processorConfig)
                     .pluginConfigLookup(
-                                  (system, id) -> {
-                                      if (!"maven".equals(system)) {
-                                          return Optional.empty();
-                                      }
-                                      final Plugin plugin = ctx.project.getPlugin(id);
-                                      if (plugin == null) {
-                                          return Optional.empty();
-                                      }
-                                      return Optional.of(MavenConfigurationExtractor.extract((Xpp3Dom) plugin.getConfiguration()));
-                                  })
+                        (system, id) -> {
+                            if (!"maven".equals(system)) {
+                                return Optional.empty();
+                            }
+                            final Plugin plugin = ctx.project.getPlugin(id);
+                            if (plugin == null) {
+                                return Optional.empty();
+                            }
+                            return Optional.of(MavenConfigurationExtractor.extract((Xpp3Dom) plugin.getConfiguration()));
+                        })
+                    .secretConfigLookup(
+                        id -> {
+                            Settings settings = ctx.session.getSettings();
+                            if (settings == null || StringUtils.isBlank(id)) {
+                                return Optional.empty();
+                            }
+                            Server server = settings.getServer(id);
+                            if (server == null) {
+                                return Optional.empty();
+                            }
+                            Map<String, Object> config = MavenConfigurationExtractor.extract((Xpp3Dom) server.getConfiguration());
+                            config.put("id", server.getId());
+                            config.put("username", server.getUsername());
+                            config.put("password", server.getPassword());
+                            return Optional.of(config);
+                        })
                     .build();
             return ctx;
         }

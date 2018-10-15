@@ -36,9 +36,6 @@ import static org.junit.Assert.assertNotNull;
 public class ReplicationControllerHandlerTest {
 
     @Mocked
-    EnvVarHandler envVarHandler;
-
-    @Mocked
     ProbeHandler probeHandler;
 
     MavenProject project = new MavenProject();
@@ -85,7 +82,7 @@ public class ReplicationControllerHandlerTest {
     public void replicationControllerHandlerTest() {
 
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -122,7 +119,7 @@ public class ReplicationControllerHandlerTest {
     public void replicationControllerHandlerWithInvalidNameTest() {
         //invalid controller name
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -144,7 +141,7 @@ public class ReplicationControllerHandlerTest {
     public void replicationControllerHandlerWithoutControllerTest() {
         //without controller name
         ContainerHandler containerHandler = new
-                ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
+                ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 

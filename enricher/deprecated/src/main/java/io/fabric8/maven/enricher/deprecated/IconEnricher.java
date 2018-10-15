@@ -225,7 +225,7 @@ public class IconEnricher extends BaseEnricher {
     private InputStream loadPluginResource(String iconRef) {
         InputStream answer = Thread.currentThread().getContextClassLoader().getResourceAsStream(iconRef);
         if (answer == null) {
-            answer = getContext().getProjectClassLoaders().getTestClassLoader().getResourceAsStream(iconRef);
+            answer = getContext().getProjectClassLoaders().getCompileClassLoader().getResourceAsStream(iconRef);
         }
         if (answer == null) {
             answer = this.getClass().getResourceAsStream(iconRef);

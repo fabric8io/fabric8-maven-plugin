@@ -28,13 +28,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
 import com.google.common.base.Objects;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.maven.MavenExecutionException;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.model.Plugin;

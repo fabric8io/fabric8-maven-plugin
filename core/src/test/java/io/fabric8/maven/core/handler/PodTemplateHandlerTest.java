@@ -38,9 +38,6 @@ import static org.junit.Assert.assertTrue;
 public class PodTemplateHandlerTest {
 
     @Mocked
-    EnvVarHandler envVarHandler;
-
-    @Mocked
     ProbeHandler probeHandler;
 
     MavenProject project = new MavenProject();
@@ -83,7 +80,7 @@ public class PodTemplateHandlerTest {
     public void podWithoutVolumeTemplateHandlerTest() {
 
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -112,7 +109,7 @@ public class PodTemplateHandlerTest {
     @Test
     public void podWithEmotyVolumeTemplateHandlerTest(){
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
         //Pod with empty Volume Config and wihtout ServiceAccount
@@ -134,7 +131,7 @@ public class PodTemplateHandlerTest {
     @Test
     public void podWithVolumeTemplateHandlerTest(){
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
         //Config with Volume Config and ServiceAccount
@@ -167,7 +164,7 @@ public class PodTemplateHandlerTest {
     @Test
     public void podWithInvalidVolumeTypeTemplateHandlerTest(){
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -196,7 +193,7 @@ public class PodTemplateHandlerTest {
     @Test
     public void podWithoutEmptyTypeTemplateHandlerTest(){
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 

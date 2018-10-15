@@ -24,7 +24,6 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;

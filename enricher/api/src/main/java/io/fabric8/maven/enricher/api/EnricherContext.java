@@ -56,13 +56,6 @@ public interface EnricherContext {
     File getProjectDirectory();
 
     /**
-     * Output directory where created files should be placed to.
-     * For Maven that's e.g. the "target" directory.
-     * @return the output directory.
-     */
-    String getOutputDirectory();
-
-    /**
      * Get various class loaders used in the projects
      *
      * @return compile and test class loader
@@ -77,10 +70,6 @@ public interface EnricherContext {
      * @return true if a plugin exists, false otherwise.
      */
     boolean hasPlugin(String groupId, String artifactId);
-
-
-    // ===========================================================================================
-    // Dependency management
 
     /**
      * Gets dependencies defined in build tool
@@ -109,10 +98,8 @@ public interface EnricherContext {
         List<Dependency> dependencies = getDependencies(true);
         for (Dependency dep : dependencies) {
             String scope = dep.getScope();
-            if ("test".equals(scope)) {
-                continue;
-            }
-            if (artifactId != null && !artifactId.equals(dep.getGav().getArtifactId())) {
+            if ("test".equals(scope) ||
+                (artifactId != null && !artifactId.equals(dep.getGav().getArtifactId()))) {
                 continue;
             }
             if (dep.getGav().getGroupId().equals(groupId)) {
@@ -126,11 +113,4 @@ public interface EnricherContext {
     // To be removed:
 
     OpenShiftDependencyResources getOpenshiftDependencyResources();
-
-    /**
-     * Gets a map with fields username, password and email set.
-     * @param serverId Identifier to get the info.
-     * @return Docker Registry authentication parameters.
-     */
-    DockerRegistryAuthentication getDockerRegistryAuth(String serverId);
 }

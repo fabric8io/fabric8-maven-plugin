@@ -84,8 +84,8 @@ public class DefaultControllerEnricher extends BaseEnricher {
     public DefaultControllerEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-controller");
 
-        HandlerHub handlers = new HandlerHub(getContext().getProjectClassLoaders().getCompileClassLoader(),
-                                             getContext().getOutputDirectory(), getContext().getGav(), getContext().getConfiguration().getProperties());
+        HandlerHub handlers = new HandlerHub(
+            getContext().getGav(), getContext().getConfiguration().getProperties());
         rcHandler = handlers.getReplicationControllerHandler();
         rsHandler = handlers.getReplicaSetHandler();
         deployHandler = handlers.getDeploymentHandler();

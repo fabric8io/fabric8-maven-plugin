@@ -35,9 +35,6 @@ import static org.junit.Assert.assertNotNull;
 public class DaemonSetHandlerTest {
 
     @Mocked
-    EnvVarHandler envVarHandler;
-
-    @Mocked
     ProbeHandler probeHandler;
 
     MavenProject project = new MavenProject();
@@ -83,7 +80,7 @@ public class DaemonSetHandlerTest {
     @Test
     public void daemonTemplateHandlerTest() {
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -118,7 +115,7 @@ public class DaemonSetHandlerTest {
     public void daemonTemplateHandlerWithInvalidNameTest() {
         //invalid controller name
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -139,7 +136,7 @@ public class DaemonSetHandlerTest {
     public void daemonTemplateHandlerWithoutControllerTest() {
         //without controller name
         ContainerHandler containerHandler =
-                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), envVarHandler, probeHandler);
+                new ContainerHandler(project.getProperties(), new GroupArtifactVersion(), probeHandler);
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 

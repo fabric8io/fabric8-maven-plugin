@@ -100,9 +100,6 @@ public class DefaultControllerEnricherTest {
             context.getGav();
             result = new GroupArtifactVersion("", "fmp-controller-test", "0");
 
-            context.getOutputDirectory();
-            result = Files.createTempDir().getAbsolutePath();
-
             Configuration config =
                 new Configuration.Builder()
                     .processorConfig(new ProcessorConfig(null, null,
@@ -118,8 +115,6 @@ public class DefaultControllerEnricherTest {
             imageConfiguration.getName();
             result = "helloworld";
 
-            context.getProjectClassLoaders();
-            result = new ProjectClassLoaders((URLClassLoader) DefaultControllerEnricherTest.class.getClassLoader(), (URLClassLoader) DefaultControllerEnricherTest.class.getClassLoader());
         }};
     }
 }

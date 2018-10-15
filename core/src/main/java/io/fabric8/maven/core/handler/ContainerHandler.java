@@ -19,6 +19,8 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.SecurityContext;
 import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
@@ -47,13 +49,11 @@ import org.json.JSONObject;
  */
 class ContainerHandler {
 
-    private final EnvVarHandler envVarHandler;
     private final ProbeHandler probeHandler;
     private final Properties configurationProperties;
     private final GroupArtifactVersion groupArtifactVersion;
 
-    public ContainerHandler(Properties configurationProperties, GroupArtifactVersion groupArtifactVersion, EnvVarHandler envVarHandler, ProbeHandler probeHandler) {
-        this.envVarHandler = envVarHandler;
+    public ContainerHandler(Properties configurationProperties, GroupArtifactVersion groupArtifactVersion, ProbeHandler probeHandler) {
         this.probeHandler = probeHandler;
         this.configurationProperties = configurationProperties;
         this.groupArtifactVersion = groupArtifactVersion;
@@ -71,7 +71,7 @@ class ContainerHandler {
                     .withName(KubernetesResourceUtil.extractContainerName(this.groupArtifactVersion, imageConfig))
                     .withImage(getImageName(imageConfig))
                     .withImagePullPolicy(getImagePullPolicy(config))
-                    .withEnv(envVarHandler.getEnvironmentVariables(config.getEnv().orElse(Collections.emptyMap())))
+                    .withEnv(getEnvVars(config))
                     .withSecurityContext(createSecurityContext(config))
                     .withPorts(getContainerPorts(imageConfig))
                     .withVolumeMounts(getVolumeMounts(config))
@@ -82,6 +82,23 @@ class ContainerHandler {
             }
         }
         return ret;
+    }
+
+    private List<EnvVar> getEnvVars(ResourceConfig config) {
+        List<EnvVar> envVars = KubernetesResourceUtil.convertToEnvVarList(config.getEnv().orElse(Collections.emptyMap()));
+
+        // TODO: This should go into an extra enricher so that this behaviour can be switched on / off
+        envVars.add(0,
+            new EnvVarBuilder()
+                .withName("KUBERNETES_NAMESPACE")
+                .withNewValueFrom()
+                  .withNewFieldRef()
+                     .withFieldPath("metadata.namespace")
+                  .endFieldRef()
+                .endValueFrom()
+                .build());
+
+        return envVars;
     }
 
 

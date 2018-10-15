@@ -118,7 +118,7 @@ public class SpringBootConfigurationHelper {
     private Optional<Integer> majorVersion(Optional<String> version) {
         if (version.isPresent()) {
             try {
-                return Optional.of(Integer.parseInt(version.get().substring(0, version.get().indexOf("."))));
+                return Optional.of(Integer.parseInt(version.get().substring(0, version.get().indexOf('.'))));
             } catch (Exception e) {
                 LOG.warn("Cannot spring boot major version from {}", version);
             }

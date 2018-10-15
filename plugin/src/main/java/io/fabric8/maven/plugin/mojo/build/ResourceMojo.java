@@ -88,7 +88,6 @@ import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.Template;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.maven.MavenExecutionException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -488,8 +487,8 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         openShiftConverters.put("DeploymentConfig", new DeploymentConfigOpenShiftConverter(getOpenshiftDeployTimeoutSeconds()));
         openShiftConverters.put("Namespace", new NamespaceOpenShiftConverter());
 
-        handlerHub = new HandlerHub(MavenUtil.getCompileClassLoader(project), project.getBuild().getOutputDirectory(),
-                                    new GroupArtifactVersion(project.getGroupId(), project.getArtifactId(), project.getVersion()), project.getProperties());
+        handlerHub = new HandlerHub(
+            new GroupArtifactVersion(project.getGroupId(), project.getArtifactId(), project.getVersion()), project.getProperties());
     }
 
     private boolean isOpenShiftMode() {
