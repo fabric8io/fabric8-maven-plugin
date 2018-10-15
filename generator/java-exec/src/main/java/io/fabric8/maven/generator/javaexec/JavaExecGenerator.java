@@ -48,9 +48,9 @@ public class JavaExecGenerator extends BaseGenerator {
     private static final String JAVA_OPTIONS = "JAVA_OPTIONS";
 
     // Plugins indicating a plain java build
-    private static final String[] JAVA_EXEC_MAVEN_PLUGINS = new String[] {
-        "org.codehaus.mojo:exec-maven-plugin",
-        "org.apache.maven.plugins:maven-shade-plugin"
+    private static final String[][] JAVA_EXEC_MAVEN_PLUGINS = new String[][] {
+        new String[] { "org.codehaus.mojo", "exec-maven-plugin" },
+        new String[] { "org.apache.maven.plugins", "maven-shade-plugin" }
     };
 
     private final FatJarDetector fatJarDetector;
@@ -99,8 +99,8 @@ public class JavaExecGenerator extends BaseGenerator {
                 return true;
             }
             // Check for the existing of plugins indicating a plain java exec app
-            for (String plugin : JAVA_EXEC_MAVEN_PLUGINS) {
-                if (MavenUtil.hasPlugin(getProject(), plugin)) {
+            for (String[] plugin : JAVA_EXEC_MAVEN_PLUGINS) {
+                if (MavenUtil.hasPlugin(getProject(), plugin[0], plugin[1])) {
                     return true;
                 }
             }

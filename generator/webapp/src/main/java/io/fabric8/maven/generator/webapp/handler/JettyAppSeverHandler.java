@@ -37,8 +37,8 @@ public class JettyAppSeverHandler extends AbstractAppServerHandler {
     public boolean isApplicable() {
         return hasOneOf("**/WEB-INF/jetty-web.xml",
                         "**/META-INF/jetty-logging.properties") ||
-               MavenUtil.hasPlugin(project, "org.mortbay.jetty:jetty-maven-plugin") ||
-               MavenUtil.hasPlugin(project, "org.eclipse.jetty:jetty-maven-plugin");
+               MavenUtil.hasPlugin(project, "org.mortbay.jetty", "jetty-maven-plugin") ||
+               MavenUtil.hasPlugin(project, "org.eclipse.jetty", "jetty-maven-plugin");
     }
 
     @Override

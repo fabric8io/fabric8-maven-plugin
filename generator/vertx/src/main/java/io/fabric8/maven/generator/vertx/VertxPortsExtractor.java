@@ -36,7 +36,7 @@ public class VertxPortsExtractor extends AbstractPortsExtractor {
 
     @Override
     public String getConfigPathFromProject(MavenProject project) {
-        Plugin plugin = project.getPlugin(Constants.VERTX_MAVEN_PLUGIN_GA);
+        Plugin plugin = project.getPlugin(Constants.VERTX_MAVEN_PLUGIN_GROUP + ":" + Constants.VERTX_MAVEN_PLUGIN_ARTIFACT);
         if (plugin == null) {
             return null;
         }

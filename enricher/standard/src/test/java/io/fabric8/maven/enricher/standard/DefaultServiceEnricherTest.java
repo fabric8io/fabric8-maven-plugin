@@ -17,12 +17,14 @@ package io.fabric8.maven.enricher.standard;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Properties;
 import java.util.TreeMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -207,14 +209,16 @@ public class DefaultServiceEnricherTest {
 
         new Expectations() {{
 
-            context.getConfig();
-            result = new ProcessorConfig(null, null, Collections.singletonMap("fmp-service", config));
+            Configuration configuration = new Configuration.Builder()
+                .images(Arrays.asList(imageConfiguration))
+                .processorConfig(new ProcessorConfig(null, null, Collections.singletonMap("fmp-service", config)))
+                .build();
+
+            context.getConfiguration();
+            result = configuration;
 
             imageConfiguration.getBuildConfiguration();
             result = getBuildConfig(withPorts);
-
-            context.getImages();
-            result = Arrays.asList(imageConfiguration);
         }};
     }
 

@@ -51,7 +51,7 @@ public class VertxPortsExtractorTest {
     @Test
     public void testVertxConfigPathFromProject() throws Exception {
         new Expectations() {{
-            project.getPlugin(Constants.VERTX_MAVEN_PLUGIN_GA);
+            project.getPlugin(Constants.VERTX_MAVEN_PLUGIN_GROUP + ":" + Constants.VERTX_MAVEN_PLUGIN_ARTIFACT);
             result = plugin;
             plugin.getConfiguration();
             result = configuration;
@@ -68,7 +68,7 @@ public class VertxPortsExtractorTest {
     @Test
     public void testNoVertxConfiguration() throws Exception {
         new Expectations() {{
-            project.getPlugin(Constants.VERTX_MAVEN_PLUGIN_GA);
+            project.getPlugin(Constants.VERTX_MAVEN_PLUGIN_GROUP + ":" + Constants.VERTX_MAVEN_PLUGIN_ARTIFACT);
             plugin.getConfiguration(); result = null;
         }};
         Map<String, Integer> result = new VertxPortsExtractor(log).extract(project);

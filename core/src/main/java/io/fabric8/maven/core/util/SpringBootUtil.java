@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.SortedMap;
 
@@ -52,15 +53,6 @@ public class SpringBootUtil {
     }
 
     /**
-     * Returns the given properties file on the project classpath if found or an empty properties object if not
-     */
-    public static Properties getPropertiesFile(MavenProject project, String propertiesFileName) {
-        URLClassLoader compileClassLoader = MavenUtil.getCompileClassLoader(project);
-        URL resource = compileClassLoader.findResource(propertiesFileName);
-        return getPropertiesResource(resource);
-    }
-
-    /**
      * Returns the given properties resource on the project classpath if found or an empty properties object if not
      */
     protected static Properties getPropertiesResource(URL resource) {
@@ -73,15 +65,6 @@ public class SpringBootUtil {
             }
         }
         return answer;
-    }
-
-    /**
-     * Returns a {@code Properties} representation of the given Yaml file on the project classpath if found or an empty properties object if not
-     */
-    public static Properties getPropertiesFromYamlFile(MavenProject project, String yamlFileName) {
-        URLClassLoader compileClassLoader = MavenUtil.getCompileClassLoader(project);
-        URL resource = compileClassLoader.findResource(yamlFileName);
-        return getPropertiesFromYamlResource(resource);
     }
 
     /**
@@ -113,15 +96,15 @@ public class SpringBootUtil {
     /**
      * Determine the spring-boot devtools version for the current project
      */
-    public static String getSpringBootDevToolsVersion(MavenProject mavenProject) {
+    public static Optional<String> getSpringBootDevToolsVersion(MavenProject mavenProject) {
         return getSpringBootVersion(mavenProject);
     }
 
     /**
      * Determine the spring-boot major version for the current project
      */
-    public static String getSpringBootVersion(MavenProject mavenProject) {
-        return MavenUtil.getDependencyVersion(mavenProject, SpringBootConfigurationHelper.SPRING_BOOT_GROUP_ID, SpringBootConfigurationHelper.SPRING_BOOT_ARTIFACT_ID);
+    public static Optional<String> getSpringBootVersion(MavenProject mavenProject) {
+        return Optional.ofNullable(MavenUtil.getDependencyVersion(mavenProject, SpringBootConfigurationHelper.SPRING_BOOT_GROUP_ID, SpringBootConfigurationHelper.SPRING_BOOT_ARTIFACT_ID));
     }
 
     /**

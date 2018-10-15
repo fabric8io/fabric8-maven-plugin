@@ -15,7 +15,7 @@
  */
 package io.fabric8.maven.core.util;
 
-import io.fabric8.maven.core.model.Artifact;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -28,7 +28,6 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import mockit.Expectations;
 import mockit.Mocked;
 import org.apache.maven.project.MavenProject;
 import org.junit.BeforeClass;
@@ -158,7 +157,7 @@ public class KubernetesResourceUtilTest {
                 .registry("example.com/someregistry")
                 .name("test")
                 .build();
-        String containerName = KubernetesResourceUtil.extractContainerName(new Artifact("io.fabric8-test-", "fabric8-maven-plugin-dummy", "0"), imageConfiguration);
+        String containerName = KubernetesResourceUtil.extractContainerName(new GroupArtifactVersion("io.fabric8-test-", "fabric8-maven-plugin-dummy", "0"), imageConfiguration);
         assertTrue(containerName.matches(KubernetesResourceUtil.CONTAINER_NAME_REGEX));
     }
 

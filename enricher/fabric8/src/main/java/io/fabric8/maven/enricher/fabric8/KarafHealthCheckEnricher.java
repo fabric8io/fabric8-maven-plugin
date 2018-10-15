@@ -20,6 +20,7 @@ import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Enriches Karaf containers with health check probes.
@@ -48,26 +49,24 @@ public class KarafHealthCheckEnricher extends AbstractHealthCheckEnricher {
     //
     private Probe discoverKarafProbe(String path, int initialDelay) {
 
-        final Map<String, Object> configurationValues = getContext().getConfiguration("karaf-maven-plugin");
+        final Optional<Map<String, Object>> configurationValues = getContext().getConfiguration().getPluginConfiguration("maven", "karaf-maven-plugin");
 
-        if (configurationValues == null || configurationValues.isEmpty()) {
+        if (!configurationValues.isPresent()) {
+            return null;
+        }
+        final Optional<Object> lookup = configurationValues.map(m -> m.get("startupFeatures"));
+
+        if (!lookup.isPresent()) {
             return null;
         }
 
-
-        final Object startupFeatures = configurationValues.get("startupFeatures");
-
-        if (startupFeatures == null) {
-            return null;
-        }
-
+        Object startupFeatures = lookup.get();
         if (!(startupFeatures instanceof Map)) {
             throw new IllegalArgumentException(String.format("For element %s was expected a complex object but a simple object was found of type %s and value %s",
                 "startupFeatures", startupFeatures.getClass(), startupFeatures.toString()));
         }
 
         final Map<String, Object> startUpFeaturesObject = (Map<String, Object>) startupFeatures;
-
         final Object feature = startUpFeaturesObject.get("feature");
 
         if (feature != null) {

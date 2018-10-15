@@ -26,6 +26,7 @@ import io.fabric8.kubernetes.api.model.PodTemplate;
 import io.fabric8.kubernetes.api.model.PodTemplateBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
@@ -64,7 +65,7 @@ public class VolumePermissionEnricherTest {
     @Test
     public void alreadyExistingInitContainer(@Mocked final ProcessorConfig config) throws Exception {
         new Expectations() {{
-            context.getConfig(); result = config;
+            context.getConfiguration(); result = new Configuration.Builder().processorConfig(config).build();
         }};
 
         PodTemplateBuilder ptb = createEmptyPodTemplate();
@@ -101,7 +102,9 @@ public class VolumePermissionEnricherTest {
                             .singletonMap(VolumePermissionEnricher.Config.permission.name(), tc.permission))));
 
             // Setup mock behaviour
-            new Expectations() {{ context.getConfig(); result = config; }};
+            new Expectations() {{
+                context.getConfiguration(); result = new Configuration.Builder().processorConfig(config).build();
+            }};
 
             VolumePermissionEnricher enricher = new VolumePermissionEnricher(context);
 

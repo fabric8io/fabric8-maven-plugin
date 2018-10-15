@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -68,7 +69,7 @@ public class PrometheusEnricherTest {
 
         // Setup mock behaviour
         new Expectations() {{
-            context.getConfig(); result = config;
+            context.getConfiguration(); result = new Configuration.Builder().processorConfig(config).build();
         }};
 
         PrometheusEnricher enricher = new PrometheusEnricher(context);
@@ -97,9 +98,13 @@ public class PrometheusEnricherTest {
 
         // Setup mock behaviour
         new Expectations() {{
-            context.getConfig(); result = config;
+            context.getConfiguration();
+            result = new Configuration.Builder()
+                .processorConfig(config)
+                .images(Arrays.asList(imageConfiguration))
+                .build();
+
             imageConfiguration.getBuildConfiguration(); result = imageConfig;
-            context.getImages(); result = Arrays.asList(imageConfiguration);
         }};
 
         PrometheusEnricher enricher = new PrometheusEnricher(context);
@@ -126,9 +131,13 @@ public class PrometheusEnricherTest {
 
         // Setup mock behaviour
         new Expectations() {{
-            context.getConfig(); result = config;
+            context.getConfiguration();
+            result = new Configuration.Builder()
+                .processorConfig(config)
+                .images(Arrays.asList(imageConfiguration))
+                .build();
+
             imageConfiguration.getBuildConfiguration(); result = imageConfig;
-            context.getImages(); result = Arrays.asList(imageConfiguration);
         }};
 
         PrometheusEnricher enricher = new PrometheusEnricher(context);

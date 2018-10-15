@@ -35,8 +35,8 @@ public class WildFlyAppSeverHandler extends AbstractAppServerHandler {
     @Override
     public boolean isApplicable() {
         return
-            !MavenUtil.hasPlugin(project, "org.wildfly.swarm:wildfly-swarm-plugin") &&
-            !MavenUtil.hasPlugin(project, "io.thorntail:thorntail-maven-plugin") &&
+            !MavenUtil.hasPlugin(project, "org.wildfly.swarm", "wildfly-swarm-plugin") &&
+            !MavenUtil.hasPlugin(project, "io.thorntail", "thorntail-maven-plugin") &&
             (hasOneOf("**/WEB-INF/jboss-deployment-structure.xml",
                      "**/META-INF/jboss-deployment-structure.xml",
                      "**/WEB-INF/jboss-web.xml", "**/WEB-INF/ejb-jar.xml",
@@ -45,8 +45,8 @@ public class WildFlyAppSeverHandler extends AbstractAppServerHandler {
                      "**/META-INF/*-ds.xml", "**/WEB-INF/*-ds.xml",
                      "**/WEB-INF/jboss-ejb-client.xml", "**/META-INF/jbosscmp-jdbc.xml",
                      "**/WEB-INF/jboss-webservices.xml") ||
-            MavenUtil.hasPlugin(project, "org.jboss.as.plugins:jboss-as-maven-plugin") ||
-            MavenUtil.hasPlugin(project, "org.wildfly.plugins:wildfly-maven-plugin"));
+            MavenUtil.hasPlugin(project, "org.jboss.as.plugins", "jboss-as-maven-plugin") ||
+            MavenUtil.hasPlugin(project, "org.wildfly.plugins", "wildfly-maven-plugin"));
     }
 
     @Override

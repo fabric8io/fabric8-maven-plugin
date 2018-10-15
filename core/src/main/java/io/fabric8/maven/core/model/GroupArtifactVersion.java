@@ -15,22 +15,13 @@
  */
 package io.fabric8.maven.core.model;
 
-public class Artifact {
+public class GroupArtifactVersion {
 
     private String groupId;
     private String artifactId;
     private String version;
 
-    public Artifact() {
-        this("unknown", "empty-project", "0");
-    }
-
-    public Artifact(String version) {
-        this();
-        this.version = version;
-    }
-
-    public Artifact(String groupId, String artifactId, String version) {
+    public GroupArtifactVersion(String groupId, String artifactId, String version) {
         this.groupId = groupId;
         this.artifactId = artifactId;
         this.version = version;
@@ -48,4 +39,7 @@ public class Artifact {
         return version;
     }
 
+    public boolean isSnapshot() {
+        return getVersion() != null && getVersion().endsWith("SNAPSHOT");
+    }
 }

@@ -25,6 +25,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.model.DistributionManagement;
+import org.apache.maven.model.Site;
+import org.apache.maven.project.MavenProject;
 
 /**
  * Adds a link to the generated documentation for this microservice so we can link to the versioned docs in the
@@ -46,12 +49,30 @@ public class DocLinkEnricher extends AbstractLiveEnricher {
         }
     }
 
+    private String getDocumentationUrl() {
+        if (getContext() instanceof MavenEnricherContext) {
+            MavenEnricherContext mavenEnricherContext = (MavenEnricherContext) getContext();
+            MavenProject currentProject = mavenEnricherContext.getProject();
+            while (currentProject != null) {
+                DistributionManagement distributionManagement = currentProject.getDistributionManagement();
+                if (distributionManagement != null) {
+                    Site site = distributionManagement.getSite();
+                    if (site != null) {
+                        return site.getUrl();
+                    }
+                }
+                currentProject = currentProject.getParent();
+            }
+        }
+        return null;
+    }
+
     protected String findDocumentationUrl() {
 
-        String url = getContext().getDocumentationUrl();
+        String url = getDocumentationUrl();
         if (StringUtils.isNotBlank(url)) {
             // lets replace any properties...
-            url = replaceProperties(url, getContext().getProperties());
+            url = replaceProperties(url, getContext().getConfiguration().getProperties());
 
             // lets convert the internal dns name to a public name
             try {

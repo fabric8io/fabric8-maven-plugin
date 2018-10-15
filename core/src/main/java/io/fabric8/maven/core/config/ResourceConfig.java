@@ -15,9 +15,9 @@
  */
 package io.fabric8.maven.core.config;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.maven.plugins.annotations.Parameter;
 
@@ -80,8 +80,8 @@ public class ResourceConfig {
     @Parameter
     private String namespace;
 
-    public Map<String, String> getEnv() {
-        return env != null ? env : Collections.<String, String>emptyMap();
+    public Optional<Map<String, String>> getEnv() {
+        return Optional.ofNullable(env);
     }
 
     public MetaDataConfig getLabels() {

@@ -23,10 +23,11 @@ package io.fabric8.maven.enricher.standard;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.core.util.KindAndName;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.Dependency;
+import io.fabric8.maven.core.model.Dependency;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.io.File;
 import java.io.IOException;
@@ -113,7 +114,7 @@ public class DependencyEnricherTest {
 
 
         File aFile = new File(getClass().getResource(artifactFilePath).getFile());
-        Dependency artifact = new Dependency("jar", "compile", aFile);
+        Dependency artifact = new Dependency(new GroupArtifactVersion("g1", "a1", "v1"),"jar", "compile", aFile);
         artifacts.add(artifact);
         return artifacts;
     }

@@ -15,12 +15,12 @@
  */
 package io.fabric8.maven.enricher.fabric8;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import io.fabric8.kubernetes.api.model.HTTPHeader;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.kubernetes.api.model.ProbeFluent;
+import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,6 +28,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+
 import javax.annotation.Nullable;
 
 
@@ -47,7 +49,8 @@ import javax.annotation.Nullable;
  */
 public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
-    static final String VERTX_MAVEN_PLUGIN_GA = "io.fabric8:vertx-maven-plugin";
+    static final String VERTX_MAVEN_PLUGIN_GROUP = "io.fabric8";
+    static final String VERTX_MAVEN_PLUGIN_ARTIFACT = "vertx-maven-plugin";
     static final String VERTX_GROUPID = "io.vertx";
 
     private static final int DEFAULT_MANAGEMENT_PORT = 8080;
@@ -78,8 +81,8 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
     }
 
     private boolean isApplicable() {
-        return getContext().hasPlugin(VERTX_MAVEN_PLUGIN_GA)
-                || getContext().hasDependencyOnAnyArtifactOfGroup(VERTX_GROUPID);
+        return getContext().hasPlugin(VERTX_MAVEN_PLUGIN_GROUP, VERTX_MAVEN_PLUGIN_ARTIFACT)
+               || getContext().hasDependency(VERTX_GROUPID, null);
     }
 
     private String getSpecificPropertyName(boolean readiness, String attribute) {
@@ -97,28 +100,25 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
         // We don't allow to set the HOST, because it should rather be configured in the HTTP header (Host header)
         // cf. https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/
 
-        String type = getStringValue("type", readiness).or("http").toUpperCase();
+        String type = getStringValue("type", readiness).orElse("http").toUpperCase();
         Optional<Integer> port = getIntegerValue("port", readiness);
         Optional<String> portName = getStringValue("port-name", readiness);
         String path = getStringValue("path", readiness)
-                .transform(new Function<String, String>() {
-                    @Override
-                    public String apply(String input) {
-                        if (input.isEmpty() || input.startsWith("/")) {
-                            return input;
-                        }
-                        return "/" + input;
+                .map(input -> {
+                    if (input.isEmpty() || input.startsWith("/")) {
+                        return input;
                     }
+                    return "/" + input;
                 })
-                .orNull();
-        String scheme = getStringValue("scheme", readiness).or(SCHEME_HTTP).toUpperCase();
+                .orElse(null);
+        String scheme = getStringValue("scheme", readiness).orElse(SCHEME_HTTP).toUpperCase();
         Optional<Integer> initialDelay = getIntegerValue("initial-delay", readiness);
         Optional<Integer> period = getIntegerValue("period", readiness);
         Optional<Integer> timeout = getIntegerValue("timeout", readiness);
         Optional<Integer> successThreshold = getIntegerValue("success-threshold", readiness);
         Optional<Integer> failureThreshold = getIntegerValue("failure-threshold", readiness);
-        List<String> command = getListValue("command", readiness).or(Collections.<String>emptyList());
-        Map<String, String> headers = getMapValue("headers", readiness).or(Collections.<String, String>emptyMap());
+        List<String> command = getListValue("command", readiness).orElse(Collections.<String>emptyList());
+        Map<String, String> headers = getMapValue("headers", readiness).orElse(Collections.<String, String>emptyMap());
 
 
         // Validate
@@ -229,14 +229,15 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
         String specific = getSpecificPropertyName(readiness, attribute);
         String generic = VERTX_HEALTH + attribute;
         // Check if we have the specific user property.
-        String property = getContext().getProperties().getProperty(specific);
+        Configuration contextConfig = getContext().getConfiguration();
+        String property = contextConfig.getProperty(specific);
         if (property != null) {
-            return Optional.of(property).transform(TRIM);
+            return Optional.of(property).map(TRIM);
         }
 
-        property = getContext().getProperties().getProperty(generic);
+        property = contextConfig.getProperty(generic);
         if (property != null) {
-            return Optional.of(property).transform(TRIM);
+            return Optional.of(property).map(TRIM);
         }
 
 
@@ -245,10 +246,10 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
                 attribute
         };
 
-        Optional<String> config = getValueFromConfig(specificPath).transform(TRIM);
+        Optional<String> config = getValueFromConfig(specificPath).map(TRIM);
         if (!config.isPresent()) {
             // Generic path.
-            return getValueFromConfig(attribute).transform(TRIM);
+            return getValueFromConfig(attribute).map(TRIM);
         } else {
             return config;
         }
@@ -266,29 +267,26 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
             element = getElement(attribute);
         }
 
-        return element.transform(new Function<Object, List<String>>() {
-            @Override
-            public List<String> apply(Object input) {
-                if (input instanceof Map) {
-                    final Collection<Object> values = ((Map<String, Object>) input).values();
-                    List<String> elements = new ArrayList<>();
-                    for (Object value : values) {
-                        if (value instanceof List) {
-                            List<String> currentValues = (List<String>) value;
-                            elements.addAll(currentValues);
-                        } else {
-                            elements.add((String) value);
-                        }
+        return element.map(input -> {
+            if (input instanceof Map) {
+                final Collection<Object> values = ((Map<String, Object>) input).values();
+                List<String> elements = new ArrayList<>();
+                for (Object value : values) {
+                    if (value instanceof List) {
+                        List<String> currentValues = (List<String>) value;
+                        elements.addAll(currentValues);
+                    } else {
+                        elements.add((String) value);
                     }
-
-                    return elements;
-                } else {
-                    throw new IllegalArgumentException(String.format(
-                        ERROR_MESSAGE,
-                        attribute, input.getClass(), input.toString()));
                 }
 
+                return elements;
+            } else {
+                throw new IllegalArgumentException(String.format(
+                    ERROR_MESSAGE,
+                    attribute, input.getClass(), input.toString()));
             }
+
         });
     }
 
@@ -303,7 +301,7 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
             element = getElement(attribute);
         }
 
-        return element.transform(input -> {
+        return element.map(input -> {
             if (input instanceof Map) {
                 return (Map<String, String>) input;
             } else {
@@ -317,29 +315,26 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
     private Optional<Integer> getIntegerValue(String attribute, boolean readiness) {
         return getStringValue(attribute, readiness)
-                .transform(Integer::parseInt);
+                .map(Integer::parseInt);
     }
 
     private Optional<String> getValueFromConfig(String... keys) {
-        return getElement(keys).transform(new Function<Object, String>() {
-            @Override
-            @Nullable
-            public String apply(Object input) {
-                if (input instanceof String) {
-                    return (String) input;
-                } else {
-                    throw new IllegalArgumentException(String.format(
-                        ERROR_MESSAGE,
-                    Arrays.toString(keys), input.getClass(), input.toString()));
-                }
+        return getElement(keys).map(input -> {
+            if (input instanceof String) {
+                return (String) input;
+            } else {
+                throw new IllegalArgumentException(String.format(
+                    ERROR_MESSAGE,
+                Arrays.toString(keys), input.getClass(), input.toString()));
             }
         });
     }
 
     private Optional<Object> getElement(String... path) {
-        final Map<String, Object> configuration = getContext().getConfiguration("io.fabric8:fabric8-maven-plugin");
-        if (configuration == null || configuration.isEmpty()) {
-            return Optional.absent();
+        final Optional<Map<String, Object>> configuration = getContext().getConfiguration().getPluginConfiguration("maven", "io.fabric8:fabric8-maven-plugin");
+
+        if (!configuration.isPresent()) {
+            return Optional.empty();
         }
 
 
@@ -347,14 +342,14 @@ public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
         List<String> absolute = new ArrayList<>();
         absolute.addAll(Arrays.asList(roots));
         absolute.addAll(Arrays.asList(path));
-        Object root = configuration;
+        Object root = configuration.get();
         for (String key : absolute) {
 
             if (root instanceof Map) {
                 Map<String, Object> rootMap = (Map<String, Object>) root;
                 root = rootMap.get(key);
                 if (root == null) {
-                    return Optional.absent();
+                    return Optional.empty();
                 }
             }
 
