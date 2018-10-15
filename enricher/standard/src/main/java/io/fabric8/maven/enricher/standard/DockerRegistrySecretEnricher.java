@@ -15,16 +15,15 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.SecretConstants;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
 public class DockerRegistrySecretEnricher extends SecretEnricher {
     final private static String ANNOTATION_KEY = "maven.fabric8.io/dockerServerId";

@@ -33,7 +33,6 @@ import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
-import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
