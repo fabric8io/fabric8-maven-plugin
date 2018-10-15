@@ -15,6 +15,13 @@
  */
 package io.fabric8.maven.core.handler;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPort;
@@ -35,13 +42,7 @@ import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 /**
  * @author roland
@@ -117,7 +118,7 @@ class ContainerHandler {
             return null;
         }
         Properties props = getPropertiesWithSystemOverrides(this.configurationProperties);
-        String configuredRegistry = EnvUtil.fistRegistryOf(
+        String configuredRegistry = EnvUtil.firstRegistryOf(
             imageConfiguration.getRegistry(),
             props.getProperty("docker.pull.registry"),
             props.getProperty("docker.registry"));
@@ -168,9 +169,9 @@ class ContainerHandler {
         if (!ports.isEmpty()) {
             List<ContainerPort> ret = new ArrayList<>();
             PortMapping portMapping = new PortMapping(ports, configurationProperties);
-            JSONArray portSpecs = portMapping.toJson();
-            for (int i = 0; i < portSpecs.length(); i ++) {
-                JSONObject portSpec = portSpecs.getJSONObject(i);
+            JsonArray portSpecs = portMapping.toJson();
+            for (int i = 0; i < portSpecs.size(); i ++) {
+                JsonObject portSpec = portSpecs.get(i).getAsJsonObject();
                 ret.add(extractContainerPort(portSpec));
             }
             return ret;
@@ -179,17 +180,17 @@ class ContainerHandler {
         }
     }
 
-    private ContainerPort extractContainerPort(JSONObject portSpec) {
+    private ContainerPort extractContainerPort(JsonObject portSpec) {
         ContainerPortBuilder portBuilder = new ContainerPortBuilder()
-            .withContainerPort(portSpec.getInt("containerPort"));
+            .withContainerPort(portSpec.get("containerPort").getAsInt());
         if (portSpec.has("hostPort")) {
-            portBuilder.withHostPort(portSpec.getInt("hostPort"));
+            portBuilder.withHostPort(portSpec.get("hostPort").getAsInt());
         }
         if (portSpec.has("protocol")) {
-            portBuilder.withProtocol(portSpec.getString("protocol").toUpperCase());
+            portBuilder.withProtocol(portSpec.get("protocol").getAsString().toUpperCase());
         }
         if (portSpec.has("hostIP")) {
-            portBuilder.withHostIP(portSpec.getString("hostIP"));
+            portBuilder.withHostIP(portSpec.get("hostIP").getAsString());
         }
         return portBuilder.build();
     }

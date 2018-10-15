@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.util.Configs;
@@ -28,7 +30,6 @@ import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.util.InitContainerHandler;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONObject;
 
 import java.util.*;
 
@@ -120,9 +121,9 @@ public class VolumePermissionEnricher extends BaseEnricher {
             private List<VolumeMount> createMounts(Map<String, String> mountPoints) {
                 List<VolumeMount> ret = new ArrayList<>();
                 for (Map.Entry<String, String> entry : mountPoints.entrySet()) {
-                    JSONObject mount = new JSONObject();
-                    mount.put("name", entry.getKey());
-                    mount.put("mountPath", entry.getValue());
+                    JsonObject mount = new JsonObject();
+                    mount.add("name", new JsonPrimitive(entry.getKey()));
+                    mount.add("mountPath", new JsonPrimitive(entry.getValue()));
 
                     VolumeMount volumeMount = new VolumeMountBuilder()
                             .withName(entry.getKey())

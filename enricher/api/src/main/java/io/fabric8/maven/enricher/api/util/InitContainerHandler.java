@@ -19,11 +19,7 @@ import java.util.List;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
-import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.docker.util.Logger;
-import org.apache.commons.lang3.StringUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 /**
  * @author roland

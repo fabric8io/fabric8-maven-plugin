@@ -15,6 +15,8 @@
  */
 package io.fabric8.maven.plugin.mojo.build;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import io.fabric8.maven.core.config.MappingConfig;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
 import java.io.File;
@@ -101,7 +103,6 @@ import org.apache.maven.settings.Settings;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.json.JSONObject;
 
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
 import static io.fabric8.maven.core.util.ResourceFileType.json;
@@ -966,7 +967,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         }
         try {
             return EnvUtil.loadTimestamp(tsFile);
-        } catch (MojoExecutionException e) {
+        } catch (IOException e) {
             throw new MojoExecutionException("Cannot read timestamp from " + tsFile,e);
         }
     }
@@ -1028,18 +1029,17 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             return "";
         }
 
-        Map<String, String> auth = new HashMap<>();
-        auth.put("username", server.getUsername());
-        auth.put("password", server.getPassword());
+        JsonObject auth = new JsonObject();
+        auth.add("username", new JsonPrimitive(server.getUsername()));
+        auth.add("password", new JsonPrimitive(server.getPassword()));
 
         String mail = getConfigurationValue(server, "email");
-        if (StringUtils.isBlank(mail)) {
-            mail = "foo@foo.com";
+        if (!StringUtils.isBlank(mail)) {
+            auth.add("email", new JsonPrimitive(mail));
         }
-        auth.put("email", mail);
 
-        JSONObject json = new JSONObject()
-            .put(serverId, auth);
+        JsonObject json = new JsonObject();
+        json.add(serverId, auth);
         return json.toString();
     }
 
