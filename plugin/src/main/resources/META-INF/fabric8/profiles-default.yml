@@ -27,7 +27,6 @@
     - fmp-service
     - fmp-image
     - fmp-portname
-    - fmp-ianaservice
     - fmp-project
     - fmp-dependency
     - fmp-pod-annotations
