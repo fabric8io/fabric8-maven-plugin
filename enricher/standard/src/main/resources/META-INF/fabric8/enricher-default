@@ -46,10 +46,7 @@ io.fabric8.maven.enricher.standard.VolumePermissionEnricher
 # Add an enricher for enabling debug information
 io.fabric8.maven.enricher.standard.DebugEnricher
 
-# Add an enricher for merging duplicates
-io.fabric8.maven.enricher.standard.MergeEnricher
-
-# Add an enricher for merging duplicates
+# Add an enricher for removing build related annotations
 io.fabric8.maven.enricher.standard.RemoveBuildAnnotationsEnricher
 
 # Add an enricher for adding Maven SCM metadata based on pom.xml scm details
