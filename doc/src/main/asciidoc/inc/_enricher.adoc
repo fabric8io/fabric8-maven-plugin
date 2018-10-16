@@ -35,7 +35,7 @@ This plugin comes with a set of default enrichers. In addition custom enrichers 
 fabric8-maven-plugin comes with a set of enrichers which are enabled by default. There are two categories of default enrichers:
 
 * *Standard Enrichers* are used to add default resource object when they are missing or add common metadata extracted from the given build information
-* *Fabric8 Enrichers* are enrichers which are focussed on a certain tech stack that they detect.
+* *Fabric8 Enrichers* are enrichers which are focused on a certain tech stack that they detect.
 * *OpenShift.io Enrichers* are specific to the https://www.openshift.io[OpenShift.io development environment]. These enrichers can add metadata to resources to allow them to better integrate with OpenShift.io.
 
 . Default Enrichers Overview
