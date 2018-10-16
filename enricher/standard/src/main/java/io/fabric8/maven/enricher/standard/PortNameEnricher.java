@@ -15,15 +15,20 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.maven.docker.util.Logger;
+
+import static io.fabric8.ianaservicehelper.Helper.serviceNames;
 
 /**
  * Enrich container ports with names with names of IANA registered services, if not already present.
@@ -33,7 +38,7 @@ public class PortNameEnricher extends BaseEnricher {
         super(buildContext, "fmp-portname");
     }
 
-    public static final Map<Integer, String> DEFAULT_PORT_MAPPING;
+    private static final Map<Integer, String> DEFAULT_PORT_MAPPING;
     static {
         Map<Integer, String> temp = new HashMap<>();
         temp.put(8080, "http");
@@ -43,16 +48,38 @@ public class PortNameEnricher extends BaseEnricher {
         DEFAULT_PORT_MAPPING = Collections.unmodifiableMap(temp);
     }
 
+    public static void addFromDefaultPortMapping (ContainerPortBuilder builder, Logger logger) {
+        String serviceName = DEFAULT_PORT_MAPPING.get(builder.getContainerPort());
+        if (serviceName != null && !serviceName.isEmpty()) {
+            logger.verbose("Adding port name %s for port %d", serviceName, builder.getContainerPort());
+            builder.withName(serviceName);
+        }
+    }
+
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
         builder.accept(new TypedVisitor<ContainerPortBuilder>() {
+
             @Override
             public void visit(ContainerPortBuilder builder) {
+
                 if (builder.getContainerPort() != null && (builder.getName() == null || builder.getName().isEmpty())) {
-                    String serviceName = DEFAULT_PORT_MAPPING.get(builder.getContainerPort());
-                    if (serviceName != null && !serviceName.isEmpty()) {
-                        log.verbose("Adding port name %s for port %d", serviceName, builder.getContainerPort());
-                        builder.withName(serviceName);
+                    String protocol = builder.getProtocol();
+                    if (protocol == null || protocol.isEmpty()) {
+                        protocol = "tcp";
+                    }
+                    try {
+                        Set<String> sn = serviceNames(builder.getContainerPort(), protocol.toLowerCase());
+                        if (sn != null && !sn.isEmpty()) {
+                            String serviceName = sn.iterator().next();
+                            log.verbose("Adding port name %s for port %d", serviceName, builder.getContainerPort());
+                            builder.withName(serviceName);
+                        } else {
+                            addFromDefaultPortMapping(builder, log);
+                        }
+                    } catch (IOException e) {
+                        log.verbose("Failed to find service names for port %d/%s : %s", builder.getContainerPort(), protocol.toLowerCase(), e.getMessage());
+                        addFromDefaultPortMapping(builder, log);
                     }
                 }
             }

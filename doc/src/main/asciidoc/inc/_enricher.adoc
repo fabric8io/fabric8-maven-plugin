@@ -58,9 +58,6 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 | <<fmp-git>>
 | Check local `.git` directory and add build information as annotations.
 
-| <<fmp-ianaservice>>
-| Add a default portname looking up IANA services
-
 | <<fmp-image>>
 | Add the image name into a `PodSpec` of replication controller, replication sets and deployments, if missing.
 
@@ -113,9 +110,6 @@ include::enricher/_fmp_service.adoc[]
 
 [[fmp-pod-annotation]]
 ==== fmp-pod-annotation
-
-[[fmp-ianaservice]]
-==== fmp-ianaservice
 
 [[fmp-project]]
 ==== fmp-project
