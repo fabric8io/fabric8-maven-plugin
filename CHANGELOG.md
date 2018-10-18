@@ -10,7 +10,7 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
-###3.5.42
+###3.5.42 (2018-10-18)
 * Fix 1346: karaf-maven-plugin is detected under any groupId
 * Fix 1021: Avoids empty deployment selector value in generated yaml resource
 * Fix 1383: Check if instanceof Openshift before casting and handle failures.
