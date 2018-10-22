@@ -17,12 +17,16 @@ package io.fabric8.maven.enricher.api;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 
 /**
@@ -33,16 +37,15 @@ public abstract class BaseEnricher implements Enricher {
 
     private final EnricherConfig config;
     private final String name;
-    private EnricherContext buildContext;
+    private EnricherContext enricherContext;
 
     protected Logger log;
 
-    public BaseEnricher(EnricherContext buildContext, String name) {
-        this.buildContext = buildContext;
+    public BaseEnricher(EnricherContext enricherContext, String name) {
+        this.enricherContext = enricherContext;
         // Pick the configuration which is for us
-        this.config = new EnricherConfig(this.buildContext.getProperties(),
-                                         name, buildContext.getConfig());
-        this.log = new PrefixedLogger(name, buildContext.getLog());
+        this.config = new EnricherConfig(name, enricherContext.getConfiguration());
+        this.log = new PrefixedLogger(name, enricherContext.getLog());
         this.name = name;
     }
 
@@ -70,12 +73,16 @@ public abstract class BaseEnricher implements Enricher {
         return log;
     }
 
-    protected List<ImageConfiguration> getImages() {
-        return buildContext.getImages();
+    protected Optional<List<ImageConfiguration>> getImages() {
+        return enricherContext.getConfiguration().getImages();
     }
 
     protected boolean hasImageConfiguration() {
-        return !buildContext.getImages().isEmpty();
+        return !enricherContext.getConfiguration().getImages().orElse(Collections.emptyList()).isEmpty();
+    }
+
+    protected Configuration getConfiguration() {
+        return enricherContext.getConfiguration();
     }
 
     protected String getConfig(Configs.Key key) {
@@ -95,14 +102,14 @@ public abstract class BaseEnricher implements Enricher {
     }
 
     protected EnricherContext getContext() {
-        return buildContext;
+        return enricherContext;
     }
 
     /**
      * Returns true if we are in OpenShift S2I binary building mode
      */
     protected boolean isOpenShiftMode() {
-        Properties properties = getContext().getProperties();
+        Properties properties = getContext().getConfiguration().getProperties();
         if (properties != null) {
             return PlatformMode.isOpenShiftMode(properties);
         }

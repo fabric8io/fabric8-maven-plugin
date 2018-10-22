@@ -17,6 +17,7 @@ package io.fabric8.maven.enricher.osio;
 
 import com.google.common.collect.ImmutableMap;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.enricher.api.Kind;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.util.Collections;
@@ -48,8 +49,7 @@ public class SpaceLabelEnricherTest {
     public void testDefaultConfiguration() {
         final Properties props = new Properties();
         new Expectations() {{
-            context.getProperties();
-            result = props;
+            context.getConfiguration(); result = new Configuration.Builder().properties(props).build();
         }};
 
         SpaceLabelEnricher enricher = new SpaceLabelEnricher(context);
@@ -70,8 +70,7 @@ public class SpaceLabelEnricherTest {
 
         final Properties props = new Properties();
         new Expectations() {{
-            context.getProperties();
-            result = props;
+            context.getConfiguration(); result = new Configuration.Builder().properties(props).build();
         }};
 
         SpaceLabelEnricher enricher = new SpaceLabelEnricher(context);
@@ -84,8 +83,7 @@ public class SpaceLabelEnricherTest {
         final Properties props = new Properties();
         props.put(SPACE_KEY, SPACE_VALUE);
         new Expectations() {{
-            context.getProperties();
-            result = props;
+            context.getConfiguration(); result = new Configuration.Builder().properties(props).build();
         }};
 
         SpaceLabelEnricher enricher = new SpaceLabelEnricher(context);
@@ -110,8 +108,7 @@ public class SpaceLabelEnricherTest {
         );
 
         new Expectations() {{
-            context.getConfig();
-            result = config;
+            context.getConfiguration(); result = new Configuration.Builder().processorConfig(config).build();
         }};
 
         SpaceLabelEnricher enricher = new SpaceLabelEnricher(context);

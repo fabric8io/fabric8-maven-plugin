@@ -15,8 +15,8 @@
  */
 package io.fabric8.maven.core.handler;
 
-import io.fabric8.maven.core.model.Artifact;
-import java.net.URLClassLoader;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
+
 import java.util.Properties;
 
 /**
@@ -33,10 +33,9 @@ public class HandlerHub {
     private final DaemonSetHandler daemonSetHandler;
     private final JobHandler jobHandler;
 
-    public HandlerHub(URLClassLoader compileClassloader, String outputDirectory, Artifact artifact, Properties configuration) {
+    public HandlerHub(GroupArtifactVersion groupArtifactVersion, Properties configuration) {
         ProbeHandler probeHandler = new ProbeHandler();
-        EnvVarHandler envVarHandler = new EnvVarHandler(compileClassloader, outputDirectory);
-        ContainerHandler containerHandler = new ContainerHandler(configuration, artifact, envVarHandler, probeHandler);
+        ContainerHandler containerHandler = new ContainerHandler(configuration, groupArtifactVersion, probeHandler);
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
         deploymentHandler = new DeploymentHandler(podTemplateHandler);

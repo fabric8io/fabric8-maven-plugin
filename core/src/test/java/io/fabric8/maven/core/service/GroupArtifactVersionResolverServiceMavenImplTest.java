@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(JMockit.class)
-public class ArtifactResolverServiceMavenImplTest {
+public class GroupArtifactVersionResolverServiceMavenImplTest {
 
     @Mocked
     private MavenProject mavenProject;

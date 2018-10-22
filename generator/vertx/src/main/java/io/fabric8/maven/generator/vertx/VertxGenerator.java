@@ -23,16 +23,17 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
-import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
 import static io.fabric8.maven.generator.vertx.Constants.CLUSTER_MANAGER_SPI;
-import static io.fabric8.maven.generator.vertx.Constants.SHADE_PLUGIN_GA;
+import static io.fabric8.maven.generator.vertx.Constants.SHADE_PLUGIN_ARTIFACT;
+import static io.fabric8.maven.generator.vertx.Constants.SHADE_PLUGIN_GROUP;
 import static io.fabric8.maven.generator.vertx.Constants.VERTX_DROPWIZARD;
 import static io.fabric8.maven.generator.vertx.Constants.VERTX_GROUPID;
 import static io.fabric8.maven.generator.vertx.Constants.VERTX_INFINIPAN;
-import static io.fabric8.maven.generator.vertx.Constants.VERTX_MAVEN_PLUGIN_GA;
+import static io.fabric8.maven.generator.vertx.Constants.VERTX_MAVEN_PLUGIN_ARTIFACT;
+import static io.fabric8.maven.generator.vertx.Constants.VERTX_MAVEN_PLUGIN_GROUP;
 
 /**
  * Vert.x Generator.
@@ -60,8 +61,8 @@ public class VertxGenerator extends JavaExecGenerator {
   @Override
   public boolean isApplicable(List<ImageConfiguration> configs) throws MojoExecutionException {
     return shouldAddImageConfiguration(configs)
-        && (MavenUtil.hasPlugin(getProject(), VERTX_MAVEN_PLUGIN_GA)
-        || MavenUtil.hasDependencyOnAnyArtifactOfGroup(getProject(), VERTX_GROUPID));
+        && (MavenUtil.hasPlugin(getProject(), VERTX_MAVEN_PLUGIN_GROUP, VERTX_MAVEN_PLUGIN_ARTIFACT)
+        || MavenUtil.hasDependency(getProject(), VERTX_GROUPID, null));
   }
 
   @Override
@@ -119,9 +120,8 @@ public class VertxGenerator extends JavaExecGenerator {
 
   private boolean isUsingFatJarPlugin() {
     MavenProject project = getProject();
-    Plugin shade = project.getPlugin(SHADE_PLUGIN_GA);
-    Plugin vertx = project.getPlugin(VERTX_MAVEN_PLUGIN_GA);
-    return shade != null || vertx != null;
+    return MavenUtil.hasPlugin(project, SHADE_PLUGIN_GROUP, SHADE_PLUGIN_ARTIFACT) ||
+           MavenUtil.hasPlugin(project, VERTX_MAVEN_PLUGIN_GROUP, VERTX_MAVEN_PLUGIN_ARTIFACT);
   }
 
   @Override

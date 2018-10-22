@@ -15,20 +15,6 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.google.common.base.Function;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.KindAndName;
-import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
-import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
-import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.Dependency;
-import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.openshift.api.model.Template;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,6 +29,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.model.Dependency;
+import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.KindAndName;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.openshift.api.model.Template;
 
 /**
  * Enricher for embedding dependency descriptors to single package.
@@ -119,42 +120,33 @@ public class DependencyEnricher extends BaseEnricher {
     @Override
     public void adapt(final KubernetesListBuilder builder) {
         final List<HasMetadata> kubernetesItems = new ArrayList<>();
-        processArtifactSetResources(this.kubernetesDependencyArtifacts, new Function<List<HasMetadata>, Void>() {
-            @Override
-            public Void apply(List<HasMetadata> items) {
-                kubernetesItems.addAll(Arrays.asList(items.toArray(new HasMetadata[items.size()])));
-                return null;
-            }
+        processArtifactSetResources(this.kubernetesDependencyArtifacts, items -> {
+            kubernetesItems.addAll(Arrays.asList(items.toArray(new HasMetadata[items.size()])));
+            return null;
         });
-        processArtifactSetResources(this.kubernetesTemplateDependencyArtifacts, new Function<List<HasMetadata>, Void>() {
-            @Override
-            public Void apply(List<HasMetadata> items) {
-                List<HasMetadata> templates = Arrays.asList(items.toArray(new HasMetadata[items.size()]));
+        processArtifactSetResources(this.kubernetesTemplateDependencyArtifacts, items -> {
+            List<HasMetadata> templates = Arrays.asList(items.toArray(new HasMetadata[items.size()]));
 
-                // lets remove all the plain resources (without any ${PARAM} expressions) which match objects
-                // in the Templates found from the k8s-templates.yml files which still contain ${PARAM} expressions
-                // to preserve the parameter expressions for dependent kubernetes resources
-                for (HasMetadata resource : templates) {
-                    if (resource instanceof Template) {
-                        Template template = (Template) resource;
-                        List<HasMetadata> objects = template.getObjects();
-                        if (objects != null) {
-                            removeTemplateObjects(kubernetesItems, objects);
-                            kubernetesItems.addAll(objects);
-                        }
+            // lets remove all the plain resources (without any ${PARAM} expressions) which match objects
+            // in the Templates found from the k8s-templates.yml files which still contain ${PARAM} expressions
+            // to preserve the parameter expressions for dependent kubernetes resources
+            for (HasMetadata resource : templates) {
+                if (resource instanceof Template) {
+                    Template template = (Template) resource;
+                    List<HasMetadata> objects = template.getObjects();
+                    if (objects != null) {
+                        removeTemplateObjects(kubernetesItems, objects);
+                        kubernetesItems.addAll(objects);
                     }
                 }
-                return null;
             }
+            return null;
         });
         filterAndAddItemsToBuilder(builder, kubernetesItems);
 
-        processArtifactSetResources(this.openshiftDependencyArtifacts, new Function<List<HasMetadata>, Void>() {
-            @Override
-            public Void apply(List<HasMetadata> items) {
-                getContext().getOpenshiftDependencyResources().addOpenShiftResources(items);
-                return null;
-            }
+        processArtifactSetResources(this.openshiftDependencyArtifacts, items -> {
+            getContext().getOpenshiftDependencyResources().addOpenShiftResources(items);
+            return null;
         });
     }
 

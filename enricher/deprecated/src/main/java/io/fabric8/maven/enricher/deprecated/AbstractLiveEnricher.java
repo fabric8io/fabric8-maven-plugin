@@ -29,17 +29,18 @@ import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import org.apache.commons.lang3.StringUtils;
 
-abstract public class AbstractLiveEnricher extends BaseEnricher {
+public abstract class AbstractLiveEnricher extends BaseEnricher {
 
     private KubernetesClient kubernetesClient;
 
     private enum Config implements Configs.Key {
-        online;
+        online,
+        namespace;
 
         public String def() { return d; } protected String d;
     }
 
-    public AbstractLiveEnricher(MavenEnricherContext buildContext, String name) {
+    AbstractLiveEnricher(MavenEnricherContext buildContext, String name) {
         super(buildContext, name);
     }
 
@@ -47,7 +48,7 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
      * Returns true if in offline mode, "false" if not speciied.
      * Can be overriden by
      */
-    protected boolean isOnline() {
+    boolean isOnline() {
         String isOnline = getConfig(Config.online);
         if (isOnline != null) {
             return Configs.asBoolean(isOnline);
@@ -135,7 +136,7 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
 
     // Check a global prop from the project or system props
     protected Boolean asBooleanFromGlobalProp(String prop) {
-        String value = getContext().getProperties().getProperty(prop);
+        String value = getContext().getConfiguration().getProperty(prop);
         if (value == null) {
             value = System.getProperty(prop);
         }
@@ -155,10 +156,21 @@ abstract public class AbstractLiveEnricher extends BaseEnricher {
     // - default name space from the kubernetes helper
     // - "default"
     private String getNamespace() {
-        String namespace = getContext().getNamespace();
+        String namespace = getConfig(Config.namespace);
         if (StringUtils.isNotBlank(namespace)){
             return namespace;
         }
+
+        namespace = getContext().getConfiguration().getProperty("fabric8.namespace");
+        if (StringUtils.isNotBlank(namespace)){
+            return namespace;
+        }
+
+        namespace = System.getProperty("fabric8.namespace");
+        if (StringUtils.isNotBlank(namespace)){
+            return namespace;
+        }
+
         return KubernetesHelper.getDefaultNamespace();
     }
 }

@@ -70,7 +70,7 @@ public class WebAppGenerator extends BaseGenerator {
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
         return shouldAddImageConfiguration(configs) &&
-               MavenUtil.hasPlugin(getProject(), "org.apache.maven.plugins:maven-war-plugin");
+               MavenUtil.hasPlugin(getProject(), "org.apache.maven.plugins", "maven-war-plugin");
     }
 
     @Override

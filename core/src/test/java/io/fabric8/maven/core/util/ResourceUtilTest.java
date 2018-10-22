@@ -15,7 +15,8 @@
  */
 package io.fabric8.maven.core.util;
 
-import org.json.JSONObject;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
@@ -29,9 +30,10 @@ public class ResourceUtilTest {
 
     @Test
     public void simple() {
-        JSONObject first = new JSONObject("{first: bla, second: blub}");
-        JSONObject same = new JSONObject("{second: blub, first: bla   }");
-        JSONObject different = new JSONObject("{second: blub, first: bla2   }");
+        JsonParser parser = new JsonParser();
+        JsonObject first = parser.parse("{first: bla, second: blub}").getAsJsonObject();
+        JsonObject same = parser.parse("{second: blub, first: bla   }").getAsJsonObject();
+        JsonObject different = parser.parse("{second: blub, first: bla2   }").getAsJsonObject();
         assertTrue(ResourceUtil.jsonEquals(first, same));
         assertFalse(ResourceUtil.jsonEquals(first, different));
     }

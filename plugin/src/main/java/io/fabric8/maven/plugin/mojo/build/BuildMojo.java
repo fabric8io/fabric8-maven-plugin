@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.plugin.mojo.build;
 
+import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import java.io.File;
 import java.io.IOException;
@@ -22,14 +23,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.BuildRecreateMode;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.core.util.ProfileUtil;
@@ -37,7 +36,6 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.Task;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
@@ -204,29 +202,33 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
     @Override
-    protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-        if (shouldSkipBecauseOfPomPackaging()) {
-            getLog().info("Disabling docker build for pom packaging");
-            return;
+    protected void executeInternal(ServiceHub hub) throws MojoExecutionException {
+        try {
+            if (shouldSkipBecauseOfPomPackaging()) {
+                getLog().info("Disabling docker build for pom packaging");
+                return;
+            }
+            if (getResolvedImages().size() == 0) {
+                log.warn("No image build configuration found or detected");
+            }
+
+            // Build the fabric8 service hub
+            fabric8ServiceHub = new Fabric8ServiceHub.Builder()
+                    .log(log)
+                    .clusterAccess(clusterAccess)
+                    .platformMode(mode)
+                    .dockerServiceHub(hub)
+                    .buildServiceConfig(getBuildServiceConfig())
+                    .repositorySystem(repositorySystem)
+                    .mavenProject(project)
+                    .build();
+
+            super.executeInternal(hub);
+
+            fabric8ServiceHub.getBuildService().postProcess(getBuildServiceConfig());
+        } catch(IOException e) {
+            throw new MojoExecutionException(e.getMessage());
         }
-        if (getResolvedImages().size() == 0) {
-            log.warn("No image build configuration found or detected");
-        }
-
-        // Build the fabric8 service hub
-        fabric8ServiceHub = new Fabric8ServiceHub.Builder()
-                .log(log)
-                .clusterAccess(clusterAccess)
-                .platformMode(mode)
-                .dockerServiceHub(hub)
-                .buildServiceConfig(getBuildServiceConfig())
-                .repositorySystem(repositorySystem)
-                .mavenProject(project)
-                .build();
-
-        super.executeInternal(hub);
-
-        fabric8ServiceHub.getBuildService().postProcess(getBuildServiceConfig());
     }
 
     private boolean shouldSkipBecauseOfPomPackaging() {
@@ -274,22 +276,18 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .s2iImageStreamLookupPolicyLocal(s2iImageStreamLookupPolicyLocal)
                 .imagePullManager(getImagePullManager(imagePullPolicy, autoPull))
                 .buildDirectory(project.getBuild().getDirectory())
-                .attacher(new BuildService.BuildServiceConfig.Attacher() {
-                    @Override
-                    public void attach(String classifier, File destFile) {
-                        if (destFile.exists()) {
-                            projectHelper.attachArtifact(project, "yml", classifier, destFile);
-                        }
+                .attacher((classifier, destFile) -> {
+                    if (destFile.exists()) {
+                        projectHelper.attachArtifact(project, "yml", classifier, destFile);
                     }
                 })
-                .enricherTask(new Task<KubernetesListBuilder>() {
-                    @Override
-                    public void execute(KubernetesListBuilder builder) throws Exception {
-                        new EnricherManager(resources, getEnricherContext()).enrich(builder);
-                    }
-                })
+                .enricherTask(builder ->
+                                  new EnricherManager(resources, getEnricherContext(),
+                                                      MavenUtil.getCompileClasspathElementsIfRequested(project, useProjectClasspath))
+                                      .enrich(builder))
                 .build();
     }
+
 
     /**
      * Customization hook called by the base plugin.
@@ -367,10 +365,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .config(extractEnricherConfig())
                 .images(getResolvedImages())
                 .resources(resources)
-                .namespace(resources != null && resources.getNamespace() != null ? resources.getNamespace() : namespace)
                 .log(log)
                 .openshiftDependencyResources(new OpenShiftDependencyResources(log))
-                .useProjectClasspath(useProjectClasspath)
                 .build();
     }
 

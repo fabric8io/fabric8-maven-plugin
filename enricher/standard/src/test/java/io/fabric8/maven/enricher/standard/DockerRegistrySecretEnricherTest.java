@@ -15,9 +15,13 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import io.fabric8.maven.enricher.api.DockerRegistryAuthentication;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import io.fabric8.maven.core.model.Configuration;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
@@ -29,12 +33,12 @@ import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
-import org.apache.maven.settings.Server;
-import org.apache.maven.settings.Settings;
+import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author yuwzho
@@ -48,42 +52,50 @@ public class DockerRegistrySecretEnricherTest {
     private String dockerUrl = "docker.io";
     private String annotation = "maven.fabric8.io/dockerServerId";
 
+    private void setupExpectations() {
+        new Expectations() {
+            {{
+                context.getConfiguration();
+                result = new Configuration.Builder()
+                    .secretConfigLookup(
+                        id -> {
+                            Map<String, Object> ret = new HashMap<>();
+                            ret.put("username", "username");
+                            ret.put("password", "password");
+                            return Optional.of(ret);
+                        })
+                    .build();
+            }}
+
+        };
+    }
+
     @Test
     public void testDockerRegistry() {
-        new Expectations() {
-            {
-                {
-                    context.getDockerRegistryAuth(dockerUrl);
-                    result = createDockerRegistry();
-                }
-            }
-        };
-
-
+        setupExpectations();
         DockerRegistrySecretEnricher enricher = new DockerRegistrySecretEnricher(context);
         KubernetesListBuilder builder = new KubernetesListBuilder();
-        builder.addToSecretItems(createBaseSecret(true));
+        Secret secretEnriched = createBaseSecret(true);
+        builder.addToSecretItems(secretEnriched);
         enricher.addMissingResources(builder);
 
-        KubernetesListBuilder expectedBuilder = new KubernetesListBuilder();
-        Secret expectedSecret = createBaseSecret(false);
-        expectedSecret.getData().put(SecretConstants.DOCKER_DATA_KEY,
-                "eyJkb2NrZXIuaW8iOnsicGFzc3dvcmQiOiJwYXNzd29yZCIsImVtYWlsIjoiZm9vQGZvby5jb20iLCJ1c2VybmFtZSI6InVzZXJuYW1lIn19");
-        expectedBuilder.addToSecretItems(expectedSecret);
-        assertEquals(expectedBuilder.build(), builder.build());
+        secretEnriched = (Secret) builder.buildItem(0);
+        Map<String, String> enrichedData = secretEnriched.getData();
+        assertThat(enrichedData.size()).isEqualTo(1);
+        String data = enrichedData.get(SecretConstants.DOCKER_DATA_KEY);
+        assertThat(data).isNotNull();
+        JsonObject auths = (JsonObject) new JsonParser().parse(new String(Base64.decodeBase64(data)));
+        assertThat(auths.size()).isEqualTo(1);
+        JsonObject auth = auths.getAsJsonObject("docker.io");
+        assertThat(auth.size()).isEqualTo(2);
+
+        assertThat(auth.get("username").getAsString()).isEqualTo("username");
+        assertThat(auth.get("password").getAsString()).isEqualTo("password");
     }
 
     @Test
     public void testDockerRegistryWithBadKind() {
-        new Expectations() {
-            {
-                {
-                    context.getDockerRegistryAuth(dockerUrl);
-                    result = createDockerRegistry();
-                }
-            }
-        };
-
+        setupExpectations();
         DockerRegistrySecretEnricher enricher = new DockerRegistrySecretEnricher(context);
         KubernetesListBuilder builder = new KubernetesListBuilder();
         Secret secret = createBaseSecret(true);
@@ -98,16 +110,7 @@ public class DockerRegistrySecretEnricherTest {
     @Test
     public void testDockerRegistryWithBadAnnotation() {
         DockerRegistrySecretEnricher enricher = new DockerRegistrySecretEnricher(context);
-
-        new Expectations() {
-            {
-                {
-                    context.getDockerRegistryAuth(dockerUrl);
-                    result = createDockerRegistry();
-                }
-            }
-        };
-
+        setupExpectations();
         KubernetesListBuilder builder = new KubernetesListBuilder();
         Secret secret = createBaseSecret(true);
         secret.getMetadata().getAnnotations().put(annotation, "docker1.io");
@@ -135,17 +138,5 @@ public class DockerRegistrySecretEnricherTest {
             .withMetadata(metaBuilder.build())
             .withType(SecretConstants.DOCKER_CONFIG_TYPE)
             .build();
-    }
-
-    private Server createBaseServer() {
-        Server server = new Server();
-        server.setUsername("username");
-        server.setPassword("password");
-        server.setId(dockerUrl);
-        return server;
-    }
-
-    public DockerRegistryAuthentication createDockerRegistry() {
-        return new DockerRegistryAuthentication("username", "password", null);
     }
 }

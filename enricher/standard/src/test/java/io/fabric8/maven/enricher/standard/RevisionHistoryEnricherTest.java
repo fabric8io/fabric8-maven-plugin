@@ -23,6 +23,7 @@ import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
@@ -64,7 +65,8 @@ public class RevisionHistoryEnricherTest {
         // Setup mock behaviour
         final String revisionNumber = "10";
         new Expectations() {{
-            context.getConfig(); result = prepareEnricherConfig(revisionNumber);
+            Configuration config = new Configuration.Builder().processorConfig(prepareEnricherConfig(revisionNumber)).build();
+            context.getConfiguration(); result = config;
         }};
 
         // Given

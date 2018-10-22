@@ -15,7 +15,8 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import io.fabric8.maven.core.model.Artifact;
+import io.fabric8.maven.core.model.Configuration;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import java.util.Map;
 import java.util.Properties;
 
@@ -52,8 +53,8 @@ public class MavenProjectEnricherTest {
     @Before
     public void setupExpectations() {
         new Expectations() {{
-            context.getArtifact();
-            result = new Artifact( "groupId", "artifactId", "version");
+            context.getGav();
+            result = new GroupArtifactVersion("groupId", "artifactId", "version");
         }};
     }
 
@@ -86,8 +87,8 @@ public class MavenProjectEnricherTest {
         final Properties properties = new Properties();
         properties.setProperty("fabric8.enricher.fmp-project.useProjectLabel", "true");
         new Expectations() {{
-            context.getProperties();
-            result = properties;
+            context.getConfiguration();
+            result = new Configuration.Builder().properties(properties).build();
         }};
 
         ProjectEnricher projectEnricher = new ProjectEnricher(context);

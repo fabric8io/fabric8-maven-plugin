@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.enricher.fabric8;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +70,7 @@ public class PrometheusEnricher extends BaseEnricher {
     private String findPrometheusPort() {
         String prometheusPort = getConfig(Config.prometheusPort);
         if (StringUtils.isBlank(prometheusPort)) {
-            for (ImageConfiguration configuration : getImages()) {
+            for (ImageConfiguration configuration : getImages().orElse(Collections.emptyList())) {
                 BuildImageConfiguration buildImageConfiguration = configuration.getBuildConfiguration();
                 if (buildImageConfiguration != null) {
                     List<String> ports = buildImageConfiguration.getPorts();

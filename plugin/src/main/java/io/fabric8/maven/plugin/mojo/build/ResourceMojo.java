@@ -15,8 +15,10 @@
  */
 package io.fabric8.maven.plugin.mojo.build;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import io.fabric8.maven.core.config.MappingConfig;
-import io.fabric8.maven.core.model.Artifact;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -51,7 +53,6 @@ import io.fabric8.maven.core.handler.ServiceHandler;
 import io.fabric8.maven.core.service.ComposeService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.core.util.Base64Util;
-import io.fabric8.maven.core.util.DockerServerUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.core.util.OpenShiftOverrideResources;
@@ -102,7 +103,6 @@ import org.apache.maven.settings.Settings;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.json.JSONObject;
 
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
 import static io.fabric8.maven.core.util.ResourceFileType.json;
@@ -488,8 +488,8 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         openShiftConverters.put("DeploymentConfig", new DeploymentConfigOpenShiftConverter(getOpenshiftDeployTimeoutSeconds()));
         openShiftConverters.put("Namespace", new NamespaceOpenShiftConverter());
 
-        handlerHub = new HandlerHub(MavenUtil.getCompileClassLoader(project), project.getBuild().getOutputDirectory(),
-            new Artifact(project.getGroupId(), project.getArtifactId(), project.getVersion()), project.getProperties());
+        handlerHub = new HandlerHub(
+            new GroupArtifactVersion(project.getGroupId(), project.getArtifactId(), project.getVersion()), project.getProperties());
     }
 
     private boolean isOpenShiftMode() {
@@ -604,14 +604,10 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             .resources(resources)
             .images(resolvedImages)
             .log(log)
-            .useProjectClasspath(useProjectClasspath)
             .openshiftDependencyResources(openshiftDependencyResources);
-        if (resources != null) {
-            ctxBuilder.namespace(resources.getNamespace());
-        }
 
 
-        EnricherManager enricherManager = new EnricherManager(resources, ctxBuilder.build());
+        EnricherManager enricherManager = new EnricherManager(resources, ctxBuilder.build(), MavenUtil.getCompileClasspathElementsIfRequested(project, useProjectClasspath));
 
         // Generate all resources from the main resource directory, configuration and enrich them accordingly
         KubernetesListBuilder builder = generateAppResources(images, enricherManager);
@@ -971,7 +967,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         }
         try {
             return EnvUtil.loadTimestamp(tsFile);
-        } catch (MojoExecutionException e) {
+        } catch (IOException e) {
             throw new MojoExecutionException("Cannot read timestamp from " + tsFile,e);
         }
     }
@@ -1033,18 +1029,17 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             return "";
         }
 
-        Map<String, String> auth = new HashMap<>();
-        auth.put("username", server.getUsername());
-        auth.put("password", server.getPassword());
+        JsonObject auth = new JsonObject();
+        auth.add("username", new JsonPrimitive(server.getUsername()));
+        auth.add("password", new JsonPrimitive(server.getPassword()));
 
         String mail = getConfigurationValue(server, "email");
-        if (StringUtils.isBlank(mail)) {
-            mail = "foo@foo.com";
+        if (!StringUtils.isBlank(mail)) {
+            auth.add("email", new JsonPrimitive(mail));
         }
-        auth.put("email", mail);
 
-        JSONObject json = new JSONObject()
-            .put(serverId, auth);
+        JsonObject json = new JsonObject();
+        json.add(serverId, auth);
         return json.toString();
     }
 

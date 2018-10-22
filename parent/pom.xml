@@ -66,7 +66,7 @@
     <version.kubernetes-client>4.1.0</version.kubernetes-client>
     <version.openshift-client>${version.kubernetes-client}</version.openshift-client>
     <version.mockwebserver>0.0.13</version.mockwebserver>
-    <version.docker-maven-plugin>0.26.1</version.docker-maven-plugin>
+    <version.docker-maven-plugin>0.27.2</version.docker-maven-plugin>
     <version.networknt.validator>0.1.7</version.networknt.validator>
     <version.jgit>5.1.2.201810061102-r</version.jgit>
     <version.hamcrest-library>1.3</version.hamcrest-library>
@@ -347,6 +347,12 @@
         <groupId>com.fasterxml.jackson.jaxrs</groupId>
         <artifactId>jackson-jaxrs-json-provider</artifactId>
         <version>2.8.7</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>2.8.5</version>
       </dependency>
 
       <!-- ################################################# -->
@@ -690,6 +696,14 @@
               <exclude>.editorconfig</exclude>
               <exclude>license.txt</exclude>
               <exclude>**/test-kubeconfig</exclude>
+              <exclude>**/*-services</exclude>
+              <exclude>**/*-default</exclude>
+              <exclude>**/*.adoc</exclude>
+              <exclude>**/enricher</exclude>
+              <exclude>.lgtm</exclude>
+              <exclude>**/.gitkeep</exclude>
+              <exclude>Jenkinsfile</exclude>
+              <exclude>mvnw</exclude>
             </excludes>
           </configuration>
         </plugin>

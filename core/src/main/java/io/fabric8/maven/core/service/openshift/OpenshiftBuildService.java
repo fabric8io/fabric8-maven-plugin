@@ -28,6 +28,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.LocalObjectReferenceBuilder;
@@ -73,7 +75,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.archiver.tar.TarArchiver;
-import org.json.JSONObject;
 
 /**
  * @author nicola
@@ -341,7 +342,7 @@ public class OpenshiftBuildService implements BuildService {
             fromImage = extractBaseFromConfiguration(buildConfig);
         }
 
-        String pullRegistry = EnvUtil.fistRegistryOf(new ImageName(fromImage).getRegistry(), dockerBuildContext.getRegistryConfig().getRegistry(), dockerBuildContext.getRegistryConfig().getRegistry());;
+        String pullRegistry = EnvUtil.firstRegistryOf(new ImageName(fromImage).getRegistry(), dockerBuildContext.getRegistryConfig().getRegistry(), dockerBuildContext.getRegistryConfig().getRegistry());
 
         if (pullRegistry != null) {
             RegistryService.RegistryConfig registryConfig = dockerBuildContext.getRegistryConfig();
@@ -350,14 +351,14 @@ public class OpenshiftBuildService implements BuildService {
 
             if (authConfig != null) {
 
-                JSONObject auths = new JSONObject();
-                JSONObject auth = new JSONObject();
-                JSONObject item = new JSONObject();
+                JsonObject auths = new JsonObject();
+                JsonObject auth = new JsonObject();
+                JsonObject item = new JsonObject();
 
                 String authString = authConfig.getUsername() + ":" + authConfig.getPassword();
-                item.put("auth", Base64.encodeBase64String(authString.getBytes("UTF-8")));
-                auth.put(pullRegistry, item);
-                auths.put("auths", auth);
+                item.add("auth", new JsonPrimitive(Base64.encodeBase64String(authString.getBytes("UTF-8"))));
+                auth.add(pullRegistry, item);
+                auths.add("auths", auth);
 
                 String credentials = Base64.encodeBase64String(auths.toString().getBytes("UTF-8"));
 

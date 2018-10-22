@@ -15,12 +15,25 @@
  */
 package io.fabric8.maven.enricher.standard.openshift;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
+
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplate;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.core.model.Artifact;
+import io.fabric8.maven.core.model.Configuration;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.enricher.api.Kind;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.util.Collections;
@@ -32,8 +45,6 @@ import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
 import org.apache.maven.project.MavenProject;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -82,15 +93,15 @@ public class AutoTLSEnricherTest {
             // Setup mock behaviour
             new Expectations() {
                 {
-                    context.getProperties();
-                    result = projectProps;
+                    Configuration configuration =
+                        new Configuration.Builder().properties(projectProps).processorConfig(config).build();
+                    context.getConfiguration();
+                    result = configuration;
                     project.getArtifactId();
                     result = "projectA";
                     minTimes = 0;
-                    context.getConfig();
-                    result = config;
-                    context.getArtifact();
-                    result = new Artifact("", "projectA", "0");
+                    context.getGav();
+                    result = new GroupArtifactVersion("", "projectA", "0");
                 }
             };
 
@@ -163,13 +174,16 @@ public class AutoTLSEnricherTest {
             // Setup mock behaviour
             new Expectations() {
                 {
-                    context.getProperties();
-                    result = projectProps;
+                    Configuration configuration =
+                        new Configuration.Builder()
+                            .properties(projectProps)
+                            .processorConfig(config)
+                            .build();
+                    context.getConfiguration();
+                    result = configuration;
                     project.getArtifactId();
                     result = "projectA";
                     minTimes = 0;
-                    context.getConfig();
-                    result = config;
                 }
             };
 
@@ -186,17 +200,18 @@ public class AutoTLSEnricherTest {
                 continue;
             }
 
-            JSONArray ja = new JSONArray(initContainers);
-            assertEquals(1, ja.length());
-            JSONObject jo = ja.getJSONObject(0);
-            assertEquals(tc.initContainerName, jo.get("name"));
-            assertEquals(tc.initContainerImage, jo.get("image"));
-            JSONArray mounts = jo.getJSONArray("volumeMounts");
-            assertEquals(2, mounts.length());
-            JSONObject mount = mounts.getJSONObject(0);
-            assertEquals(tc.tlsSecretVolumeName, mount.get("name"));
-            mount = mounts.getJSONObject(1);
-            assertEquals(tc.jksVolumeName, mount.get("name"));
+            Gson gson = new Gson();
+            JsonArray ja = new JsonParser().parse(gson.toJson(initContainers, new TypeToken<Collection<Container>>() {}.getType())).getAsJsonArray();
+            assertEquals(1, ja.size());
+            JsonObject jo = ja.get(0).getAsJsonObject();
+            assertEquals(tc.initContainerName, jo.get("name").getAsString());
+            assertEquals(tc.initContainerImage, jo.get("image").getAsString());
+            JsonArray mounts = jo.get("volumeMounts").getAsJsonArray();
+            assertEquals(2, mounts.size());
+            JsonObject mount = mounts.get(0).getAsJsonObject();
+            assertEquals(tc.tlsSecretVolumeName, mount.get("name").getAsString());
+            mount = mounts.get(1).getAsJsonObject();
+            assertEquals(tc.jksVolumeName, mount.get("name").getAsString());
         }
     }
 }

@@ -15,14 +15,18 @@
  */
 package io.fabric8.maven.enricher.fabric8;
 
-import io.fabric8.kubernetes.api.model.HTTPHeader;
-import io.fabric8.kubernetes.api.model.Probe;
-import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.maven.enricher.api.util.MavenConfigurationExtractor;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
+import java.util.function.BiFunction;
+
+import io.fabric8.kubernetes.api.model.HTTPHeader;
+import io.fabric8.kubernetes.api.model.Probe;
+import io.fabric8.maven.core.model.Configuration;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.maven.enricher.api.util.MavenConfigurationExtractor;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -48,17 +52,53 @@ public class VertxHealthCheckEnricherTest {
     @Mocked
     private MavenEnricherContext context;
 
+    private void setupExpectations(Map<String, Object> config) {
+        new Expectations() {{
+            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GROUP, VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_ARTIFACT);
+            result = true;
+
+            Configuration.Builder configBuilder = new Configuration.Builder();
+            configBuilder.pluginConfigLookup(getProjectLookup(config));
+
+            context.getConfiguration();
+            result = configBuilder.build();
+        }};
+    }
+
+    private void setupExpectations(Properties props) {
+        new Expectations() {{
+            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GROUP, VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_ARTIFACT);
+            result = true;
+
+            Configuration.Builder configBuilder = new Configuration.Builder();
+            configBuilder.properties(props);
+            configBuilder.pluginConfigLookup(getProjectLookup(null));
+
+            context.getConfiguration();
+            result = configBuilder.build();
+        }};
+    }
+
+    private void setupExpectations(Properties props, Map<String, Object> config) {
+        new Expectations() {{
+            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GROUP, VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_ARTIFACT);
+            result = true;
+
+            Configuration.Builder configBuilder = new Configuration.Builder();
+            configBuilder.properties(props);
+            configBuilder.pluginConfigLookup(getProjectLookup(config));
+
+            context.getConfiguration();
+            result = configBuilder.build();
+        }};
+
+    }
+
     @Test
     public void testDefaultConfiguration() {
         VertxHealthCheckEnricher enricher = new VertxHealthCheckEnricher(context);
 
-        final Properties props = new Properties();
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+        setupExpectations(new Properties());
 
         Probe probe = enricher.getLivenessProbe();
         assertNull(probe);
@@ -72,12 +112,7 @@ public class VertxHealthCheckEnricherTest {
 
         final Properties props = new Properties();
         props.put("vertx.health.path", "/ping");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+        setupExpectations(props);
 
         Probe probe = enricher.getLivenessProbe();
         assertNotNull(probe);
@@ -101,13 +136,7 @@ public class VertxHealthCheckEnricherTest {
         final Properties props = new Properties();
         props.put("vertx.health.path", "/ping");
         props.put("vertx.health.readiness.path", "/ready");
-
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+        setupExpectations(props);
 
         Probe probe = enricher.getLivenessProbe();
         assertNotNull(probe);
@@ -142,15 +171,10 @@ public class VertxHealthCheckEnricherTest {
     }
 
     @Test
-    public void testWithCustomConfigurationComingFromConf() throws IOException, XmlPullParserException {
+    public void testWithCustomConfigurationComingFromConf() {
 
         final Map<String, Object> config = createFakeConfig("<path>health</path><port>1234</port><scheme>https</scheme>");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(config);
 
         VertxHealthCheckEnricher enricher = new VertxHealthCheckEnricher(context);
 
@@ -169,6 +193,14 @@ public class VertxHealthCheckEnricherTest {
         assertEquals(probe.getHttpGet().getPath(), "/health");
     }
 
+    private BiFunction<String, String, Optional<Map<String, Object>>> getProjectLookup(Map<String, Object> config) {
+        return (s,i) -> {
+            assertThat(s).isEqualTo("maven");
+            assertThat(i).isEqualTo("io.fabric8:fabric8-maven-plugin");
+            return Optional.ofNullable(config);
+        };
+    }
+
     @Test
     public void testWithCustomConfigurationForLivenessAndReadinessComingFromConf() {
         final Map<String, Object> config = createFakeConfig(
@@ -176,12 +208,7 @@ public class VertxHealthCheckEnricherTest {
                         "<port>1234</port>" +
                         "<scheme>https</scheme>" +
                         "<readiness><path>/ready</path></readiness>");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(config);
 
         VertxHealthCheckEnricher enricher = new VertxHealthCheckEnricher(context);
 
@@ -208,12 +235,8 @@ public class VertxHealthCheckEnricherTest {
         props.put("vertx.health.path", "/health");
         props.put("vertx.health.port", " 8081 ");
         props.put("vertx.health.scheme", " https");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+
+        setupExpectations(props);
 
         Probe probe = enricher.getLivenessProbe();
         assertNotNull(probe);
@@ -234,12 +257,7 @@ public class VertxHealthCheckEnricherTest {
     public void testWithHttpHeaders() {
         final Map<String, Object> config = createFakeConfig("<path>health</path>" +
                 "<headers><X-Header>X</X-Header><Y-Header>Y</Y-Header></headers>");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(config);
 
         VertxHealthCheckEnricher enricher = new VertxHealthCheckEnricher(context);
 
@@ -264,12 +282,7 @@ public class VertxHealthCheckEnricherTest {
 
         final Properties props = new Properties();
         props.put("vertx.health.path", "");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+        setupExpectations(props);
 
         Probe probe = enricher.getLivenessProbe();
         assertNull(probe);
@@ -284,12 +297,7 @@ public class VertxHealthCheckEnricherTest {
         final Properties props = new Properties();
         props.put("vertx.health.port", " -1 ");
         props.put("vertx.health.path", " /ping ");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+        setupExpectations(props);
 
         Probe probe = enricher.getLivenessProbe();
         assertNull(probe);
@@ -304,12 +312,7 @@ public class VertxHealthCheckEnricherTest {
         final Properties props = new Properties();
         props.put("vertx.health.port", "not an integer");
         props.put("vertx.health.path", " /ping ");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+        setupExpectations(props);
 
         try {
             enricher.getLivenessProbe();
@@ -333,12 +336,7 @@ public class VertxHealthCheckEnricherTest {
         final Properties props = new Properties();
         props.put("vertx.health.port-name", " health ");
         props.put("vertx.health.path", " /ping ");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+        setupExpectations(props);
 
         Probe probe = enricher.getLivenessProbe();
         assertThat(probe.getHttpGet().getPort().getStrVal()).isEqualToIgnoringCase("health");
@@ -352,12 +350,7 @@ public class VertxHealthCheckEnricherTest {
                 "<path>/ping</path>" +
                         "<port>-1</port>");
 
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(config);
 
         VertxHealthCheckEnricher enricher = new VertxHealthCheckEnricher(context);
 
@@ -374,12 +367,7 @@ public class VertxHealthCheckEnricherTest {
         final Properties props = new Properties();
         props.put("vertx.health.readiness.path", "");
         props.put("vertx.health.path", "/ping");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+        setupExpectations(props);
 
         Probe probe = enricher.getLivenessProbe();
         assertNotNull(probe);
@@ -395,12 +383,7 @@ public class VertxHealthCheckEnricherTest {
                 "<readiness><path></path></readiness>" +
                         "<path>/ping</path>");
 
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(config);
 
         VertxHealthCheckEnricher enricher = new VertxHealthCheckEnricher(context);
 
@@ -418,12 +401,7 @@ public class VertxHealthCheckEnricherTest {
         final Properties props = new Properties();
         props.put("vertx.health.readiness.path", "/ping");
         props.put("vertx.health.path", "");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+        setupExpectations(props);
 
         Probe probe = enricher.getLivenessProbe();
         assertNull(probe);
@@ -438,13 +416,9 @@ public class VertxHealthCheckEnricherTest {
         final Map<String, Object> config = createFakeConfig(
                 "<readiness><path>/ping</path></readiness>" +
                         "<path></path>");
+        setupExpectations(config);
 
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GROUP, VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_ARTIFACT);
 
         VertxHealthCheckEnricher enricher = new VertxHealthCheckEnricher(context);
 
@@ -463,12 +437,7 @@ public class VertxHealthCheckEnricherTest {
         props.put("vertx.health.type", "tcp");
         props.put("vertx.health.port", "1234");
         props.put("vertx.health.readiness.port", "1235");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+        setupExpectations(props);
 
         Probe probe = enricher.getLivenessProbe();
         assertNotNull(probe);
@@ -487,12 +456,7 @@ public class VertxHealthCheckEnricherTest {
                         "<liveness><port>1234</port></liveness>" +
                         "<readiness><port>1235</port></readiness>");
 
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(config);
 
         Probe probe = enricher.getLivenessProbe();
         assertNotNull(probe);
@@ -510,12 +474,7 @@ public class VertxHealthCheckEnricherTest {
         props.put("vertx.health.type", "tcp");
         props.put("vertx.health.port-name", "health");
         props.put("vertx.health.readiness.port-name", "ready");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+        setupExpectations(props);
 
         Probe probe = enricher.getLivenessProbe();
         assertNotNull(probe);
@@ -533,13 +492,7 @@ public class VertxHealthCheckEnricherTest {
                 "<type>tcp</type>" +
                         "<liveness><port-name>health</port-name></liveness>" +
                         "<readiness><port-name>ready</port-name></readiness>");
-
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(config);
 
         Probe probe = enricher.getLivenessProbe();
         assertNotNull(probe);
@@ -556,12 +509,7 @@ public class VertxHealthCheckEnricherTest {
         final Properties props = new Properties();
         props.put("vertx.health.type", "tcp");
         props.put("vertx.health.readiness.port", "1235");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+        setupExpectations(props);
 
         Probe probe = enricher.getLivenessProbe();
         assertNull(probe);
@@ -577,13 +525,7 @@ public class VertxHealthCheckEnricherTest {
         final Map<String, Object> config = createFakeConfig(
                 "<type>tcp</type>" +
                         "<readiness><port>1235</port></readiness>");
-
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(config);
 
         Probe probe = enricher.getLivenessProbe();
         assertNull(probe);
@@ -600,12 +542,7 @@ public class VertxHealthCheckEnricherTest {
         props.put("vertx.health.type", "tcp");
         props.put("vertx.health.port", "1235");
         props.put("vertx.health.readiness.port", "0");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+        setupExpectations(props);
 
         Probe probe = enricher.getLivenessProbe();
         assertEquals(probe.getTcpSocket().getPort().getIntVal().intValue(), 1235);
@@ -623,12 +560,7 @@ public class VertxHealthCheckEnricherTest {
                         "<liveness><port>1235</port></liveness>" +
                         "<readiness><port>-1</port></readiness>");
 
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(config);
 
         Probe probe = enricher.getLivenessProbe();
         assertEquals(probe.getTcpSocket().getPort().getIntVal().intValue(), 1235);
@@ -645,12 +577,7 @@ public class VertxHealthCheckEnricherTest {
         props.put("vertx.health.type", "tcp");
         props.put("vertx.health.port", "1235");
         props.put("vertx.health.port-name", "health");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+        setupExpectations(props);
 
         enricher.getLivenessProbe();
     }
@@ -663,13 +590,8 @@ public class VertxHealthCheckEnricherTest {
                 "<type>tcp</type>" +
                         "<liveness><port>1234</port><port-name>foo</port-name></liveness>" +
                         "<readiness><port>1235</port><port-name>foo</port-name></readiness>");
+        setupExpectations(config);
 
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
 
         try {
             enricher.getLivenessProbe();
@@ -693,12 +615,7 @@ public class VertxHealthCheckEnricherTest {
 
         final Properties props = new Properties();
         props.put("vertx.health.type", "tcp");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+        setupExpectations(props);
 
         Probe probe = enricher.getLivenessProbe();
         assertNull(probe);
@@ -711,14 +628,8 @@ public class VertxHealthCheckEnricherTest {
         VertxHealthCheckEnricher enricher = new VertxHealthCheckEnricher(context);
 
         final Map<String, Object> config = createFakeConfig(
-                "<type>tcp</type>");
-
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+            "<type>tcp</type>");
+        setupExpectations(config);
 
         Probe probe = enricher.getLivenessProbe();
         assertNull(probe);
@@ -737,13 +648,7 @@ public class VertxHealthCheckEnricherTest {
                         "<arg>-c</arg>" +
                         "<arg>touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600</arg>" +
                         "</command>");
-
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(config);
 
         Probe probe = enricher.getLivenessProbe();
         assertNotNull(probe);
@@ -766,12 +671,7 @@ public class VertxHealthCheckEnricherTest {
                         "</command></readiness>" +
                         "<liveness><command/></liveness>");
 
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(config);
 
         Probe probe = enricher.getLivenessProbe();
         assertNull(probe);
@@ -793,12 +693,7 @@ public class VertxHealthCheckEnricherTest {
                         "</command></liveness>" +
                         "<readiness><command/></readiness>");
 
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(config);
 
         Probe probe = enricher.getLivenessProbe();
         assertThat(probe.getExec().getCommand()).hasSize(3);
@@ -813,12 +708,7 @@ public class VertxHealthCheckEnricherTest {
 
         final Properties props = new Properties();
         props.put("vertx.health.type", "exec");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+        setupExpectations(props);
 
         Probe probe = enricher.getLivenessProbe();
         assertNull(probe);
@@ -833,12 +723,7 @@ public class VertxHealthCheckEnricherTest {
         final Map<String, Object> config = createFakeConfig(
                 "<type>exec</type>");
 
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(config);
 
         Probe probe = enricher.getLivenessProbe();
         assertNull(probe);
@@ -852,12 +737,7 @@ public class VertxHealthCheckEnricherTest {
 
         final Properties props = new Properties();
         props.put("vertx.health.type", "not a valid type");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = props;
-        }};
+        setupExpectations(props);
 
         try {
             enricher.getLivenessProbe();
@@ -882,12 +762,7 @@ public class VertxHealthCheckEnricherTest {
         final Map<String, Object> config = createFakeConfig(
                 "<type>not a valid type</type>");
 
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(config);
 
         try {
             enricher.getLivenessProbe();
@@ -909,7 +784,7 @@ public class VertxHealthCheckEnricherTest {
         VertxHealthCheckEnricher enricher = new VertxHealthCheckEnricher(context);
 
         new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
+            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GROUP, VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_ARTIFACT);
             result = false;
         }};
 
@@ -931,12 +806,7 @@ public class VertxHealthCheckEnricherTest {
                         "<readiness>" +
                         "   <path>/ping</path>" +
                         "</readiness>");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+                setupExpectations(config);
 
         Probe probe = enricher.getLivenessProbe();
         assertNotNull(probe);
@@ -961,15 +831,8 @@ public class VertxHealthCheckEnricherTest {
         Properties properties = new Properties();
         properties.put("vertx.health.type", "tcp");
         properties.put("vertx.health.port", "1234");
+        setupExpectations(properties,config);
 
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = properties;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
 
         Probe probe = enricher.getReadinessProbe();
         assertThat(probe).isNotNull();
@@ -996,14 +859,7 @@ public class VertxHealthCheckEnricherTest {
         properties.put("vertx.health.type", "tcp");
         properties.put("vertx.health.port", "1234");
 
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = properties;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(properties,config);
 
         Probe probe = enricher.getReadinessProbe();
         assertThat(probe).isNotNull();
@@ -1033,14 +889,7 @@ public class VertxHealthCheckEnricherTest {
         properties.put("vertx.health.readiness.type", "tcp");
         properties.put("vertx.health.readiness.port", "1234");
         properties.put("vertx.health.port", "1235");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = properties;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(properties, config);
 
         Probe probe = enricher.getReadinessProbe();
         assertThat(probe).isNotNull();
@@ -1065,14 +914,7 @@ public class VertxHealthCheckEnricherTest {
         properties.put("vertx.health.readiness.type", "tcp");
         properties.put("vertx.health.readiness.port", "1234");
         properties.put("vertx.health.port", "1235");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = properties;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(properties, config);
 
         Probe probe = enricher.getReadinessProbe();
         assertThat(probe).isNotNull();
@@ -1101,12 +943,7 @@ public class VertxHealthCheckEnricherTest {
                         "</readiness>" +
                         "<path>/health</path>" +
                         "<port-name>health</port-name>");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(config);
 
         Probe probe = enricher.getReadinessProbe();
         assertThat(probe).isNotNull();
@@ -1133,14 +970,7 @@ public class VertxHealthCheckEnricherTest {
         properties.put("vertx.health.port", "1235");
         properties.put("vertx.health.liveness.type", "tcp");
         properties.put("vertx.health.liveness.port", "1236");
-        new Expectations() {{
-            context.hasPlugin(VertxHealthCheckEnricher.VERTX_MAVEN_PLUGIN_GA);
-            result = true;
-            context.getProperties();
-            result = properties;
-            context.getConfiguration("io.fabric8:fabric8-maven-plugin");
-            result = config;
-        }};
+        setupExpectations(properties, config);
 
         Probe probe = enricher.getReadinessProbe();
         assertThat(probe).isNotNull();

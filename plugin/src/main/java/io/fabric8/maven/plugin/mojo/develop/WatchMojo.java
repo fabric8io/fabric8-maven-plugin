@@ -33,7 +33,6 @@ import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
-import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
@@ -166,7 +165,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     }
 
     @Override
-    protected synchronized void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
+    protected synchronized void executeInternal(ServiceHub hub) throws MojoExecutionException {
         this.hub = hub;
 
         URL masterUrl = kubernetes.getMasterUrl();
@@ -195,25 +194,30 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     }
 
     public WatcherContext getWatcherContext() throws MojoExecutionException {
-        BuildService.BuildContext buildContext = getBuildContext();
-        WatchService.WatchContext watchContext = getWatchContext();
+        try {
+            BuildService.BuildContext buildContext = getBuildContext();
+            WatchService.WatchContext watchContext = getWatchContext(hub);
 
 
-        return new WatcherContext.Builder()
-                .serviceHub(hub)
-                .buildContext(buildContext)
-                .watchContext(watchContext)
-                .config(extractWatcherConfig())
-                .logger(log)
-                .newPodLogger(createLogger("[[C]][NEW][[C]] "))
-                .oldPodLogger(createLogger("[[R]][OLD][[R]] "))
-                .mode(mode)
-                .project(project)
-                .useProjectClasspath(useProjectClasspath)
-                .namespace(clusterAccess.getNamespace())
-                .kubernetesClient(kubernetes)
-                .fabric8ServiceHub(getFabric8ServiceHub())
-                .build();
+            return new WatcherContext.Builder()
+                    .serviceHub(hub)
+                    .buildContext(buildContext)
+                    .watchContext(watchContext)
+                    .config(extractWatcherConfig())
+                    .logger(log)
+                    .newPodLogger(createLogger("[[C]][NEW][[C]] "))
+                    .oldPodLogger(createLogger("[[R]][OLD][[R]] "))
+                    .mode(mode)
+                    .project(project)
+
+                    .useProjectClasspath(useProjectClasspath)
+                    .namespace(clusterAccess.getNamespace())
+                    .kubernetesClient(kubernetes)
+                    .fabric8ServiceHub(getFabric8ServiceHub())
+                    .build();
+        } catch(IOException exception) {
+            throw new MojoExecutionException(exception.getMessage());
+        }
     }
 
     protected Fabric8ServiceHub getFabric8ServiceHub() {
