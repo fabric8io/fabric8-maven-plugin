@@ -110,7 +110,7 @@ workflows:
     - doc:
         filters:
           branches:
-            only: master
+            only: 3.5.x
     - build
     - license
     - sonar-pr
