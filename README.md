@@ -25,7 +25,7 @@ To enable fabric8 maven plugin on your project just add this to the plugins sect
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-plugin</artifactId>
-        <version>3.5.41</version>
+        <version>3.5.42</version>
       </plugin>
 ```
 
