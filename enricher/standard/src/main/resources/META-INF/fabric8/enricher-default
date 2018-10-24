@@ -64,6 +64,9 @@ io.fabric8.maven.enricher.standard.RevisionHistoryEnricher
 # Add an enricher for adding trigger annotations to Kubernetes resources
 io.fabric8.maven.enricher.standard.TriggersAnnotationEnricher
 
+# Add Config Map enricher
+io.fabric8.maven.enricher.standard.ConfigMapEnricher
+
 # Provide cluster generated CERTs to a pod
 # (see https://docs.okd.io/latest/dev_guide/secrets.html#service-serving-certificate-secrets)
 io.fabric8.maven.enricher.standard.openshift.AutoTLSEnricher

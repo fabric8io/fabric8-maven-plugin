@@ -38,6 +38,7 @@
     - fmp-debug
     - fmp-remove-build-annotations
     - fmp-volume-permission
+    - fmp-configmap-file
 
     # Route exposure
     - fmp-openshift-service-expose

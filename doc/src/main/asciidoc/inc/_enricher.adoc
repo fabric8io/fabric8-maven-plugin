@@ -87,6 +87,9 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 
 | <<fmp-triggers-annotation>>
 | Add ImageStreamTag change triggers on Kubernetes resources such as StatefulSets, ReplicaSets and DaemonSets using the `image.openshift.io/triggers` annotation.
+
+| <<fmp-configmap-file>>
+| Add ConfigMap elements defined as XML or as annotation.
 |===
 
 [[enrichers-standard]]
@@ -1016,6 +1019,63 @@ The trigger is added to all containers that apply, but can be restricted to a li
 </enricher>
 ...
 ----
+
+[[fmp-configmap-file]]
+==== fmp-configmap-file
+
+This enricher adds ConfigMap defined as `resources` in plugin configuration and/or resolves file content from an annotation.
+
+As XML you can define:
+
+[source, xml]
+.pom.xml
+----
+<configuration>
+  <resources>
+    <configMap>
+      <elements>
+        <element>
+          <name>A</name>
+          <value>B</value>
+        </element>
+       </elements>
+    </configMap>
+  </resources>
+</configuration>
+----
+
+This creates a ConfigMap data with key `A` and value `B`.
+
+You can also use `file` tag to refer to the content of a file.
+
+[source, xml]
+----
+<configuration>
+  <resources>
+    <configMap>
+      <elements>
+        <element>
+          <file>src/test/resources/test-application.properties</file>
+        </element>
+       </elements>
+    </configMap>
+  </resources>
+</configuration>
+----
+
+This creates a ConfigMap with key `test-application.properties` and value the content of the `src/test/resources/test-application.properties` file.
+If you set `name` tag then this is used as key instead of the filename.
+
+If you are defining a custom `ConfigMap` file, you can use an annotation to define a file name as key and its content as the value:
+
+[source, yaml]
+----
+metadata:
+  name: ${project.artifactId}
+  maven.fabric8.io/cm/application.properties: src/test/resources/test-application.properties
+----
+
+This creates a `ConfigMap` data with key `application.properties` (part defined after `cm`) and value the content of `src/test/resources/test-application.properties` file.
 
 == Enricher API
 
