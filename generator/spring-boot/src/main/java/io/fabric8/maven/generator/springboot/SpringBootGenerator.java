@@ -135,6 +135,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
         String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET);
         if (Strings.isNullOrEmpty(remoteSecret)) {
             addSecretTokenToApplicationProperties();
+            throw new MojoExecutionException("No spring.devtools.remote.secret found in application.properties. Plugin has added it, please re-run goals");
         }
     }
 
@@ -247,12 +248,17 @@ public class SpringBootGenerator extends JavaExecGenerator {
 
         // We always add to application.properties, even when an application.yml exists, since both
         // files are evaluated by Spring Boot.
-        File file = new File(getProject().getBasedir(), "target/classes/application.properties");
+        appendSecretTokenToFile("target/classes/application.properties", newToken);
+        appendSecretTokenToFile("src/main/resources/application.properties", newToken);
+    }
+
+    private void appendSecretTokenToFile(String path, String token) throws MojoExecutionException {
+        File file = new File(getProject().getBasedir(), path);
         file.getParentFile().mkdirs();
         String text = String.format("%s" +
-                                    "# Remote secret added by fabric8-maven-plugin\n" +
-                                    "%s=%s\n",
-                                    file.exists() ? "\n" : "", DEV_TOOLS_REMOTE_SECRET, newToken);
+                        "# Remote secret added by fabric8-maven-plugin\n" +
+                        "%s=%s\n",
+                file.exists() ? "\n" : "", DEV_TOOLS_REMOTE_SECRET, token);
 
         try (FileWriter writer = new FileWriter(file, true)) {
             writer.append(text);
