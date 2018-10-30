@@ -96,7 +96,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
-        final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getArtifactId()));
+        final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getSanitizedArtifactId()));
         final ResourceConfig config = new ResourceConfig.Builder()
                     .controllerName(name)
                     .imagePullPolicy(getConfig(Config.pullPolicy))
