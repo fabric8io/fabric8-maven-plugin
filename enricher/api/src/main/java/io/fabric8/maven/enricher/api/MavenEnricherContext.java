@@ -57,6 +57,8 @@ public class MavenEnricherContext implements EnricherContext {
 
     private Settings settings;
 
+    private Map<String, String> processingInstruction;
+
     private MavenProject project;
     private Logger log;
 
@@ -73,6 +75,14 @@ public class MavenEnricherContext implements EnricherContext {
 
     public Settings getSettings() {
         return settings;
+    }
+
+    public Map<String, String> getProcessingInstructions() {
+        return processingInstruction;
+    }
+
+    public void setProcessingInstructions(Map<String, String> instruction) {
+        this.processingInstruction = instruction;
     }
 
     @Override
@@ -229,6 +239,11 @@ public class MavenEnricherContext implements EnricherContext {
 
         public Builder properties(Properties properties) {
             ctx.properties = properties;
+            return this;
+        }
+
+        public Builder processingInstructions(Map<String, String> pi) {
+            ctx.processingInstruction = pi;
             return this;
         }
 

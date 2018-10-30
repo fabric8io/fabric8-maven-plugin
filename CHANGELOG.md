@@ -59,6 +59,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 ### 3.5-SNAPSHOT
 * Fix 1390: Provides better exception message in case of invalid `application.yml` in Spring Boot
 * Fix 1382: Allow to provide additional fragment filename mappings
+* Fix 918: Sanitize Maven project names when artifactId starts with a number
 
 ### 4.0.0-M1 (2018-11-09)
 * Feature: Move to Java 1.8 as minimal requirement

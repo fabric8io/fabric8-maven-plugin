@@ -16,6 +16,7 @@
 package io.fabric8.maven.enricher.fabric8;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -121,6 +122,9 @@ public class DockerHealthCheckEnricherTest {
                             .build());
             context.getConfiguration();
             result = new Configuration.Builder().images(images).build();
+
+            context.getProcessingInstructions();
+            result = Collections.singletonMap("FABRIC8_GENERATED_CONTAINERS", "myImage,myImage2");
         }};
 
         KubernetesListBuilder builder = addDeployment(createDeployment("myImage"), "myImage2");
@@ -206,10 +210,6 @@ public class DockerHealthCheckEnricherTest {
                 .withNewSpec()
                 .addNewContainer()
                 .withName(name)
-                .addNewEnv()
-                    .withName("FABRIC8_GENERATED")
-                    .withValue("true")
-                .endEnv()
                 .endContainer()
                 .endSpec()
                 .endTemplate()

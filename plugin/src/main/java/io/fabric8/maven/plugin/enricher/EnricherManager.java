@@ -107,11 +107,12 @@ public class EnricherManager {
      */
     private void adapt(PlatformMode platformMode, final ProcessorConfig enricherConfig, final KubernetesListBuilder builder) {
         loop(enricherConfig, (Enricher enricher) -> {
-                enricher.enrich(platformMode, builder);
-                return null;
-            });
+            enricher.enrich(platformMode, builder);
+            return null;
+        });
     }
 
+    // =============================================================================================
     private void logEnrichers(List<Enricher> enrichers) {
         log.verbose("Enrichers:");
         for (Enricher enricher : enrichers) {

@@ -100,11 +100,6 @@ class ContainerHandler {
                 .endValueFrom()
                 .build());
 
-        envVars.add(
-                new EnvVarBuilder()
-                        .withName("FABRIC8_GENERATED")
-                        .withValue("true")
-                        .build());
         return envVars;
     }
 

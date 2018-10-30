@@ -38,7 +38,7 @@ public abstract class BaseEnricher implements Enricher {
 
     private final EnricherConfig config;
     private final String name;
-    private EnricherContext enricherContext;
+    public EnricherContext enricherContext;
 
     protected Logger log;
 
