@@ -49,7 +49,7 @@ public class GroupArtifactVersion {
      * ArtifactId is used for setting a resource name (service, pod,...) in Kubernetes resource.
      * The problem is that a Kubernetes resource name must start by a char.
      * This method returns a valid string to be used as Kubernetes name.
-     * @return Sanititzed Kubernetes name.
+     * @return Sanitized Kubernetes name.
      */
     public String getSanitizedArtifactId() {
         if (this.artifactId != null && !this.artifactId.isEmpty() && Character.isDigit(this.artifactId.charAt(0))) {
