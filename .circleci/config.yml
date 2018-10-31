@@ -20,8 +20,7 @@ jobs:
   # Build Website
   doc:
     working_directory: ~/fabric8io/fmp-docs
-    docker:
-    - image: circleci/openjdk:8-node-browsers
+    machine: true
     steps:
     - add_ssh_keys:
         fingerprints:
@@ -34,8 +33,7 @@ jobs:
   # Run build with jacoco enabled
   build:
     working_directory: ~/fabric8io/fabric8-maven-plugin
-    docker:
-    - image: circleci/openjdk:8-node-browsers
+    machine: true
     steps:
     - checkout
     - restore_cache:
@@ -49,8 +47,7 @@ jobs:
 
   license:
     working_directory: ~/fabric8io/fabric8-maven-plugin
-    docker:
-    - image: circleci/openjdk:8-node-browsers
+    machine: true
     steps:
     - checkout
     - restore_cache:
@@ -63,8 +60,7 @@ jobs:
 
   sonar-pr:
     working_directory: ~/fabric8io/fmp-sonar-pr
-    docker:
-    - image: circleci/openjdk:8-node-browsers
+    machine: true
     steps:
     - checkout
     - restore_cache:
@@ -87,9 +83,8 @@ jobs:
         - ~/.m2
 
   sonar:
-    working_directory: ~/fabric8io/dmp-sonar
-    docker:
-    - image: circleci/openjdk:8-node-browsers
+    working_directory: ~/fabric8io/fmp-sonar
+    machine: true
     steps:
     - checkout
     - restore_cache:
