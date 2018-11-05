@@ -45,9 +45,11 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1372: Filename to type mappings should be more flexible than a string array
 * Fix 1327: Update docker maven plugin version
 * Fix 1365: Generated image reference in deployment.yml contains duplicate registry name
+* Fix 662:  Add additional files when not a fat-jar
 * Removed support for loading env variable from schema.json
 * Removed MergeEnricher as it is broken and not used anyway
 * Fix 1069: Fix broken fabric8:watch
+* Fix 314: Do not execute GitEnricher if not Git repo
 
 ###3.5.40
 * Feature 1264: Added `osio` profile, with enricher to apply OpenShift.io space labels to resources
