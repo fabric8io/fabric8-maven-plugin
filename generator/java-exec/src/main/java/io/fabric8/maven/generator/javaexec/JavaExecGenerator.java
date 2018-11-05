@@ -178,30 +178,39 @@ public class JavaExecGenerator extends BaseGenerator {
         if (assemblyRef != null) {
             builder.descriptorRef(assemblyRef);
         } else {
+            Assembly assembly = new Assembly();
+            addAdditionalFiles(assembly);
             if (isFatJar()) {
                 FatJarDetector.Result fatJar = detectFatJar();
-                Assembly assembly = new Assembly();
                 MavenProject project = getProject();
                 if (fatJar == null) {
                     DependencySet dependencySet = new DependencySet();
                     dependencySet.addInclude(project.getGroupId() + ":" + project.getArtifactId());
                     assembly.addDependencySet(dependencySet);
                 } else {
-                    FileSet fileSet = new FileSet();
-                    File buildDir = new File(project.getBuild().getDirectory());
-                    fileSet.setDirectory(toRelativePath(buildDir, project.getBasedir()));
-                    fileSet.addInclude(toRelativePath(fatJar.getArchiveFile(), buildDir));
-                    fileSet.setOutputDirectory(".");
-                    fileSet.setFileMode("0640");
+                    FileSet fileSet = getOutputDirectoryFileSet(fatJar, project);
                     assembly.addFileSet(fileSet);
                 }
-                assembly.addFileSet(createFileSet("src/main/fabric8-includes/bin","bin","0755","0755"));
-                assembly.addFileSet(createFileSet("src/main/fabric8-includes",".","0644","0755"));
-                builder.assemblyDef(assembly);
             } else {
                 builder.descriptorRef("artifact-with-dependencies");
             }
-        };
+            builder.assemblyDef(assembly);
+        }
+    }
+
+    private void addAdditionalFiles(Assembly assembly) {
+        assembly.addFileSet(createFileSet("src/main/fabric8-includes/bin","bin","0755","0755"));
+        assembly.addFileSet(createFileSet("src/main/fabric8-includes",".","0644","0755"));
+    }
+
+    private FileSet getOutputDirectoryFileSet(FatJarDetector.Result fatJar, MavenProject project) {
+        FileSet fileSet = new FileSet();
+        File buildDir = new File(project.getBuild().getDirectory());
+        fileSet.setDirectory(toRelativePath(buildDir, project.getBasedir()));
+        fileSet.addInclude(toRelativePath(fatJar.getArchiveFile(), buildDir));
+        fileSet.setOutputDirectory(".");
+        fileSet.setFileMode("0640");
+        return fileSet;
     }
 
     private String toRelativePath(File archiveFile, File basedir) {
