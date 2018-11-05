@@ -45,6 +45,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1372: Filename to type mappings should be more flexible than a string array
 * Fix 1327: Update docker maven plugin version
 * Fix 1365: Generated image reference in deployment.yml contains duplicate registry name
+* Fix 662:  Add additional files when not a fat-jar
 * Removed support for loading env variable from schema.json
 * Removed MergeEnricher as it is broken and not used anyway
 
