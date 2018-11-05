@@ -45,36 +45,40 @@ public class GitEnricher extends BaseEnricher {
 
     @Override
     public Map<String, String> getAnnotations(Kind kind) {
-        Map<String, String> annotations = new HashMap<>();
-        Repository repository = null;
-        try {
-            if (kind.isController() || kind == Kind.SERVICE) {
-                // Git annotations (if git is used as SCM)
-                repository = GitUtil.getGitRepository(getContext().getProjectDirectory());
-                if (repository != null) {
-                    String branch = repository.getBranch();
-                    if (branch != null) {
-                        annotations.put(Fabric8Annotations.GIT_BRANCH.value(), branch);
-                    }
-                    String id = GitUtil.getGitCommitId(repository);
-                    if (id != null) {
-                        annotations.put(Fabric8Annotations.GIT_COMMIT.value(), id);
+        final Map<String, String> annotations = new HashMap<>();
+        if (GitUtil.findGitFolder(getContext().getProjectDirectory()) != null) {
+            Repository repository = null;
+            try {
+                if (kind.isController() || kind == Kind.SERVICE) {
+                    // Git annotations (if git is used as SCM)
+                    repository = GitUtil.getGitRepository(getContext().getProjectDirectory());
+                    if (repository != null) {
+                        String branch = repository.getBranch();
+                        if (branch != null) {
+                            annotations.put(Fabric8Annotations.GIT_BRANCH.value(), branch);
+                        }
+                        String id = GitUtil.getGitCommitId(repository);
+                        if (id != null) {
+                            annotations.put(Fabric8Annotations.GIT_COMMIT.value(), id);
+                        }
                     }
                 }
-            }
-            return annotations;
-        } catch (IOException | GitAPIException e) {
-            log.error("Cannot extract Git information for adding to annotations: " + e, e);
-            return null;
-        } finally {
-            if (repository != null) {
-                try {
-                    repository.close();
-                } catch (Exception e) {
-                    // ignore
+                return annotations;
+            } catch (IOException | GitAPIException e) {
+                log.error("Cannot extract Git information for adding to annotations: " + e, e);
+                return null;
+            } finally {
+                if (repository != null) {
+                    try {
+                        repository.close();
+                    } catch (Exception e) {
+                        // ignore
+                    }
                 }
             }
         }
+
+        return annotations;
     }
 }
 
