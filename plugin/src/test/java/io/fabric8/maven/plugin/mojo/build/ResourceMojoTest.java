@@ -35,11 +35,11 @@ public class ResourceMojoTest {
         final ConfigMapEntry standardConfigMapEntry = new ConfigMapEntry();
         standardConfigMapEntry.setName("A");
         standardConfigMapEntry.setValue("B");
-        mockedConfigMap.addElement(standardConfigMapEntry);
+        mockedConfigMap.addEntry(standardConfigMapEntry);
 
         final ConfigMapEntry fileConfigMapEntry = new ConfigMapEntry();
         fileConfigMapEntry.setFile("src/test/resources/test-application.properties");
-        mockedConfigMap.addElement(fileConfigMapEntry);
+        mockedConfigMap.addEntry(fileConfigMapEntry);
 
         final ResourceConfig.Builder resourceConfigBuilder = new ResourceConfig.Builder();
         resourceConfigBuilder.withConfigMap(mockedConfigMap);

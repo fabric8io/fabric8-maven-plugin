@@ -60,12 +60,12 @@
         <configuration>
           <resources>
             <configMap>
-              <elements>
-                <element>
+              <entries>
+                <entry>
                   <name>A</name>
                   <value>B</value>
-                </element>
-              </elements>
+                </entry>
+              </entries>
             </configMap>
           </resources>
         </configuration>

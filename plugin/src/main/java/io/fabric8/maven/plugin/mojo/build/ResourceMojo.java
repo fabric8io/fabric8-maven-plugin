@@ -1019,7 +1019,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         final Map<String, String> configMapData = new HashMap<>();
 
         if (configMap != null) {
-            for (ConfigMapEntry configMapEntry : configMap.getElements()) {
+            for (ConfigMapEntry configMapEntry : configMap.getEntries()) {
                 String name = configMapEntry.getName();
                 final String value = configMapEntry.getValue();
                 if (name != null && value != null) {

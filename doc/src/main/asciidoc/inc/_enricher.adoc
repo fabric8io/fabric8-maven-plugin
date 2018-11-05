@@ -1033,12 +1033,12 @@ As XML you can define:
 <configuration>
   <resources>
     <configMap>
-      <elements>
-        <element>
+      <entries>
+        <entry>
           <name>A</name>
           <value>B</value>
-        </element>
-       </elements>
+        </entry>
+       </entries>
     </configMap>
   </resources>
 </configuration>
@@ -1053,11 +1053,11 @@ You can also use `file` tag to refer to the content of a file.
 <configuration>
   <resources>
     <configMap>
-      <elements>
-        <element>
+      <entries>
+        <entry>
           <file>src/test/resources/test-application.properties</file>
-        </element>
-       </elements>
+        </entry>
+       </entries>
     </configMap>
   </resources>
 </configuration>
