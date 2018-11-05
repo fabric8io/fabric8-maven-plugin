@@ -79,6 +79,9 @@
           </resources>
 
           <enricher>
+            <includes>
+              <include>fmp-portname</include>
+            </includes>
             <excludes>
               <exclude>build</exclude>
             </excludes>
