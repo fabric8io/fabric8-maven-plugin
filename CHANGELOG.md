@@ -48,6 +48,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 662:  Add additional files when not a fat-jar
 * Removed support for loading env variable from schema.json
 * Removed MergeEnricher as it is broken and not used anyway
+* Fix 977: Allows user to define ConfigMap from XML and annotation
 * Fix 314: Do not execute GitEnricher if not Git repo
 
 ###3.5.40
