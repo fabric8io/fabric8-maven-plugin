@@ -1005,11 +1005,13 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         final Map<String, String> configMapFromConfiguration;
         try {
             configMapFromConfiguration = createConfigMapFromConfiguration(configMap);
-            ConfigMapBuilder element = new ConfigMapBuilder();
-            element.withNewMetadata().withName("xmlconfig").endMetadata();
-            element.addToData(configMapFromConfiguration);
+            if(!configMapFromConfiguration.isEmpty()) {
+                ConfigMapBuilder element = new ConfigMapBuilder();
+                element.withNewMetadata().withName("xmlconfig").endMetadata();
+                element.addToData(configMapFromConfiguration);
 
-            builder.addToConfigMapItems(element.build());
+                builder.addToConfigMapItems(element.build());
+            }
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
