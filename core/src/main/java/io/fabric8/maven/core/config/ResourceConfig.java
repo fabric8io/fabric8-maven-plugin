@@ -49,6 +49,9 @@ public class ResourceConfig {
     private List<ServiceConfig> services;
 
     @Parameter
+    private ConfigMap configMap;
+
+    @Parameter
     private ProbeConfig liveness;
 
     @Parameter
@@ -142,6 +145,10 @@ public class ResourceConfig {
         return namespace;
     }
 
+    public ConfigMap getConfigMap() {
+        return configMap;
+    }
+
     // =============================================================================================
 
     public static class Builder {
@@ -174,6 +181,11 @@ public class ResourceConfig {
 
         public Builder withServiceAccount(String serviceAccount) {
             config.serviceAccount = serviceAccount;
+            return this;
+        }
+
+        public Builder withConfigMap(ConfigMap configMap) {
+            config.configMap = configMap;
             return this;
         }
 

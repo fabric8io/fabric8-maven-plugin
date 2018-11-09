@@ -25,9 +25,6 @@ io.fabric8.maven.enricher.standard.DefaultServiceEnricher,103
 # Add port names from IANA service definitions
 io.fabric8.maven.enricher.standard.PortNameEnricher
 
-# Add port names from IANA service definitions
-io.fabric8.maven.enricher.standard.IANAServicePortNameEnricher
-
 # Add Maven coordinates as labels
 io.fabric8.maven.enricher.standard.ProjectEnricher
 
@@ -63,6 +60,9 @@ io.fabric8.maven.enricher.standard.RevisionHistoryEnricher
 
 # Add an enricher for adding trigger annotations to Kubernetes resources
 io.fabric8.maven.enricher.standard.TriggersAnnotationEnricher
+
+# Add Config Map enricher
+io.fabric8.maven.enricher.standard.ConfigMapEnricher
 
 # Provide cluster generated CERTs to a pod
 # (see https://docs.okd.io/latest/dev_guide/secrets.html#service-serving-certificate-secrets)

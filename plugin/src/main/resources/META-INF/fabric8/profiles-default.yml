@@ -27,7 +27,6 @@
     - fmp-service
     - fmp-image
     - fmp-portname
-    - fmp-ianaservice
     - fmp-project
     - fmp-dependency
     - fmp-pod-annotations
@@ -38,6 +37,7 @@
     - fmp-debug
     - fmp-remove-build-annotations
     - fmp-volume-permission
+    - fmp-configmap-file
 
     # Route exposure
     - fmp-openshift-service-expose
