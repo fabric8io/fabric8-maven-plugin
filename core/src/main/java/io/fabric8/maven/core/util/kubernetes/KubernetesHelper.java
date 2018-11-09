@@ -294,7 +294,7 @@ public class KubernetesHelper {
     }
 
     private static boolean isInPodPhase(Pod pod, String phase) {
-        return getPodPhase(pod).startsWith(phase);
+        return getPodPhase(pod).toLowerCase().startsWith(phase);
     }
 
     static String getPodPhase(Pod pod) {

@@ -174,12 +174,7 @@ public class SpringBootWatcher extends BaseWatcher {
     private void runRemoteSpringApplication(String url) {
         log.info("Running RemoteSpringApplication against endpoint: " + url);
 
-        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(MavenUtil.getCompileClassLoader(getContext().getProject()));
-        String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET, System.getProperty(DEV_TOOLS_REMOTE_SECRET));
-        if (StringUtils.isBlank(remoteSecret)) {
-            log.warn("There is no `%s` property defined in your src/main/resources/application.properties. Please add one!", DEV_TOOLS_REMOTE_SECRET);
-            throw new IllegalStateException("No " + DEV_TOOLS_REMOTE_SECRET + " property defined in application.properties or system properties");
-        }
+        String remoteSecret = validateSpringBootDevtoolsSettings();
 
         ClassLoader classLoader = getClass().getClassLoader();
         if (classLoader instanceof URLClassLoader) {
@@ -291,6 +286,22 @@ public class SpringBootWatcher extends BaseWatcher {
     private File getSpringBootDevToolsJar(MavenProject project) throws IOException {
         String version = SpringBootUtil.getSpringBootDevToolsVersion(project).orElseThrow(() -> new IllegalStateException("Unable to find the spring-boot version"));
         return getContext().getFabric8ServiceHub().getArtifactResolverService().resolveArtifact(SpringBootConfigurationHelper.SPRING_BOOT_GROUP_ID, SpringBootConfigurationHelper.SPRING_BOOT_DEVTOOLS_ARTIFACT_ID, version, "jar");
+    }
+
+    private String validateSpringBootDevtoolsSettings() throws IllegalStateException {
+        String configuration = MavenUtil.getPlugin(getContext().getProject(), null, SpringBootConfigurationHelper.SPRING_BOOT_MAVEN_PLUGIN_ARTIFACT_ID).getConfiguration().toString();
+        if(!configuration.contains("<excludeDevtools>false</excludeDevtools>")) {
+            log.warn("devtools need to be included in repacked archive, please set <excludeDevtools> to false in plugin configuration");
+            throw new IllegalStateException("devtools needs to be included in fat jar");
+        }
+
+        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(MavenUtil.getCompileClassLoader(getContext().getProject()));
+        String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET, System.getProperty(DEV_TOOLS_REMOTE_SECRET));
+        if (StringUtils.isBlank(remoteSecret)) {
+            log.warn("There is no `%s` property defined in your src/main/resources/application.properties. Please add one!", DEV_TOOLS_REMOTE_SECRET);
+            throw new IllegalStateException("No " + DEV_TOOLS_REMOTE_SECRET + " property defined in application.properties or system properties");
+        }
+        return properties.getProperty(DEV_TOOLS_REMOTE_SECRET);
     }
 
 }
