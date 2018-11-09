@@ -10,27 +10,13 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
-###3.5-SNAPSHOT
+### 3.5-SNAPSHOT
 * Fix 1021: Avoids empty deployment selector value in generated yaml resource
 * Fix 1383: Check if instanceof Openshift before casting and handle failures.
 * Fix 1390: Provides better exception message in case of invalid `application.yml` in Spring Boot
 * Fix 1382: Allow to provide additional fragment filename mappings
 
-###3.5.41 (2018-08-01)
-* Feature 1032: Improvements of the Vert.x Generator and enrichers
-* Fix 1313: Removed unused Maven goals. Please contact us if something's missing for you.
-* Fix 1299: autotls feature doesn't work with OpenShift 3.9 (Kubernetes 1.8+) due to InitContainer annotation deprecation
-* Fix 1276: Proper inclusion of webapp's war regardless of the final name
-* Feature: New 'path' config option for the webapp generator to set the context path
-* Fix 1334: support for docker.pull.registry
-* Fix 1268: Java console for OpenShift builds reachable again.
-* Fix 1312: Container name should not be generated from maven group id
-* Feature 917: Add `timeoutSeconds` configuration option for SpringBootHealthCheck enricher
-* Fix 1073: Preserve file extension when copying file to helm chart folder
-* Fix 1340: spring-boot-maven-plugin is detected under any groupId
-* Fix 1346: karaf-maven-plugin is detected under any groupId
-
-###4.0-SNAPSHOT
+### 4.0.0-M1 (2018-11-09)
 * Feature: Move to Java 1.8 as minimal requirement
 * Refactor 1344: Removed unused Maven goals. Please contact us if something's missing for you.
 * Refactor 949: Remove dependency from fabric8/fabric8
@@ -53,7 +39,21 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 314: Do not execute GitEnricher if not Git repo
 * Fix 714: Merges the functionality of IANAServicePortNameEnricher and PortNameEnricher.
 
-###3.5.40
+### 3.5.41 (2018-08-01)
+* Feature 1032: Improvements of the Vert.x Generator and enrichers
+* Fix 1313: Removed unused Maven goals. Please contact us if something's missing for you.
+* Fix 1299: autotls feature doesn't work with OpenShift 3.9 (Kubernetes 1.8+) due to InitContainer annotation deprecation
+* Fix 1276: Proper inclusion of webapp's war regardless of the final name
+* Feature: New 'path' config option for the webapp generator to set the context path
+* Fix 1334: support for docker.pull.registry
+* Fix 1268: Java console for OpenShift builds reachable again.
+* Fix 1312: Container name should not be generated from maven group id
+* Feature 917: Add `timeoutSeconds` configuration option for SpringBootHealthCheck enricher
+* Fix 1073: Preserve file extension when copying file to helm chart folder
+* Fix 1340: spring-boot-maven-plugin is detected under any groupId
+* Fix 1346: karaf-maven-plugin is detected under any groupId
+
+### 3.5.40
 * Feature 1264: Added `osio` profile, with enricher to apply OpenShift.io space labels to resources
 * Feature 1291: Added ImageStream triggers for StatefulSets, ReplicaSets and DaemonSets
 * Feature 1293: Added support to create pullSecret in buildConfig when pulling from private registry in Openshift.
@@ -65,7 +65,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Upgraded Kubernetes Client to 3.2.0 - https://github.com/fabric8io/fabric8-maven-plugin/pull/1304
 * Upgraded Fabric8 to 3.0.12 - https://github.com/fabric8io/fabric8-maven-plugin/pull/1307
 
-###3.5.39
+### 3.5.39
 * Feature 1206: Added support for spring-boot 2 health endpoint
 * Feature 1171: Added configuration options for delay and period on spring-boot health check probes
 * Fix 1173: disable the Prometheus agent for WildFly Swarm applications, because it uses Java logging too early; also reenable the Jolokia agent, which was disabled due to the same problem but was fixed a long time ago
@@ -77,19 +77,19 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1263: Display a warning in case of premature close of the build watcher by kubernetes client
 * Fix 886: Introduce extends for profiles
 
-###3.5.38
+### 3.5.38
 * Feature 1209: Added flag fabric8.openshift.generateRoute which if set to false will not generate route.yml and also will not add Route resource in openshift.yml. If set to true or not set, it will generate rou  te.yml and also add Route resource in openshift.yml. By default its value is true.
 * Fix 1177: Added flag fabric8.openshift.enableAutomaticTrigger which would be able to enable/disable automatic deployments whenever there is new image
   generated.
 * Fix 1184: MultiModule projects were not getting deployed using FMP 3.5.34 onwards. This was working after adding an extra flag which was breaking the previous behaviour in patch release. We will make these change again in minor release and will add the notes regarding that. For the time being, we have reverted the change.
 * Fix #1226: Plugin fails to deploy changes to an application with S2I build. It used to pick first image verion always. This fix pick the right image tag by comaring created attribute of image tag
 
-###3.5.35
+### 3.5.35
 * Fix 1130: Added flag fabric8.openshift.trimImageInContainerSpec which would set the container image reference to "", this is done to handle weird
   behavior of Openshift 3.7 in which subsequent rollouts lead to ImagePullErr.
 * Feature 1174: ImageStreams use local lookup policy by default to simplify usage of Deployment or StatefulSet resources on Openshift
 
-###3.5.34
+### 3.5.34
 * Feature 1003: Added suspend option to remote debugging
 * Remove duplicate tenant repos from downstream version updates and add in tjenkins platform
 * Fix 1051: resource validation was slow due to online hosted schema. The fix uses the JSON schema from kubernetes-model project
