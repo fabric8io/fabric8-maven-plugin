@@ -108,4 +108,7 @@
 
 |Template
 |`template`
+
+|Pod
+|`pd`, `pod`
 |===
