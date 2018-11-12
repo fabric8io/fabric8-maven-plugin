@@ -53,6 +53,7 @@ public class KindFilenameMapperUtilTest {
         final Map<String, List<String>> expectedSerlializedContent = new HashMap<>();
         expectedSerlializedContent.put("ConfigMap", Arrays.asList("cm", "configmap"));
         expectedSerlializedContent.put("CronJob", Arrays.asList("cj", "cronjob"));
+        expectedSerlializedContent.put("Pod", Arrays.asList("pd", "pod"));
         assertThat(mappings).containsAllEntriesOf(expectedSerlializedContent);
 
     }
