@@ -15,6 +15,8 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import io.fabric8.maven.core.config.ResourceConfig;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +39,14 @@ public class RemoveBuildAnnotationsEnricher extends BaseEnricher {
 
     @Override
     public void adapt(KubernetesListBuilder builder) {
+
+        final ResourceConfig resourceConfig = getConfiguration().getResource().get();
+
+        if (resourceConfig != null) {
+            overrideEnvironmentVariables(builder, resourceConfig.getEnv()
+                .orElse(new HashMap<>()));
+        }
+
         List<HasMetadata> items = builder.buildItems();
 
         for (HasMetadata item : items) {

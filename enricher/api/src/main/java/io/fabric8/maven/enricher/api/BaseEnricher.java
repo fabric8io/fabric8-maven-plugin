@@ -15,6 +15,11 @@
  */
 package io.fabric8.maven.enricher.api;
 
+import io.fabric8.kubernetes.api.builder.TypedVisitor;
+import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.model.Configuration;
@@ -24,6 +29,8 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -103,6 +110,56 @@ public abstract class BaseEnricher implements Enricher {
 
     protected EnricherContext getContext() {
         return enricherContext;
+    }
+
+    protected void overrideEnvironmentVariables(KubernetesListBuilder builder, final Map<String, String> resourceEnv) {
+        builder.accept(new TypedVisitor<ContainerBuilder>() {
+            @Override
+            public void visit(ContainerBuilder containerBuilder) {
+                List<EnvVar> envVars = containerBuilder.buildEnv();
+
+                if (envVars == null) {
+                    envVars = new LinkedList<>();
+                    containerBuilder.withEnv(envVars);
+                }
+
+                if (resourceEnv != null) {
+                    for (Map.Entry<String, String> resourceEnvEntry : resourceEnv.entrySet()) {
+                        EnvVar newEnvVar =
+                            new EnvVarBuilder()
+                                .withName(resourceEnvEntry.getKey())
+                                .withValue(resourceEnvEntry.getValue())
+                                .build();
+                        if (hasEnvWithName(envVars, resourceEnvEntry.getKey())) {
+                            final String oldValue = removeEnvWithName(envVars, resourceEnvEntry.getKey());
+                            log.warn(
+                                "Environment variable %s is overridden: Setting the value %s, which replaces %s",
+                                newEnvVar.getName(), newEnvVar.getValue(), oldValue);
+                        }
+                        envVars.add(newEnvVar);
+                    }
+                    containerBuilder.withEnv(envVars);
+                }
+            }
+        });
+
+    }
+
+    private String removeEnvWithName(List<EnvVar> envVars, String name) {
+        final Iterator<EnvVar> iterator = envVars.iterator();
+        while(iterator.hasNext()) {
+            final EnvVar envVar = iterator.next();
+            if (envVar.getName().equals(name)) {
+                iterator.remove();
+                return envVar.getValue();
+            }
+        }
+
+        return "";
+    }
+
+    private boolean hasEnvWithName(List<EnvVar> envVars, String name) {
+        return envVars.stream().anyMatch(e -> e.getName().equals(name));
     }
 
     /**

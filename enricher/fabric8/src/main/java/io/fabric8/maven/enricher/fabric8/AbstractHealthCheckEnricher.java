@@ -20,8 +20,10 @@ import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.Probe;
+import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import java.util.HashMap;
 
 /**
  * Enriches containers with health check probes.
@@ -34,6 +36,13 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
+
+        final ResourceConfig resourceConfig = getConfiguration().getResource().get();
+
+        if (resourceConfig != null) {
+            overrideEnvironmentVariables(builder, resourceConfig.getEnv()
+                .orElse(new HashMap<>()));
+        }
 
         builder.accept(new TypedVisitor<ContainerBuilder>() {
             @Override

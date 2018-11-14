@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import io.fabric8.maven.core.config.ResourceConfig;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -58,6 +59,13 @@ public class VolumePermissionEnricher extends BaseEnricher {
 
     @Override
     public void adapt(KubernetesListBuilder builder) {
+
+        final ResourceConfig resourceConfig = getConfiguration().getResource().get();
+
+        if (resourceConfig != null) {
+            overrideEnvironmentVariables(builder, resourceConfig.getEnv()
+                .orElse(new HashMap<>()));
+        }
 
         builder.accept(new TypedVisitor<PodTemplateSpecBuilder>() {
             @Override

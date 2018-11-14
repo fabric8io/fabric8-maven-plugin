@@ -16,7 +16,9 @@
 
 package io.fabric8.maven.enricher.standard.openshift;
 
+import io.fabric8.maven.core.config.ResourceConfig;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +49,14 @@ public class ExposeEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
+
+        final ResourceConfig resourceConfig = getConfiguration().getResource().get();
+
+        if (resourceConfig != null) {
+            overrideEnvironmentVariables(builder, resourceConfig.getEnv()
+                .orElse(new HashMap<>()));
+        }
+
         List<HasMetadata> items = builder.getItems();
         if (items != null) {
             for (HasMetadata item : items) {

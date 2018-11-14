@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import io.fabric8.maven.core.config.ResourceConfig;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -119,6 +120,14 @@ public class DependencyEnricher extends BaseEnricher {
 
     @Override
     public void adapt(final KubernetesListBuilder builder) {
+
+        final ResourceConfig resourceConfig = getConfiguration().getResource().get();
+
+        if (resourceConfig != null) {
+            overrideEnvironmentVariables(builder, resourceConfig.getEnv()
+                .orElse(new HashMap<>()));
+        }
+
         final List<HasMetadata> kubernetesItems = new ArrayList<>();
         processArtifactSetResources(this.kubernetesDependencyArtifacts, items -> {
             kubernetesItems.addAll(Arrays.asList(items.toArray(new HasMetadata[items.size()])));

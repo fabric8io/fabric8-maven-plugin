@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.enricher.standard.openshift;
 
+import io.fabric8.maven.core.config.ResourceConfig;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +86,14 @@ public class AutoTLSEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
+
+        final ResourceConfig resourceConfig = getConfiguration().getResource().get();
+
+        if (resourceConfig != null) {
+            overrideEnvironmentVariables(builder, resourceConfig.getEnv()
+                .orElse(new HashMap<>()));
+        }
+
         if (!isOpenShiftMode()) {
             return;
         }

@@ -15,7 +15,9 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import io.fabric8.maven.core.config.ResourceConfig;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -69,6 +71,13 @@ public class TriggersAnnotationEnricher extends BaseEnricher {
 
     @Override
     public void adapt(KubernetesListBuilder builder) {
+
+        final ResourceConfig resourceConfig = getConfiguration().getResource().get();
+
+        if (resourceConfig != null) {
+            overrideEnvironmentVariables(builder, resourceConfig.getEnv()
+                .orElse(new HashMap<>()));
+        }
 
         builder.accept(new TypedVisitor<StatefulSetBuilder>() {
             @Override
