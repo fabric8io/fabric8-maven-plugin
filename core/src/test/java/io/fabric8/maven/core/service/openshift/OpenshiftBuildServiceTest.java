@@ -51,13 +51,11 @@ import io.fabric8.openshift.client.server.mock.OpenShiftMockServer;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.Verifications;
-import mockit.integration.junit4.JMockit;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.archiver.tar.TarArchiver;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +63,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
-@RunWith(JMockit.class)
 public class OpenshiftBuildServiceTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(OpenshiftBuildServiceTest.class);

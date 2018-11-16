@@ -43,7 +43,10 @@ public class Configs {
     public static String asString(String value) { return value; }
 
     public static String getPropertyWithSystemAsFallback(Properties properties, String key) {
-        String val = properties.getProperty(key);
+        String val = null;
+        if (properties != null) {
+            val = properties.getProperty(key);
+        }
         if (val == null) {
             val = System.getProperty(key);
         }

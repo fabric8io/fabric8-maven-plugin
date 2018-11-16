@@ -17,6 +17,8 @@ package io.fabric8.maven.enricher.fabric8;
 
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.enricher.api.util.ProjectClassLoaders;
+
+import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.Map;
@@ -305,7 +307,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherTestSupport {
         new Expectations(){{
             context.getProjectClassLoaders();
             result = new ProjectClassLoaders(
-                (URLClassLoader) AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader()) {
+                new URLClassLoader(new URL[0], AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader())) {
                 @Override
                 public boolean isClassInCompileClasspath(boolean all, String... clazz) {
                     return true;
@@ -339,7 +341,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherTestSupport {
                 result = new Configuration.Builder().processorConfig(config).build();
                 context.getProjectClassLoaders();
                 result = new ProjectClassLoaders(
-                    (URLClassLoader) AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader()) {
+                    new URLClassLoader(new URL[0], AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader())) {
                     @Override
                     public boolean isClassInCompileClasspath(boolean all, String... clazz) {
                         return true;
@@ -380,7 +382,7 @@ public abstract class AbstractSpringBootHealthCheckEnricherTestSupport {
             context.getConfiguration(); result = new Configuration.Builder().processorConfig(config).build();
             context.getProjectClassLoaders();
             result = new ProjectClassLoaders(
-                (URLClassLoader) AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader()) {
+                new URLClassLoader(new URL[0], AbstractSpringBootHealthCheckEnricherTestSupport.class.getClassLoader())) {
                 @Override
                 public boolean isClassInCompileClasspath(boolean all, String... clazz) {
                     return true;

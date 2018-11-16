@@ -25,16 +25,13 @@ import io.fabric8.maven.core.util.kubernetes.UserConfigurationCompare;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftMockServer;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import io.fabric8.maven.docker.util.Logger;
 
 import java.util.Collections;
 
 import static junit.framework.TestCase.assertTrue;
 
-@RunWith(JMockit.class)
 public class PatchServiceTest {
     @Mocked
     Logger log;

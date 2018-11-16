@@ -20,17 +20,14 @@ import java.util.Map;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static io.fabric8.maven.core.util.FileUtil.getAbsolutePath;
 import static org.junit.Assert.assertEquals;
 
-@RunWith(JMockit.class)
 public class VertxPortsExtractorTest {
 
     @Mocked

@@ -26,11 +26,9 @@ import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 
@@ -38,7 +36,6 @@ import static org.junit.Assert.assertEquals;
  * @author roland
  * @since 22/09/16
  */
-@RunWith(JMockit.class)
 public class JavaRunGeneratorTest {
 
     @Mocked
