@@ -29,12 +29,10 @@ import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.util.MavenConfigurationExtractor;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.codehaus.plexus.util.xml.Xpp3DomBuilder;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -45,7 +43,6 @@ import static org.junit.Assert.fail;
 /**
  * @author <a href="http://escoffier.me">Clement Escoffier</a>
  */
-@RunWith(JMockit.class)
 public class VertxHealthCheckEnricherTest {
 
 

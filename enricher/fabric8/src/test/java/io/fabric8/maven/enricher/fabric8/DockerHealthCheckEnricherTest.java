@@ -33,11 +33,9 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.assertj.core.api.ListAssert;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -45,7 +43,6 @@ import static org.junit.Assert.assertThat;
 /**
  * @author nicola
  */
-@RunWith(JMockit.class)
 public class DockerHealthCheckEnricherTest {
 
     @Mocked

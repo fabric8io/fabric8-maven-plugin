@@ -32,9 +32,7 @@ import java.util.List;
 import java.util.Properties;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
@@ -44,7 +42,6 @@ import static junit.framework.TestCase.assertTrue;
 /**
  * @author nicola
  */
-@RunWith(JMockit.class)
 public class TriggersAnnotationEnricherTest {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();

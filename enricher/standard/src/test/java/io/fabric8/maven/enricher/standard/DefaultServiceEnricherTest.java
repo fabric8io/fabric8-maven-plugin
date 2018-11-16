@@ -31,9 +31,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasNoJsonPath;
@@ -47,7 +45,6 @@ import static org.junit.Assert.assertThat;
  * @author roland
  * @since 03/06/16
  */
-@RunWith(JMockit.class)
 public class DefaultServiceEnricherTest {
 
     @Mocked

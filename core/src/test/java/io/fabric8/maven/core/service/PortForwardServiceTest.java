@@ -30,12 +30,9 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftMockServer;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(JMockit.class)
 public class PortForwardServiceTest {
 
     @Mocked
