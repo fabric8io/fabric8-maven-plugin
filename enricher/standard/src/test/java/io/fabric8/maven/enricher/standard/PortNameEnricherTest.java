@@ -29,9 +29,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -48,7 +46,6 @@ import static org.hamcrest.Matchers.equalTo;
  * @author dgaur
  * @since 03/06/16
  */
-@RunWith(JMockit.class)
 public class PortNameEnricherTest {
 
     @Mocked

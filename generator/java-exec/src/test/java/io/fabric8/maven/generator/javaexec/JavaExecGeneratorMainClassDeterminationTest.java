@@ -33,12 +33,10 @@ import mockit.Invocation;
 import mockit.Mock;
 import mockit.MockUp;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.apache.maven.model.Build;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -50,7 +48,6 @@ import static org.junit.Assert.assertNull;
  * @author: Oliver Weise
  * @since: 2016-11-30
  */
-@RunWith(JMockit.class)
 public class JavaExecGeneratorMainClassDeterminationTest {
 
     @Mocked

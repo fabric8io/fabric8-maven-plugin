@@ -22,12 +22,10 @@ import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.Kind;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.apache.maven.model.Scm;
 import org.apache.maven.project.MavenProject;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
@@ -36,7 +34,6 @@ import static junit.framework.TestCase.assertTrue;
 /**
  * @author kameshs
  */
-@RunWith(JMockit.class)
 public class MavenScmEnricherTest {
 
     @Mocked

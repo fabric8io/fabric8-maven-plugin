@@ -39,15 +39,12 @@ import java.util.List;
 import java.util.Map;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(JMockit.class)
 public class DependencyEnricherTest {
 
     @Mocked

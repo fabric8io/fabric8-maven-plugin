@@ -32,10 +32,8 @@ import io.fabric8.maven.core.util.SecretConstants;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,7 +41,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author yuwzho
  */
-@RunWith(JMockit.class)
 public class DockerRegistrySecretEnricherTest {
 
     @Mocked

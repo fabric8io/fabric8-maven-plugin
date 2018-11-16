@@ -66,6 +66,10 @@ public enum PlatformMode {
      * Returns true if the given maven properties indicate running in OpenShift platform mode
      */
     public static boolean isOpenShiftMode(Properties properties) {
-        return Objects.equal(openshift.toString(), properties.getProperty(FABRIC8_EFFECTIVE_PLATFORM_MODE, ""));
+        if (properties == null) {
+            return false;
+        } else {
+            return Objects.equal(openshift.toString(), properties.getProperty(FABRIC8_EFFECTIVE_PLATFORM_MODE, ""));
+        }
     }
 }

@@ -23,13 +23,11 @@ import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.AutoPullMode;
 import mockit.Expectations;
-import mockit.FullVerificationsInOrder;
+import mockit.FullVerifications;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
+import mockit.VerificationsInOrder;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(JMockit.class)
 public class DockerBuildServiceTest {
 
     @Mocked
@@ -65,7 +63,7 @@ public class DockerBuildServiceTest {
         DockerBuildService service = new DockerBuildService(hub, config);
         service.build(image);
 
-        new FullVerificationsInOrder() {{
+        new VerificationsInOrder() {{
             buildService.buildImage(image, config.getImagePullManager(), context);
             buildService.tagImage(imageName, image);
         }};

@@ -25,14 +25,12 @@ import io.fabric8.maven.generator.api.GeneratorContext;
 import mockit.Expectations;
 import mockit.Injectable;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
@@ -40,7 +38,6 @@ import static org.assertj.core.api.Assertions.entry;
 /**
  * @author <a href="http://escoffier.me">Clement Escoffier</a>
  */
-@RunWith(JMockit.class)
 public class VertxGeneratorTest {
 
     @Injectable

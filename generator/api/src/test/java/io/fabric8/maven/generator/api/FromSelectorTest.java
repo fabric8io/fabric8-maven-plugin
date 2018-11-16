@@ -23,11 +23,9 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy;
 import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.docker;
@@ -39,7 +37,6 @@ import static org.junit.Assert.assertEquals;
  * @author roland
  * @since 12/08/16
  */
-@RunWith(JMockit.class)
 public class FromSelectorTest {
 
     @Mocked
