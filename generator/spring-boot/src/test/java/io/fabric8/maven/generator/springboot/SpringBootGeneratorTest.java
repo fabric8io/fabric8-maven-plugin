@@ -59,7 +59,6 @@ public class SpringBootGeneratorTest {
 
     @Test
     public void javaOptions() throws IOException, MojoExecutionException {
-        try {
         SpringBootGenerator generator = new SpringBootGenerator(createGeneratorContext());
         List<String> extraOpts = generator.getExtraJavaOptions();
         assertNotNull(extraOpts);
@@ -69,9 +68,6 @@ public class SpringBootGeneratorTest {
         assertEquals(1, configs.size());
         Map<String, String> env = configs.get(0).getBuildConfiguration().getEnv();
         assertNull(env.get("JAVA_OPTIONS"));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
     }
 
     private GeneratorContext createGeneratorContext() throws IOException {
