@@ -45,6 +45,28 @@ jobs:
         paths:
         - ~/.m2
 
+  # Run Tests
+  tests:
+    working_directory: ~/fabric8io/fabric8-maven-plugin
+    machine: true
+    steps:
+    - checkout
+    - restore_cache:
+        key: fmp-{{ checksum "pom.xml" }}
+    - run:
+        command: |
+          # Install kompose
+          curl -L https://github.com/kubernetes/kompose/releases/download/v1.16.0/kompose-linux-amd64 -o kompose
+          chmod +x kompose
+          sudo mv ./kompose /usr/local/bin/kompose
+
+          # Run maven build
+          mvn clean install
+    - save_cache:
+        key: fmp-{{ checksum "pom.xml" }}
+        paths:
+        - ~/.m2
+
   license:
     working_directory: ~/fabric8io/fabric8-maven-plugin
     machine: true
@@ -107,6 +129,7 @@ workflows:
           branches:
             only: 3.5.x
     - build
+    - tests
     - license
     - sonar-pr
     - sonar:
