@@ -50,12 +50,10 @@ public class ExposeEnricher extends BaseEnricher {
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
 
-        final ResourceConfig resourceConfig = getConfiguration().getResource().get();
-
-        if (resourceConfig != null) {
+        getConfiguration().getResource().ifPresent(resourceConfig -> {
             overrideEnvironmentVariables(builder, resourceConfig.getEnv()
                 .orElse(new HashMap<>()));
-        }
+        });
 
         List<HasMetadata> items = builder.getItems();
         if (items != null) {

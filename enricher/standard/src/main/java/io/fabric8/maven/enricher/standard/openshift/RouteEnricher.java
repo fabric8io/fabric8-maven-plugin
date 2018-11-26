@@ -50,12 +50,10 @@ public class RouteEnricher extends BaseEnricher {
     @Override
     public void addMissingResources(final KubernetesListBuilder listBuilder) {
 
-        final ResourceConfig resourceConfig = getConfiguration().getResource().get();
-
-        if (resourceConfig != null) {
+        getConfiguration().getResource().ifPresent(resourceConfig -> {
             overrideEnvironmentVariables(listBuilder, resourceConfig.getEnv()
                 .orElse(new HashMap<>()));
-        }
+        });
 
         final List<Route> routes = new ArrayList<>();
         listBuilder.accept(new TypedVisitor<ServiceBuilder>() {

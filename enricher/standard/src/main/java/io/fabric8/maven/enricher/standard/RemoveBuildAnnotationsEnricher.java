@@ -40,12 +40,10 @@ public class RemoveBuildAnnotationsEnricher extends BaseEnricher {
     @Override
     public void adapt(KubernetesListBuilder builder) {
 
-        final ResourceConfig resourceConfig = getConfiguration().getResource().get();
-
-        if (resourceConfig != null) {
+        getConfiguration().getResource().ifPresent(resourceConfig -> {
             overrideEnvironmentVariables(builder, resourceConfig.getEnv()
                 .orElse(new HashMap<>()));
-        }
+        });
 
         List<HasMetadata> items = builder.buildItems();
 

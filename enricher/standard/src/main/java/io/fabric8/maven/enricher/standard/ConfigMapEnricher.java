@@ -40,12 +40,10 @@ public class ConfigMapEnricher extends BaseEnricher {
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
 
-        final ResourceConfig resourceConfig = getConfiguration().getResource().get();
-
-        if (resourceConfig != null) {
+        getConfiguration().getResource().ifPresent(resourceConfig -> {
             overrideEnvironmentVariables(builder, resourceConfig.getEnv()
                 .orElse(new HashMap<>()));
-        }
+        });
 
         addAnnotations(builder);
     }

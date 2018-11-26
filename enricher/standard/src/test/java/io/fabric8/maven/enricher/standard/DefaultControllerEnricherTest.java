@@ -15,7 +15,6 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import com.google.common.io.Files;
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
@@ -26,8 +25,6 @@ import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.maven.enricher.api.util.ProjectClassLoaders;
-import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.TreeMap;

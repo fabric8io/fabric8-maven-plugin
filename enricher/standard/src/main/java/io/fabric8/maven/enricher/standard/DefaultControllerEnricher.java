@@ -98,12 +98,10 @@ public class DefaultControllerEnricher extends BaseEnricher {
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
 
-        final ResourceConfig resourceConfig = getConfiguration().getResource().get();
-
-        if (resourceConfig != null) {
-            overrideEnvironmentVariables(builder, resourceConfig.getEnv()
-                .orElse(new HashMap<>()));
-        }
+        getConfiguration().getResource().ifPresent(resourceConfig -> {
+                overrideEnvironmentVariables(builder, resourceConfig.getEnv()
+                    .orElse(new HashMap<>()));
+        });
 
         final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getSanitizedArtifactId()));
         final ResourceConfig config = new ResourceConfig.Builder()

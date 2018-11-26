@@ -69,12 +69,10 @@ public class ProjectEnricher extends BaseEnricher {
     @Override
     public void adapt(KubernetesListBuilder builder) {
 
-        final ResourceConfig resourceConfig = getConfiguration().getResource().get();
-
-        if (resourceConfig != null) {
+        getConfiguration().getResource().ifPresent(resourceConfig -> {
             overrideEnvironmentVariables(builder, resourceConfig.getEnv()
                 .orElse(new HashMap<>()));
-        }
+        });
 
         // Add to all objects in the builder
         builder.accept(new TypedVisitor<ObjectMetaBuilder>() {

@@ -121,12 +121,10 @@ public class DependencyEnricher extends BaseEnricher {
     @Override
     public void adapt(final KubernetesListBuilder builder) {
 
-        final ResourceConfig resourceConfig = getConfiguration().getResource().get();
-
-        if (resourceConfig != null) {
+        getConfiguration().getResource().ifPresent(resourceConfig -> {
             overrideEnvironmentVariables(builder, resourceConfig.getEnv()
                 .orElse(new HashMap<>()));
-        }
+        });
 
         final List<HasMetadata> kubernetesItems = new ArrayList<>();
         processArtifactSetResources(this.kubernetesDependencyArtifacts, items -> {
