@@ -127,6 +127,8 @@ The `fmp-project` enricher supports the following configuration options:
 | `false`
 |===
 
+The project labels which are already specified in the input fragments are not overridden by the enricher.
+
 [[fmp-git]]
 ==== fmp-git
 
