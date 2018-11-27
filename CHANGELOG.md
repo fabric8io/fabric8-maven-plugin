@@ -10,6 +10,9 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
+### 4.0.0-M2-SNAPSHOT
+* Fix 1326: Fixes overridding of Selector Label by the project enrichers entries.
+
 ### 3.5-SNAPSHOT
 * Fix 1021: Avoids empty deployment selector value in generated yaml resource
 * Fix 1383: Check if instanceof Openshift before casting and handle failures.
@@ -39,6 +42,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 314: Do not execute GitEnricher if not Git repo
 * Fix 714: Merges the functionality of IANAServicePortNameEnricher and PortNameEnricher.
 * Fix 963: add support for Pod resource type in yaml config.
+
 ### 3.5.41 (2018-08-01)
 * Feature 1032: Improvements of the Vert.x Generator and enrichers
 * Fix 1313: Removed unused Maven goals. Please contact us if something's missing for you.

@@ -34,7 +34,7 @@ items:
       matchLabels:
         provider: fabric8
         app: deployment-strategy-type-919
-        group: io.fabric8
+        group: io.fabric8.devops.apps
     strategy:
       type: Recreate
     template:

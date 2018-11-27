@@ -34,9 +34,9 @@ items:
       protocol: TCP
       targetPort: 5000
     selector:
-      app: volume-enricher-storage-class-835
+      app: fabric8-docker-registry
       provider: fabric8
-      group: io.fabric8
+      group: io.fabric8.devops.apps
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
@@ -70,7 +70,7 @@ items:
       matchLabels:
         provider: fabric8
         app: volume-enricher-storage-class-835
-        group: io.fabric8
+        group: io.fabric8.devops.apps
     template:
       metadata:
         labels:
