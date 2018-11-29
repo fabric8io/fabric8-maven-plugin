@@ -12,6 +12,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 
 ### 4.0.0-M2-SNAPSHOT
 * Fix 1326: Fixes overridding of Selector Label by the project enrichers entries.
+* Fix 839: Sets Spring Boot generator color config property as String (http://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/ansi/AnsiOutput.Enabled.html)
 
 ### 3.5-SNAPSHOT
 * Fix 1021: Avoids empty deployment selector value in generated yaml resource

@@ -64,7 +64,7 @@ public class SpringBootGeneratorTest {
         assertNotNull(extraOpts);
         assertEquals(0, extraOpts.size());
 
-        List<ImageConfiguration> configs = generator.customize(new ArrayList<ImageConfiguration>(), true);
+        List<ImageConfiguration> configs = generator.customize(new ArrayList<>(), true);
         assertEquals(1, configs.size());
         Map<String, String> env = configs.get(0).getBuildConfiguration().getEnv();
         assertNull(env.get("JAVA_OPTIONS"));
