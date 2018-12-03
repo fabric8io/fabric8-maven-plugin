@@ -60,7 +60,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
     private static final String DEFAULT_SERVER_PORT = "8080";
 
     public enum Config implements Configs.Key {
-        color {{ d = "false"; }};
+        color {{ d = ""; }};
 
         public String def() { return d; } protected String d;
     }
@@ -102,8 +102,9 @@ public class SpringBootGenerator extends JavaExecGenerator {
     @Override
     protected List<String> getExtraJavaOptions() {
         List<String> opts = super.getExtraJavaOptions();
-        if (Boolean.parseBoolean(getConfig(color))) {
-            opts.add("-Dspring.output.ansi.enabled=" + getConfig(color));
+        final String configuredColor = getConfig(color);
+        if (configuredColor != null && !configuredColor.isEmpty()) {
+            opts.add("-Dspring.output.ansi.enabled=" + configuredColor);
         }
         return opts;
     }
