@@ -15,17 +15,11 @@
  */
 package io.fabric8.maven.plugin.mojo.develop;
 
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.List;
-import java.util.Set;
-
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.maven.core.access.ClusterAccess;
+import io.fabric8.maven.core.access.ClusterConfiguration;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
@@ -44,6 +38,11 @@ import io.fabric8.maven.generator.api.GeneratorMode;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.maven.plugin.watcher.WatcherManager;
 import io.fabric8.maven.watcher.api.WatcherContext;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.List;
+import java.util.Set;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -108,6 +107,90 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     private String namespace;
 
     /**
+     * Master URL on which to operate
+     */
+    @Parameter(property = "fabric8.masterUrl")
+    private String masterUrl;
+
+    /**
+     * Api version on which to operate
+     */
+    @Parameter(property = "fabric8.apiVersion")
+    private String apiVersion;
+
+    /**
+     * CaCert File on which to operate
+     */
+    @Parameter(property = "fabric8.caCert.file")
+    private String caCertFile;
+
+    /**
+     * CaCert Data on which to operate
+     */
+    @Parameter(property = "fabric8.caCert.data")
+    private String caCertData;
+
+    /**
+     * Client Cert File on which to operate
+     */
+    @Parameter(property = "fabric8.clientCert.file")
+    private String clientCertFile;
+
+    /**
+     * Client Cert Data on which to operate
+     */
+    @Parameter(property = "fabric8.clientCert.data")
+    private String clientCertData;
+
+    /**
+     * Client Key File on which to operate
+     */
+    @Parameter(property = "fabric8.clientKey.cert")
+    private String clientKeyFile;
+
+    /**
+     * Client Key Data on which to operate
+     */
+    @Parameter(property = "fabric8.clientKey.data")
+    private String clientKeyData;
+
+    /**
+     * Client Key Algorithm on which to operate
+     */
+    @Parameter(property = "fabric8.clientKey.algorithm")
+    private String clientKeyAlgo;
+
+    /**
+     * Client Key Passphrase on which to operate
+     */
+    @Parameter(property = "fabric8.clientKey.passphrase")
+    private String clientKeyPassphrase;
+
+    /**
+     * Trust Store File on which to operate
+     */
+    @Parameter(property = "fabric8.trustStore.file")
+    private String trustStoreFile;
+
+    /**
+     * Trust Store Passphrase on which to operate
+     */
+    @Parameter(property = "fabric8.trustStore.passphrase")
+    private String trustStorePassphrase;
+
+    /**
+     * Key Store File on which to operate
+     */
+    @Parameter(property = "fabric8.keyStore.file")
+    private String keyStoreFile;
+
+    /**
+     * Key Store Passphrase on which to operate
+     */
+    @Parameter(property = "fabric8.keyStore.passphrase")
+    private String keyStorePassphrase;
+
+    /**
      * Watcher specific options. This is a generic prefix where the keys have the form
      * <code>&lt;watcher-prefix&gt;-&lt;option&gt;</code>.
      */
@@ -158,10 +241,31 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
             return;
         }
 
-        clusterAccess = new ClusterAccess(namespace);
+        clusterAccess = new ClusterAccess(getClusterConfiguration());
         kubernetes = clusterAccess.createDefaultClient(log);
 
         super.execute();
+    }
+
+    protected ClusterConfiguration getClusterConfiguration() {
+        final ClusterConfiguration clusterConfiguration = new ClusterConfiguration();
+        clusterConfiguration.setApiVersion(apiVersion);
+        clusterConfiguration.setCaCertData(caCertData);
+        clusterConfiguration.setCaCertFile(caCertFile);
+        clusterConfiguration.setClientCertData(clientCertData);
+        clusterConfiguration.setClientCertFile(clientCertFile);
+        clusterConfiguration.setClientKeyAlgo(clientKeyAlgo);
+        clusterConfiguration.setClientKeyData(clientKeyData);
+        clusterConfiguration.setClientKeyFile(clientKeyFile);
+        clusterConfiguration.setClientKeyPassphrase(clientKeyPassphrase);
+        clusterConfiguration.setKeyStoreFile(keyStoreFile);
+        clusterConfiguration.setKeyStorePassphrase(keyStorePassphrase);
+        clusterConfiguration.setMasterUrl(masterUrl);
+        clusterConfiguration.setNamespace(namespace);
+        clusterConfiguration.setTrustStoreFile(trustStoreFile);
+        clusterConfiguration.setTrustStorePassphrase(trustStorePassphrase);
+
+        return clusterConfiguration;
     }
 
     @Override
@@ -211,7 +315,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
                     .project(project)
 
                     .useProjectClasspath(useProjectClasspath)
-                    .namespace(clusterAccess.getNamespace())
+                    .clusterConfiguration(getClusterConfiguration())
                     .kubernetesClient(kubernetes)
                     .fabric8ServiceHub(getFabric8ServiceHub())
                     .build();

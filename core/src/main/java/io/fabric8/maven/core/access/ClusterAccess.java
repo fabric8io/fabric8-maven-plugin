@@ -15,21 +15,17 @@
  */
 package io.fabric8.maven.core.access;
 
-import java.net.UnknownHostException;
-
 import io.fabric8.kubernetes.client.Config;
-import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.maven.core.config.PlatformMode;
-import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftAPIGroups;
 import io.fabric8.openshift.client.OpenShiftClient;
-import org.apache.commons.lang3.StringUtils;
+import java.net.UnknownHostException;
 
 /**
  * @author roland
@@ -37,27 +33,34 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class ClusterAccess {
 
-    private String namespace;
+    private ClusterConfiguration clusterConfiguration;
 
     private KubernetesClient client;
 
-    public ClusterAccess(String namespace) {
-        this.namespace = setNamespace(namespace);
+    public ClusterAccess(ClusterConfiguration clusterConfiguration) {
+        this.clusterConfiguration = clusterConfiguration;
         this.client = null;
     }
 
-    public String setNamespace(String namespace){
-        String ns=namespace;
-        if (StringUtils.isBlank(ns)) {
-            ns = KubernetesHelper.getDefaultNamespace();
-        }
-        return ns;
+    @Deprecated
+    public ClusterAccess(String namespace) {
+        ClusterConfiguration clusterConfiguration = new ClusterConfiguration();
+        clusterConfiguration.setNamespace(namespace);
+        this.clusterConfiguration = clusterConfiguration;
+        this.client = null;
     }
 
-    public ClusterAccess(String namespace, KubernetesClient client){
-        this.namespace = setNamespace(namespace);
+    public ClusterAccess(ClusterConfiguration clusterConfiguration, KubernetesClient client) {
+        this.clusterConfiguration = clusterConfiguration;
         this.client = client;
     }
+
+    /**public ClusterAccess(String namespace, KubernetesClient client) {
+        ClusterConfiguration clusterConfiguration = new ClusterConfiguration();
+        clusterConfiguration.setNamespace(namespace);
+        this.clusterConfiguration = clusterConfiguration;
+        this.client = client;
+    }**/
 
     public <T extends KubernetesClient> T createDefaultClient(Logger log) {
         if (isOpenShift(log)) {
@@ -78,10 +81,11 @@ public class ClusterAccess {
     // ============================================================================
 
     private Config createDefaultConfig() {
-        return new ConfigBuilder().withNamespace(getNamespace()).build();
+        return this.clusterConfiguration.getConfig();
     }
+
     public String getNamespace() {
-        return namespace;
+        return this.clusterConfiguration.getNamespace();
     }
 
     /**

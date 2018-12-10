@@ -149,6 +149,62 @@ a| The build mode which can be
 | Namespace to use when accessing Kubernetes or OpenShift
 | `fabric8.namespace`
 
+| *masterUrl*
+| Master URL on which to operate
+| `fabric8.masterUrl`
+
+| *apiVersion*
+| Api version on which to operate
+| `fabric8.apiVersion`
+
+| *caCertFile*
+| CaCert File on which to operate
+| `fabric8.caCert.file`
+
+| *caCertData*
+| CaCert Data on which to operate
+| `fabric8.caCert.data`
+
+| *clientCertFile*
+| Client Cert File on which to operate
+| `fabric8.clientCert.file`
+
+| *clientCertData*
+| Client Cert Data on which to operate
+| `fabric8.clientCert.data`
+
+| *clientKeyFile*
+| Client Key File on which to operate
+| `fabric8.clientKey.cert`
+
+| *clientKeyData*
+| Client Key Data on which to operate
+| `fabric8.clientKey.data`
+
+| *clientKeyAlgo*
+| Client Key Algorithm on which to operate
+| `fabric8.clientKey.algorithm`
+
+| *clientKeyPassphrase*
+| Client Key Passphrase on which to operate
+| `fabric8.clientKey.passphrase`
+
+| *trustStoreFile*
+| Trust Store File on which to operate
+| `fabric8.trustStore.file`
+
+| *trustStorePassphrase*
+| Trust Store Passphrase on which to operate
+| `fabric8.trustStore.passphrase`
+
+| *keyStoreFile*
+| Key Store File on which to operate
+| `fabric8.keyStore.file`
+
+| *keyStorePassphrase*
+| Key Store Passphrase on which to operate
+| `fabric8.keyStore.passphrase`
+
 | *outputDirectory*
 | Default output directory to be used by this plugin. The default value is `target/docker` and is only used for the goal `{plugin}:build`.
 | `docker.target.dir`

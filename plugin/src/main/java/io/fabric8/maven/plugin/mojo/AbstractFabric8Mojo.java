@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.plugin.mojo;
 
+import io.fabric8.maven.core.access.ClusterConfiguration;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.execution.MavenSession;
@@ -49,6 +50,97 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
     @Parameter(defaultValue = "${settings}", readonly = true)
     protected Settings settings;
 
+
+    /**
+     * Namespace on which to operate
+     */
+    @Parameter(property = "fabric8.namespace")
+    private String namespace;
+
+    /**
+     * Master URL on which to operate
+     */
+    @Parameter(property = "fabric8.masterUrl")
+    private String masterUrl;
+
+    /**
+     * Api version on which to operate
+     */
+    @Parameter(property = "fabric8.apiVersion")
+    private String apiVersion;
+
+    /**
+     * CaCert File on which to operate
+     */
+    @Parameter(property = "fabric8.caCert.file")
+    private String caCertFile;
+
+    /**
+     * CaCert Data on which to operate
+     */
+    @Parameter(property = "fabric8.caCert.data")
+    private String caCertData;
+
+    /**
+     * Client Cert File on which to operate
+     */
+    @Parameter(property = "fabric8.clientCert.file")
+    private String clientCertFile;
+
+    /**
+     * Client Cert Data on which to operate
+     */
+    @Parameter(property = "fabric8.clientCert.data")
+    private String clientCertData;
+
+    /**
+     * Client Key File on which to operate
+     */
+    @Parameter(property = "fabric8.clientKey.cert")
+    private String clientKeyFile;
+
+    /**
+     * Client Key Data on which to operate
+     */
+    @Parameter(property = "fabric8.clientKey.data")
+    private String clientKeyData;
+
+    /**
+     * Client Key Algorithm on which to operate
+     */
+    @Parameter(property = "fabric8.clientKey.algorithm")
+    private String clientKeyAlgo;
+
+    /**
+     * Client Key Passphrase on which to operate
+     */
+    @Parameter(property = "fabric8.clientKey.passphrase")
+    private String clientKeyPassphrase;
+
+    /**
+     * Trust Store File on which to operate
+     */
+    @Parameter(property = "fabric8.trustStore.file")
+    private String trustStoreFile;
+
+    /**
+     * Trust Store Passphrase on which to operate
+     */
+    @Parameter(property = "fabric8.trustStore.passphrase")
+    private String trustStorePassphrase;
+
+    /**
+     * Key Store File on which to operate
+     */
+    @Parameter(property = "fabric8.keyStore.file")
+    private String keyStoreFile;
+
+    /**
+     * Key Store Passphrase on which to operate
+     */
+    @Parameter(property = "fabric8.keyStore.passphrase")
+    private String keyStorePassphrase;
+
     protected Logger log;
 
     @Override
@@ -76,6 +168,27 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
 
     protected Logger createLogger(String prefix) {
         return new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), "F8:" + prefix);
+    }
+
+    protected ClusterConfiguration getClusterConfiguration() {
+        final ClusterConfiguration clusterConfiguration = new ClusterConfiguration();
+        clusterConfiguration.setApiVersion(apiVersion);
+        clusterConfiguration.setCaCertData(caCertData);
+        clusterConfiguration.setCaCertFile(caCertFile);
+        clusterConfiguration.setClientCertData(clientCertData);
+        clusterConfiguration.setClientCertFile(clientCertFile);
+        clusterConfiguration.setClientKeyAlgo(clientKeyAlgo);
+        clusterConfiguration.setClientKeyData(clientKeyData);
+        clusterConfiguration.setClientKeyFile(clientKeyFile);
+        clusterConfiguration.setClientKeyPassphrase(clientKeyPassphrase);
+        clusterConfiguration.setKeyStoreFile(keyStoreFile);
+        clusterConfiguration.setKeyStorePassphrase(keyStorePassphrase);
+        clusterConfiguration.setMasterUrl(masterUrl);
+        clusterConfiguration.setNamespace(namespace);
+        clusterConfiguration.setTrustStoreFile(trustStoreFile);
+        clusterConfiguration.setTrustStorePassphrase(trustStorePassphrase);
+
+        return clusterConfiguration;
     }
 
 }
