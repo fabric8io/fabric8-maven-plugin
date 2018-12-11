@@ -44,9 +44,9 @@ public class ClusterAccess {
 
     @Deprecated
     public ClusterAccess(String namespace) {
-        ClusterConfiguration clusterConfiguration = new ClusterConfiguration();
-        clusterConfiguration.setNamespace(namespace);
-        this.clusterConfiguration = clusterConfiguration;
+        ClusterConfiguration.Builder clusterConfigurationBuilder = new ClusterConfiguration.Builder();
+        clusterConfigurationBuilder.namespace(namespace);
+        this.clusterConfiguration = clusterConfigurationBuilder.build();
         this.client = null;
     }
 
@@ -54,13 +54,6 @@ public class ClusterAccess {
         this.clusterConfiguration = clusterConfiguration;
         this.client = client;
     }
-
-    /**public ClusterAccess(String namespace, KubernetesClient client) {
-        ClusterConfiguration clusterConfiguration = new ClusterConfiguration();
-        clusterConfiguration.setNamespace(namespace);
-        this.clusterConfiguration = clusterConfiguration;
-        this.client = client;
-    }**/
 
     public <T extends KubernetesClient> T createDefaultClient(Logger log) {
         if (isOpenShift(log)) {

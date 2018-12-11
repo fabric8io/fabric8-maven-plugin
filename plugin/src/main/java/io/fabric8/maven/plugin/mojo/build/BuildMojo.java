@@ -165,104 +165,14 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter(property = "fabric8.build.recreate", defaultValue = "none")
     private String buildRecreate;
 
-    /**
-     * Namespace to use when accessing Kubernetes or OpenShift
-     */
-    /**
-     * Namespace on which to operate
-     */
-    @Parameter(property = "fabric8.namespace")
-    private String namespace;
-
-    /**
-     * Master URL on which to operate
-     */
-    @Parameter(property = "fabric8.masterUrl")
-    private String masterUrl;
-
-    /**
-     * Api version on which to operate
-     */
-    @Parameter(property = "fabric8.apiVersion")
-    private String apiVersion;
-
-    /**
-     * CaCert File on which to operate
-     */
-    @Parameter(property = "fabric8.caCert.file")
-    private String caCertFile;
-
-    /**
-     * CaCert Data on which to operate
-     */
-    @Parameter(property = "fabric8.caCert.data")
-    private String caCertData;
-
-    /**
-     * Client Cert File on which to operate
-     */
-    @Parameter(property = "fabric8.clientCert.file")
-    private String clientCertFile;
-
-    /**
-     * Client Cert Data on which to operate
-     */
-    @Parameter(property = "fabric8.clientCert.data")
-    private String clientCertData;
-
-    /**
-     * Client Key File on which to operate
-     */
-    @Parameter(property = "fabric8.clientKey.cert")
-    private String clientKeyFile;
-
-    /**
-     * Client Key Data on which to operate
-     */
-    @Parameter(property = "fabric8.clientKey.data")
-    private String clientKeyData;
-
-    /**
-     * Client Key Algorithm on which to operate
-     */
-    @Parameter(property = "fabric8.clientKey.algorithm")
-    private String clientKeyAlgo;
-
-    /**
-     * Client Key Passphrase on which to operate
-     */
-    @Parameter(property = "fabric8.clientKey.passphrase")
-    private String clientKeyPassphrase;
-
-    /**
-     * Trust Store File on which to operate
-     */
-    @Parameter(property = "fabric8.trustStore.file")
-    private String trustStoreFile;
-
-    /**
-     * Trust Store Passphrase on which to operate
-     */
-    @Parameter(property = "fabric8.trustStore.passphrase")
-    private String trustStorePassphrase;
-
-    /**
-     * Key Store File on which to operate
-     */
-    @Parameter(property = "fabric8.keyStore.file")
-    private String keyStoreFile;
-
-    /**
-     * Key Store Passphrase on which to operate
-     */
-    @Parameter(property = "fabric8.keyStore.passphrase")
-    private String keyStorePassphrase;
-
     @Component
     private MavenProjectHelper projectHelper;
 
     @Component
     protected RepositorySystem repositorySystem;
+
+    @Parameter
+    protected ClusterConfiguration access;
 
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
@@ -285,24 +195,10 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
     protected ClusterConfiguration getClusterConfiguration() {
-        final ClusterConfiguration clusterConfiguration = new ClusterConfiguration();
-        clusterConfiguration.setApiVersion(apiVersion);
-        clusterConfiguration.setCaCertData(caCertData);
-        clusterConfiguration.setCaCertFile(caCertFile);
-        clusterConfiguration.setClientCertData(clientCertData);
-        clusterConfiguration.setClientCertFile(clientCertFile);
-        clusterConfiguration.setClientKeyAlgo(clientKeyAlgo);
-        clusterConfiguration.setClientKeyData(clientKeyData);
-        clusterConfiguration.setClientKeyFile(clientKeyFile);
-        clusterConfiguration.setClientKeyPassphrase(clientKeyPassphrase);
-        clusterConfiguration.setKeyStoreFile(keyStoreFile);
-        clusterConfiguration.setKeyStorePassphrase(keyStorePassphrase);
-        clusterConfiguration.setMasterUrl(masterUrl);
-        clusterConfiguration.setNamespace(namespace);
-        clusterConfiguration.setTrustStoreFile(trustStoreFile);
-        clusterConfiguration.setTrustStorePassphrase(trustStorePassphrase);
+        final ClusterConfiguration.Builder clusterConfigurationBuilder = new ClusterConfiguration.Builder(access);
 
-        return clusterConfiguration;
+        return clusterConfigurationBuilder.from(System.getProperties())
+            .from(project.getProperties()).build();
     }
 
     @Override

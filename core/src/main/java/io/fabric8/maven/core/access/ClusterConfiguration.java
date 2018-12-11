@@ -1,12 +1,31 @@
+/**
+ * Copyright 2016 Red Hat, Inc.
+ *
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package io.fabric8.maven.core.access;
 
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import java.lang.reflect.Field;
+import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
 
 public class ClusterConfiguration {
 
+    private String username;
+    private String password;
     private String masterUrl;
     private String apiVersion;
     private String namespace;
@@ -23,71 +42,7 @@ public class ClusterConfiguration {
     private String keyStoreFile;
     private String keyStorePassphrase;
 
-    public ClusterConfiguration() {
-    }
-
-    public void setMasterUrl(String masterUrl) {
-        this.masterUrl = masterUrl;
-    }
-
-    public void setApiVersion(String apiVersion) {
-        this.apiVersion = apiVersion;
-    }
-
-    public void setNamespace(String ns) {
-        if (StringUtils.isBlank(ns)) {
-            ns = KubernetesHelper.getDefaultNamespace();
-        }
-
-        this.namespace = ns;
-    }
-
-    public void setCaCertFile(String caCertFile) {
-        this.caCertFile = caCertFile;
-    }
-
-    public void setCaCertData(String caCertData) {
-        this.caCertData = caCertData;
-    }
-
-    public void setClientCertFile(String clientCertFile) {
-        this.clientCertFile = clientCertFile;
-    }
-
-    public void setClientCertData(String clientCertData) {
-        this.clientCertData = clientCertData;
-    }
-
-    public void setClientKeyFile(String clientKeyFile) {
-        this.clientKeyFile = clientKeyFile;
-    }
-
-    public void setClientKeyData(String clientKeyData) {
-        this.clientKeyData = clientKeyData;
-    }
-
-    public void setClientKeyAlgo(String clientKeyAlgo) {
-        this.clientKeyAlgo = clientKeyAlgo;
-    }
-
-    public void setClientKeyPassphrase(String clientKeyPassphrase) {
-        this.clientKeyPassphrase = clientKeyPassphrase;
-    }
-
-    public void setTrustStoreFile(String trustStoreFile) {
-        this.trustStoreFile = trustStoreFile;
-    }
-
-    public void setTrustStorePassphrase(String trustStorePassphrase) {
-        this.trustStorePassphrase = trustStorePassphrase;
-    }
-
-    public void setKeyStoreFile(String keyStoreFile) {
-        this.keyStoreFile = keyStoreFile;
-    }
-
-    public void setKeyStorePassphrase(String keyStorePassphrase) {
-        this.keyStorePassphrase = keyStorePassphrase;
+    private ClusterConfiguration() {
     }
 
     public String getNamespace() {
@@ -96,6 +51,14 @@ public class ClusterConfiguration {
 
     public Config getConfig() {
         final ConfigBuilder configBuilder = new ConfigBuilder();
+
+        if (StringUtils.isNotBlank(this.username)) {
+            configBuilder.withUsername(this.username);
+        }
+
+        if (StringUtils.isNotBlank(this.password)) {
+            configBuilder.withPassword(this.password);
+        }
 
         if (StringUtils.isNotBlank(this.masterUrl)) {
             configBuilder.withMasterUrl(this.masterUrl);
@@ -159,5 +122,130 @@ public class ClusterConfiguration {
 
         return configBuilder.build();
 
+    }
+
+    public static class Builder {
+        private ClusterConfiguration clusterConfiguration;
+
+        public Builder() {
+            this(new ClusterConfiguration());
+        }
+
+        public Builder(ClusterConfiguration clusterConfiguration) {
+            this.clusterConfiguration = clusterConfiguration;
+        }
+
+        public Builder from(Properties properties) {
+
+            Field[] fields = ClusterConfiguration.class.getDeclaredFields();
+
+            for (Field f :fields) {
+                final String propertyName = "fabric8." + f.getName();
+                if (properties.containsKey(propertyName)) {
+                    String value = (String) properties.get(propertyName);
+                    f.setAccessible(true);
+                    try {
+                        f.set(this.clusterConfiguration, value);
+                    } catch (IllegalAccessException e) {
+                        throw new IllegalArgumentException(e);
+                    }
+                }
+            }
+
+            return this;
+        }
+
+        public Builder username(String username) {
+            this.clusterConfiguration.username = username;
+            return this;
+        }
+
+        public Builder password(String password) {
+            this.clusterConfiguration.password = password;
+            return this;
+        }
+
+        public Builder masterUrl(String masterUrl) {
+            this.clusterConfiguration.masterUrl = masterUrl;
+            return this;
+        }
+
+        public Builder apiVersion(String apiVersion) {
+            this.clusterConfiguration.apiVersion = apiVersion;
+            return this;
+        }
+
+        public Builder namespace(String ns) {
+            if (StringUtils.isBlank(ns)) {
+                ns = KubernetesHelper.getDefaultNamespace();
+            }
+
+            this.clusterConfiguration.namespace = ns;
+            return this;
+        }
+
+        public Builder caCertFile(String caCertFile) {
+            this.clusterConfiguration.caCertFile = caCertFile;
+            return this;
+        }
+
+        public Builder caCertData(String caCertData) {
+            this.clusterConfiguration.caCertData = caCertData;
+            return this;
+        }
+
+        public Builder clientCertFile(String clientCertFile) {
+            this.clusterConfiguration.clientCertFile = clientCertFile;
+            return this;
+        }
+
+        public Builder clientCertData(String clientCertData) {
+            this.clusterConfiguration.clientCertData = clientCertData;
+            return this;
+        }
+
+        public Builder clientKeyFile(String clientKeyFile) {
+            this.clusterConfiguration.clientKeyFile = clientKeyFile;
+            return this;
+        }
+
+        public Builder clientKeyData(String clientKeyData) {
+            this.clusterConfiguration.clientKeyData = clientKeyData;
+            return this;
+        }
+
+        public Builder clientKeyAlgo(String clientKeyAlgo) {
+            this.clusterConfiguration.clientKeyAlgo = clientKeyAlgo;
+            return this;
+        }
+
+        public Builder clientKeyPassphrase(String clientKeyPassphrase) {
+            this.clusterConfiguration.clientKeyPassphrase = clientKeyPassphrase;
+            return this;
+        }
+
+        public Builder trustStoreFile(String trustStoreFile) {
+            this.clusterConfiguration.trustStoreFile = trustStoreFile;
+            return this;
+        }
+
+        public Builder trustStorePassphrase(String trustStorePassphrase) {
+            this.clusterConfiguration.trustStorePassphrase = trustStorePassphrase;
+            return this;
+        }
+
+        public Builder keyStoreFile(String keyStoreFile) {
+            this.clusterConfiguration.keyStoreFile = keyStoreFile;
+            return this;
+        }
+
+        public Builder keyStorePassphrase(String keyStorePassphrase) {
+            this.clusterConfiguration.keyStorePassphrase = keyStorePassphrase;
+            return this;
+        }
+
+        public ClusterConfiguration build(){
+            return this.clusterConfiguration;
+        }
     }
 }
