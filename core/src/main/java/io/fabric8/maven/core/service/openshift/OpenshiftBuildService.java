@@ -302,10 +302,15 @@ public class OpenshiftBuildService implements BuildService {
         } else if (osBuildStrategy == OpenShiftBuildStrategy.s2i) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             Map<String, String> fromExt = buildConfig.getFromExt();
+            String fromName, fromKind, fromNamespace;
 
-            String fromName = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.name, buildConfig.getFrom());
-            String fromKind = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.kind, "DockerImage");
-            String fromNamespace = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.namespace, "ImageStreamTag".equals(fromKind) ? "openshift" : null);
+            if(buildConfig.isDockerFileMode()) {
+                fromName = extractBaseFromDockerfile(buildConfig, config.getDockerBuildContext());
+            } else {
+                fromName = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.name, buildConfig.getFrom());
+            }
+            fromKind = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.kind, "DockerImage");
+            fromNamespace = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.namespace, "ImageStreamTag".equals(fromKind) ? "openshift" : null);
 
             BuildStrategy buildStrategy = new BuildStrategyBuilder()
                     .withType("Source")
