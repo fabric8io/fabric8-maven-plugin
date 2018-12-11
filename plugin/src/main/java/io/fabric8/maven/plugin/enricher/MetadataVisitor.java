@@ -30,6 +30,9 @@ import io.fabric8.maven.core.config.MetaDataConfig;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.enricher.api.Kind;
+import io.fabric8.openshift.api.model.BuildBuilder;
+import io.fabric8.openshift.api.model.BuildConfigBuilder;
+import io.fabric8.openshift.api.model.ImageStreamBuilder;
 
 /**
  * Visitor which adds labels and annotations
@@ -268,6 +271,54 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(JobBuilder item) {
+            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+        }
+    }
+
+    public static class ImageStreamBuilderVisitor extends MetadataVisitor<ImageStreamBuilder> {
+        ImageStreamBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
+            super(resourceConfig, enricher);
+        }
+
+        @Override
+        protected Kind getKind() {
+            return Kind.IMAGESTREAM;
+        }
+
+        @Override
+        protected ObjectMeta getOrCreateMetadata(ImageStreamBuilder item) {
+            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+        }
+    }
+
+    public static class BuildConfigBuilderVisitor extends MetadataVisitor<BuildConfigBuilder> {
+        BuildConfigBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
+            super(resourceConfig, enricher);
+        }
+
+        @Override
+        protected Kind getKind() {
+            return Kind.BUILD_CONFIG;
+        }
+
+        @Override
+        protected ObjectMeta getOrCreateMetadata(BuildConfigBuilder item) {
+            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+        }
+    }
+
+    public static class BuildBuilderVisitor extends MetadataVisitor<BuildBuilder> {
+        BuildBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
+            super(resourceConfig, enricher);
+        }
+
+        @Override
+        protected Kind getKind() {
+            return Kind.BUILD;
+        }
+
+        @Override
+        protected ObjectMeta getOrCreateMetadata(BuildBuilder item) {
             return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
         }
     }

@@ -28,8 +28,11 @@ public enum Kind {
     DEPLOYMENT_CONFIG,
     DAEMON_SET,
     STATEFUL_SET,
+    IMAGESTREAM,
     JOB,
-    POD_SPEC;
+    POD_SPEC,
+    BUILD_CONFIG,
+    BUILD;
 
     /**
      * Returns true if the kind is a controller
