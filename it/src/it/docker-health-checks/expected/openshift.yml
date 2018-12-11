@@ -23,7 +23,7 @@ items:
     template:
       spec:
         containers:
-        - image: img1:latest
+        - image: "@matches(^.*/img1:latest)@"
           livenessProbe:
             exec:
               command:
@@ -35,7 +35,7 @@ items:
               command:
               - echo
               - '"hello"'
-        - image: img2:latest
+        - image: "@matches(^.*/img2:latest)@"
           livenessProbe:
             exec:
               command:

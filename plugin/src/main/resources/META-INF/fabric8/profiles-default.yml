@@ -33,6 +33,7 @@
     - fmp-git
     - fmp-maven-scm
     - fmp-maven-issue-mgmt
+    - fmp-namespace
     # TODO: Documents and verify enrichers below
     - fmp-debug
     - fmp-remove-build-annotations

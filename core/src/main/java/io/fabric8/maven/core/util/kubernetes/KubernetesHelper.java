@@ -39,8 +39,10 @@ import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.client.ConfigBuilder;
+import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.util.ResourceFileType;
 import io.fabric8.maven.core.util.ResourceUtil;
+import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.openshift.api.model.Template;
 import org.apache.commons.lang3.StringUtils;
 
@@ -401,5 +403,22 @@ public class KubernetesHelper {
         }
         String homeDir = System.getProperty("user.home", ".");
         return new File(homeDir, ".kube/config");
+    }
+
+    /**
+     * Appends namespace in image name by extracting it from cluster
+     *
+     * @param image image name
+     * @return ImageName object
+     */
+    public static String getImageNameWithNamespace(String image, String namespace) {
+        ImageName imageName = new ImageName(image);
+        if(imageName.getUser() == null) {
+            StringBuilder imageNameBuilder = new StringBuilder();
+            imageNameBuilder.append(namespace + "/");
+            imageNameBuilder.append(imageName.getFullName());
+            imageName = new ImageName(imageNameBuilder.toString());
+        }
+        return imageName.getFullName();
     }
 }

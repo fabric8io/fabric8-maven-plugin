@@ -10,6 +10,9 @@
 # Add a default name for any resource missing
 io.fabric8.maven.enricher.standard.NameEnricher
 
+# Adds namespace in image name and in ImageChange Trigger
+io.fabric8.maven.enricher.standard.NamespaceEnricher
+
 # Add a default Deployment, ReplicaSet or ReplicationController if none is given
 io.fabric8.maven.enricher.standard.DefaultControllerEnricher
 
