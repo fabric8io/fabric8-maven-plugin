@@ -15,17 +15,11 @@
  */
 package io.fabric8.maven.plugin.mojo.develop;
 
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.List;
-import java.util.Set;
-
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.maven.core.access.ClusterAccess;
+import io.fabric8.maven.core.access.ClusterConfiguration;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
@@ -44,6 +38,11 @@ import io.fabric8.maven.generator.api.GeneratorMode;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.maven.plugin.watcher.WatcherManager;
 import io.fabric8.maven.watcher.api.WatcherContext;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.List;
+import java.util.Set;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -101,11 +100,8 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     @Parameter(property = "fabric8.build.strategy")
     private OpenShiftBuildStrategy buildStrategy = OpenShiftBuildStrategy.s2i;
 
-    /**
-     * Namespace on which to operate
-     */
-    @Parameter(property = "fabric8.namespace")
-    private String namespace;
+    @Parameter
+    protected ClusterConfiguration access;
 
     /**
      * Watcher specific options. This is a generic prefix where the keys have the form
@@ -158,10 +154,17 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
             return;
         }
 
-        clusterAccess = new ClusterAccess(namespace);
+        clusterAccess = new ClusterAccess(getClusterConfiguration());
         kubernetes = clusterAccess.createDefaultClient(log);
 
         super.execute();
+    }
+
+    protected ClusterConfiguration getClusterConfiguration() {
+        final ClusterConfiguration.Builder clusterConfigurationBuilder = new ClusterConfiguration.Builder(access);
+
+        return clusterConfigurationBuilder.from(System.getProperties())
+            .from(project.getProperties()).build();
     }
 
     @Override
@@ -211,7 +214,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
                     .project(project)
 
                     .useProjectClasspath(useProjectClasspath)
-                    .namespace(clusterAccess.getNamespace())
+                    .clusterConfiguration(getClusterConfiguration())
                     .kubernetesClient(kubernetes)
                     .fabric8ServiceHub(getFabric8ServiceHub())
                     .build();

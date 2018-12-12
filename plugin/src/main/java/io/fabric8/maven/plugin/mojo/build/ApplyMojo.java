@@ -181,12 +181,6 @@ public class ApplyMojo extends AbstractFabric8Mojo {
     private File jsonLogDir;
 
     /**
-     * Namespace on which to operate
-     */
-    @Parameter(property = "fabric8.namespace")
-    private String namespace;
-
-    /**
      * How many seconds to wait for a URL to be generated for a service
      */
     @Parameter(property = "fabric8.serviceUrl.waitSeconds", defaultValue = "5")
@@ -202,8 +196,9 @@ public class ApplyMojo extends AbstractFabric8Mojo {
     private ClusterAccess clusterAccess;
     protected ApplyService applyService;
 
-    public void executeInternal() throws MojoExecutionException, MojoFailureException {
-        clusterAccess = new ClusterAccess(namespace);
+    public void executeInternal() throws MojoExecutionException {
+
+        clusterAccess = new ClusterAccess(getClusterConfiguration());
 
         try {
             KubernetesClient kubernetes = clusterAccess.createDefaultClient(log);

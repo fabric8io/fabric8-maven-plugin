@@ -17,6 +17,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 796: Remove workaround to produce both .yaml and .json files
 * Fix 1425: Added metadata visitors for imagestreams, build and buildconfig.
 * Fix 1360: Namespace missing in generated DeploymentConfig
+* Fix 712: Add possibility to configure 
 
 ### 3.5-SNAPSHOT
 * Fix 1021: Avoids empty deployment selector value in generated yaml resource

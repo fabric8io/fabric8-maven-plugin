@@ -15,12 +15,14 @@
  */
 package io.fabric8.maven.plugin.mojo;
 
+import io.fabric8.maven.core.access.ClusterConfiguration;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
@@ -49,6 +51,9 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
     @Parameter(defaultValue = "${settings}", readonly = true)
     protected Settings settings;
 
+    @Parameter
+    protected ClusterConfiguration access;
+
     protected Logger log;
 
     @Override
@@ -76,6 +81,13 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
 
     protected Logger createLogger(String prefix) {
         return new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), "F8:" + prefix);
+    }
+
+    protected ClusterConfiguration getClusterConfiguration() {
+        final ClusterConfiguration.Builder clusterConfigurationBuilder = new ClusterConfiguration.Builder(access);
+
+        return clusterConfigurationBuilder.from(System.getProperties())
+            .from(project.getProperties()).build();
     }
 
 }
