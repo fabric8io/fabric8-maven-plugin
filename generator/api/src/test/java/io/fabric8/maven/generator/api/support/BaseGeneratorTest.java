@@ -30,11 +30,9 @@ import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.kind;
 import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.name;
@@ -49,7 +47,6 @@ import static org.junit.Assert.fail;
  * @author roland
  * @since 10/01/17
  */
-@RunWith(JMockit.class)
 public class BaseGeneratorTest {
 
     @Mocked

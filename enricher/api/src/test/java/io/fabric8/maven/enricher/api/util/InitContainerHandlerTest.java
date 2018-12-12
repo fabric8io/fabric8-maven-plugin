@@ -26,10 +26,8 @@ import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -42,7 +40,6 @@ import static org.junit.Assert.fail;
  * @since 07/02/17
  */
 
-@RunWith(JMockit.class)
 public class InitContainerHandlerTest {
 
     @Mocked

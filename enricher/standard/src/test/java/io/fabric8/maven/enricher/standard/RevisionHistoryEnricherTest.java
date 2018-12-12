@@ -29,15 +29,12 @@ import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-@RunWith(JMockit.class)
 public class RevisionHistoryEnricherTest {
 
     @Mocked

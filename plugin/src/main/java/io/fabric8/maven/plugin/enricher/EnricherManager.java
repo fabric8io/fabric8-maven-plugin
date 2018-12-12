@@ -79,6 +79,10 @@ public class EnricherManager {
             new MetadataVisitor.DaemonSetBuilderVisitor(resourceConfig, this),
             new MetadataVisitor.StatefulSetBuilderVisitor(resourceConfig, this),
             new MetadataVisitor.JobBuilderVisitor(resourceConfig, this),
+            new MetadataVisitor.ImageStreamBuilderVisitor(resourceConfig, this),
+            new MetadataVisitor.BuildConfigBuilderVisitor(resourceConfig, this),
+            new MetadataVisitor.BuildBuilderVisitor(resourceConfig, this),
+
         };
 
         selectorVisitorCreators = new SelectorVisitor[] {

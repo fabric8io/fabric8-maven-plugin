@@ -26,12 +26,10 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.apache.maven.model.Build;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -42,7 +40,6 @@ import static org.junit.Assert.assertNull;
  * @author roland
  * @since 28/11/16
  */
-@RunWith(JMockit.class)
 public class SpringBootGeneratorTest {
 
     @Mocked
@@ -67,7 +64,7 @@ public class SpringBootGeneratorTest {
         assertNotNull(extraOpts);
         assertEquals(0, extraOpts.size());
 
-        List<ImageConfiguration> configs = generator.customize(new ArrayList<ImageConfiguration>(), true);
+        List<ImageConfiguration> configs = generator.customize(new ArrayList<>(), true);
         assertEquals(1, configs.size());
         Map<String, String> env = configs.get(0).getBuildConfiguration().getEnv();
         assertNull(env.get("JAVA_OPTIONS"));

@@ -17,7 +17,6 @@ package io.fabric8.maven.core.util;
 
 import java.util.Properties;
 
-import mockit.Expectations;
 import mockit.Mocked;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
@@ -32,8 +31,8 @@ public class ConfigsTest {
 
     String value="value";
 
-    @Mocked
-    Properties properties;
+    //@Mocked can't mock properties anymore in recent jmocckit
+    Properties properties = new Properties();
 
     @Test
     public void getIntValueTest(){
@@ -81,24 +80,8 @@ public class ConfigsTest {
 
     @Test
     public void getPropertyValueTest(){
-
-        new Expectations() {{
-            properties.getProperty(KEY_1);
-            result = value;
-
-            properties.getProperty(KEY_2);
-            result = null;
-
-            System.getProperty(KEY_2);
-            result = value;
-
-            properties.getProperty(KEY_3);
-            result = null;
-
-            System.getProperty(KEY_3);
-            result = null;
-        }};
-
+        properties.setProperty(KEY_1, value);        
+        System.setProperty(KEY_2, value);
 
         assertEquals("value",Configs.getPropertyWithSystemAsFallback(properties, KEY_1));
         assertEquals("value",Configs.getPropertyWithSystemAsFallback(properties, KEY_2));

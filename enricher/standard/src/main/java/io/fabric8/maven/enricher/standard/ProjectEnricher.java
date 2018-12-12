@@ -42,6 +42,8 @@ import java.util.Map;
  *
  * The "app" label can be replaced with the (old) "project" label using the "useProjectLabel" configuraiton option.
  *
+ * The project labels which are already specified in the input fragments are not overridden by the enricher.
+ *
  * @author roland
  * @since 01/04/16
  */
