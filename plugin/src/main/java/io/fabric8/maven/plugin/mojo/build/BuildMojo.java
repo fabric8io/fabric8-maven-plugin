@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.plugin.mojo.build;
 
+import io.fabric8.maven.core.access.ClusterConfiguration;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import java.io.File;
@@ -164,17 +165,14 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter(property = "fabric8.build.recreate", defaultValue = "none")
     private String buildRecreate;
 
-    /**
-     * Namespace to use when accessing Kubernetes or OpenShift
-     */
-    @Parameter(property = "fabric8.namespace")
-    private String namespace;
-
     @Component
     private MavenProjectHelper projectHelper;
 
     @Component
     protected RepositorySystem repositorySystem;
+
+    @Parameter
+    protected ClusterConfiguration access;
 
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
@@ -191,9 +189,16 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         if (skip || skipBuild) {
             return;
         }
-        clusterAccess = new ClusterAccess(namespace);
+        clusterAccess = new ClusterAccess(getClusterConfiguration());
         // Platform mode is already used in executeInternal()
         super.execute();
+    }
+
+    protected ClusterConfiguration getClusterConfiguration() {
+        final ClusterConfiguration.Builder clusterConfigurationBuilder = new ClusterConfiguration.Builder(access);
+
+        return clusterConfigurationBuilder.from(System.getProperties())
+            .from(project.getProperties()).build();
     }
 
     @Override

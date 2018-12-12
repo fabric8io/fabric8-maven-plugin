@@ -16,6 +16,7 @@
 package io.fabric8.maven.watcher.api;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.maven.core.access.ClusterConfiguration;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
@@ -43,7 +44,7 @@ public class WatcherContext {
     private ServiceHub serviceHub;
     private WatchService.WatchContext watchContext;
     private BuildService.BuildContext buildContext;
-    private String namespace;
+    private ClusterConfiguration clusterConfiguration;
     private KubernetesClient kubernetesClient;
     private Fabric8ServiceHub fabric8ServiceHub;
 
@@ -82,8 +83,8 @@ public class WatcherContext {
         return buildContext;
     }
 
-    public String getNamespace() {
-        return namespace;
+    public ClusterConfiguration getClusterConfiguration() {
+        return clusterConfiguration;
     }
 
     public KubernetesClient getKubernetesClient() {
@@ -158,8 +159,8 @@ public class WatcherContext {
             return this;
         }
 
-        public Builder namespace(String namespace) {
-            ctx.namespace = namespace;
+        public Builder clusterConfiguration(ClusterConfiguration clusterConfiguration) {
+            ctx.clusterConfiguration = clusterConfiguration;
             return this;
         }
 

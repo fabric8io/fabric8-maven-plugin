@@ -145,9 +145,9 @@ a| The build mode which can be
 | Number of parallel connections are allowed to be opened to the Docker Host. For parsing log output, a connection needs to be kept open (as well for the wait features), so don't put that number to low. Default is 100 which should be suitable for most of the cases.
 | `docker.maxConnections`
 
-| *namespace*
-| Namespace to use when accessing Kubernetes or OpenShift
-| `fabric8.namespace`
+| *access*
+| Group of configuration parameters to connect to Kubernetes/OpenShift cluster
+|
 
 | *outputDirectory*
 | Default output directory to be used by this plugin. The default value is `target/docker` and is only used for the goal `{plugin}:build`.
@@ -202,6 +202,95 @@ a| The build mode which can be
 | *verbose*
 | Boolean attribute for switching on verbose output like the build steps when doing a Docker build. Default is `false`
 | `docker.verbose`
+|===
+
+=== Access Configuration
+
+You can configure parameters to define how Fabric8 is going to connect to Kubernetes/OpenShift cluster instead of relaying on default parameters.
+
+[source, xml]
+----
+<configuration>
+  <access>
+    <username></username>
+    <password></password>
+    <masterUrl></masterUrl>
+    <apiVersion></apiVersion>
+  </access>
+</configuration>
+----
+
+[cols="1,5,1"]
+|===
+| Element | Description | Property (System property or Maven property)
+
+| *username*
+| Username on which to operate
+| `fabric8.username`
+
+| *password*
+| Password on which to operate
+| `fabric8.password`
+
+| *namespace*
+| Namespace on which to operate
+| `fabric8.namespace`
+
+| *masterUrl*
+| Master URL on which to operate
+| `fabric8.masterUrl`
+
+| *apiVersion*
+| Api version on which to operate
+| `fabric8.apiVersion`
+
+| *caCertFile*
+| CaCert File on which to operate
+| `fabric8.caCertFile`
+
+| *caCertData*
+| CaCert Data on which to operate
+| `fabric8.caCertData`
+
+| *clientCertFile*
+| Client Cert File on which to operate
+| `fabric8.clientCertFile`
+
+| *clientCertData*
+| Client Cert Data on which to operate
+| `fabric8.clientCertData`
+
+| *clientKeyFile*
+| Client Key File on which to operate
+| `fabric8.clientKeyFile`
+
+| *clientKeyData*
+| Client Key Data on which to operate
+| `fabric8.clientKeyData`
+
+| *clientKeyAlgo*
+| Client Key Algorithm on which to operate
+| `fabric8.clientKeyAlgo`
+
+| *clientKeyPassphrase*
+| Client Key Passphrase on which to operate
+| `fabric8.clientKeyPassphrase`
+
+| *trustStoreFile*
+| Trust Store File on which to operate
+| `fabric8.trustStoreFile`
+
+| *trustStorePassphrase*
+| Trust Store Passphrase on which to operate
+| `fabric8.trustStorePassphrase`
+
+| *keyStoreFile*
+| Key Store File on which to operate
+| `fabric8.keyStoreFile`
+
+| *keyStorePassphrase*
+| Key Store Passphrase on which to operate
+| `fabric8.keyStorePassphrase`
 |===
 
 === Image Configuration
