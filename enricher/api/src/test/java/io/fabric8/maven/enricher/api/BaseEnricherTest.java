@@ -38,7 +38,7 @@ public class BaseEnricherTest {
     private EnricherContext enricherContext;
 
     @Test
-    public void should_set_environment_variables_from_resources() {
+    public void setEnvironmentVariablesFromResources() {
 
         // Given
         final DummyBaseEnricher dummyBaseEnricher = new DummyBaseEnricher(enricherContext, "dummy");
@@ -63,7 +63,7 @@ public class BaseEnricherTest {
     }
 
     @Test
-    public void should_add_resource_environment_variables_to_container_environment_variables() {
+    public void addResourceEnvironmentVariablesToContainerEnvironmentVariables() {
 
         // Given
         final DummyBaseEnricher dummyBaseEnricher = new DummyBaseEnricher(enricherContext, "dummy");
@@ -90,7 +90,7 @@ public class BaseEnricherTest {
     }
 
     @Test
-    public void should_override_resource_environment_variables_to_container_environment_variables() {
+    public void overrideResourceEnvironmentVariablesToContainerEnvironmentVariables() {
 
         // Given
         final DummyBaseEnricher dummyBaseEnricher = new DummyBaseEnricher(enricherContext, "dummy");
