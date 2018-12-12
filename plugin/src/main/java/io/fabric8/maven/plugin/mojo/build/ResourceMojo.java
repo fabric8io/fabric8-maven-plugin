@@ -413,7 +413,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     }
 
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
-        clusterAccess = new ClusterAccess(namespace);
+        clusterAccess = new ClusterAccess(getClusterConfiguration());
         updateKindFilenameMappings();
         try {
             lateInit();
