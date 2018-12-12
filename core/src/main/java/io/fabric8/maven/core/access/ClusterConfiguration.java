@@ -46,6 +46,9 @@ public class ClusterConfiguration {
     }
 
     public String getNamespace() {
+        if (StringUtils.isBlank(this.namespace)) {
+            this.namespace = KubernetesHelper.getDefaultNamespace();
+        }
         return namespace;
     }
 

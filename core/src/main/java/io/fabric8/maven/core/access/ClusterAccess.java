@@ -39,6 +39,11 @@ public class ClusterAccess {
 
     public ClusterAccess(ClusterConfiguration clusterConfiguration) {
         this.clusterConfiguration = clusterConfiguration;
+
+        if (this.clusterConfiguration == null) {
+            this.clusterConfiguration = new ClusterConfiguration.Builder().build();
+        }
+
         this.client = null;
     }
 
