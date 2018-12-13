@@ -38,6 +38,8 @@ public class WildFlySwarmHealthCheckEnricher extends AbstractHealthCheckEnricher
         port {{
             d = "8080";
         }},
+        failureThreshold                    {{ d = "3"; }},
+        successThreshold                    {{ d = "1"; }},
         path {{
             d = "/health";
         }};
@@ -68,9 +70,11 @@ public class WildFlySwarmHealthCheckEnricher extends AbstractHealthCheckEnricher
             String path = getPath();
 
             // lets default to adding a wildfly swarm health check
-            return new ProbeBuilder().
-                    withNewHttpGet().withNewPort(port).withPath(path).withScheme(scheme).endHttpGet().
-                    withInitialDelaySeconds(initialDelay).build();
+            return new ProbeBuilder()
+                    .withNewHttpGet().withNewPort(port).withPath(path).withScheme(scheme).endHttpGet()
+                    .withFailureThreshold(getFailureThreshold())
+                    .withSuccessThreshold(getSuccessThreshold())
+                    .withInitialDelaySeconds(initialDelay).build();
         }
         return null;
     }
@@ -87,5 +91,8 @@ public class WildFlySwarmHealthCheckEnricher extends AbstractHealthCheckEnricher
         return Configs.asString(getConfig(Config.path));
     }
 
+    protected int getFailureThreshold() { return Configs.asInteger(getConfig(Config.failureThreshold)); }
+
+    protected int getSuccessThreshold() { return Configs.asInteger(getConfig(Config.successThreshold)); }
 
 }

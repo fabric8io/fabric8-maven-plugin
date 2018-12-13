@@ -50,6 +50,14 @@ public class ProbeHandler {
         if (timeoutSeconds != null) {
             probe.setTimeoutSeconds(timeoutSeconds);
         }
+        Integer failureThreshold = probeConfig.getFailureThreshold();
+        if(failureThreshold != null) {
+            probe.setFailureThreshold(failureThreshold);
+        }
+        Integer successThreshold = probeConfig.getSuccessThreshold();
+        if(successThreshold != null) {
+            probe.setSuccessThreshold(successThreshold);
+        }
         HTTPGetAction getAction = getHTTPGetAction(probeConfig.getGetUrl());
         if (getAction != null) {
             probe.setHttpGet(getAction);
