@@ -85,11 +85,11 @@ public class ProbeHandler {
         }
         try {
             URL url = new URL(getUrl);
-                return new HTTPGetAction(url.getHost(),
-                        null /* headers */,
-                        url.getPath(),
-                        new IntOrString(url.getPort()),
-                        url.getProtocol());
+            return new HTTPGetAction(url.getHost(),
+                    null /* headers */,
+                    url.getPath(),
+                    new IntOrString(url.getPort()),
+                    url.getProtocol().toUpperCase());
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("Invalid URL " + getUrl + " given for HTTP GET readiness check");
         }

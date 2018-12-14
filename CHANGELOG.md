@@ -23,6 +23,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 712: Add possibility to configure cluster access fexibly.
 * Chore 1452: Upgraded Jgit to 5.2.0.201812061821-r
 * Fix 222: The SeviceEnricher could check the Docker image configuration for specific labels
+* Fix 1019: Custom liveness/readiness probes are not being created
 
 ### 3.5-SNAPSHOT
 * Fix 1390: Provides better exception message in case of invalid `application.yml` in Spring Boot
