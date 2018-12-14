@@ -67,7 +67,7 @@
     <version.kubernetes-client>4.1.0</version.kubernetes-client>
     <version.openshift-client>${version.kubernetes-client}</version.openshift-client>
     <version.mockwebserver>0.0.13</version.mockwebserver>
-    <version.docker-maven-plugin>0.27.2</version.docker-maven-plugin>
+    <version.docker-maven-plugin>0.28.0</version.docker-maven-plugin>
     <version.networknt.validator>0.1.7</version.networknt.validator>
     <version.jgit>5.2.0.201812061821-r</version.jgit>
     <version.hamcrest-library>1.3</version.hamcrest-library>
