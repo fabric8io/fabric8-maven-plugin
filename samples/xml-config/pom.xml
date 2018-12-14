@@ -209,10 +209,6 @@
                   </containers>
                   <!-- Volumes used in the replicaSet -->
                   <volumes>
-                    <volume>
-                      <name>scratch</name>
-                      <type>emptyDir</type>
-                    </volume>
                   </volumes>
                 </deployment>
                 <!-- Dedicated section for (multiple) services to define -->
@@ -239,30 +235,68 @@
             <artifactId>fabric8-maven-plugin</artifactId>
             <version>${fabric8-maven-plugin.version}</version>
 
-            <configuration>
-              <images>
-                <image>
-                  <name>${image.user}/${project.artifactId}:${project.version}</name>
-                  <alias>camel-service</alias>
-                  <build>
-                    <from>fabric8/s2i-java@sha256:a6ba8a6e76ebd75f99f2431fe0ec39a82985bc21c0f9bd56021deca1ffde520c</from>
-                    <assembly>
-                      <basedir>/deployments</basedir>
-                      <descriptorRef>artifact-with-dependencies</descriptorRef>
-                    </assembly>
-                    <env>
-                      <JAVA_LIB_DIR>/deployments</JAVA_LIB_DIR>
-                      <JAVA_MAIN_CLASS>org.apache.camel.cdi.Main</JAVA_MAIN_CLASS>
-                    </env>
-                  </build>
-                </image>
-              </images>
-            </configuration>
+	    <configuration>
+	      <images>
+		<image>
+		  <name>${image.user}/${project.artifactId}:${project.version}</name>
+		  <alias>camel-service</alias>
+		  <build>
+		    <from>fabric8/s2i-java@@sha256:a6ba8a6e76ebd75f99f2431fe0ec39a82985bc21c0f9bd56021deca1ffde520c</from>
+		    <assembly>
+		      <basedir>/deployments</basedir>
+		      <descriptorRef>artifact-with-dependencies</descriptorRef>
+		    </assembly>
+		    <env>
+		      <JAVA_LIB_DIR>/deployments</JAVA_LIB_DIR>
+		      <JAVA_MAIN_CLASS>org.apache.camel.cdi.Main</JAVA_MAIN_CLASS>
+		    </env>
+		  </build>
+		</image>
+	      </images>
+	      <resources>
+		<volumes>
+		  <volume>
+		    <name>downward-api-volume</name>
+		    <type>downwardAPI</type>
+		    <items>
+		      <item>
+			<path>labels</path>
+			<fieldRef>
+			  <fieldPath>metadata.labels</fieldPath>
+			</fieldRef>
+		      </item>
+		      <item>
+			<path>annotations</path>
+			<fieldRef>
+			  <fieldPath>metadata.annotations</fieldPath>
+			</fieldRef>
+		      </item>
+		    </items>
+		  </volume>
+		  <volume>
+		    <name>config-vol</name>
+		    <type>configMap</type> <!-- You must create a configmap before you can use it. -->
+		    <configMapName>log-config</configMapName>
+		    <configMapItems>
+		      <configMapItem>
+			<key>log_level</key>
+			<path>log_level</path>
+		      </configMapItem>
+		    </configMapItems>
+		  </volume>
+		  <volume>
+		    <name>scratch</name>
+		    <type>emptyDir</type>
+		    <medium>Memory</medium>
+		  </volume>
+		</volumes>
+	      </resources>
+	    </configuration>
 
-            <executions>
-              <execution>
-                <goals>
-                  <goal>resource</goal>
+	    <executions>
+	      <execution>
+		<goals>
+		  <goal>resource</goal>
                   <goal>build</goal>
                 </goals>
               </execution>
