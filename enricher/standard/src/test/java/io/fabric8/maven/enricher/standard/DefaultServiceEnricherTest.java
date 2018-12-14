@@ -17,7 +17,6 @@ package io.fabric8.maven.enricher.standard;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Properties;
 import java.util.TreeMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -25,6 +24,7 @@ import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.model.Configuration;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -52,6 +52,9 @@ public class DefaultServiceEnricherTest {
 
     @Mocked
     ImageConfiguration imageConfiguration;
+
+    @Mocked
+    GroupArtifactVersion groupArtifactVersion;
 
     @Test
     public void checkDefaultConfiguration() throws Exception {
@@ -169,6 +172,39 @@ public class DefaultServiceEnricherTest {
 
     }
 
+    @Test
+    public void serviceImageLabelEnrichment() throws Exception {
+        ImageConfiguration imageConfigurationWithLabels = new ImageConfiguration.Builder()
+                .name("test-label")
+                .alias("test")
+                .build();
+        final TreeMap config = new TreeMap();
+        config.put("type", "LoadBalancer");
+
+        new Expectations() {{
+
+            Configuration configuration = new Configuration.Builder()
+                    .images(Arrays.asList(imageConfigurationWithLabels))
+                    .processorConfig(new ProcessorConfig(null, null, Collections.singletonMap("fmp-service", config)))
+                    .build();
+
+            groupArtifactVersion.getSanitizedArtifactId();
+            result = "fmp-service";
+
+            context.getConfiguration();
+            result = configuration;
+
+            imageConfigurationWithLabels.getBuildConfiguration();
+            result = new BuildImageConfiguration.Builder()
+                    .labels(Collections.singletonMap("fabric8.generator.service.ports", "9090"))
+                    .ports(Arrays.asList("80", "53/UDP"))
+                    .build();
+        }};
+
+        String json = enrich();
+        assertPort(json, 0, 9090, 9090, "http", "TCP");
+    }
+
     // ======================================================================================================
 
     private String enrich() throws com.fasterxml.jackson.core.JsonProcessingException {
@@ -179,7 +215,7 @@ public class DefaultServiceEnricherTest {
 
         // Validate that the generated resource contains
         KubernetesList list = builder.build();
-        assertEquals(list.getItems().size(),1);
+        assertEquals(1, list.getItems().size());
 
         return ResourceUtil.toJson(list.getItems().get(0));
     }

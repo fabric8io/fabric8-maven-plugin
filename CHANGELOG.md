@@ -21,6 +21,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1373: Allow the configuration of failureThreshold and successThreshold on readiness and liveness probes
 * Fix 712: Add possibility to configure cluster access fexibly.
 * Upgraded Jgit to version 5.2.0.201812061821-r - https://github.com/fabric8io/fabric8-maven-plugin/pull/1452
+* Fix 222: The SeviceEnricher could check the Docker image configuration for specific labels
 
 ### 3.5-SNAPSHOT
 * Fix 1021: Avoids empty deployment selector value in generated yaml resource

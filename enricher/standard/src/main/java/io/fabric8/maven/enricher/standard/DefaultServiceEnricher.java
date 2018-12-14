@@ -35,6 +35,7 @@ import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -59,6 +60,8 @@ public class DefaultServiceEnricher extends BaseEnricher {
     private static final Pattern PORT_MAPPING_PATTERN =
         Pattern.compile("^\\s*(?<port>\\d+)(\\s*:\\s*(?<targetPort>\\d+))?(\\s*/\\s*(?<protocol>(tcp|udp)))?\\s*$",
                         Pattern.CASE_INSENSITIVE);
+    private static final String PORT_IMAGE_LABEL_PREFIX = "fabric8.generator.service.port";
+    private static final String PORTS_IMAGE_LABEL_PREFIX = "fabric8.generator.service.ports";
 
 
     // Available configuration keys
@@ -115,12 +118,14 @@ public class DefaultServiceEnricher extends BaseEnricher {
             return null;
         }
 
+        String serviceName = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getSanitizedArtifactId()));
+
         // Create service only for all images which are supposed to live in a single pod
-        List<ServicePort> ports = getImages().map(this::extractPorts).orElse(Collections.emptyList());
+        List<ServicePort> ports = extractPorts(getImages().get());
 
         ServiceBuilder builder = new ServiceBuilder()
             .withNewMetadata()
-              .withName(getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getSanitizedArtifactId())))
+              .withName(serviceName)
               .withLabels(extractLabels())
             .endMetadata();
         ServiceFluent.SpecNested<ServiceBuilder> specBuilder = builder.withNewSpec();
@@ -205,18 +210,26 @@ public class DefaultServiceEnricher extends BaseEnricher {
         List<ServicePort> configuredPorts = extractPortsFromConfig();
 
         for (ImageConfiguration image : images) {
+            Map<String, String> labels = extractLabelsFromConfig(image);
             List<String> podPorts = getPortsFromBuildConfiguration(image);
+            List<String> portsFromImageLabels = getLabelWithService(labels);
             if (podPorts.isEmpty()) {
                 continue;
             }
 
             // Extract first port and remove first element
-            addPortIfNotNull(ret, extractPortsFromImageSpec(image.getName(), podPorts.remove(0), shiftOrNull(configuredPorts)));
+            if(portsFromImageLabels == null || portsFromImageLabels.isEmpty()) {
+                addPortIfNotNull(ret, extractPortsFromImageSpec(image.getName(), podPorts.remove(0), shiftOrNull(configuredPorts), null));
+            } else {
+                for (String imageLabelPort : portsFromImageLabels) {
+                    addPortIfNotNull(ret, extractPortsFromImageSpec(image.getName(), podPorts.remove(0), shiftOrNull(configuredPorts), imageLabelPort));
+                }
+            }
 
             // Remaining port specs if multi-port is selected
             if (isMultiPort) {
                 for (String port : podPorts) {
-                    addPortIfNotNull(ret, extractPortsFromImageSpec(image.getName(), port, shiftOrNull(configuredPorts)));
+                    addPortIfNotNull(ret, extractPortsFromImageSpec(image.getName(), port, shiftOrNull(configuredPorts), null));
                 }
             }
         }
@@ -262,6 +275,26 @@ public class DefaultServiceEnricher extends BaseEnricher {
         return ret;
     }
 
+    private Map<String, String> extractLabelsFromConfig(ImageConfiguration imageConfiguration) {
+        Map<String, String> labels = new HashMap<>();
+        if(imageConfiguration.getBuildConfiguration() != null && imageConfiguration.getBuildConfiguration().getLabels() != null) {
+            labels.putAll(imageConfiguration.getBuildConfiguration().getLabels());
+        }
+        return labels;
+    }
+
+    private List<String> getLabelWithService(Map<String, String> labels) {
+        List<String> portsList = new ArrayList<>();
+        for(Map.Entry<String, String> entry : labels.entrySet()) {
+            if(entry.getKey().equals(PORT_IMAGE_LABEL_PREFIX)) {
+                portsList.add(entry.getValue());
+            } if(entry.getKey().equals(PORTS_IMAGE_LABEL_PREFIX)) {
+                portsList.addAll(Arrays.asList(entry.getValue().split(",")));
+            }
+        }
+        return portsList;
+    }
+
     // parse config specified ports
     private ServicePort parsePortMapping(String port) {
         Matcher matcher = PORT_MAPPING_PATTERN.matcher(port);
@@ -293,16 +326,16 @@ public class DefaultServiceEnricher extends BaseEnricher {
         }
     }
 
-    private ServicePort extractPortsFromImageSpec(String imageName, String portSpec, ServicePort portOverride) {
+    private ServicePort extractPortsFromImageSpec(String imageName, String portSpec, ServicePort portOverride, String targetPortFromImageLabel) {
 
         Matcher portMatcher = PORT_PROTOCOL_PATTERN.matcher(portSpec);
-            if (!portMatcher.matches()) {
-                log.warn("Invalid port specification '%s' for image %s. Must match \\d+(/(tcp|udp))?. Ignoring for now for service generation",
-                         portSpec, imageName);
-                return null;
-            }
+        if (!portMatcher.matches()) {
+            log.warn("Invalid port specification '%s' for image %s. Must match \\d+(/(tcp|udp))?. Ignoring for now for service generation",
+                     portSpec, imageName);
+            return null;
+        }
 
-        Integer targetPort = Integer.parseInt(portMatcher.group(1));
+        Integer targetPort = Integer.parseInt(targetPortFromImageLabel != null ? targetPortFromImageLabel : portMatcher.group(1));
         String protocol = getProtocol(portMatcher.group(2));
         Integer port = checkForLegacyMapping(targetPort);
 
