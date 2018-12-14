@@ -43,6 +43,12 @@ public class ProbeConfig {
     @Parameter
     String tcpPort;
 
+    @Parameter
+    Integer failureThreshold;
+
+    @Parameter
+    Integer successThreshold;
+
     public Integer getInitialDelaySeconds() {
         return initialDelaySeconds;
     }
@@ -61,6 +67,14 @@ public class ProbeConfig {
 
     public String getTcpPort() {
         return tcpPort;
+    }
+
+    public Integer getFailureThreshold() {
+        return failureThreshold;
+    }
+
+    public Integer getSuccessThreshold() {
+        return successThreshold;
     }
 
     // =============================================================
@@ -90,6 +104,16 @@ public class ProbeConfig {
 
         public Builder getUrl(String getUrl) {
             config.getUrl = getUrl;
+            return this;
+        }
+
+        public Builder failureThreshold(Integer failureThreshold) {
+            config.failureThreshold = failureThreshold;
+            return this;
+        }
+
+        public Builder successThreshold(Integer successThreshold) {
+            config.successThreshold = successThreshold;
             return this;
         }
 

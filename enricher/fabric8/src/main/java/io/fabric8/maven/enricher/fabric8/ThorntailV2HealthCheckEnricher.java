@@ -40,6 +40,8 @@ public class ThorntailV2HealthCheckEnricher extends AbstractHealthCheckEnricher 
         port {{
             d = "8080";
         }},
+        failureThreshold                    {{ d = "3"; }},
+        successThreshold                    {{ d = "1"; }},
         path {{
             d = "/health";
         }};
@@ -74,12 +76,18 @@ public class ThorntailV2HealthCheckEnricher extends AbstractHealthCheckEnricher 
             String scheme = getScheme().toUpperCase();
             String path = getPath();
 
-            return new ProbeBuilder().
-                    withNewHttpGet().withNewPort(port).withPath(path).withScheme(scheme).endHttpGet().
-                    withInitialDelaySeconds(initialDelay).build();
+            return new ProbeBuilder()
+                     .withNewHttpGet().withNewPort(port).withPath(path).withScheme(scheme).endHttpGet()
+                     .withFailureThreshold(getFailureThreshold())
+                     .withSuccessThreshold(getSuccessThreshold())
+                     .withInitialDelaySeconds(initialDelay).build();
         }
         return null;
     }
+
+    protected int getFailureThreshold() { return Configs.asInteger(getConfig(Config.failureThreshold)); }
+
+    protected int getSuccessThreshold() { return Configs.asInteger(getConfig(Config.successThreshold)); }
 
     protected String getScheme() {
         return Configs.asString(getConfig(Config.scheme));
