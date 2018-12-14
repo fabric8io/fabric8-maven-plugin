@@ -84,7 +84,7 @@ public class ProbeHandlerTest {
         assertEquals(null,probe.getHttpGet().getHttpHeaders());
         assertEquals("/healthz",probe.getHttpGet().getPath());
         assertEquals(8080,probe.getHttpGet().getPort().getIntVal().intValue());
-        assertEquals("http",probe.getHttpGet().getScheme());
+        assertEquals("HTTP",probe.getHttpGet().getScheme());
         assertNull(probe.getExec());
         assertNull(probe.getTcpSocket());
     }
@@ -199,7 +199,7 @@ public class ProbeHandlerTest {
         assertEquals(null,probe.getHttpGet().getHttpHeaders());
         assertEquals("/healthz",probe.getHttpGet().getPath());
         assertEquals(8080,probe.getHttpGet().getPort().getIntVal().intValue());
-        assertEquals("http",probe.getHttpGet().getScheme());
+        assertEquals("HTTP",probe.getHttpGet().getScheme());
     }
 
     @Test
@@ -272,7 +272,7 @@ public class ProbeHandlerTest {
         assertEquals(null,probe.getHttpGet().getHttpHeaders());
         assertEquals("/healthz",probe.getHttpGet().getPath());
         assertEquals(8080,probe.getHttpGet().getPort().getIntVal().intValue());
-        assertEquals("http",probe.getHttpGet().getScheme());
+        assertEquals("HTTP",probe.getHttpGet().getScheme());
     }
 
     @Test

@@ -89,6 +89,7 @@ class ContainerHandler {
         List<EnvVar> envVars = KubernetesResourceUtil.convertToEnvVarList(config.getEnv().orElse(Collections.emptyMap()));
 
         // TODO: This should go into an extra enricher so that this behaviour can be switched on / off
+        envVars.removeIf(obj -> obj.getName().equals("KUBERNETES_NAMESPACE"));
         envVars.add(0,
             new EnvVarBuilder()
                 .withName("KUBERNETES_NAMESPACE")

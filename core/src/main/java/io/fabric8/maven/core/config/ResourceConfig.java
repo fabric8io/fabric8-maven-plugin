@@ -154,6 +154,29 @@ public class ResourceConfig {
     public static class Builder {
         private ResourceConfig config = new ResourceConfig();
 
+        public Builder() { }
+
+        public Builder(ResourceConfig config) {
+            if(config != null) {
+                this.config.env = config.getEnv().orElse(null);
+                this.config.controllerName = config.getControllerName();
+                this.config.imagePullPolicy = config.getImagePullPolicy();
+                this.config.replicas = config.getReplicas();
+                this.config.liveness = config.getLiveness();
+                this.config.readiness = config.getReadiness();
+                this.config.annotations = config.getAnnotations();
+                this.config.serviceAccount = config.getServiceAccount();
+                this.config.configMap = config.getConfigMap();
+                this.config.volumes = config.getVolumes();
+                this.config.labels = config.getLabels();
+                this.config.annotations = config.getAnnotations();
+                this.config.secrets = config.getSecrets();
+                this.config.services = config.getServices();
+                this.config.metrics = config.getMetrics();
+                this.config.namespace = config.getNamespace();
+            }
+        }
+
         public Builder env(Map<String, String> env) {
             config.env = env;
             return this;
@@ -186,6 +209,16 @@ public class ResourceConfig {
 
         public Builder withConfigMap(ConfigMap configMap) {
             config.configMap = configMap;
+            return this;
+        }
+
+        public Builder withLiveness(ProbeConfig liveness) {
+            config.liveness = liveness;
+            return this;
+        }
+
+        public Builder withReadiness(ProbeConfig readiness) {
+            config.readiness = readiness;
             return this;
         }
 
