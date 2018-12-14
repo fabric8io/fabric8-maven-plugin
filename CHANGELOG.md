@@ -11,6 +11,7 @@ We use semantic versioning in some slight variation until our feature set has st
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
 ### 4.0.0-M2-SNAPSHOT
+* Fix 10: Make VolumeConfiguration more flexible
 * Fix 1326: Fixes overridding of Selector Label by the project enrichers entries.
 * Fix 839: Sets Spring Boot generator color config property as String (http://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/ansi/AnsiOutput.Enabled.html)
 * Fix 401: Refactor DefaultControllerEnricher
@@ -18,8 +19,10 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1386: Allow @sha256 digest for tags in FROM
 * Fix 796: Remove workaround to produce both .yaml and .json files
 * Fix 1425: Added metadata visitors for imagestreams, build and buildconfig.
+* Fix 1373: Allow the configuration of failureThreshold and successThreshold on readiness and liveness probes
 * Fix 712: Add possibility to configure cluster access fexibly.
 * Upgraded Jgit to version 5.2.0.201812061821-r - https://github.com/fabric8io/fabric8-maven-plugin/pull/1452
+* Fix 222: The SeviceEnricher could check the Docker image configuration for specific labels
 
 ### 3.5-SNAPSHOT
 * Fix 1021: Avoids empty deployment selector value in generated yaml resource

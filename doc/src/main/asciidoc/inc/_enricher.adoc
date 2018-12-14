@@ -239,6 +239,8 @@ The enricher will use the following settings by default:
 
 - port = `8181`
 - scheme = `HTTP`
+- failureThreshold = `3`
+- successThreshold = `1`
 
 and use paths `/readiness-check` for readiness check and `/health-check` for liveness check.
 
@@ -289,6 +291,8 @@ The enricher will use the following settings by default:
 * `livenessProbeInitialDelaySeconds` : `180`
 * `livenessProbePeriodSeconds` : _<kubernetes-default>_
 * `timeoutSeconds` : _<kubernetes-default>_
+* `failureThreshold`: `3`
+* `successThreshold`: `1`
 
 These values can be configured by the enricher in the `fabric8-maven-plugin` configuration as shown below:
 [source,xml]
@@ -312,6 +316,8 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
               <f8-healthcheck-spring-boot>
                 <timeoutSeconds>5</timeoutSeconds>
                 <readinessProbeInitialDelaySeconds>30</readinessProbeInitialDelaySeconds>
+                <failureThreshold>3</failureThreshold>
+                <successThreshold>1</successThreshold>
               </f8-healthcheck-spring-boot>
             </config>
           </enricher>
@@ -337,6 +343,8 @@ The enricher will use the following settings by default:
 - port = `8080`
 - scheme = `HTTP`
 - path = `/health`
+- failureThreshold = `3`
+- successThreshold = `1`
 
 These values can be configured by the enricher in the `fabric8-maven-plugin` configuration as shown below:
 [source,xml]
@@ -361,6 +369,8 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
                 <port>4444</port>
                 <scheme>HTTPS</scheme>
                 <path>health/myapp</path>
+                <failureThreshold>3</failureThreshold>
+                <successThreshold>1</successThreshold>
               </f8-healthcheck-wildfly-swarm>
             </config>
           </enricher>
@@ -385,6 +395,8 @@ The enricher will use the following settings by default:
 - port = `8080`
 - scheme = `HTTP`
 - path = `/health`
+- failureThreshold = `3`
+- successThreshold = `1`
 
 These values can be configured by the enricher in the `fabric8-maven-plugin` configuration as shown below:
 [source,xml]
@@ -409,6 +421,8 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
                 <port>4444</port>
                 <scheme>HTTPS</scheme>
                 <path>health/myapp</path>
+                <failureThreshold>3</failureThreshold>
+                <successThreshold>1</successThreshold>
               </f8-healthcheck-thorntail>
             </config>
           </enricher>
@@ -677,7 +691,7 @@ Here is an example of HTTP probe configuration:
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
     <config>
-        <f8-healthcheck-vertx>>
+        <f8-healthcheck-vertx>
             <initialDelay>3</initialDelay>
             <period>3</period>
             <liveness>

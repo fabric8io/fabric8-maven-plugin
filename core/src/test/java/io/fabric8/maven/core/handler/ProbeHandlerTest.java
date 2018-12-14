@@ -208,6 +208,7 @@ public class ProbeHandlerTest {
         //withport and url but with other request and port as int
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5)
+                .failureThreshold(3).successThreshold(1)
                 .getUrl("tcp://www.healthcheck.com:8080/healthz").tcpPort("80")
                 .build();
 
@@ -221,6 +222,8 @@ public class ProbeHandlerTest {
         assertEquals("www.healthcheck.com",probe.getTcpSocket().getHost());
         assertEquals(5,probe.getInitialDelaySeconds().intValue());
         assertEquals(5,probe.getTimeoutSeconds().intValue());
+        assertEquals(3, probe.getFailureThreshold().intValue());
+        assertEquals(1, probe.getSuccessThreshold().intValue());
     }
 
     @Test
@@ -230,6 +233,8 @@ public class ProbeHandlerTest {
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5)
                 .getUrl("tcp://www.healthcheck.com:8080/healthz").tcpPort("httpPort")
+                .successThreshold(1)
+                .failureThreshold(3)
                 .build();
 
         probe = probeHandler.getProbe(probeConfig);
@@ -242,6 +247,8 @@ public class ProbeHandlerTest {
         assertEquals("www.healthcheck.com",probe.getTcpSocket().getHost());
         assertEquals(5,probe.getInitialDelaySeconds().intValue());
         assertEquals(5,probe.getTimeoutSeconds().intValue());
+        assertEquals(3, probe.getFailureThreshold().intValue());
+        assertEquals(1, probe.getSuccessThreshold().intValue());
     }
 
     @Test
