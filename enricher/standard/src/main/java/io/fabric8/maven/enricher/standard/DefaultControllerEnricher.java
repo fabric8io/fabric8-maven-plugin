@@ -130,63 +130,8 @@ public class DefaultControllerEnricher extends BaseEnricher {
                     builder.addToJobItems(jobHandler.getJob(config, images));
                 }
             }
-        } else if (KubernetesResourceUtil.checkForKind(builder, "StatefulSet")) {
-            final StatefulSetSpec spec = statefulSetHandler.getStatefulSet(config, images).getSpec();
-            if (spec != null) {
-                builder.accept(new TypedVisitor<StatefulSetBuilder>() {
-                    @Override
-                    public void visit(StatefulSetBuilder statefulSetBuilder) {
-                        statefulSetBuilder.editOrNewSpec().editOrNewTemplate().editOrNewSpec().endSpec().endTemplate().endSpec();
-                        mergeStatefulSetSpec(statefulSetBuilder, spec);
-                    }
-                });
-
-                if (spec.getTemplate() != null && spec.getTemplate().getSpec() != null) {
-                    final PodSpec podSpec = spec.getTemplate().getSpec();
-                    builder.accept(new TypedVisitor<PodSpecBuilder>() {
-                        @Override
-                        public void visit(PodSpecBuilder builder) {
-                            KubernetesResourceUtil.mergePodSpec(builder, podSpec, name);
-                        }
-                    });
-                }
-            }
-        } else {
-            final DeploymentSpec spec = deployHandler.getDeployment(config, images).getSpec();
-            if (spec != null) {
-                builder.accept(new TypedVisitor<DeploymentBuilder>() {
-                    @Override
-                    public void visit(DeploymentBuilder deploymentBuilder) {
-                        deploymentBuilder.editOrNewSpec().editOrNewTemplate().editOrNewSpec().endSpec().endTemplate().endSpec();
-                        mergeDeploymentSpec(deploymentBuilder, spec);
-                    }
-                });
-
-                if (spec.getTemplate() != null && spec.getTemplate().getSpec() != null) {
-                    final PodSpec podSpec = spec.getTemplate().getSpec();
-                    builder.accept(new TypedVisitor<PodSpecBuilder>() {
-                        @Override
-                        public void visit(PodSpecBuilder builder) {
-                            KubernetesResourceUtil.mergePodSpec(builder, podSpec, name);
-                        }
-                    });
-                }
-            }
         }
     }
-
-    private void mergeDeploymentSpec(DeploymentBuilder builder, DeploymentSpec spec) {
-        DeploymentFluent.SpecNested<DeploymentBuilder> specBuilder = builder.editSpec();
-        KubernetesResourceUtil.mergeSimpleFields(specBuilder, spec);
-        specBuilder.endSpec();
-    }
-
-    private void mergeStatefulSetSpec(StatefulSetBuilder builder, StatefulSetSpec spec) {
-        StatefulSetFluent.SpecNested<StatefulSetBuilder> specBuilder = builder.editSpec();
-        KubernetesResourceUtil.mergeSimpleFields(specBuilder, spec);
-        specBuilder.endSpec();
-    }
-
 
     static {
         KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(String.class);
