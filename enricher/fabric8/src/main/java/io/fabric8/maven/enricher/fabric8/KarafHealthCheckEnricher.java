@@ -17,6 +17,7 @@ package io.fabric8.maven.enricher.fabric8;
 
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,16 @@ public class KarafHealthCheckEnricher extends AbstractHealthCheckEnricher {
         super(buildContext, "f8-healthcheck-karaf");
     }
 
+    private enum Config implements Configs.Key {
+        failureThreshold                    {{ d = "3"; }},
+        successThreshold                    {{ d = "1"; }};
+
+        protected String d;
+
+        public String def() {
+            return d;
+        }
+    }
 
     @Override
     protected Probe getReadinessProbe() {
@@ -78,16 +89,20 @@ public class KarafHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
                 for (String featureValue : features) {
                     if ("fabric8-karaf-checks".equals(featureValue)) {
-                        return new ProbeBuilder().withNewHttpGet().
-                            withNewPort(DEFAULT_HEALTH_CHECK_PORT).withPath(path).endHttpGet().withInitialDelaySeconds(initialDelay).build();
+                        return new ProbeBuilder().withNewHttpGet().withNewPort(DEFAULT_HEALTH_CHECK_PORT).withPath(path).endHttpGet()
+                                .withSuccessThreshold(getSuccessThreshold())
+                                .withFailureThreshold(getFailureThreshold())
+                                .withInitialDelaySeconds(initialDelay).build();
                     }
                 }
             } else {
 
                 String featureValue = (String) feature;
                 if ("fabric8-karaf-checks".equals(featureValue)) {
-                    return new ProbeBuilder().withNewHttpGet().
-                        withNewPort(DEFAULT_HEALTH_CHECK_PORT).withPath(path).endHttpGet().withInitialDelaySeconds(initialDelay).build();
+                    return new ProbeBuilder().withNewHttpGet().withNewPort(DEFAULT_HEALTH_CHECK_PORT).withPath(path).endHttpGet()
+                            .withSuccessThreshold(getSuccessThreshold())
+                            .withFailureThreshold(getFailureThreshold())
+                            .withInitialDelaySeconds(initialDelay).build();
                 }
             }
 
@@ -96,4 +111,7 @@ public class KarafHealthCheckEnricher extends AbstractHealthCheckEnricher {
         return null;
     }
 
+    protected int getFailureThreshold() { return Configs.asInteger(getConfig(Config.failureThreshold)); }
+
+    protected int getSuccessThreshold() { return Configs.asInteger(getConfig(Config.successThreshold)); }
 }
