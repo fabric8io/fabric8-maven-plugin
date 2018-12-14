@@ -24,6 +24,7 @@
     includes:
     - fmp-name
     - fmp-controller
+    - fmp-controller-from-configuration
     - fmp-service
     - fmp-image
     - fmp-portname

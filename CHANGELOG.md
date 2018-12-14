@@ -14,6 +14,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 10: Make VolumeConfiguration more flexible
 * Fix 1326: Fixes overridding of Selector Label by the project enrichers entries.
 * Fix 839: Sets Spring Boot generator color config property as String (http://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/ansi/AnsiOutput.Enabled.html)
+* Fix 401: Refactor DefaultControllerEnricher
 * Fix 1412: mvn deploy fails when using a Dockerfile during S2I build
 * Fix 1386: Allow @sha256 digest for tags in FROM
 * Fix 796: Remove workaround to produce both .yaml and .json files
