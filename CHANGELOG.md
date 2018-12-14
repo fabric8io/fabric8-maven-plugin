@@ -13,7 +13,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 ### 4.0.0-M2-SNAPSHOT
 * Fix 10: Make VolumeConfiguration more flexible
 * Fix 1326: Fixes overridding of Selector Label by the project enrichers entries.
-* Fix 839: Sets Spring Boot generator color config property as String (http://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/ansi/AnsiOutput.Enabled.html)
+* Fix 839: Sets Spring Boot generator [color config property as String](http://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/ansi/AnsiOutput.Enabled.html)
 * Fix 401: Refactor DefaultControllerEnricher
 * Fix 1412: mvn deploy fails when using a Dockerfile during S2I build
 * Fix 1386: Allow @sha256 digest for tags in FROM
@@ -21,12 +21,10 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1425: Added metadata visitors for imagestreams, build and buildconfig.
 * Fix 1373: Allow the configuration of failureThreshold and successThreshold on readiness and liveness probes
 * Fix 712: Add possibility to configure cluster access fexibly.
-* Upgraded Jgit to version 5.2.0.201812061821-r - https://github.com/fabric8io/fabric8-maven-plugin/pull/1452
+* Chore 1452: Upgraded Jgit to 5.2.0.201812061821-r
 * Fix 222: The SeviceEnricher could check the Docker image configuration for specific labels
 
 ### 3.5-SNAPSHOT
-* Fix 1021: Avoids empty deployment selector value in generated yaml resource
-* Fix 1383: Check if instanceof Openshift before casting and handle failures.
 * Fix 1390: Provides better exception message in case of invalid `application.yml` in Spring Boot
 * Fix 1382: Allow to provide additional fragment filename mappings
 
@@ -53,6 +51,13 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 314: Do not execute GitEnricher if not Git repo
 * Fix 714: Merges the functionality of IANAServicePortNameEnricher and PortNameEnricher.
 * Fix 963: add support for Pod resource type in yaml config.
+
+###3.5.42 (2018-10-18)
+* Fix 1346: karaf-maven-plugin is detected under any groupId
+* Fix 1021: Avoids empty deployment selector value in generated yaml resource
+* Fix 1383: Check if instanceof Openshift before casting and handle failures.
+* Feature ENTESB-9252: Add Service Annotations to facilitate automated service discovery by 3scale.
+* Fix 1365: Generated image reference in deployment.yml contains duplicate registry name
 
 ### 3.5.41 (2018-08-01)
 * Feature 1032: Improvements of the Vert.x Generator and enrichers
