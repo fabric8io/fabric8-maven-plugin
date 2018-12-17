@@ -53,6 +53,7 @@
     - f8-healthcheck-karaf
     - f8-healthcheck-vertx
     - f8-healthcheck-docker
+    - f8-healthcheck-webapp
     - f8-prometheus
     # Dependencies shouldn't be enriched anymore, therefor it's last in the list
     - fmp-dependency
