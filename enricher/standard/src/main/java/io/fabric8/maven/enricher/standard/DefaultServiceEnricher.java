@@ -82,9 +82,6 @@ public class DefaultServiceEnricher extends BaseEnricher {
         // Service port to use (only for the first exposed pod port)
         port,
 
-        // Legacy mapping from port 8080 / 9090 to 80
-        legacyPortMapping {{ d = "false"; }},
-
         // Whether to expose multiple ports or only the first one
         multiPort {{ d = "false"; }},
 
@@ -360,10 +357,6 @@ public class DefaultServiceEnricher extends BaseEnricher {
     }
 
     private int checkForLegacyMapping(int port) {
-        // The legacy mapping maps 8080 -> 80 and 9090 -> 90 which needs to be enabled explicitly
-        if (Configs.asBoolean(getConfig(Config.legacyPortMapping)) && (port == 8080 || port == 9090)) {
-            return 80;
-        }
         return port;
     }
 
