@@ -42,10 +42,6 @@ The following configuration parameters can be used to influence the behaviour of
 | *protocol*
 | Default protocol to use for the services. Must be `tcp` or `udp`
 | `tcp`
-
-| *legacyPortMapping*
-| If this mapping options is set to `true` then a pod exports ports 8080 or 9090 is mapped to a service port 80. This is deprecated and switched off by default. You can switch it on to get back the old behaviour or, even better, use `port` for setting the service port directly.
-| `false`
 |===
 
 You specify the properties like for any enricher within the enrichers configuration like in

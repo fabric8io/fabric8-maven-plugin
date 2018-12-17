@@ -15,6 +15,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Feature 729: Select custom resources depending on environment.
 * Feature 601: Adds healthcheck for webapp
 * Fix 1460: Upgraded kubernetes client to 4.1.1
+* Fix 690: Removes deprecated _legacyPortMapping_ property.
 
 ### 4.0.0-M2 (2018-12-14)
 * Fix 10: Make VolumeConfiguration more flexible
