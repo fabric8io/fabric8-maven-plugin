@@ -290,28 +290,27 @@ public class OpenshiftBuildService implements BuildService {
     private BuildStrategy createBuildStrategy(ImageConfiguration imageConfig, OpenShiftBuildStrategy osBuildStrategy, String openshiftPullSecret) {
         if (osBuildStrategy == OpenShiftBuildStrategy.docker) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
-
-            BuildStrategyFluent.DockerStrategyNested<BuildStrategyBuilder> buildStrategyBuilder = new BuildStrategyBuilder().withType("Docker")
-                    .withNewDockerStrategy();
             Map<String, String> fromExt = buildConfig.getFromExt();
+            String fromName, fromKind, fromNamespace;
 
-            if (!fromExt.isEmpty()) {
-                String fromName = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.name, buildConfig.getFrom());
-
-                String fromKind = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.kind, "DockerImage");
-                String fromNamespace = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.namespace, "ImageStreamTag".equals(fromKind) ? "openshift" : null);
-
-                buildStrategyBuilder
-                        .withNewFrom()
-                        .withKind(fromKind)
-                        .withName(fromName)
-                        .withNamespace(fromNamespace)
-                        .endFrom();
+            if(buildConfig.isDockerFileMode()) {
+                fromName = extractBaseFromDockerfile(buildConfig, config.getDockerBuildContext());
+            } else {
+                fromName = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.name, buildConfig.getFrom());
             }
+            fromKind = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.kind, "DockerImage");
+            fromNamespace = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.namespace, "ImageStreamTag".equals(fromKind) ? "openshift" : null);
 
-            BuildStrategy buildStrategy =
-                    buildStrategyBuilder.endDockerStrategy().build();
-
+            BuildStrategy buildStrategy = new BuildStrategyBuilder()
+                    .withType("Docker")
+                    .withNewDockerStrategy()
+                    .withNewFrom()
+                    .withKind(fromKind)
+                    .withName(fromName)
+                    .withNamespace(StringUtils.isEmpty(fromNamespace) ? null : fromNamespace)
+                    .endFrom()
+                    .endDockerStrategy().build();
+            
             if (openshiftPullSecret != null) {
                 buildStrategy.getDockerStrategy().setPullSecret(new LocalObjectReferenceBuilder()
                 .withName(openshiftPullSecret)
