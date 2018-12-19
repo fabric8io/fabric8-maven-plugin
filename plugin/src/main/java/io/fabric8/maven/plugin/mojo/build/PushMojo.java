@@ -16,6 +16,7 @@
 package io.fabric8.maven.plugin.mojo.build;
 
 
+import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
 import java.io.File;
 import java.util.List;
 
@@ -71,6 +72,12 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     private File resourceDir;
 
     /**
+     * Environment name where resources are placed. For example, if you set this property to dev and resourceDir is the default one, Fabric8 will look at src/main/fabric8/dev
+     */
+    @Parameter(property = "fabric8.environment")
+    private String environment;
+
+    /**
      * Whether to perform a Kubernetes build (i.e. agains a vanilla Docker daemon) or
      * an OpenShift build (with a Docker build against the OpenShift API server.
      */
@@ -108,7 +115,7 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
         try {
             ProcessorConfig generatorConfig =
-                ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, resourceDir, generator);
+                ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, ResourceDirCreator.getFinalResourceDir(resourceDir, environment), generator);
             GeneratorContext ctx = new GeneratorContext.Builder()
                 .config(generatorConfig)
                 .project(project)
