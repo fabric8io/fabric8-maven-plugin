@@ -175,6 +175,10 @@ a| The build mode which can be
 | Directory where fabric8 resources are stored. This is also the directory where a custom profile is looked up. Default is `src/main/fabric8`.
 | `fabric8.resourceDir`
 
+| *environment*
+| Environment name where resources are placed. For example, if you set this property to dev and resourceDir is the default one, Fabric8 will look at src/main/fabric8/dev. If not set then root `resourceDir` directory is used.
+| `fabric8.environment`
+
 | *skip*
 | With this parameter the execution of this plugin can be skipped completely.
 | `docker.skip`
