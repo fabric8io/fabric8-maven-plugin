@@ -56,7 +56,6 @@ import io.fabric8.openshift.api.model.DoneableImageStream;
 import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.ImageStreamSpec;
 import io.fabric8.openshift.api.model.OAuthClient;
-import io.fabric8.openshift.api.model.PolicyBinding;
 import io.fabric8.openshift.api.model.Project;
 import io.fabric8.openshift.api.model.ProjectRequest;
 import io.fabric8.openshift.api.model.Role;
@@ -147,8 +146,6 @@ public class ApplyService {
             } else {
                 log.warn("Not connected to OpenShift cluster so cannot apply entity " + dto);
             }
-        } else if (dto instanceof PolicyBinding) {
-            applyPolicyBinding((PolicyBinding) dto, sourceName);
         } else if (dto instanceof RoleBinding) {
             applyRoleBinding((RoleBinding) dto, sourceName);
         } else if (dto instanceof Role) {
@@ -691,61 +688,6 @@ public class ApplyService {
                 openShiftClient.roleBindings().inNamespace(namespace).create(entity);
             } catch (Exception e) {
                 onApplyError("Failed to create RoleBinding from " + sourceName + ". " + e, e);
-            }
-        }
-    }
-
-    public void applyPolicyBinding(PolicyBinding entity, String sourceName) {
-        OpenShiftClient openShiftClient = getOpenShiftClient();
-        if (openShiftClient != null) {
-            String id = getName(entity);
-
-            Objects.requireNonNull(id, "No name for " + entity + " " + sourceName);
-            String namespace = KubernetesHelper.getNamespace(entity);
-            if (StringUtils.isBlank(namespace)) {
-                namespace = getNamespace();
-            }
-            applyNamespace(namespace);
-            PolicyBinding old = openShiftClient.policyBindings().inNamespace(namespace).withName(id).get();
-            if (isRunning(old)) {
-                if (UserConfigurationCompare.configEqual(entity, old)) {
-                    log.info("PolicyBinding has not changed so not doing anything");
-                } else {
-                    if (isRecreateMode()) {
-                        log.info("Deleting PolicyBinding: " + id);
-                        openShiftClient.policyBindings().inNamespace(namespace).withName(id).delete();
-                        doCreatePolicyBinding(entity, namespace, sourceName);
-                    } else {
-                        log.info("Updating PolicyBinding from " + sourceName);
-                        try {
-                            String resourceVersion = KubernetesHelper.getResourceVersion(old);
-                            ObjectMeta metadata = getOrCreateMetadata(entity);
-                            metadata.setNamespace(namespace);
-                            metadata.setResourceVersion(resourceVersion);
-                            Object answer = openShiftClient.policyBindings().inNamespace(namespace).withName(id).replace(entity);
-                            logGeneratedEntity("Updated PolicyBinding: ", namespace, entity, answer);
-                        } catch (Exception e) {
-                            onApplyError("Failed to update PolicyBinding from " + sourceName + ". " + e + ". " + entity, e);
-                        }
-                    }
-                }
-            } else {
-                if (!isAllowCreate()) {
-                    log.warn("Creation disabled so not creating PolicyBinding from " + sourceName + " namespace " + namespace + " name " + getName(entity));
-                } else {
-                    doCreatePolicyBinding(entity, namespace, sourceName);
-                }
-            }
-        }
-    }
-
-    public void doCreatePolicyBinding(PolicyBinding entity, String namespace , String sourceName) {
-        OpenShiftClient openShiftClient = getOpenShiftClient();
-        if (openShiftClient != null) {
-            try {
-                openShiftClient.policyBindings().inNamespace(namespace).create(entity);
-            } catch (Exception e) {
-                onApplyError("Failed to create PolicyBinding from " + sourceName + ". " + e, e);
             }
         }
     }
