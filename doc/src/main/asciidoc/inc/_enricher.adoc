@@ -277,13 +277,10 @@ The enricher will use the following settings by default:
 - port = `8080`
 - scheme = `HTTP`
 - path = ``
-- initialDelay = -1
+- initialReadinessDelay = 10
+- initialLivenessDelay = 180
 
 If `path` attribute is not set (default value) then this enricher is disabled.
-If `initialDelay` is `-1` then it uses next default values:
-
-readiness:: 10
-liveness:: 180
 
 These values can be configured by the enricher in the `fabric8-maven-plugin` configuration as shown below:
 

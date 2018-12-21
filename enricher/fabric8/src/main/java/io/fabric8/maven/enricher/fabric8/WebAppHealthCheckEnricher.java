@@ -23,11 +23,6 @@ import org.apache.commons.lang3.StringUtils;
 
 public class WebAppHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
-
-    private static final int DEFAULT_DELAY_READNESS = 10;
-    private static final int DEFAULT_DELAY_LIVENESS = 180;
-
-
     public WebAppHealthCheckEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "f8-healthcheck-webapp");
     }
@@ -44,8 +39,11 @@ public class WebAppHealthCheckEnricher extends AbstractHealthCheckEnricher {
         path {{
             d = "";
         }},
-        initialDelay {{
-            d = "-1";
+        initialReadinessDelay {{
+            d = "10";
+        }},
+        initialLivenessDelay {{
+            d = "180";
         }};
 
         protected String d;
@@ -80,20 +78,20 @@ public class WebAppHealthCheckEnricher extends AbstractHealthCheckEnricher {
         String scheme = getScheme().toUpperCase();
         String path = getPath();
 
+        int delay = readiness ? getInitialReadinessDelay() : getInitialLivenessDelay();
+
         return new ProbeBuilder().
             withNewHttpGet().withNewPort(port).withPath(path).withScheme(scheme).endHttpGet().
-            withInitialDelaySeconds(getInitialDelay(readiness)).build();
+            withInitialDelaySeconds(delay).build();
 
     }
 
-    private int getInitialDelay(boolean readness) {
-        final int initialDelay = Configs.asInt(getConfig(Config.initialDelay));
+    private int getInitialReadinessDelay() {
+        return Configs.asInt(getConfig(Config.initialReadinessDelay));
+    }
 
-        if (initialDelay < 0) {
-            return readness ? DEFAULT_DELAY_READNESS : DEFAULT_DELAY_LIVENESS;
-        }
-
-        return  initialDelay;
+    private int getInitialLivenessDelay() {
+        return  Configs.asInt(getConfig(Config.initialLivenessDelay));
     }
 
     protected String getScheme() {
