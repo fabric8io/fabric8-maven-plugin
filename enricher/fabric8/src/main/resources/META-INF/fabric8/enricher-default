@@ -13,6 +13,7 @@ io.fabric8.maven.enricher.fabric8.WildFlySwarmHealthCheckEnricher
 io.fabric8.maven.enricher.fabric8.ThorntailV2HealthCheckEnricher
 io.fabric8.maven.enricher.fabric8.KarafHealthCheckEnricher
 io.fabric8.maven.enricher.fabric8.VertxHealthCheckEnricher
+io.fabric8.maven.enricher.fabric8.WebAppHealthCheckEnricher
 io.fabric8.maven.enricher.fabric8.DockerHealthCheckEnricher,510
 
 # Other enrichers
