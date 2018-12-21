@@ -267,6 +267,52 @@ items:
 By default the enricher inspects the images' BuildConfiguration and add the annotations if the port 9779 is listed.
 You can force the plugin to add annotations by setting enricher's config ```prometheusPort```
 
+[[f8-healthcheck-webapp]]
+==== f8-healthcheck-webapp
+
+This enricher adds kubernetes readiness and liveness probes with WebApp. This requires that you have `maven-war-plugin` set.
+
+The enricher will use the following settings by default:
+
+- port = `8080`
+- scheme = `HTTP`
+- path = ``
+- initialReadinessDelay = 10
+- initialLivenessDelay = 180
+
+If `path` attribute is not set (default value) then this enricher is disabled.
+
+These values can be configured by the enricher in the `fabric8-maven-plugin` configuration as shown below:
+
+[source,xml]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>fabric8-maven-plugin</artifactId>
+  <version>3.3.0</version>
+  <executions>
+    <execution>
+      <id>fmp</id>
+        <goals>
+          <goal>resource</goal>
+          <goal>helm</goal>
+          <goal>build</goal>
+        </goals>
+    </execution>
+  </executions>
+  <configuration>
+    <enricher>
+      <config>
+        <f8-healthcheck-webapp>
+          <path>/</path>
+        </f8-healthcheck-webapp>
+      </config>
+    </enricher>
+  </configuration>
+    ...
+</plugin>
+----
+
 [[f8-healthcheck-spring-boot]]
 ==== f8-healthcheck-spring-boot
 
@@ -428,7 +474,6 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
           </enricher>
         </configuration>
       </plugin>
-
 
 [[f8-healthcheck-vertx]]
 ==== f8-healthcheck-vertx
