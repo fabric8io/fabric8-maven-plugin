@@ -36,6 +36,7 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.GeneratorMode;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
+import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
 import io.fabric8.maven.plugin.watcher.WatcherManager;
 import io.fabric8.maven.watcher.api.WatcherContext;
 import java.io.File;
@@ -132,6 +133,12 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
      */
     @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
     private File resourceDir;
+
+    /**
+     * Environment name where resources are placed. For example, if you set this property to dev and resourceDir is the default one, Fabric8 will look at src/main/fabric8/dev
+     */
+    @Parameter(property = "fabric8.environment")
+    private String environment;
 
     // Whether to use color
     @Parameter(property = "fabric8.useColor", defaultValue = "true")
@@ -257,7 +264,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     // Get watcher config
     private ProcessorConfig extractWatcherConfig() {
         try {
-            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.WATCHER_CONFIG, profile, resourceDir, watcher);
+            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.WATCHER_CONFIG, profile, ResourceDirCreator.getFinalResourceDir(resourceDir, environment), watcher);
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot extract watcher config: " + e, e);
         }
@@ -266,7 +273,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     // Get generator config
     private ProcessorConfig extractGeneratorConfig() {
         try {
-            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, resourceDir, generator);
+            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, ResourceDirCreator.getFinalResourceDir(resourceDir, environment), generator);
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot extract generator config: " + e, e);
         }

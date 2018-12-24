@@ -80,6 +80,7 @@ import io.fabric8.maven.plugin.converter.ReplicSetOpenShiftConverter;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
+import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.Template;
 import java.io.File;
@@ -155,6 +156,13 @@ public class ResourceMojo extends AbstractFabric8Mojo {
      */
     @Parameter(property = "fabric8.resourceDirOpenShiftOverride", defaultValue = "${basedir}/src/main/fabric8-openshift-override")
     private File resourceDirOpenShiftOverride;
+
+    /**
+     * Environment name where resources are placed. For example, if you set this property to dev and resourceDir is the default one, Fabric8 will look at src/main/fabric8/dev
+     * Same applies for resourceDirOpenShiftOverride property.
+     */
+    @Parameter(property = "fabric8.environment")
+    private String environment;
 
     /**
      * Should we use the project's compile-time classpath to scan for additional enrichers/generators?
@@ -325,6 +333,12 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     @Component
     private MavenProjectHelper projectHelper;
 
+    // resourceDir when environment has been applied
+    private File realResourceDir;
+
+    // resourceDirOpenShiftOverride when environment has been applied
+    private File realResourceDirOpenShiftOverride;
+
     /**
      * Returns the Template if the list contains a single Template only otherwise returns null
      */
@@ -413,6 +427,9 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     }
 
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
+        realResourceDir = ResourceDirCreator.getFinalResourceDir(resourceDir, environment);
+        realResourceDirOpenShiftOverride = ResourceDirCreator.getFinalResourceDir(resourceDirOpenShiftOverride, environment);
+
         clusterAccess = new ClusterAccess(getClusterConfiguration());
         updateKindFilenameMappings();
         try {
@@ -632,15 +649,15 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
         // Add resources found in subdirectories of resourceDir, with a certain profile
         // applied
-        addProfiledResourcesFromSubirectories(builder, resourceDir, enricherManager);
+        addProfiledResourcesFromSubirectories(builder, realResourceDir, enricherManager);
         return builder.build();
     }
 
     private void loadOpenShiftOverrideResources() throws MojoExecutionException, IOException {
         openShiftOverrideResources = new OpenShiftOverrideResources(log);
 
-        if (resourceDirOpenShiftOverride.isDirectory() && resourceDirOpenShiftOverride.exists()) {
-            File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDirOpenShiftOverride);
+        if (realResourceDirOpenShiftOverride.isDirectory() && realResourceDirOpenShiftOverride.exists()) {
+            File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(realResourceDirOpenShiftOverride);
             if (resourceFiles.length > 0) {
                 String defaultName = MavenUtil.createDefaultResourceName(project.getGroupId(), project.getArtifactId());
                 KubernetesListBuilder builder = KubernetesResourceUtil.readResourceFragmentsFrom(
@@ -692,7 +709,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         Path composeFilePath = checkComposeConfig();
         ComposeService composeUtil = new ComposeService(komposeBinDir, composeFilePath, log);
         try {
-            File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDir);
+            File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(realResourceDir);
             File[] composeResourceFiles = composeUtil.convertToKubeFragments();
             File[] allResources = ArrayUtils.addAll(resourceFiles, composeResourceFiles);
             KubernetesListBuilder builder;
@@ -700,7 +717,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             // Add resource files found in the fabric8 directory
             if (allResources != null && allResources.length > 0) {
                 if (resourceFiles != null && resourceFiles.length > 0) {
-                    log.info("using resource templates from %s", resourceDir);
+                    log.info("using resource templates from %s", realResourceDir);
                 }
 
                 if (composeResourceFiles != null && composeResourceFiles.length > 0) {
@@ -779,11 +796,11 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     }
 
     private ProcessorConfig extractEnricherConfig() throws IOException {
-        return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.ENRICHER_CONFIG, profile, resourceDir, enricher);
+        return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.ENRICHER_CONFIG, profile, realResourceDir, enricher);
     }
 
     private ProcessorConfig extractGeneratorConfig() throws IOException {
-        return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, resourceDir, generator);
+        return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, realResourceDir, generator);
     }
 
     // Converts the kubernetes resources into OpenShift resources
@@ -1185,7 +1202,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     }
 
     private boolean hasFabric8Dir() {
-        return resourceDir.isDirectory();
+        return realResourceDir.isDirectory();
     }
 
     private boolean isPomProject() {
