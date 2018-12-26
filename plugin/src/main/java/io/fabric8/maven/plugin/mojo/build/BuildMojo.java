@@ -18,6 +18,7 @@ package io.fabric8.maven.plugin.mojo.build;
 import io.fabric8.maven.core.access.ClusterConfiguration;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -99,6 +100,12 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      */
     @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
     private File resourceDir;
+
+    /**
+     * Environment name where resources are placed. For example, if you set this property to dev and resourceDir is the default one, Fabric8 will look at src/main/fabric8/dev
+     */
+    @Parameter(property = "fabric8.environment")
+    private String environment;
 
     @Parameter(property = "fabric8.skip.build.pom")
     private Boolean skipBuildPom;
@@ -356,7 +363,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     // Get generator config
     private ProcessorConfig extractGeneratorConfig() {
         try {
-            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, resourceDir, generator);
+            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, ResourceDirCreator.getFinalResourceDir(resourceDir, environment), generator);
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot extract generator config: " + e,e);
         }
@@ -378,7 +385,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     // Get enricher config
     private ProcessorConfig extractEnricherConfig() {
         try {
-            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.ENRICHER_CONFIG, profile, resourceDir, enricher);
+            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.ENRICHER_CONFIG, profile, ResourceDirCreator.getFinalResourceDir(resourceDir, environment), enricher);
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot extract enricher config: " + e,e);
         }

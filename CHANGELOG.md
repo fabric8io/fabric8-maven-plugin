@@ -10,7 +10,10 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
-### 4.0-SNAPSHOT
+### 4.0.0-M3
+
+* Feature 729: Select custom resources depending on environment.
+* Feature 601: Adds healthcheck for webapp
 * Fix 1458: Support for from Image configuration in openshift docker build strategy
 
 ### 4.0.0-M2 (2018-12-14)
