@@ -14,6 +14,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 
 * Feature 729: Select custom resources depending on environment.
 * Feature 601: Adds healthcheck for webapp
+* Fix 1460: Upgraded kubernetes client to 4.1.1
 * Fix 1458: Support for from Image configuration in openshift docker build strategy
 
 ### 4.0.0-M2 (2018-12-14)
