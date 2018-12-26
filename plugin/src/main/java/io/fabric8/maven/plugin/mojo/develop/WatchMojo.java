@@ -203,6 +203,11 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
 
     }
 
+    @Override
+    public String getPrefix() {
+        return "fabric8.";
+    }
+
     public WatcherContext getWatcherContext() throws MojoExecutionException {
         try {
             BuildService.BuildContext buildContext = getBuildContext();

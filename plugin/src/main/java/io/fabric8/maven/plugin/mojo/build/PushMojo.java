@@ -129,4 +129,9 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
             throw new IllegalArgumentException("Cannot extract generator config: " + e,e);
         }
     }
+
+    @Override
+    public String getPrefix() {
+        return "fabric8.";
+    }
 }

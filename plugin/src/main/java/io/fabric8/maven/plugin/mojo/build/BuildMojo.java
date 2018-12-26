@@ -209,6 +209,11 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     }
 
     @Override
+    public String getPrefix() {
+        return "fabric8.";
+    }
+
+    @Override
     protected boolean isDockerAccessRequired() {
         return platformMode == PlatformMode.kubernetes;
     }
@@ -390,6 +395,5 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             throw new IllegalArgumentException("Cannot extract enricher config: " + e,e);
         }
     }
-
 
 }

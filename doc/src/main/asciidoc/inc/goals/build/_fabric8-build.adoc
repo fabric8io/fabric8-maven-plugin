@@ -67,7 +67,7 @@ Global configuration parameters specify overall behavior common for all images t
 
 | *apiVersion*
 | Use this variable if you are using an older version of docker not compatible with the current default use to communicate with the server.
-| `docker.apiVersion`
+| `fabric8.apiVersion`
 
  | *authConfig*
 | Authentication information when pulling from or pushing to Docker registry. There is a dedicated section <<authentication, Authentication>> for how doing security.
@@ -81,7 +81,7 @@ a| Decide how to pull missing base images or images to start:
  * `always` : Pull images always even when they are already exist locally
  * `once` : For multi-module builds images are only checked once and pulled for the whole build.
 
-| `docker.autoPull`
+| `fabric8.autoPull`
 
 | *buildRecreate*
 a| If the effective <<build-mode,mode>> is `openshift` then this option decides how the OpenShift resource objects associated with the build should be treated when they already exist:
@@ -105,7 +105,7 @@ By default S2I is used.
 
 | *certPath*
 | Path to SSL certificate when SSL is used for communicating with the Docker daemon. These certificates are normally stored in `~/.docker/`. With this configuration the path can be set explicitly. If not set, the fallback is first taken from the environment variable `DOCKER_CERT_PATH` and then as last resort `~/.docker/`. The keys in this are expected with it standard names `ca.pem`, `cert.pem` and `key.pem`. Please refer to the https://docs.docker.com/articles/https[Docker documentation] for more information about SSL security with Docker.
-| `docker.certPath`
+| `fabric8.certPath`
 
 | *dockerHost*
 a| The URL of the Docker Daemon. If this configuration option is not given, then the optional `<machine>` configuration section is consulted. The scheme of the URL can be either given directly as `http` or `https`
@@ -117,15 +117,15 @@ the scheme `unix` together with the filesystem path to the unix socket.
 The discovery sequence used by the docker-maven-plugin to determine
 the URL is:
 
-. value of *dockerHost* (`docker.host`)
+. value of *dockerHost* (`fabric8.host`)
 . the Docker host associated with the docker-machine named in `<machine>`, i.e. the `DOCKER_HOST` from `docker-machine env`. See <<docker-machine,below>> for more information about Docker machine support.
 . the value of the environment variable `DOCKER_HOST`.
 . `unix:///var/run/docker.sock` if it is a readable socket.
-| `docker.host`
+| `fabric8.host`
 
 | *image*
-| In order to temporarily restrict the operation of plugin goals this configuration option can be used. Typically this will be set via the system property `docker.image` when Maven is called. The value can be a single image name (either its alias or full name) or it can be a comma separated list with multiple image names. Any name which doesn't refer an image in the configuration will be ignored.
-| `docker.image`
+| In order to temporarily restrict the operation of plugin goals this configuration option can be used. Typically this will be set via the system property `fabric8.image` when Maven is called. The value can be a single image name (either its alias or full name) or it can be a comma separated list with multiple image names. Any name which doesn't refer an image in the configuration will be ignored.
+| `fabric8.image`
 
 | *machine*
 | Docker machine configuration. See <<docker-machine, Docker Machine>> for possible values
@@ -143,7 +143,7 @@ a| The build mode which can be
 
 | *maxConnections*
 | Number of parallel connections are allowed to be opened to the Docker Host. For parsing log output, a connection needs to be kept open (as well for the wait features), so don't put that number to low. Default is 100 which should be suitable for most of the cases.
-| `docker.maxConnections`
+| `fabric8.maxConnections`
 
 | *access*
 | Group of configuration parameters to connect to Kubernetes/OpenShift cluster
@@ -151,7 +151,7 @@ a| The build mode which can be
 
 | *outputDirectory*
 | Default output directory to be used by this plugin. The default value is `target/docker` and is only used for the goal `{plugin}:build`.
-| `docker.target.dir`
+| `fabric8.target.dir`
 
 | *portPropertyFile*
 | Global property file into which the mapped properties should be written to. The format of this file and its purpose are also described in <<start-port-mapping,Port Mapping>>.
@@ -169,7 +169,7 @@ a| The build mode which can be
 
 | *registry*
 | Specify globally a registry to use for pulling and pushing images. See <<registry,Registry handling>> for details.
-| `docker.registry`
+| `fabric8.registry`
 
 | *resourceDir*
 | Directory where fabric8 resources are stored. This is also the directory where a custom profile is looked up. Default is `src/main/fabric8`.
@@ -181,11 +181,11 @@ a| The build mode which can be
 
 | *skip*
 | With this parameter the execution of this plugin can be skipped completely.
-| `docker.skip`
+| `fabric8.skip`
 
 | *skipBuild*
 | If set not images will be build (which implies also _skip.tag_) with `{plugin}:build`
-| `docker.skip.build`
+| `fabric8.skip.build`
 
 | *skipBuildPom*
 | If set the build step will be skipped for modules of type `pom`. If not set, then by default projects of type `pom` will be skipped if there are no image configurations contained.
@@ -193,19 +193,19 @@ a| The build mode which can be
 
 | *skipTag*
 | If set to `true` this plugin won't add any tags to images that have been built with `{plugin}:build`
-| `docker.skip.tag`
+| `fabric8.skip.tag`
 
 | *skipMachine*
 | Skip using docker machine in any case
-| `docker.skip.machine`
+| `fabric8.skip.machine`
 
 | *sourceDirectory*
 | Default directory that contains the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This option is only relevant for the `{plugin}:build` goal.
-| `docker.source.dir`
+| `fabric8.source.dir`
 
 | *verbose*
 | Boolean attribute for switching on verbose output like the build steps when doing a Docker build. Default is `false`
-| `docker.verbose`
+| `fabric8.verbose`
 |===
 
 === Access Configuration
