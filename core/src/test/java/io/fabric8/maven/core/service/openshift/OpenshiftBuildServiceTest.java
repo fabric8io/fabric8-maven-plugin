@@ -191,74 +191,104 @@ public class OpenshiftBuildServiceTest {
 
     @Test
     public void testDockerBuild() throws Exception {
-        final io.fabric8.maven.docker.service.BuildService.BuildContext context
-                = new io.fabric8.maven.docker.service.BuildService.BuildContext.Builder()
-                .registryConfig(new RegistryService.RegistryConfig.Builder().build())
-                .build();
+        int nTries = 0;
+        boolean bTestComplete = false;
+        do {
+            try {
+                nTries++;
 
-        BuildService.BuildServiceConfig.Builder dockerConfig = new BuildService.BuildServiceConfig.Builder()
-                .buildDirectory(baseDir)
-                .dockerBuildContext(context)
-                .buildRecreateMode(BuildRecreateMode.none)
-                .s2iBuildNameSuffix("-docker")
-                .openshiftBuildStrategy(OpenShiftBuildStrategy.docker)
-                .dockerMojoParameters(dockerMojoParameters);
+                final io.fabric8.maven.docker.service.BuildService.BuildContext context
+                        = new io.fabric8.maven.docker.service.BuildService.BuildContext.Builder()
+                        .registryConfig(new RegistryService.RegistryConfig.Builder().build())
+                        .build();
 
-        BuildService.BuildServiceConfig config = dockerConfig.build();
-        WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, true, 50,
-                false, false);
-        OpenShiftMockServer mockServer = collector.getMockServer();
+                BuildService.BuildServiceConfig.Builder dockerConfig = new BuildService.BuildServiceConfig.Builder()
+                        .buildDirectory(baseDir)
+                        .dockerBuildContext(context)
+                        .buildRecreateMode(BuildRecreateMode.none)
+                        .s2iBuildNameSuffix("-docker")
+                        .openshiftBuildStrategy(OpenShiftBuildStrategy.docker)
+                        .dockerMojoParameters(dockerMojoParameters);
 
-        DefaultOpenShiftClient client = (DefaultOpenShiftClient) mockServer.createOpenShiftClient();
-        OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
-        service.build(image);
+                BuildService.BuildServiceConfig config = dockerConfig.build();
+                WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, true, 50,
+                        false, false);
+                OpenShiftMockServer mockServer = collector.getMockServer();
 
-        assertTrue(mockServer.getRequestCount() > 8);
-        collector.assertEventsRecordedInOrder("build-config-check", "new-build-config", "pushed");
-        assertEquals("{\"apiVersion\":\"build.openshift.io/v1\",\"kind\":\"BuildConfig\",\"metadata\":{\"annotations\":{},\"labels\":{},\"name\":\"myapp-docker\"},\"spec\":{\"nodeSelector\":{},\"output\":{\"to\":{\"kind\":\"ImageStreamTag\",\"name\":\"myapp:latest\"}},\"source\":{\"type\":\"Binary\"},\"strategy\":{\"dockerStrategy\":{\"from\":{\"kind\":\"DockerImage\",\"name\":\"myapp\"}},\"type\":\"Docker\"},\"triggers\":[]}}", collector.getBodies().get(1));
-        collector.assertEventsNotRecorded("patch-build-config");
+                DefaultOpenShiftClient client = (DefaultOpenShiftClient) mockServer.createOpenShiftClient();
+                OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
+                service.build(image);
 
+                assertTrue(mockServer.getRequestCount() > 8);
+                collector.assertEventsRecordedInOrder("build-config-check", "new-build-config", "pushed");
+                assertEquals("{\"apiVersion\":\"build.openshift.io/v1\",\"kind\":\"BuildConfig\",\"metadata\":{\"annotations\":{},\"labels\":{},\"name\":\"myapp-docker\"},\"spec\":{\"nodeSelector\":{},\"output\":{\"to\":{\"kind\":\"ImageStreamTag\",\"name\":\"myapp:latest\"}},\"source\":{\"type\":\"Binary\"},\"strategy\":{\"dockerStrategy\":{\"from\":{\"kind\":\"DockerImage\",\"name\":\"myapp\"}},\"type\":\"Docker\"},\"triggers\":[]}}", collector.getBodies().get(1));
+                collector.assertEventsNotRecorded("patch-build-config");
+                bTestComplete = true;
+            } catch (Fabric8ServiceException exception) {
+                Throwable rootCause = getRootCause(exception);
+                logger.warn("A problem encountered while running test {}, retrying..", exception.getMessage());
+                // Let's wait for a while, and then retry again
+                if (rootCause != null && rootCause instanceof IOException) {
+                    continue;
+                }
+            }
+        } while (nTries < MAX_TIMEOUT_RETRIES && !bTestComplete);
     }
 
     @Test
     public void testDockerBuildFromExt() throws Exception {
-        final io.fabric8.maven.docker.service.BuildService.BuildContext context
-                = new io.fabric8.maven.docker.service.BuildService.BuildContext.Builder()
-                .registryConfig(new RegistryService.RegistryConfig.Builder().build())
-                .build();
+        int nTries = 0;
+        boolean bTestComplete = false;
+        do {
+            try {
+                nTries++;
 
-        BuildService.BuildServiceConfig.Builder dockerConfig = new BuildService.BuildServiceConfig.Builder()
-                .buildDirectory(baseDir)
-                .dockerBuildContext(context)
-                .buildRecreateMode(BuildRecreateMode.none)
-                .s2iBuildNameSuffix("-docker")
-                .openshiftBuildStrategy(OpenShiftBuildStrategy.docker)
-                .dockerMojoParameters(dockerMojoParameters);
+                final io.fabric8.maven.docker.service.BuildService.BuildContext context
+                        = new io.fabric8.maven.docker.service.BuildService.BuildContext.Builder()
+                        .registryConfig(new RegistryService.RegistryConfig.Builder().build())
+                        .build();
 
-        BuildService.BuildServiceConfig config = dockerConfig.build();
-        WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, true, 50,
-                false, false);
-        OpenShiftMockServer mockServer = collector.getMockServer();
+                BuildService.BuildServiceConfig.Builder dockerConfig = new BuildService.BuildServiceConfig.Builder()
+                        .buildDirectory(baseDir)
+                        .dockerBuildContext(context)
+                        .buildRecreateMode(BuildRecreateMode.none)
+                        .s2iBuildNameSuffix("-docker")
+                        .openshiftBuildStrategy(OpenShiftBuildStrategy.docker)
+                        .dockerMojoParameters(dockerMojoParameters);
 
-        DefaultOpenShiftClient client = (DefaultOpenShiftClient) mockServer.createOpenShiftClient();
-        OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
-        Map<String,String> fromExt = ImmutableMap.of("name", "app:1.2-1",
-                "kind", "ImageStreamTag",
-                "namespace", "my-project");
-        ImageConfiguration fromExtImage = new ImageConfiguration.Builder()
-                .name(projectName)
-                .buildConfig(new BuildImageConfiguration.Builder()
-                        .fromExt(fromExt)
-                        .build()
-                ).build();
+                BuildService.BuildServiceConfig config = dockerConfig.build();
+                WebServerEventCollector<OpenShiftMockServer> collector = createMockServer(config, true, 50,
+                        false, false);
+                OpenShiftMockServer mockServer = collector.getMockServer();
 
-        service.build(fromExtImage);
+                DefaultOpenShiftClient client = (DefaultOpenShiftClient) mockServer.createOpenShiftClient();
+                OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
+                Map<String,String> fromExt = ImmutableMap.of("name", "app:1.2-1",
+                        "kind", "ImageStreamTag",
+                        "namespace", "my-project");
+                ImageConfiguration fromExtImage = new ImageConfiguration.Builder()
+                        .name(projectName)
+                        .buildConfig(new BuildImageConfiguration.Builder()
+                                .fromExt(fromExt)
+                                .build()
+                        ).build();
 
-        assertTrue(mockServer.getRequestCount() > 8);
-        collector.assertEventsRecordedInOrder("build-config-check", "new-build-config", "pushed");
-        assertEquals("{\"apiVersion\":\"build.openshift.io/v1\",\"kind\":\"BuildConfig\",\"metadata\":{\"annotations\":{},\"labels\":{},\"name\":\"myapp-docker\"},\"spec\":{\"nodeSelector\":{},\"output\":{\"to\":{\"kind\":\"ImageStreamTag\",\"name\":\"myapp:latest\"}},\"source\":{\"type\":\"Binary\"},\"strategy\":{\"dockerStrategy\":{\"from\":{\"kind\":\"ImageStreamTag\",\"name\":\"app:1.2-1\",\"namespace\":\"my-project\"}},\"type\":\"Docker\"},\"triggers\":[]}}", collector.getBodies().get(1));
-        collector.assertEventsNotRecorded("patch-build-config");
+                service.build(fromExtImage);
 
+                assertTrue(mockServer.getRequestCount() > 8);
+                collector.assertEventsRecordedInOrder("build-config-check", "new-build-config", "pushed");
+                assertEquals("{\"apiVersion\":\"build.openshift.io/v1\",\"kind\":\"BuildConfig\",\"metadata\":{\"annotations\":{},\"labels\":{},\"name\":\"myapp-docker\"},\"spec\":{\"nodeSelector\":{},\"output\":{\"to\":{\"kind\":\"ImageStreamTag\",\"name\":\"myapp:latest\"}},\"source\":{\"type\":\"Binary\"},\"strategy\":{\"dockerStrategy\":{\"from\":{\"kind\":\"ImageStreamTag\",\"name\":\"app:1.2-1\",\"namespace\":\"my-project\"}},\"type\":\"Docker\"},\"triggers\":[]}}", collector.getBodies().get(1));
+                collector.assertEventsNotRecorded("patch-build-config");
+                bTestComplete = true;
+            } catch (Fabric8ServiceException exception) {
+                Throwable rootCause = getRootCause(exception);
+                logger.warn("A problem encountered while running test {}, retrying..", exception.getMessage());
+                // Let's wait for a while, and then retry again
+                if (rootCause != null && rootCause instanceof IOException) {
+                    continue;
+                }
+            }
+        } while (nTries < MAX_TIMEOUT_RETRIES && !bTestComplete);
     }
 
     @Test
