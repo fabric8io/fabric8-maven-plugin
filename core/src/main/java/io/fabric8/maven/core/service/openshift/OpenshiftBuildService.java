@@ -288,10 +288,28 @@ public class OpenshiftBuildService implements BuildService {
 
     private BuildStrategy createBuildStrategy(ImageConfiguration imageConfig, OpenShiftBuildStrategy osBuildStrategy, String openshiftPullSecret) {
         if (osBuildStrategy == OpenShiftBuildStrategy.docker) {
-            BuildStrategy buildStrategy = new BuildStrategyBuilder().withType("Docker")
-                    .withNewDockerStrategy()
-                    .endDockerStrategy().build();
+            BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+            Map<String, String> fromExt = buildConfig.getFromExt();
+            String fromName, fromKind, fromNamespace;
 
+            if(buildConfig.isDockerFileMode()) {
+                fromName = extractBaseFromDockerfile(buildConfig, config.getDockerBuildContext());
+            } else {
+                fromName = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.name, buildConfig.getFrom());
+            }
+            fromKind = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.kind, "DockerImage");
+            fromNamespace = getMapValueWithDefault(fromExt, OpenShiftBuildStrategy.SourceStrategy.namespace, "ImageStreamTag".equals(fromKind) ? "openshift" : null);
+
+            BuildStrategy buildStrategy = new BuildStrategyBuilder()
+                    .withType("Docker")
+                    .withNewDockerStrategy()
+                    .withNewFrom()
+                    .withKind(fromKind)
+                    .withName(fromName)
+                    .withNamespace(StringUtils.isEmpty(fromNamespace) ? null : fromNamespace)
+                    .endFrom()
+                    .endDockerStrategy().build();
+            
             if (openshiftPullSecret != null) {
                 buildStrategy.getDockerStrategy().setPullSecret(new LocalObjectReferenceBuilder()
                 .withName(openshiftPullSecret)
