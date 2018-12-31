@@ -193,10 +193,16 @@ public class ApplyMojo extends AbstractFabric8Mojo {
     @Parameter(property = "fabric8.s2i.buildNameSuffix", defaultValue = "-s2i")
     protected String s2iBuildNameSuffix;
 
+    @Parameter(property = "fabric8.skip.apply", defaultValue = "false")
+    protected boolean skipApply;
+
     private ClusterAccess clusterAccess;
     protected ApplyService applyService;
 
     public void executeInternal() throws MojoExecutionException {
+        if (skipApply) {
+            return;
+        }
 
         clusterAccess = new ClusterAccess(getClusterConfiguration());
 
