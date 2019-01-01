@@ -518,7 +518,7 @@ public class OpenshiftBuildService implements BuildService {
         final AtomicReference<Build> buildHolder = new AtomicReference<>();
 
         // Don't query for logs directly, Watch over the build pod:
-        waitUntilPodIsReady(buildName + "-build", 60, log);
+        waitUntilPodIsReady(buildName + "-build", 120, log);
         log.info("Waiting for build " + buildName + " to complete...");
         try (LogWatch logWatch = client.pods().withName(buildName + "-build").watchLog()) {
             KubernetesClientUtil.printLogsAsync(logWatch,
