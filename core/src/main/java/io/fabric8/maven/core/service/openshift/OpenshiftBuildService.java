@@ -339,6 +339,7 @@ public class OpenshiftBuildService implements BuildService {
                     .withName(fromName)
                     .withNamespace(StringUtils.isEmpty(fromNamespace) ? null : fromNamespace)
                     .endFrom()
+                    .withForcePull(config.isForcePullEnabled())
                     .endSourceStrategy()
                     .build();
             if (openshiftPullSecret != null) {

@@ -147,6 +147,16 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     private boolean s2iImageStreamLookupPolicyLocal = true;
 
     /**
+     * While creating a BuildConfig, By default, if the builder image specified in the
+     * build configuration is available locally on the node, that image will be used.
+     *
+     * ForcePull to override the local image and refresh it from the registry to which the image stream points.
+     *
+     */
+    @Parameter(property = "fabric8.build.forcePull", defaultValue = "false")
+    private boolean forcePull = false;
+
+    /**
      * Should we use the project's compile-time classpath to scan for additional enrichers/generators?
      */
     @Parameter(property = "fabric8.useProjectClasspath", defaultValue = "false")
@@ -293,6 +303,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .openshiftPullSecret(openshiftPullSecret)
                 .s2iBuildNameSuffix(s2iBuildNameSuffix)
                 .s2iImageStreamLookupPolicyLocal(s2iImageStreamLookupPolicyLocal)
+                .forcePullEnabled(forcePull)
                 .imagePullManager(getImagePullManager(imagePullPolicy, autoPull))
                 .buildDirectory(project.getBuild().getDirectory())
                 .attacher((classifier, destFile) -> {

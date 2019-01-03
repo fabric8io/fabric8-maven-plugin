@@ -57,6 +57,8 @@ public interface BuildService {
 
         private OpenShiftBuildStrategy openshiftBuildStrategy;
 
+        private boolean forcePull;
+
         private String s2iBuildNameSuffix;
 
         private String openshiftPullSecret;
@@ -116,6 +118,10 @@ public interface BuildService {
             return s2iImageStreamLookupPolicyLocal;
         }
 
+        public boolean isForcePullEnabled() {
+            return forcePull;
+        }
+
         public void attachArtifact(String classifier, File destFile) {
             if (attacher != null) {
                 attacher.attach(classifier, destFile);
@@ -150,6 +156,11 @@ public interface BuildService {
 
             public Builder openshiftBuildStrategy(OpenShiftBuildStrategy openshiftBuildStrategy) {
                 config.openshiftBuildStrategy = openshiftBuildStrategy;
+                return this;
+            }
+
+            public Builder forcePullEnabled(boolean forcePull) {
+                config.forcePull = forcePull;
                 return this;
             }
 
