@@ -92,6 +92,9 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     @Parameter(property = "fabric8.build.strategy" )
     private OpenShiftBuildStrategy buildStrategy = OpenShiftBuildStrategy.s2i;
 
+    @Parameter(property = "docker.skip.push", defaultValue = "false")
+    protected boolean skipPush;
+
     @Override
     protected String getLogPrefix() {
         return "F8> ";
@@ -99,7 +102,7 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        if (skip) {
+        if (skip || skipPush) {
             return;
         }
         super.execute();
