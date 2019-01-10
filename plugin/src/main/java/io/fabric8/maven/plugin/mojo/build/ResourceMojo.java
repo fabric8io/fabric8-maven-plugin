@@ -317,6 +317,9 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     @Parameter(property = "kompose.dir", defaultValue = "${user.home}/.kompose/bin")
     private File komposeBinDir;
 
+    @Parameter(property = "docker.skip.resource", defaultValue = "false")
+    protected boolean skipResource;
+
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
 
@@ -427,6 +430,10 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     }
 
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
+        if (skipResource) {
+            return;
+        }
+
         realResourceDir = ResourceDirCreator.getFinalResourceDir(resourceDir, environment);
         realResourceDirOpenShiftOverride = ResourceDirCreator.getFinalResourceDir(resourceDirOpenShiftOverride, environment);
 

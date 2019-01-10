@@ -172,6 +172,9 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter(property = "fabric8.build.recreate", defaultValue = "none")
     private String buildRecreate;
 
+    @Parameter(property = "docker.skip.build", defaultValue = "false")
+    protected boolean skipBuild;
+
     @Component
     private MavenProjectHelper projectHelper;
 
@@ -215,6 +218,10 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     @Override
     protected void executeInternal(ServiceHub hub) throws MojoExecutionException {
+        if (skipBuild) {
+            return;
+        }
+
         try {
             if (shouldSkipBecauseOfPomPackaging()) {
                 getLog().info("Disabling docker build for pom packaging");
