@@ -18,9 +18,12 @@ package io.fabric8.maven.core.service.openshift;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.maven.core.service.PatchService;
+import io.fabric8.maven.core.util.WebServerEventCollector;
 import io.fabric8.maven.core.util.kubernetes.UserConfigurationCompare;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftMockServer;
@@ -31,6 +34,7 @@ import io.fabric8.maven.docker.util.Logger;
 import java.util.Collections;
 
 import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 public class PatchServiceTest {
     @Mocked
@@ -67,6 +71,34 @@ public class PatchServiceTest {
 
         assertTrue(UserConfigurationCompare.configEqual(patchedService.getSpec(), oldService.getSpec()));
         assertTrue(UserConfigurationCompare.configEqual(patchedService.getMetadata(), newService.getMetadata()));
+    }
+
+    @Test
+    public void testSecretPatching() {
+        Secret oldSecret = new SecretBuilder()
+                .withNewMetadata().withName("secret").endMetadata()
+                .addToData("test", "dGVzdA==")
+                .build();
+        Secret newSecret = new SecretBuilder()
+                .withNewMetadata().withName("secret").endMetadata()
+                .addToStringData("test", "test")
+                .build();
+        WebServerEventCollector<OpenShiftMockServer> collector = new WebServerEventCollector<>(mockServer);
+        mockServer.expect().get().withPath("/api/v1/namespaces/test/secrets/secret")
+                .andReply(collector.record("get-secret").andReturn(200, oldSecret)).always();
+        mockServer.expect().patch().withPath("/api/v1/namespaces/test/secrets/secret")
+                .andReply(collector.record("patch-secret")
+                        .andReturn(200, new SecretBuilder().withMetadata(newSecret.getMetadata())
+                                .addToStringData(oldSecret.getData()).build())).once();
+
+        OpenShiftClient client = mockServer.createOpenShiftClient();
+
+        PatchService patchService = new PatchService(client, log);
+
+        patchService.compareAndPatchEntity("test", newSecret, oldSecret);
+        collector.assertEventsRecordedInOrder("get-secret", "get-secret", "patch-secret");
+        assertEquals("[{\"op\":\"remove\",\"path\":\"/data\"},{\"op\":\"add\",\"path\":\"/stringData\",\"value\":{\"test\":\"test\"}}]", collector.getBodies().get(2));
+
     }
 
     @Test(expected = IllegalArgumentException.class)
