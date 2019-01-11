@@ -270,6 +270,7 @@ public class OpenshiftBuildServiceTest {
                         .name(projectName)
                         .buildConfig(new BuildImageConfiguration.Builder()
                                 .fromExt(fromExt)
+                                .nocache(Boolean.TRUE)
                                 .build()
                         ).build();
 
@@ -277,7 +278,7 @@ public class OpenshiftBuildServiceTest {
 
                 assertTrue(mockServer.getRequestCount() > 8);
                 collector.assertEventsRecordedInOrder("build-config-check", "new-build-config", "pushed");
-                assertEquals("{\"apiVersion\":\"build.openshift.io/v1\",\"kind\":\"BuildConfig\",\"metadata\":{\"annotations\":{},\"labels\":{},\"name\":\"myapp-docker\"},\"spec\":{\"nodeSelector\":{},\"output\":{\"to\":{\"kind\":\"ImageStreamTag\",\"name\":\"myapp:latest\"}},\"source\":{\"type\":\"Binary\"},\"strategy\":{\"dockerStrategy\":{\"from\":{\"kind\":\"ImageStreamTag\",\"name\":\"app:1.2-1\",\"namespace\":\"my-project\"}},\"type\":\"Docker\"},\"triggers\":[]}}", collector.getBodies().get(1));
+                assertEquals("{\"apiVersion\":\"build.openshift.io/v1\",\"kind\":\"BuildConfig\",\"metadata\":{\"annotations\":{},\"labels\":{},\"name\":\"myapp-docker\"},\"spec\":{\"nodeSelector\":{},\"output\":{\"to\":{\"kind\":\"ImageStreamTag\",\"name\":\"myapp:latest\"}},\"source\":{\"type\":\"Binary\"},\"strategy\":{\"dockerStrategy\":{\"from\":{\"kind\":\"ImageStreamTag\",\"name\":\"app:1.2-1\",\"namespace\":\"my-project\"},\"noCache\":true},\"type\":\"Docker\"},\"triggers\":[]}}", collector.getBodies().get(1));
                 collector.assertEventsNotRecorded("patch-build-config");
                 bTestComplete = true;
             } catch (Fabric8ServiceException exception) {
