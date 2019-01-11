@@ -175,6 +175,9 @@ public class PatchService {
             if(!UserConfigurationCompare.configEqual(newObj.getData(), oldObj.getData())) {
                     entity.withData(newObj.getData());
             }
+            if(!UserConfigurationCompare.configEqual(newObj.getStringData(), oldObj.getStringData())) {
+                entity.withStringData(newObj.getStringData());
+            }
             return entity.done();
         };
     }
