@@ -308,6 +308,7 @@ public class OpenshiftBuildService implements BuildService {
                     .withName(fromName)
                     .withNamespace(StringUtils.isEmpty(fromNamespace) ? null : fromNamespace)
                     .endFrom()
+                    .withNoCache(checkForNocache(imageConfig))
                     .endDockerStrategy().build();
             
             if (openshiftPullSecret != null) {
@@ -350,6 +351,16 @@ public class OpenshiftBuildService implements BuildService {
 
         } else {
             throw new IllegalArgumentException("Unsupported BuildStrategy " + osBuildStrategy);
+        }
+    }
+
+    private Boolean checkForNocache(ImageConfiguration imageConfig) {
+        String nocache = System.getProperty("docker.nocache");
+        if (nocache != null) {
+            return nocache.length() == 0 || Boolean.valueOf(nocache);
+        } else {
+            BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+            return buildConfig.getNoCache();
         }
     }
 
