@@ -18,6 +18,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 690: Removes deprecated _legacyPortMapping_ property.
 * Fix 1458: Support for from Image configuration in openshift docker build strategy
 * Fix 732: Added 'skip' options to goals.
+* Fix 1466: Allow to configure noCache option for openshift docker build strategy
 
 ### 4.0.0-M2 (2018-12-14)
 * Fix 10: Make VolumeConfiguration more flexible
