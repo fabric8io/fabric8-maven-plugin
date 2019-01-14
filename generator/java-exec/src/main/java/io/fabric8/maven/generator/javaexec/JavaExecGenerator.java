@@ -168,9 +168,7 @@ public class JavaExecGenerator extends BaseGenerator {
     }
 
     protected AssemblyConfiguration createAssembly() throws MojoExecutionException {
-        AssemblyConfiguration.Builder builder = new AssemblyConfiguration.Builder().targetDir(getConfig(Config.targetDir));
-        addAssembly(builder);
-        return builder.build();
+        return getAssemblyConfiguration(new AssemblyConfiguration.Builder().targetDir(getConfig(Config.targetDir)));
     }
 
     protected void addAssembly(AssemblyConfiguration.Builder builder) throws MojoExecutionException {
@@ -196,6 +194,15 @@ public class JavaExecGenerator extends BaseGenerator {
             }
             builder.assemblyDef(assembly);
         }
+    }
+
+    protected AssemblyConfiguration createAssembly(AssemblyConfiguration.Builder builder) throws MojoExecutionException {
+        return getAssemblyConfiguration(builder);
+    }
+
+    private AssemblyConfiguration getAssemblyConfiguration(AssemblyConfiguration.Builder builder) throws MojoExecutionException {
+        addAssembly(builder);
+        return builder.build();
     }
 
     private void addAdditionalFiles(Assembly assembly) {

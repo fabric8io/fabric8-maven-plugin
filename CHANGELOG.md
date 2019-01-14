@@ -20,6 +20,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 732: Added 'skip' options to goals.
 * Fix 1467: Wait timeout for build pod is too small
 * Fix 1466: Allow to configure noCache option for openshift docker build strategy
+* Fix 1079: fabric8-includes does not seem to work with Karaf generator
 
 ### 4.0.0-M2 (2018-12-14)
 * Fix 10: Make VolumeConfiguration more flexible

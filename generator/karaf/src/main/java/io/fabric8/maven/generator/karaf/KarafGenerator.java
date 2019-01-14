@@ -24,17 +24,16 @@ import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.GeneratorContext;
-import io.fabric8.maven.generator.api.support.BaseGenerator;
-import org.apache.commons.lang3.StringUtils;
+import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
+import org.apache.maven.plugin.MojoExecutionException;
 
-public class KarafGenerator extends BaseGenerator {
+public class KarafGenerator extends JavaExecGenerator {
 
     private static final String KARAF_MAVEN_PLUGIN_ARTIFACT_ID = "karaf-maven-plugin";
 
     public KarafGenerator(GeneratorContext context) {
-        super(context, "karaf", new FromSelector.Default(context,"karaf"));
+        super(context, "karaf");
     }
 
     private enum Config implements Configs.Key {
@@ -48,14 +47,17 @@ public class KarafGenerator extends BaseGenerator {
     }
 
     @Override
-    public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean prePackagePhase) {
+    public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean prePackagePhase) throws MojoExecutionException {
         ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
         BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
             .ports(extractPorts())
             .cmd(new Arguments(getConfig(Config.cmd)));
         addFrom(buildBuilder);
         if (!prePackagePhase) {
-            buildBuilder.assembly(createAssembly());
+            buildBuilder.assembly(createAssembly(new AssemblyConfiguration.Builder()
+              .targetDir(getConfig(Config.baseDir))
+              .user(getConfig(Config.user))
+              .descriptorRef("karaf")));
         }
         addLatestTagIfSnapshot(buildBuilder);
         imageBuilder
@@ -77,19 +79,5 @@ public class KarafGenerator extends BaseGenerator {
         addPortIfValid(answer, getConfig(Config.webPort));
         addPortIfValid(answer, getConfig(Config.jolokiaPort));
         return answer;
-    }
-
-    private void addPortIfValid(List<String> list, String port) {
-        if (StringUtils.isNotBlank(port)) {
-            list.add(port);
-        }
-    }
-
-    private AssemblyConfiguration createAssembly() {
-        return new AssemblyConfiguration.Builder()
-            .targetDir(getConfig(Config.baseDir))
-            .user(getConfig(Config.user))
-            .descriptorRef("karaf")
-            .build();
     }
 }
