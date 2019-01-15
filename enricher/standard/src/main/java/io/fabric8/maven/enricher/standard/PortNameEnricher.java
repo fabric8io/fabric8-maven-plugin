@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import io.fabric8.maven.core.config.ResourceConfig;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -52,6 +53,12 @@ public class PortNameEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
+
+        getConfiguration().getResource().ifPresent(resourceConfig -> {
+            overrideEnvironmentVariables(builder, resourceConfig.getEnv()
+                .orElse(new HashMap<>()));
+        });
+
         builder.accept(new TypedVisitor<ContainerPortBuilder>() {
             @Override
             public void visit(ContainerPortBuilder portBuilder) {

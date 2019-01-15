@@ -15,6 +15,8 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import io.fabric8.maven.core.config.ResourceConfig;
+import java.util.HashMap;
 import java.util.Map;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
@@ -36,6 +38,12 @@ public abstract class SecretEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
+
+        getConfiguration().getResource().ifPresent(resourceConfig -> {
+            overrideEnvironmentVariables(builder, resourceConfig.getEnv()
+                .orElse(new HashMap<>()));
+        });
+
         // update builder
         // use a selector to choose all secret builder in kubernetes list builders.
         // try to find the target annotations

@@ -15,6 +15,8 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import io.fabric8.maven.core.config.ResourceConfig;
+import java.util.HashMap;
 import java.util.List;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -38,6 +40,11 @@ public class PodAnnotationEnricher extends BaseEnricher {
 
     @Override
     public void adapt(KubernetesListBuilder builder) {
+        getConfiguration().getResource().ifPresent(resourceConfig -> {
+            overrideEnvironmentVariables(builder, resourceConfig.getEnv()
+                .orElse(new HashMap<>()));
+        });
+
         super.adapt(builder);
 
         List<HasMetadata> items = builder.getItems();

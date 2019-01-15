@@ -16,7 +16,9 @@
 
 package io.fabric8.maven.enricher.standard.openshift;
 
+import io.fabric8.maven.core.config.ResourceConfig;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,6 +49,12 @@ public class RouteEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(final KubernetesListBuilder listBuilder) {
+
+        getConfiguration().getResource().ifPresent(resourceConfig -> {
+            overrideEnvironmentVariables(listBuilder, resourceConfig.getEnv()
+                .orElse(new HashMap<>()));
+        });
+
         final List<Route> routes = new ArrayList<>();
         listBuilder.accept(new TypedVisitor<ServiceBuilder>() {
 

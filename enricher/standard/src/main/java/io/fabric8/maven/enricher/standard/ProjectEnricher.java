@@ -18,6 +18,7 @@ package io.fabric8.maven.enricher.standard;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
@@ -69,6 +70,12 @@ public class ProjectEnricher extends BaseEnricher {
 
     @Override
     public void adapt(KubernetesListBuilder builder) {
+
+        getConfiguration().getResource().ifPresent(resourceConfig -> {
+            overrideEnvironmentVariables(builder, resourceConfig.getEnv()
+                .orElse(new HashMap<>()));
+        });
+
         // Add to all objects in the builder
         builder.accept(new TypedVisitor<ObjectMetaBuilder>() {
             @Override

@@ -41,6 +41,7 @@ import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -96,6 +97,12 @@ public class DefaultControllerEnricher extends BaseEnricher {
 
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
+
+        getConfiguration().getResource().ifPresent(resourceConfig -> {
+                overrideEnvironmentVariables(builder, resourceConfig.getEnv()
+                    .orElse(new HashMap<>()));
+        });
+
         final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getSanitizedArtifactId()));
         ResourceConfig config = new ResourceConfig.Builder(getConfiguration().getResource().orElse(null))
                 .controllerName(name)
