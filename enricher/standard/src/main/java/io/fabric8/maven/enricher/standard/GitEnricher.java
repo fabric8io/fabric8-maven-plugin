@@ -39,6 +39,8 @@ import org.eclipse.jgit.lib.Repository;
  */
 public class GitEnricher extends BaseEnricher {
 
+    private String GIT_REMOTE = "fabric8.remoteName";
+
     public GitEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-git");
     }
@@ -60,6 +62,15 @@ public class GitEnricher extends BaseEnricher {
                         String id = GitUtil.getGitCommitId(repository);
                         if (id != null) {
                             annotations.put(Fabric8Annotations.GIT_COMMIT.value(), id);
+                        }
+
+                        String gitRemote = getContext().getConfiguration().getProperties().getProperty(GIT_REMOTE);
+                        gitRemote = gitRemote == null? "origin" : gitRemote;
+                        String gitRemoteUrl = repository.getConfig().getString("remote", gitRemote, "url");
+                        if (gitRemoteUrl != null) {
+                            annotations.put(Fabric8Annotations.GIT_URL.value(), gitRemoteUrl);
+                        } else {
+                            log.warn("Could not detect any git remote");
                         }
                     }
                 }

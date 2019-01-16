@@ -132,6 +132,20 @@ The project labels which are already specified in the input fragments are not ov
 [[fmp-git]]
 ==== fmp-git
 
+Enricher that adds info from .git directory as annotations.
+
+The git branch & latest commit on the branch are annotated as fabric8/git-branch & fabric8/git-commit.
+fabrci8/git-url is annotated as the url of your configured remote.
+
+[cols="2,6,3"]
+|===
+| Option | Description | Default
+
+| `gitRemote`
+| Configures the git remote name, whose url you want to annotate as 'git-url'.
+| `origin`
+|===
+
 [[fmp-dependency]]
 ==== fmp-dependency
 

@@ -22,6 +22,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1466: Allow to configure noCache option for openshift docker build strategy
 * Fix 255: Add option to forcefully reload a s2i builder image.
 * Fix 925: Unable to configure replicas count via property
+* Fix 788: Added Git URL to GitEnricher.
 
 ### 4.0.0-M2 (2018-12-14)
 * Fix 10: Make VolumeConfiguration more flexible
