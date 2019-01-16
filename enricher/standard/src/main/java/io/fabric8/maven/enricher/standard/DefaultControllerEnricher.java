@@ -97,10 +97,11 @@ public class DefaultControllerEnricher extends BaseEnricher {
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
         final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getSanitizedArtifactId()));
-        ResourceConfig config = new ResourceConfig.Builder(getConfiguration().getResource().orElse(null))
+        ResourceConfig xmlResourceConfig = getConfiguration().getResource().orElse(null);
+        ResourceConfig config = new ResourceConfig.Builder(xmlResourceConfig)
                 .controllerName(name)
-                .imagePullPolicy(getConfig(Config.pullPolicy))
-                .withReplicas(Configs.asInt(getConfig(Config.replicaCount)))
+                .imagePullPolicy(getImagePullPolicy(xmlResourceConfig, getConfig(Config.pullPolicy)))
+                .withReplicas(getReplicaCount(xmlResourceConfig, Configs.asInt(getConfig(Config.replicaCount))))
                 .build();
 
         final List<ImageConfiguration> images = getImages().orElse(Collections.emptyList());
@@ -149,5 +150,35 @@ public class DefaultControllerEnricher extends BaseEnricher {
         KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(short.class);
         KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(char.class);
         KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(byte.class);
+    }
+
+    /**
+     * This method just makes sure that the replica count provided in XML config
+     * overrides the default option.
+     *
+     * @param xmlResourceConfig
+     * @param defaultValue
+     * @return
+     */
+    private int getReplicaCount(ResourceConfig xmlResourceConfig, int defaultValue) {
+        if(xmlResourceConfig != null) {
+                return xmlResourceConfig.getReplicas() > 0 ? xmlResourceConfig.getReplicas() : defaultValue;
+        }
+        return defaultValue;
+    }
+
+    /**
+     * This method overrides the ImagePullPolicy value by the value provided in
+     * XML config.
+     *
+     * @param xmlResourceConfig
+     * @param defaultValue
+     * @return
+     */
+    private String getImagePullPolicy(ResourceConfig xmlResourceConfig, String defaultValue) {
+        if(xmlResourceConfig != null) {
+            return xmlResourceConfig.getImagePullPolicy() != null ? xmlResourceConfig.getImagePullPolicy() : defaultValue;
+        }
+        return defaultValue;
     }
 }

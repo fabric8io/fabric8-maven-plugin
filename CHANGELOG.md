@@ -17,11 +17,11 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1460: Upgraded kubernetes client to 4.1.1
 * Fix 690: Removes deprecated _legacyPortMapping_ property.
 * Fix 1458: Support for from Image configuration in openshift docker build strategy
-
 * Fix 732: Added 'skip' options to goals.
 * Fix 1467: Wait timeout for build pod is too small
 * Fix 1466: Allow to configure noCache option for openshift docker build strategy
 * Fix 255: Add option to forcefully reload a s2i builder image.
+* Fix 925: Unable to configure replicas count via property
 
 ### 4.0.0-M2 (2018-12-14)
 * Fix 10: Make VolumeConfiguration more flexible
