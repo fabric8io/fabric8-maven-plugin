@@ -48,6 +48,9 @@ Labels and annotations can be easily added to any resource object. This is best 
       <annotations> <!--7-->
          ...
       </annotations>
+      <remotes> <!--8-->
+        <remote>https://gist.githubusercontent.com/lordofthejars/ac2823cec7831697d09444bbaa76cd50/raw/e4b43f1b6494766dfc635b5959af7730c1a58a93/deployment.yaml</remote>
+      </remotes>
     </resource>
   </configuration>
 </plugin>
@@ -59,6 +62,7 @@ Labels and annotations can be easily added to any resource object. This is best 
 <5> `<pod>` holds labels for pod specifications in replication controller, replica sets and deployments
 <6> `<deployment>` is for labels on deployments (kubernetes) and deployment configs (openshift)
 <7> The subelements are also available for specifying annotations.
+<8> `<remotes>` you can set location of fragments as `URL`.
 
 Labels and annotations can be specified in free form as a map. In this map the element name is the name of the label or annotation respectively, whereas the content is the value to set.
 

@@ -13,6 +13,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 ### 4.0.0-M3-SNAPSHOT
 
 * Feature 601: Adds healthcheck for webapp
+* Feature 804: Allow set fragments as external references (URL)
 
 ### 4.0.0-M2 (2018-12-14)
 * Fix 10: Make VolumeConfiguration more flexible
