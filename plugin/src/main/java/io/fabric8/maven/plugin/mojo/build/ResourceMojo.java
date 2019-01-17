@@ -469,11 +469,13 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     }
 
     private File resolveRemoteResources() {
-        final List<String> remotes = this.resources.getRemotes();
-        if (remotes != null && !remotes.isEmpty()) {
-            final File tempDirectory = FileUtil.createTempDirectory();
-            downloadRemotes(tempDirectory, remotes);
-            return tempDirectory;
+        if (this.resources != null) {
+            final List<String> remotes = this.resources.getRemotes();
+            if (remotes != null && !remotes.isEmpty()) {
+                final File tempDirectory = FileUtil.createTempDirectory();
+                downloadRemotes(tempDirectory, remotes);
+                return tempDirectory;
+            }
         }
 
         return null;
