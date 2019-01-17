@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.core.config;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -47,6 +48,9 @@ public class ResourceConfig {
 
     @Parameter
     private List<ServiceConfig> services;
+
+    @Parameter
+    private List<String> remotes;
 
     @Parameter
     private ConfigMap configMap;
@@ -149,6 +153,10 @@ public class ResourceConfig {
         return configMap;
     }
 
+    public List<String> getRemotes() {
+        return remotes;
+    }
+
     // =============================================================================================
 
     public static class Builder {
@@ -174,6 +182,7 @@ public class ResourceConfig {
                 this.config.services = config.getServices();
                 this.config.metrics = config.getMetrics();
                 this.config.namespace = config.getNamespace();
+                this.config.remotes = config.remotes;
             }
         }
 
@@ -219,6 +228,11 @@ public class ResourceConfig {
 
         public Builder withReadiness(ProbeConfig readiness) {
             config.readiness = readiness;
+            return this;
+        }
+
+        public Builder withRemotes(List<String> remotes) {
+            config.remotes = remotes;
             return this;
         }
 
