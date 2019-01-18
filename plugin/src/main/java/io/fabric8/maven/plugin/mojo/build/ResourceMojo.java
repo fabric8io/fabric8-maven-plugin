@@ -99,7 +99,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import javax.validation.ConstraintViolationException;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -750,7 +749,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             enricherManager.createDefaultResources(builder);
 
             // Enrich descriptors
-            enricherManager.enrich(builder);
             enricherManager.enrich(builder);
 
             return builder;
