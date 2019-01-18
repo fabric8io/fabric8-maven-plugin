@@ -55,11 +55,6 @@ jobs:
         key: fmp-{{ checksum "pom.xml" }}
     - run:
         command: |
-          # Install kompose
-          curl -L https://github.com/kubernetes/kompose/releases/download/v1.16.0/kompose-linux-amd64 -o kompose
-          chmod +x kompose
-          sudo mv ./kompose /usr/local/bin/kompose
-
           # Run maven build
           mvn clean install
     - save_cache:
