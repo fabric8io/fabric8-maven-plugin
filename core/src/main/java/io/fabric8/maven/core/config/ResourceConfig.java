@@ -49,6 +49,9 @@ public class ResourceConfig {
     private List<ServiceConfig> services;
 
     @Parameter
+    private List<String> remotes;
+
+    @Parameter
     private ConfigMap configMap;
 
     @Parameter
@@ -149,6 +152,10 @@ public class ResourceConfig {
         return configMap;
     }
 
+    public List<String> getRemotes() {
+        return remotes;
+    }
+
     // =============================================================================================
 
     public static class Builder {
@@ -174,6 +181,7 @@ public class ResourceConfig {
                 this.config.services = config.getServices();
                 this.config.metrics = config.getMetrics();
                 this.config.namespace = config.getNamespace();
+                this.config.remotes = config.remotes;
             }
         }
 
@@ -219,6 +227,11 @@ public class ResourceConfig {
 
         public Builder withReadiness(ProbeConfig readiness) {
             config.readiness = readiness;
+            return this;
+        }
+
+        public Builder withRemotes(List<String> remotes) {
+            config.remotes = remotes;
             return this;
         }
 
