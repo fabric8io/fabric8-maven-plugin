@@ -120,7 +120,6 @@ import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
-import static io.fabric8.maven.core.util.ResourceFileType.json;
 import static io.fabric8.maven.core.util.ResourceFileType.yaml;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
 
@@ -250,6 +249,11 @@ public class ResourceMojo extends AbstractFabric8Mojo {
      * Enricher specific configuration configuration given through
      * to the various enrichers.
      */
+
+    // Resource specific configuration for this plugin
+    @Parameter(property = "fabric8.gitRemote")
+    private String gitRemote;
+
     @Parameter
     private ProcessorConfig enricher;
 
