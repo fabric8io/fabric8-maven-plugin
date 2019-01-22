@@ -47,6 +47,8 @@ import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.core.service.ComposeService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.core.util.Base64Util;
+import io.fabric8.maven.core.util.FileUtil;
+import io.fabric8.maven.core.util.IoUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.core.util.OpenShiftOverrideResources;
@@ -86,6 +88,8 @@ import io.fabric8.openshift.api.model.Template;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -116,7 +120,6 @@ import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
-import static io.fabric8.maven.core.util.ResourceFileType.json;
 import static io.fabric8.maven.core.util.ResourceFileType.yaml;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
 
@@ -246,6 +249,11 @@ public class ResourceMojo extends AbstractFabric8Mojo {
      * Enricher specific configuration configuration given through
      * to the various enrichers.
      */
+
+    // Resource specific configuration for this plugin
+    @Parameter(property = "fabric8.gitRemote")
+    private String gitRemote;
+
     @Parameter
     private ProcessorConfig enricher;
 
@@ -441,11 +449,12 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         updateKindFilenameMappings();
         try {
             lateInit();
+            final File remoteResources = resolveRemoteResources();
             // Resolve the Docker image build configuration
             resolvedImages = getResolvedImages(images, log);
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
                 // Extract and generate resources which can be a mix of Kubernetes and OpenShift resources
-                KubernetesList resources = generateResources(resolvedImages);
+                KubernetesList resources = generateResources(resolvedImages, remoteResources);
                 // Adapt list to use OpenShift specific resource objects
                 KubernetesList openShiftResources = convertToOpenShiftResources(resources);
                 writeResources(openShiftResources, ResourceClassifier.OPENSHIFT, generateRoute);
@@ -461,6 +470,58 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
         }
+    }
+
+    private File resolveRemoteResources() {
+        if (this.resources != null) {
+            final List<String> remotes = this.resources.getRemotes();
+            if (remotes != null && !remotes.isEmpty()) {
+                final File tempDirectory = FileUtil.createTempDirectory();
+                downloadRemotes(tempDirectory, remotes);
+                return tempDirectory;
+            }
+        }
+
+        return null;
+    }
+
+    private void downloadRemotes(final File outputDirectory, List<String> remotes) {
+
+        if (!outputDirectory.exists()) {
+            try {
+                Files.createDirectories(outputDirectory.toPath());
+            } catch (IOException e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
+
+        remotes.stream()
+            .map(remote -> {
+                try {
+                    return new URL(remote);
+                } catch (MalformedURLException e) {
+                    throw new IllegalArgumentException(e);
+                }
+            })
+            .forEach(url -> {
+                try {
+                    IoUtil.download(this.log, url, new File(outputDirectory, getOutputName(url)));
+                } catch (MojoExecutionException e) {
+                    throw new IllegalArgumentException(e);
+                }
+            });
+    }
+
+    private String getOutputName(URL url) {
+        final String path = url.getPath();
+
+        final int slashIndex = path.lastIndexOf('/');
+        if (slashIndex >= 0) {
+            return path.substring(slashIndex + 1);
+        } else {
+            throw new IllegalArgumentException(String.format("URL %s should contain a name file to be downloaded.", url.toString()));
+        }
+
     }
 
     private void updateKindFilenameMappings() {
@@ -631,7 +692,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         return targetPlatform != null && "kubernetes".equalsIgnoreCase(targetPlatform);
     }
 
-    private KubernetesList generateResources(List<ImageConfiguration> images)
+    private KubernetesList generateResources(List<ImageConfiguration> images, File remoteResources)
         throws IOException, MojoExecutionException {
 
         // Manager for calling enrichers.
@@ -652,7 +713,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             MavenUtil.getCompileClasspathElementsIfRequested(project, useProjectClasspath));
 
         // Generate all resources from the main resource directory, configuration and enrich them accordingly
-        KubernetesListBuilder builder = generateAppResources(images, enricherManager);
+        KubernetesListBuilder builder = generateAppResources(images, enricherManager, remoteResources);
 
         // Add resources found in subdirectories of resourceDir, with a certain profile
         // applied
@@ -711,12 +772,18 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         }
     }
 
-    private KubernetesListBuilder generateAppResources(List<ImageConfiguration> images, EnricherManager enricherManager)
+    private KubernetesListBuilder generateAppResources(List<ImageConfiguration> images, EnricherManager enricherManager,
+        File remoteResources)
         throws IOException, MojoExecutionException {
         Path composeFilePath = checkComposeConfig();
         ComposeService composeUtil = new ComposeService(komposeBinDir, composeFilePath, log);
         try {
+
             File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(realResourceDir);
+            if (remoteResources != null && remoteResources.isDirectory()) {
+                final File[] remoteFragments = remoteResources.listFiles();
+                resourceFiles = ArrayUtils.addAll(resourceFiles, remoteFragments);
+            }
             File[] composeResourceFiles = composeUtil.convertToKubeFragments();
             File[] allResources = ArrayUtils.addAll(resourceFiles, composeResourceFiles);
             KubernetesListBuilder builder;

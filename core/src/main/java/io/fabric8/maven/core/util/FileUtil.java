@@ -16,8 +16,10 @@
 package io.fabric8.maven.core.util;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -27,6 +29,14 @@ import java.nio.file.Paths;
  * @since 23.05.17
  */
 public class FileUtil {
+
+    public static File createTempDirectory() {
+        try {
+            return Files.createTempDirectory("fabric8").toFile();
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
 
     public static File getRelativePath(File baseDir, File file) {
         Path baseDirPath = Paths.get(baseDir.getAbsolutePath());
