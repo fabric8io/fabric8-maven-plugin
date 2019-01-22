@@ -90,6 +90,9 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 
 | <<fmp-secret-file>>
 | Add Secret elements defined as annotation.
+
+| <<fmp-fmp-serviceaccount>>
+| Add a ServiceAccount defined as XML or mentioned in resource fragement.
 |===
 
 [[enrichers-standard]]
