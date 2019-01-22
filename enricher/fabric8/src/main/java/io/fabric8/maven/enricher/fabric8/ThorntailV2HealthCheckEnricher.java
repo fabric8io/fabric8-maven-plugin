@@ -18,7 +18,10 @@ package io.fabric8.maven.enricher.fabric8;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.SpringBootUtil;
+import io.fabric8.maven.core.util.ThorntailUtil;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import java.util.Properties;
 
 /**
  * Enriches thorntail-v2 containers with health checks if the monitoring fraction is present.
@@ -94,6 +97,12 @@ public class ThorntailV2HealthCheckEnricher extends AbstractHealthCheckEnricher 
     }
 
     protected int getPort() {
+        final Properties properties = ThorntailUtil.getThorntailProperties(getContext().getProjectClassLoaders().getCompileClassLoader());
+        properties.putAll(System.getProperties());
+        if (properties.containsKey("thorntail.http.port")) {
+            return Integer.parseInt((String) properties.get("thorntail.http.port"));
+        }
+
         return Configs.asInt(getConfig(Config.port));
     }
 
