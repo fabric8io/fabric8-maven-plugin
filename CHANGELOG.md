@@ -18,6 +18,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1460: Upgraded kubernetes client to 4.1.1
 * Fix 690: Removes deprecated _legacyPortMapping_ property.
 * Fix 1458: Support for from Image configuration in openshift docker build strategy
+* Fix 931: Add ServiceAccount enricher and configuration
 * Fix 732: Added 'skip' options to goals.
 * Refactor 1520: Move XML configuration code from Mojo to enrichers
 * Fix 1486: Remove Kompose Support

@@ -34,6 +34,7 @@
     - fmp-pod-annotations
     - fmp-git
     - fmp-maven-scm
+    - fmp-serviceaccount
     - fmp-maven-issue-mgmt
     # TODO: Documents and verify enrichers below
     - fmp-debug
