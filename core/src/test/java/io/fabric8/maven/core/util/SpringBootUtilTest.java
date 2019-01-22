@@ -32,7 +32,7 @@ public class SpringBootUtilTest {
     @Test
     public void testYamlToPropertiesParsing() {
 
-        Properties props = SpringBootUtil.getPropertiesFromYamlResource(SpringBootUtilTest.class.getResource("/util/test-application.yml"));
+        Properties props = YamlUtil.getPropertiesFromYamlResource(SpringBootUtilTest.class.getResource("/util/test-application.yml"));
         assertNotEquals(0, props.size());
 
         assertEquals("8081", props.getProperty("management.port"));
@@ -46,13 +46,13 @@ public class SpringBootUtilTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidFileThrowsException() {
-        SpringBootUtil.getPropertiesFromYamlResource(SpringBootUtilTest.class.getResource("/util/invalid-application.yml"));
+        YamlUtil.getPropertiesFromYamlResource(SpringBootUtilTest.class.getResource("/util/invalid-application.yml"));
     }
 
     @Test
     public void testNonExistentYamlToPropertiesParsing() {
 
-        Properties props = SpringBootUtil.getPropertiesFromYamlResource(SpringBootUtilTest.class.getResource("/this-file-does-not-exist"));
+        Properties props = YamlUtil.getPropertiesFromYamlResource(SpringBootUtilTest.class.getResource("/this-file-does-not-exist"));
         assertNotNull(props);
         assertEquals(0, props.size());
 
