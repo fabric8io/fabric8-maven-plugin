@@ -87,6 +87,9 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 
 | <<fmp-configmap-file>>
 | Add ConfigMap elements defined as XML or as annotation.
+
+| <<fmp-secret-file>>
+| Add Secret elements defined as annotation.
 |===
 
 [[enrichers-standard]]
@@ -1141,10 +1144,28 @@ If you are defining a custom `ConfigMap` file, you can use an annotation to defi
 ----
 metadata:
   name: ${project.artifactId}
-  maven.fabric8.io/cm/application.properties: src/test/resources/test-application.properties
+  annotations:
+    maven.fabric8.io/cm/application.properties: src/test/resources/test-application.properties
 ----
 
 This creates a `ConfigMap` data with key `application.properties` (part defined after `cm`) and value the content of `src/test/resources/test-application.properties` file.
+
+[[fmp-secret-file]]
+==== fmp-secret-file
+
+This enricher adds Secret defined as file content from an annotation.
+
+If you are defining a custom `Secret` file, you can use an annotation to define a file name as key and its content as the value:
+
+[source, yaml]
+----
+metadata:
+  name: ${project.artifactId}
+  annotations:
+    maven.fabric8.io/secret/application.properties: src/test/resources/test-application.properties
+----
+
+This creates a `Secret` data with the key `application.properties` (part defined after `secret`) and value content of `src/test/resources/test-application.properties` file (base64 encoded).
 
 == Enricher API
 
