@@ -68,11 +68,6 @@ public class SpringBootUtil {
     }
 
     /**
-     * Returns a {@code Properties} representation of the given Yaml resource or an empty properties object if the resource is null
-     */
-
-
-    /**
      * Determine the spring-boot devtools version for the current project
      */
     public static Optional<String> getSpringBootDevToolsVersion(MavenProject mavenProject) {

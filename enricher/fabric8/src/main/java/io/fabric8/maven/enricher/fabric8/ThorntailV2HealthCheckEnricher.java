@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Red Hat, Inc.
+ * Copyright 2018 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
  * 2.0 (the "License"); you may not use this file except in compliance
@@ -18,7 +18,6 @@ package io.fabric8.maven.enricher.fabric8;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.core.util.ThorntailUtil;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.util.Properties;
