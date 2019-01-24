@@ -13,8 +13,9 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.plugin.enricher;
+package io.fabric8.maven.enricher.api.visitor;
 
+import java.util.List;
 import java.util.Map;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
@@ -26,27 +27,26 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSetSpecBuilder;
 import io.fabric8.kubernetes.api.model.batch.JobSpecBuilder;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.MapUtil;
+import io.fabric8.maven.enricher.api.Enricher;
 import io.fabric8.maven.enricher.api.Kind;
 
-/**
- * @author roland
- * @since 02/05/16
- */
+import static io.fabric8.maven.enricher.api.util.ExtractorUtil.extractSelector;
+
 public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
 
-    final EnricherManager enricherManager;
+    List<Enricher> enrichers;
 
-    SelectorVisitor(EnricherManager enricherManager) {
-        this.enricherManager = enricherManager;
+    SelectorVisitor(List<Enricher> enrichers) {
+        this.enrichers = enrichers;
     }
 
     private static ThreadLocal<ProcessorConfig> configHolder = new ThreadLocal<>();
 
-    static void setProcessorConfig(ProcessorConfig config) {
+    public static void setProcessorConfig(ProcessorConfig config) {
         configHolder.set(config);
     }
 
-    static void clearProcessorConfig() {
+    public static void clearProcessorConfig() {
         configHolder.set(null);
     }
 
@@ -60,40 +60,40 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
 
     // ========================================================================
 
-    static class ServiceSpecBuilderVisitor extends SelectorVisitor<ServiceSpecBuilder> {
+     public static class ServiceSpecBuilderVisitor extends SelectorVisitor<ServiceSpecBuilder> {
 
-        ServiceSpecBuilderVisitor(EnricherManager enricherManager) {
-            super(enricherManager);
+        public ServiceSpecBuilderVisitor(List<Enricher> enrichers) {
+            super(enrichers);
         }
 
         @Override
         public void visit(ServiceSpecBuilder item) {
-            MapUtil.mergeIfAbsent(item.getSelector(), enricherManager.extractSelector(getConfig(), Kind.SERVICE));
+            MapUtil.mergeIfAbsent(item.getSelector(), extractSelector(getConfig(), Kind.SERVICE, enrichers));
         }
     }
 
-    static class ReplicationControllerSpecBuilderVisitor extends SelectorVisitor<ReplicationControllerSpecBuilder> {
-        ReplicationControllerSpecBuilderVisitor(EnricherManager enricherManager) {
-            super(enricherManager);
+    public static class ReplicationControllerSpecBuilderVisitor extends SelectorVisitor<ReplicationControllerSpecBuilder> {
+        public ReplicationControllerSpecBuilderVisitor(List<Enricher> enrichers) {
+            super(enrichers);
         }
 
         @Override
         public void visit(ReplicationControllerSpecBuilder item) {
-            MapUtil.mergeIfAbsent(item.getSelector(), enricherManager.extractSelector(getConfig(), Kind.REPLICATION_CONTROLLER));
+            MapUtil.mergeIfAbsent(item.getSelector(), extractSelector(getConfig(), Kind.REPLICATION_CONTROLLER, enrichers));
         }
     }
 
     // ============================================================================
 
-    static class DeploymentSpecBuilderVisitor extends SelectorVisitor<DeploymentSpecBuilder> {
+    public static class DeploymentSpecBuilderVisitor extends SelectorVisitor<DeploymentSpecBuilder> {
 
-        DeploymentSpecBuilderVisitor(EnricherManager enricherManager) {
-            super(enricherManager);
+        public DeploymentSpecBuilderVisitor(List<Enricher> enrichers) {
+            super(enrichers);
         }
 
         @Override
         public void visit(DeploymentSpecBuilder item) {
-            Map<String, String> selectorMatchLabels = enricherManager.extractSelector(getConfig(), Kind.DEPLOYMENT);
+            Map<String, String> selectorMatchLabels = extractSelector(getConfig(), Kind.DEPLOYMENT, enrichers);
             if(!selectorMatchLabels.isEmpty()) {
                 LabelSelector selector = item.buildSelector();
                 if (selector == null) {
@@ -105,15 +105,15 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    static class StatefulSetSpecBuilderVisitor extends SelectorVisitor<StatefulSetSpecBuilder> {
+    public static class StatefulSetSpecBuilderVisitor extends SelectorVisitor<StatefulSetSpecBuilder> {
 
-        StatefulSetSpecBuilderVisitor(EnricherManager enricherManager) {
-            super(enricherManager);
+        public StatefulSetSpecBuilderVisitor(List<Enricher> enrichers) {
+            super(enrichers);
         }
 
         @Override
         public void visit(StatefulSetSpecBuilder item) {
-            Map<String, String> selectorMatchLabels = enricherManager.extractSelector(getConfig(), Kind.STATEFUL_SET);
+            Map<String, String> selectorMatchLabels = extractSelector(getConfig(), Kind.STATEFUL_SET, enrichers);
             LabelSelector selector = item.buildSelector();
             if (selector == null) {
                 item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
@@ -123,15 +123,15 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    static class DaemonSetSpecBuilderVisitor extends SelectorVisitor<DaemonSetSpecBuilder> {
+    public static class DaemonSetSpecBuilderVisitor extends SelectorVisitor<DaemonSetSpecBuilder> {
 
-        DaemonSetSpecBuilderVisitor(EnricherManager enricherManager) {
-            super(enricherManager);
+        public DaemonSetSpecBuilderVisitor(List<Enricher> enrichers) {
+            super(enrichers);
         }
 
         @Override
         public void visit(DaemonSetSpecBuilder item) {
-            Map<String, String> selectorMatchLabels = enricherManager.extractSelector(getConfig(), Kind.DAEMON_SET);
+            Map<String, String> selectorMatchLabels = extractSelector(getConfig(), Kind.DAEMON_SET, enrichers);
             final LabelSelector selector = item.buildSelector();
             if (selector == null) {
                 item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
@@ -141,14 +141,14 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    static class JobSpecBuilderVisitor extends SelectorVisitor<JobSpecBuilder> {
-        JobSpecBuilderVisitor(EnricherManager enricherManager) {
-            super(enricherManager);
+    public static class JobSpecBuilderVisitor extends SelectorVisitor<JobSpecBuilder> {
+        public JobSpecBuilderVisitor(List<Enricher> enrichers) {
+            super(enrichers);
         }
 
         @Override
         public void visit(JobSpecBuilder item) {
-            Map<String, String> selectorMatchLabels = enricherManager.extractSelector(getConfig(), Kind.JOB);
+            Map<String, String> selectorMatchLabels = extractSelector(getConfig(), Kind.JOB, enrichers);
             final LabelSelector selector = item.buildSelector();
             if (selector != null) {
                 MapUtil.mergeIfAbsent(selector.getMatchLabels(), selectorMatchLabels);
@@ -156,15 +156,15 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         }
     }
 
-    static class ReplicaSetSpecBuilderVisitor extends SelectorVisitor<ReplicaSetSpecBuilder> {
+    public static class ReplicaSetSpecBuilderVisitor extends SelectorVisitor<ReplicaSetSpecBuilder> {
 
-        ReplicaSetSpecBuilderVisitor(EnricherManager enricherManager) {
-            super(enricherManager);
+        public ReplicaSetSpecBuilderVisitor(List<Enricher> enrichers) {
+            super(enrichers);
         }
 
         @Override
         public void visit(ReplicaSetSpecBuilder item) {
-            Map<String, String> selectorMatchLabels = enricherManager.extractSelector(getConfig(), Kind.REPLICA_SET);
+            Map<String, String> selectorMatchLabels = extractSelector(getConfig(), Kind.REPLICA_SET, enrichers);
             final LabelSelector selector = item.buildSelector();
             if (selector == null) {
                 item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
@@ -174,3 +174,4 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
         }
     }
 }
+

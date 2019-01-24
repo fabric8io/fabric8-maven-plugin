@@ -17,6 +17,8 @@ package io.fabric8.maven.enricher.api;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.Named;
+
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -70,4 +72,5 @@ public interface Enricher extends Named {
      */
     void adapt(KubernetesListBuilder builder);
 
+    void addMetadata(KubernetesListBuilder builder, List<Enricher> enrichers);
 }

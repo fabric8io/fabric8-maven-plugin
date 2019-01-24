@@ -13,9 +13,10 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.plugin.enricher;
+package io.fabric8.maven.enricher.api.visitor;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -29,10 +30,14 @@ import io.fabric8.kubernetes.api.model.batch.JobBuilder;
 import io.fabric8.maven.core.config.MetaDataConfig;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.enricher.api.Enricher;
 import io.fabric8.maven.enricher.api.Kind;
 import io.fabric8.openshift.api.model.BuildBuilder;
 import io.fabric8.openshift.api.model.BuildConfigBuilder;
 import io.fabric8.openshift.api.model.ImageStreamBuilder;
+
+import static io.fabric8.maven.enricher.api.util.ExtractorUtil.extractAnnotations;
+import static io.fabric8.maven.enricher.api.util.ExtractorUtil.extractLabels;
 
 /**
  * Visitor which adds labels and annotations
@@ -42,14 +47,13 @@ import io.fabric8.openshift.api.model.ImageStreamBuilder;
  */
 public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
-    private final EnricherManager enricherManager;
 
     private static ThreadLocal<ProcessorConfig> configHolder = new ThreadLocal<>();
     private final Map<String, String> labelsFromConfig;
     private final Map<String, String> annotationFromConfig;
+    private List<Enricher> enrichers = null;
 
-    private MetadataVisitor(ResourceConfig resourceConfig, EnricherManager enricherManager) {
-        this.enricherManager = enricherManager;
+    private MetadataVisitor(ResourceConfig resourceConfig, List<Enricher> enrichers) {
         if (resourceConfig != null) {
             labelsFromConfig = getMapFromConfiguration(resourceConfig.getLabels(), getKind());
             annotationFromConfig = getMapFromConfiguration(resourceConfig.getAnnotations(), getKind());
@@ -57,13 +61,15 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
             labelsFromConfig = new HashMap<>();
             annotationFromConfig = new HashMap<>();
         }
+
+        this.enrichers = enrichers;
     }
 
-    static void setProcessorConfig(ProcessorConfig config) {
+    public static void setProcessorConfig(ProcessorConfig config) {
         configHolder.set(config);
     }
 
-    static void clearProcessorConfig() {
+    public static void clearProcessorConfig() {
         configHolder.set(null);
     }
 
@@ -84,12 +90,12 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
     private void updateLabels(ObjectMeta metadata) {
         overlayMap(metadata.getLabels(),labelsFromConfig);
-        overlayMap(metadata.getLabels(),enricherManager.extractLabels(getProcessorConfig(), getKind()));
+        overlayMap(metadata.getLabels(), extractLabels(getProcessorConfig(), getKind(), enrichers));
     }
 
     private void updateAnnotations(ObjectMeta metadata) {
         overlayMap(metadata.getAnnotations(),annotationFromConfig);
-        overlayMap(metadata.getAnnotations(), enricherManager.extractAnnotations(getProcessorConfig(), getKind()));
+        overlayMap(metadata.getAnnotations(), extractAnnotations(getProcessorConfig(), getKind(), enrichers));
     }
 
     private Map<String, String> getMapFromConfiguration(MetaDataConfig config, Kind kind) {
@@ -147,8 +153,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
     public static class PodTemplateSpecBuilderVisitor extends MetadataVisitor<PodTemplateSpecBuilder> {
 
-        PodTemplateSpecBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
-            super(resourceConfig, enricher);
+        public PodTemplateSpecBuilderVisitor(ResourceConfig resourceConfig, List<Enricher> enrichers) {
+            super(resourceConfig, enrichers);
         }
 
         @Override
@@ -164,8 +170,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
     public static class ServiceBuilderVisitor extends MetadataVisitor<ServiceBuilder> {
 
-        ServiceBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
-            super(resourceConfig, enricher);
+        public ServiceBuilderVisitor(ResourceConfig resourceConfig, List<Enricher> enrichers) {
+            super(resourceConfig, enrichers);
         }
 
         @Override
@@ -180,8 +186,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
     }
 
     public static class ReplicaSet extends MetadataVisitor<ReplicaSetBuilder> {
-        ReplicaSet(ResourceConfig resourceConfig, EnricherManager enricher) {
-            super(resourceConfig, enricher);
+        public ReplicaSet(ResourceConfig resourceConfig, List<Enricher> enrichers) {
+            super(resourceConfig, enrichers);
         }
 
         @Override
@@ -196,8 +202,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
     }
 
     public static class ReplicationControllerBuilderVisitor extends MetadataVisitor<ReplicationControllerBuilder> {
-        ReplicationControllerBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
-            super(resourceConfig, enricher);
+        public ReplicationControllerBuilderVisitor(ResourceConfig resourceConfig, List<Enricher> enrichers) {
+            super(resourceConfig, enrichers);
         }
 
         @Override
@@ -212,8 +218,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
     }
 
     public static class DeploymentBuilderVisitor extends MetadataVisitor<DeploymentBuilder> {
-        DeploymentBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
-            super(resourceConfig, enricher);
+        public DeploymentBuilderVisitor(ResourceConfig resourceConfig, List<Enricher> enrichers) {
+            super(resourceConfig, enrichers);
         }
 
         @Override
@@ -228,8 +234,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
     }
 
     public static class DaemonSetBuilderVisitor extends MetadataVisitor<DaemonSetBuilder> {
-        DaemonSetBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
-            super(resourceConfig, enricher);
+        public DaemonSetBuilderVisitor(ResourceConfig resourceConfig, List<Enricher> enrichers) {
+            super(resourceConfig, enrichers);
         }
 
         @Override
@@ -244,8 +250,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
     }
 
     public static class StatefulSetBuilderVisitor extends MetadataVisitor<StatefulSetBuilder> {
-        StatefulSetBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
-            super(resourceConfig, enricher);
+        public StatefulSetBuilderVisitor(ResourceConfig resourceConfig, List<Enricher> enrichers) {
+            super(resourceConfig, enrichers);
         }
 
         @Override
@@ -260,8 +266,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
     }
 
     public static class JobBuilderVisitor extends MetadataVisitor<JobBuilder> {
-        JobBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
-            super(resourceConfig, enricher);
+        public JobBuilderVisitor(ResourceConfig resourceConfig, List<Enricher> enrichers) {
+            super(resourceConfig, enrichers);
         }
 
         @Override
@@ -276,8 +282,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
     }
 
     public static class ImageStreamBuilderVisitor extends MetadataVisitor<ImageStreamBuilder> {
-        ImageStreamBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
-            super(resourceConfig, enricher);
+        public ImageStreamBuilderVisitor(ResourceConfig resourceConfig, List<Enricher> enrichers) {
+            super(resourceConfig, enrichers);
         }
 
         @Override
@@ -292,8 +298,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
     }
 
     public static class BuildConfigBuilderVisitor extends MetadataVisitor<BuildConfigBuilder> {
-        BuildConfigBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
-            super(resourceConfig, enricher);
+        public BuildConfigBuilderVisitor(ResourceConfig resourceConfig, List<Enricher> enrichers) {
+            super(resourceConfig, enrichers);
         }
 
         @Override
@@ -308,8 +314,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
     }
 
     public static class BuildBuilderVisitor extends MetadataVisitor<BuildBuilder> {
-        BuildBuilderVisitor(ResourceConfig resourceConfig, EnricherManager enricher) {
-            super(resourceConfig, enricher);
+        public BuildBuilderVisitor(ResourceConfig resourceConfig, List<Enricher> enrichers) {
+            super(resourceConfig, enrichers);
         }
 
         @Override
