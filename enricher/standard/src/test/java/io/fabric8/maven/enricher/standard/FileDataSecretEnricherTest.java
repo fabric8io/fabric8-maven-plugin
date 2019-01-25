@@ -43,7 +43,7 @@ public class FileDataSecretEnricherTest {
     private MavenEnricherContext context;
 
     @Test
-    public void should_materialize_file_content_from_annotation() throws IOException {
+    public void shouldMaterializeFileContentFromAnnotation() throws IOException {
 
         // Given
 
