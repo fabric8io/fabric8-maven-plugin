@@ -26,6 +26,8 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 788: Added Git URL to GitEnricher.
 * Feature 718: Detect port number from configuration file for health check in Thorntail 
 * Refactor 828: Moved Metedata specific code into DefaultMetadataEnricher
+* Feature 718: Detect port number from configuration file for health check in Thorntail
+* Feature 1498: Allow users to define secrets from annotations 
 
 ### 4.0.0-M2 (2018-12-14)
 * Fix 10: Make VolumeConfiguration more flexible

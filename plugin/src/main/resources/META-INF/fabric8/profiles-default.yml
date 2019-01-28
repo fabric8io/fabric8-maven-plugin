@@ -22,6 +22,7 @@
   enricher:
     # The order given in "includes" is the order in which enrichers are called
     includes:
+    - fmp-metadata
     - fmp-name
     - fmp-controller
     - fmp-controller-from-configuration
@@ -39,7 +40,7 @@
     - fmp-remove-build-annotations
     - fmp-volume-permission
     - fmp-configmap-file
-    - fmp-metadata
+    - fmp-secret-file
 
     # Route exposure
     - fmp-openshift-service-expose
