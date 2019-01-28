@@ -64,6 +64,9 @@ public abstract class BaseEnricher implements Enricher {
     public void adapt(KubernetesListBuilder builder) { }
 
     @Override
+    public void addMetadata(KubernetesListBuilder builder, List<Enricher> enrichers) { }
+
+    @Override
     public void addMissingResources(KubernetesListBuilder builder) { }
 
     @Override

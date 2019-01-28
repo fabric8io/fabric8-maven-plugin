@@ -60,4 +60,16 @@ public class MapUtil {
         return answer;
 
     }
+
+    /**
+     * Copies all of the elements i.e., the mappings, from toPut map into ret, if toPut isn't null.
+     * @param ret
+     * @param toPut
+     */
+    public static void putAllIfNotNull(Map<String, String> ret, Map<String, String> toPut) {
+        if (toPut != null) {
+            ret.putAll(toPut);
+        }
+    }
+
 }

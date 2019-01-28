@@ -52,6 +52,9 @@ io.fabric8.maven.enricher.standard.MavenScmEnricher
 # Add an enricher for adding Maven SCM metadata based on pom.xml IssueManagement details
 io.fabric8.maven.enricher.standard.MavenIssueManagementEnricher
 
+# Add an enricher for Adding Metadata (Labels, Annotations & Selectors) to the generated resources
+io.fabric8.maven.enricher.standard.DefaultMetadataEnricher
+
 # Resolve the docker registry things
 io.fabric8.maven.enricher.standard.DockerRegistrySecretEnricher
 

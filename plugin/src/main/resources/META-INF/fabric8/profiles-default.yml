@@ -22,6 +22,7 @@
   enricher:
     # The order given in "includes" is the order in which enrichers are called
     includes:
+    - fmp-metadata
     - fmp-name
     - fmp-controller
     - fmp-controller-from-configuration

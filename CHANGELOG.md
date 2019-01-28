@@ -24,6 +24,8 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 925: Unable to configure replicas count via property
 * Feature 804: Allow set fragments as external references (URL)
 * Fix 788: Added Git URL to GitEnricher.
+* Feature 718: Detect port number from configuration file for health check in Thorntail 
+* Refactor 828: Moved Metedata specific code into DefaultMetadataEnricher
 * Feature 718: Detect port number from configuration file for health check in Thorntail
 * Feature 1498: Allow users to define secrets from annotations 
 
