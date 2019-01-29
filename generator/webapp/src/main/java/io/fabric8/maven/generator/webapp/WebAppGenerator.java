@@ -32,6 +32,8 @@ import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
 import io.fabric8.maven.generator.webapp.handler.CustomAppServerHandler;
 
+import static io.fabric8.maven.core.util.BuildLabelUtil.addSchemaLabels;
+
 /**
  * A generator for WAR apps
  *
@@ -95,6 +97,8 @@ public class WebAppGenerator extends BaseGenerator {
             .ports(handler.exposedPorts())
             .cmd(new Arguments(getDockerRunCommand(handler)))
             .env(getEnv(handler));
+
+        addSchemaLabels(buildBuilder, getContext().getProject(), log);
         if (!prePackagePhase) {
             buildBuilder.assembly(createAssembly(handler));
         }
