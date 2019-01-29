@@ -107,7 +107,6 @@ The full documentation can be found in the [User Manual](http://maven.fabric8.io
   * **Zero Configuration** for a quick ramp-up where opinionated defaults will be pre-selected.
   * **Inline Configuration** within the plugin configuration in an XML syntax.
   * **External Configuration** templates of the real deployment descriptors which are enriched by the plugin.
-  * **Docker Compose Configuration** provide Docker Compose file and bring up docker compose deployments on a Kubernetes/OpenShift cluster.
 * Flexible customization:
   * **Generators** analyze the Maven build and generated automatic Docker image configurations for certain systems (spring-boot, plain java, karaf ...)
   * **Enrichers** extend the Kubernetes / OpenShift resource descriptors by extra information like SCM labels and can add default objects like Services.

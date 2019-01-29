@@ -8,7 +8,6 @@ This plugin focus on two tasks: _Building Docker images_ and _creating Kubernete
 It can be configured very flexibly and supports multiple configuration models for creating: A _Zero-Config_ setup allows for a quick ramp-up with some opinionated defaults.
 For more advanced requirements, an _XML configuration_ provides additional configuration options which can be added to the `pom.xml`.
 For the full power, in order to tune all facets of the creation, external _resource fragments_ and _Dockerfiles_ can be used.
-A docker compose configuration can be also used to bring up docker compose deployments on a Kubernetes/OpenShift cluster.
 
 [[building-images]]
 == Building Images
@@ -27,7 +26,7 @@ These image related features are inherited from the https://github.com/fabric8io
 [[resource-descriptors]]
 == Kubernetes and OpenShift Resources
 
-Kubernetes and OpenShift resource descriptors can be created or generated from existing docker compose with <<fabric8:resource>>.
+Kubernetes and OpenShift resource descriptors can be created or generated from <<fabric8:resource>>.
 These files are packaged within the Maven artifacts and can be deployed to a running orchestration platform with <<fabric8:apply>>.
 
 Typically you only specify a small part of the real resource descriptors which will be enriched by this plugin with various extra information taken from the `pom.xml`.
@@ -45,13 +44,10 @@ This allows for type-safe configuration with IDE support, but only a subset of p
 
 * *Kubernetes &amp; OpenShift resource fragments* are user provided YAML files that can be _enriched_ by the plugin. This allows expert users to use a plain configuration file with all their capabilities, but also to add project specific build information and avoid boilerplate code.
 
-
-* *Docker Compose* can be used to bring up docker compose deployments on a Kubernetes/OpenShift cluster. This requires minimum to no knowledge of Kubernetes/OpenShift deployment process.
-
 The following table gives an overview of the different models
 
 .Configuration Models
-[cols="1,4,4"]
+[cols="1,4,3"]
 |===
 | Model | Docker Images | Resource Descriptors
 
@@ -66,11 +62,6 @@ The following table gives an overview of the different models
 | *Resource Fragments* and *Dockerfiles*
 | Similarly to the docker-maven-plugin, f8-m-p supports <<external-dockerfile,external Dockerfiles>> too, which are referenced from the plugin configuration.
 | Resource descriptors can be provided as external YAML files which specify a skeleton. This skeleton is then filled by Enrichers which add labels and more. Maven properties within these files are resolved to thier values. With this model you can use every Kubernetes / OpenShift resource object with all their flexibility, but still get the benefit of adding build information.
-
-| *Docker Compose*
-| All above methods can works with docker compose configuration.
-| The plugin converts docker compose descriptors into more detailed Kubernetes/OpenShift deployment resources. These resource descriptors or externally YAML files can be used to specify the application skeleton. This skeleton is then filled by Enrichers which add labels and more. Maven properties within these files are resolved to their values. With this model you can use every Kubernetes / OpenShift resource objects with all their flexibility, but still get the benefit of adding build information.
-| A `dokcercompose.yml` can have a `:build` key that specifies how to build docker image, but at present this feature is not supported.
 |===
 
 
@@ -332,46 +323,6 @@ Additionally, if you name your fragment using a name prefix followed by a dash a
 
 No image is also referenced in this example because the plugin also fills in the image details based on the configured image you are building with (either from a generator or from a dedicated image plugin configuration, as seen before).
 
-=== Docker Compose
-
-The fourth configuration option is to provide an external Docker Compose file. The following are some ways to specify docker-compose files.
-
-1. Put the Docker Compose file into `src/main/fabric8-compose` directory in the project space (only one file is supported at the moment).
-
-2. Locate the Docker Compose file path using the plugin configuration, as shown in following `pom.xml` example.
-
-
-.Example fragment "pom.xml"
-[source, xml, indent=0]
-----
-<plugin>
-  <groupId>io.fabric8</groupId>
-  <artifactId>fabric8-maven-plugin</artifactId>
-
-  <!-- ... -->
-
-  <configuration>
-    <composeFile>docker-compose.yaml</composeFile>
-  </configuration>
-
-  <executions>
-    <execution>
-      <goals>
-        <goal>resource</goal>
-        <goal>build</goal>
-      </goals>
-    </execution>
-  </executions>
-</plugin>
-----
-
-As you can see in `pom.xml`, the `composeFile` section under plugin `configuration` is used to provide the Docker Compose file path. It should be a relative path from the directory containing the `pom.xml` file.
-
-If the execution configuration includes the `resource` goal (as shown in the `pom.xml` file above), the plugin will process the Docker Compose file and generate Kubernetes/OpenShift resource descriptors during the build.
-Resources can be also generated using the <<fabric8:resource>> goal directly.
-The Docker Compose option is implemented using http://kompose.io[kompose] project.
-
-A working example can be found in the  https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/docker-compose[samples/docker-compose]
 
 
 NOTE: For building images there is also an alternative mode using external Dockerfiles, in addition to the XML based configuration. Refer to <<build-overview, fabric8:build>> for details.
