@@ -505,7 +505,7 @@ By default, this enricher uses the same configuration for liveness and readiness
 
 ===== Using the f8-healthcheck-vertx enricher
 
-The enricher is automatically executed if your project uses the `` or depends on `io.vertx:vertx-core`.
+The enricher is automatically executed if your project uses the `vertx-maven-plugin` or depends on `io.vertx:vertx-core`.
 However, by default, no health check will be added to your deployment.
 
 ===== Minimal configuration
