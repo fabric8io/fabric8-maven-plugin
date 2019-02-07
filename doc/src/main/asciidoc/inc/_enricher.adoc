@@ -505,7 +505,7 @@ By default, this enricher uses the same configuration for liveness and readiness
 
 ===== Using the f8-healthcheck-vertx enricher
 
-The enricher is automatically executed if your project uses the `vertx-maven-plugin` or depends on `io.vertx:vertx-core`.
+The enricher is automatically executed if your project uses the `` or depends on `io.vertx:vertx-core`.
 However, by default, no health check will be added to your deployment.
 
 ===== Minimal configuration
@@ -939,7 +939,7 @@ Lets say you have a maven pom.xml with the following issue management informatio
 ----
 <issueManagement>
    <system>GitHub</system>
-   <url>https://github.com/fabric8io/vertx-maven-plugin/issues/</url>
+   <url>https://github.com/reactiverse/vertx-maven-plugin/issues/</url>
 </issueManagement>
 ----
 
@@ -952,7 +952,7 @@ This information will be enriched as annotations in the generated manifest like,
   metadata:
     annotations:
       fabric8.io/issue-system: "GitHub"
-      fabric8.io/issue-tracker-url: "https://github.com/fabric8io/vertx-maven-plugin/issues/"
+      fabric8.io/issue-tracker-url: "https://github.com/reactiverse/vertx-maven-plugin/issues/"
 ...
 ----
 

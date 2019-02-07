@@ -33,7 +33,7 @@
 
   <issueManagement>
     <system>GitHub</system>
-    <url>https://github.com/fabric8io/vertx-maven-plugin/issues/</url>
+    <url>https://github.com/reactiverse/vertx-maven-plugin/issues/</url>
   </issueManagement>
 
   <dependencies>
