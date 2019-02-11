@@ -29,14 +29,17 @@ public class ResourceVersioning {
 
     private String jobVersion;
 
+    private String openshiftV1version;
+
     public ResourceVersioning() {
     }
 
-    public ResourceVersioning(String coreVersion, String extensionsVersion, String appsVersion, String jobVersion) {
+    public ResourceVersioning(String coreVersion, String extensionsVersion, String appsVersion, String jobVersion, String openshiftV1version) {
         this.coreVersion = coreVersion;
         this.extensionsVersion = extensionsVersion;
         this.appsVersion = appsVersion;
         this.jobVersion = jobVersion;
+        this.openshiftV1version = openshiftV1version;
     }
 
     public String getCoreVersion() {
@@ -61,6 +64,14 @@ public class ResourceVersioning {
 
     public void setAppsVersion(String appsVersion) {
         this.appsVersion = appsVersion;
+    }
+
+    public void setOpenshiftV1Version(String openshiftV1Version) {
+        this.openshiftV1version = openshiftV1Version;
+    }
+
+    public String getOpenshiftV1version() {
+        return openshiftV1version;
     }
 
     public String getJobVersion() {
@@ -89,6 +100,12 @@ public class ResourceVersioning {
         return c;
     }
 
+    public ResourceVersioning withOpenshiftV1Version(String version) {
+        ResourceVersioning c = copy();
+        c.setOpenshiftV1Version(version);
+        return c;
+    }
+
     public ResourceVersioning withJobVersion(String jobVersion) {
         ResourceVersioning c = copy();
         c.setJobVersion(jobVersion);
@@ -102,11 +119,12 @@ public class ResourceVersioning {
         sb.append(", extensionsVersion='").append(extensionsVersion).append('\'');
         sb.append(", appsVersion='").append(appsVersion).append('\'');
         sb.append(", jobVersion='").append(jobVersion).append('\'');
+        sb.append(", openshiftV1Version='").append(openshiftV1version).append('\'');
         sb.append('}');
         return sb.toString();
     }
 
     protected ResourceVersioning copy() {
-        return new ResourceVersioning(coreVersion, extensionsVersion, appsVersion, jobVersion);
+        return new ResourceVersioning(coreVersion, extensionsVersion, appsVersion, jobVersion, openshiftV1version);
     }
 }

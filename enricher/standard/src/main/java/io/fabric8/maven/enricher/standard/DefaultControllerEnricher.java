@@ -17,15 +17,10 @@ package io.fabric8.maven.enricher.standard;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.PodSpec;
-import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.fabric8.kubernetes.api.model.apps.DeploymentFluent;
-import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
-import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
-import io.fabric8.kubernetes.api.model.apps.StatefulSetFluent;
-import io.fabric8.kubernetes.api.model.apps.StatefulSetSpec;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.handler.DaemonSetHandler;
 import io.fabric8.maven.core.handler.DeploymentHandler;
 import io.fabric8.maven.core.handler.HandlerHub;
@@ -39,6 +34,7 @@ import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 
 import java.util.Collections;
 import java.util.List;
@@ -64,6 +60,8 @@ public class DefaultControllerEnricher extends BaseEnricher {
     protected static final String[] POD_CONTROLLER_KINDS =
         { "ReplicationController", "ReplicaSet", "Deployment", "DeploymentConfig", "StatefulSet", "DaemonSet", "Job" };
 
+    private final RuntimeMode runtimeMode;
+
     private final DeploymentHandler deployHandler;
     private final ReplicationControllerHandler rcHandler;
     private final ReplicaSetHandler rsHandler;
@@ -74,9 +72,9 @@ public class DefaultControllerEnricher extends BaseEnricher {
     // Available configuration keys
     private enum Config implements Configs.Key {
         name,
-        pullPolicy           {{ d = "IfNotPresent"; }},
-        type                 {{ d = "deployment"; }},
-        replicaCount         {{ d = "1"; }};
+        pullPolicy             {{ d = "IfNotPresent"; }},
+        type                   {{ d = "deployment"; }},
+        replicaCount           {{ d = "1"; }};
 
         public String def() { return d; } protected String d;
     }
@@ -86,6 +84,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
 
         HandlerHub handlers = new HandlerHub(
             getContext().getGav(), getContext().getConfiguration().getProperties());
+        runtimeMode = buildContext.getRuntimeMode();
         rcHandler = handlers.getReplicationControllerHandler();
         rsHandler = handlers.getReplicaSetHandler();
         deployHandler = handlers.getDeploymentHandler();
@@ -95,7 +94,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(KubernetesListBuilder builder) {
+    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
         final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getSanitizedArtifactId()));
         ResourceConfig xmlResourceConfig = getConfiguration().getResource().orElse(null);
         ResourceConfig config = new ResourceConfig.Builder(xmlResourceConfig)
@@ -131,6 +130,29 @@ public class DefaultControllerEnricher extends BaseEnricher {
                     builder.addToJobItems(jobHandler.getJob(config, images));
                 }
             }
+        }
+    }
+
+    @Override
+    public void adapt(PlatformMode platformMode, KubernetesListBuilder builder) {
+        if(platformMode == PlatformMode.kubernetes) {
+            builder.accept(new TypedVisitor<DeploymentBuilder>() {
+                @Override
+                public void visit(DeploymentBuilder deploymentBuilder) {
+                    deploymentBuilder.editSpec().withReplicas(Integer.parseInt(getConfig(Config.replicaCount))).endSpec();
+                }
+            });
+        } else {
+            builder.accept(new TypedVisitor<DeploymentConfigBuilder>() {
+                @Override
+                public void visit(DeploymentConfigBuilder deploymentConfigBuilder) {
+                    deploymentConfigBuilder.editSpec().withReplicas(Integer.parseInt(getConfig(Config.replicaCount))).endSpec();
+
+                    if(isAutomaticTriggerEnabled(true)) {
+                        deploymentConfigBuilder.editSpec().addNewTrigger().withType("ConfigChange").endTrigger().endSpec();
+                    }
+                }
+            });
         }
     }
 
@@ -180,5 +202,13 @@ public class DefaultControllerEnricher extends BaseEnricher {
             return xmlResourceConfig.getImagePullPolicy() != null ? xmlResourceConfig.getImagePullPolicy() : defaultValue;
         }
         return defaultValue;
+    }
+
+    private Boolean isAutomaticTriggerEnabled(Boolean defaultValue) {
+        if(((MavenEnricherContext)getContext()).getProperty("fabric8.openshift.enableAutomaticTrigger") != null) {
+            return Boolean.parseBoolean(((MavenEnricherContext) getContext()).getProperty("fabric8.openshift.enableAutomaticTrigger").toString());
+        } else {
+            return defaultValue;
+        }
     }
 }

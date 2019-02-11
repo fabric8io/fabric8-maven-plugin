@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.Configs;
@@ -50,7 +51,7 @@ public class RevisionHistoryEnricherTest {
         RevisionHistoryEnricher enricher = new RevisionHistoryEnricher(context);
 
         // When
-        enricher.addMissingResources(builder);
+        enricher.addMissingResources(PlatformMode.kubernetes, builder);
 
         // Then
         assertRevisionHistory(builder.build(), Configs.asInt(RevisionHistoryEnricher.Config.limit.def()));
@@ -74,7 +75,7 @@ public class RevisionHistoryEnricherTest {
         RevisionHistoryEnricher enricher = new RevisionHistoryEnricher(context);
 
         // When
-        enricher.addMissingResources(builder);
+        enricher.addMissingResources(PlatformMode.kubernetes, builder);
 
         // Then
         assertRevisionHistory(builder.build(), Integer.parseInt(revisionNumber));

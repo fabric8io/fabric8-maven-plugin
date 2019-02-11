@@ -42,6 +42,7 @@ import io.fabric8.kubernetes.api.model.apps.ReplicaSetSpecFluent;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetFluent;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetSpecFluent;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -85,7 +86,7 @@ public class ImageEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(KubernetesListBuilder builder) {
+    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
         if (!hasImageConfiguration()) {
             log.verbose("No images resolved. Skipping ...");
             return;

@@ -31,6 +31,7 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplate;
 import io.fabric8.kubernetes.api.model.PodTemplateBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
@@ -80,7 +81,7 @@ public class VolumePermissionEnricherTest {
         KubernetesListBuilder klb = new KubernetesListBuilder().addToPodTemplateItems(ptb.build());
 
         VolumePermissionEnricher enricher = new VolumePermissionEnricher(context);
-        enricher.adapt(klb);
+        enricher.adapt(PlatformMode.kubernetes,klb);
 
         List<Container> initS = ((PodTemplate) klb.build().getItems().get(0)).getTemplate().getSpec().getInitContainers();
         assertNotNull(initS);
@@ -117,7 +118,7 @@ public class VolumePermissionEnricherTest {
 
             KubernetesListBuilder klb = new KubernetesListBuilder().addToPodTemplateItems(ptb.build());
 
-            enricher.adapt(klb);
+            enricher.adapt(PlatformMode.kubernetes,klb);
 
             PodTemplate pt = (PodTemplate) klb.buildItem(0);
 

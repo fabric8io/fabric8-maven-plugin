@@ -21,6 +21,7 @@ import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.ResourceUtil;
@@ -70,7 +71,7 @@ public class PortNameEnricherTest {
         // Enrich
         PortNameEnricher portNameEnricher = new PortNameEnricher(context);
         KubernetesListBuilder builder = getPodTemplateList();
-        portNameEnricher.addMissingResources(builder);
+        portNameEnricher.addMissingResources(PlatformMode.kubernetes,builder);
 
         // Validate that the generated resource contains
         KubernetesList list = builder.build();

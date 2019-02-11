@@ -187,7 +187,7 @@ public class AutoTLSEnricherTest {
             AutoTLSEnricher enricher = new AutoTLSEnricher(context);
             KubernetesListBuilder klb = new KubernetesListBuilder().addNewPodTemplateItem().withNewMetadata().and()
                     .withNewTemplate().withNewMetadata().and().withNewSpec().and().and().and();
-            enricher.adapt(klb);
+            enricher.adapt(PlatformMode.kubernetes, klb);
             PodTemplate pt = (PodTemplate) klb.getItems().get(0);
 
             List<Container> initContainers = pt.getTemplate().getSpec().getInitContainers();

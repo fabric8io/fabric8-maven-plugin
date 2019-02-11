@@ -21,6 +21,7 @@ import java.util.Map;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
@@ -84,7 +85,7 @@ public class AutoTLSEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(KubernetesListBuilder builder) {
+    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
         if (!isOpenShiftMode()) {
             return;
         }
@@ -142,7 +143,7 @@ public class AutoTLSEnricher extends BaseEnricher {
     }
 
     @Override
-    public void adapt(KubernetesListBuilder builder) {
+    public void adapt(PlatformMode platformMode, KubernetesListBuilder builder) {
         if (!isOpenShiftMode()) {
             return;
         }

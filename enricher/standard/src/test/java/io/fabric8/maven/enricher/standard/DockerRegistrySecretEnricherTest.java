@@ -17,6 +17,7 @@ package io.fabric8.maven.enricher.standard;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.model.Configuration;
 
 import java.util.HashMap;
@@ -74,7 +75,7 @@ public class DockerRegistrySecretEnricherTest {
         KubernetesListBuilder builder = new KubernetesListBuilder();
         Secret secretEnriched = createBaseSecret(true);
         builder.addToSecretItems(secretEnriched);
-        enricher.addMissingResources(builder);
+        enricher.addMissingResources(PlatformMode.kubernetes, builder);
 
         secretEnriched = (Secret) builder.buildItem(0);
         Map<String, String> enrichedData = secretEnriched.getData();
@@ -100,7 +101,7 @@ public class DockerRegistrySecretEnricherTest {
         builder.addToSecretItems(createBaseSecret(true));
         KubernetesList expected = builder.build();
 
-        enricher.addMissingResources(builder);
+        enricher.addMissingResources(PlatformMode.kubernetes, builder);
         assertEquals(expected, builder.build());
     }
 
@@ -115,7 +116,7 @@ public class DockerRegistrySecretEnricherTest {
 
         KubernetesList expected = builder.build();
 
-        enricher.addMissingResources(builder);
+        enricher.addMissingResources(PlatformMode.kubernetes, builder);
         assertEquals(expected, builder.build());
     }
 

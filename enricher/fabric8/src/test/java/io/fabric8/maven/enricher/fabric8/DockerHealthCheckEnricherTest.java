@@ -23,6 +23,7 @@ import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.docker.config.Arguments;
@@ -83,7 +84,7 @@ public class DockerHealthCheckEnricherTest {
         KubernetesListBuilder builder = createDeployment("myImage");
 
         DockerHealthCheckEnricher enricher = new DockerHealthCheckEnricher(context);
-        enricher.addMissingResources(builder);
+        enricher.addMissingResources(PlatformMode.kubernetes, builder);
 
         KubernetesList list = builder.build();
         assertEquals(1, list.getItems().size());
@@ -126,7 +127,7 @@ public class DockerHealthCheckEnricherTest {
         KubernetesListBuilder builder = addDeployment(createDeployment("myImage"), "myImage2");
 
         DockerHealthCheckEnricher enricher = new DockerHealthCheckEnricher(context);
-        enricher.addMissingResources(builder);
+        enricher.addMissingResources(PlatformMode.kubernetes, builder);
 
         KubernetesList list = builder.build();
         assertEquals(2, list.getItems().size());
@@ -155,7 +156,7 @@ public class DockerHealthCheckEnricherTest {
         KubernetesListBuilder builder = createDeployment("myImage");
 
         DockerHealthCheckEnricher enricher = new DockerHealthCheckEnricher(context);
-        enricher.addMissingResources(builder);
+        enricher.addMissingResources(PlatformMode.kubernetes, builder);
 
         KubernetesList list = builder.build();
         assertEquals(1, list.getItems().size());
@@ -185,7 +186,7 @@ public class DockerHealthCheckEnricherTest {
         KubernetesListBuilder builder = createDeployment("myUnmatchingImage");
 
         DockerHealthCheckEnricher enricher = new DockerHealthCheckEnricher(context);
-        enricher.addMissingResources(builder);
+        enricher.addMissingResources(PlatformMode.kubernetes, builder);
 
         KubernetesList list = builder.build();
         assertEquals(1, list.getItems().size());

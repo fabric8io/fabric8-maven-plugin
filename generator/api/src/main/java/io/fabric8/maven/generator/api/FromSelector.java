@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 
@@ -45,9 +45,9 @@ public abstract class FromSelector {
     }
 
     public String getFrom() {
-        PlatformMode mode = context.getPlatformMode();
+        RuntimeMode mode = context.getPlatformMode();
         OpenShiftBuildStrategy strategy = context.getStrategy();
-        if (mode == PlatformMode.openshift && strategy == OpenShiftBuildStrategy.s2i) {
+        if (mode == RuntimeMode.openshift && strategy == OpenShiftBuildStrategy.s2i) {
             return getS2iBuildFrom();
         } else {
             return getDockerBuildFrom();

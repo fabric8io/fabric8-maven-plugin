@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -261,7 +261,7 @@ public class BaseGeneratorTest {
     public void getRegistryInOpenshift() {
         Properties props = new Properties();
         props.put("fabric8.generator.registry", "fabric8.io");
-        props.put(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, "openshift");
+        props.put(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, "openshift");
         setupContextOpenShift(props, null, null);
 
         BaseGenerator generator = createGenerator(null);
@@ -296,10 +296,11 @@ public class BaseGeneratorTest {
             ctx.getConfig(); result = config;
             config.getConfig("test-generator", "from"); result = configFrom; minTimes = 0;
             config.getConfig("test-generator", "fromMode"); result = configFromMode; minTimes = 0;
-            ctx.getPlatformMode();result = PlatformMode.kubernetes;minTimes = 0;
+            ctx.getPlatformMode();result = RuntimeMode.kubernetes;minTimes = 0;
             ctx.getStrategy(); result = null; minTimes = 0;
         }};
     }
+
     public void setupContextOpenShift(final Properties projectProps, final String configFrom, final String configFromMode) {
         new Expectations() {{
             ctx.getProject(); result = project;
@@ -307,7 +308,7 @@ public class BaseGeneratorTest {
             ctx.getConfig(); result = config;
             config.getConfig("test-generator", "from"); result = configFrom; minTimes = 0;
             config.getConfig("test-generator", "fromMode"); result = configFromMode; minTimes = 0;
-            ctx.getPlatformMode();result = PlatformMode.openshift;minTimes = 0;
+            ctx.getPlatformMode();result = RuntimeMode.openshift;minTimes = 0;
             ctx.getStrategy(); result = OpenShiftBuildStrategy.s2i; minTimes = 0;
         }};
     }

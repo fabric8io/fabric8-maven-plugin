@@ -29,6 +29,7 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
@@ -46,20 +47,22 @@ public class RouteEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(final KubernetesListBuilder listBuilder) {
-        final List<Route> routes = new ArrayList<>();
-        listBuilder.accept(new TypedVisitor<ServiceBuilder>() {
+    public void addMissingResources(PlatformMode platformMode, final KubernetesListBuilder listBuilder) {
+        if(platformMode == PlatformMode.openshift) {
+            final List<Route> routes = new ArrayList<>();
+            listBuilder.accept(new TypedVisitor<ServiceBuilder>() {
 
-            @Override
-            public void visit(ServiceBuilder serviceBuilder) {
-                addRoute(listBuilder, serviceBuilder, routes);
+                @Override
+                public void visit(ServiceBuilder serviceBuilder) {
+                    addRoute(listBuilder, serviceBuilder, routes);
+                }
+            });
+
+            if (!routes.isEmpty()) {
+                Route[] routeArray = new Route[routes.size()];
+                routes.toArray(routeArray);
+                listBuilder.addToRouteItems(routeArray);
             }
-        });
-
-        if (!routes.isEmpty()) {
-            Route[] routeArray = new Route[routes.size()];
-            routes.toArray(routeArray);
-            listBuilder.addToRouteItems(routeArray);
         }
     }
 

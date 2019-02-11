@@ -18,7 +18,7 @@ package io.fabric8.maven.watcher.api;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterConfiguration;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.docker.service.BuildService;
@@ -39,7 +39,7 @@ public class WatcherContext {
     private Logger logger;
     private Logger newPodLogger;
     private Logger oldPodLogger;
-    private PlatformMode mode;
+    private RuntimeMode mode;
     private boolean useProjectClasspath;
     private ServiceHub serviceHub;
     private WatchService.WatchContext watchContext;
@@ -63,7 +63,7 @@ public class WatcherContext {
         return logger;
     }
 
-    public PlatformMode getMode() {
+    public RuntimeMode getMode() {
         return mode;
     }
 
@@ -134,7 +134,7 @@ public class WatcherContext {
             return this;
         }
 
-        public Builder mode(PlatformMode mode) {
+        public Builder mode(RuntimeMode mode) {
             ctx.mode = mode;
             return this;
         }

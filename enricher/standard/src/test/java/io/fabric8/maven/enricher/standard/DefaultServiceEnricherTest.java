@@ -22,6 +22,7 @@ import java.util.TreeMap;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
@@ -155,7 +156,7 @@ public class DefaultServiceEnricherTest {
         setupExpectations(false, "headless", "false");
         DefaultServiceEnricher serviceEnricher = new DefaultServiceEnricher(context);
         KubernetesListBuilder builder = new KubernetesListBuilder();
-        serviceEnricher.addMissingResources(builder);
+        serviceEnricher.addMissingResources(PlatformMode.kubernetes, builder);
 
         // Validate that the generated resource contains
         KubernetesList list = builder.build();
@@ -211,7 +212,7 @@ public class DefaultServiceEnricherTest {
         // Enrich
         DefaultServiceEnricher serviceEnricher = new DefaultServiceEnricher(context);
         KubernetesListBuilder builder = new KubernetesListBuilder();
-        serviceEnricher.addMissingResources(builder);
+        serviceEnricher.addMissingResources(PlatformMode.kubernetes, builder);
 
         // Validate that the generated resource contains
         KubernetesList list = builder.build();

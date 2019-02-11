@@ -18,6 +18,7 @@ package io.fabric8.maven.generator.api;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.service.ArtifactResolverService;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.project.MavenProject;
@@ -30,7 +31,7 @@ public class GeneratorContext {
     private MavenProject project;
     private ProcessorConfig config;
     private Logger logger;
-    private PlatformMode platformMode;
+    private RuntimeMode platformMode;
     private OpenShiftBuildStrategy strategy;
 
     private boolean useProjectClasspath;
@@ -54,7 +55,7 @@ public class GeneratorContext {
         return logger;
     }
 
-    public PlatformMode getPlatformMode() {
+    public RuntimeMode getPlatformMode() {
         return platformMode;
     }
 
@@ -105,7 +106,7 @@ public class GeneratorContext {
             return this;
         }
 
-        public Builder platformMode(PlatformMode mode) {
+        public Builder platformMode(RuntimeMode mode) {
             ctx.platformMode = mode;
             return this;
         }

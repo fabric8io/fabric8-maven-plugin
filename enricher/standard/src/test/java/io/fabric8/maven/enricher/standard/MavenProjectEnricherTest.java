@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
 import java.util.Map;
@@ -60,7 +61,7 @@ public class MavenProjectEnricherTest {
         ProjectEnricher projectEnricher = new ProjectEnricher(context);
 
         KubernetesListBuilder builder = createListWithDeploymentConfig();
-        projectEnricher.adapt(builder);
+        projectEnricher.adapt(PlatformMode.kubernetes, builder);
         KubernetesList list = builder.build();
 
         Map<String, String> labels = list.getItems().get(0).getMetadata().getLabels();
@@ -91,7 +92,7 @@ public class MavenProjectEnricherTest {
         ProjectEnricher projectEnricher = new ProjectEnricher(context);
 
         KubernetesListBuilder builder = createListWithDeploymentConfig();
-        projectEnricher.adapt(builder);
+        projectEnricher.adapt(PlatformMode.kubernetes, builder);
         KubernetesList list = builder.build();
 
         Map<String, String> labels = list.getItems().get(0).getMetadata().getLabels();

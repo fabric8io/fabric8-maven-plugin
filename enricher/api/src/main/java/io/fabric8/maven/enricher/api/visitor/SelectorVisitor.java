@@ -29,6 +29,7 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.maven.enricher.api.Enricher;
 import io.fabric8.maven.enricher.api.Kind;
+import io.fabric8.openshift.api.model.DeploymentConfigSpecBuilder;
 
 import static io.fabric8.maven.enricher.api.util.ExtractorUtil.extractSelector;
 
@@ -100,6 +101,26 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
                     item.withNewSelector().addToMatchLabels(selectorMatchLabels).endSelector();
                 } else {
                     MapUtil.mergeIfAbsent(selector.getMatchLabels(), selectorMatchLabels);
+                }
+            }
+        }
+    }
+
+    public static class DeploymentConfigSpecBuilderVisitor extends SelectorVisitor<DeploymentConfigSpecBuilder> {
+
+        public DeploymentConfigSpecBuilderVisitor(List<Enricher> enrichers) {
+            super(enrichers);
+        }
+
+        @Override
+        public void visit(DeploymentConfigSpecBuilder item) {
+            Map<String, String> selectorMatchLabels = extractSelector(getConfig(), Kind.DEPLOYMENT, enrichers);
+            if(!selectorMatchLabels.isEmpty()) {
+                Map<String, String> selector = item.getSelector();
+                if (selector == null) {
+                    item.withSelector(selectorMatchLabels);
+                } else {
+                    MapUtil.mergeIfAbsent(selector, selectorMatchLabels);
                 }
             }
         }

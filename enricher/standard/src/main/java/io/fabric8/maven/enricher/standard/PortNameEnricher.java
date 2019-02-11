@@ -25,6 +25,7 @@ import java.util.Set;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import org.apache.commons.lang3.StringUtils;
@@ -51,7 +52,7 @@ public class PortNameEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(KubernetesListBuilder builder) {
+    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
         builder.accept(new TypedVisitor<ContainerPortBuilder>() {
             @Override
             public void visit(ContainerPortBuilder portBuilder) {

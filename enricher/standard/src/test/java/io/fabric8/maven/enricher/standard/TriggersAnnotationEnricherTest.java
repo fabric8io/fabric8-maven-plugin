@@ -23,6 +23,7 @@ import io.fabric8.kubernetes.api.model.apps.DaemonSet;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.batch.Job;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.ImageChangeTrigger;
@@ -65,7 +66,7 @@ public class TriggersAnnotationEnricherTest {
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
-        enricher.adapt(builder);
+        enricher.adapt(PlatformMode.kubernetes, builder);
 
 
         StatefulSet res = (StatefulSet) builder.build().getItems().get(0);
@@ -101,7 +102,7 @@ public class TriggersAnnotationEnricherTest {
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
-        enricher.adapt(builder);
+        enricher.adapt(PlatformMode.kubernetes, builder);
 
 
         ReplicaSet res = (ReplicaSet) builder.build().getItems().get(0);
@@ -139,7 +140,7 @@ public class TriggersAnnotationEnricherTest {
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
-        enricher.adapt(builder);
+        enricher.adapt(PlatformMode.kubernetes, builder);
 
 
         DaemonSet res = (DaemonSet) builder.build().getItems().get(0);
@@ -183,7 +184,7 @@ public class TriggersAnnotationEnricherTest {
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
-        enricher.adapt(builder);
+        enricher.adapt(PlatformMode.kubernetes, builder);
 
 
         StatefulSet res = (StatefulSet) builder.build().getItems().get(0);
@@ -226,7 +227,7 @@ public class TriggersAnnotationEnricherTest {
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
-        enricher.adapt(builder);
+        enricher.adapt(PlatformMode.kubernetes, builder);
 
 
         Job res = (Job) builder.build().getItems().get(0);

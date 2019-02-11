@@ -21,7 +21,8 @@ import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -154,8 +155,8 @@ abstract public class BaseGenerator implements Generator {
     }
 
     // Use "istag" as default for "redhat" versions of this plugin
-    private String getFromModeDefault(PlatformMode mode) {
-        if (mode == PlatformMode.openshift && fromSelector != null && fromSelector.isRedHat()) {
+    private String getFromModeDefault(RuntimeMode mode) {
+        if (mode == RuntimeMode.openshift && fromSelector != null && fromSelector.isRedHat()) {
             return "istag";
         } else {
             return "docker";
@@ -168,7 +169,7 @@ abstract public class BaseGenerator implements Generator {
      * @return Docker image name which is never null
      */
     protected String getImageName() {
-        if (PlatformMode.isOpenShiftMode(getProject().getProperties())) {
+        if (RuntimeMode.isOpenShiftMode(getProject().getProperties())) {
             return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", "%a:%l");
         } else {
             return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", "%g/%a:%l");
@@ -182,7 +183,7 @@ abstract public class BaseGenerator implements Generator {
      * @return The docker registry if configured
      */
     protected String getRegistry() {
-        if (!PlatformMode.isOpenShiftMode(getProject().getProperties())) {
+        if (!RuntimeMode.isOpenShiftMode(getProject().getProperties())) {
             return getConfigWithSystemFallbackAndDefault(Config.registry, "fabric8.generator.registry", null);
         }
 

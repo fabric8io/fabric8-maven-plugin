@@ -23,9 +23,12 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.openshift.api.model.DeploymentConfig;
+import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 
 /**
  * Enricher which copies the annotation from a Deployment to the annotations of
@@ -37,12 +40,12 @@ public class PodAnnotationEnricher extends BaseEnricher {
     }
 
     @Override
-    public void adapt(KubernetesListBuilder builder) {
-        super.adapt(builder);
+    public void adapt(PlatformMode platformMode, KubernetesListBuilder builder) {
+        super.adapt(platformMode, builder);
 
         List<HasMetadata> items = builder.getItems();
         for (HasMetadata item : items) {
-            if (item instanceof Deployment) {
+            if (platformMode == PlatformMode.kubernetes && item instanceof Deployment) {
                 Deployment deployment = (Deployment) item;
                 ObjectMeta metadata = deployment.getMetadata();
                 DeploymentSpec spec = deployment.getSpec();
@@ -53,6 +56,21 @@ public class PodAnnotationEnricher extends BaseEnricher {
                         if (templateMetadata == null) {
                             templateMetadata = new ObjectMeta();
                             template.setMetadata(templateMetadata);
+                        }
+                        templateMetadata.setAnnotations(MapUtil.mergeMaps(templateMetadata.getAnnotations(), metadata.getAnnotations()));
+                    }
+                }
+            } else if(platformMode == PlatformMode.openshift && item instanceof DeploymentConfig) {
+                DeploymentConfig deploymentConfig = (DeploymentConfig)item;
+                ObjectMeta metadata = deploymentConfig.getMetadata();
+                DeploymentConfigSpec spec = deploymentConfig.getSpec();
+                if(metadata != null && spec != null) {
+                    PodTemplateSpec templateSpec = spec.getTemplate();
+                    if(templateSpec != null) {
+                        ObjectMeta templateMetadata = templateSpec.getMetadata();
+                        if(templateMetadata == null) {
+                            templateMetadata = new ObjectMeta();
+                            templateSpec.setMetadata(templateMetadata);
                         }
                         templateMetadata.setAnnotations(MapUtil.mergeMaps(templateMetadata.getAnnotations(), metadata.getAnnotations()));
                     }

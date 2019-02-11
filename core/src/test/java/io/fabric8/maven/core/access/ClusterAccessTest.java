@@ -21,7 +21,7 @@ import java.util.List;
 import io.fabric8.kubernetes.api.model.RootPaths;
 import io.fabric8.kubernetes.client.Client;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftMockServer;
@@ -38,7 +38,7 @@ public class ClusterAccessTest {
     @Mocked
     private Logger logger;
 
-    private PlatformMode mode;
+    private RuntimeMode mode;
 
     private List<String> paths = new ArrayList<String>() ;
 
@@ -46,7 +46,7 @@ public class ClusterAccessTest {
     OpenShiftClient client = mockServer.createOpenShiftClient();
 
     @Test
-    public void openshiftPlatformModeTest() throws Exception {
+    public void openshiftRuntimeModeTest() throws Exception {
 
         paths.add("/oapi");
         paths.add("/oapi/v1");
@@ -59,18 +59,18 @@ public class ClusterAccessTest {
 
         ClusterAccess clusterAccess = new ClusterAccess(null, client);
 
-        mode = clusterAccess.resolvePlatformMode(PlatformMode.openshift, logger);
-        assertEquals(PlatformMode.openshift, mode);
+        mode = clusterAccess.resolveRuntimeMode(RuntimeMode.openshift, logger);
+        assertEquals(RuntimeMode.openshift, mode);
 
-        mode = clusterAccess.resolvePlatformMode(PlatformMode.DEFAULT, logger);
-        assertEquals(PlatformMode.openshift, mode);
+        mode = clusterAccess.resolveRuntimeMode(RuntimeMode.DEFAULT, logger);
+        assertEquals(RuntimeMode.openshift, mode);
 
-        mode = clusterAccess.resolvePlatformMode(null, logger);
-        assertEquals(PlatformMode.openshift, mode);
+        mode = clusterAccess.resolveRuntimeMode(null, logger);
+        assertEquals(RuntimeMode.openshift, mode);
     }
 
     @Test
-    public void kubernetesPlatformModeTest() throws Exception {
+    public void kubernetesRuntimeModeTest() throws Exception {
 
         RootPaths rootpaths = new RootPaths();
 
@@ -80,14 +80,14 @@ public class ClusterAccessTest {
 
         ClusterAccess clusterAccess = new ClusterAccess(null, client);
 
-        mode = clusterAccess.resolvePlatformMode(PlatformMode.kubernetes, logger);
-        assertEquals(PlatformMode.kubernetes, mode);
+        mode = clusterAccess.resolveRuntimeMode(RuntimeMode.kubernetes, logger);
+        assertEquals(RuntimeMode.kubernetes, mode);
 
-        mode = clusterAccess.resolvePlatformMode(PlatformMode.DEFAULT, logger);
-        assertEquals(PlatformMode.kubernetes, mode);
+        mode = clusterAccess.resolveRuntimeMode(RuntimeMode.DEFAULT, logger);
+        assertEquals(RuntimeMode.kubernetes, mode);
 
-        mode = clusterAccess.resolvePlatformMode(null, logger);
-        assertEquals(PlatformMode.kubernetes, mode);
+        mode = clusterAccess.resolveRuntimeMode(null, logger);
+        assertEquals(RuntimeMode.kubernetes, mode);
     }
 
     @Test
