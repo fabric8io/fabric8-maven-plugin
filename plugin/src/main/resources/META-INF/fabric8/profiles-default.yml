@@ -45,6 +45,7 @@
     # Route exposure
     - fmp-openshift-service-expose
     - fmp-openshift-route
+    - fmp-openshift-deploymentconfig
 
     # -----------------------------------------
     # TODO: Document and verify enrichers below

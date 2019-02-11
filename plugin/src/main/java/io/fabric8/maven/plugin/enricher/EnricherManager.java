@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import com.google.common.base.Function;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.ClassUtil;
@@ -62,28 +63,28 @@ public class EnricherManager {
 
     }
 
-    public void createDefaultResources(final KubernetesListBuilder builder) {
-        createDefaultResources(defaultEnricherConfig, builder);
+    public void createDefaultResources(PlatformMode platformMode, final KubernetesListBuilder builder) {
+        createDefaultResources(platformMode, defaultEnricherConfig, builder);
     }
 
-    public void createDefaultResources(ProcessorConfig enricherConfig, final KubernetesListBuilder builder) {
+    public void createDefaultResources(PlatformMode platformMode, ProcessorConfig enricherConfig, final KubernetesListBuilder builder) {
         // Add default resources
         loop(enricherConfig, enricher -> {
-            enricher.addMissingResources(builder);
+            enricher.addMissingResources(platformMode, builder);
             return null;
         });
     }
 
-    public void enrich(KubernetesListBuilder builder) {
-        enrich(defaultEnricherConfig, builder);
+    public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) {
+        enrich(platformMode, defaultEnricherConfig, builder);
     }
 
-    public void enrich(ProcessorConfig config, KubernetesListBuilder builder) {
+    public void enrich(PlatformMode platformMode, ProcessorConfig config, KubernetesListBuilder builder) {
         // Add Metadata labels (
-        addMetadata(config, builder, enrichers);
+        addMetadata(platformMode, config, builder, enrichers);
 
         // Final customization step
-        adapt(config, builder);
+        adapt(platformMode, config, builder);
     }
 
     /**
@@ -92,14 +93,11 @@ public class EnricherManager {
      * @param builder builder to customize
      * @param enricherList list of enrichers
      */
-    private void addMetadata(final ProcessorConfig enricherConfig, final KubernetesListBuilder builder, final List<Enricher> enricherList) {
-        loop(enricherConfig, new Function<Enricher, Void>() {
-            @Override
-            public Void apply(Enricher enricher) {
-                enricher.addMetadata(builder, enricherList);
+    private void addMetadata(PlatformMode platformMode, final ProcessorConfig enricherConfig, final KubernetesListBuilder builder, final List<Enricher> enricherList) {
+        loop(enricherConfig, (Enricher enricher) -> {
+                enricher.addMetadata(PlatformMode.kubernetes, builder, enricherList);
                 return null;
-            }
-        });
+            });
     }
 
     /**
@@ -107,14 +105,11 @@ public class EnricherManager {
      *
      * @param builder builder to customize
      */
-    private void adapt(final ProcessorConfig enricherConfig, final KubernetesListBuilder builder) {
-        loop(enricherConfig, new Function<Enricher, Void>() {
-            @Override
-            public Void apply(Enricher enricher) {
-                enricher.adapt(builder);
+    private void adapt(PlatformMode platformMode, final ProcessorConfig enricherConfig, final KubernetesListBuilder builder) {
+        loop(enricherConfig, (Enricher enricher) -> {
+                enricher.adapt(platformMode, builder);
                 return null;
-            }
-        });
+            });
     }
 
     private void logEnrichers(List<Enricher> enrichers) {

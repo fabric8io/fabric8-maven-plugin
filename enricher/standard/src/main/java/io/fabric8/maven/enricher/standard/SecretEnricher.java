@@ -27,6 +27,7 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.SecretConfig;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Base64Util;
 import io.fabric8.maven.core.util.SecretConstants;
 import io.fabric8.maven.enricher.api.BaseEnricher;
@@ -44,7 +45,7 @@ public abstract class SecretEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(KubernetesListBuilder builder) {
+    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
         // update builder
         // use a selector to choose all secret builder in kubernetes list builders.
         // try to find the target annotations

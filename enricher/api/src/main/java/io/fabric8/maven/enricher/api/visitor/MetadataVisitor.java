@@ -34,6 +34,7 @@ import io.fabric8.maven.enricher.api.Enricher;
 import io.fabric8.maven.enricher.api.Kind;
 import io.fabric8.openshift.api.model.BuildBuilder;
 import io.fabric8.openshift.api.model.BuildConfigBuilder;
+import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import io.fabric8.openshift.api.model.ImageStreamBuilder;
 
 import static io.fabric8.maven.enricher.api.util.ExtractorUtil.extractAnnotations;
@@ -229,6 +230,22 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(DeploymentBuilder item) {
+            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+        }
+    }
+
+    public static class DeploymentConfigBuilderVisitor extends MetadataVisitor<DeploymentConfigBuilder> {
+        public DeploymentConfigBuilderVisitor(ResourceConfig resourceConfig, List<Enricher> enrichers) {
+            super(resourceConfig, enrichers);
+        }
+
+        @Override
+        protected Kind getKind() {
+            return Kind.DEPLOYMENT;
+        }
+
+        @Override
+        protected ObjectMeta getOrCreateMetadata(DeploymentConfigBuilder item) {
             return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
         }
     }

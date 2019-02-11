@@ -16,10 +16,13 @@
 package io.fabric8.maven.enricher.standard;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.Enricher;
+import io.fabric8.maven.enricher.api.Kind;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.util.List;
 import io.fabric8.maven.enricher.api.visitor.SelectorVisitor;
@@ -50,6 +53,7 @@ public class DefaultMetadataEnricher extends BaseEnricher {
 
         this.metaDataVisitors = new MetadataVisitor[] {
                 new MetadataVisitor.DeploymentBuilderVisitor(resourceConfig, enrichers),
+                new MetadataVisitor.DeploymentConfigBuilderVisitor(resourceConfig, enrichers),
                 new MetadataVisitor.ReplicaSet(resourceConfig,  enrichers),
                 new MetadataVisitor.ReplicationControllerBuilderVisitor(resourceConfig,  enrichers),
                 new MetadataVisitor.ServiceBuilderVisitor(resourceConfig,  enrichers),
@@ -65,6 +69,7 @@ public class DefaultMetadataEnricher extends BaseEnricher {
 
         this.selectorVisitorCreators = new SelectorVisitor[] {
                 new SelectorVisitor.DeploymentSpecBuilderVisitor(enrichers),
+                new SelectorVisitor.DeploymentConfigSpecBuilderVisitor(enrichers),
                 new SelectorVisitor.ReplicaSetSpecBuilderVisitor(enrichers),
                 new SelectorVisitor.ReplicationControllerSpecBuilderVisitor(enrichers),
                 new SelectorVisitor.ServiceSpecBuilderVisitor(enrichers),
@@ -75,7 +80,7 @@ public class DefaultMetadataEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMetadata(KubernetesListBuilder builder, List<Enricher> enrichers) {
+    public void addMetadata(PlatformMode platformMode, KubernetesListBuilder builder, List<Enricher> enrichers) {
         this.enrichers = enrichers;
 
         init();

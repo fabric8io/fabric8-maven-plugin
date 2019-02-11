@@ -61,13 +61,13 @@ public abstract class BaseEnricher implements Enricher {
     public Map<String, String> getAnnotations(Kind kind) { return null; }
 
     @Override
-    public void adapt(KubernetesListBuilder builder) { }
+    public void adapt(PlatformMode platformMode, KubernetesListBuilder builder) { }
 
     @Override
-    public void addMetadata(KubernetesListBuilder builder, List<Enricher> enrichers) { }
+    public void addMetadata(PlatformMode platformMode, KubernetesListBuilder builder, List<Enricher> enrichers) { }
 
     @Override
-    public void addMissingResources(KubernetesListBuilder builder) { }
+    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) { }
 
     @Override
     public Map<String, String> getSelector(Kind kind) { return null; }

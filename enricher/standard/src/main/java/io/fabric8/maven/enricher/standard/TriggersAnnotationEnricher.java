@@ -31,6 +31,7 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.apps.*;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.docker.util.ImageName;
@@ -68,7 +69,7 @@ public class TriggersAnnotationEnricher extends BaseEnricher {
     }
 
     @Override
-    public void adapt(KubernetesListBuilder builder) {
+    public void adapt(PlatformMode platformMode, KubernetesListBuilder builder) {
 
         builder.accept(new TypedVisitor<StatefulSetBuilder>() {
             @Override

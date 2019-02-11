@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.core.util.kubernetes;
 
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
 import java.io.File;
 import java.io.FilenameFilter;
@@ -106,10 +107,12 @@ public class KubernetesResourceUtil {
     public static final String API_EXTENSIONS_VERSION = "extensions/v1beta1";
     public static final String API_APPS_VERSION = "apps/v1beta1";
     public static final String JOB_VERSION = "batch/v1";
+    public static final String OPENSHIFT_V1_VERSION = "apps.openshift.io/v1";
     public static final ResourceVersioning DEFAULT_RESOURCE_VERSIONING = new ResourceVersioning()
             .withCoreVersion(API_VERSION)
             .withExtensionsVersion(API_EXTENSIONS_VERSION)
             .withAppsVersion(API_APPS_VERSION)
+            .withOpenshiftV1Version(OPENSHIFT_V1_VERSION)
             .withJobVersion(JOB_VERSION);
 
     public static final HashSet<Class<?>> SIMPLE_FIELD_TYPES = new HashSet<>();
@@ -129,13 +132,13 @@ public class KubernetesResourceUtil {
      * @return the list builder
      * @throws IOException
      */
-    public static KubernetesListBuilder readResourceFragmentsFrom(ResourceVersioning apiVersions,
+    public static KubernetesListBuilder readResourceFragmentsFrom(PlatformMode platformMode, ResourceVersioning apiVersions,
                                                                   String defaultName,
                                                                   File[] resourceFiles) throws IOException {
         KubernetesListBuilder builder = new KubernetesListBuilder();
         if (resourceFiles != null) {
             for (File file : resourceFiles) {
-                HasMetadata resource = getResource(apiVersions, file, defaultName);
+                HasMetadata resource = getResource(platformMode, apiVersions, file, defaultName);
                 builder.addToItems(resource);
             }
         }
@@ -157,9 +160,9 @@ public class KubernetesResourceUtil {
      * @param file file to read, whose name must match {@link #FILENAME_PATTERN}.  @return map holding the fragment
      * @param appName resource name specifying resources belonging to this application
      */
-    public static HasMetadata getResource(ResourceVersioning apiVersions,
+    public static HasMetadata getResource(PlatformMode platformMode, ResourceVersioning apiVersions,
                                           File file, String appName) throws IOException {
-        Map<String,Object> fragment = readAndEnrichFragment(apiVersions, file, appName);
+        Map<String,Object> fragment = readAndEnrichFragment(platformMode, apiVersions, file, appName);
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.convertValue(fragment, HasMetadata.class);
@@ -171,12 +174,7 @@ public class KubernetesResourceUtil {
     public static File[] listResourceFragments(File resourceDir) {
         final Pattern filenamePattern = Pattern.compile(FILENAME_PATTERN);
         final Pattern exludePattern = Pattern.compile(PROFILES_PATTERN);
-        return resourceDir.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return filenamePattern.matcher(name).matches() && !exludePattern.matcher(name).matches();
-            }
-        });
+        return resourceDir.listFiles((File dir, String name) -> filenamePattern.matcher(name).matches() && !exludePattern.matcher(name).matches());
     }
 
 
@@ -222,7 +220,7 @@ public class KubernetesResourceUtil {
     private static final String PROFILES_PATTERN = "^profiles?\\.ya?ml$";
 
     // Read fragment and add default values
-    private static Map<String, Object> readAndEnrichFragment(ResourceVersioning apiVersions,
+    private static Map<String, Object> readAndEnrichFragment(PlatformMode platformMode, ResourceVersioning apiVersions,
                                                              File file, String appName) throws IOException {
         Pattern pattern = Pattern.compile(FILENAME_PATTERN, Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(file.getName());
@@ -239,6 +237,7 @@ public class KubernetesResourceUtil {
 
         if (type != null) {
             kind = getAndValidateKindFromType(file, type);
+
         } else {
             // Try name as type
             kind = FILENAME_TO_KIND_MAPPER.get(name.toLowerCase());
@@ -248,6 +247,9 @@ public class KubernetesResourceUtil {
             }
         }
 
+        if(kind != null && kind.equals("Deployment") && platformMode.equals(PlatformMode.openshift)) {
+            kind = "DeploymentConfig";
+        }
         addKind(fragment, kind, file.getName());
 
         String apiVersion = apiVersions.getCoreVersion();
@@ -257,6 +259,8 @@ public class KubernetesResourceUtil {
             apiVersion = apiVersions.getAppsVersion();
         } else if (Objects.equals(kind, "Job")) {
             apiVersion = apiVersions.getJobVersion();
+        } else if(Objects.equals(kind, "DeploymentConfig") && platformMode == PlatformMode.openshift) {
+            apiVersion = apiVersions.getOpenshiftV1version();
         }
         addIfNotExistent(fragment, "apiVersion", apiVersion);
 

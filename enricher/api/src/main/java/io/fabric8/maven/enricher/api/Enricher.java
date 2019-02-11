@@ -17,6 +17,7 @@ package io.fabric8.maven.enricher.api;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.Named;
+import io.fabric8.maven.core.config.PlatformMode;
 
 import java.util.List;
 import java.util.Map;
@@ -63,14 +64,14 @@ public interface Enricher extends Named {
      *
      * @param builder the build to examine and add to
      */
-    void addMissingResources(KubernetesListBuilder builder);
+    void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder);
 
     /**
      * Final customization of the overall resource descriptor. Fine tuning happens here.
      *
      * @param builder list to customer used to customize
      */
-    void adapt(KubernetesListBuilder builder);
+    void adapt(PlatformMode platformMode, KubernetesListBuilder builder);
 
-    void addMetadata(KubernetesListBuilder builder, List<Enricher> enrichers);
+    void addMetadata(PlatformMode platformMode, KubernetesListBuilder builder, List<Enricher> enrichers);
 }

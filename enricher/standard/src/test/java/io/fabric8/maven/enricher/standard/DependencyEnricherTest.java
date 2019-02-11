@@ -23,6 +23,7 @@ package io.fabric8.maven.enricher.standard;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.core.util.KindAndName;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
@@ -73,8 +74,8 @@ public class DependencyEnricherTest {
 
     private KubernetesList enrichResources(KubernetesListBuilder aBuilder) {
         DependencyEnricher enricher = new DependencyEnricher(context);
-        enricher.addMissingResources(aBuilder);
-        enricher.adapt(aBuilder);
+        enricher.addMissingResources(PlatformMode.kubernetes, aBuilder);
+        enricher.adapt(PlatformMode.kubernetes, aBuilder);
         return aBuilder.build();
     }
 
@@ -91,6 +92,7 @@ public class DependencyEnricherTest {
          * loading Kubernetes resources.
          */
         KubernetesListBuilder builder = KubernetesResourceUtil.readResourceFragmentsFrom(
+                PlatformMode.kubernetes,
                 KubernetesResourceUtil.DEFAULT_RESOURCE_VERSIONING,
                 project.getName(),
                 resourceList.toArray(new File[resourceList.size()]));

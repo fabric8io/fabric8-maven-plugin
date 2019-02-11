@@ -18,9 +18,11 @@ package io.fabric8.maven.enricher.standard;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 
 /**
  * This enricher adds the 'revisionHistoryLimit' property to deployment spec of RCs / RSs for KuberNetes/OpenShift resource descriptors.
@@ -45,18 +47,29 @@ public class RevisionHistoryEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(KubernetesListBuilder builder) {
+    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
         final Integer maxRevisionHistories = Configs.asInt(getConfig(Config.limit));
 
         log.info("Adding revision history limit to %s", maxRevisionHistories);
 
-        builder.accept(new TypedVisitor<DeploymentBuilder>() {
-            @Override
-            public void visit(DeploymentBuilder item) {
-                item.editOrNewSpec()
-                    .withRevisionHistoryLimit(maxRevisionHistories)
-                .endSpec();
-            }
-        });
+        if(platformMode == PlatformMode.kubernetes) {
+            builder.accept(new TypedVisitor<DeploymentBuilder>() {
+                @Override
+                public void visit(DeploymentBuilder item) {
+                    item.editOrNewSpec()
+                            .withRevisionHistoryLimit(maxRevisionHistories)
+                            .endSpec();
+                }
+            });
+        } else {
+            builder.accept(new TypedVisitor<DeploymentConfigBuilder>() {
+                @Override
+                public void visit(DeploymentConfigBuilder item) {
+                    item.editOrNewSpec()
+                            .withRevisionHistoryLimit(maxRevisionHistories)
+                            .endSpec();
+                }
+            });
+        }
     }
 }

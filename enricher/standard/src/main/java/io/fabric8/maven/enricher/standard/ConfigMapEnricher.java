@@ -20,6 +20,7 @@ import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.ConfigMapEntry;
 import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.io.IOException;
@@ -39,7 +40,7 @@ public class ConfigMapEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(KubernetesListBuilder builder) {
+    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
         addAnnotations(builder);
         addConfigMapFromXmlConfigurations(builder);
     }

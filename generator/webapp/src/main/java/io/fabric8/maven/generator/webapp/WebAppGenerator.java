@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.Arguments;
@@ -75,7 +75,7 @@ public class WebAppGenerator extends BaseGenerator {
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean prePackagePhase) {
-        if (getContext().getPlatformMode() == PlatformMode.openshift &&
+        if (getContext().getPlatformMode() == RuntimeMode.openshift &&
             getContext().getStrategy() == OpenShiftBuildStrategy.s2i &&
             !prePackagePhase) {
             throw new IllegalArgumentException("S2I not yet supported for the webapp-generator. Use -Dfabric8.mode=kubernetes or " +

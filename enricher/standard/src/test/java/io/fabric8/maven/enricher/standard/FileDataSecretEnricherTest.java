@@ -19,6 +19,7 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.Base64Util;
@@ -63,7 +64,7 @@ public class FileDataSecretEnricherTest {
         builder.addToSecretItems(createBaseSecret());
 
         // When
-        fileDataSecretEnricher.addMissingResources(builder);
+        fileDataSecretEnricher.addMissingResources(PlatformMode.kubernetes,builder);
 
         // Then
         final Secret secret = (Secret) builder.buildFirstItem();

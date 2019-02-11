@@ -16,7 +16,7 @@
 package io.fabric8.maven.core.service;
 
 import io.fabric8.maven.core.access.ClusterAccess;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.service.kubernetes.DockerBuildService;
 import io.fabric8.maven.core.service.openshift.OpenshiftBuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
@@ -58,16 +58,16 @@ public class Fabric8ServiceHubTest {
     @Before
     public void init() throws Exception {
         new Expectations() {{
-            clusterAccess.resolvePlatformMode(PlatformMode.kubernetes, withInstanceOf(Logger.class));
-            result = PlatformMode.kubernetes;
+            clusterAccess.resolveRuntimeMode(RuntimeMode.kubernetes, withInstanceOf(Logger.class));
+            result = RuntimeMode.kubernetes;
             minTimes = 0;
 
-            clusterAccess.resolvePlatformMode(PlatformMode.openshift, withInstanceOf(Logger.class));
-            result = PlatformMode.openshift;
+            clusterAccess.resolveRuntimeMode(RuntimeMode.openshift, withInstanceOf(Logger.class));
+            result = RuntimeMode.openshift;
             minTimes = 0;
 
-            clusterAccess.resolvePlatformMode(PlatformMode.auto, withInstanceOf(Logger.class));
-            result = PlatformMode.kubernetes;
+            clusterAccess.resolveRuntimeMode(RuntimeMode.auto, withInstanceOf(Logger.class));
+            result = RuntimeMode.kubernetes;
             minTimes = 0;
 
             clusterAccess.createKubernetesClient();
@@ -95,7 +95,7 @@ public class Fabric8ServiceHubTest {
         new Fabric8ServiceHub.Builder()
                 .clusterAccess(clusterAccess)
                 .log(logger)
-                .platformMode(PlatformMode.auto)
+                .platformMode(RuntimeMode.auto)
                 .build();
     }
 
@@ -104,7 +104,7 @@ public class Fabric8ServiceHubTest {
         Fabric8ServiceHub hub = new Fabric8ServiceHub.Builder()
                 .clusterAccess(clusterAccess)
                 .log(logger)
-                .platformMode(PlatformMode.kubernetes)
+                .platformMode(RuntimeMode.kubernetes)
                 .dockerServiceHub(dockerServiceHub)
                 .buildServiceConfig(buildServiceConfig)
                 .build();
@@ -120,7 +120,7 @@ public class Fabric8ServiceHubTest {
         Fabric8ServiceHub hub = new Fabric8ServiceHub.Builder()
                 .clusterAccess(clusterAccess)
                 .log(logger)
-                .platformMode(PlatformMode.openshift)
+                .platformMode(RuntimeMode.openshift)
                 .dockerServiceHub(dockerServiceHub)
                 .buildServiceConfig(buildServiceConfig)
                 .build();
@@ -136,7 +136,7 @@ public class Fabric8ServiceHubTest {
         Fabric8ServiceHub hub = new Fabric8ServiceHub.Builder()
                 .clusterAccess(clusterAccess)
                 .log(logger)
-                .platformMode(PlatformMode.kubernetes)
+                .platformMode(RuntimeMode.kubernetes)
                 .mavenProject(mavenProject)
                 .repositorySystem(repositorySystem)
                 .build();

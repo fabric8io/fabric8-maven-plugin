@@ -74,6 +74,9 @@ io.fabric8.maven.enricher.standard.openshift.AutoTLSEnricher
 # Add a route on demand when on OpenShift
 io.fabric8.maven.enricher.standard.openshift.RouteEnricher
 
+# Add a deploymentconfig from deployment when on OpenShift
+io.fabric8.maven.enricher.standard.openshift.DeploymentConfigEnricher
+
 # Add an "expose" label to every service (TODO: Combine this with a Route/Ingress enricher)
 io.fabric8.maven.enricher.standard.openshift.ExposeEnricher
 

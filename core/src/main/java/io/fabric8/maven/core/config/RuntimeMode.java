@@ -15,17 +15,17 @@
  */
 package io.fabric8.maven.core.config;
 
-import java.util.Properties;
-
 import com.google.common.base.Objects;
 
+import java.util.Properties;
+
 /**
- * Mode how to create resource descriptors
+ * Mode how to interact with Kubernetes/Openshift cluster.
  *
  * @author roland
  * @since 25/05/16
  */
-public enum PlatformMode {
+public enum RuntimeMode {
 
     /**
      * Create resources descriptors for vanilla Kubernetes
@@ -43,13 +43,13 @@ public enum PlatformMode {
      */
     auto(true, "Auto");
 
-    public static final PlatformMode DEFAULT = PlatformMode.auto;
+    public static final RuntimeMode DEFAULT = RuntimeMode.auto;
     public static final String FABRIC8_EFFECTIVE_PLATFORM_MODE = "fabric8.internal.effective.platform.mode";
 
     private boolean autoFlag;
     private String label;
 
-    PlatformMode(boolean autoFlag, String label) {
+    RuntimeMode(boolean autoFlag, String label) {
         this.autoFlag = autoFlag;
         this.label = label;
     }

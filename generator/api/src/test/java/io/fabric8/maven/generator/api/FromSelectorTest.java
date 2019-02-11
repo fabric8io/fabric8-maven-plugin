@@ -18,7 +18,7 @@ package io.fabric8.maven.generator.api;
 import java.util.Map;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
@@ -30,7 +30,7 @@ import org.junit.Test;
 import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy;
 import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.docker;
 import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.s2i;
-import static io.fabric8.maven.core.config.PlatformMode.openshift;
+import static io.fabric8.maven.core.config.RuntimeMode.openshift;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -78,7 +78,7 @@ public class FromSelectorTest {
                 .project(project)
                 .config(new ProcessorConfig())
                 .logger(logger)
-                .platformMode((PlatformMode) data[i])
+                .platformMode((RuntimeMode) data[i])
                 .strategy((OpenShiftBuildStrategy) data[i + 1])
                 .build();
 

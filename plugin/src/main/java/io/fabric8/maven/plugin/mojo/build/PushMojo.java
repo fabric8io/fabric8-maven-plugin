@@ -21,7 +21,7 @@ import java.io.File;
 import java.util.List;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -82,7 +82,7 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
      * an OpenShift build (with a Docker build against the OpenShift API server.
      */
     @Parameter(property = "fabric8.mode")
-    private PlatformMode mode = PlatformMode.auto;
+    private RuntimeMode mode = RuntimeMode.auto;
 
     /**
      * OpenShift build mode when an OpenShift build is performed.

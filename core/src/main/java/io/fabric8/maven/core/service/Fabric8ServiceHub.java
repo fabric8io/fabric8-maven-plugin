@@ -20,7 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterAccess;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.service.kubernetes.DockerBuildService;
 import io.fabric8.maven.core.service.openshift.OpenshiftBuildService;
 import io.fabric8.maven.core.util.LazyBuilder;
@@ -41,7 +42,7 @@ public class Fabric8ServiceHub {
      */
     private ClusterAccess clusterAccess;
 
-    private PlatformMode platformMode;
+    private RuntimeMode platformMode;
 
     private Logger log;
 
@@ -58,7 +59,7 @@ public class Fabric8ServiceHub {
      * Computed resources
      */
 
-    private PlatformMode resolvedMode;
+    private RuntimeMode resolvedMode;
 
     private KubernetesClient client;
 
@@ -71,8 +72,8 @@ public class Fabric8ServiceHub {
         Objects.requireNonNull(clusterAccess, "clusterAccess");
         Objects.requireNonNull(log, "log");
 
-        this.resolvedMode = clusterAccess.resolvePlatformMode(platformMode, log);
-        if (resolvedMode != PlatformMode.kubernetes && resolvedMode != PlatformMode.openshift) {
+        this.resolvedMode = clusterAccess.resolveRuntimeMode(platformMode, log);
+        if (resolvedMode != RuntimeMode.kubernetes && resolvedMode != RuntimeMode.openshift) {
             throw new IllegalArgumentException("Unknown platform mode " + platformMode + " resolved as "+ resolvedMode);
         }
         this.client = clusterAccess.createDefaultClient(log);
@@ -90,7 +91,7 @@ public class Fabric8ServiceHub {
             protected BuildService build() {
                 BuildService buildService;
                 // Creating platform-dependent services
-                if (resolvedMode == PlatformMode.openshift) {
+                if (resolvedMode == RuntimeMode.openshift) {
                     if (!(client instanceof OpenShiftClient)) {
                         throw new IllegalStateException("Openshift platform has been specified but Openshift has not been detected!");
                     }
@@ -135,7 +136,7 @@ public class Fabric8ServiceHub {
             return this;
         }
 
-        public Builder platformMode(PlatformMode platformMode) {
+        public Builder platformMode(RuntimeMode platformMode) {
             hub.platformMode = platformMode;
             return this;
         }

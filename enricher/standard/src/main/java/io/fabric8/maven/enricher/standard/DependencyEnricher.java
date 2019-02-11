@@ -36,6 +36,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.model.Dependency;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.KindAndName;
@@ -118,7 +119,7 @@ public class DependencyEnricher extends BaseEnricher {
     }
 
     @Override
-    public void adapt(final KubernetesListBuilder builder) {
+    public void adapt(PlatformMode platformMode, final KubernetesListBuilder builder) {
         final List<HasMetadata> kubernetesItems = new ArrayList<>();
         processArtifactSetResources(this.kubernetesDependencyArtifacts, items -> {
             kubernetesItems.addAll(Arrays.asList(items.toArray(new HasMetadata[items.size()])));

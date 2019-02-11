@@ -25,6 +25,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
@@ -57,7 +58,7 @@ public class VolumePermissionEnricher extends BaseEnricher {
     }
 
     @Override
-    public void adapt(KubernetesListBuilder builder) {
+    public void adapt(PlatformMode platformMode, KubernetesListBuilder builder) {
 
         builder.accept(new TypedVisitor<PodTemplateSpecBuilder>() {
             @Override

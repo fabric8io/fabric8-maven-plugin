@@ -20,6 +20,7 @@ import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
@@ -122,13 +123,13 @@ public class ClusterAccess {
         return false;
     }
 
-    public PlatformMode resolvePlatformMode(PlatformMode mode, Logger log) {
-        PlatformMode resolvedMode;
+    public RuntimeMode resolveRuntimeMode(RuntimeMode mode, Logger log) {
+        RuntimeMode resolvedMode;
         if (mode == null) {
-            mode = PlatformMode.DEFAULT;
+            mode = RuntimeMode.DEFAULT;
         }
         if (mode.isAuto()) {
-            resolvedMode = isOpenShiftImageStream(log) ? PlatformMode.openshift : PlatformMode.kubernetes;
+            resolvedMode = isOpenShiftImageStream(log) ? RuntimeMode.openshift : RuntimeMode.kubernetes;
         } else {
             resolvedMode = mode;
         }

@@ -16,6 +16,7 @@
 package io.fabric8.maven.plugin.mojo.build;
 
 import io.fabric8.maven.core.access.ClusterConfiguration;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.EnricherContext;
 import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
@@ -115,7 +116,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      * an OpenShift build (with a Docker build against the OpenShift API server.
      */
     @Parameter(property = "fabric8.mode")
-    private PlatformMode mode = PlatformMode.DEFAULT;
+    private RuntimeMode mode = RuntimeMode.DEFAULT;
 
     /**
      * OpenShift build mode when an OpenShift build is performed.
@@ -201,7 +202,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     Fabric8ServiceHub fabric8ServiceHub;
 
     // Mode which is resolved, also when 'auto' is set
-    private PlatformMode platformMode;
+    private RuntimeMode platformMode;
 
 
     @Override
@@ -223,7 +224,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     @Override
     protected boolean isDockerAccessRequired() {
-        return platformMode == PlatformMode.kubernetes;
+        return platformMode == RuntimeMode.kubernetes;
     }
 
     @Override
@@ -314,7 +315,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .enricherTask(builder ->
                                   new EnricherManager(resources, getEnricherContext(),
                                                       MavenUtil.getCompileClasspathElementsIfRequested(project, useProjectClasspath))
-                                      .enrich(builder))
+                                      .enrich(PlatformMode.openshift, builder))
                 .build();
     }
 
@@ -327,8 +328,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      */
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-        platformMode = clusterAccess.resolvePlatformMode(mode, log);
-        if (platformMode == PlatformMode.openshift) {
+        platformMode = clusterAccess.resolveRuntimeMode(mode, log);
+        if (platformMode == RuntimeMode.openshift) {
             log.info("Using [[B]]OpenShift[[B]] build with strategy [[B]]%s[[B]]", buildStrategy.getLabel());
         } else {
             log.info("Building Docker image in [[B]]Kubernetes[[B]] mode");
@@ -391,6 +392,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     public EnricherContext getEnricherContext() {
         return new MavenEnricherContext.Builder()
                 .project(project)
+                .runtimeMode(mode)
                 .session(session)
                 .config(extractEnricherConfig())
                 .images(getResolvedImages())

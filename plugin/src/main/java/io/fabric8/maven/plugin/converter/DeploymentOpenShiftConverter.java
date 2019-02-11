@@ -25,11 +25,10 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfigFluent;
@@ -42,10 +41,10 @@ import org.apache.commons.lang3.StringUtils;
  * @since 01/08/16
  */
 public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConverter {
-    private final PlatformMode mode;
+    private final RuntimeMode mode;
     private final Long openshiftDeployTimeoutSeconds;
 
-    public DeploymentOpenShiftConverter(PlatformMode mode, Long openshiftDeployTimeoutSeconds) {
+    public DeploymentOpenShiftConverter(RuntimeMode mode, Long openshiftDeployTimeoutSeconds) {
         this.mode = mode;
         this.openshiftDeployTimeoutSeconds = openshiftDeployTimeoutSeconds;
     }
@@ -114,7 +113,7 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
 
                 // add a new image change trigger for the build stream
                 if (containerToImageMap.size() != 0) {
-                    if (mode.equals(PlatformMode.openshift)) {
+                    if (mode.equals(RuntimeMode.openshift)) {
                         for (Map.Entry<String, String> entry : containerToImageMap.entrySet()) {
                             String containerName = entry.getKey();
                             ImageName image = new ImageName(entry.getValue());

@@ -21,6 +21,7 @@ import java.util.Map;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 
@@ -36,7 +37,7 @@ public class RemoveBuildAnnotationsEnricher extends BaseEnricher {
     }
 
     @Override
-    public void adapt(KubernetesListBuilder builder) {
+    public void adapt(PlatformMode platformMode, KubernetesListBuilder builder) {
         List<HasMetadata> items = builder.buildItems();
 
         for (HasMetadata item : items) {
