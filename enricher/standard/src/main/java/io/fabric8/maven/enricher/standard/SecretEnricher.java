@@ -15,14 +15,23 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
+import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.config.SecretConfig;
 import io.fabric8.maven.core.util.Base64Util;
+import io.fabric8.maven.core.util.SecretConstants;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import org.apache.commons.lang3.StringUtils;
 
 public abstract class SecretEnricher extends BaseEnricher {
 
@@ -58,6 +67,61 @@ public abstract class SecretEnricher extends BaseEnricher {
                 secretBuilder.addToData(data);
             }
         });
+
+        addSecretsFromXmlConfiguration(builder);
+    }
+
+    private void addSecretsFromXmlConfiguration(KubernetesListBuilder builder) {
+        log.verbose("Adding secrets resources from plugin configuration");
+        List<SecretConfig> secrets = getSecretsFromXmlConfig();
+        if (secrets == null || secrets.isEmpty()) {
+            return;
+        }
+        for (int i = 0; i < secrets.size(); i++) {
+            SecretConfig secretConfig = secrets.get(i);
+            if (StringUtils.isBlank(secretConfig.getName())) {
+                log.warn("Secret name is empty. You should provide a proper name for the secret");
+                continue;
+            }
+
+            Map<String, String> data = new HashMap<>();
+            String type = "";
+            ObjectMeta metadata = new ObjectMetaBuilder()
+                    .withNamespace(secretConfig.getNamespace())
+                    .withName(secretConfig.getName())
+                    .build();
+
+            // docker-registry
+            if (secretConfig.getDockerServerId() != null) {
+                MavenEnricherContext mavenContext = ((MavenEnricherContext)getContext());
+                String dockerSecret = (mavenContext).getDockerJsonConfigString(mavenContext.getSettings(), secretConfig.getDockerServerId());
+                if (StringUtils.isBlank(dockerSecret)) {
+                    log.warn("Docker secret with id "
+                            + secretConfig.getDockerServerId()
+                            + " cannot be found in maven settings");
+                    continue;
+                }
+                data.put(SecretConstants.DOCKER_DATA_KEY, Base64Util.encodeToString(dockerSecret));
+                type = SecretConstants.DOCKER_CONFIG_TYPE;
+            }
+            // TODO: generic secret (not supported for now)
+
+            if (StringUtils.isBlank(type) || data.isEmpty()) {
+                log.warn("No data can be found for docker secret with id " + secretConfig.getDockerServerId());
+                continue;
+            }
+
+            Secret secret = new SecretBuilder().withData(data).withMetadata(metadata).withType(type).build();
+            builder.addToSecretItems(i, secret);
+        }
+    }
+
+    private List<SecretConfig> getSecretsFromXmlConfig() {
+        ResourceConfig resourceConfig = getConfiguration().getResource().orElse(null);
+        if(resourceConfig != null && resourceConfig.getSecrets() != null) {
+            return resourceConfig.getSecrets();
+        }
+        return null;
     }
 
     protected abstract String getAnnotationKey();

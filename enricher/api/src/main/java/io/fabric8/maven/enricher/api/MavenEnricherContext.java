@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.model.Configuration;
@@ -53,6 +55,8 @@ public class MavenEnricherContext implements EnricherContext {
     // overall configuration for the build
     private Configuration configuration;
 
+    private Settings settings;
+
     private MavenProject project;
     private Logger log;
 
@@ -64,6 +68,10 @@ public class MavenEnricherContext implements EnricherContext {
     @Override
     public Configuration getConfiguration() {
         return configuration;
+    }
+
+    public Settings getSettings() {
+        return settings;
     }
 
     @Override
@@ -133,6 +141,48 @@ public class MavenEnricherContext implements EnricherContext {
         return project;
     }
 
+    //Method used in MOJO
+    public String getDockerJsonConfigString(final Settings settings, final String serverId) {
+        Server server = getServer(settings, serverId);
+        if (server == null) {
+            return "";
+        }
+
+        JsonObject auth = new JsonObject();
+        auth.add("username", new JsonPrimitive(server.getUsername()));
+        auth.add("password", new JsonPrimitive(server.getPassword()));
+
+        String mail = getConfigurationValue(server, "email");
+        if (!StringUtils.isBlank(mail)) {
+            auth.add("email", new JsonPrimitive(mail));
+        }
+
+        JsonObject json = new JsonObject();
+        json.add(serverId, auth);
+        return json.toString();
+    }
+
+    public Server getServer(final Settings settings, final String serverId) {
+        if (settings == null || StringUtils.isBlank(serverId)) {
+            return null;
+        }
+        return settings.getServer(serverId);
+    }
+
+    private String getConfigurationValue(final Server server, final String key) {
+
+        final Xpp3Dom configuration = (Xpp3Dom) server.getConfiguration();
+        if (configuration == null) {
+            return null;
+        }
+
+        final Xpp3Dom node = configuration.getChild(key);
+        if (node == null) {
+            return null;
+        }
+
+        return node.getValue();
+    }
     // =======================================================================================================
     public static class Builder {
 
@@ -174,6 +224,11 @@ public class MavenEnricherContext implements EnricherContext {
 
         public Builder openshiftDependencyResources(OpenShiftDependencyResources openShiftDependencyResources) {
             ctx.openshiftDependencyResources = openShiftDependencyResources;
+            return this;
+        }
+
+        public Builder settings(Settings settings) {
+            ctx.settings = settings;
             return this;
         }
 

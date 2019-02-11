@@ -15,38 +15,24 @@
  */
 package io.fabric8.maven.plugin.mojo.build;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.SecretBuilder;
-import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.maven.core.access.ClusterAccess;
-import io.fabric8.maven.core.config.ConfigMapEntry;
 import io.fabric8.maven.core.config.MappingConfig;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.Profile;
 import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.maven.core.config.SecretConfig;
-import io.fabric8.maven.core.config.ServiceConfig;
 import io.fabric8.maven.core.handler.HandlerHub;
-import io.fabric8.maven.core.handler.ReplicationControllerHandler;
-import io.fabric8.maven.core.handler.ServiceHandler;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
-import io.fabric8.maven.core.util.Base64Util;
 import io.fabric8.maven.core.util.FileUtil;
-import io.fabric8.maven.core.util.IoUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.core.util.OpenShiftOverrideResources;
@@ -54,7 +40,6 @@ import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.core.util.ResourceClassifier;
 import io.fabric8.maven.core.util.ResourceFileType;
 import io.fabric8.maven.core.util.ResourceUtil;
-import io.fabric8.maven.core.util.SecretConstants;
 import io.fabric8.maven.core.util.ValidationUtil;
 import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
@@ -86,11 +71,6 @@ import io.fabric8.openshift.api.model.Template;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -111,11 +91,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProjectHelper;
-import org.apache.maven.settings.Server;
-import org.apache.maven.settings.Settings;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
-import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
 import static io.fabric8.maven.core.util.ResourceFileType.yaml;
@@ -462,51 +439,12 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             final List<String> remotes = this.resources.getRemotes();
             if (remotes != null && !remotes.isEmpty()) {
                 final File tempDirectory = FileUtil.createTempDirectory();
-                downloadRemotes(tempDirectory, remotes);
+                FileUtil.downloadRemotes(tempDirectory, remotes, this.log);
                 return tempDirectory;
             }
         }
 
         return null;
-    }
-
-    private void downloadRemotes(final File outputDirectory, List<String> remotes) {
-
-        if (!outputDirectory.exists()) {
-            try {
-                Files.createDirectories(outputDirectory.toPath());
-            } catch (IOException e) {
-                throw new IllegalArgumentException(e);
-            }
-        }
-
-        remotes.stream()
-            .map(remote -> {
-                try {
-                    return new URL(remote);
-                } catch (MalformedURLException e) {
-                    throw new IllegalArgumentException(e);
-                }
-            })
-            .forEach(url -> {
-                try {
-                    IoUtil.download(this.log, url, new File(outputDirectory, getOutputName(url)));
-                } catch (MojoExecutionException e) {
-                    throw new IllegalArgumentException(e);
-                }
-            });
-    }
-
-    private String getOutputName(URL url) {
-        final String path = url.getPath();
-
-        final int slashIndex = path.lastIndexOf('/');
-        if (slashIndex >= 0) {
-            return path.substring(slashIndex + 1);
-        } else {
-            throw new IllegalArgumentException(String.format("URL %s should contain a name file to be downloaded.", url.toString()));
-        }
-
     }
 
     private void updateKindFilenameMappings() {
@@ -689,6 +627,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             .project(project)
             .session(session)
             .config(extractEnricherConfig())
+            .settings(settings)
             .resources(resources)
             .images(resolvedImages)
             .log(log)
@@ -778,12 +717,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                 builder = readResourceFragments(resourceFiles);
             } else {
                 builder = new KubernetesListBuilder();
-            }
-
-            // Add locally configured objects
-            if (resources != null) {
-                // TODO: Allow also support resources to be specified via XML
-                addConfiguredResources(builder, images);
             }
 
             // Create default resources for app resources only
@@ -972,16 +905,9 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         ret = ConfigHelper.resolveImages(
             log,
             images,
-            new ConfigHelper.Resolver() {
-                @Override
-                public List<ImageConfiguration> resolve(ImageConfiguration image) {
-                    return imageConfigResolver.resolve(image, project, session);
-                }
-            },
+            (ImageConfiguration image) -> imageConfigResolver.resolve(image, project, session),
             null,  // no filter on image name yet (TODO: Maybe add this, too ?)
-            new ConfigHelper.Customizer() {
-                @Override
-                public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
+                (List<ImageConfiguration> configs) -> {
                     try {
                         GeneratorContext ctx = new GeneratorContext.Builder()
                             .config(extractGeneratorConfig())
@@ -995,7 +921,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                     } catch (Exception e) {
                         throw new IllegalArgumentException("Cannot extract generator: " + e, e);
                     }
-                }
             });
 
         Date now = getBuildReferenceDate();
@@ -1024,153 +949,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         }
     }
 
-    private void addConfiguredResources(KubernetesListBuilder builder, List<ImageConfiguration> images) {
-
-        log.verbose("Adding resources from plugin configuration");
-        addSecrets(builder);
-        addServices(builder, resources.getServices());
-        addController(builder, images);
-        addConfigMapFromConfigurations(builder, this.resources.getConfigMap());
-    }
-
-    void addConfigMapFromConfigurations(KubernetesListBuilder builder, io.fabric8.maven.core.config.ConfigMap configMap) {
-        final Map<String, String> configMapFromConfiguration;
-        try {
-            configMapFromConfiguration = createConfigMapFromConfiguration(configMap);
-            if(!configMapFromConfiguration.isEmpty()) {
-                ConfigMapBuilder element = new ConfigMapBuilder();
-                element.withNewMetadata().withName("xmlconfig").endMetadata();
-                element.addToData(configMapFromConfiguration);
-
-                builder.addToConfigMapItems(element.build());
-            }
-        } catch (IOException e) {
-            throw new IllegalArgumentException(e);
-        }
-    }
-
-    private Map<String, String> createConfigMapFromConfiguration(io.fabric8.maven.core.config.ConfigMap configMap) throws IOException {
-        final Map<String, String> configMapData = new HashMap<>();
-
-        if (configMap != null) {
-            for (ConfigMapEntry configMapEntry : configMap.getEntries()) {
-                String name = configMapEntry.getName();
-                final String value = configMapEntry.getValue();
-                if (name != null && value != null) {
-                    configMapData.put(name, value);
-                } else {
-                    final String file = configMapEntry.getFile();
-                    if (file != null) {
-                        if (name == null) {
-                            name = Paths.get(file).getFileName().toString();
-                        }
-                        configMapData.put(name, readContent(file));
-                    }
-                }
-            }
-        }
-        return configMapData;
-    }
-
-    private String readContent(String location) throws IOException {
-        return new String(Files.readAllBytes(Paths.get(location)));
-    }
-
-    private void addSecrets(KubernetesListBuilder builder) {
-        log.verbose("Adding secrets resources from plugin configuration");
-        List<SecretConfig> secrets = resources.getSecrets();
-        if (secrets == null || secrets.isEmpty()) {
-            return;
-        }
-        for (int i = 0; i < secrets.size(); i++) {
-            SecretConfig secretConfig = secrets.get(i);
-            if (StringUtils.isBlank(secretConfig.getName())) {
-                log.warn("Secret name is empty. You should provide a proper name for the secret");
-                continue;
-            }
-
-            Map<String, String> data = new HashMap<>();
-            String type = "";
-            ObjectMeta metadata = new ObjectMetaBuilder()
-                .withNamespace(secretConfig.getNamespace())
-                .withName(secretConfig.getName())
-                .build();
-
-            // docker-registry
-            if (secretConfig.getDockerServerId() != null) {
-                String dockerSecret = getDockerJsonConfigString(settings, secretConfig.getDockerServerId());
-                if (StringUtils.isBlank(dockerSecret)) {
-                    log.warn("Docker secret with id "
-                        + secretConfig.getDockerServerId()
-                        + " cannot be found in maven settings");
-                    continue;
-                }
-                data.put(SecretConstants.DOCKER_DATA_KEY, Base64Util.encodeToString(dockerSecret));
-                type = SecretConstants.DOCKER_CONFIG_TYPE;
-            }
-            // TODO: generic secret (not supported for now)
-
-            if (StringUtils.isBlank(type) || data.isEmpty()) {
-                log.warn("No data can be found for docker secret with id " + secretConfig.getDockerServerId());
-                continue;
-            }
-
-            Secret secret = new SecretBuilder().withData(data).withMetadata(metadata).withType(type).build();
-            builder.addToSecretItems(i, secret);
-        }
-    }
-
-    //Method used in MOJO
-    public String getDockerJsonConfigString(final Settings settings, final String serverId) {
-        Server server = getServer(settings, serverId);
-        if (server == null) {
-            return "";
-        }
-
-        JsonObject auth = new JsonObject();
-        auth.add("username", new JsonPrimitive(server.getUsername()));
-        auth.add("password", new JsonPrimitive(server.getPassword()));
-
-        String mail = getConfigurationValue(server, "email");
-        if (!StringUtils.isBlank(mail)) {
-            auth.add("email", new JsonPrimitive(mail));
-        }
-
-        JsonObject json = new JsonObject();
-        json.add(serverId, auth);
-        return json.toString();
-    }
-
-    public Server getServer(final Settings settings, final String serverId) {
-        if (settings == null || StringUtils.isBlank(serverId)) {
-            return null;
-        }
-        return settings.getServer(serverId);
-    }
-
-    private String getConfigurationValue(final Server server, final String key) {
-
-        final Xpp3Dom configuration = (Xpp3Dom) server.getConfiguration();
-        if (configuration == null) {
-            return null;
-        }
-
-        final Xpp3Dom node = configuration.getChild(key);
-        if (node == null) {
-            return null;
-        }
-
-        return node.getValue();
-    }
-
-    private void addController(KubernetesListBuilder builder, List<ImageConfiguration> images) {
-        // TODO: Change to ReplicaSet
-        ReplicationControllerHandler rcHandler = handlerHub.getReplicationControllerHandler();
-        if (resources.getControllerName() != null) {
-            builder.addToReplicationControllerItems(rcHandler.getReplicationController(resources, images));
-        }
-    }
-
     private File[] mavenFilterFiles(File[] resourceFiles, File outDir) throws MojoExecutionException {
         if (!outDir.exists()) {
             if (!outDir.mkdirs()) {
@@ -1193,29 +971,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         return ret;
     }
 
-    private void addServices(KubernetesListBuilder builder, List<ServiceConfig> serviceConfig) {
-        if (serviceConfig != null) {
-            ServiceHandler serviceHandler = handlerHub.getServiceHandler();
-            builder.addToServiceItems(toArray(serviceHandler.getServices(serviceConfig)));
-        }
-    }
-
-    // convert list to array, never returns null.
-    private Service[] toArray(List<Service> services) {
-        if (services == null) {
-            return new Service[0];
-        }
-        if (services instanceof ArrayList) {
-            return ((ArrayList<Service>) services).toArray(new Service[services.size()]);
-        } else {
-            Service[] ret = new Service[services.size()];
-            for (int i = 0; i < services.size(); i++) {
-                ret[i] = services.get(i);
-            }
-            return ret;
-        }
-    }
-
     private boolean hasFabric8Dir() {
         return realResourceDir.isDirectory();
     }
@@ -1234,9 +989,5 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
         // Attach it to the Maven reactor so that it will also get deployed
         projectHelper.attachArtifact(project, this.resourceFileType.getArtifactType(), classifier.getValue(), file);
-    }
-
-    protected List<MappingConfig> getMappings() {
-        return mappings;
     }
 }

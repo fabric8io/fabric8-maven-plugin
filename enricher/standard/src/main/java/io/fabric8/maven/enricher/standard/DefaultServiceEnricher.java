@@ -26,6 +26,9 @@ import io.fabric8.kubernetes.api.model.ServiceFluent;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
+import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.config.ServiceConfig;
+import io.fabric8.maven.core.handler.ServiceHandler;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
@@ -104,9 +107,38 @@ public class DefaultServiceEnricher extends BaseEnricher {
         } else {
             addDefaultService(builder, defaultService);
         }
+
+        // Add Services configured via XML
+        addServices(builder);
     }
 
     // =======================================================================================================
+
+    private void addServices(KubernetesListBuilder builder) {
+        ResourceConfig resources = new ResourceConfig();
+
+        if (resources != null && resources.getServices() != null) {
+            List<ServiceConfig> serviceConfig = resources.getServices();
+            ServiceHandler serviceHandler = new ServiceHandler();
+            builder.addToServiceItems(toArray(serviceHandler.getServices(serviceConfig)));
+        }
+    }
+
+    // convert list to array, never returns null.
+    private Service[] toArray(List<Service> services) {
+        if (services == null) {
+            return new Service[0];
+        }
+        if (services instanceof ArrayList) {
+            return ((ArrayList<Service>) services).toArray(new Service[services.size()]);
+        } else {
+            Service[] ret = new Service[services.size()];
+            for (int i = 0; i < services.size(); i++) {
+                ret[i] = services.get(i);
+            }
+            return ret;
+        }
+    }
 
     private Service getDefaultService() {
 
