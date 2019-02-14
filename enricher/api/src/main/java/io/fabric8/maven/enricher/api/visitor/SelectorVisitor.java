@@ -114,7 +114,7 @@ public abstract class SelectorVisitor<T> extends TypedVisitor<T> {
 
         @Override
         public void visit(DeploymentConfigSpecBuilder item) {
-            Map<String, String> selectorMatchLabels = extractSelector(getConfig(), Kind.DEPLOYMENT, enrichers);
+            Map<String, String> selectorMatchLabels = extractSelector(getConfig(), Kind.DEPLOYMENT_CONFIG, enrichers);
             if(!selectorMatchLabels.isEmpty()) {
                 Map<String, String> selector = item.getSelector();
                 if (selector == null) {

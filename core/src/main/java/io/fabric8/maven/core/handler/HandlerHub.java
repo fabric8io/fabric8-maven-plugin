@@ -29,9 +29,11 @@ public class HandlerHub {
     private final ReplicaSetHandler replicaSetHandler;
     private final ReplicationControllerHandler replicationControllerHandler;
     private final DeploymentHandler deploymentHandler;
+    private final DeploymentConfigHandler deploymentConfigHandler;
     private final StatefulSetHandler statefulSetHandler;
     private final DaemonSetHandler daemonSetHandler;
     private final JobHandler jobHandler;
+
 
     public HandlerHub(GroupArtifactVersion groupArtifactVersion, Properties configuration) {
         ProbeHandler probeHandler = new ProbeHandler();
@@ -39,6 +41,7 @@ public class HandlerHub {
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
         deploymentHandler = new DeploymentHandler(podTemplateHandler);
+        deploymentConfigHandler = new DeploymentConfigHandler(podTemplateHandler);
         replicaSetHandler = new ReplicaSetHandler(podTemplateHandler);
         replicationControllerHandler = new ReplicationControllerHandler(podTemplateHandler);
         serviceHandler = new ServiceHandler();
@@ -53,6 +56,10 @@ public class HandlerHub {
 
     public DeploymentHandler getDeploymentHandler() {
         return deploymentHandler;
+    }
+
+    public DeploymentConfigHandler getDeploymentConfigHandler() {
+        return deploymentConfigHandler;
     }
 
     public ReplicaSetHandler getReplicaSetHandler() {

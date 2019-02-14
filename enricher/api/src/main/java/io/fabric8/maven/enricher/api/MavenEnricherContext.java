@@ -25,6 +25,7 @@ import java.util.Set;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.RuntimeMode;
@@ -32,7 +33,6 @@ import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.model.Dependency;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.util.MavenConfigurationExtractor;
@@ -62,10 +62,11 @@ public class MavenEnricherContext implements EnricherContext {
     private MavenProject project;
     private Logger log;
 
-    private OpenShiftDependencyResources openshiftDependencyResources;
     private MavenSession session;
 
     private RuntimeMode runtimeMode;
+
+    private PlatformMode platformMode;
 
     private Properties properties;
 
@@ -86,9 +87,8 @@ public class MavenEnricherContext implements EnricherContext {
     }
 
 
-    @Override
-    public OpenShiftDependencyResources getOpenshiftDependencyResources() {
-        return openshiftDependencyResources;
+    public PlatformMode getPlatformMode() {
+        return platformMode;
     }
 
     @Override
@@ -140,7 +140,7 @@ public class MavenEnricherContext implements EnricherContext {
         );
     }
 
-
+    @Override
     public RuntimeMode getRuntimeMode() { return runtimeMode; }
 
     public Object getProperty(String key) {
@@ -235,11 +235,6 @@ public class MavenEnricherContext implements EnricherContext {
             return this;
         }
 
-        public Builder openshiftDependencyResources(OpenShiftDependencyResources openShiftDependencyResources) {
-            ctx.openshiftDependencyResources = openShiftDependencyResources;
-            return this;
-        }
-
         public Builder settings(Settings settings) {
             ctx.settings = settings;
             return this;
@@ -252,6 +247,12 @@ public class MavenEnricherContext implements EnricherContext {
 
         public Builder properties(Properties properties) {
             ctx.properties = properties;
+            return this;
+        }
+
+
+        public Builder platformMode(PlatformMode platformMode) {
+            ctx.platformMode = platformMode;
             return this;
         }
 

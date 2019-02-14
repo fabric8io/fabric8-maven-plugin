@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.core.handler;
 
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
 import java.util.ArrayList;
 import java.util.List;

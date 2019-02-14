@@ -21,7 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.RuntimeMode;
-import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.service.kubernetes.DockerBuildService;
 import io.fabric8.maven.core.service.openshift.OpenshiftBuildService;
 import io.fabric8.maven.core.util.LazyBuilder;
