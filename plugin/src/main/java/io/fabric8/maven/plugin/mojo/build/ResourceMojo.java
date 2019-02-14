@@ -15,14 +15,9 @@
  */
 package io.fabric8.maven.plugin.mojo.build;
 
-import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.MappingConfig;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
@@ -35,17 +30,13 @@ import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.core.util.FileUtil;
 import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.core.util.OpenShiftDependencyResources;
-import io.fabric8.maven.core.util.OpenShiftOverrideResources;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.core.util.ResourceClassifier;
 import io.fabric8.maven.core.util.ResourceFileType;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.core.util.ValidationUtil;
-import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
-import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.core.util.validator.ResourceValidator;
 import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.config.ConfigHelper;
@@ -55,8 +46,6 @@ import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.maven.enricher.api.util.InitContainerHandler;
-import io.fabric8.maven.enricher.standard.VolumePermissionEnricher;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.converter.DeploymentConfigOpenShiftConverter;
 import io.fabric8.maven.plugin.converter.DeploymentOpenShiftConverter;
@@ -67,18 +56,15 @@ import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
 import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
-import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.Template;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 import javax.validation.ConstraintViolationException;
 import org.apache.commons.lang3.ArrayUtils;
@@ -94,7 +80,6 @@ import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 
-import static io.fabric8.maven.core.util.Constants.RESOURCE_APP_CATALOG_ANNOTATION;
 import static io.fabric8.maven.core.util.ResourceFileType.yaml;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
 
@@ -293,10 +278,8 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
 
-    private RuntimeMode platformMode;
+    private RuntimeMode runtimeMode;
 
-    private OpenShiftDependencyResources openshiftDependencyResources;
-    private OpenShiftOverrideResources openShiftOverrideResources;
     /**
      * The artifact type for attaching the generated resource file to the project.
      * Can be either 'json' or 'yaml'
@@ -417,23 +400,16 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
                 // Extract and generate resources which can be a mix of Kubernetes and OpenShift resources
 
-                KubernetesList resources = new KubernetesList();
+                KubernetesList resources;
                 for(PlatformMode platformMode : new PlatformMode[] { PlatformMode.kubernetes, PlatformMode.openshift }) {
                     ResourceClassifier resourceClassifier = platformMode == PlatformMode.kubernetes ? ResourceClassifier.KUBERNETES
                             : ResourceClassifier.OPENSHIFT;
 
-                    // Adapt list to use OpenShift specific resource objects
                     resources = generateResources(platformMode, resolvedImages, remoteResources);
                     writeResources(resources, resourceClassifier, generateRoute);
                     File resourceDir = new File(this.targetDir, resourceClassifier.getValue());
                     validateIfRequired(resourceDir, resourceClassifier);
                 }
-//                KubernetesList openShiftResources = convertToOpenShiftResources(resources);
-//                // Remove OpenShift specific stuff provided by fragments
-//                KubernetesList kubernetesResources = convertToKubernetesResources(resources, openShiftResources);
-//                writeResources(kubernetesResources, ResourceClassifier.KUBERNETES, generateRoute);
-//                File kubernetesResourceDir = new File(this.targetDir, ResourceClassifier.KUBERNETES.getValue());
-//                validateIfRequired(kubernetesResourceDir, ResourceClassifier.KUBERNETES);
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
@@ -492,8 +468,8 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     }
 
     private void lateInit() {
-        platformMode = clusterAccess.resolveRuntimeMode(mode, log);
-        log.info("Running in [[B]]%s[[B]] mode", platformMode.getLabel());
+        runtimeMode = clusterAccess.resolveRuntimeMode(mode, log);
+        log.info("Running in [[B]]%s[[B]] mode", runtimeMode.getLabel());
 
         if (isOpenShiftMode()) {
             Properties properties = project.getProperties();
@@ -503,14 +479,14 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                 properties.setProperty(DOCKER_IMAGE_USER, namespace);
             }
             if (!properties.contains(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE)) {
-                properties.setProperty(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, platformMode.toString());
+                properties.setProperty(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, runtimeMode.toString());
             }
         }
 
         openShiftConverters = new HashMap<>();
         openShiftConverters.put("ReplicaSet", new ReplicSetOpenShiftConverter());
         openShiftConverters.put("Deployment",
-            new DeploymentOpenShiftConverter(platformMode, getOpenshiftDeployTimeoutSeconds()));
+            new DeploymentOpenShiftConverter(runtimeMode, getOpenshiftDeployTimeoutSeconds()));
         // TODO : This converter shouldn't be here. See its javadoc.
         openShiftConverters.put("DeploymentConfig",
             new DeploymentConfigOpenShiftConverter(getOpenshiftDeployTimeoutSeconds()));
@@ -522,49 +498,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     }
 
     private boolean isOpenShiftMode() {
-        return platformMode.equals(PlatformMode.openshift);
-    }
-
-    private KubernetesList convertToKubernetesResources(KubernetesList resources, KubernetesList openShiftResources)
-        throws MojoExecutionException {
-        KubernetesList kubernetesResources = removeOpenShiftObjects(resources);
-        KubernetesList kubernetesList = processOpenshiftTemplateIfProvided(openShiftResources, kubernetesResources);
-        return kubernetesList;
-    }
-
-    private KubernetesList processOpenshiftTemplateIfProvided(KubernetesList openShiftResources,
-        KubernetesList kubernetesResources) throws MojoExecutionException {
-        Template template = getSingletonTemplate(openShiftResources);
-        if (template != null) {
-            KubernetesList kubernetesTemplateList = createKubernetesTemplate(kubernetesResources, template);
-            if (kubernetesTemplateList != null) {
-                writeResources(kubernetesTemplateList, ResourceClassifier.KUBERNETES_TEMPLATE, generateRoute);
-            }
-            kubernetesResources = replaceTemplateExpressions(kubernetesResources, template);
-        }
-        return kubernetesResources;
-    }
-
-    private KubernetesList createKubernetesTemplate(KubernetesList kubernetesResources, Template template) {
-        Template customTemplate = createTemplateWithObjects(kubernetesResources, template);
-        if (customTemplate != null) {
-            return new KubernetesListBuilder().withItems(customTemplate).build();
-        }
-        return null;
-    }
-
-    private KubernetesList replaceTemplateExpressions(KubernetesList kubernetesResources, Template template)
-        throws MojoExecutionException {
-        Template customTemplate = createTemplateWithObjects(kubernetesResources, template);
-        if (customTemplate != null) {
-            try {
-                return OpenshiftHelper.processTemplatesLocally(customTemplate, false);
-            } catch (IOException e) {
-                throw new MojoExecutionException("Failed to replace template expressions in kubernetes manifest: " + e,
-                    e);
-            }
-        }
-        return kubernetesResources;
+        return runtimeMode.equals(RuntimeMode.openshift);
     }
 
     private static Template createTemplateWithObjects(KubernetesList kubernetesResources, Template template) {
@@ -584,51 +518,10 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         return openshiftDeployTimeoutSeconds;
     }
 
-    public void setOpenshiftDeployTimeoutSeconds(Long openshiftDeployTimeoutSeconds) {
-        this.openshiftDeployTimeoutSeconds = openshiftDeployTimeoutSeconds;
-    }
-
-    private KubernetesList removeOpenShiftObjects(KubernetesList list) {
-        KubernetesListBuilder ret = new KubernetesListBuilder();
-        ret.withMetadata(list.getMetadata());
-        for (HasMetadata item : list.getItems()) {
-            if (!isOpenshiftItem(item)) {
-                ret.addToItems(item);
-            } else {
-                log.verbose("kubernetes.yml: Removed OpenShift specific resource '%s' of type %s",
-                    KubernetesHelper.getName(item), KubernetesHelper.getKind(item));
-            }
-        }
-        return ret.build();
-    }
-
-    private boolean isOpenshiftItem(HasMetadata item) {
-        if (isTargetPlatformOpenShift(item)) {
-            return true;
-        }
-        return item.getClass().getPackage().getName().contains("openshift");
-    }
-
-    private boolean isTargetPlatformOpenShift(HasMetadata item) {
-        String targetPlatform =
-            KubernetesHelper.getOrCreateAnnotations(item).get(Fabric8Annotations.TARGET_PLATFORM.value());
-        return targetPlatform != null && "openshift".equalsIgnoreCase(targetPlatform);
-    }
-
-    private boolean isTargetPlatformKubernetes(HasMetadata item) {
-        String targetPlatform =
-            KubernetesHelper.getOrCreateAnnotations(item).get(Fabric8Annotations.TARGET_PLATFORM.value());
-        return targetPlatform != null && "kubernetes".equalsIgnoreCase(targetPlatform);
-    }
-
     private KubernetesList generateResources(PlatformMode platformMode, List<ImageConfiguration> images, File remoteResources)
         throws IOException, MojoExecutionException {
 
         // Manager for calling enrichers.
-        openshiftDependencyResources = new OpenShiftDependencyResources(log);
-
-        loadOpenShiftOverrideResources(platformMode);
-
         MavenEnricherContext.Builder ctxBuilder = new MavenEnricherContext.Builder()
                 .runtimeMode(mode)
                 .project(project)
@@ -638,8 +531,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                 .properties(project.getProperties())
                 .resources(resources)
                 .images(resolvedImages)
-                .log(log)
-                .openshiftDependencyResources(openshiftDependencyResources);
+                .log(log);
 
         EnricherManager enricherManager = new EnricherManager(resources, ctxBuilder.build(),
             MavenUtil.getCompileClasspathElementsIfRequested(project, useProjectClasspath));
@@ -651,26 +543,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         // applied
         addProfiledResourcesFromSubirectories(platformMode, builder, realResourceDir, enricherManager);
         return builder.build();
-    }
-
-    private void loadOpenShiftOverrideResources(PlatformMode platformMode) throws MojoExecutionException, IOException {
-        openShiftOverrideResources = new OpenShiftOverrideResources(log);
-
-        if (realResourceDirOpenShiftOverride.isDirectory() && realResourceDirOpenShiftOverride.exists()) {
-            File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(realResourceDirOpenShiftOverride);
-            if (resourceFiles.length > 0) {
-                String defaultName = MavenUtil.createDefaultResourceName(project.getGroupId(), project.getArtifactId());
-                KubernetesListBuilder builder = KubernetesResourceUtil.readResourceFragmentsFrom(
-                        platformMode,
-                        KubernetesResourceUtil.DEFAULT_RESOURCE_VERSIONING,
-                        defaultName,
-                        mavenFilterFiles(resourceFiles, this.workDirOpenShiftOverride));
-                KubernetesList list = builder.build();
-                for (HasMetadata item : list.getItems()) {
-                    openShiftOverrideResources.addOpenShiftOverride(item);
-                }
-            }
-        }
     }
 
     private void addProfiledResourcesFromSubirectories(PlatformMode platformMode, KubernetesListBuilder builder, File resourceDir,
@@ -707,6 +579,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             KubernetesListBuilder builder = processResourceFragments(platformMode, remoteResources);
 
             // Create default resources for app resources only
+
             enricherManager.createDefaultResources(platformMode, builder);
 
             // Enrich descriptors
@@ -760,153 +633,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, realResourceDir, generator);
     }
 
-    // Converts the kubernetes resources into OpenShift resources
-    private KubernetesList convertToOpenShiftResources(KubernetesList resources) throws MojoExecutionException {
-        KubernetesListBuilder builder = new KubernetesListBuilder();
-        builder.withMetadata(resources.getMetadata());
-        List<HasMetadata> items = resources.getItems();
-        List<HasMetadata> objects = new ArrayList<>();
-        if (items != null) {
-            switchToDeployment = (switchToDeployment && isImageStreamNotUsed());
-            for (HasMetadata item : items) {
-                if (item instanceof Deployment) {
-                    // if we have a Deployment and a DeploymentConfig of the same name
-                    // since we have a different manifest for OpenShift then lets filter out
-                    // the Kubernetes specific Deployment
-                    String name = KubernetesHelper.getName(item);
-                    if (hasDeploymentConfigNamed(items, name)) {
-                        continue;
-                    }
-                }
-
-                item = openShiftOverrideResources.overrideResource(item);
-
-                if (switchToDeployment && item instanceof Deployment) {
-                    /*
-                     * Switch to using Deployments rather than DeploymentConfig on OpenShift
-                     * when not using ImageStreams.
-                     */
-                    objects.add(item);
-                    log.info("filtering out this item, use Kubernetes Deployment instead.");
-                    continue;
-                }
-
-                HasMetadata converted = convertKubernetesItemToOpenShift(item);
-                if (converted != null && !isTargetPlatformKubernetes(item)) {
-                    objects.add(converted);
-                }
-            }
-        }
-
-        openshiftDependencyResources.addMissingResources(objects);
-        moveTemplatesToTopLevel(builder, objects);
-        // TODO: Remove this ASAP when https://github.com/fabric8io/fabric8-maven-plugin/issues/678 is fixed
-        removeInitContainers(builder, VolumePermissionEnricher.ENRICHER_NAME);
-        return builder.build();
-    }
-
-    private boolean isImageStreamNotUsed() {
-        return !PlatformMode.isOpenShiftMode(project.getProperties());
-    }
-
-    private void removeInitContainers(KubernetesListBuilder builder, final String enricherName) {
-        builder.accept(new TypedVisitor<PodTemplateSpecBuilder>() {
-            @Override
-            public void visit(PodTemplateSpecBuilder builder) {
-                InitContainerHandler initContainerHandler = new InitContainerHandler(log);
-                if (initContainerHandler.hasInitContainer(builder, enricherName)) {
-                    log.verbose("Removing init container from openshift.yml for %s", enricherName);
-                    initContainerHandler.removeInitContainer(builder, enricherName);
-                }
-            }
-        });
-    }
-
-    private void moveTemplatesToTopLevel(KubernetesListBuilder builder, List<HasMetadata> objects) {
-        Template template = extractAndRemoveTemplates(objects);
-        if (template != null) {
-            openshiftDependencyResources.addMissingParameters(template);
-            builder.addToItems(template);
-        } else {
-            for (HasMetadata object : objects) {
-                builder.addToItems(object);
-            }
-        }
-    }
-
-    private Template extractAndRemoveTemplates(List<HasMetadata> items) {
-        Template extractedTemplate = null;
-        for (HasMetadata item : new ArrayList<>(items)) {
-            if (item instanceof Template && !KubernetesResourceUtil.isAppCatalogResource(item)) {
-                Template template = (Template) item;
-                if (extractedTemplate == null) {
-                    extractedTemplate = template;
-                } else {
-                    extractedTemplate = OpenshiftHelper.combineTemplates(extractedTemplate, template);
-                }
-                items.remove(item);
-            }
-        }
-        if (extractedTemplate != null) {
-            extractedTemplate.setObjects(items);
-        }
-        return extractedTemplate;
-    }
-
-    private boolean hasDeploymentConfigNamed(List<HasMetadata> items, String name) {
-        for (HasMetadata item : items) {
-            if (item instanceof DeploymentConfig) {
-                String dcName = KubernetesHelper.getName(item);
-                if (Objects.equals(name, dcName)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Converts any kubernetes resource to the OpenShift equivalent
-     *
-     * @return the converted kubernetes resource or null if it should be ignored
-     */
-    private HasMetadata convertKubernetesItemToOpenShift(HasMetadata item) {
-
-        // TODO-F8SPEC: App Catalog is Fabric8 specific. Its best handled outside the 'regular' resource generation chain
-        //              better in an 'AppCatalog' specific processing
-        // vvvvvvv (begin)
-        if (item instanceof ConfigMap &&
-            "true".equals(getAnnotations(item).get(RESOURCE_APP_CATALOG_ANNOTATION))) {
-            // kubernetes App Catalog so we use a Template instead on OpenShift
-            return null;
-        }
-        // TODO-F8SPEC: ^^^^^ (end)
-
-        // lets check if there's an OpenShift resource of this name already from a dependency...
-        if (!isOpenshiftItem(item)) {
-            HasMetadata dependencyResource = openshiftDependencyResources.convertKubernetesItemToOpenShift(item);
-            if (dependencyResource != null) {
-                return dependencyResource;
-            }
-        }
-
-        KubernetesToOpenShiftConverter converter = openShiftConverters.get(item.getKind());
-        return converter != null ? converter.convert(item, trimImageInContainerSpec, enableAutomaticTrigger) : item;
-    }
-
     // ==================================================================================
-
-    private Map<String, String> getAnnotations(HasMetadata item) {
-        ObjectMeta meta = item.getMetadata();
-        if (meta == null) {
-            return Collections.EMPTY_MAP;
-        }
-        Map<String, String> annos = meta.getAnnotations();
-        if (annos == null) {
-            return Collections.EMPTY_MAP;
-        }
-        return annos;
-    }
 
     private List<ImageConfiguration> getResolvedImages(List<ImageConfiguration> images, final Logger log)
         throws MojoExecutionException {

@@ -19,12 +19,6 @@ import com.google.common.base.Objects;
 
 import java.util.Properties;
 
-/**
- * Mode how to interact with Kubernetes/Openshift cluster.
- *
- * @author roland
- * @since 25/05/16
- */
 public enum RuntimeMode {
 
     /**

@@ -41,6 +41,7 @@ public class ReplicaSetHandler {
 
     public ReplicaSet getReplicaSet(ResourceConfig config,
                                     List<ImageConfiguration> images) {
+
         return new ReplicaSetBuilder()
             .withMetadata(createRsMetaData(config))
             .withSpec(createRsSpec(config, images))

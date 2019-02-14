@@ -144,11 +144,6 @@ public class DependencyEnricher extends BaseEnricher {
             return null;
         });
         filterAndAddItemsToBuilder(builder, kubernetesItems);
-
-        processArtifactSetResources(this.openshiftDependencyArtifacts, items -> {
-            getContext().getOpenshiftDependencyResources().addOpenShiftResources(items);
-            return null;
-        });
     }
 
     private void removeTemplateObjects(List<HasMetadata> list, List<HasMetadata> objects) {

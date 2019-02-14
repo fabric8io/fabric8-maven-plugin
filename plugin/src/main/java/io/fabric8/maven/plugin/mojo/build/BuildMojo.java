@@ -33,7 +33,6 @@ import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.service.Fabric8ServiceHub;
-import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -398,7 +397,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .images(getResolvedImages())
                 .resources(resources)
                 .log(log)
-                .openshiftDependencyResources(new OpenShiftDependencyResources(log))
                 .build();
     }
 

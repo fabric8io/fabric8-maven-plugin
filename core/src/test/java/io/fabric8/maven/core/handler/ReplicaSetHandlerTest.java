@@ -16,6 +16,7 @@
 package io.fabric8.maven.core.handler;
 
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.VolumeConfig;
 import io.fabric8.maven.core.model.GroupArtifactVersion;

@@ -61,19 +61,19 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                 if (replicas != null) {
                     specBuilder.withReplicas(replicas);
                 }
-                Integer revisionHistoryLimit = spec.getRevisionHistoryLimit();
+                Integer revisionHistoryLimit = spec.getRevisionHistoryLimit(); // Can be ignored.Revision History enricher takes care of this.
                 if (revisionHistoryLimit != null) {
                     specBuilder.withRevisionHistoryLimit(revisionHistoryLimit);
                 }
 
-                LabelSelector selector = spec.getSelector();
-                if (selector  != null) {
+                LabelSelector selector = spec.getSelector(); // Can be ignored. Metadata and Selector Visitors take care of this.
+                if (selector != null) {
                     Map<String, String> matchLabels = selector.getMatchLabels();
                     if (matchLabels != null && !matchLabels.isEmpty()) {
                         specBuilder.withSelector(matchLabels);
                     }
                 }
-                Map<String, String> containerToImageMap = new HashMap<>();
+                Map<String, String> containerToImageMap = new HashMap<>(); // Can be ignored. Line 60 ( DeploymentHandler )
                 PodTemplateSpec template = spec.getTemplate();
                 if (template != null) {
                     specBuilder.withTemplate(template);
@@ -86,7 +86,7 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                         containerToImageMap.put(container.getName(), container.getImage());
                     }
                 }
-                DeploymentStrategy strategy = spec.getStrategy();
+                DeploymentStrategy strategy = spec.getStrategy(); // IN
                 String strategyType = null;
                 if (strategy != null) {
                     strategyType = strategy.getType();
@@ -107,7 +107,7 @@ public class DeploymentOpenShiftConverter implements KubernetesToOpenShiftConver
                 }
 
                 // lets add a default trigger so that its triggered when we change its config
-                if(enableAutomaticTrigger) {
+                if(enableAutomaticTrigger) { // IN
                     specBuilder.addNewTrigger().withType("ConfigChange").endTrigger();
                 }
 
