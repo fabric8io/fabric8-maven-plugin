@@ -168,6 +168,9 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     }
 
     protected ClusterConfiguration getClusterConfiguration() {
+        if(access == null) {
+            access = new ClusterConfiguration.Builder().build();
+        }
         final ClusterConfiguration.Builder clusterConfigurationBuilder = new ClusterConfiguration.Builder(access);
 
         return clusterConfigurationBuilder.from(System.getProperties())
