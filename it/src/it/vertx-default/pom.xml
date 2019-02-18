@@ -31,8 +31,8 @@
     <description>Minimal Example with Eclipse Vert.x</description>
 
     <properties>
-        <vertx.version>3.4.2</vertx.version>
-        <vertx-maven-plugin.version>1.0.9</vertx-maven-plugin.version>
+        <vertx.version>3.6.3</vertx.version>
+        <vertx-maven-plugin.version>1.0.18</vertx-maven-plugin.version>
         <vertx.verticle>io.openshift.booster.HttpApplication</vertx.verticle>
     </properties>
 
@@ -62,7 +62,7 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>io.fabric8</groupId>
+                <groupId>io.reactiverse</groupId>
                 <artifactId>vertx-maven-plugin</artifactId>
                 <version>${vertx-maven-plugin.version}</version>
                 <executions>

@@ -17,7 +17,7 @@ package io.fabric8.maven.generator.vertx;
 
 public class Constants {
 
-    static final String VERTX_MAVEN_PLUGIN_GROUP = "io.fabric8";
+    static final String VERTX_MAVEN_PLUGIN_GROUP = "io.reactiverse";
     static final String VERTX_MAVEN_PLUGIN_ARTIFACT = "vertx-maven-plugin";
     static final String SHADE_PLUGIN_GROUP = "org.apache.maven.plugins";
     static final String SHADE_PLUGIN_ARTIFACT = "maven-shade-plugin";

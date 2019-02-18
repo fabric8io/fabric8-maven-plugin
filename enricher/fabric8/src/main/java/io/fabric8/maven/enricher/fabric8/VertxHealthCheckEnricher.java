@@ -49,7 +49,7 @@ import javax.annotation.Nullable;
  */
 public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
-    static final String VERTX_MAVEN_PLUGIN_GROUP = "io.fabric8";
+    static final String VERTX_MAVEN_PLUGIN_GROUP = "io.reactiverse";
     static final String VERTX_MAVEN_PLUGIN_ARTIFACT = "vertx-maven-plugin";
     static final String VERTX_GROUPID = "io.vertx";
 
