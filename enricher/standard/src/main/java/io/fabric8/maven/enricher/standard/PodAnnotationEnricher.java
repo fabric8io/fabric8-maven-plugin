@@ -60,11 +60,11 @@ public class PodAnnotationEnricher extends BaseEnricher {
                         templateMetadata.setAnnotations(MapUtil.mergeMaps(templateMetadata.getAnnotations(), metadata.getAnnotations()));
                     }
                 }
-            } else if(platformMode == PlatformMode.openshift && item instanceof DeploymentConfig) {
+            } else if (platformMode == PlatformMode.openshift && item instanceof DeploymentConfig) {
                 DeploymentConfig deploymentConfig = (DeploymentConfig)item;
                 ObjectMeta metadata = deploymentConfig.getMetadata();
                 DeploymentConfigSpec spec = deploymentConfig.getSpec();
-                if(metadata != null && spec != null) {
+                if (metadata != null && spec != null) {
                     PodTemplateSpec templateSpec = spec.getTemplate();
                     if(templateSpec != null) {
                         ObjectMeta templateMetadata = templateSpec.getMetadata();

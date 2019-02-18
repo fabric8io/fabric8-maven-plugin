@@ -143,10 +143,12 @@ public class MavenEnricherContext implements EnricherContext {
     @Override
     public RuntimeMode getRuntimeMode() { return runtimeMode; }
 
+    @Override
     public Object getProperty(String key) {
         return properties.getProperty(key);
     }
 
+    @Override
     public Properties getProperties() { return properties; }
     // ========================================================================
     // Maven specific methods, only available after casting
