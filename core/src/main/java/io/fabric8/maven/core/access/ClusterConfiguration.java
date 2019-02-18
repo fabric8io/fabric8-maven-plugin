@@ -43,12 +43,10 @@ public class ClusterConfiguration {
     private String keyStorePassphrase;
 
     private ClusterConfiguration() {
+        this.namespace = KubernetesHelper.getDefaultNamespace();
     }
 
     public String getNamespace() {
-        if (StringUtils.isBlank(this.namespace)) {
-            this.namespace = KubernetesHelper.getDefaultNamespace();
-        }
         return namespace;
     }
 

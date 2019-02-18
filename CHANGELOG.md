@@ -29,6 +29,8 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Feature 718: Detect port number from configuration file for health check in Thorntail 
 * Refactor 828: Moved Metedata specific code into DefaultMetadataEnricher
 * Feature 718: Detect port number from configuration file for health check in Thorntail
+* Fix NullPointerException in ClusterConfiguration during fabric8:watch
+* Feature 1498: Allow users to define secrets from annotations 
 * Feature 1498: Allow users to define secrets from annotations
 * Fix 1517: update vmp groupid and vert.x version
 
