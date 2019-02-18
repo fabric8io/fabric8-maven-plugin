@@ -21,7 +21,14 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.RuntimeMode;
-import io.fabric8.maven.core.handler.*;
+import io.fabric8.maven.core.handler.DeploymentHandler;
+import io.fabric8.maven.core.handler.DeploymentConfigHandler;
+import io.fabric8.maven.core.handler.ReplicationControllerHandler;
+import io.fabric8.maven.core.handler.ReplicaSetHandler;
+import io.fabric8.maven.core.handler.StatefulSetHandler;
+import io.fabric8.maven.core.handler.DaemonSetHandler;
+import io.fabric8.maven.core.handler.JobHandler;
+import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
@@ -194,28 +201,28 @@ public class DefaultControllerEnricher extends BaseEnricher {
      * This method overrides the ImagePullPolicy value by the value provided in
      * XML config.
      *
-     * @param xmlResourceConfig
+     * @param resourceConfig
      * @param defaultValue
      * @return
      */
-    private String getImagePullPolicy(ResourceConfig xmlResourceConfig, String defaultValue) {
-        if(xmlResourceConfig != null) {
-            return xmlResourceConfig.getImagePullPolicy() != null ? xmlResourceConfig.getImagePullPolicy() : defaultValue;
+    private String getImagePullPolicy(ResourceConfig resourceConfig, String defaultValue) {
+        if(resourceConfig != null) {
+            return resourceConfig.getImagePullPolicy() != null ? resourceConfig.getImagePullPolicy() : defaultValue;
         }
         return defaultValue;
     }
 
     private Boolean isAutomaticTriggerEnabled(Boolean defaultValue) {
-        if(((MavenEnricherContext)getContext()).getProperty("fabric8.openshift.enableAutomaticTrigger") != null) {
-            return Boolean.parseBoolean(((MavenEnricherContext) getContext()).getProperty("fabric8.openshift.enableAutomaticTrigger").toString());
+        if(getContext().getProperty("fabric8.openshift.enableAutomaticTrigger") != null) {
+            return Boolean.parseBoolean(getContext().getProperty("fabric8.openshift.enableAutomaticTrigger").toString());
         } else {
             return defaultValue;
         }
     }
 
     private Long getOpenshiftDeployTimeoutInSeconds(Long defaultValue) {
-        if (((MavenEnricherContext)getContext()).getProperty("fabric8.openshift.deployTimeoutSeconds") != null) {
-            return Long.parseLong(((MavenEnricherContext)getContext()).getProperty("fabric8.openshift.deployTimeoutSeconds").toString());
+        if (getContext().getProperty("fabric8.openshift.deployTimeoutSeconds") != null) {
+            return Long.parseLong(getContext().getProperty("fabric8.openshift.deployTimeoutSeconds").toString());
         } else {
             return defaultValue;
         }

@@ -259,7 +259,7 @@ public class KubernetesResourceUtil {
             apiVersion = apiVersions.getAppsVersion();
         } else if (Objects.equals(kind, "Job")) {
             apiVersion = apiVersions.getJobVersion();
-        } else if(Objects.equals(kind, "DeploymentConfig") && platformMode == PlatformMode.openshift) {
+        } else if (Objects.equals(kind, "DeploymentConfig") && platformMode == PlatformMode.openshift) {
             apiVersion = apiVersions.getOpenshiftV1version();
         }
         addIfNotExistent(fragment, "apiVersion", apiVersion);

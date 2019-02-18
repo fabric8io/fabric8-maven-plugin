@@ -11,7 +11,8 @@ We use semantic versioning in some slight variation until our feature set has st
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
 ### 4.0.0-M3
-
+* Refactor 678: Enricher Workflow to allow direct generation of OpenShift objects.
+* Refactor 802: Remove resource object post processing.
 * Feature 729: Select custom resources depending on environment.
 * Feature 601: Adds healthcheck for webapp
 * Fix 1460: Upgraded kubernetes client to 4.1.1

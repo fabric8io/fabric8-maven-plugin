@@ -18,6 +18,7 @@ package io.fabric8.maven.enricher.api;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.RuntimeMode;
@@ -114,4 +115,8 @@ public interface EnricherContext {
     PlatformMode getPlatformMode();
 
     RuntimeMode getRuntimeMode();
+
+    Object getProperty(String key);
+
+    Properties getProperties();
 }
