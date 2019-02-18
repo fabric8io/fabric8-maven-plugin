@@ -939,7 +939,7 @@ Lets say you have a maven pom.xml with the following issue management informatio
 ----
 <issueManagement>
    <system>GitHub</system>
-   <url>https://github.com/fabric8io/vertx-maven-plugin/issues/</url>
+   <url>https://github.com/reactiverse/vertx-maven-plugin/issues/</url>
 </issueManagement>
 ----
 
@@ -952,7 +952,7 @@ This information will be enriched as annotations in the generated manifest like,
   metadata:
     annotations:
       fabric8.io/issue-system: "GitHub"
-      fabric8.io/issue-tracker-url: "https://github.com/fabric8io/vertx-maven-plugin/issues/"
+      fabric8.io/issue-tracker-url: "https://github.com/reactiverse/vertx-maven-plugin/issues/"
 ...
 ----
 

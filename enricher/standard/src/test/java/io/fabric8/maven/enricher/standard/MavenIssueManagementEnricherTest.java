@@ -45,7 +45,7 @@ public class MavenIssueManagementEnricherTest {
         final MavenProject project = new MavenProject();
         final IssueManagement issueManagement = new IssueManagement();
         issueManagement.setSystem("GitHub");
-        issueManagement.setUrl("https://github.com/fabric8io/vertx-maven-plugin/issues/");
+        issueManagement.setUrl("https://github.com/reactiverse/vertx-maven-plugin/issues/");
         project.setIssueManagement(issueManagement);
         // Setup mock behaviour
         new Expectations() {
@@ -63,7 +63,7 @@ public class MavenIssueManagementEnricherTest {
         Assert.assertEquals(2, scmAnnotations.size());
         assertEquals("GitHub",
                 scmAnnotations.get(Fabric8Annotations.ISSUE_SYSTEM.value()));
-        assertEquals("https://github.com/fabric8io/vertx-maven-plugin/issues/",
+        assertEquals("https://github.com/reactiverse/vertx-maven-plugin/issues/",
                 scmAnnotations.get(Fabric8Annotations.ISSUE_TRACKER_URL.value()));
     }
 

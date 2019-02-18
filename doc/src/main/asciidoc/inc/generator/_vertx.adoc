@@ -5,7 +5,7 @@ The Vert.x generator detects an application using Eclipse Vert.x. It generates t
 
 Currently, this generator is enabled if:
 
-* you are using the Vert.x Maven Plugin (https://github.com/fabric8io/vertx-maven-plugin)
+* you are using the Vert.x Maven Plugin (https://github.com/reactiverse/vertx-maven-plugin)
 * you are depending on `io.vertx:vertx-core` and uses the Maven Shader plugin
 
 Otherwise this generator is identical to the <<generator-java-exec,java-exec generator>>. It supports the  <<generator-options-common, common generator options>> and the <<generator-java-exec-options, `java-exec` options>>.
