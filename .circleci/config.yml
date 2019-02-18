@@ -22,9 +22,6 @@ jobs:
     working_directory: ~/fabric8io/fmp-docs
     machine: true
     steps:
-    - add_ssh_keys:
-        fingerprints:
-        - "4d:16:cc:b2:2c:0a:e6:52:9b:ac:8e:51:23:88:91:57"
     - checkout
     - run: git config --global user.email "circleci@fabric8.io"
     - run: git config --global user.name "CircleCI"
@@ -114,6 +111,14 @@ jobs:
         key: fmp-sonar-{{ checksum "pom.xml" }}
         paths:
         - ~/.m2
+  RELEASE:
+    machine: true
+    steps:
+    - checkout
+    - run:
+        command: |
+          bash ./scripts/prepare-environment.sh
+          bash ./scripts/release.sh
 
 workflows:
   version: 2
@@ -122,7 +127,7 @@ workflows:
     - doc:
         filters:
           branches:
-            only: 3.5.x
+            only: release-only
     - build
     - tests
     - license
@@ -131,3 +136,7 @@ workflows:
         filters:
           branches:
             only: master
+    - RELEASE:
+        filters:
+          branches:
+            only: release-project

@@ -18,6 +18,8 @@ package io.fabric8.maven.enricher.standard;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.config.ConfigMapEntry;
+import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.io.IOException;
@@ -39,6 +41,7 @@ public class ConfigMapEnricher extends BaseEnricher {
     @Override
     public void addMissingResources(KubernetesListBuilder builder) {
         addAnnotations(builder);
+        addConfigMapFromXmlConfigurations(builder);
     }
 
     private void addAnnotations(KubernetesListBuilder builder) {
@@ -80,6 +83,54 @@ public class ConfigMapEnricher extends BaseEnricher {
 
     private String getOutput(String key) {
         return key.substring(PREFIX_ANNOTATION.length());
+    }
+
+    private void addConfigMapFromXmlConfigurations(KubernetesListBuilder builder) {
+        io.fabric8.maven.core.config.ConfigMap configMap = getConfigMapFromXmlConfiguration();
+        final Map<String, String> configMapFromConfiguration;
+        try {
+            configMapFromConfiguration = createConfigMapFromConfiguration(configMap);
+            if(!configMapFromConfiguration.isEmpty()) {
+                ConfigMapBuilder element = new ConfigMapBuilder();
+                element.withNewMetadata().withName("xmlconfig").endMetadata();
+                element.addToData(configMapFromConfiguration);
+
+                builder.addToConfigMapItems(element.build());
+            }
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    private io.fabric8.maven.core.config.ConfigMap getConfigMapFromXmlConfiguration() {
+        ResourceConfig resourceConfig = getConfiguration().getResource().orElse(null);
+        if(resourceConfig != null && resourceConfig.getConfigMap() != null) {
+            return resourceConfig.getConfigMap();
+        }
+        return null;
+    }
+
+    private Map<String, String> createConfigMapFromConfiguration(io.fabric8.maven.core.config.ConfigMap configMap) throws IOException {
+        final Map<String, String> configMapData = new HashMap<>();
+
+        if (configMap != null) {
+            for (ConfigMapEntry configMapEntry : configMap.getEntries()) {
+                String name = configMapEntry.getName();
+                final String value = configMapEntry.getValue();
+                if (name != null && value != null) {
+                    configMapData.put(name, value);
+                } else {
+                    final String file = configMapEntry.getFile();
+                    if (file != null) {
+                        if (name == null) {
+                            name = Paths.get(file).getFileName().toString();
+                        }
+                        configMapData.put(name, readContent(file));
+                    }
+                }
+            }
+        }
+        return configMapData;
     }
 
 }

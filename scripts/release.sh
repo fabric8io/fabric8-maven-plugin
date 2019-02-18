@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Copyright 2016 Red Hat, Inc.
 #
@@ -14,23 +15,17 @@
 # permissions and limitations under the License.
 #
 
-set -e
+#!/bin/bash
 
-echo ============================================
-echo Deploying fabric8-maven-plugin documentation
-echo ============================================
+set -x
 
-export MAVEN_OPTS="-Xmx3000m"
+project="fabric8io/fabric8-maven-plugin"
 
-mvn -B install -DskipTests=true
-cd doc
-mvn -B -Phtml,pdf package
-git clone -b gh-pages https://fabric8cd:$GH_TOKEN@github.com/fabric8io/fabric8-maven-plugin.git gh-pages
-cp -rv target/generated-docs/* gh-pages/
-cd gh-pages
-mv index.pdf fabric8-maven-plugin.pdf
-git add --ignore-errors *
-git commit -m "generated documentation"
-git push origin gh-pages
-cd ..
-rm -rf gh-pages target
+source ./scripts/utils.sh
+
+# stage
+output=$(stage_project)
+echo $output
+
+# promote
+release_sonatype_repo

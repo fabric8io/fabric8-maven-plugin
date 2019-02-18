@@ -15,13 +15,18 @@
  */
 package io.fabric8.maven.core.util;
 
+import org.apache.maven.plugin.MojoExecutionException;
+import io.fabric8.maven.docker.util.Logger;
+
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * File related methods which cannot be found elsewhere
@@ -79,5 +84,44 @@ public class FileUtil {
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static void downloadRemotes(final File outputDirectory, List<String> remotes, Logger log) {
+
+        if (!outputDirectory.exists()) {
+            try {
+                Files.createDirectories(outputDirectory.toPath());
+            } catch (IOException e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
+
+        remotes.stream()
+                .map(remote -> {
+                    try {
+                        return new URL(remote);
+                    } catch (MalformedURLException e) {
+                        throw new IllegalArgumentException(e);
+                    }
+                })
+                .forEach(url -> {
+                    try {
+                        IoUtil.download(log, url, new File(outputDirectory, getOutputName(url)));
+                    } catch (MojoExecutionException e) {
+                        throw new IllegalArgumentException(e);
+                    }
+                });
+    }
+
+    private static String getOutputName(URL url) {
+        final String path = url.getPath();
+
+        final int slashIndex = path.lastIndexOf('/');
+        if (slashIndex >= 0) {
+            return path.substring(slashIndex + 1);
+        } else {
+            throw new IllegalArgumentException(String.format("URL %s should contain a name file to be downloaded.", url.toString()));
+        }
+
     }
 }
