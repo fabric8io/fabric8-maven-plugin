@@ -16,24 +16,17 @@
 package io.fabric8.maven.enricher.standard;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.Enricher;
-import io.fabric8.maven.enricher.api.Kind;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import java.util.List;
 import io.fabric8.maven.enricher.api.visitor.SelectorVisitor;
 import io.fabric8.maven.enricher.api.visitor.MetadataVisitor;
 
 public class DefaultMetadataEnricher extends BaseEnricher {
 
-    // List of enrichers used for customizing the generated deployment descriptors
-    private List<Enricher> enrichers;
-
-    // List of visitors used to enrich with labels
+    // List of visitors used to create with labels
     private MetadataVisitor<?>[] metaDataVisitors = null;
     private SelectorVisitor<?>[] selectorVisitorCreators = null;
 
@@ -52,49 +45,32 @@ public class DefaultMetadataEnricher extends BaseEnricher {
     private void init() {
 
         this.metaDataVisitors = new MetadataVisitor[] {
-                new MetadataVisitor.DeploymentBuilderVisitor(resourceConfig, enrichers),
-                new MetadataVisitor.DeploymentConfigBuilderVisitor(resourceConfig, enrichers),
-                new MetadataVisitor.ReplicaSet(resourceConfig,  enrichers),
-                new MetadataVisitor.ReplicationControllerBuilderVisitor(resourceConfig,  enrichers),
-                new MetadataVisitor.ServiceBuilderVisitor(resourceConfig,  enrichers),
-                new MetadataVisitor.PodTemplateSpecBuilderVisitor(resourceConfig,  enrichers),
-                new MetadataVisitor.DaemonSetBuilderVisitor(resourceConfig,  enrichers),
-                new MetadataVisitor.StatefulSetBuilderVisitor(resourceConfig,  enrichers),
-                new MetadataVisitor.JobBuilderVisitor(resourceConfig,  enrichers),
-                new MetadataVisitor.ImageStreamBuilderVisitor(resourceConfig,  enrichers),
-                new MetadataVisitor.BuildConfigBuilderVisitor(resourceConfig,  enrichers),
-                new MetadataVisitor.BuildBuilderVisitor(resourceConfig,  enrichers),
-
-        };
-
-        this.selectorVisitorCreators = new SelectorVisitor[] {
-                new SelectorVisitor.DeploymentSpecBuilderVisitor(enrichers),
-                new SelectorVisitor.DeploymentConfigSpecBuilderVisitor(enrichers),
-                new SelectorVisitor.ReplicaSetSpecBuilderVisitor(enrichers),
-                new SelectorVisitor.ReplicationControllerSpecBuilderVisitor(enrichers),
-                new SelectorVisitor.ServiceSpecBuilderVisitor(enrichers),
-                new SelectorVisitor.DaemonSetSpecBuilderVisitor(enrichers),
-                new SelectorVisitor.StatefulSetSpecBuilderVisitor(enrichers),
-                new SelectorVisitor.JobSpecBuilderVisitor(enrichers)
+                new MetadataVisitor.DeploymentBuilderVisitor(resourceConfig),
+                new MetadataVisitor.DeploymentConfigBuilderVisitor(resourceConfig),
+                new MetadataVisitor.ReplicaSet(resourceConfig),
+                new MetadataVisitor.ReplicationControllerBuilderVisitor(resourceConfig),
+                new MetadataVisitor.ServiceBuilderVisitor(resourceConfig),
+                new MetadataVisitor.PodTemplateSpecBuilderVisitor(resourceConfig),
+                new MetadataVisitor.DaemonSetBuilderVisitor(resourceConfig),
+                new MetadataVisitor.StatefulSetBuilderVisitor(resourceConfig),
+                new MetadataVisitor.JobBuilderVisitor(resourceConfig),
+                new MetadataVisitor.ImageStreamBuilderVisitor(resourceConfig),
+                new MetadataVisitor.BuildConfigBuilderVisitor(resourceConfig),
+                new MetadataVisitor.BuildBuilderVisitor(resourceConfig),
         };
     }
 
     @Override
-    public void addMetadata(PlatformMode platformMode, KubernetesListBuilder builder, List<Enricher> enrichers) {
-        this.enrichers = enrichers;
-
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         init();
         // Enrich labels
         enrichLabels(defaultEnricherConfig, builder);
-
-        // Add missing selectors
-        addMissingSelectors(defaultEnricherConfig, builder);
     }
 
     /**
      * Enrich the given list with labels.
      *
-     * @param builder the build to enrich with labels
+     * @param builder the build to create with labels
      */
     private void enrichLabels(ProcessorConfig config, KubernetesListBuilder builder) {
         visit(config, builder, metaDataVisitors);
@@ -108,23 +84,6 @@ public class DefaultMetadataEnricher extends BaseEnricher {
             }
         } finally {
             MetadataVisitor.clearProcessorConfig();
-        }
-    }
-
-    /**
-     * Add selector when missing to services and replication controller / replica sets
-     *
-     * @param config processor config to use
-     * @param builder builder to add selectors to.
-     */
-    private void addMissingSelectors(ProcessorConfig config, KubernetesListBuilder builder) {
-        SelectorVisitor.setProcessorConfig(config);
-        try {
-            for (SelectorVisitor<?> visitor : selectorVisitorCreators) {
-                builder.accept(visitor);
-            }
-        } finally {
-            SelectorVisitor.clearProcessorConfig();
         }
     }
 

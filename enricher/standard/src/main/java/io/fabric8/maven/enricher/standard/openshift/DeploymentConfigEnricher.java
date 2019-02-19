@@ -25,7 +25,6 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
-import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
@@ -42,23 +41,23 @@ import java.util.Objects;
 
 public class DeploymentConfigEnricher extends BaseEnricher {
     static final String ENRICHER_NAME = "fmp-openshift-deploymentconfig";
-    private RuntimeMode runtimeMode;
     private Boolean enableAutomaticTrigger;
+    private Boolean enableImageChangeTrigger;
     private Long openshiftDeployTimeoutSeconds;
 
     public DeploymentConfigEnricher(MavenEnricherContext context) {
         super(context, ENRICHER_NAME);
-        this.runtimeMode = context.getRuntimeMode();
         this.enableAutomaticTrigger = isAutomaticTriggerEnabled(context, true);
+        this.enableImageChangeTrigger = getImageChangeTriggerFlag(true);
         this.openshiftDeployTimeoutSeconds = getOpenshiftDeployTimeoutInSeconds(context, 3600L);
     }
 
     @Override
-    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         if(platformMode == PlatformMode.openshift) {
             for(HasMetadata item : builder.buildItems()) {
                 if(item instanceof Deployment) {
-                    DeploymentConfig deploymentConfig = convert(item);
+                    DeploymentConfig deploymentConfig = convert(item, platformMode);
                     removeItemFromBuilder(builder, item);
                     builder.addToDeploymentConfigItems(deploymentConfig);
                 }
@@ -77,7 +76,7 @@ public class DeploymentConfigEnricher extends BaseEnricher {
         builder.withItems(newListItems);
     }
 
-    private DeploymentConfig convert(HasMetadata item) {
+    private DeploymentConfig convert(HasMetadata item, PlatformMode platformMode) {
         Deployment resource = (Deployment) item;
         DeploymentConfigBuilder builder = new DeploymentConfigBuilder();
         builder.withMetadata(resource.getMetadata());
@@ -139,7 +138,7 @@ public class DeploymentConfigEnricher extends BaseEnricher {
 
             // add a new image change trigger for the build stream
             if (containerToImageMap.size() != 0) {
-                if(runtimeMode.equals(RuntimeMode.openshift)) {
+                if(enableImageChangeTrigger) {
                     for (Map.Entry<String, String> entry : containerToImageMap.entrySet()) {
                         String containerName = entry.getKey();
                         ImageName image = new ImageName(entry.getValue());
@@ -176,6 +175,13 @@ public class DeploymentConfigEnricher extends BaseEnricher {
     private Long getOpenshiftDeployTimeoutInSeconds(MavenEnricherContext enricherContext, Long defaultValue) {
         if (enricherContext.getProperty("fabric8.openshift.deployTimeoutSeconds") != null) {
             return Long.parseLong(enricherContext.getProperty("fabric8.openshift.deployTimeoutSeconds").toString());
+        } else {
+            return defaultValue;
+        }
+    }
+    private Boolean getImageChangeTriggerFlag(Boolean defaultValue) {
+        if (getContext().getProperty("fabric8.openshift.imageChangeTriggers") != null) {
+            return Boolean.parseBoolean(getContext().getProperty("fabric8.openshift.imageChangeTriggers").toString());
         } else {
             return defaultValue;
         }

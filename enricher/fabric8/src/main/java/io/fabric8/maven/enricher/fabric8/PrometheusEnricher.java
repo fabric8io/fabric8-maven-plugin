@@ -20,13 +20,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.fabric8.kubernetes.api.builder.TypedVisitor;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
 import org.apache.commons.lang3.StringUtils;
 
 
@@ -49,22 +52,23 @@ public class PrometheusEnricher extends BaseEnricher {
     }
 
     @Override
-    public Map<String, String> getAnnotations(Kind kind) {
-        if (kind == Kind.SERVICE) {
-            String prometheusPort = findPrometheusPort();
-            if (StringUtils.isNotBlank(prometheusPort)) {
-                log.verbose("Add prometheus.io annotations: %s=%s, %s=%s",
-                    ANNOTATION_PROMETHEUS_SCRAPE, "true",
-                    ANNOTATION_PROMETHEUS_PORT, prometheusPort);
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
+        builder.accept(new TypedVisitor<ServiceBuilder>() {
+            @Override
+            public void visit(ServiceBuilder serviceBuilder) {
+                String prometheusPort = findPrometheusPort();
+                if (StringUtils.isNotBlank(prometheusPort)) {
+                    log.verbose("Add prometheus.io annotations: %s=%s, %s=%s",
+                            ANNOTATION_PROMETHEUS_SCRAPE, "true",
+                            ANNOTATION_PROMETHEUS_PORT, prometheusPort);
 
-                Map<String, String> annotations = new HashMap<>();
-                MapUtil.putIfAbsent(annotations, ANNOTATION_PROMETHEUS_PORT, prometheusPort);
-                MapUtil.putIfAbsent(annotations, ANNOTATION_PROMETHEUS_SCRAPE, "true");
-                return annotations;
+                    Map<String, String> annotations = new HashMap<>();
+                    MapUtil.putIfAbsent(annotations, ANNOTATION_PROMETHEUS_PORT, prometheusPort);
+                    MapUtil.putIfAbsent(annotations, ANNOTATION_PROMETHEUS_SCRAPE, "true");
+                    serviceBuilder.editMetadata().addToAnnotations(annotations).endMetadata();
+                }
             }
-        }
-
-        return super.getAnnotations(kind);
+        });
     }
 
     private String findPrometheusPort() {

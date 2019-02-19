@@ -19,9 +19,6 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.Named;
 import io.fabric8.maven.core.config.PlatformMode;
 
-import java.util.List;
-import java.util.Map;
-
 /**
  * Interface describing enrichers which add to kubernetes descriptors
  *
@@ -29,30 +26,6 @@ import java.util.Map;
  * @since 01/04/16
  */
 public interface Enricher extends Named {
-
-    /**
-     * Get labels to add too objects
-     *
-     * @param kind for which type to get the labels
-     * @return map of additional labels
-     */
-    Map<String, String> getLabels(Kind kind);
-
-    /**
-     * Return annotations to add
-     *
-     * @param kind the kind of object to add
-     * @return map of annotations
-     */
-    Map<String, String> getAnnotations(Kind kind);
-
-    /**
-     * Get the selector for a service or replica set / replication controller
-     *
-     * @param kind get the selector map
-     * @return selector
-     */
-    Map<String,String> getSelector(Kind kind);
 
     /**
      * Add default resources when they are missing. Each enricher should be responsible
@@ -64,14 +37,12 @@ public interface Enricher extends Named {
      *
      * @param builder the build to examine and add to
      */
-    void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder);
+    void create(PlatformMode platformMode, KubernetesListBuilder builder);
 
     /**
      * Final customization of the overall resource descriptor. Fine tuning happens here.
      *
      * @param builder list to customer used to customize
      */
-    void adapt(PlatformMode platformMode, KubernetesListBuilder builder);
-
-    void addMetadata(PlatformMode platformMode, KubernetesListBuilder builder, List<Enricher> enrichers);
+    void enrich(PlatformMode platformMode, KubernetesListBuilder builder);
 }

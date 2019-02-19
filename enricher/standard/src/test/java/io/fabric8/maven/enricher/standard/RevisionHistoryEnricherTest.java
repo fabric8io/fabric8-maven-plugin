@@ -51,7 +51,7 @@ public class RevisionHistoryEnricherTest {
         RevisionHistoryEnricher enricher = new RevisionHistoryEnricher(context);
 
         // When
-        enricher.addMissingResources(PlatformMode.kubernetes, builder);
+        enricher.create(PlatformMode.kubernetes, builder);
 
         // Then
         assertRevisionHistory(builder.build(), Configs.asInt(RevisionHistoryEnricher.Config.limit.def()));
@@ -75,7 +75,7 @@ public class RevisionHistoryEnricherTest {
         RevisionHistoryEnricher enricher = new RevisionHistoryEnricher(context);
 
         // When
-        enricher.addMissingResources(PlatformMode.kubernetes, builder);
+        enricher.create(PlatformMode.kubernetes, builder);
 
         // Then
         assertRevisionHistory(builder.build(), Integer.parseInt(revisionNumber));

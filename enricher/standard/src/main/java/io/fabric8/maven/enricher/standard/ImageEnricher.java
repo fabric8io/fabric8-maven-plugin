@@ -86,7 +86,7 @@ public class ImageEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         if (!hasImageConfiguration()) {
             log.verbose("No images resolved. Skipping ...");
             return;

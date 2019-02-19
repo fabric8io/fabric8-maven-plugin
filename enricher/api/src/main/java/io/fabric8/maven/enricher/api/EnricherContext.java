@@ -18,10 +18,6 @@ package io.fabric8.maven.enricher.api;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
-
-import io.fabric8.maven.core.config.PlatformMode;
-import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.model.Dependency;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
@@ -111,12 +107,11 @@ public interface EnricherContext {
         return Optional.empty();
     }
 
-
-    PlatformMode getPlatformMode();
-
-    RuntimeMode getRuntimeMode();
-
+    /**
+     * Gets a system property used in project.
+     *
+     * @param key name of property
+     * @return value of property if set.
+     */
     Object getProperty(String key);
-
-    Properties getProperties();
 }

@@ -19,13 +19,13 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.access.ClusterAccess;
+import io.fabric8.maven.core.access.ClusterConfiguration;
 import io.fabric8.maven.core.config.MappingConfig;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.Profile;
 import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.core.util.FileUtil;
@@ -157,13 +157,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     private List<ImageConfiguration> images;
 
     /**
-     * Whether to perform a Kubernetes build (i.e. against a vanilla Docker daemon) or
-     * an OpenShift build (with a Docker build against the OpenShift API server.
-     */
-    @Parameter(property = "fabric8.mode")
-    private RuntimeMode mode = RuntimeMode.DEFAULT;
-
-    /**
      * OpenShift build mode when an OpenShift build is performed.
      * Can be either "s2i" for an s2i binary build mode or "docker" for a binary
      * docker mode.
@@ -264,13 +257,11 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     @Parameter(property = "fabric8.openshift.enableAutomaticTrigger", defaultValue = "true")
     private Boolean enableAutomaticTrigger;
 
+    @Parameter(property = "fabric8.openshift.imageChangeTrigger", defaultValue = "true")
+    private Boolean enableImageChangeTrigger;
+
     @Parameter(property = "docker.skip.resource", defaultValue = "false")
     protected boolean skipResource;
-
-    // Access for creating OpenShift binary builds
-    private ClusterAccess clusterAccess;
-
-    private RuntimeMode runtimeMode;
 
     /**
      * The artifact type for attaching the generated resource file to the project.
@@ -381,8 +372,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
         realResourceDir = ResourceDirCreator.getFinalResourceDir(resourceDir, environment);
         realResourceDirOpenShiftOverride = ResourceDirCreator.getFinalResourceDir(resourceDirOpenShiftOverride, environment);
-
-        clusterAccess = new ClusterAccess(getClusterConfiguration());
         updateKindFilenameMappings();
         try {
             lateInit();
@@ -391,7 +380,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             resolvedImages = getResolvedImages(images, log);
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
                 // Extract and generate resources which can be a mix of Kubernetes and OpenShift resources
-
                 KubernetesList resources;
                 for(PlatformMode platformMode : new PlatformMode[] { PlatformMode.kubernetes, PlatformMode.openshift }) {
                     ResourceClassifier resourceClassifier = platformMode == PlatformMode.kubernetes ? ResourceClassifier.KUBERNETES
@@ -417,7 +405,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                 return tempDirectory;
             }
         }
-
         return null;
     }
 
@@ -460,28 +447,9 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     }
 
     private void lateInit() {
-        runtimeMode = clusterAccess.resolveRuntimeMode(mode, log);
-        log.info("Running in [[B]]%s[[B]] mode", runtimeMode.getLabel());
-
-        if (isOpenShiftMode()) {
-            Properties properties = project.getProperties();
-            if (!properties.contains(DOCKER_IMAGE_USER)) {
-                String namespace = clusterAccess.getNamespace();
-                log.info("Using docker image name of namespace: " + namespace);
-                properties.setProperty(DOCKER_IMAGE_USER, namespace);
-            }
-            if (!properties.contains(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE)) {
-                properties.setProperty(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, runtimeMode.toString());
-            }
-        }
-
         handlerHub = new HandlerHub(
             new GroupArtifactVersion(project.getGroupId(), project.getArtifactId(), project.getVersion()),
             project.getProperties());
-    }
-
-    private boolean isOpenShiftMode() {
-        return runtimeMode.equals(RuntimeMode.openshift);
     }
 
     private KubernetesList generateResources(PlatformMode platformMode, List<ImageConfiguration> images, File remoteResources)
@@ -489,7 +457,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
         // Manager for calling enrichers.
         MavenEnricherContext.Builder ctxBuilder = new MavenEnricherContext.Builder()
-                .runtimeMode(mode)
                 .project(project)
                 .session(session)
                 .config(extractEnricherConfig())
@@ -502,7 +469,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         EnricherManager enricherManager = new EnricherManager(resources, ctxBuilder.build(),
             MavenUtil.getCompileClasspathElementsIfRequested(project, useProjectClasspath));
 
-        // Generate all resources from the main resource directory, configuration and enrich them accordingly
+        // Generate all resources from the main resource directory, configuration and create them accordingly
         KubernetesListBuilder builder = generateAppResources(platformMode, images, enricherManager, remoteResources);
 
         // Add resources found in subdirectories of resourceDir, with a certain profile
@@ -545,7 +512,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             KubernetesListBuilder builder = processResourceFragments(platformMode, remoteResources);
 
             // Create default resources for app resources only
-
             enricherManager.createDefaultResources(platformMode, builder);
 
             // Enrich descriptors
@@ -569,10 +535,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
         // Add resource files found in the fabric8 directory
         if (resourceFiles != null && resourceFiles.length > 0) {
-            if (resourceFiles != null && resourceFiles.length > 0) {
-                log.info("using resource templates from %s", realResourceDir);
-            }
-
+            log.info("using resource templates from %s", realResourceDir);
             builder = readResourceFragments(platformMode, resourceFiles);
         } else {
             builder = new KubernetesListBuilder();
@@ -612,13 +575,13 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                 (List<ImageConfiguration> configs) -> {
                     try {
                         GeneratorContext ctx = new GeneratorContext.Builder()
-                            .config(extractGeneratorConfig())
-                            .project(project)
-                            .logger(log)
-                            .platformMode(mode)
-                            .strategy(buildStrategy)
-                            .useProjectClasspath(useProjectClasspath)
-                            .build();
+                                .config(extractGeneratorConfig())
+                                .project(project)
+                                .runtimeMode(new ClusterAccess(getClusterConfiguration()).resolveRuntimeMode(null, log))
+                                .logger(log)
+                                .strategy(buildStrategy)
+                                .useProjectClasspath(useProjectClasspath)
+                                .build();
                         return GeneratorManager.generate(configs, ctx, true);
                     } catch (Exception e) {
                         throw new IllegalArgumentException("Cannot extract generator: " + e, e);
@@ -691,5 +654,12 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
         // Attach it to the Maven reactor so that it will also get deployed
         projectHelper.attachArtifact(project, this.resourceFileType.getArtifactType(), classifier.getValue(), file);
+    }
+
+    protected ClusterConfiguration getClusterConfiguration() {
+        final ClusterConfiguration.Builder clusterConfigurationBuilder = new ClusterConfiguration.Builder(access);
+
+        return clusterConfigurationBuilder.from(System.getProperties())
+                .from(project.getProperties()).build();
     }
 }

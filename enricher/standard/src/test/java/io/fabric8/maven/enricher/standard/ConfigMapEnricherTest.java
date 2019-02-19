@@ -57,7 +57,7 @@ public class ConfigMapEnricherTest {
         builder.addToConfigMapItems(createBaseConfigMap());
 
         // When
-        configMapEnricher.addMissingResources(PlatformMode.kubernetes, builder);
+        configMapEnricher.create(PlatformMode.kubernetes, builder);
 
         // Then
         final ConfigMap configMap = (ConfigMap) builder.buildFirstItem();

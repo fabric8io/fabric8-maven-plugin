@@ -296,7 +296,7 @@ public class BaseGeneratorTest {
             ctx.getConfig(); result = config;
             config.getConfig("test-generator", "from"); result = configFrom; minTimes = 0;
             config.getConfig("test-generator", "fromMode"); result = configFromMode; minTimes = 0;
-            ctx.getPlatformMode();result = RuntimeMode.kubernetes;minTimes = 0;
+            ctx.getRuntimeMode();result = RuntimeMode.kubernetes;minTimes = 0;
             ctx.getStrategy(); result = null; minTimes = 0;
         }};
     }
@@ -308,7 +308,7 @@ public class BaseGeneratorTest {
             ctx.getConfig(); result = config;
             config.getConfig("test-generator", "from"); result = configFrom; minTimes = 0;
             config.getConfig("test-generator", "fromMode"); result = configFromMode; minTimes = 0;
-            ctx.getPlatformMode();result = RuntimeMode.openshift;minTimes = 0;
+            ctx.getRuntimeMode();result = RuntimeMode.openshift;minTimes = 0;
             ctx.getStrategy(); result = OpenShiftBuildStrategy.s2i; minTimes = 0;
         }};
     }

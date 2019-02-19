@@ -20,13 +20,15 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
 import mockit.Expectations;
 import mockit.Mocked;
 import org.junit.Test;
@@ -69,8 +71,10 @@ public class PrometheusEnricherTest {
             context.getConfiguration(); result = new Configuration.Builder().processorConfig(config).build();
         }};
 
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new ServiceBuilder().withNewMetadata().withName("foo").endMetadata().build());
         PrometheusEnricher enricher = new PrometheusEnricher(context);
-        Map<String, String> annotations = enricher.getAnnotations(Kind.SERVICE);
+        enricher.create(PlatformMode.kubernetes, builder);
+        Map<String, String> annotations = builder.buildFirstItem().getMetadata().getAnnotations();
 
         assertEquals(2, annotations.size());
         assertEquals("1234", annotations.get(PrometheusEnricher.ANNOTATION_PROMETHEUS_PORT));
@@ -104,8 +108,10 @@ public class PrometheusEnricherTest {
             imageConfiguration.getBuildConfiguration(); result = imageConfig;
         }};
 
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new ServiceBuilder().withNewMetadata().withName("foo").endMetadata().build());
         PrometheusEnricher enricher = new PrometheusEnricher(context);
-        Map<String, String> annotations = enricher.getAnnotations(Kind.SERVICE);
+        enricher.create(PlatformMode.kubernetes, builder);
+        Map<String, String> annotations = builder.buildFirstItem().getMetadata().getAnnotations();
 
         assertEquals(2, annotations.size());
         assertEquals("9779", annotations.get(PrometheusEnricher.ANNOTATION_PROMETHEUS_PORT));
@@ -137,9 +143,11 @@ public class PrometheusEnricherTest {
             imageConfiguration.getBuildConfiguration(); result = imageConfig;
         }};
 
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new ServiceBuilder().withNewMetadata().withName("foo").endMetadata().build());
         PrometheusEnricher enricher = new PrometheusEnricher(context);
-        Map<String, String> annotations = enricher.getAnnotations(Kind.SERVICE);
+        enricher.create(PlatformMode.kubernetes, builder);
+        Map<String, String> annotations = builder.buildFirstItem().getMetadata().getAnnotations();
 
-        assertNull(annotations);
+        assertEquals(Collections.emptyMap(), annotations);
     }
 }

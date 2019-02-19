@@ -15,6 +15,8 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
@@ -24,7 +26,8 @@ import java.util.Properties;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
+import io.fabric8.openshift.api.model.DeploymentConfig;
+import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import mockit.Expectations;
 import mockit.Mocked;
 import org.apache.maven.project.MavenProject;
@@ -61,7 +64,7 @@ public class MavenProjectEnricherTest {
         ProjectEnricher projectEnricher = new ProjectEnricher(context);
 
         KubernetesListBuilder builder = createListWithDeploymentConfig();
-        projectEnricher.adapt(PlatformMode.kubernetes, builder);
+        projectEnricher.enrich(PlatformMode.kubernetes, builder);
         KubernetesList list = builder.build();
 
         Map<String, String> labels = list.getItems().get(0).getMetadata().getLabels();
@@ -72,7 +75,11 @@ public class MavenProjectEnricherTest {
         assertEquals("version", labels.get("version"));
         assertNull(labels.get("project"));
 
-        Map<String, String> selectors = projectEnricher.getSelector (Kind.DEPLOYMENT_CONFIG);
+        builder = new KubernetesListBuilder().withItems(new DeploymentBuilder().build());
+        projectEnricher.create(PlatformMode.kubernetes, builder);
+
+        Deployment deployment = (Deployment)builder.buildFirstItem();
+        Map<String, String> selectors = deployment.getSpec().getSelector().getMatchLabels();
         assertEquals("groupId", selectors.get("group"));
         assertEquals("artifactId", selectors.get("app"));
         assertNull(selectors.get("version"));
@@ -92,7 +99,7 @@ public class MavenProjectEnricherTest {
         ProjectEnricher projectEnricher = new ProjectEnricher(context);
 
         KubernetesListBuilder builder = createListWithDeploymentConfig();
-        projectEnricher.adapt(PlatformMode.kubernetes, builder);
+        projectEnricher.enrich(PlatformMode.kubernetes, builder);
         KubernetesList list = builder.build();
 
         Map<String, String> labels = list.getItems().get(0).getMetadata().getLabels();
@@ -103,7 +110,11 @@ public class MavenProjectEnricherTest {
         assertEquals("version", labels.get("version"));
         assertNull(labels.get("app"));
 
-        Map<String, String> selectors = projectEnricher.getSelector (Kind.DEPLOYMENT_CONFIG);
+        builder = new KubernetesListBuilder().withItems(new DeploymentConfigBuilder().build());
+        projectEnricher.create(PlatformMode.kubernetes, builder);
+
+        DeploymentConfig deploymentConfig = (DeploymentConfig)builder.buildFirstItem();
+        Map<String, String> selectors = deploymentConfig.getSpec().getSelector();
         assertEquals("groupId", selectors.get("group"));
         assertEquals("artifactId", selectors.get("project"));
         assertNull(selectors.get("version"));

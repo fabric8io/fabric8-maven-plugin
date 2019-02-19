@@ -15,13 +15,16 @@
  */
 package io.fabric8.maven.enricher.osio;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 
+import io.fabric8.kubernetes.api.builder.TypedVisitor;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
 
 /**
  * Apply a label containing the OpenShift.io space to be associated
@@ -31,7 +34,7 @@ public class SpaceLabelEnricher extends BaseEnricher {
 
     private static final String SPACE_LABEL = "space";
 
-    static enum Config implements Configs.Key {
+    enum Config implements Configs.Key {
         space;
 
         @Override
@@ -46,18 +49,24 @@ public class SpaceLabelEnricher extends BaseEnricher {
     }
 
     @Override
-    public Map<String, String> getLabels(Kind kind) {
-        String space = getConfig(Config.space);
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
+        builder.accept(new TypedVisitor<ObjectMetaBuilder>() {
+            @Override
+            public void visit(ObjectMetaBuilder o) {
+                if(o != null) {
+                    String space = getConfig(Config.space);
+                    Map<String, String> labels;
 
-        if (space != null && !space.trim().isEmpty()) {
-            getLog().verbose("Setting space label '%s' on %s", space, kind.toString().toLowerCase());
-
-            Map<String, String> labels = new HashMap<>(1);
-            labels.put(SPACE_LABEL, space);
-            return labels;
-        }
-
-        return super.getLabels(kind);
+                    if (o != null) {
+                        labels = o.getLabels();
+                        labels.put(SPACE_LABEL, space);
+                    } else {
+                        labels = Collections.singletonMap(SPACE_LABEL, space);
+                    }
+                    o.addToLabels(labels);
+                    o.getLabels();
+                }
+            }
+        });
     }
-
 }

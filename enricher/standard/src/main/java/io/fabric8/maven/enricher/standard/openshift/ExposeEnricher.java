@@ -47,7 +47,7 @@ public class ExposeEnricher extends BaseEnricher {
     public static final String EXPOSE_LABEL = "expose";
 
     @Override
-    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         List<HasMetadata> items = builder.getItems();
         if (items != null) {
             for (HasMetadata item : items) {

@@ -252,7 +252,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
                     .config(extractGeneratorConfig())
                     .project(project)
                     .logger(log)
-                    .platformMode(mode)
+                    .runtimeMode(mode)
                     .strategy(buildStrategy)
                     .useProjectClasspath(useProjectClasspath)
                     .artifactResolver(serviceHub.getArtifactResolverService())

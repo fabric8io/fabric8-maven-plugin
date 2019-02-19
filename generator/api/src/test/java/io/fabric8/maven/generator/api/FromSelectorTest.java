@@ -78,7 +78,7 @@ public class FromSelectorTest {
                 .project(project)
                 .config(new ProcessorConfig())
                 .logger(logger)
-                .platformMode((RuntimeMode) data[i])
+                .runtimeMode((RuntimeMode) data[i])
                 .strategy((OpenShiftBuildStrategy) data[i + 1])
                 .build();
 

@@ -37,7 +37,7 @@ public class RemoveBuildAnnotationsEnricher extends BaseEnricher {
     }
 
     @Override
-    public void adapt(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) {
         List<HasMetadata> items = builder.buildItems();
 
         for (HasMetadata item : items) {

@@ -18,7 +18,6 @@ package io.fabric8.maven.enricher.standard.openshift;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
@@ -32,15 +31,9 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplate;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.model.Configuration;
-import io.fabric8.maven.core.model.GroupArtifactVersion;
-import io.fabric8.maven.enricher.api.Kind;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TreeMap;
 import mockit.Expectations;
 import mockit.Mocked;
 import org.apache.maven.project.MavenProject;
@@ -69,48 +62,6 @@ public class AutoTLSEnricherTest {
             this.mode = mode;
             this.tlsSecretNameConfig = tlsSecretNameConfig;
             this.tlsSecretName = tlsSecretName;
-        }
-    }
-
-    @Test
-    public void testSecretName() throws Exception {
-        final SecretNameTestConfig[] data = new SecretNameTestConfig[] {
-                new SecretNameTestConfig(PlatformMode.kubernetes, null, null),
-                new SecretNameTestConfig(PlatformMode.openshift, null, "projectA-tls"),
-                new SecretNameTestConfig(PlatformMode.openshift, "custom-secret", "custom-secret") };
-
-        for (final SecretNameTestConfig tc : data) {
-            final ProcessorConfig config = new ProcessorConfig(null, null,
-                    Collections.singletonMap(AutoTLSEnricher.ENRICHER_NAME, new TreeMap(Collections
-                            .singletonMap(AutoTLSEnricher.Config.tlsSecretName.name(), tc.tlsSecretNameConfig))));
-
-            final Properties projectProps = new Properties();
-            projectProps.put(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, tc.mode.name());
-
-            // Setup mock behaviour
-            new Expectations() {
-                {
-                    Configuration configuration =
-                        new Configuration.Builder().properties(projectProps).processorConfig(config).build();
-                    context.getConfiguration();
-                    result = configuration;
-                    project.getArtifactId();
-                    result = "projectA";
-                    minTimes = 0;
-                    context.getGav();
-                    result = new GroupArtifactVersion("", "projectA", "0");
-                }
-            };
-
-            AutoTLSEnricher enricher = new AutoTLSEnricher(context);
-            Map<String, String> annotations = enricher.getAnnotations(Kind.SERVICE);
-            if (tc.mode == PlatformMode.kubernetes) {
-                assertNull(annotations);
-                continue;
-            }
-
-            assertEquals(1, annotations.size());
-            assertEquals(tc.tlsSecretName, annotations.get(AutoTLSEnricher.AUTOTLS_ANNOTATION_KEY));
         }
     }
 
@@ -166,7 +117,7 @@ public class AutoTLSEnricherTest {
                     Collections.singletonMap(AutoTLSEnricher.ENRICHER_NAME, configMap));
 
             final Properties projectProps = new Properties();
-            projectProps.put(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, tc.mode.name());
+            projectProps.put(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, tc.mode.name());
 
             // Setup mock behaviour
             new Expectations() {
@@ -187,7 +138,7 @@ public class AutoTLSEnricherTest {
             AutoTLSEnricher enricher = new AutoTLSEnricher(context);
             KubernetesListBuilder klb = new KubernetesListBuilder().addNewPodTemplateItem().withNewMetadata().and()
                     .withNewTemplate().withNewMetadata().and().withNewSpec().and().and().and();
-            enricher.adapt(PlatformMode.kubernetes, klb);
+            enricher.enrich(PlatformMode.kubernetes, klb);
             PodTemplate pt = (PodTemplate) klb.getItems().get(0);
 
             List<Container> initContainers = pt.getTemplate().getSpec().getInitContainers();

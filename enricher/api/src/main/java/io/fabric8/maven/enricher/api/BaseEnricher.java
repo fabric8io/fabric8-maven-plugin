@@ -17,6 +17,7 @@ package io.fabric8.maven.enricher.api;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
@@ -55,22 +56,10 @@ public abstract class BaseEnricher implements Enricher {
     }
 
     @Override
-    public Map<String, String> getLabels(Kind kind) { return null; }
+    public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) { }
 
     @Override
-    public Map<String, String> getAnnotations(Kind kind) { return null; }
-
-    @Override
-    public void adapt(PlatformMode platformMode, KubernetesListBuilder builder) { }
-
-    @Override
-    public void addMetadata(PlatformMode platformMode, KubernetesListBuilder builder, List<Enricher> enrichers) { }
-
-    @Override
-    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) { }
-
-    @Override
-    public Map<String, String> getSelector(Kind kind) { return null; }
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) { }
 
     protected Logger getLog() {
         return log;
@@ -114,7 +103,7 @@ public abstract class BaseEnricher implements Enricher {
     protected boolean isOpenShiftMode() {
         Properties properties = getContext().getConfiguration().getProperties();
         if (properties != null) {
-            return PlatformMode.isOpenShiftMode(properties);
+            return RuntimeMode.isOpenShiftMode(properties);
         }
         return false;
     }

@@ -20,13 +20,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.PodSpec;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.ImageName;
-import io.fabric8.openshift.api.model.*;
+import io.fabric8.openshift.api.model.DeploymentConfig;
+import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
+import io.fabric8.openshift.api.model.DeploymentConfigSpec;
+import io.fabric8.openshift.api.model.DeploymentConfigSpecBuilder;
 
 public class DeploymentConfigHandler {
     private final PodTemplateHandler podTemplateHandler;
@@ -35,11 +42,11 @@ public class DeploymentConfigHandler {
     }
 
     public DeploymentConfig getDeploymentConfig(ResourceConfig config,
-                                                List<ImageConfiguration> images, Long openshiftDeployTimeoutSeconds, RuntimeMode runtimeMode, Boolean enableAutomaticTrigger) {
+                                                List<ImageConfiguration> images, Long openshiftDeployTimeoutSeconds, Boolean imageChangeTrigger, Boolean enableAutomaticTrigger, PlatformMode platformMode) {
 
         DeploymentConfig deploymentConfig = new DeploymentConfigBuilder()
                 .withMetadata(createDeploymentConfigMetaData(config))
-                .withSpec(createDeploymentConfigSpec(config, images, openshiftDeployTimeoutSeconds, runtimeMode, enableAutomaticTrigger))
+                .withSpec(createDeploymentConfigSpec(config, images, openshiftDeployTimeoutSeconds, imageChangeTrigger, enableAutomaticTrigger, platformMode))
                 .build();
 
         return deploymentConfig;
@@ -53,7 +60,7 @@ public class DeploymentConfigHandler {
                 .build();
     }
 
-    private DeploymentConfigSpec createDeploymentConfigSpec(ResourceConfig config, List<ImageConfiguration> images, Long openshiftDeployTimeoutSeconds, RuntimeMode runtimeMode, Boolean enableAutomaticTrigger) {
+    private DeploymentConfigSpec createDeploymentConfigSpec(ResourceConfig config, List<ImageConfiguration> images, Long openshiftDeployTimeoutSeconds, Boolean imageChangeTrigger, Boolean enableAutomaticTrigger, PlatformMode platformMode) {
         DeploymentConfigSpecBuilder specBuilder = new DeploymentConfigSpecBuilder();
 
         PodTemplateSpec podTemplateSpec = podTemplateHandler.getPodTemplate(config,images);
@@ -73,7 +80,7 @@ public class DeploymentConfigHandler {
         }
 
         // add a new image change trigger for the build stream
-        if (containerToImageMap.size() != 0 && runtimeMode == RuntimeMode.openshift) {
+        if (containerToImageMap.size() != 0 && imageChangeTrigger) {
             for (Map.Entry<String, String> entry : containerToImageMap.entrySet()) {
                 String containerName = entry.getKey();
                 ImageName image = new ImageName(entry.getValue());

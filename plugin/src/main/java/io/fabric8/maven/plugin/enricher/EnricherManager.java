@@ -70,7 +70,7 @@ public class EnricherManager {
     public void createDefaultResources(PlatformMode platformMode, ProcessorConfig enricherConfig, final KubernetesListBuilder builder) {
         // Add default resources
         loop(enricherConfig, enricher -> {
-            enricher.addMissingResources(platformMode, builder);
+            enricher.create(platformMode, builder);
             return null;
         });
     }
@@ -81,7 +81,7 @@ public class EnricherManager {
 
     public void enrich(PlatformMode platformMode, ProcessorConfig config, KubernetesListBuilder builder) {
         // Add Metadata labels (
-        addMetadata(platformMode, config, builder, enrichers);
+        enrich(platformMode, config, builder, enrichers);
 
         // Final customization step
         adapt(platformMode, config, builder);
@@ -93,9 +93,9 @@ public class EnricherManager {
      * @param builder builder to customize
      * @param enricherList list of enrichers
      */
-    private void addMetadata(PlatformMode platformMode, final ProcessorConfig enricherConfig, final KubernetesListBuilder builder, final List<Enricher> enricherList) {
+    private void enrich(PlatformMode platformMode, final ProcessorConfig enricherConfig, final KubernetesListBuilder builder, final List<Enricher> enricherList) {
         loop(enricherConfig, (Enricher enricher) -> {
-                enricher.addMetadata(PlatformMode.kubernetes, builder, enricherList);
+                enricher.create(platformMode, builder);
                 return null;
             });
     }
@@ -107,7 +107,7 @@ public class EnricherManager {
      */
     private void adapt(PlatformMode platformMode, final ProcessorConfig enricherConfig, final KubernetesListBuilder builder) {
         loop(enricherConfig, (Enricher enricher) -> {
-                enricher.adapt(platformMode, builder);
+                enricher.enrich(platformMode, builder);
                 return null;
             });
     }

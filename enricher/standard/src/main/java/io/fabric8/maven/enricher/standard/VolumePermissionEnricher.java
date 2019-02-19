@@ -58,7 +58,7 @@ public class VolumePermissionEnricher extends BaseEnricher {
     }
 
     @Override
-    public void adapt(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) {
 
         builder.accept(new TypedVisitor<PodTemplateSpecBuilder>() {
             @Override

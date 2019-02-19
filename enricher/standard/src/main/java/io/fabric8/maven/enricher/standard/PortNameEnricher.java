@@ -33,7 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import static io.fabric8.ianaservicehelper.Helper.serviceNames;
 
 /**
- * Use a given set of well known ports and, if not found, enrich container ports with names with
+ * Use a given set of well known ports and, if not found, create container ports with names with
  * names of IANA registered services, if not already present.
  */
 public class PortNameEnricher extends BaseEnricher {
@@ -52,7 +52,7 @@ public class PortNameEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         builder.accept(new TypedVisitor<ContainerPortBuilder>() {
             @Override
             public void visit(ContainerPortBuilder portBuilder) {

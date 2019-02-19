@@ -16,14 +16,18 @@
 package io.fabric8.maven.enricher.osio;
 
 import com.google.common.collect.ImmutableMap;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.model.Configuration;
-import io.fabric8.maven.enricher.api.Kind;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
+
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
@@ -32,7 +36,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 public class SpaceLabelEnricherTest {
 
@@ -49,9 +52,10 @@ public class SpaceLabelEnricherTest {
             context.getConfiguration(); result = new Configuration.Builder().properties(props).build();
         }};
 
+        Service service = new ServiceBuilder().withNewMetadata().withName("foo").endMetadata().build();
         SpaceLabelEnricher enricher = new SpaceLabelEnricher(context);
-        Map<String, String> labels = enricher.getLabels(Kind.SERVICE);
-        assertNull(labels);
+        enricher.create(PlatformMode.kubernetes, new KubernetesListBuilder().withItems(service));
+        assertNotNull(service.getMetadata().getLabels());
     }
 
     @Test
@@ -70,9 +74,12 @@ public class SpaceLabelEnricherTest {
             context.getConfiguration(); result = new Configuration.Builder().properties(props).build();
         }};
 
+        Service service = new ServiceBuilder().withNewMetadata().withName("foo").endMetadata().build();
         SpaceLabelEnricher enricher = new SpaceLabelEnricher(context);
-        Map<String, String> labels = enricher.getLabels(Kind.SERVICE);
-        checkLabel(labels);
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(service);
+        enricher.create(PlatformMode.kubernetes, builder);
+        service = (Service) builder.buildFirstItem();
+        checkLabel(service.getMetadata().getLabels());
     }
 
     @Test
@@ -83,9 +90,12 @@ public class SpaceLabelEnricherTest {
             context.getConfiguration(); result = new Configuration.Builder().properties(props).build();
         }};
 
+        Service service = new ServiceBuilder().withNewMetadata().withName("foo").endMetadata().build();
         SpaceLabelEnricher enricher = new SpaceLabelEnricher(context);
-        Map<String, String> labels = enricher.getLabels(Kind.SERVICE);
-        checkLabel(labels);
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(service);
+        enricher.create(PlatformMode.kubernetes, builder);
+        service = (Service) builder.buildFirstItem();
+        checkLabel(service.getMetadata().getLabels());
     }
 
     @Test
@@ -108,9 +118,12 @@ public class SpaceLabelEnricherTest {
             context.getConfiguration(); result = new Configuration.Builder().processorConfig(config).build();
         }};
 
+        Service service = new ServiceBuilder().withNewMetadata().withName("foo").endMetadata().build();
         SpaceLabelEnricher enricher = new SpaceLabelEnricher(context);
-        Map<String, String> labels = enricher.getLabels(Kind.SERVICE);
-        checkLabel(labels);
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(service);
+        enricher.create(PlatformMode.kubernetes, builder);
+        service = (Service) builder.buildFirstItem();
+        checkLabel(service.getMetadata().getLabels());
     }
 
     private void checkLabel(Map<String, String> labels) {

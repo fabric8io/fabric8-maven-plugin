@@ -15,7 +15,6 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import java.util.Arrays;
 import java.util.Collections;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -77,7 +76,7 @@ public class ImageEnricherTest {
                 .addNewDeploymentItem()
                 .endDeploymentItem();
 
-        imageEnricher.addMissingResources(PlatformMode.kubernetes, builder);
+        imageEnricher.create(PlatformMode.kubernetes, builder);
         assertCorrectlyGeneratedResources(builder.build(), "Deployment");
     }
 
@@ -87,7 +86,7 @@ public class ImageEnricherTest {
                 .addNewReplicaSetItem()
                 .endReplicaSetItem();
 
-        imageEnricher.addMissingResources(PlatformMode.kubernetes, builder);
+        imageEnricher.create(PlatformMode.kubernetes, builder);
         assertCorrectlyGeneratedResources(builder.build(), "ReplicaSet");
     }
 
@@ -97,7 +96,7 @@ public class ImageEnricherTest {
                 .addNewReplicationControllerItem()
                 .endReplicationControllerItem();
 
-        imageEnricher.addMissingResources(PlatformMode.kubernetes, builder);
+        imageEnricher.create(PlatformMode.kubernetes, builder);
         assertCorrectlyGeneratedResources(builder.build(), "ReplicationController");
     }
 
@@ -107,7 +106,7 @@ public class ImageEnricherTest {
                 .addNewDaemonSetItem()
                 .endDaemonSetItem();
 
-        imageEnricher.addMissingResources(PlatformMode.kubernetes, builder);
+        imageEnricher.create(PlatformMode.kubernetes, builder);
         assertCorrectlyGeneratedResources(builder.build(), "DaemonSet");
     }
 
@@ -117,7 +116,7 @@ public class ImageEnricherTest {
                 .addNewStatefulSetItem()
                 .endStatefulSetItem();
 
-        imageEnricher.addMissingResources(PlatformMode.kubernetes, builder);
+        imageEnricher.create(PlatformMode.kubernetes, builder);
         assertCorrectlyGeneratedResources(builder.build(), "StatefulSet");
     }
 
@@ -127,7 +126,7 @@ public class ImageEnricherTest {
                 .addNewDeploymentConfigItem()
                 .endDeploymentConfigItem();
 
-        imageEnricher.addMissingResources(PlatformMode.kubernetes, builder);
+        imageEnricher.create(PlatformMode.kubernetes, builder);
         assertCorrectlyGeneratedResources(builder.build(), "DeploymentConfig");
     }
 

@@ -61,8 +61,6 @@ public class DefaultControllerEnricher extends BaseEnricher {
     protected static final String[] POD_CONTROLLER_KINDS =
         { "ReplicationController", "ReplicaSet", "Deployment", "DeploymentConfig", "StatefulSet", "DaemonSet", "Job" };
 
-    private final RuntimeMode runtimeMode;
-
     private final DeploymentHandler deployHandler;
     private final DeploymentConfigHandler deployConfigHandler;
     private final ReplicationControllerHandler rcHandler;
@@ -86,7 +84,6 @@ public class DefaultControllerEnricher extends BaseEnricher {
 
         HandlerHub handlers = new HandlerHub(
             getContext().getGav(), getContext().getConfiguration().getProperties());
-        runtimeMode = buildContext.getRuntimeMode();
         rcHandler = handlers.getReplicationControllerHandler();
         rsHandler = handlers.getReplicaSetHandler();
         deployHandler = handlers.getDeploymentHandler();
@@ -97,7 +94,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getSanitizedArtifactId()));
         ResourceConfig xmlResourceConfig = getConfiguration().getResource().orElse(null);
         ResourceConfig config = new ResourceConfig.Builder(xmlResourceConfig)
@@ -119,7 +116,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
                         builder.addToDeploymentItems(deployHandler.getDeployment(config, images));
                     } else {
                         log.info("Adding a default DeploymentConfig");
-                        builder.addToDeploymentConfigItems(deployConfigHandler.getDeploymentConfig(config, images, getOpenshiftDeployTimeoutInSeconds(3600L),runtimeMode, isAutomaticTriggerEnabled(true)));
+                        builder.addToDeploymentConfigItems(deployConfigHandler.getDeploymentConfig(config, images, getOpenshiftDeployTimeoutInSeconds(3600L), getImageChangeTriggerFlag(true), isAutomaticTriggerEnabled(true), platformMode));
                     }
                 } else if ("statefulSet".equalsIgnoreCase(type)) {
                     log.info("Adding a default StatefulSet");
@@ -142,7 +139,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
     }
 
     @Override
-    public void adapt(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) {
         if(platformMode == PlatformMode.kubernetes) {
             builder.accept(new TypedVisitor<DeploymentBuilder>() {
                 @Override
@@ -223,6 +220,14 @@ public class DefaultControllerEnricher extends BaseEnricher {
     private Long getOpenshiftDeployTimeoutInSeconds(Long defaultValue) {
         if (getContext().getProperty("fabric8.openshift.deployTimeoutSeconds") != null) {
             return Long.parseLong(getContext().getProperty("fabric8.openshift.deployTimeoutSeconds").toString());
+        } else {
+            return defaultValue;
+        }
+    }
+
+    private Boolean getImageChangeTriggerFlag(Boolean defaultValue) {
+        if (getContext().getProperty("fabric8.openshift.imageChangeTriggers") != null) {
+            return Boolean.parseBoolean(getContext().getProperty("fabric8.openshift.imageChangeTriggers").toString());
         } else {
             return defaultValue;
         }
