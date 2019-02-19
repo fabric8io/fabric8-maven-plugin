@@ -336,8 +336,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
         if (platformMode.equals(PlatformMode.openshift)) {
             Properties properties = project.getProperties();
-            if (!properties.contains(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE)) {
-                properties.setProperty(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, platformMode.toString());
+            if (!properties.contains(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE)) {
+                properties.setProperty(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, platformMode.toString());
             }
         }
 

@@ -47,11 +47,6 @@ import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.generator.api.GeneratorContext;
-import io.fabric8.maven.plugin.converter.DeploymentConfigOpenShiftConverter;
-import io.fabric8.maven.plugin.converter.DeploymentOpenShiftConverter;
-import io.fabric8.maven.plugin.converter.KubernetesToOpenShiftConverter;
-import io.fabric8.maven.plugin.converter.NamespaceOpenShiftConverter;
-import io.fabric8.maven.plugin.converter.ReplicSetOpenShiftConverter;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
@@ -226,9 +221,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     // Services
     private HandlerHub handlerHub;
-
-    // Converters for going from Kubernertes objects to openshift objects
-    private Map<String, KubernetesToOpenShiftConverter> openShiftConverters;
 
     /**
      * Namespace to use when accessing Kubernetes or OpenShift
@@ -478,19 +470,10 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                 log.info("Using docker image name of namespace: " + namespace);
                 properties.setProperty(DOCKER_IMAGE_USER, namespace);
             }
-            if (!properties.contains(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE)) {
-                properties.setProperty(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, runtimeMode.toString());
+            if (!properties.contains(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE)) {
+                properties.setProperty(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, runtimeMode.toString());
             }
         }
-
-        openShiftConverters = new HashMap<>();
-        openShiftConverters.put("ReplicaSet", new ReplicSetOpenShiftConverter());
-        openShiftConverters.put("Deployment",
-            new DeploymentOpenShiftConverter(runtimeMode, getOpenshiftDeployTimeoutSeconds()));
-        // TODO : This converter shouldn't be here. See its javadoc.
-        openShiftConverters.put("DeploymentConfig",
-            new DeploymentConfigOpenShiftConverter(getOpenshiftDeployTimeoutSeconds()));
-        openShiftConverters.put("Namespace", new NamespaceOpenShiftConverter());
 
         handlerHub = new HandlerHub(
             new GroupArtifactVersion(project.getGroupId(), project.getArtifactId(), project.getVersion()),
@@ -499,23 +482,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     private boolean isOpenShiftMode() {
         return runtimeMode.equals(RuntimeMode.openshift);
-    }
-
-    private static Template createTemplateWithObjects(KubernetesList kubernetesResources, Template template) {
-        List<io.fabric8.openshift.api.model.Parameter> parameters = template.getParameters();
-        List<HasMetadata> items = kubernetesResources.getItems();
-        Template tempTemplate = null;
-        if (parameters != null && parameters.size() > 0 && items != null && items.size() > 0) {
-            tempTemplate = new Template();
-            tempTemplate.setMetadata(template.getMetadata());
-            tempTemplate.setParameters(parameters);
-            tempTemplate.setObjects(items);
-        }
-        return tempTemplate;
-    }
-
-    public Long getOpenshiftDeployTimeoutSeconds() {
-        return openshiftDeployTimeoutSeconds;
     }
 
     private KubernetesList generateResources(PlatformMode platformMode, List<ImageConfiguration> images, File remoteResources)

@@ -19,21 +19,34 @@ import com.google.common.base.Objects;
 
 import java.util.Properties;
 
+
+/**
+ * Mode on how to build/deploy resources onto Kubernetes/Openshift cluster.
+ * It can be provided by user as a parameter, otherwise it would be
+ * automatically detected by plugin via querying cluster.
+ *
+ * @author Rohan
+ * @since 14/02/2019
+ */
 public enum RuntimeMode {
 
     /**
-     * Create resources descriptors for vanilla Kubernetes
+     * Build Docker images and use plain Deployments for deployment
+     * onto cluster. It can be used both on vanilla Kubernetes and
+     * Openshift.
      */
     kubernetes(false, "Kubernetes"),
 
     /**
-     * Use special OpenShift features like BuildConfigs
+     * Use special OpenShift features like BuildConfigs, DeploymentConfigs
+     * ImageStreams and S2I builds while deploying onto cluster. It can be
+     * used only when on Openshift.
      */
     openshift(false, "OpenShift"),
 
     /**
-     * Detect automatically whether running on OpenShift or Kuberentes.
-     * This is done by contacting an API server
+     * Detect automatically whether running cluster is OpenShift or Kuberentes.
+     * This is done by contacting cluster API server.
      */
     auto(true, "Auto");
 
