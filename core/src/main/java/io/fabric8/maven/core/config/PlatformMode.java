@@ -15,12 +15,8 @@
  */
 package io.fabric8.maven.core.config;
 
-import java.util.Properties;
-
-import com.google.common.base.Objects;
-
 /**
- * Mode how to create resource descriptors
+ * Mode how to create resource descriptors used by enrichers.
  *
  * @author roland
  * @since 25/05/16
@@ -30,42 +26,21 @@ public enum PlatformMode {
     /**
      * Create resources descriptors for vanilla Kubernetes
      */
-    kubernetes(false, "Kubernetes"),
+    kubernetes("Kubernetes"),
 
     /**
      * Use special OpenShift features like BuildConfigs
      */
-    openshift(false, "OpenShift"),
+    openshift("OpenShift");
 
-    /**
-     * Detect automatically whether running on OpenShift or Kuberentes.
-     * This is done by contacting an API server
-     */
-    auto(true, "Auto");
-
-    public static final PlatformMode DEFAULT = PlatformMode.auto;
-    public static final String FABRIC8_EFFECTIVE_PLATFORM_MODE = "fabric8.internal.effective.platform.mode";
-
-    private boolean autoFlag;
     private String label;
 
-    PlatformMode(boolean autoFlag, String label) {
-        this.autoFlag = autoFlag;
+    PlatformMode(String label) {
         this.label = label;
-    }
-
-    public boolean isAuto() {
-        return autoFlag;
     }
 
     public String getLabel() {
         return label;
     }
 
-    /**
-     * Returns true if the given maven properties indicate running in OpenShift platform mode
-     */
-    public static boolean isOpenShiftMode(Properties properties) {
-        return properties == null ? false : Objects.equal(openshift.toString(), properties.getProperty(FABRIC8_EFFECTIVE_PLATFORM_MODE, ""));
-    }
 }
