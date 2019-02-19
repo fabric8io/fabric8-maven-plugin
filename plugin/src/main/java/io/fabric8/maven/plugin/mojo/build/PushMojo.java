@@ -123,7 +123,7 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
                 .config(generatorConfig)
                 .project(project)
                 .logger(log)
-                .platformMode(mode)
+                .runtimeMode(mode)
                 .strategy(buildStrategy)
                 .useProjectClasspath(false)
                 .build();

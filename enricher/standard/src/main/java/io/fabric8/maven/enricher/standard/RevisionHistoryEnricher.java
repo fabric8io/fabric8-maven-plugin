@@ -47,7 +47,7 @@ public class RevisionHistoryEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         final Integer maxRevisionHistories = Configs.asInt(getConfig(Config.limit));
 
         log.info("Adding revision history limit to %s", maxRevisionHistories);

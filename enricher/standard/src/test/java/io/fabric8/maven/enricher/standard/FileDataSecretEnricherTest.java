@@ -64,7 +64,7 @@ public class FileDataSecretEnricherTest {
         builder.addToSecretItems(createBaseSecret());
 
         // When
-        fileDataSecretEnricher.addMissingResources(PlatformMode.kubernetes,builder);
+        fileDataSecretEnricher.create(PlatformMode.kubernetes,builder);
 
         // Then
         final Secret secret = (Secret) builder.buildFirstItem();

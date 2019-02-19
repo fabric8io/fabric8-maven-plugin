@@ -75,7 +75,7 @@ public class WebAppGenerator extends BaseGenerator {
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean prePackagePhase) {
-        if (getContext().getPlatformMode() == RuntimeMode.openshift &&
+        if (getContext().getRuntimeMode() == RuntimeMode.openshift &&
             getContext().getStrategy() == OpenShiftBuildStrategy.s2i &&
             !prePackagePhase) {
             throw new IllegalArgumentException("S2I not yet supported for the webapp-generator. Use -Dfabric8.mode=kubernetes or " +

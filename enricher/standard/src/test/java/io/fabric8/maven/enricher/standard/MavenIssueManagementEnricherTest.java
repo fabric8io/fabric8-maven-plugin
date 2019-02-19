@@ -17,9 +17,11 @@ package io.fabric8.maven.enricher.standard;
 
 import java.util.Map;
 
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
 import mockit.Expectations;
 import mockit.Mocked;
 import org.apache.maven.model.IssueManagement;
@@ -58,7 +60,11 @@ public class MavenIssueManagementEnricherTest {
         };
 
         MavenIssueManagementEnricher enricher = new MavenIssueManagementEnricher(context);
-        Map<String, String> scmAnnotations = enricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new DeploymentBuilder().withNewMetadata().withName("foo").endMetadata().build());
+
+        enricher.create(PlatformMode.kubernetes, builder);
+
+        Map<String, String> scmAnnotations = builder.buildFirstItem().getMetadata().getAnnotations();
         assertNotNull(scmAnnotations);
         Assert.assertEquals(2, scmAnnotations.size());
         assertEquals("GitHub",
@@ -85,7 +91,12 @@ public class MavenIssueManagementEnricherTest {
         };
 
         MavenIssueManagementEnricher enricher = new MavenIssueManagementEnricher(context);
-        Map<String, String> scmAnnotations = enricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new DeploymentBuilder().withNewMetadata().withName("foo").endMetadata().build());
+
+        enricher.create(PlatformMode.kubernetes, builder);
+
+        Map<String, String> scmAnnotations = builder.buildFirstItem().getMetadata().getAnnotations();
+        assertNotNull(scmAnnotations);
         assertTrue(scmAnnotations.isEmpty());
     }
 
@@ -107,7 +118,12 @@ public class MavenIssueManagementEnricherTest {
         };
 
         MavenIssueManagementEnricher enricher = new MavenIssueManagementEnricher(context);
-        Map<String, String> scmAnnotations = enricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new DeploymentBuilder().withNewMetadata().withName("foo").endMetadata().build());
+
+        enricher.create(PlatformMode.kubernetes, builder);
+
+        Map<String, String> scmAnnotations = builder.buildFirstItem().getMetadata().getAnnotations();
+        assertNotNull(scmAnnotations);
         assertTrue(scmAnnotations.isEmpty());
     }
 
@@ -127,7 +143,12 @@ public class MavenIssueManagementEnricherTest {
         };
 
         MavenIssueManagementEnricher enricher = new MavenIssueManagementEnricher(context);
-        Map<String, String> scmAnnotations = enricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new DeploymentBuilder().withNewMetadata().withName("foo").endMetadata().build());
+
+        enricher.create(PlatformMode.kubernetes, builder);
+
+        Map<String, String> scmAnnotations = builder.buildFirstItem().getMetadata().getAnnotations();
+        assertNotNull(scmAnnotations);
         assertTrue(scmAnnotations.isEmpty());
     }
 

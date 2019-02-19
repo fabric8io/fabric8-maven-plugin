@@ -40,8 +40,8 @@ public class PodAnnotationEnricher extends BaseEnricher {
     }
 
     @Override
-    public void adapt(PlatformMode platformMode, KubernetesListBuilder builder) {
-        super.adapt(platformMode, builder);
+    public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) {
+        super.enrich(platformMode, builder);
 
         List<HasMetadata> items = builder.getItems();
         for (HasMetadata item : items) {

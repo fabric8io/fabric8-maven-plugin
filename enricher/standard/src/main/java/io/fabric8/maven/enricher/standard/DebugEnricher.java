@@ -55,7 +55,7 @@ public class DebugEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         if (debugEnabled()) {
             int count = 0;
             List<HasMetadata> items = builder.getItems();

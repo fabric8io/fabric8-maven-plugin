@@ -100,7 +100,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         final Service defaultService = getDefaultService();
 
         if (hasServices(builder)) {

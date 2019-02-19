@@ -77,7 +77,7 @@ public class DefaultControllerEnricherTest {
         // Enrich
         DefaultControllerEnricher controllerEnricher = new DefaultControllerEnricher(context);
         KubernetesListBuilder builder = new KubernetesListBuilder();
-        controllerEnricher.addMissingResources(PlatformMode.kubernetes, builder);
+        controllerEnricher.create(PlatformMode.kubernetes, builder);
 
         // Validate that the generated resource contains
         KubernetesList list = builder.build();

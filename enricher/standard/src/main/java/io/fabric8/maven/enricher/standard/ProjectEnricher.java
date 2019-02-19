@@ -18,13 +18,19 @@ package io.fabric8.maven.enricher.standard;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.apps.DaemonSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
+import io.fabric8.kubernetes.api.model.batch.JobBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
+import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,12 +70,83 @@ public class ProjectEnricher extends BaseEnricher {
     }
 
     @Override
-    public Map<String, String> getSelector(Kind kind) {
-        return createLabels(kind.hasNoVersionInSelector());
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
+        builder.accept(new TypedVisitor<ServiceBuilder>() {
+            @Override
+            public void visit(ServiceBuilder serviceBuilder) {
+                Map<String, String> selectors = new HashMap<>();
+                if(serviceBuilder.buildSpec() != null && serviceBuilder.buildSpec().getSelector() != null) {
+                    selectors.putAll(serviceBuilder.buildSpec().getSelector());
+                };
+                MapUtil.mergeIfAbsent(selectors, createLabels(true));
+                serviceBuilder.editOrNewSpec().addToSelector(selectors).endSpec();
+            }
+        });
+
+        builder.accept(new TypedVisitor<DeploymentBuilder>() {
+            @Override
+            public void visit(DeploymentBuilder builder) {
+                Map<String, String> selectors = new HashMap<>();
+                if(builder.buildSpec() != null && builder.buildSpec().getSelector() != null && builder.buildSpec().getSelector().getMatchLabels() != null) {
+                    selectors.putAll(builder.buildSpec().getSelector().getMatchLabels());
+                }
+                MapUtil.mergeIfAbsent(selectors, createLabels(true));
+                builder.editOrNewSpec().editOrNewSelector().withMatchLabels(selectors).endSelector().endSpec();
+            }
+        });
+
+        builder.accept(new TypedVisitor<DeploymentConfigBuilder>() {
+            @Override
+            public void visit(DeploymentConfigBuilder builder) {
+                Map<String, String> selectors = new HashMap<>();
+                if(builder.buildSpec() != null && builder.buildSpec().getSelector() != null) {
+                    selectors.putAll(builder.buildSpec().getSelector());
+                }
+                MapUtil.mergeIfAbsent(selectors, createLabels(true));
+                builder.editOrNewSpec().addToSelector(selectors).endSpec();
+            }
+        });
+
+        builder.accept(new TypedVisitor<DaemonSetBuilder>() {
+            @Override
+            public void visit(DaemonSetBuilder builder) {
+                Map<String, String> selectors = new HashMap<>();
+                if(builder.buildSpec() != null && builder.buildSpec().getSelector() != null && builder.buildSpec().getSelector().getMatchLabels() != null) {
+                    selectors.putAll(builder.buildSpec().getSelector().getMatchLabels());
+                }
+                MapUtil.mergeIfAbsent(selectors, createLabels());
+                builder.editOrNewSpec().editOrNewSelector().withMatchLabels(selectors).endSelector().endSpec();
+            }
+        });
+
+        builder.accept(new TypedVisitor<StatefulSetBuilder>() {
+            @Override
+            public void visit(StatefulSetBuilder builder) {
+                Map<String, String> selectors = new HashMap<>();
+                if(builder.buildSpec() != null && builder.buildSpec().getSelector() != null && builder.buildSpec().getSelector().getMatchLabels() != null) {
+                    selectors.putAll(builder.buildSpec().getSelector().getMatchLabels());
+                }
+                MapUtil.mergeIfAbsent(selectors, createLabels());
+                builder.editOrNewSpec().editOrNewSelector().withMatchLabels(selectors).endSelector().endSpec();
+            }
+        });
+
+        builder.accept(new TypedVisitor<JobBuilder>() {
+            @Override
+            public void visit(JobBuilder builder) {
+                Map<String, String> selectors = new HashMap<>();
+                if(builder.buildSpec() != null && builder.buildSpec().getSelector() != null && builder.buildSpec().getSelector().getMatchLabels() != null) {
+                    selectors.putAll(builder.buildSpec().getSelector().getMatchLabels());
+                }
+                MapUtil.mergeIfAbsent(selectors, createLabels());
+                builder.editOrNewSpec().editOrNewSelector().withMatchLabels(selectors).endSelector().endSpec();
+            }
+        });
+
     }
 
     @Override
-    public void adapt(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) {
         // Add to all objects in the builder
         builder.accept(new TypedVisitor<ObjectMetaBuilder>() {
             @Override

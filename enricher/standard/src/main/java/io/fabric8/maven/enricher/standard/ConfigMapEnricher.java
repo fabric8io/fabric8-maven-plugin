@@ -40,7 +40,7 @@ public class ConfigMapEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         addAnnotations(builder);
         addConfigMapFromXmlConfigurations(builder);
     }
@@ -91,7 +91,7 @@ public class ConfigMapEnricher extends BaseEnricher {
         final Map<String, String> configMapFromConfiguration;
         try {
             configMapFromConfiguration = createConfigMapFromConfiguration(configMap);
-            if(!configMapFromConfiguration.isEmpty()) {
+            if(!configMapFromConfiguration.isEmpty() && !checkIfItemExists(builder, "xmlconfig")) {
                 ConfigMapBuilder element = new ConfigMapBuilder();
                 element.withNewMetadata().withName("xmlconfig").endMetadata();
                 element.addToData(configMapFromConfiguration);
@@ -101,6 +101,10 @@ public class ConfigMapEnricher extends BaseEnricher {
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
+    }
+
+    private boolean checkIfItemExists(KubernetesListBuilder builder, String name) {
+        return builder.buildItems().stream().anyMatch(item -> item.getMetadata().getName().equals(name));
     }
 
     private io.fabric8.maven.core.config.ConfigMap getConfigMapFromXmlConfiguration() {

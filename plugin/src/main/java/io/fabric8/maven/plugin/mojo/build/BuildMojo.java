@@ -201,7 +201,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     Fabric8ServiceHub fabric8ServiceHub;
 
     // Mode which is resolved, also when 'auto' is set
-    private RuntimeMode platformMode;
+    private RuntimeMode runtimeMode;
 
 
     @Override
@@ -223,7 +223,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     @Override
     protected boolean isDockerAccessRequired() {
-        return platformMode == RuntimeMode.kubernetes;
+        return runtimeMode == RuntimeMode.kubernetes;
     }
 
     @Override
@@ -327,17 +327,18 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      */
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-        platformMode = clusterAccess.resolveRuntimeMode(mode, log);
-        if (platformMode == RuntimeMode.openshift) {
+        runtimeMode = clusterAccess.resolveRuntimeMode(mode, log);
+        log.info("Running in [[B]]%s[[B]] mode", runtimeMode.getLabel());
+        if (runtimeMode == RuntimeMode.openshift) {
             log.info("Using [[B]]OpenShift[[B]] build with strategy [[B]]%s[[B]]", buildStrategy.getLabel());
         } else {
             log.info("Building Docker image in [[B]]Kubernetes[[B]] mode");
         }
 
-        if (platformMode.equals(PlatformMode.openshift)) {
+        if (runtimeMode.equals(PlatformMode.openshift)) {
             Properties properties = project.getProperties();
             if (!properties.contains(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE)) {
-                properties.setProperty(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, platformMode.toString());
+                properties.setProperty(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, runtimeMode.toString());
             }
         }
 
@@ -361,7 +362,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .config(extractGeneratorConfig())
                 .project(project)
                 .logger(log)
-                .platformMode(platformMode)
+                .runtimeMode(runtimeMode)
                 .strategy(buildStrategy)
                 .useProjectClasspath(useProjectClasspath)
                 .artifactResolver(getFabric8ServiceHub().getArtifactResolverService())
@@ -391,7 +392,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     public EnricherContext getEnricherContext() {
         return new MavenEnricherContext.Builder()
                 .project(project)
-                .runtimeMode(mode)
                 .session(session)
                 .config(extractEnricherConfig())
                 .images(getResolvedImages())

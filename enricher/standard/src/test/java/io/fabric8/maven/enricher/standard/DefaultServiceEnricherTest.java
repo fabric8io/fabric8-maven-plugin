@@ -156,7 +156,7 @@ public class DefaultServiceEnricherTest {
         setupExpectations(false, "headless", "false");
         DefaultServiceEnricher serviceEnricher = new DefaultServiceEnricher(context);
         KubernetesListBuilder builder = new KubernetesListBuilder();
-        serviceEnricher.addMissingResources(PlatformMode.kubernetes, builder);
+        serviceEnricher.create(PlatformMode.kubernetes, builder);
 
         // Validate that the generated resource contains
         KubernetesList list = builder.build();
@@ -212,7 +212,7 @@ public class DefaultServiceEnricherTest {
         // Enrich
         DefaultServiceEnricher serviceEnricher = new DefaultServiceEnricher(context);
         KubernetesListBuilder builder = new KubernetesListBuilder();
-        serviceEnricher.addMissingResources(PlatformMode.kubernetes, builder);
+        serviceEnricher.create(PlatformMode.kubernetes, builder);
 
         // Validate that the generated resource contains
         KubernetesList list = builder.build();

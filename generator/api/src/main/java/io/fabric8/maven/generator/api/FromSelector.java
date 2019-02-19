@@ -45,7 +45,7 @@ public abstract class FromSelector {
     }
 
     public String getFrom() {
-        RuntimeMode mode = context.getPlatformMode();
+        RuntimeMode mode = context.getRuntimeMode();
         OpenShiftBuildStrategy strategy = context.getStrategy();
         if (mode == RuntimeMode.openshift && strategy == OpenShiftBuildStrategy.s2i) {
             return getS2iBuildFrom();

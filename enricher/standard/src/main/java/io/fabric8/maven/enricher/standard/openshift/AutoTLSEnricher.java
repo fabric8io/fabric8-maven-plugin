@@ -77,15 +77,7 @@ public class AutoTLSEnricher extends BaseEnricher {
     }
 
     @Override
-    public Map<String, String> getAnnotations(Kind kind) {
-        if (!isOpenShiftMode() || kind != Kind.SERVICE) {
-            return null;
-        }
-        return Collections.singletonMap(AUTOTLS_ANNOTATION_KEY, this.secretName);
-    }
-
-    @Override
-    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         if (!isOpenShiftMode()) {
             return;
         }
@@ -143,7 +135,7 @@ public class AutoTLSEnricher extends BaseEnricher {
     }
 
     @Override
-    public void adapt(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) {
         if (!isOpenShiftMode()) {
             return;
         }

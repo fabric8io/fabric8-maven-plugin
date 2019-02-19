@@ -34,7 +34,6 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
-import org.assertj.core.api.ListAssert;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -84,7 +83,7 @@ public class DockerHealthCheckEnricherTest {
         KubernetesListBuilder builder = createDeployment("myImage");
 
         DockerHealthCheckEnricher enricher = new DockerHealthCheckEnricher(context);
-        enricher.addMissingResources(PlatformMode.kubernetes, builder);
+        enricher.create(PlatformMode.kubernetes, builder);
 
         KubernetesList list = builder.build();
         assertEquals(1, list.getItems().size());
@@ -127,7 +126,7 @@ public class DockerHealthCheckEnricherTest {
         KubernetesListBuilder builder = addDeployment(createDeployment("myImage"), "myImage2");
 
         DockerHealthCheckEnricher enricher = new DockerHealthCheckEnricher(context);
-        enricher.addMissingResources(PlatformMode.kubernetes, builder);
+        enricher.create(PlatformMode.kubernetes, builder);
 
         KubernetesList list = builder.build();
         assertEquals(2, list.getItems().size());
@@ -156,7 +155,7 @@ public class DockerHealthCheckEnricherTest {
         KubernetesListBuilder builder = createDeployment("myImage");
 
         DockerHealthCheckEnricher enricher = new DockerHealthCheckEnricher(context);
-        enricher.addMissingResources(PlatformMode.kubernetes, builder);
+        enricher.create(PlatformMode.kubernetes, builder);
 
         KubernetesList list = builder.build();
         assertEquals(1, list.getItems().size());
@@ -186,7 +185,7 @@ public class DockerHealthCheckEnricherTest {
         KubernetesListBuilder builder = createDeployment("myUnmatchingImage");
 
         DockerHealthCheckEnricher enricher = new DockerHealthCheckEnricher(context);
-        enricher.addMissingResources(PlatformMode.kubernetes, builder);
+        enricher.create(PlatformMode.kubernetes, builder);
 
         KubernetesList list = builder.build();
         assertEquals(1, list.getItems().size());

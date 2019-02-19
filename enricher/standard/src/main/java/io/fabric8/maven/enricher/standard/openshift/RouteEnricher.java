@@ -47,7 +47,7 @@ public class RouteEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(PlatformMode platformMode, final KubernetesListBuilder listBuilder) {
+    public void create(PlatformMode platformMode, final KubernetesListBuilder listBuilder) {
         if(platformMode == PlatformMode.openshift) {
             final List<Route> routes = new ArrayList<>();
             listBuilder.accept(new TypedVisitor<ServiceBuilder>() {

@@ -81,7 +81,7 @@ public class VolumePermissionEnricherTest {
         KubernetesListBuilder klb = new KubernetesListBuilder().addToPodTemplateItems(ptb.build());
 
         VolumePermissionEnricher enricher = new VolumePermissionEnricher(context);
-        enricher.adapt(PlatformMode.kubernetes,klb);
+        enricher.enrich(PlatformMode.kubernetes,klb);
 
         List<Container> initS = ((PodTemplate) klb.build().getItems().get(0)).getTemplate().getSpec().getInitContainers();
         assertNotNull(initS);
@@ -118,7 +118,7 @@ public class VolumePermissionEnricherTest {
 
             KubernetesListBuilder klb = new KubernetesListBuilder().addToPodTemplateItems(ptb.build());
 
-            enricher.adapt(PlatformMode.kubernetes,klb);
+            enricher.enrich(PlatformMode.kubernetes,klb);
 
             PodTemplate pt = (PodTemplate) klb.buildItem(0);
 

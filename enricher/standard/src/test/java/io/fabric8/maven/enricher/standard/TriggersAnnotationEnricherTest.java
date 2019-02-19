@@ -66,7 +66,7 @@ public class TriggersAnnotationEnricherTest {
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
-        enricher.adapt(PlatformMode.kubernetes, builder);
+        enricher.enrich(PlatformMode.kubernetes, builder);
 
 
         StatefulSet res = (StatefulSet) builder.build().getItems().get(0);
@@ -102,7 +102,7 @@ public class TriggersAnnotationEnricherTest {
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
-        enricher.adapt(PlatformMode.kubernetes, builder);
+        enricher.enrich(PlatformMode.kubernetes, builder);
 
 
         ReplicaSet res = (ReplicaSet) builder.build().getItems().get(0);
@@ -140,7 +140,7 @@ public class TriggersAnnotationEnricherTest {
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
-        enricher.adapt(PlatformMode.kubernetes, builder);
+        enricher.enrich(PlatformMode.kubernetes, builder);
 
 
         DaemonSet res = (DaemonSet) builder.build().getItems().get(0);
@@ -184,7 +184,7 @@ public class TriggersAnnotationEnricherTest {
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
-        enricher.adapt(PlatformMode.kubernetes, builder);
+        enricher.enrich(PlatformMode.kubernetes, builder);
 
 
         StatefulSet res = (StatefulSet) builder.build().getItems().get(0);
@@ -227,7 +227,7 @@ public class TriggersAnnotationEnricherTest {
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
-        enricher.adapt(PlatformMode.kubernetes, builder);
+        enricher.enrich(PlatformMode.kubernetes, builder);
 
 
         Job res = (Job) builder.build().getItems().get(0);

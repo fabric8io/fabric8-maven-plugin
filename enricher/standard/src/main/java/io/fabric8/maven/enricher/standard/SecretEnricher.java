@@ -45,7 +45,7 @@ public abstract class SecretEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         // update builder
         // use a selector to choose all secret builder in kubernetes list builders.
         // try to find the target annotations
@@ -75,9 +75,17 @@ public abstract class SecretEnricher extends BaseEnricher {
     private void addSecretsFromXmlConfiguration(KubernetesListBuilder builder) {
         log.verbose("Adding secrets resources from plugin configuration");
         List<SecretConfig> secrets = getSecretsFromXmlConfig();
+        Map<String, Integer> secretToIndexMap = new HashMap<>();
         if (secrets == null || secrets.isEmpty()) {
             return;
         }
+
+        for(Integer index = 0; index < builder.buildItems().size(); index++) {
+            if(builder.buildItems().get(index) instanceof Secret) {
+                secretToIndexMap.put(builder.buildItems().get(index).getMetadata().getName(), index);
+            }
+        }
+
         for (int i = 0; i < secrets.size(); i++) {
             SecretConfig secretConfig = secrets.get(i);
             if (StringUtils.isBlank(secretConfig.getName())) {
@@ -113,7 +121,9 @@ public abstract class SecretEnricher extends BaseEnricher {
             }
 
             Secret secret = new SecretBuilder().withData(data).withMetadata(metadata).withType(type).build();
-            builder.addToSecretItems(i, secret);
+            if(!secretToIndexMap.containsKey(secretConfig.getName())) {
+                builder.addToSecretItems(i, secret);
+            }
         }
     }
 

@@ -17,9 +17,11 @@ package io.fabric8.maven.enricher.standard;
 
 import java.util.Map;
 
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
 import mockit.Expectations;
 import mockit.Mocked;
 import org.apache.maven.model.Scm;
@@ -61,7 +63,11 @@ public class MavenScmEnricherTest {
 
         MavenScmEnricher mavenScmEnricher = new MavenScmEnricher(context);
 
-        Map<String, String> scmAnnotations = mavenScmEnricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new DeploymentBuilder().withNewMetadata().withName("foo").endMetadata().build());
+
+        mavenScmEnricher.create(PlatformMode.kubernetes, builder);
+
+        Map<String, String> scmAnnotations = builder.buildFirstItem().getMetadata().getAnnotations();
         assertNotNull(scmAnnotations);
 
         Assert.assertEquals(2, scmAnnotations.size());
@@ -91,7 +97,11 @@ public class MavenScmEnricherTest {
 
         MavenScmEnricher mavenScmEnricher = new MavenScmEnricher(context);
 
-        Map<String, String> scmAnnotations = mavenScmEnricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new DeploymentBuilder().withNewMetadata().withName("foo").endMetadata().build());
+
+        mavenScmEnricher.create(PlatformMode.kubernetes, builder);
+
+        Map<String, String> scmAnnotations = builder.buildFirstItem().getMetadata().getAnnotations();
         assertNotNull(scmAnnotations);
 
         Assert.assertEquals(1, scmAnnotations.size());
@@ -119,7 +129,11 @@ public class MavenScmEnricherTest {
 
         MavenScmEnricher mavenScmEnricher = new MavenScmEnricher(context);
 
-        Map<String, String> scmAnnotations = mavenScmEnricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new DeploymentBuilder().withNewMetadata().withName("foo").endMetadata().build());
+
+        mavenScmEnricher.create(PlatformMode.kubernetes, builder);
+
+        Map<String, String> scmAnnotations = builder.buildFirstItem().getMetadata().getAnnotations();
         assertNotNull(scmAnnotations);
 
         Assert.assertEquals(2, scmAnnotations.size());
@@ -149,7 +163,11 @@ public class MavenScmEnricherTest {
 
         MavenScmEnricher mavenScmEnricher = new MavenScmEnricher(context);
 
-        Map<String, String> scmAnnotations = mavenScmEnricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new DeploymentBuilder().withNewMetadata().withName("foo").endMetadata().build());
+
+        mavenScmEnricher.create(PlatformMode.kubernetes, builder);
+
+        Map<String, String> scmAnnotations = builder.buildFirstItem().getMetadata().getAnnotations();
         assertNotNull(scmAnnotations);
 
         Assert.assertEquals(1, scmAnnotations.size());
@@ -174,8 +192,12 @@ public class MavenScmEnricherTest {
 
         MavenScmEnricher mavenScmEnricher = new MavenScmEnricher(context);
 
-        Map<String, String> scmAnnotations = mavenScmEnricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
-        assertTrue(scmAnnotations.isEmpty());
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new DeploymentBuilder().withNewMetadata().withName("foo").endMetadata().build());
+
+        mavenScmEnricher.create(PlatformMode.kubernetes, builder);
+
+        Map<String, String> scmAnnotations = builder.buildFirstItem().getMetadata().getAnnotations();
+        assertNotNull(scmAnnotations);
 
     }
 

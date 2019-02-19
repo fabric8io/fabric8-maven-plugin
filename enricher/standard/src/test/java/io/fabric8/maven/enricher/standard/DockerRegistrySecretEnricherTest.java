@@ -75,7 +75,7 @@ public class DockerRegistrySecretEnricherTest {
         KubernetesListBuilder builder = new KubernetesListBuilder();
         Secret secretEnriched = createBaseSecret(true);
         builder.addToSecretItems(secretEnriched);
-        enricher.addMissingResources(PlatformMode.kubernetes, builder);
+        enricher.create(PlatformMode.kubernetes, builder);
 
         secretEnriched = (Secret) builder.buildItem(0);
         Map<String, String> enrichedData = secretEnriched.getData();
@@ -101,7 +101,7 @@ public class DockerRegistrySecretEnricherTest {
         builder.addToSecretItems(createBaseSecret(true));
         KubernetesList expected = builder.build();
 
-        enricher.addMissingResources(PlatformMode.kubernetes, builder);
+        enricher.create(PlatformMode.kubernetes, builder);
         assertEquals(expected, builder.build());
     }
 
@@ -116,7 +116,7 @@ public class DockerRegistrySecretEnricherTest {
 
         KubernetesList expected = builder.build();
 
-        enricher.addMissingResources(PlatformMode.kubernetes, builder);
+        enricher.create(PlatformMode.kubernetes, builder);
         assertEquals(expected, builder.build());
     }
 

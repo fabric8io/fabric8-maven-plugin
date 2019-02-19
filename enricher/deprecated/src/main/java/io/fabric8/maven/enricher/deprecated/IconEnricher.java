@@ -17,12 +17,21 @@
 package io.fabric8.maven.enricher.deprecated;
 
 import com.google.common.io.Files;
+import io.fabric8.kubernetes.api.builder.TypedVisitor;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.apps.DaemonSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
+import io.fabric8.kubernetes.api.model.batch.JobBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.FileUtil;
 import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -32,6 +41,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import io.fabric8.maven.enricher.api.util.ProjectClassLoaders;
+import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -72,19 +82,75 @@ public class IconEnricher extends BaseEnricher {
         appConfigDir = new File(getConfig(Config.sourceDir, baseDir + "/src/main/fabric8"));
     }
 
-    @Override
-    public Map<String, String> getAnnotations(Kind kind) {
-        if (kind.isController() || kind == Kind.SERVICE) {
-            String iconUrl = getIconUrl(extractIconRef());
-            if (iconUrl != null) {
-                log.info("Adding icon for %s", kind.toString().toLowerCase());
-                log.verbose("Icon URL: %s", iconUrl);
-                return Collections.singletonMap("fabric8.io/iconUrl", iconUrl);
-            } else {
-                log.debug("No icon file found for resources of type " + kind);
-            }
+    public Map<String, String> getAnnotations(String kind) {
+        String iconUrl = getIconUrl(extractIconRef());
+        if (iconUrl != null) {
+            log.info("Adding icon for %s", kind.toLowerCase());
+            log.verbose("Icon URL: %s", iconUrl);
+            return Collections.singletonMap("fabric8.io/iconUrl", iconUrl);
+        } else {
+            log.debug("No icon file found for resources of type " + kind);
         }
         return null;
+    }
+
+    @Override
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
+        builder.accept(new TypedVisitor<ServiceBuilder>() {
+            @Override
+            public void visit(ServiceBuilder serviceBuilder) {
+                serviceBuilder.editMetadata().addToAnnotations(getAnnotations(serviceBuilder.getKind())).endMetadata();
+            }
+        });
+
+        builder.accept(new TypedVisitor<DeploymentBuilder>() {
+            @Override
+            public void visit(DeploymentBuilder builder) {
+                builder.editMetadata().addToAnnotations(getAnnotations(builder.getKind())).endMetadata();
+            }
+        });
+
+        builder.accept(new TypedVisitor<DeploymentConfigBuilder>() {
+            @Override
+            public void visit(DeploymentConfigBuilder builder) {
+                builder.editMetadata().addToAnnotations(getAnnotations(builder.getKind())).endMetadata();
+            }
+        });
+
+        builder.accept(new TypedVisitor<ReplicaSetBuilder>() {
+            @Override
+            public void visit(ReplicaSetBuilder builder) {
+                builder.editMetadata().addToAnnotations(getAnnotations(builder.getKind())).endMetadata();
+            }
+        });
+
+        builder.accept(new TypedVisitor<ReplicationControllerBuilder>() {
+            @Override
+            public void visit(ReplicationControllerBuilder builder) {
+                builder.editMetadata().addToAnnotations(getAnnotations(builder.getKind())).endMetadata();
+            }
+        });
+
+        builder.accept(new TypedVisitor<DaemonSetBuilder>() {
+            @Override
+            public void visit(DaemonSetBuilder builder) {
+                builder.editMetadata().addToAnnotations(getAnnotations(builder.getKind())).endMetadata();
+            }
+        });
+
+        builder.accept(new TypedVisitor<StatefulSetBuilder>() {
+            @Override
+            public void visit(StatefulSetBuilder builder) {
+                builder.editMetadata().addToAnnotations(getAnnotations(builder.getKind())).endMetadata();
+            }
+        });
+
+        builder.accept(new TypedVisitor<JobBuilder>() {
+            @Override
+            public void visit(JobBuilder builder) {
+                builder.editMetadata().addToAnnotations(getAnnotations(builder.getKind())).endMetadata();
+            }
+        });
     }
 
     // ====================================================================================================

@@ -34,7 +34,7 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
 
         builder.accept(new TypedVisitor<ContainerBuilder>() {
             @Override

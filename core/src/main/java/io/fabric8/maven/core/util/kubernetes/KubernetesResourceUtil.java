@@ -237,7 +237,6 @@ public class KubernetesResourceUtil {
 
         if (type != null) {
             kind = getAndValidateKindFromType(file, type);
-
         } else {
             // Try name as type
             kind = FILENAME_TO_KIND_MAPPER.get(name.toLowerCase());
@@ -247,9 +246,6 @@ public class KubernetesResourceUtil {
             }
         }
 
-        if(kind != null && kind.equals("Deployment") && platformMode.equals(PlatformMode.openshift)) {
-            kind = "DeploymentConfig";
-        }
         addKind(fragment, kind, file.getName());
 
         String apiVersion = apiVersions.getCoreVersion();

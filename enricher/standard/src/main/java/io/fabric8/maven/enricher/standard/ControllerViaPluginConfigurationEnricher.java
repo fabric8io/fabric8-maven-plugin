@@ -66,7 +66,7 @@ public class ControllerViaPluginConfigurationEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getSanitizedArtifactId()));
         final ResourceConfig config = new ResourceConfig.Builder()
                 .controllerName(name)

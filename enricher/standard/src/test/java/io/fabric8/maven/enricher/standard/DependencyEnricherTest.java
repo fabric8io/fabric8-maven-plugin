@@ -74,8 +74,8 @@ public class DependencyEnricherTest {
 
     private KubernetesList enrichResources(KubernetesListBuilder aBuilder) {
         DependencyEnricher enricher = new DependencyEnricher(context);
-        enricher.addMissingResources(PlatformMode.kubernetes, aBuilder);
-        enricher.adapt(PlatformMode.kubernetes, aBuilder);
+        enricher.create(PlatformMode.kubernetes, aBuilder);
+        enricher.enrich(PlatformMode.kubernetes, aBuilder);
         return aBuilder.build();
     }
 
