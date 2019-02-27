@@ -311,10 +311,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                         projectHelper.attachArtifact(project, "yml", classifier, destFile);
                     }
                 })
-                .enricherTask(builder ->
-                                  new EnricherManager(resources, getEnricherContext(),
-                                                      MavenUtil.getCompileClasspathElementsIfRequested(project, useProjectClasspath))
-                                      .enrich(PlatformMode.openshift, builder))
                 .build();
     }
 
@@ -392,6 +388,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     public EnricherContext getEnricherContext() {
         return new MavenEnricherContext.Builder()
                 .project(project)
+                .properties(project.getProperties())
                 .session(session)
                 .config(extractEnricherConfig())
                 .images(getResolvedImages())
