@@ -26,6 +26,7 @@ import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.Profile;
 import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.core.util.FileUtil;
@@ -143,6 +144,9 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     // Resource specific configuration for this plugin
     @Parameter
     private ResourceConfig resources;
+
+    @Parameter(property = "fabric8.mode")
+    private RuntimeMode runtimeMode = RuntimeMode.DEFAULT;
 
     // Skip resource descriptors validation
     @Parameter(property = "fabric8.skipResourceValidation", defaultValue = "false")
@@ -447,6 +451,19 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     }
 
     private void lateInit() {
+        ClusterAccess clusterAccess = new ClusterAccess(getClusterConfiguration());
+        runtimeMode = new ClusterAccess(getClusterConfiguration()).resolveRuntimeMode(null, log);
+        if (runtimeMode.equals(RuntimeMode.openshift)) {
+            Properties properties = project.getProperties();
+            if (!properties.contains(DOCKER_IMAGE_USER)) {
+                String namespace = clusterAccess.getNamespace();
+                log.info("Using docker image name of namespace: " + namespace);
+                properties.setProperty(DOCKER_IMAGE_USER, namespace);
+            }
+            if (!properties.contains(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE)) {
+                properties.setProperty(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, runtimeMode.toString());
+            }
+        }
         handlerHub = new HandlerHub(
             new GroupArtifactVersion(project.getGroupId(), project.getArtifactId(), project.getVersion()),
             project.getProperties());
@@ -577,7 +594,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                         GeneratorContext ctx = new GeneratorContext.Builder()
                                 .config(extractGeneratorConfig())
                                 .project(project)
-                                .runtimeMode(new ClusterAccess(getClusterConfiguration()).resolveRuntimeMode(null, log))
+                                .runtimeMode(runtimeMode)
                                 .logger(log)
                                 .strategy(buildStrategy)
                                 .useProjectClasspath(useProjectClasspath)
