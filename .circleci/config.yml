@@ -120,6 +120,19 @@ jobs:
           bash ./scripts/prepare-environment.sh
           bash ./scripts/release.sh
 
+  E2E_TEST:
+    machine: true
+    steps:
+    - checkout
+    - run:
+        command: |
+          bash ./scripts/setup_openshift_environment.sh
+          mvn clean install -DskipTests
+          cd ..
+          git clone https://github.com/rohanKanojia/fabric8-maven-plugin-rt -b minimal && cd fabric8-maven-plugin-rt
+          mvn clean install
+
+
 workflows:
   version: 2
   all:
@@ -140,3 +153,4 @@ workflows:
         filters:
           branches:
             only: release-project
+    - E2E_TEST
