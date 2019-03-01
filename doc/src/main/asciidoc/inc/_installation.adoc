@@ -6,6 +6,22 @@ This plugin is available from Maven central and can be connected to
 pre- and post-integration phase as seen below. The configuration and
 available goals are described below.
 
+In order for Maven to find the provider for fabric8 goals, the Maven `~/.m2/settings.xml` and add the `io.fabric8` namespace to the `<pluginGroups>` element
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+---- 
+<settings>
+      ...
+
+      <pluginGroups>
+        <pluginGroup>io.fabric8</pluginGroup>
+      </pluginGroups>
+
+      ...
+</settings>
+----
+
+
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ---- 
 <plugin>
