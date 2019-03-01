@@ -84,7 +84,7 @@ public class DockerHealthCheckEnricherTest {
         KubernetesListBuilder builder = createDeployment("myImage");
 
         DockerHealthCheckEnricher enricher = new DockerHealthCheckEnricher(context);
-        enricher.create(PlatformMode.kubernetes, builder);
+        enricher.enrich(PlatformMode.kubernetes, builder);
 
         KubernetesList list = builder.build();
         assertEquals(1, list.getItems().size());
@@ -130,7 +130,7 @@ public class DockerHealthCheckEnricherTest {
         KubernetesListBuilder builder = addDeployment(createDeployment("myImage"), "myImage2");
 
         DockerHealthCheckEnricher enricher = new DockerHealthCheckEnricher(context);
-        enricher.create(PlatformMode.kubernetes, builder);
+        enricher.enrich(PlatformMode.kubernetes, builder);
 
         KubernetesList list = builder.build();
         assertEquals(2, list.getItems().size());
@@ -159,7 +159,7 @@ public class DockerHealthCheckEnricherTest {
         KubernetesListBuilder builder = createDeployment("myImage");
 
         DockerHealthCheckEnricher enricher = new DockerHealthCheckEnricher(context);
-        enricher.create(PlatformMode.kubernetes, builder);
+        enricher.enrich(PlatformMode.kubernetes, builder);
 
         KubernetesList list = builder.build();
         assertEquals(1, list.getItems().size());
@@ -189,7 +189,7 @@ public class DockerHealthCheckEnricherTest {
         KubernetesListBuilder builder = createDeployment("myUnmatchingImage");
 
         DockerHealthCheckEnricher enricher = new DockerHealthCheckEnricher(context);
-        enricher.create(PlatformMode.kubernetes, builder);
+        enricher.enrich(PlatformMode.kubernetes, builder);
 
         KubernetesList list = builder.build();
         assertEquals(1, list.getItems().size());

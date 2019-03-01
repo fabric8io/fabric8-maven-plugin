@@ -60,7 +60,7 @@ public class AbstractHealthCheckEnricherTest {
                 .endTemplate()
                 .endSpec()
                 .endDeploymentItem();
-
+        
         createEnricher(new Properties(), Collections.emptyMap()).create(PlatformMode.kubernetes, list);
 
         final AtomicInteger containerFound = new AtomicInteger(0);
