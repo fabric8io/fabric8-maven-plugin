@@ -82,7 +82,6 @@ jobs:
     - run: |
         if [ -n "${CIRCLE_PR_NUMBER}" ]; then
           MAVEN_OPTS="-Xmx3000m" mvn -B clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar \
-             -Dsonar.analysis.mode=preview \
              -Dsonar.github.pullRequest=${CIRCLE_PR_NUMBER} \
              -Dsonar.github.repository=fabric8io/fabric8-maven-plugin \
              -Dsonar.github.oauth=${GITHUB_COMMENT_TOKEN} \
