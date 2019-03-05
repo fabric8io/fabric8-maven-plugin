@@ -175,12 +175,9 @@ public class OpenshiftBuildService implements BuildService {
                     }
                 }
 
-                return new ArchiverCustomizer() {
-                    @Override
-                    public TarArchiver customize(TarArchiver tarArchiver) throws IOException {
-                        tarArchiver.addFile(environmentFile, ".s2i/environment");
-                        return tarArchiver;
-                    }
+                return tarArchiver -> {
+                    tarArchiver.addFile(environmentFile, ".s2i/environment");
+                    return tarArchiver;
                 };
             } else {
                 return null;

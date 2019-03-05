@@ -46,12 +46,7 @@ public class FatJarDetector {
                 // No directory to check found so we return null here ...
                 return null;
             }
-            String[] jarOrWars = directory.list(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return name.endsWith(".war") || name.endsWith(".jar");
-                }
-            });
+            String[] jarOrWars = directory.list((dir, name) -> name.endsWith(".war") || name.endsWith(".jar"));
             if (jarOrWars == null || jarOrWars.length == 0) {
                 return null;
             }

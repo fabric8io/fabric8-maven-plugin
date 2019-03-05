@@ -245,22 +245,19 @@ public class IconEnricher extends BaseEnricher {
 
     private File copyIconToFolder(String iconRef, File appBuildDir) throws IOException {
         if (StringUtils.isNotBlank(iconRef)) {
-            File[] icons = appBuildDir.listFiles(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    if (name == null) {
-                        return false;
-                    }
-                    String lower = name.toLowerCase();
-                    if (lower.startsWith("icon.")) {
-                        for (String ext : ICON_EXTENSIONS) {
-                            if (lower.endsWith(ext)) {
-                                return true;
-                            }
-                        }
-                    }
+            File[] icons = appBuildDir.listFiles((dir, name) -> {
+                if (name == null) {
                     return false;
                 }
+                String lower = name.toLowerCase();
+                if (lower.startsWith("icon.")) {
+                    for (String ext : ICON_EXTENSIONS) {
+                        if (lower.endsWith(ext)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
             });
             if (icons == null || icons.length == 0) {
                 // lets copy the iconRef

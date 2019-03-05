@@ -245,31 +245,16 @@ public class ProfileUtil {
     /**
      * Get the generator configuration
      */
-    public final static ProcessorConfigurationExtractor GENERATOR_CONFIG = new ProcessorConfigurationExtractor() {
-        @Override
-        public ProcessorConfig extract(Profile profile) {
-            return profile.getGeneratorConfig();
-        }
-    };
+    public final static ProcessorConfigurationExtractor GENERATOR_CONFIG = profile -> profile.getGeneratorConfig();
 
     /**
      * Get the enricher configuration
      */
-    public final static ProcessorConfigurationExtractor ENRICHER_CONFIG = new ProcessorConfigurationExtractor() {
-        @Override
-        public ProcessorConfig extract(Profile profile) {
-            return profile.getEnricherConfig();
-        }
-    };
+    public final static ProcessorConfigurationExtractor ENRICHER_CONFIG = profile -> profile.getEnricherConfig();
 
     /**
      * Get the watcher configuration
      */
-    public final static ProcessorConfigurationExtractor WATCHER_CONFIG = new ProcessorConfigurationExtractor() {
-        @Override
-        public ProcessorConfig extract(Profile profile) {
-            return profile.getWatcherConfig();
-        }
-    };
+    public final static ProcessorConfigurationExtractor WATCHER_CONFIG = profile -> profile.getWatcherConfig();
 
 }

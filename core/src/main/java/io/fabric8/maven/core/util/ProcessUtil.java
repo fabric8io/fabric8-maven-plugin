@@ -229,30 +229,24 @@ public class ProcessUtil {
     }
 
     private static Function<String, Void> createOutputHandler(final Logger log, final boolean useStandardLoggingLevel) {
-        return new Function<String, Void>() {
-            @Override
-            public Void apply(String outputLine) {
-                if (useStandardLoggingLevel) {
-                    log.info("%s", outputLine);
-                } else {
-                    log.debug("%s", outputLine);
-                }
-                return null;
+        return outputLine -> {
+            if (useStandardLoggingLevel) {
+                log.info("%s", outputLine);
+            } else {
+                log.debug("%s", outputLine);
             }
+            return null;
         };
     }
 
     private static Function<String, Void> createErrorHandler(final Logger log,  final boolean useStandardLoggingLevel) {
-        return new Function<String, Void>() {
-            @Override
-            public Void apply(String outputLine) {
-                if (useStandardLoggingLevel) {
-                    log.error("%s", outputLine);
-                } else {
-                    log.warn("%s", outputLine);
-                }
-                return null;
+        return outputLine -> {
+            if (useStandardLoggingLevel) {
+                log.error("%s", outputLine);
+            } else {
+                log.warn("%s", outputLine);
             }
+            return null;
         };
     }
 
