@@ -501,22 +501,19 @@ public class KubernetesResourceUtil {
             return null;
         }
         List<Pod> sortedPods = new ArrayList<>(pods);
-        Collections.sort(sortedPods, new Comparator<Pod>() {
-            @Override
-            public int compare(Pod p1, Pod p2) {
-                Date t1 = getCreationTimestamp(p1);
-                Date t2 = getCreationTimestamp(p2);
-                if (t1 != null) {
-                    if (t2 == null) {
-                        return 1;
-                    } else {
-                        return t1.compareTo(t2);
-                    }
-                } else if (t2 == null) {
-                    return 0;
+        Collections.sort(sortedPods, (p1, p2) -> {
+            Date t1 = getCreationTimestamp(p1);
+            Date t2 = getCreationTimestamp(p2);
+            if (t1 != null) {
+                if (t2 == null) {
+                    return 1;
+                } else {
+                    return t1.compareTo(t2);
                 }
-                return -1;
+            } else if (t2 == null) {
+                return 0;
             }
+            return -1;
         });
         return sortedPods.get(sortedPods.size() - 1);
     }

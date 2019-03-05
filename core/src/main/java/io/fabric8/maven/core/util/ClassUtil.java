@@ -130,19 +130,9 @@ public class ClassUtil {
 
     // ========================================================================
 
-    private static final FileFilter DIR_FILTER = new FileFilter() {
-        @Override
-        public boolean accept(File pathname) {
-            return pathname.isDirectory() && !pathname.getName().startsWith(".");
-        }
-    };
+    private static final FileFilter DIR_FILTER = pathname -> pathname.isDirectory() && !pathname.getName().startsWith(".");
 
-    private static final FileFilter CLASS_FILE_FILTER = new FileFilter() {
-		@Override
-        public boolean accept(File file) {
-            return (file.isFile() && file.getName().endsWith(".class"));
-		}
-	};
+    private static final FileFilter CLASS_FILE_FILTER = file -> (file.isFile() && file.getName().endsWith(".class"));
 
 
     private static void findClasses(List<String> classes, File dir, String prefix) throws IOException {
