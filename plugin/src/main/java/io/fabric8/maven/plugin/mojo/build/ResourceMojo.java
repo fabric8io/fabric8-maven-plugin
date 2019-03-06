@@ -452,7 +452,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     private void lateInit() {
         ClusterAccess clusterAccess = new ClusterAccess(getClusterConfiguration());
-        runtimeMode = new ClusterAccess(getClusterConfiguration()).resolveRuntimeMode(null, log);
+        runtimeMode = new ClusterAccess(getClusterConfiguration()).resolveRuntimeMode(runtimeMode, log);
         if (runtimeMode.equals(RuntimeMode.openshift)) {
             Properties properties = project.getProperties();
             if (!properties.contains(DOCKER_IMAGE_USER)) {
