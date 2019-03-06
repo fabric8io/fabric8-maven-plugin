@@ -79,12 +79,14 @@ public class ResourceConfig {
     @Parameter
     private int replicas = 1;
 
-    // Service account to use
+    @Parameter
+    private String namespace;
+
     @Parameter
     private String serviceAccount;
 
     @Parameter
-    private String namespace;
+    private List<ServiceAccountConfig> serviceAccounts;
 
     public Optional<Map<String, String>> getEnv() {
         return Optional.ofNullable(env);
@@ -144,6 +146,10 @@ public class ResourceConfig {
         return serviceAccount;
     }
 
+    public List<ServiceAccountConfig> getServiceAccounts() {
+        return serviceAccounts;
+    }
+
     public String getNamespace() {
         return namespace;
     }
@@ -173,6 +179,7 @@ public class ResourceConfig {
                 this.config.readiness = config.getReadiness();
                 this.config.annotations = config.getAnnotations();
                 this.config.serviceAccount = config.getServiceAccount();
+                this.config.serviceAccounts = config.getServiceAccounts();
                 this.config.configMap = config.getConfigMap();
                 this.config.volumes = config.getVolumes();
                 this.config.labels = config.getLabels();
@@ -212,6 +219,11 @@ public class ResourceConfig {
 
         public Builder withServiceAccount(String serviceAccount) {
             config.serviceAccount = serviceAccount;
+            return this;
+        }
+
+        public Builder withServiceAccounts(List<ServiceAccountConfig> serviceAccounts) {
+            config.serviceAccounts = serviceAccounts;
             return this;
         }
 

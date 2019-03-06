@@ -266,6 +266,12 @@ A working example can be found in the  https://github.com/fabric8io/fabric8-mave
         <headless>true</headless>
       </service>
     </services>
+
+    <serviceAccounts>
+      <serviceAccount>
+        <name>build-robot</name>
+      </serviceAccount>
+    </serviceAccounts>
   </resources>
 </configuration>
 ----
