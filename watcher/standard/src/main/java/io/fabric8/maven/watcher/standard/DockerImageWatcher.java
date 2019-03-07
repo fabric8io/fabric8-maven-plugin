@@ -73,17 +73,7 @@ public class DockerImageWatcher extends BaseWatcher {
 
         // add a image customizer
         watchContext = new WatchService.WatchContext.Builder(watchContext)
-                .imageCustomizer(new Task<ImageConfiguration>() {
-                    @Override
-                    public void execute(ImageConfiguration imageConfiguration) throws DockerAccessException, MojoExecutionException, MojoFailureException {
-                        buildImage(imageConfiguration);
-                    }
-                }).containerRestarter(new Task<WatchService.ImageWatcher>() {
-                    @Override
-                    public void execute(WatchService.ImageWatcher imageWatcher) throws DockerAccessException, MojoExecutionException, MojoFailureException {
-                        restartContainer(imageWatcher, resources);
-                    }
-                })
+                .imageCustomizer(imageConfiguration -> buildImage(imageConfiguration)).containerRestarter(imageWatcher -> restartContainer(imageWatcher, resources))
                 .build();
 
         ServiceHub hub = getContext().getServiceHub();

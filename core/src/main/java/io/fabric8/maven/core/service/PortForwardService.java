@@ -165,17 +165,14 @@ public class PortForwardService {
 
         forwarderThread.start();
 
-        final Closeable handle = new Closeable() {
-            @Override
-            public void close() throws IOException {
-                try {
-                    watch.close();
-                } catch (Exception e) {}
-                try {
-                    forwarderThread.interrupt();
-                    forwarderThread.join(15000);
-                } catch (Exception e) {}
-            }
+        final Closeable handle = () -> {
+            try {
+                watch.close();
+            } catch (Exception e) {}
+            try {
+                forwarderThread.interrupt();
+                forwarderThread.join(15000);
+            } catch (Exception e) {}
         };
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override

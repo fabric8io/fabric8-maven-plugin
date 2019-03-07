@@ -71,6 +71,9 @@ io.fabric8.maven.enricher.standard.ConfigMapEnricher
 # (see https://docs.okd.io/latest/dev_guide/secrets.html#service-serving-certificate-secrets)
 io.fabric8.maven.enricher.standard.openshift.AutoTLSEnricher
 
+# Add a service account
+io.fabric8.maven.enricher.standard.ServiceAccountEnricher
+
 # Add a route on demand when on OpenShift
 io.fabric8.maven.enricher.standard.openshift.RouteEnricher
 

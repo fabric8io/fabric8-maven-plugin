@@ -441,12 +441,9 @@ public class HelmMojo extends AbstractFabric8Mojo {
 
     private void copyTextFile(File outputDir, final String srcFile) throws MojoExecutionException {
         try {
-            FilenameFilter filter = new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    String lower = name.toLowerCase(Locale.ENGLISH);
-                    return lower.equals(srcFile.toLowerCase()) || lower.startsWith(srcFile.toLowerCase() + ".");
-                }
+            FilenameFilter filter = (dir, name) -> {
+                String lower = name.toLowerCase(Locale.ENGLISH);
+                return lower.equals(srcFile.toLowerCase()) || lower.startsWith(srcFile.toLowerCase() + ".");
             };
             copyFirstFile(project.getBasedir(), filter, outputDir);
         } catch (IOException e) {
