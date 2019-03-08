@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.generator.api.support;
 
 import java.util.Arrays;
@@ -23,21 +22,17 @@ import java.util.Map;
 import java.util.Properties;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.GeneratorContext;
-
+import mockit.Expectations;
+import mockit.Mocked;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 
 import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.kind;
 import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.name;
@@ -52,7 +47,6 @@ import static org.junit.Assert.fail;
  * @author roland
  * @since 10/01/17
  */
-@RunWith(JMockit.class)
 public class BaseGeneratorTest {
 
     @Mocked
@@ -249,7 +243,7 @@ public class BaseGeneratorTest {
 
         setupNameContext(null, null);
         generator = createGenerator(null);
-        assertEquals("%g/%a:%t", generator.getImageName());
+        assertEquals("%g/%a:%l", generator.getImageName());
 
     }
 
@@ -267,7 +261,7 @@ public class BaseGeneratorTest {
     public void getRegistryInOpenshift() {
         Properties props = new Properties();
         props.put("fabric8.generator.registry", "fabric8.io");
-        props.put(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, "openshift");
+        props.put(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, "openshift");
         setupContextOpenShift(props, null, null);
 
         BaseGenerator generator = createGenerator(null);
@@ -302,10 +296,11 @@ public class BaseGeneratorTest {
             ctx.getConfig(); result = config;
             config.getConfig("test-generator", "from"); result = configFrom; minTimes = 0;
             config.getConfig("test-generator", "fromMode"); result = configFromMode; minTimes = 0;
-            ctx.getMode(); result = PlatformMode.kubernetes; minTimes = 0;
+            ctx.getRuntimeMode();result = RuntimeMode.kubernetes;minTimes = 0;
             ctx.getStrategy(); result = null; minTimes = 0;
         }};
     }
+
     public void setupContextOpenShift(final Properties projectProps, final String configFrom, final String configFromMode) {
         new Expectations() {{
             ctx.getProject(); result = project;
@@ -313,7 +308,7 @@ public class BaseGeneratorTest {
             ctx.getConfig(); result = config;
             config.getConfig("test-generator", "from"); result = configFrom; minTimes = 0;
             config.getConfig("test-generator", "fromMode"); result = configFromMode; minTimes = 0;
-            ctx.getMode(); result = PlatformMode.openshift; minTimes = 0;
+            ctx.getRuntimeMode();result = RuntimeMode.openshift;minTimes = 0;
             ctx.getStrategy(); result = OpenShiftBuildStrategy.s2i; minTimes = 0;
         }};
     }

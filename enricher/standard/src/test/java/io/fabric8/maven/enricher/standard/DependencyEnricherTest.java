@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.standard;
 
 /*
@@ -24,34 +23,33 @@ package io.fabric8.maven.enricher.standard;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.core.util.KindAndName;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import mockit.Expectations;
-import mockit.Mocked;
-
-import mockit.integration.junit4.JMockit;
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.DefaultArtifact;
-import org.apache.maven.artifact.handler.DefaultArtifactHandler;
-import org.apache.maven.project.MavenProject;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import io.fabric8.maven.core.model.Dependency;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import mockit.Expectations;
+import mockit.Mocked;
+import org.apache.maven.project.MavenProject;
+import org.junit.Test;
 
-import static io.fabric8.maven.core.util.ResourceFileType.yaml;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(JMockit.class)
 public class DependencyEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     @Mocked
     private ImageConfiguration imageConfiguration;
@@ -76,21 +74,25 @@ public class DependencyEnricherTest {
 
     private KubernetesList enrichResources(KubernetesListBuilder aBuilder) {
         DependencyEnricher enricher = new DependencyEnricher(context);
-        enricher.addMissingResources(aBuilder);
-        enricher.adapt(aBuilder);
+        enricher.create(PlatformMode.kubernetes, aBuilder);
+        enricher.enrich(PlatformMode.kubernetes, aBuilder);
         return aBuilder.build();
     }
 
-    private KubernetesListBuilder createResourcesForTest() throws IOException {
+    private KubernetesListBuilder createResourcesForTest() throws IOException, URISyntaxException {
         setupExpectations();
         List<File> resourceList = new ArrayList<>();
-        resourceList.add(new File(getClass().getResource(overrideFragementFile).getFile()));
+
+        resourceList.add(new File(Paths.get(getClass().getResource(overrideFragementFile).toURI()).toAbsolutePath().toString()));
+
+
 
         /*
          * Our override file also contains a ConfigMap item with name jenkins, load it while
          * loading Kubernetes resources.
          */
         KubernetesListBuilder builder = KubernetesResourceUtil.readResourceFragmentsFrom(
+                PlatformMode.kubernetes,
                 KubernetesResourceUtil.DEFAULT_RESOURCE_VERSIONING,
                 project.getName(),
                 resourceList.toArray(new File[resourceList.size()]));
@@ -100,21 +102,18 @@ public class DependencyEnricherTest {
     private void setupExpectations() {
         // Setup Mock behaviour
         new Expectations() {{
-            context.getProject();
-            result = project;
 
-            context.getProject().getArtifacts();
+            context.getDependencies(true);
             result = getDummyArtifacts();
         }};
     }
 
-    private Set<Artifact> getDummyArtifacts() {
-        Set<Artifact> artifacts = new TreeSet<>();
+    private List<Dependency> getDummyArtifacts() {
+        List<Dependency> artifacts = new ArrayList<>();
 
-        Artifact artifact = new DefaultArtifact("io.fabric8.tenant.apps", "jenkins",
-                "1.0.0-SNAPSHOT", "compile", "jar", null, new DefaultArtifactHandler("jar"));
+
         File aFile = new File(getClass().getResource(artifactFilePath).getFile());
-        artifact.setFile(aFile);
+        Dependency artifact = new Dependency(new GroupArtifactVersion("g1", "a1", "v1"),"jar", "compile", aFile);
         artifacts.add(artifact);
         return artifacts;
     }

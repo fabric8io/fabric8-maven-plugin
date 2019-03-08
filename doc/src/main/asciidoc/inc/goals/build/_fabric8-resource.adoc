@@ -48,6 +48,9 @@ Labels and annotations can be easily added to any resource object. This is best 
       <annotations> <!--7-->
          ...
       </annotations>
+      <remotes> <!--8-->
+        <remote>https://gist.githubusercontent.com/lordofthejars/ac2823cec7831697d09444bbaa76cd50/raw/e4b43f1b6494766dfc635b5959af7730c1a58a93/deployment.yaml</remote>
+      </remotes>
     </resource>
   </configuration>
 </plugin>
@@ -56,9 +59,10 @@ Labels and annotations can be easily added to any resource object. This is best 
 <2> Within `<all>` labels which should be applied to *every* object can be specified
 <3> `<service>` labels are used to label services
 <4> `<replicaSet>` labels are for replica set and replication controller
-<5> `<pod>` holds lables for pod specifications in replication controller, replica sets and deployments
+<5> `<pod>` holds labels for pod specifications in replication controller, replica sets and deployments
 <6> `<deployment>` is for labels on deployments (kubernetes) and deployment configs (openshift)
 <7> The subelements are also available for specifying annotations.
+<8> `<remotes>` you can set location of fragments as `URL`.
 
 Labels and annotations can be specified in free form as a map. In this map the element name is the name of the label or annotation respectively, whereas the content is the value to set.
 
@@ -104,16 +108,16 @@ You can create a secret using xml configuration in the `pom.xml` file. It should
 |key |required |description
 
 |**dockerServerId**
-|true
+|`true`
 |the server id which is configured in
 `~/.m2/setting.xml`
 
 |**name**
-|true
+|`true`
 |this will be used as name of the kubernetes secret resource
 
 |**namespace**
-|false
+|`false`
 |the secret resource will be applied to the specific
 namespace, if provided
 |===
@@ -171,10 +175,80 @@ Resource goal also validates the generated resource descriptors using API specif
 | Configuration | Description | Default
 
 | *fabric8.skipResourceValidation*
-| If value is set to `true` then resource validation is skipped. This may be useful if resource validation is getting failed due to some reason but still you want to continue the deployment.
-| false
+| If value is set to `true` then resource validation is skipped. This may be useful if resource validation is failing for some reason but you still want to continue the deployment.
+| `false`
 
 | *fabric8.failOnValidationError*
 | If value is set to `true` then any validation error will block the plugin execution. A warning will be printed otherwise.
-| false
+| `false`
+
+| *fabric8.build.switchToDeployment*
+| If value is set to `true` then fabric8-maven-plugin would switch to Deployments rather than DeploymentConfig when not using ImageStreams on Openshift.
+| `false`
+
+| *fabric8.openshift.trimImageInContainerSpec*
+| If value is set to `true` then it would set the container image reference to "", this is done to handle weird behavior of Openshift 3.7 in which subsequent rollouts lead to ImagePullErr
+| `false`
+|===
+
+[[resource-route-generation]]
+=== Route Generation
+
+When the `fabric8:resource` goal is run, an OpenShift https://docs.openshift.org/latest/architecture/networking/routes.html[Route] descriptor (`route.yml`) will also be generated along the service if an OpenShift cluster is targeted. 
+If you do not want to generate a Route descriptor, you can set the `fabric8.openshift.generateRoute` property to `false`.
+
+.Route Generation Configuration
+[cols="1.6.1"]
+|===
+| Configuration | Description | Default
+
+| *fabric8.openshift.generateRoute*
+| If value is set to `false` then no Route descriptor will be generated. By default it is set to `true`, which will create a `route.yml` descriptor and also add Route resource to `openshift.yml`.
+| `true`
+|===
+
+If you do not want to generate a Route descriptor, you can also specify so in the plugin configuration in your POM as seen below.
+
+.Example for not generating route resource by configuring it in `pom.xml`
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+<plugin>
+    <groupId>io.fabric8</groupId>
+    <artifactId>fabric8-maven-plugin</artifactId>
+    <version>{version}</version>
+    <configuration>
+        <generateRoute>false</generateRoute>
+    </configuration>
+</plugin>
+----
+
+If you are using resource fragments, then also you can configure it in your Service resource fragment (e.g. `service.yml`). You need to add an `expose` label to the `metadata` section of your service and set it to `false`.
+
+.Example for not generating route resource by configuring it in resource fragments
+
+[source.yaml]
+----
+metadata:
+  annotations:
+    api.service.kubernetes.io/path: /hello
+  labels:
+    expose: "false"
+spec:
+  type: LoadBalancer
+----
+
+In case both the label and the property have been set with conflicting values, precedence will be given to the property value, so if you set the label to `true` but set the property to `false` then no Route descriptor will be generated because precedence will be given to the property value.
+
+[[disable-automatic-deployments]]
+=== Disable Automatic Deployments
+
+.Automatic Trigger Configuration
+[cols="1.6.1"]
+|===
+| Configuration | Description | Default
+
+| *fabric8.openshift.enableAutomaticTrigger*
+| If the value is set to `false` then automatic deployments would be disabled.
+| `true`
 |===

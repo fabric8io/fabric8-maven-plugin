@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,13 +13,11 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.api;
 
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.Named;
-
-import java.util.Map;
+import io.fabric8.maven.core.config.PlatformMode;
 
 /**
  * Interface describing enrichers which add to kubernetes descriptors
@@ -28,30 +26,6 @@ import java.util.Map;
  * @since 01/04/16
  */
 public interface Enricher extends Named {
-
-    /**
-     * Get labels to add too objects
-     *
-     * @param kind for which type to get the labels
-     * @return map of additional labels
-     */
-    Map<String, String> getLabels(Kind kind);
-
-    /**
-     * Return annotations to add
-     *
-     * @param kind the kind of object to add
-     * @return map of annotations
-     */
-    Map<String, String> getAnnotations(Kind kind);
-
-    /**
-     * Get the selector for a service or replica set / replication controller
-     *
-     * @param kind get the selector map
-     * @return selector
-     */
-    Map<String,String> getSelector(Kind kind);
 
     /**
      * Add default resources when they are missing. Each enricher should be responsible
@@ -63,13 +37,12 @@ public interface Enricher extends Named {
      *
      * @param builder the build to examine and add to
      */
-    void addMissingResources(KubernetesListBuilder builder);
+    void create(PlatformMode platformMode, KubernetesListBuilder builder);
 
     /**
      * Final customization of the overall resource descriptor. Fine tuning happens here.
      *
      * @param builder list to customer used to customize
      */
-    void adapt(KubernetesListBuilder builder);
-
+    void enrich(PlatformMode platformMode, KubernetesListBuilder builder);
 }

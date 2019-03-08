@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -16,9 +16,8 @@
 package io.fabric8.maven.core.util;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
-import static io.fabric8.kubernetes.api.KubernetesHelper.getName;
 
 /**
  * Represents a key for a resource so we can look up resources by key and name
@@ -33,7 +32,15 @@ public class KindAndName {
     }
 
     public KindAndName(HasMetadata item) {
-        this(getKind(item), getName(item));
+        this(io.fabric8.maven.core.util.kubernetes.KubernetesHelper.getKind(item), KubernetesHelper.getName(item));
+    }
+
+    public String getKind() {
+        return kind;
+    }
+
+    public String getName() {
+        return name;
     }
 
     @Override
@@ -46,14 +53,18 @@ public class KindAndName {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         KindAndName that = (KindAndName) o;
 
-        if (!kind.equals(that.kind)) return false;
-        return name.equals(that.name);
+        if (!kind.equals(that.kind))
+            return false;
 
+        return name.equals(that.name);
     }
 
     @Override

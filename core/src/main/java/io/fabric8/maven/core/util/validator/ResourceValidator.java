@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -15,28 +15,33 @@
  */
 package io.fabric8.maven.core.util.validator;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.ValidationMessage;
-import io.fabric8.maven.core.util.ResourceClassifier;
-import io.fabric8.maven.docker.util.Logger;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import javax.validation.Path;
-import javax.validation.metadata.ConstraintDescriptor;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Path;
+import javax.validation.metadata.ConstraintDescriptor;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.ValidationMessage;
+import io.fabric8.maven.core.util.ResourceClassifier;
+import io.fabric8.maven.docker.util.Logger;
 
 /**
  * Validates Kubernetes/OpenShift resource descriptors using JSON schema validation method.
@@ -82,6 +87,7 @@ public class ResourceValidator {
      */
     private void setupIgnoreRules(ResourceClassifier target) {
         ignoreValidationRules.add(new IgnorePortValidationRule(IgnorePortValidationRule.TYPE));
+        ignoreValidationRules.add(new IgnoreResourceMemoryLimitRule(IgnoreResourceMemoryLimitRule.TYPE));
     }
 
     /**
@@ -102,8 +108,6 @@ public class ResourceValidator {
                     JsonSchema schema = getJsonSchema(prepareSchemaUrl(SCHEMA_JSON), kind);
                     Set<ValidationMessage> errors = schema.validate(inputSpecNode);
                     processErrors(errors, resource);
-                } catch (JSONException e) {
-                    throw new ConstraintViolationException(e.getMessage(), new HashSet<ConstraintViolationImpl>());
                 } catch (URISyntaxException e) {
                     throw new IOException(e);
                 }
@@ -151,21 +155,21 @@ public class ResourceValidator {
     private JsonSchema getJsonSchema(URI schemaUrl, String kind) throws IOException {
         checkIfKindPropertyExists(kind);
         JsonSchemaFactory factory = new JsonSchemaFactory();
-        JSONObject jsonSchema = getSchemaJson(schemaUrl);
+        JsonObject jsonSchema = getSchemaJson(schemaUrl);
         getResourceProperties(kind, jsonSchema);
 
         return factory.getSchema(jsonSchema.toString());
     }
 
-    private void getResourceProperties(String kind, JSONObject jsonSchema) {
-        jsonSchema.put("properties" , jsonSchema.getJSONObject("resources")
-                .getJSONObject(kind.replaceAll("\"", "").toLowerCase())
-                .getJSONObject("properties"));
+    private void getResourceProperties(String kind, JsonObject jsonSchema) {
+        jsonSchema.add("properties" , jsonSchema.get("resources").getAsJsonObject()
+                .getAsJsonObject(kind.replaceAll("\"", "").toLowerCase())
+                .getAsJsonObject("properties"));
     }
 
     private void checkIfKindPropertyExists(String kind) {
         if(kind == null) {
-            throw new JSONException("Invalid kind of resource or 'kind' is missing from resource definition");
+            throw new JsonIOException("Invalid kind of resource or 'kind' is missing from resource definition");
         }
     }
 
@@ -180,10 +184,10 @@ public class ResourceValidator {
         }
     }
 
-    public JSONObject getSchemaJson(URI schemaUrl) throws IOException {
+    public JsonObject getSchemaJson(URI schemaUrl) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         String rootNode = objectMapper.readValue(schemaUrl.toURL(), JsonNode.class).toString();
-        JSONObject jsonObject = new JSONObject(rootNode);
+        JsonObject jsonObject = new JsonParser().parse(rootNode).getAsJsonObject();
         jsonObject.remove("id");
         return jsonObject;
     }

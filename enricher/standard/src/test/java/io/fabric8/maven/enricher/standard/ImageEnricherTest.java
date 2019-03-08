@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,30 +13,25 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.standard;
 
-import java.util.Arrays;
 import java.util.Collections;
-
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.EnricherContext;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
-
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.model.Configuration;
+import io.fabric8.maven.core.util.ResourceUtil;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import mockit.Expectations;
+import mockit.Mocked;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -45,11 +40,10 @@ import static org.junit.Assert.assertThat;
  * @author nicola
  * @since 14/02/17
  */
-@RunWith(JMockit.class)
 public class ImageEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     @Mocked
     ImageConfiguration imageConfiguration;
@@ -60,13 +54,17 @@ public class ImageEnricherTest {
     public void prepareMock() {
         // Setup mock behaviour
         new Expectations() {{
-            context.getResources(); result = new ResourceConfig.Builder()
-                    .env(Collections.singletonMap("MY_KEY", "MY_VALUE"))
-                    .build();
+            Configuration configuration =
+                new Configuration.Builder()
+                    .resource(new ResourceConfig.Builder()
+                                  .env(Collections.singletonMap("MY_KEY", "MY_VALUE"))
+                                  .build())
+                .images(Collections.singletonList(imageConfiguration))
+                .build();
+            context.getConfiguration(); result = configuration;
 
             imageConfiguration.getName(); result = "busybox";
             imageConfiguration.getAlias(); result = "busybox";
-            context.getImages(); result = Arrays.asList(imageConfiguration);
         }};
 
         imageEnricher = new ImageEnricher(context);
@@ -78,7 +76,7 @@ public class ImageEnricherTest {
                 .addNewDeploymentItem()
                 .endDeploymentItem();
 
-        imageEnricher.addMissingResources(builder);
+        imageEnricher.create(PlatformMode.kubernetes, builder);
         assertCorrectlyGeneratedResources(builder.build(), "Deployment");
     }
 
@@ -88,7 +86,7 @@ public class ImageEnricherTest {
                 .addNewReplicaSetItem()
                 .endReplicaSetItem();
 
-        imageEnricher.addMissingResources(builder);
+        imageEnricher.create(PlatformMode.kubernetes, builder);
         assertCorrectlyGeneratedResources(builder.build(), "ReplicaSet");
     }
 
@@ -98,7 +96,7 @@ public class ImageEnricherTest {
                 .addNewReplicationControllerItem()
                 .endReplicationControllerItem();
 
-        imageEnricher.addMissingResources(builder);
+        imageEnricher.create(PlatformMode.kubernetes, builder);
         assertCorrectlyGeneratedResources(builder.build(), "ReplicationController");
     }
 
@@ -108,7 +106,7 @@ public class ImageEnricherTest {
                 .addNewDaemonSetItem()
                 .endDaemonSetItem();
 
-        imageEnricher.addMissingResources(builder);
+        imageEnricher.create(PlatformMode.kubernetes, builder);
         assertCorrectlyGeneratedResources(builder.build(), "DaemonSet");
     }
 
@@ -118,7 +116,7 @@ public class ImageEnricherTest {
                 .addNewStatefulSetItem()
                 .endStatefulSetItem();
 
-        imageEnricher.addMissingResources(builder);
+        imageEnricher.create(PlatformMode.kubernetes, builder);
         assertCorrectlyGeneratedResources(builder.build(), "StatefulSet");
     }
 
@@ -128,14 +126,14 @@ public class ImageEnricherTest {
                 .addNewDeploymentConfigItem()
                 .endDeploymentConfigItem();
 
-        imageEnricher.addMissingResources(builder);
+        imageEnricher.create(PlatformMode.kubernetes, builder);
         assertCorrectlyGeneratedResources(builder.build(), "DeploymentConfig");
     }
 
     private void assertCorrectlyGeneratedResources(KubernetesList list, String kind) throws JsonProcessingException {
         assertEquals(list.getItems().size(),1);
 
-        String json = KubernetesResourceUtil.toJson(list.getItems().get(0));
+        String json = ResourceUtil.toJson(list.getItems().get(0));
         assertThat(json, JsonPathMatchers.isJson());
         assertThat(json, JsonPathMatchers.hasJsonPath("$.kind", Matchers.equalTo(kind)));
 

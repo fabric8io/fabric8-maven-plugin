@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,11 +13,12 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.config;
 
 import java.util.List;
 
+import io.fabric8.kubernetes.api.model.DownwardAPIVolumeFile;
+import io.fabric8.kubernetes.api.model.KeyToPath;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
@@ -73,6 +74,99 @@ public class VolumeConfig {
 
     @Parameter
     private String claimRef;
+
+    @Parameter
+    private String volumeId;
+
+    @Parameter
+    private String diskName;
+
+    @Parameter
+    private String diskUri;
+
+    @Parameter
+    private String kind;
+
+    @Parameter
+    private String cachingMode;
+
+    @Parameter
+    private String hostPathType;
+
+    @Parameter
+    private String shareName;
+
+    @Parameter
+    private String user;
+
+    @Parameter
+    private String secretFile;
+
+    @Parameter
+    private String secretRef;
+
+    @Parameter
+    private Integer lun;
+
+    @Parameter
+    private List<String> targetWwns;
+
+    @Parameter
+    private String datasetName;
+
+    @Parameter
+    private List<String> portals;
+
+    @Parameter
+    private String targetPortal;
+
+    @Parameter
+    private String registry;
+
+    @Parameter
+    private String volume;
+
+    @Parameter
+    private String group;
+
+    @Parameter
+    private String iqn;
+
+    @Parameter
+    private List<String> monitors;
+
+    @Parameter
+    private String pool;
+
+    @Parameter
+    private String keyring;
+
+    @Parameter
+    private String image;
+
+    @Parameter
+    private String gateway;
+
+    @Parameter
+    private String system;
+
+    @Parameter
+    private String protectionDomain;
+
+    @Parameter
+    private String storagePool;
+
+    @Parameter
+    private String volumeName;
+
+    @Parameter
+    private String configMapName;
+
+    @Parameter
+    private List<KeyToPath> configMapItems;
+
+    @Parameter
+    private List<DownwardAPIVolumeFile> items;
 
     public String getType() {
         return type;
@@ -132,6 +226,96 @@ public class VolumeConfig {
 
     public List<String> getMounts() {
         return mounts;
+    }
+
+    public String getVolumeId() { return volumeId; }
+
+    public String getDiskName() { return diskName; }
+
+    public String getDiskUri() { return diskUri; }
+
+    public String getKind() { return kind; }
+
+    public String getCachingMode() { return cachingMode; }
+
+    public String getShareName() { return shareName; }
+
+    public String getUser() { return user; }
+
+    public String getGroup() { return group; }
+
+    public String getSecretFile() { return secretFile; }
+
+    public String getSecretRef() { return secretRef; }
+
+    public Integer getLun() { return lun; }
+
+    public List<String> getTargetWwns() { return targetWwns; }
+
+    public String getDatasetName() { return datasetName; }
+
+    public List<String> getPortals() { return portals; }
+
+    public String getTargetPortal() { return targetPortal; }
+
+    public String getIqn() { return iqn; }
+
+    public String getVolume() { return volume; }
+
+    public String getRegistry() { return registry; }
+
+    public List<String> getMonitors() { return monitors; }
+
+    public String getPool() { return pool; }
+
+    public String getKeyring() { return keyring; }
+
+    public String getImage() { return image; }
+
+    public String getGateway() { return gateway; }
+
+    public String getSystem() { return system; }
+
+    public String getProtectionDomain() { return protectionDomain; }
+
+    public String getStoragePool() { return storagePool; }
+
+    public String getVolumeName() { return volumeName; }
+
+    public List<DownwardAPIVolumeFile> getItems() { return items; }
+
+    public String getHostPathType() { return hostPathType; }
+
+    public String getConfigMapName() { return name; }
+
+    public List<KeyToPath> getConfigMapItems() { return configMapItems; }
+
+    public static class Builder {
+        private VolumeConfig volumeConfig = new VolumeConfig();
+
+        public VolumeConfig.Builder name(String name) {
+            volumeConfig.name = name;
+            return this;
+        }
+
+        public VolumeConfig.Builder mounts(List<String> mounts) {
+            volumeConfig.mounts = mounts;
+            return this;
+        }
+
+        public VolumeConfig.Builder type(String type) {
+            volumeConfig.type = type;
+            return this;
+        }
+
+        public VolumeConfig.Builder path(String path) {
+            volumeConfig.path = path;
+            return this;
+        }
+
+        public VolumeConfig build() {
+            return volumeConfig;
+        }
     }
 
     // TODO: Change to rich configuration as described in http://blog.sonatype.com/2011/03/configuring-plugin-goals-in-maven-3/

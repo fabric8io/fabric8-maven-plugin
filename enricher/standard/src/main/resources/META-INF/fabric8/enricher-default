@@ -25,9 +25,6 @@ io.fabric8.maven.enricher.standard.DefaultServiceEnricher,103
 # Add port names from IANA service definitions
 io.fabric8.maven.enricher.standard.PortNameEnricher
 
-# Add port names from IANA service definitions
-io.fabric8.maven.enricher.standard.IANAServicePortNameEnricher
-
 # Add Maven coordinates as labels
 io.fabric8.maven.enricher.standard.ProjectEnricher
 
@@ -46,10 +43,7 @@ io.fabric8.maven.enricher.standard.VolumePermissionEnricher
 # Add an enricher for enabling debug information
 io.fabric8.maven.enricher.standard.DebugEnricher
 
-# Add an enricher for merging duplicates
-io.fabric8.maven.enricher.standard.MergeEnricher
-
-# Add an enricher for merging duplicates
+# Add an enricher for removing build related annotations
 io.fabric8.maven.enricher.standard.RemoveBuildAnnotationsEnricher
 
 # Add an enricher for adding Maven SCM metadata based on pom.xml scm details
@@ -58,8 +52,39 @@ io.fabric8.maven.enricher.standard.MavenScmEnricher
 # Add an enricher for adding Maven SCM metadata based on pom.xml IssueManagement details
 io.fabric8.maven.enricher.standard.MavenIssueManagementEnricher
 
+# Add an enricher for Adding Metadata (Labels, Annotations & Selectors) to the generated resources
+io.fabric8.maven.enricher.standard.DefaultMetadataEnricher
+
 # Resolve the docker registry things
 io.fabric8.maven.enricher.standard.DockerRegistrySecretEnricher
 
 # Add an enricher for adding revision history limit for deployment resources
 io.fabric8.maven.enricher.standard.RevisionHistoryEnricher
+
+# Add an enricher for adding trigger annotations to Kubernetes resources
+io.fabric8.maven.enricher.standard.TriggersAnnotationEnricher
+
+# Add Config Map enricher
+io.fabric8.maven.enricher.standard.ConfigMapEnricher
+
+# Provide cluster generated CERTs to a pod
+# (see https://docs.okd.io/latest/dev_guide/secrets.html#service-serving-certificate-secrets)
+io.fabric8.maven.enricher.standard.openshift.AutoTLSEnricher
+
+# Add a service account
+io.fabric8.maven.enricher.standard.ServiceAccountEnricher
+
+# Add a route on demand when on OpenShift
+io.fabric8.maven.enricher.standard.openshift.RouteEnricher
+
+# Add a deploymentconfig from deployment when on OpenShift
+io.fabric8.maven.enricher.standard.openshift.DeploymentConfigEnricher
+
+# Add an "expose" label to every service (TODO: Combine this with a Route/Ingress enricher)
+io.fabric8.maven.enricher.standard.openshift.ExposeEnricher
+
+# Enhance a given controller with the configuration information presented in the plugin configuration.
+io.fabric8.maven.enricher.standard.ControllerViaPluginConfigurationEnricher
+
+# Add Secret enricher
+io.fabric8.maven.enricher.standard.FileDataSecretEnricher

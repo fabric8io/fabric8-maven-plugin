@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,33 +13,32 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.standard;
-
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
 
 import java.util.List;
 import java.util.Map;
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+
 import static io.fabric8.maven.core.util.Constants.RESOURCE_SOURCE_URL_ANNOTATION;
-import static io.fabric8.utils.Lists.notNullList;
 
 /**
  * Removes any build time annotations on resources
  */
 public class RemoveBuildAnnotationsEnricher extends BaseEnricher {
 
-    public RemoveBuildAnnotationsEnricher(EnricherContext buildContext) {
+    public RemoveBuildAnnotationsEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-remove-build-annotations");
     }
 
     @Override
-    public void adapt(KubernetesListBuilder builder) {
-        List<HasMetadata> items = notNullList(builder.getItems());
+    public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) {
+        List<HasMetadata> items = builder.buildItems();
 
         for (HasMetadata item : items) {
             removeBuildAnnotations(item);

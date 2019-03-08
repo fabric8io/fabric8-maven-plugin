@@ -9,3 +9,6 @@ notes.md
 .settings
 .vscode
 velocity.log
+/.metadata/
+/.recommenders/
+.factorypath

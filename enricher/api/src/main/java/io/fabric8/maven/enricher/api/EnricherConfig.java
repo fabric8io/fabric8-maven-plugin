@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,13 +13,12 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.api;
 
 import java.util.Map;
-import java.util.Properties;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.Configs;
 
 /**
@@ -31,13 +30,11 @@ public class EnricherConfig {
     private static final String ENRICHER_PROP_PREFIX = "fabric8.enricher";
 
     private final String name;
-    private final ProcessorConfig config;
-    private final Properties projectProperties;
+    private final Configuration configuration;
 
-    public EnricherConfig(Properties projectProperties, String name, ProcessorConfig config) {
-        this.config = config;
+    public EnricherConfig(String name, Configuration configuration) {
         this.name = name;
-        this.projectProperties = projectProperties;
+        this.configuration = configuration;
     }
 
     /**
@@ -55,7 +52,7 @@ public class EnricherConfig {
      * @return raw configuration.
      */
     public Map<String, String> getRawConfig() {
-        return config.getConfigMap(name);
+        return configuration.getProcessorConfig().orElse(ProcessorConfig.EMPTY).getConfigMap(name);
     }
 
     /**
@@ -67,11 +64,11 @@ public class EnricherConfig {
      * @return the value looked up or the default value.
      */
     public String get(Configs.Key key, String defaultVal) {
-        String val = config != null ? config.getConfig(name, key.name()) : null;
+        String val = configuration.getProcessorConfig().orElse(ProcessorConfig.EMPTY).getConfig(name, key.name());
 
         if (val == null) {
             String fullKey = ENRICHER_PROP_PREFIX + "." + name + "." + key;
-            val = Configs.getPropertyWithSystemAsFallback(projectProperties, fullKey);
+            val = configuration.getPropertyWithSystemOverride(fullKey);
         }
         return val != null ? val : defaultVal;
     }

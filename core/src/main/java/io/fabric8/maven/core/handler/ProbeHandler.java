@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,17 +13,22 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.handler;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.ExecAction;
+import io.fabric8.kubernetes.api.model.HTTPGetAction;
+import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.Probe;
+import io.fabric8.kubernetes.api.model.TCPSocketAction;
 import io.fabric8.maven.core.config.ProbeConfig;
 import io.fabric8.maven.core.util.Commandline;
-import io.fabric8.utils.Strings;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 
 /**
  * @author roland
@@ -45,6 +50,14 @@ public class ProbeHandler {
         if (timeoutSeconds != null) {
             probe.setTimeoutSeconds(timeoutSeconds);
         }
+        Integer failureThreshold = probeConfig.getFailureThreshold();
+        if(failureThreshold != null) {
+            probe.setFailureThreshold(failureThreshold);
+        }
+        Integer successThreshold = probeConfig.getSuccessThreshold();
+        if(successThreshold != null) {
+            probe.setSuccessThreshold(successThreshold);
+        }
         HTTPGetAction getAction = getHTTPGetAction(probeConfig.getGetUrl());
         if (getAction != null) {
             probe.setHttpGet(getAction);
@@ -55,12 +68,7 @@ public class ProbeHandler {
             probe.setExec(execAction);
             return probe;
         }
-        TCPSocketAction tcpSocketAction;
-        try {
-            tcpSocketAction = getTCPSocketAction(new URL(probeConfig.getGetUrl()), probeConfig.getTcpPort());
-        } catch (MalformedURLException e) {
-            return null;
-        }
+        TCPSocketAction tcpSocketAction = getTCPSocketAction(probeConfig.getGetUrl(), probeConfig.getTcpPort());
         if (tcpSocketAction != null) {
             probe.setTcpSocket(tcpSocketAction);
             return probe;
@@ -72,22 +80,22 @@ public class ProbeHandler {
     // ========================================================================================
 
     private HTTPGetAction getHTTPGetAction(String getUrl) {
-        if (getUrl == null) {
+        if (getUrl == null || !getUrl.subSequence(0,4).toString().equalsIgnoreCase("http")) {
             return null;
         }
         try {
             URL url = new URL(getUrl);
             return new HTTPGetAction(url.getHost(),
-                                     null /* headers */,
-                                     url.getPath(),
-                                     new IntOrString(url.getPort()),
-                                     url.getProtocol());
+                    null /* headers */,
+                    url.getPath(),
+                    new IntOrString(url.getPort()),
+                    url.getProtocol().toUpperCase());
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("Invalid URL " + getUrl + " given for HTTP GET readiness check");
         }
     }
 
-    private TCPSocketAction getTCPSocketAction(URL url, String port) {
+    private TCPSocketAction getTCPSocketAction(String getUrl, String port) {
         if (port != null) {
             IntOrString portObj = new IntOrString(port);
             try {
@@ -96,13 +104,22 @@ public class ProbeHandler {
             } catch (NumberFormatException e) {
                 portObj.setStrVal(port);
             }
-            return new TCPSocketAction(url.getHost(), portObj);
+            if(getUrl==null)
+                return new TCPSocketAction(getUrl, portObj);
+            String validurl = getUrl.replaceFirst("(([a-zA-Z])+)://","http://");
+            try{
+                URL url = new URL(validurl);
+                return new TCPSocketAction(url.getHost(), portObj);
+            }
+            catch (MalformedURLException e){
+                throw new IllegalArgumentException("Invalid URL " + getUrl + " given for TCP readiness check");
+            }
         }
         return null;
     }
 
     private ExecAction getExecAction(String execCmd) {
-        if (Strings.isNotBlank(execCmd)) {
+        if (isNotBlank(execCmd)) {
             List<String> splitCommandLine = Commandline.translateCommandline(execCmd);
             if (!splitCommandLine.isEmpty()) {
                 return new ExecAction(splitCommandLine);

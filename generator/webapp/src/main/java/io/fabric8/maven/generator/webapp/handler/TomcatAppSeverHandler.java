@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,14 +13,13 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.generator.webapp.handler;
-
-import io.fabric8.maven.core.util.MavenUtil;
-import org.apache.maven.project.MavenProject;
 
 import java.util.Arrays;
 import java.util.List;
+
+import io.fabric8.maven.core.util.MavenUtil;
+import org.apache.maven.project.MavenProject;
 
 /**
  * Detector for tomat app servers.
@@ -36,8 +35,8 @@ public class TomcatAppSeverHandler extends AbstractAppServerHandler {
     @Override
     public boolean isApplicable() {
         return hasOneOf("**/META-INF/context.xml") ||
-                MavenUtil.hasPlugin(project, "org.apache.tomcat.maven:tomcat6-maven-plugin") ||
-                MavenUtil.hasPlugin(project, "org.apache.tomcat.maven:tomcat7-maven-plugin");
+                MavenUtil.hasPlugin(project, "org.apache.tomcat.maven", "tomcat6-maven-plugin") ||
+                MavenUtil.hasPlugin(project, "org.apache.tomcat.maven", "tomcat7-maven-plugin");
     }
 
     @Override

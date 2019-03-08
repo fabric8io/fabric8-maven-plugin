@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.util;
 
 import java.io.File;
@@ -28,12 +27,10 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import io.fabric8.maven.docker.util.Logger;
-
-import org.apache.maven.plugin.MojoExecutionException;
-
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  *

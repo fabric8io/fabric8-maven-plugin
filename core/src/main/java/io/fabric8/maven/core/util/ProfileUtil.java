@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,12 +13,16 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.util;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +30,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.Profile;
 import org.apache.maven.shared.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper class for dealing with profiles.
@@ -37,7 +43,9 @@ public class ProfileUtil {
 
     private ProfileUtil() {}
 
-    // Alowed profile names
+    private static final Logger log = LoggerFactory.getLogger(ProfileUtil.class);
+
+    // Allowed profile names
     public static final String[] PROFILE_FILENAMES = {"profiles%s.yml", "profiles%s.yaml", "profiles%s"};
 
     // Mapper for handling YAML formats
@@ -62,6 +70,10 @@ public class ProfileUtil {
             String profile = profileArg == null ? DEFAULT_PROFILE : profileArg;
             Profile profileFound = lookup(profile, resourceDir);
             if (profileFound != null) {
+                if(profileFound.getParentProfile() != null) {
+                    profileFound = inheritFromParentProfile(profileFound, resourceDir);
+                    log.info(profileFound + " inheriting resources from " + profileFound.getParentProfile());
+                }
                 return profileFound;
             } else {
                 throw new IllegalArgumentException("No profile '" + profile + "' defined");
@@ -69,6 +81,18 @@ public class ProfileUtil {
         } catch (IOException e) {
             throw new IOException("Error while looking up profile " + profileArg + ": " + e.getMessage(),e);
         }
+    }
+
+    private static Profile inheritFromParentProfile(Profile aProfile, File resourceDir) throws IOException {
+        Profile aParentProfile = lookup(aProfile.getParentProfile(), resourceDir);
+        if(aParentProfile != null) {
+            aProfile.setEnricherConfig(ProcessorConfig.mergeProcessorConfigs(aProfile.getEnricherConfig(), aParentProfile.getEnricherConfig()));
+            aProfile.setGeneratorConfig(ProcessorConfig.mergeProcessorConfigs(aProfile.getGeneratorConfig(), aParentProfile.getGeneratorConfig()));
+            aProfile.setWatcherConfig(ProcessorConfig.mergeProcessorConfigs(aProfile.getWatcherConfig(), aParentProfile.getWatcherConfig()));
+        } else {
+            throw new IllegalArgumentException("No parent profile '" + aProfile.getParentProfile() + "' defined");
+        }
+        return aProfile;
     }
 
     /**
@@ -221,31 +245,16 @@ public class ProfileUtil {
     /**
      * Get the generator configuration
      */
-    public final static ProcessorConfigurationExtractor GENERATOR_CONFIG = new ProcessorConfigurationExtractor() {
-        @Override
-        public ProcessorConfig extract(Profile profile) {
-            return profile.getGeneratorConfig();
-        }
-    };
+    public final static ProcessorConfigurationExtractor GENERATOR_CONFIG = profile -> profile.getGeneratorConfig();
 
     /**
      * Get the enricher configuration
      */
-    public final static ProcessorConfigurationExtractor ENRICHER_CONFIG = new ProcessorConfigurationExtractor() {
-        @Override
-        public ProcessorConfig extract(Profile profile) {
-            return profile.getEnricherConfig();
-        }
-    };
+    public final static ProcessorConfigurationExtractor ENRICHER_CONFIG = profile -> profile.getEnricherConfig();
 
     /**
      * Get the watcher configuration
      */
-    public final static ProcessorConfigurationExtractor WATCHER_CONFIG = new ProcessorConfigurationExtractor() {
-        @Override
-        public ProcessorConfig extract(Profile profile) {
-            return profile.getWatcherConfig();
-        }
-    };
+    public final static ProcessorConfigurationExtractor WATCHER_CONFIG = profile -> profile.getWatcherConfig();
 
 }

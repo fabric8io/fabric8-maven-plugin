@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -27,6 +27,8 @@ public class VersionUtilTest {
         assertVersionsEqual("1", "1");
         assertVersionsEqual("foo", "foo");
         assertVersionsEqual("foo-SNAPSHOT", "foo-SNAPSHOT");
+        assertVersionsEqual("","");
+        assertVersionsEqual(null,null);
     }
 
     @Test
@@ -38,6 +40,8 @@ public class VersionUtilTest {
         assertVersionGreaterThan("1.10", "1.9-SNAPSHOT");
         assertVersionGreaterThan("1.10-SNAPSHOT", "1.8");
         assertVersionGreaterThan("x-SNAPSHOT", "foo-SNAPSHOT");
+        assertVersionGreaterThan("1.5","");
+        assertVersionGreaterThan("1.5",null);
     }
 
     @Test

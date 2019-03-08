@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -18,17 +18,15 @@ package io.fabric8.maven.core.service;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterAccess;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.service.kubernetes.DockerBuildService;
 import io.fabric8.maven.core.service.openshift.OpenshiftBuildService;
 import io.fabric8.maven.core.util.LazyBuilder;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.OpenShiftClient;
-
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.repository.RepositorySystem;
 
@@ -43,7 +41,7 @@ public class Fabric8ServiceHub {
      */
     private ClusterAccess clusterAccess;
 
-    private PlatformMode platformMode;
+    private RuntimeMode platformMode;
 
     private Logger log;
 
@@ -56,15 +54,11 @@ public class Fabric8ServiceHub {
     private MavenProject mavenProject;
 
     /**
-     * Configurable with default
-     */
-    private Controller controller;
-
     /*
      * Computed resources
      */
 
-    private PlatformMode resolvedMode;
+    private RuntimeMode resolvedMode;
 
     private KubernetesClient client;
 
@@ -77,39 +71,29 @@ public class Fabric8ServiceHub {
         Objects.requireNonNull(clusterAccess, "clusterAccess");
         Objects.requireNonNull(log, "log");
 
-        this.resolvedMode = clusterAccess.resolvePlatformMode(platformMode, log);
-        if (resolvedMode != PlatformMode.kubernetes && resolvedMode != PlatformMode.openshift) {
+        this.resolvedMode = clusterAccess.resolveRuntimeMode(platformMode, log);
+        if (resolvedMode != RuntimeMode.kubernetes && resolvedMode != RuntimeMode.openshift) {
             throw new IllegalArgumentException("Unknown platform mode " + platformMode + " resolved as "+ resolvedMode);
         }
         this.client = clusterAccess.createDefaultClient(log);
 
-        if (this.controller == null) {
-            this.controller = new Controller(this.client);
-            this.controller.setThrowExceptionOnError(true);
-        }
-
         // Lazily building services
 
-        this.services.putIfAbsent(ClientToolsService.class, new LazyBuilder<ClientToolsService>() {
+        this.services.putIfAbsent(ApplyService.class, new LazyBuilder<ApplyService>() {
             @Override
-            protected ClientToolsService build() {
-                return new ClientToolsService(controller, log);
+            protected ApplyService build() {
+                return new ApplyService(client, log);
             }
         });
-
-        this.services.putIfAbsent(PortForwardService.class, new LazyBuilder<PortForwardService>() {
-            @Override
-            protected PortForwardService build() {
-                return new PortForwardService(getClientToolsService(), log, client);
-            }
-        });
-
         this.services.putIfAbsent(BuildService.class, new LazyBuilder<BuildService>() {
             @Override
             protected BuildService build() {
                 BuildService buildService;
                 // Creating platform-dependent services
-                if (resolvedMode == PlatformMode.openshift) {
+                if (resolvedMode == RuntimeMode.openshift) {
+                    if (!(client instanceof OpenShiftClient)) {
+                        throw new IllegalStateException("Openshift platform has been specified but Openshift has not been detected!");
+                    }
                     // Openshift services
                     buildService = new OpenshiftBuildService((OpenShiftClient) client, log, dockerServiceHub, buildServiceConfig);
                 } else {
@@ -126,14 +110,6 @@ public class Fabric8ServiceHub {
                 return new ArtifactResolverServiceMavenImpl(repositorySystem, mavenProject);
             }
         });
-    }
-
-    public ClientToolsService getClientToolsService() {
-        return (ClientToolsService) this.services.get(ClientToolsService.class).get();
-    }
-
-    public PortForwardService getPortForwardService() {
-        return (PortForwardService) this.services.get(PortForwardService.class).get();
     }
 
     public BuildService getBuildService() {
@@ -159,7 +135,7 @@ public class Fabric8ServiceHub {
             return this;
         }
 
-        public Builder platformMode(PlatformMode platformMode) {
+        public Builder platformMode(RuntimeMode platformMode) {
             hub.platformMode = platformMode;
             return this;
         }
@@ -176,11 +152,6 @@ public class Fabric8ServiceHub {
 
         public Builder buildServiceConfig(BuildService.BuildServiceConfig buildServiceConfig) {
             hub.buildServiceConfig = buildServiceConfig;
-            return this;
-        }
-
-        public Builder controller(Controller controller) {
-            hub.controller = controller;
             return this;
         }
 

@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,15 +13,16 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.standard;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 
 /**
  * This enricher adds the 'revisionHistoryLimit' property to deployment spec of RCs / RSs for KuberNetes/OpenShift resource descriptors.
@@ -41,23 +42,34 @@ public class RevisionHistoryEnricher extends BaseEnricher {
         public String def() { return d; }
     }
 
-    public RevisionHistoryEnricher(EnricherContext buildContext) {
+    public RevisionHistoryEnricher(MavenEnricherContext buildContext) {
         super(buildContext, DEFAULT_NAME);
     }
 
     @Override
-    public void addMissingResources(KubernetesListBuilder builder) {
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         final Integer maxRevisionHistories = Configs.asInt(getConfig(Config.limit));
 
         log.info("Adding revision history limit to %s", maxRevisionHistories);
 
-        builder.accept(new TypedVisitor<DeploymentBuilder>() {
-            @Override
-            public void visit(DeploymentBuilder item) {
-                item.editOrNewSpec()
-                    .withRevisionHistoryLimit(maxRevisionHistories)
-                .endSpec();
-            }
-        });
+        if(platformMode == PlatformMode.kubernetes) {
+            builder.accept(new TypedVisitor<DeploymentBuilder>() {
+                @Override
+                public void visit(DeploymentBuilder item) {
+                    item.editOrNewSpec()
+                            .withRevisionHistoryLimit(maxRevisionHistories)
+                            .endSpec();
+                }
+            });
+        } else {
+            builder.accept(new TypedVisitor<DeploymentConfigBuilder>() {
+                @Override
+                public void visit(DeploymentConfigBuilder item) {
+                    item.editOrNewSpec()
+                            .withRevisionHistoryLimit(maxRevisionHistories)
+                            .endSpec();
+                }
+            });
+        }
     }
 }

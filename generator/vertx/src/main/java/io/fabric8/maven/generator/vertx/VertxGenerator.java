@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,22 +13,27 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.generator.vertx;
-
-import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.generator.api.GeneratorContext;
-import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
-import org.apache.maven.model.Plugin;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static io.fabric8.maven.generator.vertx.Constants.*;
+import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.generator.api.GeneratorContext;
+import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
+
+import static io.fabric8.maven.generator.vertx.Constants.CLUSTER_MANAGER_SPI;
+import static io.fabric8.maven.generator.vertx.Constants.SHADE_PLUGIN_ARTIFACT;
+import static io.fabric8.maven.generator.vertx.Constants.SHADE_PLUGIN_GROUP;
+import static io.fabric8.maven.generator.vertx.Constants.VERTX_DROPWIZARD;
+import static io.fabric8.maven.generator.vertx.Constants.VERTX_GROUPID;
+import static io.fabric8.maven.generator.vertx.Constants.VERTX_INFINIPAN;
+import static io.fabric8.maven.generator.vertx.Constants.VERTX_MAVEN_PLUGIN_ARTIFACT;
+import static io.fabric8.maven.generator.vertx.Constants.VERTX_MAVEN_PLUGIN_GROUP;
 
 /**
  * Vert.x Generator.
@@ -40,6 +45,12 @@ import static io.fabric8.maven.generator.vertx.Constants.*;
  * Maven Shader Plugin or if the project use the Vert.x Maven Plugin.
  *
  * To avoid the issue to write file in the current working directory the `cacheDirBase` is configured to `/tmp`.
+ *
+ * When a cluster manager is detected in the classpath, `-cluster` is automatically appended to the command line.
+ *
+ * To avoid DNS resolution issue, the async DNS resolver is disabled (falling back to the regular Java resolver)
+ *
+ * If vertx-dropwizard-metrics is in the classpath, the metrics are enabled and the JMX export is also enabled.
  */
 public class VertxGenerator extends JavaExecGenerator {
 
@@ -50,15 +61,56 @@ public class VertxGenerator extends JavaExecGenerator {
   @Override
   public boolean isApplicable(List<ImageConfiguration> configs) throws MojoExecutionException {
     return shouldAddImageConfiguration(configs)
-        && (MavenUtil.hasPlugin(getProject(), VERTX_MAVEN_PLUGIN_GA)
-        || MavenUtil.hasDependencyOnAnyArtifactOfGroup(getProject(), VERTX_GROUPID));
+        && (MavenUtil.hasPlugin(getProject(), VERTX_MAVEN_PLUGIN_GROUP, VERTX_MAVEN_PLUGIN_ARTIFACT)
+        || MavenUtil.hasDependency(getProject(), VERTX_GROUPID, null));
   }
 
   @Override
   protected List<String> getExtraJavaOptions() {
     List<String> opts = super.getExtraJavaOptions();
     opts.add("-Dvertx.cacheDirBase=/tmp");
+
+    if (! contains("-Dvertx.disableDnsResolver=", opts)) {
+      opts.add("-Dvertx.disableDnsResolver=true");
+    }
+
+    if (MavenUtil.hasDependency(getProject(), VERTX_GROUPID, VERTX_DROPWIZARD)) {
+      opts.add("-Dvertx.metrics.options.enabled=true");
+      opts.add("-Dvertx.metrics.options.jmxEnabled=true");
+      opts.add("-Dvertx.metrics.options.jmxDomain=vertx");
+    }
+
+    if (! contains("-Djava.net.preferIPv4Stack", opts)  && MavenUtil.hasDependency(getProject(), VERTX_GROUPID, VERTX_INFINIPAN)) {
+      opts.add("-Djava.net.preferIPv4Stack=true");
+    }
+
     return opts;
+  }
+
+  @Override
+  protected Map<String, String> getEnv(boolean prePackagePhase) throws MojoExecutionException {
+    Map<String, String> map = super.getEnv(prePackagePhase);
+
+    String args = map.get("JAVA_ARGS");
+    if (args == null) {
+      args = "";
+    }
+
+    if (MavenUtil.hasResource(getProject(), CLUSTER_MANAGER_SPI)) {
+      if (! args.isEmpty()) {
+        args += " ";
+      }
+      args += "-cluster";
+    }
+
+    if (! args.isEmpty()) {
+      map.put("JAVA_ARGS", args);
+    }
+    return map;
+  }
+
+  private boolean contains(String prefix, List<String> opts) {
+    return opts.stream().anyMatch(val -> val.startsWith(prefix));
   }
 
   @Override
@@ -68,9 +120,8 @@ public class VertxGenerator extends JavaExecGenerator {
 
   private boolean isUsingFatJarPlugin() {
     MavenProject project = getProject();
-    Plugin shade = project.getPlugin(SHADE_PLUGIN_GA);
-    Plugin vertx = project.getPlugin(VERTX_MAVEN_PLUGIN_GA);
-    return shade != null || vertx != null;
+    return MavenUtil.hasPlugin(project, SHADE_PLUGIN_GROUP, SHADE_PLUGIN_ARTIFACT) ||
+           MavenUtil.hasPlugin(project, VERTX_MAVEN_PLUGIN_GROUP, VERTX_MAVEN_PLUGIN_ARTIFACT);
   }
 
   @Override

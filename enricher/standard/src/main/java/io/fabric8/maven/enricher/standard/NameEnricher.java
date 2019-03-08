@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.standard;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
@@ -22,15 +21,16 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ReplicationControllerFluent;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentFluent;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetFluent;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentFluent;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetFluent;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.utils.Strings;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Enricher for adding a "name" to the metadata to various objects we create.
@@ -43,7 +43,7 @@ import io.fabric8.utils.Strings;
  */
 public class NameEnricher extends BaseEnricher {
 
-    public NameEnricher(EnricherContext buildContext) {
+    public NameEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-name");
     }
 
@@ -53,14 +53,14 @@ public class NameEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(KubernetesListBuilder builder) {
-        final String defaultName = getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject()));
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
+        final String defaultName = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getSanitizedArtifactId()));
 
         builder.accept(new TypedVisitor<HasMetadata>() {
             @Override
             public void visit(HasMetadata resource) {
                 ObjectMeta metadata = getOrCreateMetadata(resource);
-                if (Strings.isNullOrBlank(metadata.getName())) {
+                if (StringUtils.isBlank(metadata.getName())) {
                     metadata.setName(defaultName);
                 }
             }
@@ -74,7 +74,7 @@ public class NameEnricher extends BaseEnricher {
                 if (metadata == null) {
                     resource.withNewMetadata().withName(defaultName).endMetadata();
                 } else {
-                    if (Strings.isNullOrBlank(metadata.getName())) {
+                    if (StringUtils.isBlank(metadata.getName())) {
                         metadata.withName(defaultName).endMetadata();
                     }
                 }
@@ -87,7 +87,7 @@ public class NameEnricher extends BaseEnricher {
                 if (metadata == null) {
                     resource.withNewMetadata().withName(defaultName).endMetadata();
                 } else {
-                    if (Strings.isNullOrBlank(metadata.getName())) {
+                    if (StringUtils.isBlank(metadata.getName())) {
                         metadata.withName(defaultName).endMetadata();
                     }
                 }
@@ -100,7 +100,7 @@ public class NameEnricher extends BaseEnricher {
                 if (metadata == null) {
                     resource.withNewMetadata().withName(defaultName).endMetadata();
                 } else {
-                    if (Strings.isNullOrBlank(metadata.getName())) {
+                    if (StringUtils.isBlank(metadata.getName())) {
                         metadata.withName(defaultName).endMetadata();
                     }
                 }

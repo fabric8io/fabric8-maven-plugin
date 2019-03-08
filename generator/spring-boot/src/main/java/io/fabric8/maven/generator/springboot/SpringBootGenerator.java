@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.generator.springboot;
 
 import java.io.File;
@@ -33,24 +32,23 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import com.google.common.base.Strings;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.core.util.SpringBootProperties;
+import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
+import io.fabric8.maven.generator.api.GeneratorMode;
 import io.fabric8.maven.generator.javaexec.FatJarDetector;
 import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
-
-import com.google.common.base.Strings;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
-import static io.fabric8.maven.core.util.SpringBootProperties.DEV_TOOLS_REMOTE_SECRET;
+import static io.fabric8.maven.core.util.SpringBootConfigurationHelper.DEV_TOOLS_REMOTE_SECRET;
 import static io.fabric8.maven.generator.springboot.SpringBootGenerator.Config.color;
 
 /**
@@ -59,11 +57,10 @@ import static io.fabric8.maven.generator.springboot.SpringBootGenerator.Config.c
  */
 public class SpringBootGenerator extends JavaExecGenerator {
 
-    private static final String SPRING_BOOT_MAVEN_PLUGIN_GA = "org.springframework.boot:spring-boot-maven-plugin";
     private static final String DEFAULT_SERVER_PORT = "8080";
 
     public enum Config implements Configs.Key {
-        color {{ d = "false"; }};
+        color {{ d = ""; }};
 
         public String def() { return d; } protected String d;
     }
@@ -75,12 +72,12 @@ public class SpringBootGenerator extends JavaExecGenerator {
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
         return shouldAddImageConfiguration(configs)
-               && MavenUtil.hasPlugin(getProject(), SPRING_BOOT_MAVEN_PLUGIN_GA);
+               && MavenUtil.hasPluginOfAnyGroupId(getProject(), SpringBootConfigurationHelper.SPRING_BOOT_MAVEN_PLUGIN_ARTIFACT_ID);
     }
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean isPrePackagePhase) throws MojoExecutionException {
-        if (getContext().isWatchMode()) {
+        if (getContext().getGeneratorMode() == GeneratorMode.WATCH) {
             ensureSpringDevToolSecretToken();
             if (!isPrePackagePhase ) {
                 addDevToolsFilesToFatJar(configs);
@@ -92,11 +89,11 @@ public class SpringBootGenerator extends JavaExecGenerator {
     @Override
     protected Map<String, String> getEnv(boolean prePackagePhase) throws MojoExecutionException {
         Map<String, String> res = super.getEnv(prePackagePhase);
-        if (getContext().isWatchMode()) {
+        if (getContext().getGeneratorMode() == GeneratorMode.WATCH) {
             // adding dev tools token to env variables to prevent override during recompile
-            String secret = SpringBootUtil.getSpringBootApplicationProperties(getProject()).getProperty(SpringBootProperties.DEV_TOOLS_REMOTE_SECRET);
+            String secret = SpringBootUtil.getSpringBootApplicationProperties(MavenUtil.getCompileClassLoader(getProject())).getProperty(SpringBootConfigurationHelper.DEV_TOOLS_REMOTE_SECRET);
             if (secret != null) {
-                res.put(SpringBootProperties.DEV_TOOLS_REMOTE_SECRET_ENV, secret);
+                res.put(SpringBootConfigurationHelper.DEV_TOOLS_REMOTE_SECRET_ENV, secret);
             }
         }
         return res;
@@ -105,8 +102,9 @@ public class SpringBootGenerator extends JavaExecGenerator {
     @Override
     protected List<String> getExtraJavaOptions() {
         List<String> opts = super.getExtraJavaOptions();
-        if (Boolean.parseBoolean(getConfig(color))) {
-            opts.add("-Dspring.output.ansi.enabled=" + getConfig(color));
+        final String configuredColor = getConfig(color);
+        if (configuredColor != null && !configuredColor.isEmpty()) {
+            opts.add("-Dspring.output.ansi.enabled=" + configuredColor);
         }
         return opts;
     }
@@ -122,8 +120,9 @@ public class SpringBootGenerator extends JavaExecGenerator {
     @Override
     protected List<String> extractPorts() {
         List<String> answer = new ArrayList<>();
-        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(this.getProject());
-        String port = properties.getProperty(SpringBootProperties.SERVER_PORT, DEFAULT_SERVER_PORT);
+        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(MavenUtil.getCompileClassLoader(this.getProject()));
+        SpringBootConfigurationHelper propertyHelper = new SpringBootConfigurationHelper(SpringBootUtil.getSpringBootVersion(getProject()));
+        String port = properties.getProperty(propertyHelper.getServerPortPropertyKey(), DEFAULT_SERVER_PORT);
         addPortIfValid(answer, getConfig(JavaExecGenerator.Config.webPort, port));
         addPortIfValid(answer, getConfig(JavaExecGenerator.Config.jolokiaPort));
         addPortIfValid(answer, getConfig(JavaExecGenerator.Config.prometheusPort));
@@ -133,10 +132,11 @@ public class SpringBootGenerator extends JavaExecGenerator {
     // =============================================================================
 
     private void ensureSpringDevToolSecretToken() throws MojoExecutionException {
-        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getProject());
+        Properties properties = SpringBootUtil.getSpringBootApplicationProperties(MavenUtil.getCompileClassLoader(getProject()));
         String remoteSecret = properties.getProperty(DEV_TOOLS_REMOTE_SECRET);
         if (Strings.isNullOrEmpty(remoteSecret)) {
             addSecretTokenToApplicationProperties();
+            throw new MojoExecutionException("No spring.devtools.remote.secret found in application.properties. Plugin has added it, please re-run goals");
         }
     }
 
@@ -249,12 +249,17 @@ public class SpringBootGenerator extends JavaExecGenerator {
 
         // We always add to application.properties, even when an application.yml exists, since both
         // files are evaluated by Spring Boot.
-        File file = new File(getProject().getBasedir(), "target/classes/application.properties");
+        appendSecretTokenToFile("target/classes/application.properties", newToken);
+        appendSecretTokenToFile("src/main/resources/application.properties", newToken);
+    }
+
+    private void appendSecretTokenToFile(String path, String token) throws MojoExecutionException {
+        File file = new File(getProject().getBasedir(), path);
         file.getParentFile().mkdirs();
         String text = String.format("%s" +
-                                    "# Remote secret added by fabric8-maven-plugin\n" +
-                                    "%s=%s\n",
-                                    file.exists() ? "\n" : "", DEV_TOOLS_REMOTE_SECRET, newToken);
+                        "# Remote secret added by fabric8-maven-plugin\n" +
+                        "%s=%s\n",
+                file.exists() ? "\n" : "", DEV_TOOLS_REMOTE_SECRET, token);
 
         try (FileWriter writer = new FileWriter(file, true)) {
             writer.append(text);
@@ -265,7 +270,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
 
     private boolean isSpringBootRepackage() {
         MavenProject project = getProject();
-        Plugin plugin = project.getPlugin(SPRING_BOOT_MAVEN_PLUGIN_GA);
+        Plugin plugin = MavenUtil.getPluginOfAnyGroupId(project, SpringBootConfigurationHelper.SPRING_BOOT_MAVEN_PLUGIN_ARTIFACT_ID);
         if (plugin != null) {
             Map<String, PluginExecution> executionsAsMap = plugin.getExecutionsAsMap();
             if (executionsAsMap != null) {
@@ -282,11 +287,8 @@ public class SpringBootGenerator extends JavaExecGenerator {
     }
 
     private File getSpringBootDevToolsJar() throws IOException {
-        String version = SpringBootUtil.getSpringBootDevToolsVersion(getProject());
-        if (version == null) {
-            throw new IllegalStateException("Unable to find the spring-boot version");
-        }
-        return getContext().getArtifactResolver().resolveArtifact(SpringBootProperties.SPRING_BOOT_GROUP_ID, SpringBootProperties.SPRING_BOOT_DEVTOOLS_ARTIFACT_ID, version, "jar");
+        String version = SpringBootUtil.getSpringBootDevToolsVersion(getProject()).orElseThrow(() -> new IllegalStateException("Unable to find the spring-boot version"));
+        return getContext().getArtifactResolver().resolveArtifact(SpringBootConfigurationHelper.SPRING_BOOT_GROUP_ID, SpringBootConfigurationHelper.SPRING_BOOT_DEVTOOLS_ARTIFACT_ID, version, "jar");
     }
 
 }

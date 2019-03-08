@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,36 +13,32 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.standard;
-
-import java.util.List;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.PodSpec;
-import io.fabric8.kubernetes.api.model.PodSpecBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentFluent;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSetBuilder;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSetFluent;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpec;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.maven.core.handler.DaemonSetHandler;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.handler.DeploymentHandler;
-import io.fabric8.maven.core.handler.HandlerHub;
-import io.fabric8.maven.core.handler.JobHandler;
-import io.fabric8.maven.core.handler.ReplicaSetHandler;
+import io.fabric8.maven.core.handler.DeploymentConfigHandler;
 import io.fabric8.maven.core.handler.ReplicationControllerHandler;
+import io.fabric8.maven.core.handler.ReplicaSetHandler;
 import io.fabric8.maven.core.handler.StatefulSetHandler;
+import io.fabric8.maven.core.handler.DaemonSetHandler;
+import io.fabric8.maven.core.handler.JobHandler;
+import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.utils.Lists;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Enrich with controller if not already present.
@@ -66,6 +62,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
         { "ReplicationController", "ReplicaSet", "Deployment", "DeploymentConfig", "StatefulSet", "DaemonSet", "Job" };
 
     private final DeploymentHandler deployHandler;
+    private final DeploymentConfigHandler deployConfigHandler;
     private final ReplicationControllerHandler rcHandler;
     private final ReplicaSetHandler rsHandler;
     private final StatefulSetHandler statefulSetHandler;
@@ -75,44 +72,52 @@ public class DefaultControllerEnricher extends BaseEnricher {
     // Available configuration keys
     private enum Config implements Configs.Key {
         name,
-        pullPolicy           {{ d = "IfNotPresent"; }},
-        type                 {{ d = "deployment"; }},
-        replicaCount         {{ d = "1"; }};
+        pullPolicy             {{ d = "IfNotPresent"; }},
+        type                   {{ d = "deployment"; }},
+        replicaCount           {{ d = "1"; }};
 
         public String def() { return d; } protected String d;
     }
 
-    public DefaultControllerEnricher(EnricherContext buildContext) {
+    public DefaultControllerEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-controller");
 
-        HandlerHub handlers = new HandlerHub(buildContext.getProject());
+        HandlerHub handlers = new HandlerHub(
+            getContext().getGav(), getContext().getConfiguration().getProperties());
         rcHandler = handlers.getReplicationControllerHandler();
         rsHandler = handlers.getReplicaSetHandler();
         deployHandler = handlers.getDeploymentHandler();
+        deployConfigHandler = handlers.getDeploymentConfigHandler();
         statefulSetHandler = handlers.getStatefulSetHandler();
         daemonSetHandler = handlers.getDaemonSetHandler();
         jobHandler = handlers.getJobHandler();
     }
 
     @Override
-    public void addMissingResources(KubernetesListBuilder builder) {
-        final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getProject()));
-        final ResourceConfig config = new ResourceConfig.Builder()
-                    .controllerName(name)
-                    .imagePullPolicy(getConfig(Config.pullPolicy))
-                    .withReplicas(Configs.asInt(getConfig(Config.replicaCount)))
-                    .build();
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
+        final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getSanitizedArtifactId()));
+        ResourceConfig xmlResourceConfig = getConfiguration().getResource().orElse(null);
+        ResourceConfig config = new ResourceConfig.Builder(xmlResourceConfig)
+                .controllerName(name)
+                .imagePullPolicy(getImagePullPolicy(xmlResourceConfig, getConfig(Config.pullPolicy)))
+                .withReplicas(getReplicaCount(xmlResourceConfig, Configs.asInt(getConfig(Config.replicaCount))))
+                .build();
 
-        final List<ImageConfiguration> images = getImages();
+        final List<ImageConfiguration> images = getImages().orElse(Collections.emptyList());
 
         // Check if at least a replica set is added. If not add a default one
         if (!KubernetesResourceUtil.checkForKind(builder, POD_CONTROLLER_KINDS)) {
             // At least one image must be present, otherwise the resulting config will be invalid
-            if (!Lists.isNullOrEmpty(images)) {
+            if (!images.isEmpty()) {
                 String type = getConfig(Config.type);
-                if ("deployment".equalsIgnoreCase(type)) {
-                    log.info("Adding a default Deployment");
-                    builder.addToDeploymentItems(deployHandler.getDeployment(config, images));
+                if ("deployment".equalsIgnoreCase(type) || "deploymentConfig".equalsIgnoreCase(type)) {
+                    if (platformMode == platformMode.kubernetes) {
+                        log.info("Adding a default Deployment");
+                        builder.addToDeploymentItems(deployHandler.getDeployment(config, images));
+                    } else {
+                        log.info("Adding a default DeploymentConfig");
+                        builder.addToDeploymentConfigItems(deployConfigHandler.getDeploymentConfig(config, images, getOpenshiftDeployTimeoutInSeconds(3600L), getImageChangeTriggerFlag(true), isAutomaticTriggerEnabled(true), platformMode));
+                    }
                 } else if ("statefulSet".equalsIgnoreCase(type)) {
                     log.info("Adding a default StatefulSet");
                     builder.addToStatefulSetItems(statefulSetHandler.getStatefulSet(config, images));
@@ -130,63 +135,31 @@ public class DefaultControllerEnricher extends BaseEnricher {
                     builder.addToJobItems(jobHandler.getJob(config, images));
                 }
             }
-        } else if (KubernetesResourceUtil.checkForKind(builder, "StatefulSet")) {
-            final StatefulSetSpec spec = statefulSetHandler.getStatefulSet(config, images).getSpec();
-            if (spec != null) {
-                builder.accept(new TypedVisitor<StatefulSetBuilder>() {
-                    @Override
-                    public void visit(StatefulSetBuilder statefulSetBuilder) {
-                        statefulSetBuilder.editOrNewSpec().editOrNewTemplate().editOrNewSpec().endSpec().endTemplate().endSpec();
-                        mergeStatefulSetSpec(statefulSetBuilder, spec);
-                    }
-                });
-
-                if (spec.getTemplate() != null && spec.getTemplate().getSpec() != null) {
-                    final PodSpec podSpec = spec.getTemplate().getSpec();
-                    builder.accept(new TypedVisitor<PodSpecBuilder>() {
-                        @Override
-                        public void visit(PodSpecBuilder builder) {
-                            KubernetesResourceUtil.mergePodSpec(builder, podSpec, name);
-                        }
-                    });
-                }
-            }
-        } else {
-            final DeploymentSpec spec = deployHandler.getDeployment(config, images).getSpec();
-            if (spec != null) {
-                builder.accept(new TypedVisitor<DeploymentBuilder>() {
-                    @Override
-                    public void visit(DeploymentBuilder deploymentBuilder) {
-                        deploymentBuilder.editOrNewSpec().editOrNewTemplate().editOrNewSpec().endSpec().endTemplate().endSpec();
-                        mergeDeploymentSpec(deploymentBuilder, spec);
-                    }
-                });
-
-                if (spec.getTemplate() != null && spec.getTemplate().getSpec() != null) {
-                    final PodSpec podSpec = spec.getTemplate().getSpec();
-                    builder.accept(new TypedVisitor<PodSpecBuilder>() {
-                        @Override
-                        public void visit(PodSpecBuilder builder) {
-                            KubernetesResourceUtil.mergePodSpec(builder, podSpec, name);
-                        }
-                    });
-                }
-            }
         }
     }
 
-    private void mergeDeploymentSpec(DeploymentBuilder builder, DeploymentSpec spec) {
-        DeploymentFluent.SpecNested<DeploymentBuilder> specBuilder = builder.editSpec();
-        KubernetesResourceUtil.mergeSimpleFields(specBuilder, spec);
-        specBuilder.endSpec();
-    }
+    @Override
+    public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) {
+        if(platformMode == PlatformMode.kubernetes) {
+            builder.accept(new TypedVisitor<DeploymentBuilder>() {
+                @Override
+                public void visit(DeploymentBuilder deploymentBuilder) {
+                    deploymentBuilder.editSpec().withReplicas(Integer.parseInt(getConfig(Config.replicaCount))).endSpec();
+                }
+            });
+        } else {
+            builder.accept(new TypedVisitor<DeploymentConfigBuilder>() {
+                @Override
+                public void visit(DeploymentConfigBuilder deploymentConfigBuilder) {
+                    deploymentConfigBuilder.editSpec().withReplicas(Integer.parseInt(getConfig(Config.replicaCount))).endSpec();
 
-    private void mergeStatefulSetSpec(StatefulSetBuilder builder, StatefulSetSpec spec) {
-        StatefulSetFluent.SpecNested<StatefulSetBuilder> specBuilder = builder.editSpec();
-        KubernetesResourceUtil.mergeSimpleFields(specBuilder, spec);
-        specBuilder.endSpec();
+                    if(isAutomaticTriggerEnabled(true)) {
+                        deploymentConfigBuilder.editSpec().addNewTrigger().withType("ConfigChange").endTrigger().endSpec();
+                    }
+                }
+            });
+        }
     }
-
 
     static {
         KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(String.class);
@@ -204,5 +177,59 @@ public class DefaultControllerEnricher extends BaseEnricher {
         KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(short.class);
         KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(char.class);
         KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(byte.class);
+    }
+
+    /**
+     * This method just makes sure that the replica count provided in XML config
+     * overrides the default option.
+     *
+     * @param xmlResourceConfig
+     * @param defaultValue
+     * @return
+     */
+    private int getReplicaCount(ResourceConfig xmlResourceConfig, int defaultValue) {
+        if(xmlResourceConfig != null) {
+                return xmlResourceConfig.getReplicas() > 0 ? xmlResourceConfig.getReplicas() : defaultValue;
+        }
+        return defaultValue;
+    }
+
+    /**
+     * This method overrides the ImagePullPolicy value by the value provided in
+     * XML config.
+     *
+     * @param resourceConfig
+     * @param defaultValue
+     * @return
+     */
+    private String getImagePullPolicy(ResourceConfig resourceConfig, String defaultValue) {
+        if(resourceConfig != null) {
+            return resourceConfig.getImagePullPolicy() != null ? resourceConfig.getImagePullPolicy() : defaultValue;
+        }
+        return defaultValue;
+    }
+
+    private Boolean isAutomaticTriggerEnabled(Boolean defaultValue) {
+        if(getContext().getProperty("fabric8.openshift.enableAutomaticTrigger") != null) {
+            return Boolean.parseBoolean(getContext().getProperty("fabric8.openshift.enableAutomaticTrigger").toString());
+        } else {
+            return defaultValue;
+        }
+    }
+
+    private Long getOpenshiftDeployTimeoutInSeconds(Long defaultValue) {
+        if (getContext().getProperty("fabric8.openshift.deployTimeoutSeconds") != null) {
+            return Long.parseLong(getContext().getProperty("fabric8.openshift.deployTimeoutSeconds").toString());
+        } else {
+            return defaultValue;
+        }
+    }
+
+    private Boolean getImageChangeTriggerFlag(Boolean defaultValue) {
+        if (getContext().getProperty("fabric8.openshift.imageChangeTriggers") != null) {
+            return Boolean.parseBoolean(getContext().getProperty("fabric8.openshift.imageChangeTriggers").toString());
+        } else {
+            return defaultValue;
+        }
     }
 }

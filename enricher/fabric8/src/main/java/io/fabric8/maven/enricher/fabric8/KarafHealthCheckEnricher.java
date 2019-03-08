@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,16 +13,15 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.fabric8;
 
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
-import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-
-import org.apache.maven.model.Plugin;
-import org.codehaus.plexus.util.xml.Xpp3Dom;
+import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Enriches Karaf containers with health check probes.
@@ -31,21 +30,29 @@ public class KarafHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
     private static final int DEFAULT_HEALTH_CHECK_PORT = 8181;
 
-    public KarafHealthCheckEnricher(EnricherContext buildContext) {
-        super(buildContext, "karaf-health-check");
+    public KarafHealthCheckEnricher(MavenEnricherContext buildContext) {
+        super(buildContext, "f8-healthcheck-karaf");
     }
 
+    private enum Config implements Configs.Key {
+        failureThreshold                    {{ d = "3"; }},
+        successThreshold                    {{ d = "1"; }};
+
+        protected String d;
+
+        public String def() {
+            return d;
+        }
+    }
 
     @Override
     protected Probe getReadinessProbe() {
-        Probe probe = discoverKarafProbe("/readiness-check", 10);
-        return probe;
+        return discoverKarafProbe("/readiness-check", 10);
     }
 
     @Override
     protected Probe getLivenessProbe() {
-        Probe probe = discoverKarafProbe("/health-check", 180);
-        return probe;
+        return discoverKarafProbe("/health-check", 180);
     }
 
     //
@@ -53,25 +60,58 @@ public class KarafHealthCheckEnricher extends AbstractHealthCheckEnricher {
     //
     private Probe discoverKarafProbe(String path, int initialDelay) {
 
-        for (Plugin plugin : this.getProject().getBuildPlugins()) {
-            if ("karaf-maven-plugin".equals(plugin.getArtifactId())) {
-                Xpp3Dom configuration = (Xpp3Dom) plugin.getConfiguration();
-                if (configuration == null)
-                    return null;
-                Xpp3Dom startupFeatures = configuration.getChild("startupFeatures");
-                if (startupFeatures == null)
-                    return null;
+        final Optional<Map<String, Object>> configurationValues = getContext().getConfiguration().getPluginConfiguration("maven", "karaf-maven-plugin");
 
-                for (Xpp3Dom feature : startupFeatures.getChildren("feature")) {
-                    if ("fabric8-karaf-checks".equals(feature.getValue())) {
-                        // TODO: handle the case where the user changes the default port
-                        return new ProbeBuilder().withNewHttpGet().
-                                withNewPort(DEFAULT_HEALTH_CHECK_PORT).withPath(path).endHttpGet().withInitialDelaySeconds(initialDelay).build();
+        if (!configurationValues.isPresent()) {
+            return null;
+        }
+        final Optional<Object> lookup = configurationValues.map(m -> m.get("startupFeatures"));
+
+        if (!lookup.isPresent()) {
+            return null;
+        }
+
+        Object startupFeatures = lookup.get();
+        if (!(startupFeatures instanceof Map)) {
+            throw new IllegalArgumentException(String.format("For element %s was expected a complex object but a simple object was found of type %s and value %s",
+                "startupFeatures", startupFeatures.getClass(), startupFeatures.toString()));
+        }
+
+        final Map<String, Object> startUpFeaturesObject = (Map<String, Object>) startupFeatures;
+        final Object feature = startUpFeaturesObject.get("feature");
+
+        if (feature != null) {
+
+            // It can be a single feature or a list of features
+
+            if (feature instanceof List) {
+                final List<String> features = (List<String>) feature;
+
+                for (String featureValue : features) {
+                    if ("fabric8-karaf-checks".equals(featureValue)) {
+                        return new ProbeBuilder().withNewHttpGet().withNewPort(DEFAULT_HEALTH_CHECK_PORT).withPath(path).endHttpGet()
+                                .withSuccessThreshold(getSuccessThreshold())
+                                .withFailureThreshold(getFailureThreshold())
+                                .withInitialDelaySeconds(initialDelay).build();
                     }
                 }
+            } else {
+
+                String featureValue = (String) feature;
+                if ("fabric8-karaf-checks".equals(featureValue)) {
+                    return new ProbeBuilder().withNewHttpGet().withNewPort(DEFAULT_HEALTH_CHECK_PORT).withPath(path).endHttpGet()
+                            .withSuccessThreshold(getSuccessThreshold())
+                            .withFailureThreshold(getFailureThreshold())
+                            .withInitialDelaySeconds(initialDelay).build();
+                }
             }
+
         }
+
         return null;
     }
 
+    protected int getFailureThreshold() { return Configs.asInteger(getConfig(Config.failureThreshold)); }
+
+    protected int getSuccessThreshold() { return Configs.asInteger(getConfig(Config.successThreshold)); }
 }

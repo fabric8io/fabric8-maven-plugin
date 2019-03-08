@@ -1,31 +1,23 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ * Copyright 2016 Red Hat, Inc.
+ *
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
  */
 package io.fabric8.maven.plugin.mojo;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.ServiceNames;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.maven.core.util.GoalFinder;
+import io.fabric8.maven.core.access.ClusterConfiguration;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.openshift.client.OpenShiftClient;
-import io.fabric8.openshift.client.OpenShiftNotAvailableException;
-import io.fabric8.utils.Strings;
-import io.fabric8.utils.URLUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -59,9 +51,8 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
     @Parameter(defaultValue = "${settings}", readonly = true)
     protected Settings settings;
 
-    // Used for determining which mojos are called during a run
-    @Component
-    protected GoalFinder goalFinder;
+    @Parameter
+    protected ClusterConfiguration access;
 
     protected Logger log;
 
@@ -92,42 +83,11 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
         return new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), "F8:" + prefix);
     }
 
-    protected OpenShiftClient getOpenShiftClientOrJenkinsShift(KubernetesClient kubernetes, String namespace) throws MojoExecutionException {
-        OpenShiftClient openShiftClient = getOpenShiftClientOrNull(kubernetes);
-        if (openShiftClient == null) {
-            String jenkinshiftUrl = getJenkinShiftUrl(kubernetes, namespace);
-            log.debug("Using jenkinshift URL: " + jenkinshiftUrl);
-            if (jenkinshiftUrl == null) {
-                throw new MojoExecutionException("Could not find the service `" + ServiceNames.JENKINSHIFT + "` im namespace `" + namespace + "` on this kubernetes cluster " + kubernetes.getMasterUrl());
-            }
-            return KubernetesHelper.createJenkinshiftOpenShiftClient(jenkinshiftUrl);
-        }
-        return openShiftClient;
+    protected ClusterConfiguration getClusterConfiguration() {
+        final ClusterConfiguration.Builder clusterConfigurationBuilder = new ClusterConfiguration.Builder(access);
+
+        return clusterConfigurationBuilder.from(System.getProperties())
+            .from(project.getProperties()).build();
     }
 
-    public static String getJenkinShiftUrl(KubernetesClient kubernetes, String namespace) {
-        String jenkinshiftUrl = KubernetesHelper.getServiceURL(kubernetes, ServiceNames.JENKINSHIFT, namespace, "http", true);
-        if (jenkinshiftUrl == null) {
-            // the jenkinsshift URL is not external so lets use the fabric8 console
-            String fabric8ConsoleURL = getFabric8ConsoleServiceUrl(kubernetes, namespace);
-            if (Strings.isNotBlank(fabric8ConsoleURL)) {
-                jenkinshiftUrl = URLUtils.pathJoin(fabric8ConsoleURL, "/k8s");
-            }
-        }
-        return jenkinshiftUrl;
-    }
-
-    private static String getFabric8ConsoleServiceUrl(KubernetesClient kubernetes, String namespace) {
-        return KubernetesHelper.getServiceURL(kubernetes, ServiceNames.FABRIC8_CONSOLE, namespace, "http", true);
-    }
-
-
-    protected OpenShiftClient getOpenShiftClientOrNull(KubernetesClient kubernetesClient) {
-        try {
-            return kubernetesClient.adapt(OpenShiftClient.class);
-        } catch (OpenShiftNotAvailableException e) {
-            // ignore
-        }
-        return null;
-    }
 }

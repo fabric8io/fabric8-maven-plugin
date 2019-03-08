@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,21 +13,20 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.access;
 
-import java.net.UnknownHostException;
-
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.client.*;
+import io.fabric8.kubernetes.client.Config;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
+import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftAPIGroups;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.fabric8.utils.Strings;
-
-import static io.fabric8.kubernetes.api.KubernetesHelper.DEFAULT_NAMESPACE;
+import java.net.UnknownHostException;
 
 /**
  * @author roland
@@ -35,25 +34,39 @@ import static io.fabric8.kubernetes.api.KubernetesHelper.DEFAULT_NAMESPACE;
  */
 public class ClusterAccess {
 
-    private String namespace;
+    private ClusterConfiguration clusterConfiguration;
 
-    public ClusterAccess(String namespace) {
-        this.namespace = namespace;
+    private KubernetesClient client;
 
-        if (Strings.isNullOrBlank(this.namespace)) {
-            this.namespace = KubernetesHelper.defaultNamespace();
+    public ClusterAccess(ClusterConfiguration clusterConfiguration) {
+        this.clusterConfiguration = clusterConfiguration;
+
+        if (this.clusterConfiguration == null) {
+            this.clusterConfiguration = new ClusterConfiguration.Builder().build();
         }
-        if (Strings.isNullOrBlank(this.namespace)) {
-            this.namespace = DEFAULT_NAMESPACE;
-        }
+
+        this.client = null;
     }
 
-    public KubernetesClient createDefaultClient(Logger log) {
+    @Deprecated
+    public ClusterAccess(String namespace) {
+        ClusterConfiguration.Builder clusterConfigurationBuilder = new ClusterConfiguration.Builder();
+        clusterConfigurationBuilder.namespace(namespace);
+        this.clusterConfiguration = clusterConfigurationBuilder.build();
+        this.client = null;
+    }
+
+    public ClusterAccess(ClusterConfiguration clusterConfiguration, KubernetesClient client) {
+        this.clusterConfiguration = clusterConfiguration;
+        this.client = client;
+    }
+
+    public <T extends KubernetesClient> T createDefaultClient(Logger log) {
         if (isOpenShift(log)) {
-            return createOpenShiftClient();
+            return (T) createOpenShiftClient();
         }
 
-        return createKubernetesClient();
+        return (T) createKubernetesClient();
     }
 
     public KubernetesClient createKubernetesClient() {
@@ -67,10 +80,11 @@ public class ClusterAccess {
     // ============================================================================
 
     private Config createDefaultConfig() {
-        return new ConfigBuilder().withNamespace(getNamespace()).build();
+        return this.clusterConfiguration.getConfig();
     }
+
     public String getNamespace() {
-        return namespace;
+        return this.clusterConfiguration.getNamespace();
     }
 
     /**
@@ -79,7 +93,16 @@ public class ClusterAccess {
      */
     public boolean isOpenShiftImageStream(Logger log) {
         if (isOpenShift(log)) {
-            OpenShiftClient openShiftClient = createOpenShiftClient();
+            OpenShiftClient openShiftClient = null;
+            if (this.client == null) {
+                openShiftClient = createOpenShiftClient();
+            } else if (this.client instanceof OpenShiftClient) {
+                openShiftClient = (OpenShiftClient) this.client;
+            } else if (this.client.isAdaptable(OpenShiftClient.class)) {
+                openShiftClient = client.adapt(OpenShiftClient.class);
+            } else {
+                return false;
+            }
             return openShiftClient.supportsOpenShiftAPIGroup(OpenShiftAPIGroups.IMAGE);
         }
         return false;
@@ -87,24 +110,26 @@ public class ClusterAccess {
 
     public boolean isOpenShift(Logger log) {
         try {
-            return KubernetesHelper.isOpenShift(createKubernetesClient());
+            return this.client == null ?
+                OpenshiftHelper.isOpenShift(createKubernetesClient()) :
+                OpenshiftHelper.isOpenShift(this.client);
         } catch (KubernetesClientException exp) {
             Throwable cause = exp.getCause();
             String prefix = cause instanceof UnknownHostException ? "Unknown host " : "";
             log.warn("Cannot access cluster for detecting mode: %s%s",
                      prefix,
                      cause != null ? cause.getMessage() : exp.getMessage());
-            return false;
         }
+        return false;
     }
 
-    public PlatformMode resolvePlatformMode(PlatformMode mode, Logger log) {
-        PlatformMode resolvedMode;
+    public RuntimeMode resolveRuntimeMode(RuntimeMode mode, Logger log) {
+        RuntimeMode resolvedMode;
         if (mode == null) {
-            mode = PlatformMode.DEFAULT;
+            mode = RuntimeMode.DEFAULT;
         }
         if (mode.isAuto()) {
-            resolvedMode = isOpenShiftImageStream(log) ? PlatformMode.openshift : PlatformMode.kubernetes;
+            resolvedMode = isOpenShiftImageStream(log) ? RuntimeMode.openshift : RuntimeMode.kubernetes;
         } else {
             resolvedMode = mode;
         }

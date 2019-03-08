@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -15,31 +15,42 @@
  */
 package io.fabric8.maven.core.service.openshift;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.client.dsl.*;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.base.BaseOperation;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.openshift.api.model.*;
+import io.fabric8.openshift.api.model.ImageStream;
+import io.fabric8.openshift.api.model.ImageStreamBuilder;
+import io.fabric8.openshift.api.model.NamedTagEventList;
+import io.fabric8.openshift.api.model.TagEvent;
 import io.fabric8.openshift.client.OpenShiftClient;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.yaml.snakeyaml.Yaml;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author roland
  * @since 16/01/17
  */
-@RunWith(JMockit.class)
 public class ImageStreamServiceTest {
 
     @Mocked
@@ -137,5 +148,33 @@ public class ImageStreamServiceTest {
             .addToTags(list)
             .endStatus()
             .build();
+    }
+
+    @Test
+    public void should_return_newer_tag() throws Exception {
+        // GIVEN
+        ImageStreamService service = new ImageStreamService(client, log);
+        TagEvent oldTag = new TagEvent("2018-03-09T03:27:05Z\n", null, null, null);
+        TagEvent latestTag = new TagEvent("2018-03-09T03:28:05Z\n", null, null, null);
+
+        // WHEN
+        TagEvent resultedTag = service.newerTag(oldTag, latestTag);
+
+        // THEN
+        Assert.assertEquals(latestTag, resultedTag);
+    }
+
+    @Test
+    public void should_return_first_tag() throws Exception {
+        // GIVEN
+        ImageStreamService service = new ImageStreamService(client, log);
+        TagEvent first = new TagEvent("2018-03-09T03:27:05Z\n", null, null, null);
+        TagEvent latestTag = null;
+
+        // WHEN
+        TagEvent resultedTag = service.newerTag(first, latestTag);
+
+        // THEN
+        Assert.assertEquals(first, resultedTag);
     }
 }

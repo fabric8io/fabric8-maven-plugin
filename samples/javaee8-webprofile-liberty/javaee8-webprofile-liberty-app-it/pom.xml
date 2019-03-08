@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright 2016 Red Hat, Inc.
+
+    Red Hat licenses this file to you under the Apache License, version
+    2.0 (the "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+    implied.  See the License for the specific language governing
+    permissions and limitations under the License.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.fabric8</groupId>
+    <artifactId>javaee8-webprofile-liberty-app-it</artifactId>
+    <version>4.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>Fabric8 Maven :: Sample :: JavaEE 8 WebProfile :: IT</name>
+
+    <parent>
+        <groupId>io.fabric8</groupId>
+        <artifactId>javaee8-webprofile-liberty</artifactId>
+        <version>4.0-SNAPSHOT</version>
+    </parent>
+
+    <properties>
+        <maven.compile.source>1.8</maven.compile.source>
+        <maven.compile.target>1.8</maven.compile.target>
+                        
+        <applicationArtifactId>javaee8-webprofile-liberty-app</applicationArtifactId>
+        <applicationContext>libertyapi</applicationContext>
+        <testServerHttpPort>9080</testServerHttpPort>
+        <testProxyHost>localhost</testProxyHost> <!-- if VirtualBox is used, specify the host as a system property: -DtestProxyHost=192.168.99.100 -->
+        <startPodPause>60000</startPodPause>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>javaee8-webprofile-liberty-app</artifactId>
+            <type>war</type>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.json</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+        
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>integration-test</phase>
+                        <id>integration-test</id>
+                        <goals>
+                            <goal>integration-test</goal>
+                        </goals>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <appserver.test.host>${testProxyHost}</appserver.test.host>
+                                <appserver.test.port>${testProxyHttpPort}</appserver.test.port>
+                                <application.context.root>${applicationContext}</application.context.root>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>verify-results</id>
+                        <goals>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <summaryFile>${project.build.directory}/test-reports/it/failsafe-summary.xml</summaryFile>
+                    <reportsDirectory>${project.build.directory}/test-reports/it</reportsDirectory>
+                </configuration>
+            </plugin>
+            <plugin>            
+                <groupId>io.fabric8</groupId>
+                <artifactId>fabric8-maven-plugin</artifactId>
+                <version>${fabric8.plugin.version}</version>
+                <configuration>
+                    <mode>kubernetes</mode>
+                    <namespace>${docker.user}</namespace>
+                    <images>
+                        <image>                                    
+                            <name>${docker.user}/${applicationArtifactId}:${project.version}</name>
+                            <watch>
+                                <interval>5000</interval>
+                            </watch>
+                        </image>
+                    </images>
+                    <enricher>
+                        <config>
+                            <!-- 
+                                expose the service externally by Kubernetes
+                            -->
+                            <fmp-service>
+                                <type>NodePort</type>
+                                <name>${applicationArtifactId}</name>
+                                <port>${testServerHttpPort}:${testServerHttpPort}</port> <!-- if the port was unset, the expose would be ignored -->
+                            </fmp-service>
+                        </config>
+                    </enricher>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>build-images</id>
+                        <goals>
+                            <goal>resource</goal>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>integration-test</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>apply</goal>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>post-integration-test</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>stop</goal>
+                            <goal>undeploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!-- how to get the dynamic bound nodePort for the container in the kubernetes cluster
+                     idea: https://stackoverflow.com/questions/13887436/maven-exec-bash-script-and-save-output-as-property
+                     kubectl must be declared in $PATH
+                -->
+                <groupId>org.codehaus.gmaven</groupId>
+                <artifactId>groovy-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>integration-test-get-proxy-port</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <configuration>
+                            <properties>
+                                <script>kubectl get service ${applicationArtifactId} -n ${docker.user} -o jsonpath="{.spec.ports[0].nodePort}"</script>
+                                <pause>${startPodPause}</pause>
+                            </properties>
+                            <source>
+                                def pause = properties.pause as Integer             
+                                def command = properties.script
+                                def process = command.execute()
+                                def outputStream = new StringBuffer()
+                                process.waitForProcessOutput(outputStream, System.err)
+                                def port = outputStream.toString().replace("\"", "").trim()
+                                println "testProxyHttpPort = " + port
+                                project.properties.testProxyHttpPort = port
+                                println "Unfortunately the fabric8:start command is a background command, so a pause is needed to let the Liberty profile start inside a docker container"
+                                Thread.sleep(pause)
+                            </source>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

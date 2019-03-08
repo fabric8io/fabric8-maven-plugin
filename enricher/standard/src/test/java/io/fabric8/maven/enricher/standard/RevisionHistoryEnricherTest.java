@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,35 +13,33 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.standard;
+
+import java.util.Collections;
+import java.util.TreeMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.core.util.ResourceUtil;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import java.util.Collections;
-import java.util.TreeMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-@RunWith(JMockit.class)
 public class RevisionHistoryEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     @Test
     public void testDefaultRevisionHistoryLimit() throws JsonProcessingException {
@@ -53,7 +51,7 @@ public class RevisionHistoryEnricherTest {
         RevisionHistoryEnricher enricher = new RevisionHistoryEnricher(context);
 
         // When
-        enricher.addMissingResources(builder);
+        enricher.create(PlatformMode.kubernetes, builder);
 
         // Then
         assertRevisionHistory(builder.build(), Configs.asInt(RevisionHistoryEnricher.Config.limit.def()));
@@ -65,7 +63,8 @@ public class RevisionHistoryEnricherTest {
         // Setup mock behaviour
         final String revisionNumber = "10";
         new Expectations() {{
-            context.getConfig(); result = prepareEnricherConfig(revisionNumber);
+            Configuration config = new Configuration.Builder().processorConfig(prepareEnricherConfig(revisionNumber)).build();
+            context.getConfiguration(); result = config;
         }};
 
         // Given
@@ -76,7 +75,7 @@ public class RevisionHistoryEnricherTest {
         RevisionHistoryEnricher enricher = new RevisionHistoryEnricher(context);
 
         // When
-        enricher.addMissingResources(builder);
+        enricher.create(PlatformMode.kubernetes, builder);
 
         // Then
         assertRevisionHistory(builder.build(), Integer.parseInt(revisionNumber));
@@ -99,7 +98,7 @@ public class RevisionHistoryEnricherTest {
     private void assertRevisionHistory(KubernetesList list, Integer revisionNumber) throws JsonProcessingException {
         assertEquals(list.getItems().size(),1);
 
-        String kubeJson = KubernetesResourceUtil.toJson(list.getItems().get(0));
+        String kubeJson = ResourceUtil.toJson(list.getItems().get(0));
         assertThat(kubeJson, JsonPathMatchers.isJson());
         assertThat(kubeJson, JsonPathMatchers.hasJsonPath("$.spec.revisionHistoryLimit", Matchers.equalTo(revisionNumber)));
     }

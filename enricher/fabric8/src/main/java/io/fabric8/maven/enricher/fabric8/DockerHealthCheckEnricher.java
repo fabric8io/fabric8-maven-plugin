@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -15,19 +15,19 @@
  */
 package io.fabric8.maven.enricher.fabric8;
 
-import java.util.List;
-
+import com.google.common.base.Objects;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ExecAction;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.HealthCheckConfiguration;
 import io.fabric8.maven.docker.config.HealthCheckMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.utils.Objects;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+
+import java.util.Collections;
+import java.util.List;
 
 import static io.fabric8.maven.enricher.api.util.GoTimeUtil.durationSeconds;
 
@@ -37,8 +37,8 @@ import static io.fabric8.maven.enricher.api.util.GoTimeUtil.durationSeconds;
  */
 public class DockerHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
-    public DockerHealthCheckEnricher(EnricherContext buildContext) {
-        super(buildContext, "docker-health-check");
+    public DockerHealthCheckEnricher(MavenEnricherContext buildContext) {
+        super(buildContext, "f8-healthcheck-docker");
     }
 
     @Override
@@ -86,14 +86,12 @@ public class DockerHealthCheckEnricher extends AbstractHealthCheckEnricher {
         if (containerName == null) {
             return null;
         }
-        List<ImageConfiguration> images = getImages();
-        if (images != null) {
-            for (ImageConfiguration image : images) {
-                String imageContainerName = KubernetesResourceUtil.extractContainerName(getProject(), image);
+        List<ImageConfiguration> images = getImages().orElse(Collections.emptyList());
+        for (ImageConfiguration image : images) {
+            String imageContainerName = KubernetesResourceUtil.extractContainerName(getContext().getGav(), image);
                 if (Objects.equal(containerName, imageContainerName)) {
                     return image;
                 }
-            }
         }
         return null;
     }

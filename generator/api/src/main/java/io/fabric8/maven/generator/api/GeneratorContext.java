@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,17 +13,13 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.generator.api;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.service.ArtifactResolverService;
-import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.docker.util.Logger;
-import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -32,16 +28,16 @@ import org.apache.maven.project.MavenProject;
  */
 public class GeneratorContext {
     private MavenProject project;
-    private MavenSession session;
-    private GoalFinder goalFinder;
     private ProcessorConfig config;
-    private String goalName;
     private Logger logger;
-    private PlatformMode mode;
+    private RuntimeMode runtimeMode;
     private OpenShiftBuildStrategy strategy;
+
     private boolean useProjectClasspath;
     private boolean prePackagePhase;
     private ArtifactResolverService artifactResolver;
+
+    private GeneratorMode generatorMode = GeneratorMode.BUILD;
 
     private GeneratorContext() {
     }
@@ -50,55 +46,29 @@ public class GeneratorContext {
         return project;
     }
 
-    public MavenSession getSession() {
-        return session;
-    }
-
-    public GoalFinder getGoalFinder() {
-        return goalFinder;
-    }
-
     public ProcessorConfig getConfig() {
         return config;
-    }
-
-    public String getGoalName() {
-        return goalName;
     }
 
     public Logger getLogger() {
         return logger;
     }
 
-    public PlatformMode getMode() {
-        return mode;
+    public RuntimeMode getRuntimeMode() {
+        return runtimeMode;
     }
 
     public OpenShiftBuildStrategy getStrategy() {
         return strategy;
     }
 
+
+    public GeneratorMode getGeneratorMode() {
+        return generatorMode;
+    }
+
     public ArtifactResolverService getArtifactResolver() {
         return artifactResolver;
-    }
-
-    /**
-     * Returns true if we are in watch mode
-     */
-    public boolean isWatchMode() throws MojoExecutionException {
-        return runningWithGoal("fabric8:watch-spring-boot", "fabric8:watch");
-    }
-
-    /**
-     * Returns true if maven is running with any of the given goals
-     */
-    public boolean runningWithGoal(String... goals) throws MojoExecutionException {
-        for (String goal : goals) {
-            if (goalFinder.runningWithGoal(project, session, goal)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public boolean isUseProjectClasspath() {
@@ -125,18 +95,8 @@ public class GeneratorContext {
             return this;
         }
 
-        public Builder session(MavenSession session) {
-            ctx.session = session;
-            return this;
-        }
-
-        public Builder goalFinder(GoalFinder goalFinder) {
-            ctx.goalFinder = goalFinder;
-            return this;
-        }
-
-        public Builder goalName(String goalName) {
-            ctx.goalName = goalName;
+        public Builder generatorMode(GeneratorMode generatorMode) {
+            ctx.generatorMode = generatorMode;
             return this;
         }
 
@@ -145,8 +105,8 @@ public class GeneratorContext {
             return this;
         }
 
-        public Builder mode(PlatformMode mode) {
-            ctx.mode = mode;
+        public Builder runtimeMode(RuntimeMode mode) {
+            ctx.runtimeMode = mode;
             return this;
         }
 

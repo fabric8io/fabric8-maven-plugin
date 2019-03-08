@@ -15,7 +15,7 @@ The base images chosen are:
 |===
 | | Docker Build | S2I Build
 
-| *Tomcaty*
+| *Tomcat*
 | `fabric8/tomcat-8`
 | ---
 
@@ -51,6 +51,10 @@ In addition to the  <<generator-options-common, common generator options>> this 
 | *user*
 | User and/or group under which the files should be added. The syntax of this options is descriped in <<config-image-build-assembly-user, Assembly Configuration>>.
 |
+
+| *path*
+| Context path with which the application can be reached by default
+| `/` (root context)
 
 | *cmd*
 | Command to use to start the container. By default the base images startup command is used.

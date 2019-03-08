@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.config;
 
 import java.util.List;
@@ -45,6 +44,9 @@ public class HelmConfig {
     @Parameter
     private List<HelmType> type;
 
+    @Parameter
+    private String chartExtension;
+
     public String getChart() {
         return chart;
     }
@@ -67,6 +69,10 @@ public class HelmConfig {
 
     public List<HelmType> getType() {
         return type;
+    }
+
+    public String getChartExtension() {
+        return chartExtension;
     }
 
     public enum HelmType {

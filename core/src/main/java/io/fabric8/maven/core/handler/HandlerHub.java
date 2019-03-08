@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,10 +13,11 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.handler;
 
-import org.apache.maven.project.MavenProject;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
+
+import java.util.Properties;
 
 /**
  * @author roland
@@ -28,17 +29,19 @@ public class HandlerHub {
     private final ReplicaSetHandler replicaSetHandler;
     private final ReplicationControllerHandler replicationControllerHandler;
     private final DeploymentHandler deploymentHandler;
+    private final DeploymentConfigHandler deploymentConfigHandler;
     private final StatefulSetHandler statefulSetHandler;
     private final DaemonSetHandler daemonSetHandler;
     private final JobHandler jobHandler;
 
-    public HandlerHub(MavenProject project) {
+
+    public HandlerHub(GroupArtifactVersion groupArtifactVersion, Properties configuration) {
         ProbeHandler probeHandler = new ProbeHandler();
-        EnvVarHandler envVarHandler = new EnvVarHandler(project);
-        ContainerHandler containerHandler = new ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler containerHandler = new ContainerHandler(configuration, groupArtifactVersion, probeHandler);
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
         deploymentHandler = new DeploymentHandler(podTemplateHandler);
+        deploymentConfigHandler = new DeploymentConfigHandler(podTemplateHandler);
         replicaSetHandler = new ReplicaSetHandler(podTemplateHandler);
         replicationControllerHandler = new ReplicationControllerHandler(podTemplateHandler);
         serviceHandler = new ServiceHandler();
@@ -53,6 +56,10 @@ public class HandlerHub {
 
     public DeploymentHandler getDeploymentHandler() {
         return deploymentHandler;
+    }
+
+    public DeploymentConfigHandler getDeploymentConfigHandler() {
+        return deploymentConfigHandler;
     }
 
     public ReplicaSetHandler getReplicaSetHandler() {

@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,24 +13,22 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.generator.javaexec;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Properties;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 
@@ -38,7 +36,6 @@ import static org.junit.Assert.assertEquals;
  * @author roland
  * @since 22/09/16
  */
-@RunWith(JMockit.class)
 public class JavaRunGeneratorTest {
 
     @Mocked
@@ -53,18 +50,18 @@ public class JavaRunGeneratorTest {
     @Test
     public void fromSelector() throws IOException {
         Object[] data = {
-            "3.1.123", PlatformMode.kubernetes, null, "java.upstream.docker",
-            "3.1.redhat-101", PlatformMode.kubernetes, null, "java.redhat.docker",
-            "3.1.123", PlatformMode.openshift, OpenShiftBuildStrategy.docker, "java.upstream.docker",
-            "3.1.redhat-101", PlatformMode.openshift, OpenShiftBuildStrategy.docker, "java.redhat.docker",
-            "3.1.123", PlatformMode.openshift, OpenShiftBuildStrategy.s2i, "java.upstream.s2i",
-            "3.1.redhat-101", PlatformMode.openshift, OpenShiftBuildStrategy.s2i, "java.redhat.s2i",
+            "3.1.123", RuntimeMode.kubernetes, null, "java.upstream.docker",
+            "3.1.redhat-101", RuntimeMode.kubernetes, null, "java.redhat.docker",
+            "3.1.123", RuntimeMode.openshift, OpenShiftBuildStrategy.docker, "java.upstream.docker",
+            "3.1.redhat-101", RuntimeMode.openshift, OpenShiftBuildStrategy.docker, "java.redhat.docker",
+            "3.1.123", RuntimeMode.openshift, OpenShiftBuildStrategy.s2i, "java.upstream.s2i",
+            "3.1.redhat-101", RuntimeMode.openshift, OpenShiftBuildStrategy.s2i, "java.redhat.s2i",
         };
 
         Properties imageProps = getDefaultImageProps();
 
         for (int i = 0; i < data.length; i += 4) {
-            prepareExpectation((String) data[i], (PlatformMode) data[i+1], (OpenShiftBuildStrategy) data[i+2]);
+            prepareExpectation((String) data[i], (RuntimeMode) data[i+1], (OpenShiftBuildStrategy) data[i+2]);
             final GeneratorContext context = ctx;
             FromSelector selector = new FromSelector.Default(context, "java");
             String from = selector.getFrom();
@@ -72,12 +69,12 @@ public class JavaRunGeneratorTest {
         }
     }
 
-    private Expectations prepareExpectation(final String version, final PlatformMode mode, final OpenShiftBuildStrategy strategy) {
+    private Expectations prepareExpectation(final String version, final RuntimeMode mode, final OpenShiftBuildStrategy strategy) {
         return new Expectations() {{
             ctx.getProject(); result = project;
             project.getPlugin("io.fabric8:fabric8-maven-plugin"); result = plugin;
             plugin.getVersion(); result = version;
-            ctx.getMode(); result = mode;
+            ctx.getRuntimeMode();result = mode;
             ctx.getStrategy(); result = strategy;
         }};
     }

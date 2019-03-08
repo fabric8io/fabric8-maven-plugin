@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,40 +13,35 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.plugin.mojo.build;
 
-
+import io.fabric8.maven.core.access.ClusterConfiguration;
+import io.fabric8.maven.core.config.RuntimeMode;
+import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.BuildRecreateMode;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceHub;
-import io.fabric8.maven.core.util.GoalFinder;
-import io.fabric8.maven.core.util.Gofabric8Util;
-import io.fabric8.maven.core.util.OpenShiftDependencyResources;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.service.DockerAccessFactory;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.Task;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -106,15 +101,21 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
     private File resourceDir;
 
-    @Parameter(property = "fabric8.skip.build.pom", defaultValue = "true")
-    private boolean skipBuildPom;
+    /**
+     * Environment name where resources are placed. For example, if you set this property to dev and resourceDir is the default one, Fabric8 will look at src/main/fabric8/dev
+     */
+    @Parameter(property = "fabric8.environment")
+    private String environment;
+
+    @Parameter(property = "fabric8.skip.build.pom")
+    private Boolean skipBuildPom;
 
     /**
      * Whether to perform a Kubernetes build (i.e. against a vanilla Docker daemon) or
      * an OpenShift build (with a Docker build against the OpenShift API server.
      */
     @Parameter(property = "fabric8.mode")
-    private PlatformMode mode = PlatformMode.DEFAULT;
+    private RuntimeMode mode = RuntimeMode.DEFAULT;
 
     /**
      * OpenShift build mode when an OpenShift build is performed.
@@ -130,6 +131,30 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      */
     @Parameter(property = "fabric8.s2i.buildNameSuffix", defaultValue = "-s2i")
     private String s2iBuildNameSuffix;
+
+    /**
+     * The name of pullSecret to be used to pull the base image in case pulling from a private
+     * registry which requires authentication.
+     */
+    @Parameter(property = "fabric8.build.pullSecret", defaultValue = "pullsecret-fabric8")
+    private String openshiftPullSecret;
+
+    /**
+     * Allow the ImageStream used in the S2I binary build to be used in standard
+     * Kubernetes resources such as Deployment or StatefulSet.
+     */
+    @Parameter(property = "fabric8.s2i.imageStreamLookupPolicyLocal", defaultValue = "true")
+    private boolean s2iImageStreamLookupPolicyLocal = true;
+
+    /**
+     * While creating a BuildConfig, By default, if the builder image specified in the
+     * build configuration is available locally on the node, that image will be used.
+     *
+     * ForcePull to override the local image and refresh it from the registry to which the image stream points.
+     *
+     */
+    @Parameter(property = "fabric8.build.forcePull", defaultValue = "false")
+    private boolean forcePull = false;
 
     /**
      * Should we use the project's compile-time classpath to scan for additional enrichers/generators?
@@ -157,21 +182,17 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter(property = "fabric8.build.recreate", defaultValue = "none")
     private String buildRecreate;
 
-    /**
-     * Namespace to use when accessing Kubernetes or OpenShift
-     */
-    @Parameter(property = "fabric8.namespace")
-    private String namespace;
-
-    // Used for determining which mojos are called during a run
-    @Component
-    protected GoalFinder goalFinder;
+    @Parameter(property = "docker.skip.build", defaultValue = "false")
+    protected boolean skipBuild;
 
     @Component
     private MavenProjectHelper projectHelper;
 
     @Component
     protected RepositorySystem repositorySystem;
+
+    @Parameter
+    protected ClusterConfiguration access;
 
     // Access for creating OpenShift binary builds
     private ClusterAccess clusterAccess;
@@ -180,7 +201,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     Fabric8ServiceHub fabric8ServiceHub;
 
     // Mode which is resolved, also when 'auto' is set
-    private PlatformMode platformMode;
+    private RuntimeMode runtimeMode;
 
 
     @Override
@@ -188,47 +209,74 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         if (skip || skipBuild) {
             return;
         }
-        clusterAccess = new ClusterAccess(namespace);
+        clusterAccess = new ClusterAccess(getClusterConfiguration());
         // Platform mode is already used in executeInternal()
         super.execute();
     }
 
+    protected ClusterConfiguration getClusterConfiguration() {
+        final ClusterConfiguration.Builder clusterConfigurationBuilder = new ClusterConfiguration.Builder(access);
+
+        return clusterConfigurationBuilder.from(System.getProperties())
+            .from(project.getProperties()).build();
+    }
+
     @Override
     protected boolean isDockerAccessRequired() {
-        return platformMode == PlatformMode.kubernetes;
+        return runtimeMode == RuntimeMode.kubernetes;
     }
 
     @Override
-    protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-        if (project != null && skipBuildPom && Objects.equals("pom", project.getPackaging())) {
-            getLog().debug("Disabling docker build for pom packaging");
+    protected void executeInternal(ServiceHub hub) throws MojoExecutionException {
+        if (skipBuild) {
             return;
         }
-        if (getResolvedImages().size() == 0) {
-            log.warn("No image build configuration found or detected");
+
+        try {
+            if (shouldSkipBecauseOfPomPackaging()) {
+                getLog().info("Disabling docker build for pom packaging");
+                return;
+            }
+            if (getResolvedImages().size() == 0) {
+                log.warn("No image build configuration found or detected");
+            }
+
+            // Build the fabric8 service hub
+            fabric8ServiceHub = new Fabric8ServiceHub.Builder()
+                    .log(log)
+                    .clusterAccess(clusterAccess)
+                    .platformMode(mode)
+                    .dockerServiceHub(hub)
+                    .buildServiceConfig(getBuildServiceConfig())
+                    .repositorySystem(repositorySystem)
+                    .mavenProject(project)
+                    .build();
+
+            super.executeInternal(hub);
+
+            fabric8ServiceHub.getBuildService().postProcess(getBuildServiceConfig());
+        } catch(IOException e) {
+            throw new MojoExecutionException(e.getMessage());
         }
-
-        // Build the fabric8 service hub
-        fabric8ServiceHub = new Fabric8ServiceHub.Builder()
-                .log(log)
-                .clusterAccess(clusterAccess)
-                .platformMode(mode)
-                .dockerServiceHub(hub)
-                .buildServiceConfig(getBuildServiceConfig())
-                .repositorySystem(repositorySystem)
-                .mavenProject(project)
-                .build();
-
-        super.executeInternal(hub);
-
-        fabric8ServiceHub.getBuildService().postProcess(getBuildServiceConfig());
     }
 
-    @Override
-    protected DockerAccessFactory.DockerAccessContext getDockerAccessContext() {
-        return new DockerAccessFactory.DockerAccessContext.Builder(super.getDockerAccessContext())
-                .dockerHostProviders(Gofabric8Util.extractDockerHostProvider(log))
-                .build();
+    private boolean shouldSkipBecauseOfPomPackaging() {
+        if (!Objects.equals("pom", project.getPackaging())) {
+            // No pom packaging
+            return false;
+        }
+        if (skipBuildPom != null) {
+            // If configured take the config option
+            return skipBuildPom;
+        }
+
+        // Not specified: Skip if no image with build configured, otherwise don't skip
+        for (ImageConfiguration image : getResolvedImages()) {
+            if (image.getBuildConfiguration() != null) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -252,22 +300,20 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .dockerMojoParameters(createMojoParameters())
                 .buildRecreateMode(BuildRecreateMode.fromParameter(buildRecreate))
                 .openshiftBuildStrategy(buildStrategy)
+                .openshiftPullSecret(openshiftPullSecret)
                 .s2iBuildNameSuffix(s2iBuildNameSuffix)
+                .s2iImageStreamLookupPolicyLocal(s2iImageStreamLookupPolicyLocal)
+                .forcePullEnabled(forcePull)
+                .imagePullManager(getImagePullManager(imagePullPolicy, autoPull))
                 .buildDirectory(project.getBuild().getDirectory())
-                .attacher(new BuildService.BuildServiceConfig.Attacher() {
-                    @Override
-                    public void attach(String classifier, File destFile) {
+                .attacher((classifier, destFile) -> {
+                    if (destFile.exists()) {
                         projectHelper.attachArtifact(project, "yml", classifier, destFile);
-                    }
-                })
-                .enricherTask(new Task<KubernetesListBuilder>() {
-                    @Override
-                    public void execute(KubernetesListBuilder builder) throws Exception {
-                        new EnricherManager(resources, getEnricherContext()).enrich(builder);
                     }
                 })
                 .build();
     }
+
 
     /**
      * Customization hook called by the base plugin.
@@ -277,17 +323,18 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      */
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
-        platformMode = clusterAccess.resolvePlatformMode(mode, log);
-        if (platformMode == PlatformMode.openshift) {
+        runtimeMode = clusterAccess.resolveRuntimeMode(mode, log);
+        log.info("Running in [[B]]%s[[B]] mode", runtimeMode.getLabel());
+        if (runtimeMode == RuntimeMode.openshift) {
             log.info("Using [[B]]OpenShift[[B]] build with strategy [[B]]%s[[B]]", buildStrategy.getLabel());
         } else {
             log.info("Building Docker image in [[B]]Kubernetes[[B]] mode");
         }
 
-        if (platformMode.equals(PlatformMode.openshift)) {
+        if (runtimeMode.equals(PlatformMode.openshift)) {
             Properties properties = project.getProperties();
-            if (!properties.contains(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE)) {
-                properties.setProperty(PlatformMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, platformMode.toString());
+            if (!properties.contains(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE)) {
+                properties.setProperty(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, runtimeMode.toString());
             }
         }
 
@@ -310,11 +357,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         return new GeneratorContext.Builder()
                 .config(extractGeneratorConfig())
                 .project(project)
-                .session(session)
-                .goalFinder(goalFinder)
-                .goalName("fabric8:build")
                 .logger(log)
-                .mode(platformMode)
+                .runtimeMode(runtimeMode)
                 .strategy(buildStrategy)
                 .useProjectClasspath(useProjectClasspath)
                 .artifactResolver(getFabric8ServiceHub().getArtifactResolverService())
@@ -334,7 +378,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     // Get generator config
     private ProcessorConfig extractGeneratorConfig() {
         try {
-            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, resourceDir, generator);
+            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, ResourceDirCreator.getFinalResourceDir(resourceDir, environment), generator);
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot extract generator config: " + e,e);
         }
@@ -342,24 +386,21 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     // Get enricher context
     public EnricherContext getEnricherContext() {
-        return new EnricherContext.Builder()
+        return new MavenEnricherContext.Builder()
                 .project(project)
+                .properties(project.getProperties())
                 .session(session)
-                .goalFinder(goalFinder)
                 .config(extractEnricherConfig())
                 .images(getResolvedImages())
                 .resources(resources)
-                .namespace(resources != null && resources.getNamespace() != null ? resources.getNamespace() : namespace)
                 .log(log)
-                .openshiftDependencyResources(new OpenShiftDependencyResources(log))
-                .useProjectClasspath(useProjectClasspath)
                 .build();
     }
 
     // Get enricher config
     private ProcessorConfig extractEnricherConfig() {
         try {
-            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.ENRICHER_CONFIG, profile, resourceDir, enricher);
+            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.ENRICHER_CONFIG, profile, ResourceDirCreator.getFinalResourceDir(resourceDir, environment), enricher);
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot extract enricher config: " + e,e);
         }

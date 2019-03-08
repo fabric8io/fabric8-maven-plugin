@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.util;
 
 import java.io.IOException;
@@ -39,13 +38,14 @@ public class IoUtilTest {
         try (ServerSocket ss = new ServerSocket(port)) {
         }
         int port2 = IoUtil.getFreeRandomPort(port, 65535, 100);
-        try (ServerSocket ss = new ServerSocket(port)) {
+        try (ServerSocket ss = new ServerSocket(port2)) {
         }
         assertTrue(port2 > port);
     }
 
     @Test
     public void testSanitizeFileName() {
+        assertEquals(null, IoUtil.sanitizeFileName(null));
         assertEquals("Hello-World", IoUtil.sanitizeFileName("Hello/&%World"));
         assertEquals("-H-e-l-l-o-", IoUtil.sanitizeFileName(" _H-.-e-.-l-l--.//o()"));
         assertEquals("s2i-env-docker-io-fabric8-java-latest", IoUtil.sanitizeFileName("s2i-env-docker.io/fabric8/java:latest"));

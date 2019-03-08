@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.generator.api.support;
 
 import java.util.Collections;
@@ -22,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -32,7 +31,6 @@ import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.Generator;
 import io.fabric8.maven.generator.api.GeneratorConfig;
 import io.fabric8.maven.generator.api.GeneratorContext;
-
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
 
@@ -113,7 +111,7 @@ abstract public class BaseGenerator implements Generator {
      * @param builder for the build image configuration to add the from to.
      */
     protected void addFrom(BuildImageConfiguration.Builder builder) {
-        String fromMode = getConfigWithSystemFallbackAndDefault(Config.fromMode, "fabric8.generator.fromMode", getFromModeDefault(context.getMode()));
+        String fromMode = getConfigWithSystemFallbackAndDefault(Config.fromMode, "fabric8.generator.fromMode", getFromModeDefault(context.getRuntimeMode()));
         String from = getConfigWithSystemFallbackAndDefault(Config.from, "fabric8.generator.from", null);
         if ("docker".equalsIgnoreCase(fromMode)) {
             String fromImage = from;
@@ -156,8 +154,8 @@ abstract public class BaseGenerator implements Generator {
     }
 
     // Use "istag" as default for "redhat" versions of this plugin
-    private String getFromModeDefault(PlatformMode mode) {
-        if (mode == PlatformMode.openshift && fromSelector != null && fromSelector.isRedHat()) {
+    private String getFromModeDefault(RuntimeMode mode) {
+        if (mode == RuntimeMode.openshift && fromSelector != null && fromSelector.isRedHat()) {
             return "istag";
         } else {
             return "docker";
@@ -170,7 +168,11 @@ abstract public class BaseGenerator implements Generator {
      * @return Docker image name which is never null
      */
     protected String getImageName() {
-        return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", getDefaultImageUser());
+        if (RuntimeMode.isOpenShiftMode(getProject().getProperties())) {
+            return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", "%a:%l");
+        } else {
+            return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", "%g/%a:%l");
+        }
     }
 
     /**
@@ -180,19 +182,11 @@ abstract public class BaseGenerator implements Generator {
      * @return The docker registry if configured
      */
     protected String getRegistry() {
-        if (!PlatformMode.isOpenShiftMode(getProject().getProperties())) {
+        if (!RuntimeMode.isOpenShiftMode(getProject().getProperties())) {
             return getConfigWithSystemFallbackAndDefault(Config.registry, "fabric8.generator.registry", null);
         }
 
         return null;
-    }
-
-    private String getDefaultImageUser() {
-        if (PlatformMode.isOpenShiftMode(getProject().getProperties())) {
-            return "%a:%l";
-        } else {
-            return "%g/%a:%t";
-        }
     }
 
     /**

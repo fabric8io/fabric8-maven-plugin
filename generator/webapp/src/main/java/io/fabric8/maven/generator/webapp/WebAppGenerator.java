@@ -1,37 +1,36 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- * <p/>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * Copyright 2016 Red Hat, Inc.
+ *
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
  */
 package io.fabric8.maven.generator.webapp;
-
-import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
-import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.docker.config.AssemblyConfiguration;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.generator.api.GeneratorContext;
-import io.fabric8.maven.generator.api.support.BaseGenerator;
-import io.fabric8.maven.generator.webapp.handler.CustomAppServerHandler;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
+import io.fabric8.maven.core.config.RuntimeMode;
+import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.AssemblyConfiguration;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.generator.api.GeneratorContext;
+import io.fabric8.maven.generator.api.support.BaseGenerator;
+import io.fabric8.maven.generator.webapp.handler.CustomAppServerHandler;
 
 /**
  * A generator for WAR apps
@@ -53,6 +52,9 @@ public class WebAppGenerator extends BaseGenerator {
         // Command to execute. If null, the base image default command is used
         cmd,
 
+        // Context path under which the app will be available
+        path {{ d = "/"; }},
+
         // Ports to expose as a command separated list
         ports;
 
@@ -68,13 +70,14 @@ public class WebAppGenerator extends BaseGenerator {
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
         return shouldAddImageConfiguration(configs) &&
-               MavenUtil.hasPlugin(getProject(), "org.apache.maven.plugins:maven-war-plugin");
+               MavenUtil.hasPlugin(getProject(), "org.apache.maven.plugins", "maven-war-plugin");
     }
 
     @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean prePackagePhase) {
-        if (getContext().getMode() == PlatformMode.openshift &&
-            getContext().getStrategy() == OpenShiftBuildStrategy.s2i) {
+        if (getContext().getRuntimeMode() == RuntimeMode.openshift &&
+            getContext().getStrategy() == OpenShiftBuildStrategy.s2i &&
+            !prePackagePhase) {
             throw new IllegalArgumentException("S2I not yet supported for the webapp-generator. Use -Dfabric8.mode=kubernetes or " +
                                                "-Dfabric8.build.strategy=docker for OpenShift mode. Please refer to the reference manual at " +
                                                "https://maven.fabric8.io for details about build modes.");
@@ -90,7 +93,7 @@ public class WebAppGenerator extends BaseGenerator {
         BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
             .from(getFrom(handler))
             .ports(handler.exposedPorts())
-            .cmd(getDockerRunCommand(handler))
+            .cmd(new Arguments(getDockerRunCommand(handler)))
             .env(getEnv(handler));
         if (!prePackagePhase) {
             buildBuilder.assembly(createAssembly(handler));
@@ -130,6 +133,11 @@ public class WebAppGenerator extends BaseGenerator {
     }
 
     private AssemblyConfiguration createAssembly(AppServerHandler handler) {
+        String path = getConfig(Config.path);
+        if (path.equals("/")) {
+            path = "ROOT";
+        }
+        getProject().getProperties().setProperty("fabric8.generator.webapp.path",path);
         AssemblyConfiguration.Builder builder = new AssemblyConfiguration.Builder()
                 .targetDir(getDeploymentDir(handler))
                 .descriptorRef("webapp");

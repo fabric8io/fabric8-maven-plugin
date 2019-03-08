@@ -1,44 +1,45 @@
-/*
- *    Copyright (c) 2016 Red Hat, Inc.
+/**
+ * Copyright 2016 Red Hat, Inc.
  *
- *    Red Hat licenses this file to you under the Apache License, version
- *    2.0 (the "License"); you may not use this file except in compliance
- *    with the License.  You may obtain a copy of the License at
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- *    implied.  See the License for the specific language governing
- *    permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.standard;
 
-import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
+import java.util.Map;
+
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.apache.maven.model.Scm;
 import org.apache.maven.project.MavenProject;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import java.util.Map;
-
-import static junit.framework.TestCase.*;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertTrue;
 
 /**
  * @author kameshs
  */
-@RunWith(JMockit.class)
 public class MavenScmEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     @Test
     public void testMavenScmAll() {
@@ -62,18 +63,18 @@ public class MavenScmEnricherTest {
 
         MavenScmEnricher mavenScmEnricher = new MavenScmEnricher(context);
 
-        Map<String, String> scmAnnotations = mavenScmEnricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new DeploymentBuilder().withNewMetadata().withName("foo").endMetadata().build());
+
+        mavenScmEnricher.create(PlatformMode.kubernetes, builder);
+
+        Map<String, String> scmAnnotations = builder.buildFirstItem().getMetadata().getAnnotations();
         assertNotNull(scmAnnotations);
 
-        Assert.assertEquals(4, scmAnnotations.size());
-        assertEquals("scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git",
-                scmAnnotations.get(MavenScmEnricher.SCM_CONNECTION));
-        assertEquals("scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git",
-                scmAnnotations.get(MavenScmEnricher.SCM_DEVELOPER_CONNECTION));
+        Assert.assertEquals(2, scmAnnotations.size());
         assertEquals("HEAD",
-                scmAnnotations.get(MavenScmEnricher.SCM_TAG));
+                scmAnnotations.get(Fabric8Annotations.SCM_TAG.value()));
         assertEquals("git://github.com/fabric8io/fabric8-maven-plugin.git",
-                scmAnnotations.get(MavenScmEnricher.SCM_URL));
+                scmAnnotations.get(Fabric8Annotations.SCM_URL.value()));
 
     }
 
@@ -96,14 +97,16 @@ public class MavenScmEnricherTest {
 
         MavenScmEnricher mavenScmEnricher = new MavenScmEnricher(context);
 
-        Map<String, String> scmAnnotations = mavenScmEnricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new DeploymentBuilder().withNewMetadata().withName("foo").endMetadata().build());
+
+        mavenScmEnricher.create(PlatformMode.kubernetes, builder);
+
+        Map<String, String> scmAnnotations = builder.buildFirstItem().getMetadata().getAnnotations();
         assertNotNull(scmAnnotations);
 
-        Assert.assertEquals(2, scmAnnotations.size());
-        assertEquals("scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git",
-                scmAnnotations.get(MavenScmEnricher.SCM_CONNECTION));
+        Assert.assertEquals(1, scmAnnotations.size());
         assertEquals("HEAD",
-                scmAnnotations.get(MavenScmEnricher.SCM_TAG));
+                scmAnnotations.get(Fabric8Annotations.SCM_TAG.value()));
 
     }
 
@@ -126,14 +129,18 @@ public class MavenScmEnricherTest {
 
         MavenScmEnricher mavenScmEnricher = new MavenScmEnricher(context);
 
-        Map<String, String> scmAnnotations = mavenScmEnricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new DeploymentBuilder().withNewMetadata().withName("foo").endMetadata().build());
+
+        mavenScmEnricher.create(PlatformMode.kubernetes, builder);
+
+        Map<String, String> scmAnnotations = builder.buildFirstItem().getMetadata().getAnnotations();
         assertNotNull(scmAnnotations);
 
         Assert.assertEquals(2, scmAnnotations.size());
         assertEquals("git://github.com/fabric8io/fabric8-maven-plugin.git",
-                scmAnnotations.get(MavenScmEnricher.SCM_URL));
+                scmAnnotations.get(Fabric8Annotations.SCM_URL.value()));
         assertEquals("HEAD",
-                scmAnnotations.get(MavenScmEnricher.SCM_TAG));
+                scmAnnotations.get(Fabric8Annotations.SCM_TAG.value()));
 
     }
 
@@ -156,14 +163,16 @@ public class MavenScmEnricherTest {
 
         MavenScmEnricher mavenScmEnricher = new MavenScmEnricher(context);
 
-        Map<String, String> scmAnnotations = mavenScmEnricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new DeploymentBuilder().withNewMetadata().withName("foo").endMetadata().build());
+
+        mavenScmEnricher.create(PlatformMode.kubernetes, builder);
+
+        Map<String, String> scmAnnotations = builder.buildFirstItem().getMetadata().getAnnotations();
         assertNotNull(scmAnnotations);
 
-        Assert.assertEquals(2, scmAnnotations.size());
-        assertEquals("scm:git:git://github.com/fabric8io/fabric8-maven-plugin.git",
-                scmAnnotations.get(MavenScmEnricher.SCM_DEVELOPER_CONNECTION));
+        Assert.assertEquals(1, scmAnnotations.size());
         assertEquals("HEAD",
-                scmAnnotations.get(MavenScmEnricher.SCM_TAG));
+                scmAnnotations.get(Fabric8Annotations.SCM_TAG.value()));
 
     }
 
@@ -183,8 +192,12 @@ public class MavenScmEnricherTest {
 
         MavenScmEnricher mavenScmEnricher = new MavenScmEnricher(context);
 
-        Map<String, String> scmAnnotations = mavenScmEnricher.getAnnotations(Kind.DEPLOYMENT_CONFIG);
-        assertTrue(scmAnnotations.isEmpty());
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new DeploymentBuilder().withNewMetadata().withName("foo").endMetadata().build());
+
+        mavenScmEnricher.create(PlatformMode.kubernetes, builder);
+
+        Map<String, String> scmAnnotations = builder.buildFirstItem().getMetadata().getAnnotations();
+        assertNotNull(scmAnnotations);
 
     }
 

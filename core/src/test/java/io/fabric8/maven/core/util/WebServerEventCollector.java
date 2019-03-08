@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -15,17 +15,17 @@
  */
 package io.fabric8.maven.core.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
 import io.fabric8.mockwebserver.utils.ResponseProvider;
-
-import org.junit.Assert;
-
 import okhttp3.mockwebserver.RecordedRequest;
+import org.junit.Assert;
 
 /**
  * A utility class to record http request events.
@@ -35,6 +35,7 @@ public class WebServerEventCollector<C extends KubernetesMockServer> {
     private C mockServer;
 
     private Queue<String> events = new ConcurrentLinkedQueue<>();
+    private List<String> bodies = new ArrayList<>();
 
     public WebServerEventCollector(C mockServer) {
         this.mockServer = mockServer;
@@ -43,6 +44,11 @@ public class WebServerEventCollector<C extends KubernetesMockServer> {
     public C getMockServer() {
         return mockServer;
     }
+
+    public List<String> getBodies() {
+        return bodies;
+    }
+
 
     public void assertEventsRecorded(String... expectedEvents) {
         for (String exp : expectedEvents) {
@@ -96,6 +102,7 @@ public class WebServerEventCollector<C extends KubernetesMockServer> {
 
                 @Override
                 public Object getBody(RecordedRequest recordedRequest) {
+                    WebServerEventCollector.this.bodies.add(recordedRequest.getBody().readUtf8());
                     WebServerEventCollector.this.events.add(event);
                     return body;
                 }

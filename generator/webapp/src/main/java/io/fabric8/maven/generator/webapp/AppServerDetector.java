@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,17 +13,16 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.generator.webapp;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 import io.fabric8.maven.generator.webapp.handler.JettyAppSeverHandler;
 import io.fabric8.maven.generator.webapp.handler.TomcatAppSeverHandler;
 import io.fabric8.maven.generator.webapp.handler.WildFlyAppSeverHandler;
 import org.apache.maven.project.MavenProject;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * @author kameshs

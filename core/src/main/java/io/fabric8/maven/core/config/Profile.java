@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,11 +13,8 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.config;
 
-import java.util.Comparator;
-import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -39,6 +36,12 @@ public class Profile implements Comparable<Profile> {
      */
     @JsonProperty(value = "name")
     private String name;
+
+    /**
+     * Extends configuration
+     */
+    @JsonProperty(value = "extends")
+    private String parentProfile;
 
     /**
      * Enricher configurations
@@ -74,6 +77,7 @@ public class Profile implements Comparable<Profile> {
     public Profile(Profile profile) {
         this();
         this.name = profile.name;
+        this.parentProfile = profile.parentProfile;
         this.order = profile.order;
         this.enricherConfig = ProcessorConfig.cloneProcessorConfig(profile.enricherConfig);
         this.generatorConfig = ProcessorConfig.cloneProcessorConfig(profile.generatorConfig);
@@ -105,6 +109,8 @@ public class Profile implements Comparable<Profile> {
         return name;
     }
 
+    public String getParentProfile() { return parentProfile; }
+
     public ProcessorConfig getEnricherConfig() {
         return enricherConfig;
     }
@@ -116,6 +122,12 @@ public class Profile implements Comparable<Profile> {
     public ProcessorConfig getWatcherConfig() {
         return watcherConfig;
     }
+
+    public void setEnricherConfig(ProcessorConfig config) { this.enricherConfig = config; }
+
+    public void setGeneratorConfig(ProcessorConfig config) { this.generatorConfig = config; }
+
+    public void setWatcherConfig(ProcessorConfig config) { this.watcherConfig = config; }
 
     public int getOrder() {
         return order;

@@ -38,3 +38,22 @@ Effectively this builds your project then invokes these goals:
 * <<fabric8:build>>
 * <<fabric8:resource-apply>>
 
+By default the behaviour of resource goal is it generates `route.yml` for a service if you have not done any configuration changes. Sometimes there may be case when you want to generate route.yml but do not want to create route resource on OpenShift Cluster. This can be achieved by the following configuration.
+
+.Example for not generating route resource on your cluster
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+<plugin>
+    <groupId>io.fabric8</groupId>
+    <artifactId>fabric8-maven-plugin</artifactId>
+    <version>{version}</version>
+    <configuration>
+        <enricher>
+            <excludes>
+                <exclude>f8-expose</exclude>
+            </excludes>
+        </enricher>
+    </configuration>
+</plugin>
+----

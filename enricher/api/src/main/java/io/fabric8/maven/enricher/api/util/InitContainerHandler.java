@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,18 +13,13 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.api.util;
 
-import java.util.Map;
+import java.util.List;
 
-import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
-import io.fabric8.maven.core.util.JSONUtil;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.utils.Strings;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 /**
  * @author roland
@@ -44,17 +39,12 @@ public class InitContainerHandler {
         return getInitContainer(builder, name) != null;
     }
 
-    public JSONObject getInitContainer(PodTemplateSpecBuilder builder, String name) {
-        if (builder.hasMetadata()) {
-            String initContainerAnnotation = builder.buildMetadata().getAnnotations().get(INIT_CONTAINER_ANNOTATION);
-            if (Strings.isNotBlank(initContainerAnnotation)) {
-                JSONArray initContainers = new JSONArray(initContainerAnnotation);
-                for (int i = 0; i < initContainers.length(); i++) {
-                    JSONObject obj = initContainers.getJSONObject(i);
-                    String existingName = obj.getString("name");
-                    if (name.equals(existingName)) {
-                        return obj;
-                    }
+    public Container getInitContainer(PodTemplateSpecBuilder builder, String name) {
+        if (builder.hasSpec()) {
+            List<Container> initContainerList = builder.buildSpec().getInitContainers();
+            for(Container initContainer : initContainerList) {
+                if(initContainer.getName().equals(name)) {
+                    return initContainer;
                 }
             }
         }
@@ -62,38 +52,19 @@ public class InitContainerHandler {
     }
 
     public void removeInitContainer(PodTemplateSpecBuilder builder, String initContainerName) {
-        if (hasInitContainer(builder, initContainerName)) {
-            ObjectMeta meta = builder.buildMetadata();
-            Map<String, String> annos = meta.getAnnotations();
-            JSONArray newInitContainers = removeFromInitContainersJson(annos.get(INIT_CONTAINER_ANNOTATION), initContainerName);
-            if (newInitContainers.length() > 0) {
-                annos.put(INIT_CONTAINER_ANNOTATION, newInitContainers.toString());
-            } else {
-                annos.remove(INIT_CONTAINER_ANNOTATION);
-            }
-            meta.setAnnotations(annos);
+        Container initContainer = getInitContainer(builder, initContainerName);
+        if (initContainer != null) {
+            List<Container> initContainers = builder.buildSpec().getInitContainers();
+            initContainers.remove(initContainer);
+            builder.editSpec().withInitContainers(initContainers).endSpec();
         }
     }
 
-    private JSONArray removeFromInitContainersJson(String initContainersJson, String initContainerName) {
-        JSONArray newInitContainers = new JSONArray();
-        JSONArray initContainers = new JSONArray(initContainersJson);
-
-        for (int i = 0; i < initContainers.length(); i++) {
-            JSONObject obj = initContainers.getJSONObject(i);
-            String existingName = obj.getString("name");
-            if (!initContainerName.equals(existingName)) {
-                newInitContainers.put(obj);
-            }
-        }
-        return newInitContainers;
-    }
-
-    public void appendInitContainer(PodTemplateSpecBuilder builder, JSONObject initContainer) {
-        String name = initContainer.getString("name");
-        JSONObject existing = getInitContainer(builder, name);
+    public void appendInitContainer(PodTemplateSpecBuilder builder, Container initContainer) {
+        String name = initContainer.getName();
+        Container existing = getInitContainer(builder, name);
         if (existing != null) {
-            if (JSONUtil.equals(existing, initContainer)) {
+            if (existing.equals(initContainer)) {
                 log.warn("Trying to add init-container %s a second time. Ignoring ....", name);
                 return;
             } else {
@@ -103,16 +74,14 @@ public class InitContainerHandler {
                                   builder.build().getMetadata().getName(), name));
             }
         }
-        ensureMetadata(builder);
-        String initContainerAnnotation = builder.buildMetadata().getAnnotations().get(INIT_CONTAINER_ANNOTATION);
-        JSONArray initContainers = Strings.isNullOrBlank(initContainerAnnotation) ? new JSONArray() : new JSONArray(initContainerAnnotation);
-        initContainers.put(initContainer);
-        builder.editMetadata().addToAnnotations(INIT_CONTAINER_ANNOTATION, initContainers.toString()).endMetadata();
+
+        ensureSpec(builder);
+        builder.editSpec().addToInitContainers(initContainer).endSpec();
     }
 
-    private void ensureMetadata(PodTemplateSpecBuilder obj) {
-        if (obj.buildMetadata() == null) {
-            obj.withNewMetadata().endMetadata();
+    private void ensureSpec(PodTemplateSpecBuilder obj) {
+        if (obj.buildSpec() == null) {
+            obj.withNewSpec().endSpec();
         }
     }
 }

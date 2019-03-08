@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,24 +13,38 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.service.openshift;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
-import io.fabric8.maven.core.util.ResourceFileType;
+import io.fabric8.maven.core.util.ResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.openshift.api.model.*;
+import io.fabric8.openshift.api.model.ImageStream;
+import io.fabric8.openshift.api.model.ImageStreamBuilder;
+import io.fabric8.openshift.api.model.ImageStreamSpec;
+import io.fabric8.openshift.api.model.ImageStreamStatus;
+import io.fabric8.openshift.api.model.NamedTagEventList;
+import io.fabric8.openshift.api.model.TagEvent;
+import io.fabric8.openshift.api.model.TagReference;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.fabric8.utils.Strings;
-import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
@@ -42,6 +56,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 public class ImageStreamService {
 
 
+    public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
     private final OpenShiftClient client;
     private final Logger log;
 
@@ -63,7 +78,7 @@ public class ImageStreamService {
      * @param target file to store the image stream
      */
     public void appendImageStreamResource(ImageName imageName, File target) throws MojoExecutionException {
-        String tag = Strings.isNullOrBlank(imageName.getTag()) ? "latest" : imageName.getTag();
+        String tag = StringUtils.isBlank(imageName.getTag()) ? "latest" : imageName.getTag();
         try {
             ImageStream is = new ImageStreamBuilder()
                     .withNewMetadata()
@@ -79,8 +94,8 @@ public class ImageStreamService {
 
                     .build();
             createOrUpdateImageStreamTag(client, imageName, is);
-            File fullTargetFile = appendImageStreamToFile(is, target);
-            log.info("ImageStream %s written to %s", imageName.getSimpleName(), fullTargetFile);
+            appendImageStreamToFile(is, target);
+            log.info("ImageStream %s written to %s", imageName.getSimpleName(), target);
         } catch (KubernetesClientException e) {
             KubernetesResourceUtil.handleKubernetesClientException(e, this.log);
         } catch (IOException e) {
@@ -89,31 +104,14 @@ public class ImageStreamService {
         }
     }
 
-    private File appendImageStreamToFile(ImageStream is, File target) throws MojoExecutionException, IOException {
+    private void appendImageStreamToFile(ImageStream is, File target) throws MojoExecutionException, IOException {
 
         Map<String, ImageStream> imageStreams = readAlreadyExtractedImageStreams(target);
         // Override with given image stream
         imageStreams.put(is.getMetadata().getName(),is);
-
         KubernetesList isList =
             new KubernetesListBuilder().withItems(new ArrayList<HasMetadata>(imageStreams.values())).build();
-        return writeImageStreams(target, isList);
-    }
-
-    private File writeImageStreams(File target, KubernetesList entity) throws MojoExecutionException, IOException {
-        final File targetWithoutExt;
-        final ResourceFileType type;
-        String ext = "";
-        try {
-            ext = FilenameUtils.getExtension(target.getPath());
-            type = ResourceFileType.fromExtension(ext);
-            String p = target.getAbsolutePath();
-            targetWithoutExt = new File(p.substring(0,p.length() - ext.length() - 1));
-        } catch (IllegalArgumentException exp) {
-            throw new MojoExecutionException(
-                String.format("Invalid extension '%s' for ImageStream target file '%s'. Allowed extensions: yml, json", ext, target.getPath()), exp);
-        }
-        return KubernetesResourceUtil.writeResource(entity, targetWithoutExt, type);
+        ResourceUtil.save(target, isList);
     }
 
     private Map<String, ImageStream> readAlreadyExtractedImageStreams(File target) throws IOException {
@@ -184,6 +182,7 @@ public class ImageStreamService {
 
     private String findTagSha(OpenShiftClient client, String imageStreamName, String namespace) throws MojoExecutionException {
         ImageStream currentImageStream = null;
+
         for (int i = 0; i < IMAGE_STREAM_TAG_RETRIES; i++) {
             if (i > 0) {
                 log.info("Retrying to find tag on ImageStream %s", imageStreamName);
@@ -205,29 +204,62 @@ public class ImageStreamService {
             if (tags == null || tags.isEmpty()) {
                 continue;
             }
-            // latest tag is the first
+
+            // Iterate all imagestream tags and get the latest one by 'created' attribute
+            TagEvent latestTag = null;
+
             TAG_EVENT_LIST:
             for (NamedTagEventList list : tags) {
                 List<TagEvent> items = list.getItems();
-                if (items == null) {
+                if (items == null || items.isEmpty()) {
                     continue TAG_EVENT_LIST;
                 }
 
-                // latest item is the first
-                for (TagEvent item : items) {
-                    String image = item.getImage();
-                    if (Strings.isNotBlank(image)) {
-                        log.info("Found tag on ImageStream " + imageStreamName + " tag: " + image);
-                        return image;
-                    }
+                for (TagEvent tag : items) {
+                    latestTag = latestTag == null ? tag : newerTag(tag, latestTag);
                 }
             }
+
+            if (latestTag != null && StringUtils.isNotBlank(latestTag.getImage())) {
+                String image = latestTag.getImage();
+                log.info("Found tag on ImageStream " + imageStreamName + " tag: " + image);
+                return image;
+            }
         }
+
         // No image found, even after several retries:
         if (currentImageStream == null) {
             throw new MojoExecutionException("Could not find a current ImageStream with name " + imageStreamName + " in namespace " + namespace);
         } else {
             throw new MojoExecutionException("Could not find a tag in the ImageStream " + imageStreamName);
         }
+    }
+
+    public TagEvent newerTag(TagEvent tag1, TagEvent tag2) {
+        Date tag1Date = extractDate(tag1);
+        Date tag2Date = extractDate(tag2);
+
+        if(tag1Date == null) {
+            return tag2;
+        }
+
+        if(tag2Date == null) {
+            return tag1;
+        }
+
+        return tag1Date.compareTo(tag2Date) > 0 ? tag1 : tag2;
+    }
+
+    private Date extractDate(TagEvent tag) {
+        try {
+            return new SimpleDateFormat(DATE_FORMAT).parse(tag.getCreated());
+        } catch (ParseException e) {
+            log.error("parsing date error : " + e.getMessage(), e);
+            return null;
+        } catch (NullPointerException e) {
+            log.error("tag date is null : " + e.getMessage(), e);
+            return null;
+        }
+
     }
 }

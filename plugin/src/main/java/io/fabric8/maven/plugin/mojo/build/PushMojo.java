@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,24 +13,26 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.plugin.mojo.build;
 
 
+import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
 import java.io.File;
 import java.util.List;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.core.util.GoalFinder;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 
 /**
  * Uploads the built Docker images to a Docker registry
@@ -70,11 +72,17 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     private File resourceDir;
 
     /**
+     * Environment name where resources are placed. For example, if you set this property to dev and resourceDir is the default one, Fabric8 will look at src/main/fabric8/dev
+     */
+    @Parameter(property = "fabric8.environment")
+    private String environment;
+
+    /**
      * Whether to perform a Kubernetes build (i.e. agains a vanilla Docker daemon) or
      * an OpenShift build (with a Docker build against the OpenShift API server.
      */
     @Parameter(property = "fabric8.mode")
-    private PlatformMode mode = PlatformMode.auto;
+    private RuntimeMode mode = RuntimeMode.auto;
 
     /**
      * OpenShift build mode when an OpenShift build is performed.
@@ -84,9 +92,8 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     @Parameter(property = "fabric8.build.strategy" )
     private OpenShiftBuildStrategy buildStrategy = OpenShiftBuildStrategy.s2i;
 
-    // Used for determining which mojos are called during a run
-    @Component
-    protected GoalFinder goalFinder;
+    @Parameter(property = "docker.skip.push", defaultValue = "false")
+    protected boolean skipPush;
 
     @Override
     protected String getLogPrefix() {
@@ -95,7 +102,7 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        if (skip) {
+        if (skip || skipPush) {
             return;
         }
         super.execute();
@@ -111,15 +118,12 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs) {
         try {
             ProcessorConfig generatorConfig =
-                ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, resourceDir, generator);
+                ProfileUtil.blendProfileWithConfiguration(ProfileUtil.GENERATOR_CONFIG, profile, ResourceDirCreator.getFinalResourceDir(resourceDir, environment), generator);
             GeneratorContext ctx = new GeneratorContext.Builder()
                 .config(generatorConfig)
                 .project(project)
-                .session(session)
-                .goalFinder(goalFinder)
-                .goalName("fabric8:push")
                 .logger(log)
-                .mode(mode)
+                .runtimeMode(mode)
                 .strategy(buildStrategy)
                 .useProjectClasspath(false)
                 .build();

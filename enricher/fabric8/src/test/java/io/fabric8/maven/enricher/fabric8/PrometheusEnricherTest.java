@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -20,27 +20,26 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
-import io.fabric8.kubernetes.api.Annotations;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-@RunWith(JMockit.class)
 public class PrometheusEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
     @Mocked
     ImageConfiguration imageConfiguration;
 
@@ -69,15 +68,17 @@ public class PrometheusEnricherTest {
 
         // Setup mock behaviour
         new Expectations() {{
-            context.getConfig(); result = config;
+            context.getConfiguration(); result = new Configuration.Builder().processorConfig(config).build();
         }};
 
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new ServiceBuilder().withNewMetadata().withName("foo").endMetadata().build());
         PrometheusEnricher enricher = new PrometheusEnricher(context);
-        Map<String, String> annotations = enricher.getAnnotations(Kind.SERVICE);
+        enricher.create(PlatformMode.kubernetes, builder);
+        Map<String, String> annotations = builder.buildFirstItem().getMetadata().getAnnotations();
 
         assertEquals(2, annotations.size());
-        assertEquals("1234", annotations.get(Annotations.Management.PROMETHEUS_PORT));
-        assertEquals("true", annotations.get(Annotations.Management.PROMETHEUS_SCRAPE));
+        assertEquals("1234", annotations.get(PrometheusEnricher.ANNOTATION_PROMETHEUS_PORT));
+        assertEquals("true", annotations.get(PrometheusEnricher.ANNOTATION_PROMETHEUS_SCRAPE));
     }
 
     @Test
@@ -98,17 +99,23 @@ public class PrometheusEnricherTest {
 
         // Setup mock behaviour
         new Expectations() {{
-            context.getConfig(); result = config;
+            context.getConfiguration();
+            result = new Configuration.Builder()
+                .processorConfig(config)
+                .images(Arrays.asList(imageConfiguration))
+                .build();
+
             imageConfiguration.getBuildConfiguration(); result = imageConfig;
-            context.getImages(); result = Arrays.asList(imageConfiguration);
         }};
 
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new ServiceBuilder().withNewMetadata().withName("foo").endMetadata().build());
         PrometheusEnricher enricher = new PrometheusEnricher(context);
-        Map<String, String> annotations = enricher.getAnnotations(Kind.SERVICE);
+        enricher.create(PlatformMode.kubernetes, builder);
+        Map<String, String> annotations = builder.buildFirstItem().getMetadata().getAnnotations();
 
         assertEquals(2, annotations.size());
-        assertEquals("9779", annotations.get(Annotations.Management.PROMETHEUS_PORT));
-        assertEquals("true", annotations.get(Annotations.Management.PROMETHEUS_SCRAPE));
+        assertEquals("9779", annotations.get(PrometheusEnricher.ANNOTATION_PROMETHEUS_PORT));
+        assertEquals("true", annotations.get(PrometheusEnricher.ANNOTATION_PROMETHEUS_SCRAPE));
     }
 
     @Test
@@ -127,14 +134,20 @@ public class PrometheusEnricherTest {
 
         // Setup mock behaviour
         new Expectations() {{
-            context.getConfig(); result = config;
+            context.getConfiguration();
+            result = new Configuration.Builder()
+                .processorConfig(config)
+                .images(Arrays.asList(imageConfiguration))
+                .build();
+
             imageConfiguration.getBuildConfiguration(); result = imageConfig;
-            context.getImages(); result = Arrays.asList(imageConfiguration);
         }};
 
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new ServiceBuilder().withNewMetadata().withName("foo").endMetadata().build());
         PrometheusEnricher enricher = new PrometheusEnricher(context);
-        Map<String, String> annotations = enricher.getAnnotations(Kind.SERVICE);
+        enricher.create(PlatformMode.kubernetes, builder);
+        Map<String, String> annotations = builder.buildFirstItem().getMetadata().getAnnotations();
 
-        assertNull(annotations);
+        assertEquals(Collections.emptyMap(), annotations);
     }
 }

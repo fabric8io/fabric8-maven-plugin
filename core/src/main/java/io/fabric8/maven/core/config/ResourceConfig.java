@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,14 +13,13 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.config;
 
-import org.apache.maven.plugins.annotations.Parameter;
-
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
+import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland
@@ -36,7 +35,6 @@ public class ResourceConfig {
 
     @Parameter
     private MetaDataConfig annotations = new MetaDataConfig();
-    ;
 
     @Parameter
     private List<VolumeConfig> volumes;
@@ -49,6 +47,12 @@ public class ResourceConfig {
 
     @Parameter
     private List<ServiceConfig> services;
+
+    @Parameter
+    private List<String> remotes;
+
+    @Parameter
+    private ConfigMap configMap;
 
     @Parameter
     private ProbeConfig liveness;
@@ -75,15 +79,17 @@ public class ResourceConfig {
     @Parameter
     private int replicas = 1;
 
-    // Service account to use
+    @Parameter
+    private String namespace;
+
     @Parameter
     private String serviceAccount;
 
     @Parameter
-    private String namespace;
+    private List<ServiceAccountConfig> serviceAccounts;
 
-    public Map<String, String> getEnv() {
-        return env != null ? env : Collections.<String, String>emptyMap();
+    public Optional<Map<String, String>> getEnv() {
+        return Optional.ofNullable(env);
     }
 
     public MetaDataConfig getLabels() {
@@ -140,14 +146,51 @@ public class ResourceConfig {
         return serviceAccount;
     }
 
+    public List<ServiceAccountConfig> getServiceAccounts() {
+        return serviceAccounts;
+    }
+
     public String getNamespace() {
         return namespace;
+    }
+
+    public ConfigMap getConfigMap() {
+        return configMap;
+    }
+
+    public List<String> getRemotes() {
+        return remotes;
     }
 
     // =============================================================================================
 
     public static class Builder {
         private ResourceConfig config = new ResourceConfig();
+
+        public Builder() { }
+
+        public Builder(ResourceConfig config) {
+            if(config != null) {
+                this.config.env = config.getEnv().orElse(null);
+                this.config.controllerName = config.getControllerName();
+                this.config.imagePullPolicy = config.getImagePullPolicy();
+                this.config.replicas = config.getReplicas();
+                this.config.liveness = config.getLiveness();
+                this.config.readiness = config.getReadiness();
+                this.config.annotations = config.getAnnotations();
+                this.config.serviceAccount = config.getServiceAccount();
+                this.config.serviceAccounts = config.getServiceAccounts();
+                this.config.configMap = config.getConfigMap();
+                this.config.volumes = config.getVolumes();
+                this.config.labels = config.getLabels();
+                this.config.annotations = config.getAnnotations();
+                this.config.secrets = config.getSecrets();
+                this.config.services = config.getServices();
+                this.config.metrics = config.getMetrics();
+                this.config.namespace = config.getNamespace();
+                this.config.remotes = config.remotes;
+            }
+        }
 
         public Builder env(Map<String, String> env) {
             config.env = env;
@@ -166,6 +209,41 @@ public class ResourceConfig {
 
         public Builder withReplicas(int replicas) {
             config.replicas = replicas;
+            return this;
+        }
+
+        public Builder volumes(List<VolumeConfig> volumes) {
+            config.volumes = volumes;
+            return this;
+        }
+
+        public Builder withServiceAccount(String serviceAccount) {
+            config.serviceAccount = serviceAccount;
+            return this;
+        }
+
+        public Builder withServiceAccounts(List<ServiceAccountConfig> serviceAccounts) {
+            config.serviceAccounts = serviceAccounts;
+            return this;
+        }
+
+        public Builder withConfigMap(ConfigMap configMap) {
+            config.configMap = configMap;
+            return this;
+        }
+
+        public Builder withLiveness(ProbeConfig liveness) {
+            config.liveness = liveness;
+            return this;
+        }
+
+        public Builder withReadiness(ProbeConfig readiness) {
+            config.readiness = readiness;
+            return this;
+        }
+
+        public Builder withRemotes(List<String> remotes) {
+            config.remotes = remotes;
             return this;
         }
 

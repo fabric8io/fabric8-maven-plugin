@@ -1,11 +1,37 @@
+/**
+ * Copyright 2016 Red Hat, Inc.
+ *
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package io.fabric8.maven.enricher.fabric8;
 
+import java.util.Optional;
+import io.fabric8.kubernetes.api.model.HTTPHeader;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
-import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.kubernetes.api.model.ProbeFluent;
+import io.fabric8.maven.core.model.Configuration;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+
+import javax.annotation.Nullable;
+
 
 /**
  * Configures the health checks for a Vert.x project. Unlike other enricher this enricher extract the configuration from
@@ -23,187 +49,312 @@ import io.fabric8.maven.enricher.api.EnricherContext;
  */
 public class VertxHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
-    private static final String VERTX_MAVEN_PLUGIN_GA = "io.fabric8:vertx-maven-plugin";
-    private static final String VERTX_GROUPID = "io.vertx";
+    static final String VERTX_MAVEN_PLUGIN_GROUP = "io.reactiverse";
+    static final String VERTX_MAVEN_PLUGIN_ARTIFACT = "vertx-maven-plugin";
+    static final String VERTX_GROUPID = "io.vertx";
 
     private static final int DEFAULT_MANAGEMENT_PORT = 8080;
     private static final String SCHEME_HTTP = "HTTP";
 
-    private static final int READINESS_INITIAL_DELAY = 10;
-
-    private static final int LIVENESS_INITIAL_DELAY = 180;
-
-    /**
-     * The project property to configure the Vert.x health check scheme.
-     */
-    public static final String VERTX_HEALTH_SCHEME = "vertx.health.scheme";
-
-    /**
-     * The project property to configure the Vert.x health check path.
-     */
-    public static final String VERTX_HEALTH_PATH = "vertx.health.path";
-
-    /**
-     * The project property to configure the Vert.x readiness health check path.
-     */
-    public static final String VERTX_READINESS_HEALTH_PATH = "vertx.health.readiness.path";
-
-    /**
-     * The project property to configure the Vert.x health check port.
-     */
-    public static final String VERTX_HEALTH_PORT = "vertx.health.port";
-
-    // Available configuration keys
-    protected enum Config implements Configs.Key {
-
-        scheme {{
-            d = SCHEME_HTTP;
-        }},
-        port {{
-            d = Integer.toString(DEFAULT_MANAGEMENT_PORT);
-        }},
-        path {{
-            d = null;
-        }},
-        readiness {{
-            d = null;
-        }};
-
-        protected String d;
-
-        public String def() {
-            return d;
+    private static final String VERTX_HEALTH = "vertx.health.";
+    private static final Function<? super String, String> TRIM = new Function<String, String>() {
+        @Nullable
+        @Override
+        public String apply(@Nullable String input) {
+            return input == null ? null : input.trim();
         }
-    }
+    };
+    public static final String ERROR_MESSAGE = "Location of %s should return a String but found %s with value %s";
 
-    public VertxHealthCheckEnricher(EnricherContext buildContext) {
-        super(buildContext, "vertx-health-check");
+    public VertxHealthCheckEnricher(MavenEnricherContext buildContext) {
+        super(buildContext, "f8-healthcheck-vertx");
     }
 
     @Override
     protected Probe getReadinessProbe() {
-        return discoverVertxHealthCheck(READINESS_INITIAL_DELAY, true);
+        return discoverVertxHealthCheck(true);
     }
 
     @Override
     protected Probe getLivenessProbe() {
-        return discoverVertxHealthCheck(LIVENESS_INITIAL_DELAY, false);
+        return discoverVertxHealthCheck(false);
     }
 
     private boolean isApplicable() {
-        return MavenUtil.hasPlugin(getProject(), VERTX_MAVEN_PLUGIN_GA)
-               || MavenUtil.hasDependencyOnAnyArtifactOfGroup(getProject(), VERTX_GROUPID);
+        return getContext().hasPlugin(VERTX_MAVEN_PLUGIN_GROUP, VERTX_MAVEN_PLUGIN_ARTIFACT)
+               || getContext().hasDependency(VERTX_GROUPID, null);
     }
 
-    private Probe discoverVertxHealthCheck(int initialDelay, boolean readiness) {
+    private String getSpecificPropertyName(boolean readiness, String attribute) {
+        if (readiness) {
+            return VERTX_HEALTH + "readiness." + attribute;
+        } else {
+            return VERTX_HEALTH + "liveness." + attribute;
+        }
+    }
+
+    private Probe discoverVertxHealthCheck(boolean readiness) {
         if (!isApplicable()) {
             return null;
         }
+        // We don't allow to set the HOST, because it should rather be configured in the HTTP header (Host header)
+        // cf. https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/
 
-        int port = getPort();
+        String type = getStringValue("type", readiness).orElse("http").toUpperCase();
+        Optional<Integer> port = getIntegerValue("port", readiness);
+        Optional<String> portName = getStringValue("port-name", readiness);
+        String path = getStringValue("path", readiness)
+                .map(input -> {
+                    if (input.isEmpty() || input.startsWith("/")) {
+                        return input;
+                    }
+                    return "/" + input;
+                })
+                .orElse(null);
+        String scheme = getStringValue("scheme", readiness).orElse(SCHEME_HTTP).toUpperCase();
+        Optional<Integer> initialDelay = getIntegerValue("initial-delay", readiness);
+        Optional<Integer> period = getIntegerValue("period", readiness);
+        Optional<Integer> timeout = getIntegerValue("timeout", readiness);
+        Optional<Integer> successThreshold = getIntegerValue("success-threshold", readiness);
+        Optional<Integer> failureThreshold = getIntegerValue("failure-threshold", readiness);
+        List<String> command = getListValue("command", readiness).orElse(Collections.<String>emptyList());
+        Map<String, String> headers = getMapValue("headers", readiness).orElse(Collections.<String, String>emptyMap());
 
-        String path = null;
-        if (readiness) {
-            path = getReadinessPath();
-            if (path != null  && path.isEmpty()) {
-                // Disabled.
+
+        // Validate
+        // Port and port-name cannot be set at the same time
+        if (port.isPresent() && portName.isPresent()) {
+            log.error("Invalid health check configuration - both 'port' and 'port-name' are set, only one of them can be used");
+            throw new IllegalArgumentException("Invalid health check configuration - both 'port' and 'port-name' are set, only one of them can be used");
+        }
+
+        if (type.equalsIgnoreCase("TCP")) {
+            if (!port.isPresent() && !portName.isPresent()) {
+                log.info("TCP health check disabled (port not set)");
                 return null;
             }
-        }
-
-        if (path == null) {
-            path = getPath();
-        }
-
-        if (port <= 0  || path == null  || path.isEmpty()) {
-            // Health check disabled
-            return null;
-        }
-
-        String scheme = getScheme();
-
-        return new ProbeBuilder()
-                .withNewHttpGet()
-                .withScheme(scheme)
-                .withNewPort(port)
-                .withPath(path)
-                .endHttpGet()
-                .withInitialDelaySeconds(initialDelay).build();
-    }
-
-    private String getScheme() {
-        String scheme = getContext().getProject().getProperties()
-                .getProperty(VERTX_HEALTH_SCHEME);
-
-        if (scheme != null && !scheme.trim().isEmpty()) {
-            return scheme.trim();
-        }
-
-        return Configs.asString(getConfig(VertxHealthCheckEnricher.Config.scheme));
-    }
-
-    private int getPort() {
-        String portAsString = getContext().getProject().getProperties()
-                .getProperty(VERTX_HEALTH_PORT);
-
-        if (portAsString != null && !portAsString.trim().isEmpty()) {
-            try {
-                int port = Integer.valueOf(portAsString.trim());
-                if (port <= 0) {
-                    return -1;
-                } else {
-                    return port;
-                }
-            } catch (NumberFormatException e) {
-                // Invalid value, disable the check
-                log.warn("Invalid value for `" + VERTX_HEALTH_PORT + "` - integer expected, disabling health checks");
-                return -1;
+            if (port.isPresent() && port.get() <= 0) {
+                log.info("TCP health check disabled (port set to a negative number)");
+                return null;
             }
-        }
-        return Configs.asInt(getConfig(VertxHealthCheckEnricher.Config.port));
-    }
+        } else if (type.equalsIgnoreCase("EXEC")) {
+            if (command.isEmpty()) {
+                log.info("TCP health check disabled (command not set)");
+                return null;
+            }
+        } else if (type.equalsIgnoreCase("HTTP")) {
+            if (port.isPresent() && port.get() <= 0) {
+                log.info("HTTP health check disabled (port set to " + port.get());
+                return null;
+            }
 
-    private String processPath(String path) {
-        if (path != null) {
-            path = path.trim();
+            if (path == null) {
+                log.info("HTTP health check disabled (path not set)");
+                return null;
+            }
+
             if (path.isEmpty()) {
-                return "";
-            } else {
-                if (! path.startsWith("/")) {
-                    path = "/" + path;
+                log.info("HTTP health check disabled (the path is empty)");
+                return null;
+            }
+
+            // Set default port if not set
+            if (!port.isPresent() && !portName.isPresent()) {
+                log.info("Using default management port (8080) for HTTP health check probe");
+                port = Optional.of(DEFAULT_MANAGEMENT_PORT);
+            }
+
+        } else {
+            log.error("Invalid health check configuration - Unknown probe type, only 'exec', 'tcp' and 'http' (default) are supported");
+            throw new IllegalArgumentException("Invalid health check configuration - Unknown probe type, only 'exec', 'tcp' and 'http' (default) are supported");
+        }
+
+        // Time to build the probe
+        ProbeBuilder builder = new ProbeBuilder();
+        if (initialDelay.isPresent()) {
+            builder.withInitialDelaySeconds(initialDelay.get());
+        }
+        if (period.isPresent()) {
+            builder.withPeriodSeconds(period.get());
+        }
+        if (timeout.isPresent()) {
+            builder.withTimeoutSeconds(timeout.get());
+        }
+        if (successThreshold.isPresent()) {
+            builder.withSuccessThreshold(successThreshold.get());
+        }
+        if (failureThreshold.isPresent()) {
+            builder.withFailureThreshold(failureThreshold.get());
+        }
+
+        switch (type) {
+            case "HTTP":
+                ProbeFluent.HttpGetNested<ProbeBuilder> http = builder.withNewHttpGet()
+                        .withScheme(scheme)
+                        .withPath(path);
+                if (port.isPresent()) {
+                    http.withNewPort(port.get());
+                }
+                if (portName.isPresent()) {
+                    http.withNewPort(portName.get());
+                }
+                if (!headers.isEmpty()) {
+                    List<HTTPHeader> list = new ArrayList<>();
+                    for (Map.Entry<String, String> entry : headers.entrySet()) {
+                        list.add(new HTTPHeader(entry.getKey(), entry.getValue()));
+                    }
+                    http.withHttpHeaders(list);
+                }
+                http.endHttpGet();
+                break;
+            case "TCP":
+                ProbeFluent.TcpSocketNested<ProbeBuilder> tcp = builder.withNewTcpSocket();
+                if (port.isPresent()) {
+                    tcp.withNewPort(port.get());
+                }
+                if (portName.isPresent()) {
+                    tcp.withNewPort(portName.get());
+                }
+                tcp.endTcpSocket();
+                break;
+            case "EXEC":
+                builder.withNewExec().withCommand(command).endExec();
+        }
+
+        return builder.build();
+    }
+
+    private Optional<String> getStringValue(String attribute, boolean readiness) {
+
+        String specific = getSpecificPropertyName(readiness, attribute);
+        String generic = VERTX_HEALTH + attribute;
+        // Check if we have the specific user property.
+        Configuration contextConfig = getContext().getConfiguration();
+        String property = contextConfig.getProperty(specific);
+        if (property != null) {
+            return Optional.of(property).map(TRIM);
+        }
+
+        property = contextConfig.getProperty(generic);
+        if (property != null) {
+            return Optional.of(property).map(TRIM);
+        }
+
+
+        String[] specificPath = new String[]{
+                readiness ? "readiness" : "liveness",
+                attribute
+        };
+
+        Optional<String> config = getValueFromConfig(specificPath).map(TRIM);
+        if (!config.isPresent()) {
+            // Generic path.
+            return getValueFromConfig(attribute).map(TRIM);
+        } else {
+            return config;
+        }
+
+    }
+
+    private Optional<List<String>> getListValue(String attribute, boolean readiness) {
+        String[] path = new String[]{
+                readiness ? "readiness" : "liveness",
+                attribute
+        };
+
+        Optional<Object> element = getElement(path);
+        if (!element.isPresent()) {
+            element = getElement(attribute);
+        }
+
+        return element.map(input -> {
+            if (input instanceof Map) {
+                final Collection<Object> values = ((Map<String, Object>) input).values();
+                List<String> elements = new ArrayList<>();
+                for (Object value : values) {
+                    if (value instanceof List) {
+                        List<String> currentValues = (List<String>) value;
+                        elements.addAll(currentValues);
+                    } else {
+                        elements.add((String) value);
+                    }
                 }
 
-                return path;
+                return elements;
+            } else {
+                throw new IllegalArgumentException(String.format(
+                    ERROR_MESSAGE,
+                    attribute, input.getClass(), input.toString()));
             }
-        }
-        return null;
+
+        });
     }
 
-    private String getPath() {
-        String path = getContext().getProject().getProperties()
-                .getProperty(VERTX_HEALTH_PATH);
+    private Optional<Map<String, String>> getMapValue(String attribute, boolean readiness) {
+        String[] path = new String[]{
+                readiness ? "readiness" : "liveness",
+                attribute
+        };
 
-        path = processPath(path);
-        if (path != null) {
-            return path;
+        Optional<Object> element = getElement(path);
+        if (!element.isPresent()) {
+            element = getElement(attribute);
         }
 
-        path = Configs.asString(getConfig(VertxHealthCheckEnricher.Config.path));
-
-        return processPath(path);
+        return element.map(input -> {
+            if (input instanceof Map) {
+                return (Map<String, String>) input;
+            } else {
+                throw new IllegalArgumentException(String.format(
+                    ERROR_MESSAGE,
+                    attribute, input.getClass(), input.toString()));
+            }
+        });
     }
 
-    private String getReadinessPath() {
-        String path = getContext().getProject().getProperties()
-                .getProperty(VERTX_READINESS_HEALTH_PATH);
 
-        path = processPath(path);
-        if (path != null) {
-            return path;
+    private Optional<Integer> getIntegerValue(String attribute, boolean readiness) {
+        return getStringValue(attribute, readiness)
+                .map(Integer::parseInt);
+    }
+
+    private Optional<String> getValueFromConfig(String... keys) {
+        return getElement(keys).map(input -> {
+            if (input instanceof String) {
+                return (String) input;
+            } else {
+                throw new IllegalArgumentException(String.format(
+                    ERROR_MESSAGE,
+                Arrays.toString(keys), input.getClass(), input.toString()));
+            }
+        });
+    }
+
+    private Optional<Object> getElement(String... path) {
+        final Optional<Map<String, Object>> configuration = getContext().getConfiguration().getPluginConfiguration("maven", "io.fabric8:fabric8-maven-plugin");
+
+        if (!configuration.isPresent()) {
+            return Optional.empty();
         }
 
-        path = Configs.asString(getConfig(Config.readiness));
-        return processPath(path);
+
+        String[] roots = new String[]{"enricher", "config", "f8-healthcheck-vertx"};
+        List<String> absolute = new ArrayList<>();
+        absolute.addAll(Arrays.asList(roots));
+        absolute.addAll(Arrays.asList(path));
+        Object root = configuration.get();
+        for (String key : absolute) {
+
+            if (root instanceof Map) {
+                Map<String, Object> rootMap = (Map<String, Object>) root;
+                root = rootMap.get(key);
+                if (root == null) {
+                    return Optional.empty();
+                }
+            }
+
+        }
+        return Optional.of(root);
     }
 
 }
