@@ -29,6 +29,8 @@ import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
 import org.apache.commons.lang3.StringUtils;
 
+import static io.fabric8.maven.core.util.BuildLabelUtil.addSchemaLabels;
+
 public class KarafGenerator extends BaseGenerator {
 
     private static final String KARAF_MAVEN_PLUGIN_ARTIFACT_ID = "karaf-maven-plugin";
@@ -53,6 +55,7 @@ public class KarafGenerator extends BaseGenerator {
         BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder()
             .ports(extractPorts())
             .cmd(new Arguments(getConfig(Config.cmd)));
+        addSchemaLabels(buildBuilder, getContext().getProject(), log);
         addFrom(buildBuilder);
         if (!prePackagePhase) {
             buildBuilder.assembly(createAssembly());
