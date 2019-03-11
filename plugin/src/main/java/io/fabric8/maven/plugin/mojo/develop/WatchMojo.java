@@ -161,10 +161,15 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
             return;
         }
 
+        log = new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), getLogPrefix());
         clusterAccess = new ClusterAccess(getClusterConfiguration());
         kubernetes = clusterAccess.createDefaultClient(log);
 
-        super.execute();
+        if(clusterAccess.resolveRuntimeMode(mode, log).equals(RuntimeMode.kubernetes)) {
+            super.execute();
+        } else {
+            executeInternal(null);
+        }
     }
 
     protected ClusterConfiguration getClusterConfiguration() {
@@ -179,7 +184,9 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
 
     @Override
     protected synchronized void executeInternal(ServiceHub hub) throws MojoExecutionException {
-        this.hub = hub;
+        if(hub != null) {
+            this.hub = hub;
+        }
 
         URL masterUrl = kubernetes.getMasterUrl();
         KubernetesResourceUtil.validateKubernetesMasterUrl(masterUrl);
@@ -209,8 +216,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
     public WatcherContext getWatcherContext() throws MojoExecutionException {
         try {
             BuildService.BuildContext buildContext = getBuildContext();
-            WatchService.WatchContext watchContext = getWatchContext(hub);
-
+            WatchService.WatchContext watchContext = hub != null ? getWatchContext(hub) : null;
 
             return new WatcherContext.Builder()
                     .serviceHub(hub)
@@ -222,7 +228,6 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
                     .oldPodLogger(createLogger("[[R]][OLD][[R]] "))
                     .mode(mode)
                     .project(project)
-
                     .useProjectClasspath(useProjectClasspath)
                     .clusterConfiguration(getClusterConfiguration())
                     .kubernetesClient(kubernetes)

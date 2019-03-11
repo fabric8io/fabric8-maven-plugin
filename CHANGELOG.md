@@ -34,6 +34,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix NullPointerException in ClusterConfiguration during fabric8:watch
 * Feature 1498: Allow users to define secrets from annotations 
 * Feature 1498: Allow users to define secrets from annotations
+* Fix 1522: Remove need to initialize DockerAccess when on Openshift
 * Fix 1517: update vmp groupid and vert.x version
 
 ### 4.0.0-M2 (2018-12-14)
