@@ -37,7 +37,7 @@ items:
       app: fabric8-maven-sample-statefulset
       provider: fabric8
       group: io.fabric8
-- apiVersion: apps/v1beta1
+- apiVersion: apps/v1
   kind: StatefulSet
   metadata:
     labels:

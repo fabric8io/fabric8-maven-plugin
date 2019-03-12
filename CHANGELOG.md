@@ -35,6 +35,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Feature 1498: Allow users to define secrets from annotations 
 * Feature 1498: Allow users to define secrets from annotations
 * Fix 1522: Remove need to initialize DockerAccess when on Openshift
+* Fix 1570: Failure in applying Deployments using fabric8-maven-plugin
 * Fix 1517: update vmp groupid and vert.x version
 * Feature 456: Add labels from label-schema.org to the generator images.
 
