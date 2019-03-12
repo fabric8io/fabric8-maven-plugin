@@ -36,6 +36,8 @@ import org.apache.maven.plugins.assembly.model.DependencySet;
 import org.apache.maven.plugins.assembly.model.FileSet;
 import org.apache.maven.project.MavenProject;
 
+import static io.fabric8.maven.core.util.BuildLabelUtil.addSchemaLabels;
+
 /**
  * @author roland
  * @since 21/09/16
@@ -114,6 +116,8 @@ public class JavaExecGenerator extends BaseGenerator {
         BuildImageConfiguration.Builder buildBuilder = null;
         buildBuilder = new BuildImageConfiguration.Builder()
             .ports(extractPorts());
+
+        addSchemaLabels(buildBuilder, getContext().getProject(), log);
         addFrom(buildBuilder);
         if (!prePackagePhase) {
             // Only add assembly if not in a pre-package phase where the referenced files
