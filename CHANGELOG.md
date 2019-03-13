@@ -37,6 +37,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1522: Remove need to initialize DockerAccess when on Openshift
 * Fix 1570: Failure in applying Deployments using fabric8-maven-plugin
 * Fix 1517: update vmp groupid and vert.x version
+* Fix 1444: Option to Disable Liveness/readiness checks
 * Feature 456: Add labels from label-schema.org to the generator images.
 
 ### 4.0.0-M2 (2018-12-14)

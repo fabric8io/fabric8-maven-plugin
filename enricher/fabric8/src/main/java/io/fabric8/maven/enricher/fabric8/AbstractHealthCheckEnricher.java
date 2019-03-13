@@ -35,27 +35,28 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
 
     @Override
     public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
+        if(!checkIfhealthChecksDisabled(false)) {
+            builder.accept(new TypedVisitor<ContainerBuilder>() {
+                @Override
+                public void visit(ContainerBuilder container) {
+                    if (!container.hasReadinessProbe()) {
+                        Probe probe = getReadinessProbe(container);
+                        if (probe != null) {
+                            log.info("Adding readiness " + describe(probe));
+                            container.withReadinessProbe(probe);
+                        }
+                    }
 
-        builder.accept(new TypedVisitor<ContainerBuilder>() {
-            @Override
-            public void visit(ContainerBuilder container) {
-                if (!container.hasReadinessProbe()) {
-                    Probe probe = getReadinessProbe(container);
-                    if (probe != null) {
-                        log.info("Adding readiness " + describe(probe));
-                        container.withReadinessProbe(probe);
+                    if (!container.hasLivenessProbe()) {
+                        Probe probe = getLivenessProbe(container);
+                        if (probe != null) {
+                            log.info("Adding liveness " + describe(probe));
+                            container.withLivenessProbe(probe);
+                        }
                     }
                 }
-
-                if (!container.hasLivenessProbe()) {
-                    Probe probe = getLivenessProbe(container);
-                    if (probe != null) {
-                        log.info("Adding liveness " + describe(probe));
-                        container.withLivenessProbe(probe);
-                    }
-                }
-            }
-        });
+            });
+        }
     }
 
     private String describe(Probe probe) {
@@ -81,6 +82,14 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
             desc.append(" seconds");
         }
         return desc.toString();
+    }
+
+    protected Boolean checkIfhealthChecksDisabled(Boolean defaultValue) {
+        if(getContext().getProperty("fabric8.skipHealthCheck") != null) {
+            return Boolean.parseBoolean(getContext().getProperty("fabric8.skipHealthCheck").toString());
+        } else {
+            return defaultValue;
+        }
     }
 
     /**
