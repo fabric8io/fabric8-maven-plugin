@@ -105,7 +105,7 @@ public class KubernetesResourceUtil {
 
     public static final String API_VERSION = "v1";
     public static final String API_EXTENSIONS_VERSION = "extensions/v1beta1";
-    public static final String API_APPS_VERSION = "apps/v1beta1";
+    public static final String API_APPS_VERSION = "apps/v1";
     public static final String JOB_VERSION = "batch/v1";
     public static final String OPENSHIFT_V1_VERSION = "apps.openshift.io/v1";
     public static final ResourceVersioning DEFAULT_RESOURCE_VERSIONING = new ResourceVersioning()
@@ -249,9 +249,9 @@ public class KubernetesResourceUtil {
         addKind(fragment, kind, file.getName());
 
         String apiVersion = apiVersions.getCoreVersion();
-        if (Objects.equals(kind, "Deployment") || Objects.equals(kind, "Ingress")) {
+        if (Objects.equals(kind, "Ingress")) {
             apiVersion = apiVersions.getExtensionsVersion();
-        } else if (Objects.equals(kind, "StatefulSet")) {
+        } else if (Objects.equals(kind, "StatefulSet") || Objects.equals(kind, "Deployment")) {
             apiVersion = apiVersions.getAppsVersion();
         } else if (Objects.equals(kind, "Job")) {
             apiVersion = apiVersions.getJobVersion();
