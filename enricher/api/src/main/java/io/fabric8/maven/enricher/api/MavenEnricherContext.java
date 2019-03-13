@@ -142,7 +142,7 @@ public class MavenEnricherContext implements EnricherContext {
 
     @Override
     public Object getProperty(String key) {
-        return properties.getProperty(key);
+        return properties != null ? properties.getProperty(key) : null;
     }
 
     // ========================================================================
