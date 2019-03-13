@@ -14,6 +14,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Refactor 678: Enricher Workflow to allow direct generation of OpenShift objects.
 * Refactor 802: Remove resource object post processing.
 * Feature 729: Select custom resources depending on environment.
+* Feature 968: Improved support for sidecar containers with sidecar auto-detection and targeted health checks
 * Feature 601: Adds healthcheck for webapp
 * Fix 1460: Upgraded kubernetes client to 4.1.1
 * Fix 690: Removes deprecated _legacyPortMapping_ property.
@@ -58,6 +59,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 ### 3.5-SNAPSHOT
 * Fix 1390: Provides better exception message in case of invalid `application.yml` in Spring Boot
 * Fix 1382: Allow to provide additional fragment filename mappings
+* Fix 918: Sanitize Maven project names when artifactId starts with a number
 
 ### 4.0.0-M1 (2018-11-09)
 * Feature: Move to Java 1.8 as minimal requirement

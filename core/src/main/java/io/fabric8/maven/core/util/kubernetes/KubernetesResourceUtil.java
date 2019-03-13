@@ -653,12 +653,16 @@ public class KubernetesResourceUtil {
             if (containers == null || containers.isEmpty()) {
                 builder.addToContainers(defaultContainers.toArray(new Container[size]));
             } else {
-                int idx = 0;
                 for (Container defaultContainer : defaultContainers) {
-                    Container container;
-                    if (idx < containers.size()) {
-                        container = containers.get(idx);
-                    } else {
+                    Container container = null;
+                    for (Container fragmentContainer : containers) {
+                        if (fragmentContainer.getName() == null || fragmentContainer.getName().equals(defaultContainer.getName())) {
+                            container = fragmentContainer;
+                            break;
+                        }
+                    }
+
+                    if (container == null) {
                         container = new Container();
                         containers.add(container);
                     }
@@ -684,15 +688,16 @@ public class KubernetesResourceUtil {
                     if (container.getSecurityContext() == null) {
                         container.setSecurityContext(defaultContainer.getSecurityContext());
                     }
-                    idx++;
                 }
                 builder.withContainers(containers);
             }
         } else if (!containers.isEmpty()) {
             // lets default the container name if there's none specified in the custom yaml file
-            Container container = containers.get(0);
-            if (StringUtils.isBlank(container.getName())) {
-                container.setName(defaultName);
+                for (Container container : containers) {
+                if (StringUtils.isBlank(container.getName())) {
+                    container.setName(defaultName);
+                    break; // do it for one container only, but not necessarily the first one
+                }
             }
             builder.withContainers(containers);
         }
