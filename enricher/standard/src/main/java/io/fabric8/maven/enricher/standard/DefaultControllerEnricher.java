@@ -186,12 +186,12 @@ public class DefaultControllerEnricher extends BaseEnricher {
     }
 
     private void setProcessingInstruction(List<String> containerNames) {
-        Map<String, String> pi = new HashMap<>();
+        Map<String, String> processingInstructionsMap = new HashMap<>();
         if(enricherContext.getProcessingInstructions() != null) {
-            pi.putAll(enricherContext.getProcessingInstructions());
+            processingInstructionsMap.putAll(enricherContext.getProcessingInstructions());
         }
-        pi.put("FABRIC8_GENERATED_CONTAINERS", String.join(",", containerNames));
-        enricherContext.setProcessingInstructions(pi);
+        processingInstructionsMap.put("FABRIC8_GENERATED_CONTAINERS", String.join(",", containerNames));
+        enricherContext.setProcessingInstructions(processingInstructionsMap);
     }
 
     private List<String> getContainersFromPodSpec(PodTemplateSpec spec) {
