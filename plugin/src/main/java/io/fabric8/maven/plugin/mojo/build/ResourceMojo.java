@@ -225,6 +225,9 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     @Parameter(property = "fabric8.namespace")
     private String namespace;
 
+    @Parameter(property = "fabric8.skipHealthCheck", defaultValue = "false")
+    private Boolean skipHealthCheck;
+
     /**
      * The OpenShift deploy timeout in seconds:
      * See this issue for background of why for end users on slow wifi on their laptops
