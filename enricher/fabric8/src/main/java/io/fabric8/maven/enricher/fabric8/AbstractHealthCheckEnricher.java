@@ -21,24 +21,41 @@ import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.maven.enricher.api.EnricherContext;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Enriches containers with health check probes.
  */
 public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
 
-    public AbstractHealthCheckEnricher(MavenEnricherContext buildContext, String name) {
+    public static String ENRICH_CONTAINERS = "fabric8.enricher.basic.enrichContainers";
+
+    public static String ENRICH_ALL_CONTAINERS = "fabric8.enricher.basic.enrichAllContainers";
+
+    private enum Config implements Configs.Key {
+        enrichAllContainers {{ d = "false"; }},
+        enrichContainers    {{ d = null; }};
+
+        public String def() { return d; } protected String d;
+    }
+
+    public AbstractHealthCheckEnricher(EnricherContext buildContext, String name) {
         super(buildContext, name);
     }
 
     @Override
     public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
-
-        builder.accept(new TypedVisitor<ContainerBuilder>() {
-            @Override
-            public void visit(ContainerBuilder container) {
+        if(!checkIfhealthChecksDisabled(false)) {
+            for(ContainerBuilder container : getContainersToEnrich(builder)) {
                 if (!container.hasReadinessProbe()) {
                     Probe probe = getReadinessProbe(container);
                     if (probe != null) {
@@ -55,7 +72,7 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
                     }
                 }
             }
-        });
+        }
     }
 
     private String describe(Probe probe) {
@@ -81,6 +98,65 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
             desc.append(" seconds");
         }
         return desc.toString();
+    }
+
+    protected Boolean checkIfhealthChecksDisabled(Boolean defaultValue) {
+        if (getContext().getProperty("fabric8.skipHealthCheck") != null) {
+            return Boolean.parseBoolean(getContext().getProperty("fabric8.skipHealthCheck").toString());
+        } else {
+            return defaultValue;
+        }
+    }
+
+    private List<String> getFabric8GeneratedContainers() {
+        List<String> containers = new ArrayList<>();
+        if(enricherContext.getProcessingInstructions() != null) {
+            if(enricherContext.getProcessingInstructions().get("FABRIC8_GENERATED_CONTAINERS") != null) {
+                containers.addAll(Arrays.asList(enricherContext.getProcessingInstructions().get("FABRIC8_GENERATED_CONTAINERS").split(",")));
+            }
+        }
+        return containers;
+    }
+
+    protected List<ContainerBuilder> getContainersToEnrich(KubernetesListBuilder builder) {
+        final List<ContainerBuilder> containerBuilders = new LinkedList<>();
+        builder.accept(new TypedVisitor<ContainerBuilder>() {
+            @Override
+            public void visit(ContainerBuilder containerBuilder) {
+                containerBuilders.add(containerBuilder);
+            }
+        });
+
+        boolean enrichAllContainers = "true".equalsIgnoreCase(getConfig(Config.enrichAllContainers));
+        String enrichContainers = getConfig(Config.enrichContainers);
+        Set<String> containersToEnrich = new HashSet<>();
+        if (enrichContainers != null) {
+            containersToEnrich.addAll(Arrays.asList(enrichContainers.split(",")));
+        }
+
+        if (enrichAllContainers) {
+            return containerBuilders;
+        } else if (!containersToEnrich.isEmpty()) {
+            List<ContainerBuilder> filteredContainers = new LinkedList<>();
+            for (ContainerBuilder container : containerBuilders) {
+                if (container.hasName() && containersToEnrich.contains(container.getName())) {
+                    filteredContainers.add(container);
+                }
+            }
+            return filteredContainers;
+        } else if (containerBuilders.size() == 1) {
+            return containerBuilders;
+        } else {
+            // Multiple unfiltered containers, enrich only the generated ones
+            List<ContainerBuilder> generatedContainers = new LinkedList<>();
+            List<String> fabric8GeneratedContainers = getFabric8GeneratedContainers();
+            for (ContainerBuilder container : containerBuilders) {
+                if (container.hasName() && fabric8GeneratedContainers.contains(container.getName())) {
+                    generatedContainers.add(container);
+                }
+            }
+            return generatedContainers;
+        }
     }
 
     /**

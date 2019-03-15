@@ -17,6 +17,7 @@ package io.fabric8.maven.enricher.api;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.model.Dependency;
@@ -45,6 +46,11 @@ public interface EnricherContext {
      * @return configuration to use
      */
     Configuration getConfiguration();
+
+
+    Map<String, String> getProcessingInstructions();
+
+    void setProcessingInstructions(Map<String, String> instructions);
 
     /**
      * Base directory of the project. E.g. for Maven that's the directory

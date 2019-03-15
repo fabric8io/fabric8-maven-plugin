@@ -42,11 +42,11 @@ public class DeploymentConfigHandler {
     }
 
     public DeploymentConfig getDeploymentConfig(ResourceConfig config,
-                                                List<ImageConfiguration> images, Long openshiftDeployTimeoutSeconds, Boolean imageChangeTrigger, Boolean enableAutomaticTrigger, PlatformMode platformMode) {
+                                                List<ImageConfiguration> images, Long openshiftDeployTimeoutSeconds, Boolean imageChangeTrigger, Boolean enableAutomaticTrigger, Boolean isOpenshiftBuildStrategy) {
 
         DeploymentConfig deploymentConfig = new DeploymentConfigBuilder()
                 .withMetadata(createDeploymentConfigMetaData(config))
-                .withSpec(createDeploymentConfigSpec(config, images, openshiftDeployTimeoutSeconds, imageChangeTrigger, enableAutomaticTrigger, platformMode))
+                .withSpec(createDeploymentConfigSpec(config, images, openshiftDeployTimeoutSeconds, imageChangeTrigger, enableAutomaticTrigger, isOpenshiftBuildStrategy))
                 .build();
 
         return deploymentConfig;
@@ -60,7 +60,7 @@ public class DeploymentConfigHandler {
                 .build();
     }
 
-    private DeploymentConfigSpec createDeploymentConfigSpec(ResourceConfig config, List<ImageConfiguration> images, Long openshiftDeployTimeoutSeconds, Boolean imageChangeTrigger, Boolean enableAutomaticTrigger, PlatformMode platformMode) {
+    private DeploymentConfigSpec createDeploymentConfigSpec(ResourceConfig config, List<ImageConfiguration> images, Long openshiftDeployTimeoutSeconds, Boolean imageChangeTrigger, Boolean enableAutomaticTrigger, Boolean isOpenshiftBuildStrategy) {
         DeploymentConfigSpecBuilder specBuilder = new DeploymentConfigSpecBuilder();
 
         PodTemplateSpec podTemplateSpec = podTemplateHandler.getPodTemplate(config,images);
@@ -80,7 +80,7 @@ public class DeploymentConfigHandler {
         }
 
         // add a new image change trigger for the build stream
-        if (containerToImageMap.size() != 0 && imageChangeTrigger) {
+        if (containerToImageMap.size() != 0 && imageChangeTrigger && isOpenshiftBuildStrategy) {
             for (Map.Entry<String, String> entry : containerToImageMap.entrySet()) {
                 String containerName = entry.getKey();
                 ImageName image = new ImageName(entry.getValue());

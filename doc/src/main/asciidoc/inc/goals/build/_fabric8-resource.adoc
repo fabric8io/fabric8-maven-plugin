@@ -240,15 +240,29 @@ spec:
 
 In case both the label and the property have been set with conflicting values, precedence will be given to the property value, so if you set the label to `true` but set the property to `false` then no Route descriptor will be generated because precedence will be given to the property value.
 
-[[disable-automatic-deployments]]
-=== Disable Automatic Deployments
+[[Other-flags]]
+=== Other flags
 
-.Automatic Trigger Configuration
-[cols="1.6.1"]
+.Other options available with resource goal
+[cols="1.6.3"]
 |===
 | Configuration | Description | Default
 
 | *fabric8.openshift.enableAutomaticTrigger*
 | If the value is set to `false` then automatic deployments would be disabled.
 | `true`
+
+| *fabric8.skipHealthCheck*
+| If the value is set to `true` then no readiness/liveness checks would be added to any containers.
+| `false`
+
+| *fabric8.openshift.deployTimeoutSeconds*
+| The OpenShift deploy timeout in seconds.
+| 3600
+
+| *fabric8.openshift.imageChangeTrigger*
+| Add ImageChange triggers to DeploymentConfigs when on openshift.
+| `true`
 |===
+
+[[Other-flags]]

@@ -105,7 +105,7 @@ public class KubernetesResourceUtil {
 
     public static final String API_VERSION = "v1";
     public static final String API_EXTENSIONS_VERSION = "extensions/v1beta1";
-    public static final String API_APPS_VERSION = "apps/v1beta1";
+    public static final String API_APPS_VERSION = "apps/v1";
     public static final String JOB_VERSION = "batch/v1";
     public static final String OPENSHIFT_V1_VERSION = "apps.openshift.io/v1";
     public static final ResourceVersioning DEFAULT_RESOURCE_VERSIONING = new ResourceVersioning()
@@ -249,9 +249,9 @@ public class KubernetesResourceUtil {
         addKind(fragment, kind, file.getName());
 
         String apiVersion = apiVersions.getCoreVersion();
-        if (Objects.equals(kind, "Deployment") || Objects.equals(kind, "Ingress")) {
+        if (Objects.equals(kind, "Ingress")) {
             apiVersion = apiVersions.getExtensionsVersion();
-        } else if (Objects.equals(kind, "StatefulSet")) {
+        } else if (Objects.equals(kind, "StatefulSet") || Objects.equals(kind, "Deployment")) {
             apiVersion = apiVersions.getAppsVersion();
         } else if (Objects.equals(kind, "Job")) {
             apiVersion = apiVersions.getJobVersion();
@@ -653,12 +653,16 @@ public class KubernetesResourceUtil {
             if (containers == null || containers.isEmpty()) {
                 builder.addToContainers(defaultContainers.toArray(new Container[size]));
             } else {
-                int idx = 0;
                 for (Container defaultContainer : defaultContainers) {
-                    Container container;
-                    if (idx < containers.size()) {
-                        container = containers.get(idx);
-                    } else {
+                    Container container = null;
+                    for (Container fragmentContainer : containers) {
+                        if (fragmentContainer.getName() == null || fragmentContainer.getName().equals(defaultContainer.getName())) {
+                            container = fragmentContainer;
+                            break;
+                        }
+                    }
+
+                    if (container == null) {
                         container = new Container();
                         containers.add(container);
                     }
@@ -684,15 +688,16 @@ public class KubernetesResourceUtil {
                     if (container.getSecurityContext() == null) {
                         container.setSecurityContext(defaultContainer.getSecurityContext());
                     }
-                    idx++;
                 }
                 builder.withContainers(containers);
             }
         } else if (!containers.isEmpty()) {
             // lets default the container name if there's none specified in the custom yaml file
-            Container container = containers.get(0);
-            if (StringUtils.isBlank(container.getName())) {
-                container.setName(defaultName);
+                for (Container container : containers) {
+                if (StringUtils.isBlank(container.getName())) {
+                    container.setName(defaultName);
+                    break; // do it for one container only, but not necessarily the first one
+                }
             }
             builder.withContainers(containers);
         }
