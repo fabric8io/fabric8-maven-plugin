@@ -89,9 +89,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
      * Used to annotate a resource as being for a specific platform only such as "kubernetes" or "openshift"
      */
 
-    // THe key how we got the the docker maven plugin
-    private static final String DOCKER_MAVEN_PLUGIN_KEY = "io.fabric8:docker-maven-plugin";
-    private static final String DOCKER_IMAGE_USER = "docker.image.user";
     /**
      * The generated kubernetes and openshift manifests
      */
@@ -454,19 +451,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     }
 
     private void lateInit() {
-        ClusterAccess clusterAccess = new ClusterAccess(getClusterConfiguration());
-        runtimeMode = new ClusterAccess(getClusterConfiguration()).resolveRuntimeMode(runtimeMode, log);
-        if (runtimeMode.equals(RuntimeMode.openshift)) {
-            Properties properties = project.getProperties();
-            if (!properties.contains(DOCKER_IMAGE_USER)) {
-                String namespace = clusterAccess.getNamespace();
-                log.info("Using docker image name of namespace: " + namespace);
-                properties.setProperty(DOCKER_IMAGE_USER, namespace);
-            }
-            if (!properties.contains(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE)) {
-                properties.setProperty(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, runtimeMode.toString());
-            }
-        }
         handlerHub = new HandlerHub(
             new GroupArtifactVersion(project.getGroupId(), project.getArtifactId(), project.getVersion()),
             project.getProperties());

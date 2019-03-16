@@ -116,15 +116,11 @@ public class AutoTLSEnricherTest {
             final ProcessorConfig config = new ProcessorConfig(null, null,
                     Collections.singletonMap(AutoTLSEnricher.ENRICHER_NAME, configMap));
 
-            final Properties projectProps = new Properties();
-            projectProps.put(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, tc.mode.name());
-
             // Setup mock behaviour
             new Expectations() {
                 {
                     Configuration configuration =
                         new Configuration.Builder()
-                            .properties(projectProps)
                             .processorConfig(config)
                             .build();
                     context.getConfiguration();

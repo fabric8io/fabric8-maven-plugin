@@ -96,15 +96,4 @@ public abstract class BaseEnricher implements Enricher {
     protected EnricherContext getContext() {
         return enricherContext;
     }
-
-    /**
-     * Returns true if we are in OpenShift S2I binary building mode
-     */
-    protected boolean isOpenShiftMode() {
-        Properties properties = getContext().getConfiguration().getProperties();
-        if (properties != null) {
-            return RuntimeMode.isOpenShiftMode(properties);
-        }
-        return false;
-    }
 }

@@ -78,7 +78,7 @@ public class AutoTLSEnricher extends BaseEnricher {
 
     @Override
     public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
-        if (!isOpenShiftMode()) {
+        if (platformMode != PlatformMode.openshift) {
             return;
         }
 
@@ -136,7 +136,7 @@ public class AutoTLSEnricher extends BaseEnricher {
 
     @Override
     public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) {
-        if (!isOpenShiftMode()) {
+        if (platformMode != PlatformMode.openshift) {
             return;
         }
 

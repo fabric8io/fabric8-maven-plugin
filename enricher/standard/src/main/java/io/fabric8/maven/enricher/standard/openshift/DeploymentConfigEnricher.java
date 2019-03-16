@@ -54,10 +54,10 @@ public class DeploymentConfigEnricher extends BaseEnricher {
 
     @Override
     public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
-        if(platformMode == PlatformMode.openshift) {
-            for(HasMetadata item : builder.buildItems()) {
-                if(item instanceof Deployment) {
-                    DeploymentConfig deploymentConfig = convert(item, isOpenShiftMode());
+        if (platformMode == PlatformMode.openshift) {
+            for (HasMetadata item : builder.buildItems()) {
+                if (item instanceof Deployment) {
+                    DeploymentConfig deploymentConfig = convert(item);
                     removeItemFromBuilder(builder, item);
                     builder.addToDeploymentConfigItems(deploymentConfig);
                 }
@@ -76,7 +76,7 @@ public class DeploymentConfigEnricher extends BaseEnricher {
         builder.withItems(newListItems);
     }
 
-    private DeploymentConfig convert(HasMetadata item, Boolean isOpenshiftBuildStrategy) {
+    private DeploymentConfig convert(HasMetadata item) {
         Deployment resource = (Deployment) item;
         DeploymentConfigBuilder builder = new DeploymentConfigBuilder();
         builder.withMetadata(resource.getMetadata());
@@ -138,7 +138,7 @@ public class DeploymentConfigEnricher extends BaseEnricher {
 
             // add a new image change trigger for the build stream
             if (containerToImageMap.size() != 0) {
-                if(enableImageChangeTrigger && isOpenshiftBuildStrategy) {
+                if (enableImageChangeTrigger) {
                     for (Map.Entry<String, String> entry : containerToImageMap.entrySet()) {
                         String containerName = entry.getKey();
                         ImageName image = new ImageName(entry.getValue());

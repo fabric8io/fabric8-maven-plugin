@@ -128,7 +128,12 @@ public class DefaultControllerEnricher extends BaseEnricher {
                         setProcessingInstruction(getContainersFromPodSpec(deployment.getSpec().getTemplate()));
                     } else {
                         log.info("Adding a default DeploymentConfig");
-                        DeploymentConfig deploymentConfig = deployConfigHandler.getDeploymentConfig(config, images, getOpenshiftDeployTimeoutInSeconds(3600L), getImageChangeTriggerFlag(true), isAutomaticTriggerEnabled(true), isOpenShiftMode());
+                        DeploymentConfig deploymentConfig =
+                            deployConfigHandler.getDeploymentConfig(
+                                config, images,
+                                getOpenshiftDeployTimeoutInSeconds(3600L),
+                                getImageChangeTriggerFlag(true),
+                                isAutomaticTriggerEnabled(true));
                         builder.addToDeploymentConfigItems(deploymentConfig);
                         setProcessingInstruction(getContainersFromPodSpec(deploymentConfig.getSpec().getTemplate()));
                     }
