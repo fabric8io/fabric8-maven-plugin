@@ -68,6 +68,7 @@
   generator:
     # The order given in "includes" is the order in which generators are called
     includes:
+    - quarkus
     - spring-boot
     - wildfly-swarm
     - thorntail-v2
