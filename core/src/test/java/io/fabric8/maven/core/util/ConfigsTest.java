@@ -17,7 +17,6 @@ package io.fabric8.maven.core.util;
 
 import java.util.Properties;
 
-import mockit.Mocked;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
 
@@ -80,11 +79,11 @@ public class ConfigsTest {
 
     @Test
     public void getPropertyValueTest(){
-        properties.setProperty(KEY_1, value);        
+        properties.setProperty(KEY_1, value);
         System.setProperty(KEY_2, value);
 
-        assertEquals("value",Configs.getPropertyWithSystemAsFallback(properties, KEY_1));
-        assertEquals("value",Configs.getPropertyWithSystemAsFallback(properties, KEY_2));
-        assertEquals(null,Configs.getPropertyWithSystemAsFallback(properties,KEY_3));
+        assertEquals("value",Configs.getSystemPropertyWithMavenPropertyAsFallback(properties, KEY_1));
+        assertEquals("value",Configs.getSystemPropertyWithMavenPropertyAsFallback(properties, KEY_2));
+        assertEquals(null,Configs.getSystemPropertyWithMavenPropertyAsFallback(properties, KEY_3));
     }
 }

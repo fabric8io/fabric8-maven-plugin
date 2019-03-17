@@ -42,12 +42,9 @@ public class Configs {
 
     public static String asString(String value) { return value; }
 
-    public static String getPropertyWithSystemAsFallback(Properties properties, String key) {
-        String val = null;
-        if (properties != null) {
-            val = System.getProperty(key);
-        }
-        if (val == null) {
+    public static String getSystemPropertyWithMavenPropertyAsFallback(Properties properties, String key) {
+        String val = System.getProperty(key);
+        if (val == null && properties != null) {
             val = properties.getProperty(key);
         }
         return val;
