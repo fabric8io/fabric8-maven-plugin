@@ -61,7 +61,7 @@ public class WatcherConfig {
 
         if (val == null) {
             String fullKey = WATCHER_PROP_PREFIX + "." + name + "." + key;
-            val = Configs.getPropertyWithSystemAsFallback(projectProperties, fullKey);
+            val = Configs.getSystemPropertyWithMavenPropertyAsFallback(projectProperties, fullKey);
         }
         return val != null ? val : defaultVal;
     }
