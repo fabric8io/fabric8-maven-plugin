@@ -37,7 +37,7 @@ public class Configs {
     }
 
     public static boolean asBoolean(String value) {
-        return value != null ? Boolean.parseBoolean(value) : false;
+        return Boolean.parseBoolean(value);
     }
 
     public static String asString(String value) { return value; }
@@ -45,10 +45,10 @@ public class Configs {
     public static String getPropertyWithSystemAsFallback(Properties properties, String key) {
         String val = null;
         if (properties != null) {
-            val = properties.getProperty(key);
+            val = System.getProperty(key);
         }
         if (val == null) {
-            val = System.getProperty(key);
+            val = properties.getProperty(key);
         }
         return val;
     }
