@@ -128,7 +128,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
                         setProcessingInstruction(getContainersFromPodSpec(deployment.getSpec().getTemplate()));
                     } else {
                         log.info("Adding a default DeploymentConfig");
-                        DeploymentConfig deploymentConfig = deployConfigHandler.getDeploymentConfig(config, images, getOpenshiftDeployTimeoutInSeconds(3600L), getImageChangeTriggerFlag(true), isAutomaticTriggerEnabled(true), isOpenShiftMode());
+                        DeploymentConfig deploymentConfig = deployConfigHandler.getDeploymentConfig(config, images, getOpenshiftDeployTimeoutInSeconds(3600L), getImageChangeTriggerFlag(true), isAutomaticTriggerEnabled((MavenEnricherContext) enricherContext, true), isOpenShiftMode(), getFabric8GeneratedContainers());
                         builder.addToDeploymentConfigItems(deploymentConfig);
                         setProcessingInstruction(getContainersFromPodSpec(deploymentConfig.getSpec().getTemplate()));
                     }
@@ -177,7 +177,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
                 public void visit(DeploymentConfigBuilder deploymentConfigBuilder) {
                     deploymentConfigBuilder.editSpec().withReplicas(Integer.parseInt(getConfig(Config.replicaCount))).endSpec();
 
-                    if (isAutomaticTriggerEnabled(true)) {
+                    if (isAutomaticTriggerEnabled((MavenEnricherContext)enricherContext, true)) {
                         deploymentConfigBuilder.editSpec().addNewTrigger().withType("ConfigChange").endTrigger().endSpec();
                     }
                 }
@@ -248,25 +248,9 @@ public class DefaultControllerEnricher extends BaseEnricher {
         return defaultValue;
     }
 
-    private Boolean isAutomaticTriggerEnabled(Boolean defaultValue) {
-        if(getContext().getProperty("fabric8.openshift.enableAutomaticTrigger") != null) {
-            return Boolean.parseBoolean(getContext().getProperty("fabric8.openshift.enableAutomaticTrigger").toString());
-        } else {
-            return defaultValue;
-        }
-    }
-
     private Long getOpenshiftDeployTimeoutInSeconds(Long defaultValue) {
         if (getContext().getProperty("fabric8.openshift.deployTimeoutSeconds") != null) {
             return Long.parseLong(getContext().getProperty("fabric8.openshift.deployTimeoutSeconds").toString());
-        } else {
-            return defaultValue;
-        }
-    }
-
-    private Boolean getImageChangeTriggerFlag(Boolean defaultValue) {
-        if (getContext().getProperty("fabric8.openshift.imageChangeTriggers") != null) {
-            return Boolean.parseBoolean(getContext().getProperty("fabric8.openshift.imageChangeTriggers").toString());
         } else {
             return defaultValue;
         }

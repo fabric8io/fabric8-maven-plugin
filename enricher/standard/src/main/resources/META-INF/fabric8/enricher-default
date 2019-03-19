@@ -88,3 +88,6 @@ io.fabric8.maven.enricher.standard.ControllerViaPluginConfigurationEnricher
 
 # Add Secret enricher
 io.fabric8.maven.enricher.standard.FileDataSecretEnricher
+
+# ImageChange trigger enrichers for openshift
+io.fabric8.maven.enricher.standard.openshift.ImageChangeTriggerEnricher

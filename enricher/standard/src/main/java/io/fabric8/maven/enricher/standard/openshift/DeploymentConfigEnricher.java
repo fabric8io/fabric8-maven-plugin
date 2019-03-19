@@ -136,56 +136,11 @@ public class DeploymentConfigEnricher extends BaseEnricher {
                 specBuilder.addNewTrigger().withType("ConfigChange").endTrigger();
             }
 
-            // add a new image change trigger for the build stream
-            if (containerToImageMap.size() != 0) {
-                if(enableImageChangeTrigger && isOpenshiftBuildStrategy) {
-                    for (Map.Entry<String, String> entry : containerToImageMap.entrySet()) {
-                        String containerName = entry.getKey();
-                        ImageName image = new ImageName(entry.getValue());
-                        String tag = image.getTag() != null ? image.getTag() : "latest";
-                        specBuilder.addNewTrigger()
-                                .withType("ImageChange")
-                                .withNewImageChangeParams()
-                                .withAutomatic(enableAutomaticTrigger)
-                                .withNewFrom()
-                                .withKind("ImageStreamTag")
-                                .withName(image.getSimpleName() + ":" + tag)
-                                .withNamespace(image.getUser())
-                                .endFrom()
-                                .withContainerNames(containerName)
-                                .endImageChangeParams()
-                                .endTrigger();
-                    }
-                }
-            }
-
             specBuilder.endSpec();
         }
         return builder.build();
     }
 
-    private Boolean isAutomaticTriggerEnabled(MavenEnricherContext enricherContext, Boolean defaultValue) {
-        if(enricherContext.getProperty("fabric8.openshift.enableAutomaticTrigger") != null) {
-            return Boolean.parseBoolean(enricherContext.getProperty("fabric8.openshift.enableAutomaticTrigger").toString());
-        } else {
-            return defaultValue;
-        }
-    }
-
-    private Long getOpenshiftDeployTimeoutInSeconds(MavenEnricherContext enricherContext, Long defaultValue) {
-        if (enricherContext.getProperty("fabric8.openshift.deployTimeoutSeconds") != null) {
-            return Long.parseLong(enricherContext.getProperty("fabric8.openshift.deployTimeoutSeconds").toString());
-        } else {
-            return defaultValue;
-        }
-    }
-    private Boolean getImageChangeTriggerFlag(Boolean defaultValue) {
-        if (getContext().getProperty("fabric8.openshift.imageChangeTriggers") != null) {
-            return Boolean.parseBoolean(getContext().getProperty("fabric8.openshift.imageChangeTriggers").toString());
-        } else {
-            return defaultValue;
-        }
-    }
 
     private void validateContainer(Container container) {
         if (container.getImage() == null) {
