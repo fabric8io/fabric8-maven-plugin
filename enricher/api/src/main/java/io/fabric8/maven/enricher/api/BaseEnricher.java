@@ -24,6 +24,8 @@ import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -106,5 +108,39 @@ public abstract class BaseEnricher implements Enricher {
             return RuntimeMode.isOpenShiftMode(properties);
         }
         return false;
+    }
+
+    protected List<String> getFabric8GeneratedContainers() {
+        List<String> containers = new ArrayList<>();
+        if(enricherContext.getProcessingInstructions() != null) {
+            if(enricherContext.getProcessingInstructions().get("FABRIC8_GENERATED_CONTAINERS") != null) {
+                containers.addAll(Arrays.asList(enricherContext.getProcessingInstructions().get("FABRIC8_GENERATED_CONTAINERS").split(",")));
+            }
+        }
+        return containers;
+    }
+
+    protected Boolean isAutomaticTriggerEnabled(MavenEnricherContext enricherContext, Boolean defaultValue) {
+        if(enricherContext.getProperty("fabric8.openshift.enableAutomaticTrigger") != null) {
+            return Boolean.parseBoolean(enricherContext.getProperty("fabric8.openshift.enableAutomaticTrigger").toString());
+        } else {
+            return defaultValue;
+        }
+    }
+
+    protected Long getOpenshiftDeployTimeoutInSeconds(MavenEnricherContext enricherContext, Long defaultValue) {
+        if (enricherContext.getProperty("fabric8.openshift.deployTimeoutSeconds") != null) {
+            return Long.parseLong(enricherContext.getProperty("fabric8.openshift.deployTimeoutSeconds").toString());
+        } else {
+            return defaultValue;
+        }
+    }
+
+    protected Boolean getImageChangeTriggerFlag(Boolean defaultValue) {
+        if (getContext().getProperty("fabric8.openshift.imageChangeTriggers") != null) {
+            return Boolean.parseBoolean(getContext().getProperty("fabric8.openshift.imageChangeTriggers").toString());
+        } else {
+            return defaultValue;
+        }
     }
 }
