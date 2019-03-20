@@ -12,7 +12,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 
 ### 4.1-SNAPSHOT
 * Fix 1578: Fmp is generating ImageChange triggers in the DeploymentConfig
-
+* Fix 1582: Refactor EnricherManager logic
 
 ### 4.0.0 (14-03-2019)
 * Refactor 678: Enricher Workflow to allow direct generation of OpenShift objects.
