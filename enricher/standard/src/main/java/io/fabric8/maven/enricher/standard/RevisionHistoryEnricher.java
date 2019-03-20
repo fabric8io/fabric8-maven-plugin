@@ -50,7 +50,7 @@ public class RevisionHistoryEnricher extends BaseEnricher {
     public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         final Integer maxRevisionHistories = Configs.asInt(getConfig(Config.limit));
 
-        log.info("Adding revision history limit to %s", maxRevisionHistories);
+        log.verbose("Adding revision history limit to %s", maxRevisionHistories);
 
         if(platformMode == PlatformMode.kubernetes) {
             builder.accept(new TypedVisitor<DeploymentBuilder>() {

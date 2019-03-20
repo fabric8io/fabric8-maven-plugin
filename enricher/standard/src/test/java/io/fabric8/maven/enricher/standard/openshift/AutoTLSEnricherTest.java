@@ -116,15 +116,11 @@ public class AutoTLSEnricherTest {
             final ProcessorConfig config = new ProcessorConfig(null, null,
                     Collections.singletonMap(AutoTLSEnricher.ENRICHER_NAME, configMap));
 
-            final Properties projectProps = new Properties();
-            projectProps.put(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, tc.mode.name());
-
             // Setup mock behaviour
             new Expectations() {
                 {
                     Configuration configuration =
                         new Configuration.Builder()
-                            .properties(projectProps)
                             .processorConfig(config)
                             .build();
                     context.getConfiguration();
@@ -138,7 +134,7 @@ public class AutoTLSEnricherTest {
             AutoTLSEnricher enricher = new AutoTLSEnricher(context);
             KubernetesListBuilder klb = new KubernetesListBuilder().addNewPodTemplateItem().withNewMetadata().and()
                     .withNewTemplate().withNewMetadata().and().withNewSpec().and().and().and();
-            enricher.enrich(PlatformMode.kubernetes, klb);
+            enricher.enrich(tc.mode, klb);
             PodTemplate pt = (PodTemplate) klb.getItems().get(0);
 
             List<Container> initContainers = pt.getTemplate().getSpec().getInitContainers();
