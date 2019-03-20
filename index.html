@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 3.5.41,</span>
-<span id="revdate">2018-10-16</span>
+<span id="revdate">2019-03-20</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -531,7 +531,6 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#zero-config">1.4.1. Zero-Config</a></li>
 <li><a href="#xml-configuration">1.4.2. XML Configuration</a></li>
 <li><a href="#resource-fragments">1.4.3. Resource Fragments</a></li>
-<li><a href="#docker-compose">1.4.4. Docker Compose</a></li>
 </ul>
 </li>
 </ul>
@@ -552,7 +551,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#resource-secrets">5.1.2. Secrets</a></li>
 <li><a href="#resource-validation">5.1.3. Resource Validation</a></li>
 <li><a href="#resource-route-generation">5.1.4. Route Generation</a></li>
-<li><a href="#disable-automatic-deployments">5.1.5. Disable Automatic Deployments</a></li>
+<li><a href="#Other-flags">5.1.5. Other flags</a></li>
 </ul>
 </li>
 <li><a href="#fabric8:build">5.2. <strong>fabric8:build</strong></a>
@@ -560,12 +559,13 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#build-kubernetes">5.2.1. Kubernetes Build</a></li>
 <li><a href="#build-openshift">5.2.2. OpenShift Build</a></li>
 <li><a href="#build-goal-configuration">5.2.3. Configuration</a></li>
-<li><a href="#image-configuration">5.2.4. Image Configuration</a></li>
-<li><a href="#build-configuration">5.2.5. Build Configuration</a></li>
-<li><a href="#build-assembly">5.2.6. Assembly</a></li>
-<li><a href="#misc-env">5.2.7. Environment and Labels</a></li>
-<li><a href="#misc-startup">5.2.8. Startup Arguments</a></li>
-<li><a href="#build-buildargs">5.2.9. Build Args</a></li>
+<li><a href="#access-configuration">5.2.4. Access Configuration</a></li>
+<li><a href="#image-configuration">5.2.5. Image Configuration</a></li>
+<li><a href="#build-configuration">5.2.6. Build Configuration</a></li>
+<li><a href="#build-assembly">5.2.7. Assembly</a></li>
+<li><a href="#misc-env">5.2.8. Environment and Labels</a></li>
+<li><a href="#misc-startup">5.2.9. Startup Arguments</a></li>
+<li><a href="#build-buildargs">5.2.10. Build Args</a></li>
 </ul>
 </li>
 <li><a href="#fabric8:push">5.3. <strong>fabric8:push</strong></a></li>
@@ -685,8 +685,7 @@ It provides a tight integration into <a href="http://maven.apache.org">Maven</a>
 This plugin focus on two tasks: <em>Building Docker images</em> and <em>creating Kubernetes and OpenShift resource descriptors</em>.
 It can be configured very flexibly and supports multiple configuration models for creating: A <em>Zero-Config</em> setup allows for a quick ramp-up with some opinionated defaults.
 For more advanced requirements, an <em>XML configuration</em> provides additional configuration options which can be added to the <code>pom.xml</code>.
-For the full power, in order to tune all facets of the creation, external <em>resource fragments</em> and <em>Dockerfiles</em> can be used.
-A docker compose configuration can be also used to bring up docker compose deployments on a Kubernetes/OpenShift cluster.</p>
+For the full power, in order to tune all facets of the creation, external <em>resource fragments</em> and <em>Dockerfiles</em> can be used.</p>
 </div>
 <div class="sect2">
 <h3 id="building-images">1.1. Building Images</h3>
@@ -709,7 +708,7 @@ That images can then be pushed to public or private Docker registries with <a hr
 <div class="sect2">
 <h3 id="resource-descriptors">1.2. Kubernetes and OpenShift Resources</h3>
 <div class="paragraph">
-<p>Kubernetes and OpenShift resource descriptors can be created or generated from existing docker compose with <a href="#fabric8:resource"><strong>fabric8:resource</strong></a>.
+<p>Kubernetes and OpenShift resource descriptors can be created or generated from <a href="#fabric8:resource"><strong>fabric8:resource</strong></a>.
 These files are packaged within the Maven artifacts and can be deployed to a running orchestration platform with <a href="#fabric8:apply"><strong>fabric8:apply</strong></a>.</p>
 </div>
 <div class="paragraph">
@@ -735,9 +734,6 @@ This allows for type-safe configuration with IDE support, but only a subset of p
 <li>
 <p><strong>Kubernetes &amp; OpenShift resource fragments</strong> are user provided YAML files that can be <em>enriched</em> by the plugin. This allows expert users to use a plain configuration file with all their capabilities, but also to add project specific build information and avoid boilerplate code.</p>
 </li>
-<li>
-<p><strong>Docker Compose</strong> can be used to bring up docker compose deployments on a Kubernetes/OpenShift cluster. This requires minimum to no knowledge of Kubernetes/OpenShift deployment process.</p>
-</li>
 </ul>
 </div>
 <div class="paragraph">
@@ -746,9 +742,9 @@ This allows for type-safe configuration with IDE support, but only a subset of p
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 1. Configuration Models</caption>
 <colgroup>
-<col style="width: 11.1111%;">
-<col style="width: 44.4444%;">
-<col style="width: 44.4445%;">
+<col style="width: 12.5%;">
+<col style="width: 50%;">
+<col style="width: 37.5%;">
 </colgroup>
 <thead>
 <tr>
@@ -772,11 +768,6 @@ This allows for type-safe configuration with IDE support, but only a subset of p
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Resource Fragments</strong> and <strong>Dockerfiles</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Similarly to the docker-maven-plugin, f8-m-p supports <a href="#external-dockerfile">external Dockerfiles</a> too, which are referenced from the plugin configuration.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Resource descriptors can be provided as external YAML files which specify a skeleton. This skeleton is then filled by Enrichers which add labels and more. Maven properties within these files are resolved to thier values. With this model you can use every Kubernetes / OpenShift resource object with all their flexibility, but still get the benefit of adding build information.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Docker Compose</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">All above methods can works with docker compose configuration.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The plugin converts docker compose descriptors into more detailed Kubernetes/OpenShift deployment resources. These resource descriptors or externally YAML files can be used to specify the application skeleton. This skeleton is then filled by Enrichers which add labels and more. Maven properties within these files are resolved to their values. With this model you can use every Kubernetes / OpenShift resource objects with all their flexibility, but still get the benefit of adding build information.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1043,6 +1034,12 @@ XML based configuration is only partially implemented and is not recommended for
         <span class="tag">&lt;headless&gt;</span>true<span class="tag">&lt;/headless&gt;</span>
       <span class="tag">&lt;/service&gt;</span>
     <span class="tag">&lt;/services&gt;</span>
+
+    <span class="tag">&lt;serviceAccounts&gt;</span>
+      <span class="tag">&lt;serviceAccount&gt;</span>
+        <span class="tag">&lt;name&gt;</span>build-robot<span class="tag">&lt;/name&gt;</span>
+      <span class="tag">&lt;/serviceAccount&gt;</span>
+    <span class="tag">&lt;/serviceAccounts&gt;</span>
   <span class="tag">&lt;/resources&gt;</span>
 <span class="tag">&lt;/configuration&gt;</span></code></pre>
 </div>
@@ -1135,57 +1132,6 @@ complete list of which (along with associated abbreviations) can be found in the
 </div>
 <div class="paragraph">
 <p>No image is also referenced in this example because the plugin also fills in the image details based on the configured image you are building with (either from a generator or from a dedicated image plugin configuration, as seen before).</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="docker-compose">1.4.4. Docker Compose</h4>
-<div class="paragraph">
-<p>The fourth configuration option is to provide an external Docker Compose file. The following are some ways to specify docker-compose files.</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Put the Docker Compose file into <code>src/main/fabric8-compose</code> directory in the project space (only one file is supported at the moment).</p>
-</li>
-<li>
-<p>Locate the Docker Compose file path using the plugin configuration, as shown in following <code>pom.xml</code> example.</p>
-</li>
-</ol>
-</div>
-<div class="listingblock">
-<div class="title">Example fragment "pom.xml"</div>
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
-  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
-  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-
-  <span class="comment">&lt;!-- ... --&gt;</span>
-
-  <span class="tag">&lt;configuration&gt;</span>
-    <span class="tag">&lt;composeFile&gt;</span>docker-compose.yaml<span class="tag">&lt;/composeFile&gt;</span>
-  <span class="tag">&lt;/configuration&gt;</span>
-
-  <span class="tag">&lt;executions&gt;</span>
-    <span class="tag">&lt;execution&gt;</span>
-      <span class="tag">&lt;goals&gt;</span>
-        <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
-        <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
-      <span class="tag">&lt;/goals&gt;</span>
-    <span class="tag">&lt;/execution&gt;</span>
-  <span class="tag">&lt;/executions&gt;</span>
-<span class="tag">&lt;/plugin&gt;</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>As you can see in <code>pom.xml</code>, the <code>composeFile</code> section under plugin <code>configuration</code> is used to provide the Docker Compose file path. It should be a relative path from the directory containing the <code>pom.xml</code> file.</p>
-</div>
-<div class="paragraph">
-<p>If the execution configuration includes the <code>resource</code> goal (as shown in the <code>pom.xml</code> file above), the plugin will process the Docker Compose file and generate Kubernetes/OpenShift resource descriptors during the build.
-Resources can be also generated using the <a href="#fabric8:resource"><strong>fabric8:resource</strong></a> goal directly.
-The Docker Compose option is implemented using <a href="http://kompose.io">kompose</a> project.</p>
-</div>
-<div class="paragraph">
-<p>A working example can be found in the  <a href="https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/docker-compose">samples/docker-compose</a></p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -1395,6 +1341,22 @@ For building images there is also an alternative mode using external Dockerfiles
 <p>This plugin is available from Maven central and can be connected to
 pre- and post-integration phase as seen below. The configuration and
 available goals are described below.</p>
+</div>
+<div class="paragraph">
+<p>By default, Maven will only search for plugins in the <code>org.apache.maven.plugins</code> and <code>org.codehaus.mojo</code> packages. In order to resolve the provider for the Fabric8 plugin goals, you need to edit <code>~/.m2/settings.xml</code> and add the <code>io.fabric8</code> namespace so the <code>&lt;pluginGroups&gt;</code> configuration.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;settings&gt;</span>
+      ...
+
+      <span class="tag">&lt;pluginGroups&gt;</span>
+        <span class="tag">&lt;pluginGroup&gt;</span>io.fabric8<span class="tag">&lt;/pluginGroup&gt;</span>
+      <span class="tag">&lt;/pluginGroups&gt;</span>
+
+      ...
+<span class="tag">&lt;/settings&gt;</span></code></pre>
+</div>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1657,6 +1619,9 @@ This is chapter is incomplete, but there is work in progress.
       <span class="tag">&lt;annotations&gt;</span> <i class="conum" data-value="7"></i><b>(7)</b>
          ...
       <span class="tag">&lt;/annotations&gt;</span>
+      <span class="tag">&lt;remotes&gt;</span> <i class="conum" data-value="8"></i><b>(8)</b>
+        <span class="tag">&lt;remote&gt;</span>https://gist.githubusercontent.com/lordofthejars/ac2823cec7831697d09444bbaa76cd50/raw/e4b43f1b6494766dfc635b5959af7730c1a58a93/deployment.yaml<span class="tag">&lt;/remote&gt;</span>
+      <span class="tag">&lt;/remotes&gt;</span>
     <span class="tag">&lt;/resource&gt;</span>
   <span class="tag">&lt;/configuration&gt;</span>
 <span class="tag">&lt;/plugin&gt;</span></code></pre>
@@ -1691,6 +1656,10 @@ This is chapter is incomplete, but there is work in progress.
 <tr>
 <td><i class="conum" data-value="7"></i><b>7</b></td>
 <td>The subelements are also available for specifying annotations.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td><code>&lt;remotes&gt;</code> you can set location of fragments as <code>URL</code>.</td>
 </tr>
 </table>
 </div>
@@ -1932,9 +1901,9 @@ spec:
 </div>
 </div>
 <div class="sect3">
-<h4 id="disable-automatic-deployments">5.1.5. Disable Automatic Deployments</h4>
+<h4 id="Other-flags">5.1.5. Other flags</h4>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 10. Automatic Trigger Configuration</caption>
+<caption class="title">Table 10. Other options available with resource goal</caption>
 <colgroup>
 <col style="width: 33.3333%;">
 <col style="width: 33.3333%;">
@@ -1951,6 +1920,21 @@ spec:
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>fabric8.openshift.enableAutomaticTrigger</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If the value is set to <code>false</code> then automatic deployments would be disabled.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>fabric8.skipHealthCheck</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If the value is set to <code>true</code> then no readiness/liveness checks would be added to any containers.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>fabric8.openshift.deployTimeoutSeconds</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The OpenShift deploy timeout in seconds.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3600</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>fabric8.openshift.imageChangeTrigger</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add ImageChange triggers to DeploymentConfigs when on openshift.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code></p></td>
 </tr>
 </tbody>
@@ -2138,6 +2122,14 @@ This behavior can be turned off by setting the <code>fabric8.s2i.imageStreamLook
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.build.strategy</code></p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>forcePull</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Applicable only for Openshit, S2I build strategy.
+</p><p class="tableblock">While creating a BuildConfig, By default, if the builder image specified in the
+build configuration is available locally on the node, that image will be used.
+</p><p class="tableblock">Using forcePull will override the local image and refresh it from the registry the image stream points to.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.build.forcePull</code></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>certPath</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Path to SSL certificate when SSL is used for communicating with the Docker daemon. These certificates are normally stored in <code>~/.docker/</code>. With this configuration the path can be set explicitly. If not set, the fallback is first taken from the environment variable <code>DOCKER_CERT_PATH</code> and then as last resort <code>~/.docker/</code>. The keys in this are expected with it standard names <code>ca.pem</code>, <code>cert.pem</code> and <code>key.pem</code>. Please refer to the <a href="https://docs.docker.com/articles/https">Docker documentation</a> for more information about SSL security with Docker.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.certPath</code></p></td>
@@ -2211,9 +2203,9 @@ the URL is:</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.maxConnections</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>namespace</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Namespace to use when accessing Kubernetes or OpenShift</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.namespace</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>access</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Group of configuration parameters to connect to Kubernetes/OpenShift cluster</p></td>
+<td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>outputDirectory</strong></p></td>
@@ -2245,6 +2237,11 @@ the URL is:</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>resourceDir</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Directory where fabric8 resources are stored. This is also the directory where a custom profile is looked up. Default is <code>src/main/fabric8</code>.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.resourceDir</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>environment</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Environment name where resources are placed. For example, if you set this property to dev and resourceDir is the default one, Fabric8 will look at src/main/fabric8/dev. If not set then root <code>resourceDir</code> directory is used.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.environment</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skip</strong></p></td>
@@ -2285,7 +2282,126 @@ the URL is:</p>
 </table>
 </div>
 <div class="sect3">
-<h4 id="image-configuration">5.2.4. Image Configuration</h4>
+<h4 id="access-configuration">5.2.4. Access Configuration</h4>
+<div class="paragraph">
+<p>You can configure parameters to define how Fabric8 is going to connect to Kubernetes/OpenShift cluster instead of relaying on default parameters.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
+  <span class="tag">&lt;access&gt;</span>
+    <span class="tag">&lt;username&gt;</span><span class="tag">&lt;/username&gt;</span>
+    <span class="tag">&lt;password&gt;</span><span class="tag">&lt;/password&gt;</span>
+    <span class="tag">&lt;masterUrl&gt;</span><span class="tag">&lt;/masterUrl&gt;</span>
+    <span class="tag">&lt;apiVersion&gt;</span><span class="tag">&lt;/apiVersion&gt;</span>
+  <span class="tag">&lt;/access&gt;</span>
+<span class="tag">&lt;/configuration&gt;</span></code></pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 71.4285%;">
+<col style="width: 14.2858%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Property (System property or Maven property)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>username</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Username on which to operate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.username</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>password</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Password on which to operate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.password</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>namespace</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Namespace on which to operate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.namespace</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>masterUrl</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Master URL on which to operate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.masterUrl</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>apiVersion</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Api version on which to operate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.apiVersion</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>caCertFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CaCert File on which to operate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.caCertFile</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>caCertData</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CaCert Data on which to operate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.caCertData</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>clientCertFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Client Cert File on which to operate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.clientCertFile</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>clientCertData</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Client Cert Data on which to operate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.clientCertData</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>clientKeyFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Client Key File on which to operate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.clientKeyFile</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>clientKeyData</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Client Key Data on which to operate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.clientKeyData</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>clientKeyAlgo</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Client Key Algorithm on which to operate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.clientKeyAlgo</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>clientKeyPassphrase</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Client Key Passphrase on which to operate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.clientKeyPassphrase</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>trustStoreFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Trust Store File on which to operate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.trustStoreFile</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>trustStorePassphrase</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Trust Store Passphrase on which to operate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.trustStorePassphrase</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keyStoreFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Key Store File on which to operate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.keyStoreFile</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keyStorePassphrase</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Key Store Passphrase on which to operate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.keyStorePassphrase</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="image-configuration">5.2.5. Image Configuration</h4>
 <div class="paragraph">
 <p>The configuration how images should be created a defined in a dedicated <code>&lt;images&gt;</code> sections. These are specified for each image within the <code>&lt;images&gt;</code> element of the configuration with one <code>&lt;image&gt;</code> element per image to use.</p>
 </div>
@@ -2369,7 +2485,7 @@ linking images together or for specifying it with the global <strong>image</stro
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-configuration">5.2.5. Build Configuration</h4>
+<h4 id="build-configuration">5.2.6. Build Configuration</h4>
 <div id="build-overview" class="paragraph">
 <p>There are two different modes how images can be built:</p>
 </div>
@@ -2769,7 +2885,7 @@ remote API.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-assembly">5.2.6. Assembly</h4>
+<h4 id="build-assembly">5.2.7. Assembly</h4>
 <div class="paragraph">
 <p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
 </div>
@@ -3057,7 +3173,7 @@ possible to change the name of the final build artifact with the following:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="misc-env">5.2.7. Environment and Labels</h4>
+<h4 id="misc-env">5.2.8. Environment and Labels</h4>
 <div class="paragraph">
 <p>When creating a container one or more environment variables can be set via configuration with the <code>env</code> parameter</p>
 </div>
@@ -3091,7 +3207,7 @@ possible to change the name of the final build artifact with the following:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="misc-startup">5.2.8. Startup Arguments</h4>
+<h4 id="misc-startup">5.2.9. Startup Arguments</h4>
 <div class="paragraph">
 <p>Using <code>entryPoint</code> and <code>cmd</code> it is possible to specify the <a href="https://docs.docker.com/reference/builder/#entrypoint">entry point</a>
 or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a container.</p>
@@ -3195,7 +3311,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-buildargs">5.2.9. Build Args</h4>
+<h4 id="build-buildargs">5.2.10. Build Args</h4>
 <div id="property-buildargs" class="paragraph">
 <p>As described in section <a href="#build-configuration">Configuration</a> for external Dockerfiles <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg">Docker build arg</a> can be used. In addition to the
 configuration within the plugin configuration you can also use properties to specify them:</p>
@@ -3727,6 +3843,29 @@ The <code>fabric8.debug.suspend</code> flag will disable readiness probes in the
 <div class="paragraph">
 <p>This goal is used to monitor the project workspace for changes and automatically trigger a redeploy of the application
 running on Kubernetes.</p>
+</div>
+<div class="paragraph">
+<p>In order to use fabric8:watch for spring-boot, you need to make sure that <code>devtools</code> is included in the repacked
+archive, as shown in the following listing:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>		&lt;plugin&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+			&lt;configuration&gt;
+				&lt;excludeDevtools&gt;false&lt;/excludeDevtools&gt;
+			&lt;/configuration&gt;
+		&lt;/plugin&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then you need to set a <code>spring.devtools.remote.secret</code> in application.properties, as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>spring.devtools.remote.secret=mysecret</pre>
+</div>
 </div>
 <div class="paragraph">
 <p>Before entering the watch mode, this goal must generate the docker image and the Kubernetes resources
@@ -4275,7 +4414,7 @@ Since the released version are typically generated with a CI system which does a
 <div class="ulist">
 <ul>
 <li>
-<p>you are using the Vert.x Maven Plugin (<a href="https://github.com/fabric8io/vertx-maven-plugin" class="bare">https://github.com/fabric8io/vertx-maven-plugin</a>)</p>
+<p>you are using the Vert.x Maven Plugin (<a href="https://github.com/reactiverse/vertx-maven-plugin" class="bare">https://github.com/reactiverse/vertx-maven-plugin</a>)</p>
 </li>
 <li>
 <p>you are depending on <code>io.vertx:vertx-core</code> and uses the Maven Shader plugin</p>
@@ -4649,10 +4788,6 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <td class="tableblock halign-left valign-top"><p class="tableblock">Check local <code>.git</code> directory and add build information as annotations.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-ianaservice">fmp-ianaservice</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Add a default portname looking up IANA services</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-image">fmp-image</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add the image name into a <code>PodSpec</code> of replication controller, replication sets and deployments, if missing.</p></td>
 </tr>
@@ -4687,6 +4822,18 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-triggers-annotation">fmp-triggers-annotation</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add ImageStreamTag change triggers on Kubernetes resources such as StatefulSets, ReplicaSets and DaemonSets using the <code>image.openshift.io/triggers</code> annotation.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-configmap-file">fmp-configmap-file</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add ConfigMap elements defined as XML or as annotation.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-secret-file">fmp-secret-file</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add Secret elements defined as annotation.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-fmp-serviceaccount">[fmp-fmp-serviceaccount]</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add a ServiceAccount defined as XML or mentioned in resource fragement.</p></td>
 </tr>
 </tbody>
 </table>
@@ -4758,11 +4905,6 @@ An explicit configuration always takes precedence over auto detection. For enric
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>protocol</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Default protocol to use for the services. Must be <code>tcp</code> or <code>udp</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>tcp</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>legacyPortMapping</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">If this mapping options is set to <code>true</code> then a pod exports ports 8080 or 9090 is mapped to a service port 80. This is deprecated and switched off by default. You can switch it on to get back the old behaviour or, even better, use <code>port</code> for setting the service port directly.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -4902,10 +5044,6 @@ Assuming that the image exposes ports <code>8080</code> and <code>8778</code> (e
 
 </div>
 <div class="sect4">
-<h5 id="fmp-ianaservice">fmp-ianaservice</h5>
-
-</div>
-<div class="sect4">
 <h5 id="fmp-project">fmp-project</h5>
 <div class="paragraph">
 <p>Enricher that adds standard labels and selectors to generated resources (e.g. <code>app</code>, <code>group</code>, <code>provider</code>, <code>version</code>).</p>
@@ -4934,10 +5072,40 @@ Assuming that the image exposes ports <code>8080</code> and <code>8778</code> (e
 </tr>
 </tbody>
 </table>
+<div class="paragraph">
+<p>The project labels which are already specified in the input fragments are not overridden by the enricher.</p>
+</div>
 </div>
 <div class="sect4">
 <h5 id="fmp-git">fmp-git</h5>
-
+<div class="paragraph">
+<p>Enricher that adds info from .git directory as annotations.</p>
+</div>
+<div class="paragraph">
+<p>The git branch &amp; latest commit on the branch are annotated as fabric8/git-branch &amp; fabric8/git-commit.
+fabrci8/git-url is annotated as the url of your configured remote.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 18.1818%;">
+<col style="width: 54.5454%;">
+<col style="width: 27.2728%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gitRemote</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configures the git remote name, whose url you want to annotate as 'git-url'.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>origin</code></p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="sect4">
 <h5 id="fmp-dependency">fmp-dependency</h5>
@@ -5080,6 +5248,12 @@ a JKS-format Java keystore ready for consumption in Java services.</p>
 <li>
 <p>scheme = <code>HTTP</code></p>
 </li>
+<li>
+<p>failureThreshold = <code>3</code></p>
+</li>
+<li>
+<p>successThreshold = <code>1</code></p>
+</li>
 </ul>
 </div>
 <div class="paragraph">
@@ -5110,6 +5284,69 @@ a JKS-format Java keystore ready for consumption in Java services.</p>
 <div class="paragraph">
 <p>By default the enricher inspects the images' BuildConfiguration and add the annotations if the port 9779 is listed.
 You can force the plugin to add annotations by setting enricher&#8217;s config <code><code>prometheusPort</code></code></p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="f8-healthcheck-webapp">f8-healthcheck-webapp</h5>
+<div class="paragraph">
+<p>This enricher adds kubernetes readiness and liveness probes with WebApp. This requires that you have <code>maven-war-plugin</code> set.</p>
+</div>
+<div class="paragraph">
+<p>The enricher will use the following settings by default:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>port = <code>8080</code></p>
+</li>
+<li>
+<p>scheme = <code>HTTP</code></p>
+</li>
+<li>
+<p>path = ``</p>
+</li>
+<li>
+<p>initialReadinessDelay = 10</p>
+</li>
+<li>
+<p>initialLivenessDelay = 180</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>If <code>path</code> attribute is not set (default value) then this enricher is disabled.</p>
+</div>
+<div class="paragraph">
+<p>These values can be configured by the enricher in the <code>fabric8-maven-plugin</code> configuration as shown below:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.3.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;executions&gt;</span>
+    <span class="tag">&lt;execution&gt;</span>
+      <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
+        <span class="tag">&lt;goals&gt;</span>
+          <span class="tag">&lt;goal&gt;</span>resource<span class="tag">&lt;/goal&gt;</span>
+          <span class="tag">&lt;goal&gt;</span>helm<span class="tag">&lt;/goal&gt;</span>
+          <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
+        <span class="tag">&lt;/goals&gt;</span>
+    <span class="tag">&lt;/execution&gt;</span>
+  <span class="tag">&lt;/executions&gt;</span>
+  <span class="tag">&lt;configuration&gt;</span>
+    <span class="tag">&lt;enricher&gt;</span>
+      <span class="tag">&lt;config&gt;</span>
+        <span class="tag">&lt;f8-healthcheck-webapp&gt;</span>
+          <span class="tag">&lt;path&gt;</span>/<span class="tag">&lt;/path&gt;</span>
+        <span class="tag">&lt;/f8-healthcheck-webapp&gt;</span>
+      <span class="tag">&lt;/config&gt;</span>
+    <span class="tag">&lt;/enricher&gt;</span>
+  <span class="tag">&lt;/configuration&gt;</span>
+    ...
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
 </div>
 </div>
 <div class="sect4">
@@ -5153,6 +5390,12 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
 <li>
 <p><code>timeoutSeconds</code> : <em>&lt;kubernetes-default&gt;</em></p>
 </li>
+<li>
+<p><code>failureThreshold</code>: <code>3</code></p>
+</li>
+<li>
+<p><code>successThreshold</code>: <code>1</code></p>
+</li>
 </ul>
 </div>
 <div class="paragraph">
@@ -5180,6 +5423,8 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
               <span class="tag">&lt;f8-healthcheck-spring-boot&gt;</span>
                 <span class="tag">&lt;timeoutSeconds&gt;</span>5<span class="tag">&lt;/timeoutSeconds&gt;</span>
                 <span class="tag">&lt;readinessProbeInitialDelaySeconds&gt;</span>30<span class="tag">&lt;/readinessProbeInitialDelaySeconds&gt;</span>
+                <span class="tag">&lt;failureThreshold&gt;</span>3<span class="tag">&lt;/failureThreshold&gt;</span>
+                <span class="tag">&lt;successThreshold&gt;</span>1<span class="tag">&lt;/successThreshold&gt;</span>
               <span class="tag">&lt;/f8-healthcheck-spring-boot&gt;</span>
             <span class="tag">&lt;/config&gt;</span>
           <span class="tag">&lt;/enricher&gt;</span>
@@ -5216,6 +5461,12 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
 <li>
 <p>path = <code>/health</code></p>
 </li>
+<li>
+<p>failureThreshold = <code>3</code></p>
+</li>
+<li>
+<p>successThreshold = <code>1</code></p>
+</li>
 </ul>
 </div>
 <div class="paragraph">
@@ -5244,6 +5495,8 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
                 <span class="tag">&lt;port&gt;</span>4444<span class="tag">&lt;/port&gt;</span>
                 <span class="tag">&lt;scheme&gt;</span>HTTPS<span class="tag">&lt;/scheme&gt;</span>
                 <span class="tag">&lt;path&gt;</span>health/myapp<span class="tag">&lt;/path&gt;</span>
+                <span class="tag">&lt;failureThreshold&gt;</span>3<span class="tag">&lt;/failureThreshold&gt;</span>
+                <span class="tag">&lt;successThreshold&gt;</span>1<span class="tag">&lt;/successThreshold&gt;</span>
               <span class="tag">&lt;/f8-healthcheck-wildfly-swarm&gt;</span>
             <span class="tag">&lt;/config&gt;</span>
           <span class="tag">&lt;/enricher&gt;</span>
@@ -5280,6 +5533,12 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
 <li>
 <p>path = <code>/health</code></p>
 </li>
+<li>
+<p>failureThreshold = <code>3</code></p>
+</li>
+<li>
+<p>successThreshold = <code>1</code></p>
+</li>
 </ul>
 </div>
 <div class="paragraph">
@@ -5308,6 +5567,8 @@ The scheme will use HTTPS if <code>server.ssl.key-store</code> option is in use,
                 <span class="tag">&lt;port&gt;</span>4444<span class="tag">&lt;/port&gt;</span>
                 <span class="tag">&lt;scheme&gt;</span>HTTPS<span class="tag">&lt;/scheme&gt;</span>
                 <span class="tag">&lt;path&gt;</span>health/myapp<span class="tag">&lt;/path&gt;</span>
+                <span class="tag">&lt;failureThreshold&gt;</span>3<span class="tag">&lt;/failureThreshold&gt;</span>
+                <span class="tag">&lt;successThreshold&gt;</span>1<span class="tag">&lt;/successThreshold&gt;</span>
               <span class="tag">&lt;/f8-healthcheck-thorntail&gt;</span>
             <span class="tag">&lt;/config&gt;</span>
           <span class="tag">&lt;/enricher&gt;</span>
@@ -5637,7 +5898,7 @@ However, by default, no health check will be added to your deployment.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;config&gt;</span>
-    <span class="tag">&lt;f8-healthcheck-vertx&gt;</span><span class="error">&gt;</span>
+    <span class="tag">&lt;f8-healthcheck-vertx&gt;</span>
         <span class="tag">&lt;initialDelay&gt;</span>3<span class="tag">&lt;/initialDelay&gt;</span>
         <span class="tag">&lt;period&gt;</span>3<span class="tag">&lt;/period&gt;</span>
         <span class="tag">&lt;liveness&gt;</span>
@@ -5886,7 +6147,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;issueManagement&gt;</span>
    <span class="tag">&lt;system&gt;</span>GitHub<span class="tag">&lt;/system&gt;</span>
-   <span class="tag">&lt;url&gt;</span>https://github.com/fabric8io/vertx-maven-plugin/issues/<span class="tag">&lt;/url&gt;</span>
+   <span class="tag">&lt;url&gt;</span>https://github.com/reactiverse/vertx-maven-plugin/issues/<span class="tag">&lt;/url&gt;</span>
 <span class="tag">&lt;/issueManagement&gt;</span></code></pre>
 </div>
 </div>
@@ -5900,7 +6161,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
   <span class="key">metadata</span>:
     <span class="key">annotations</span>:
       <span class="key">fabric8.io/issue-system</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">GitHub</span><span class="delimiter">&quot;</span></span>
-      <span class="key">fabric8.io/issue-tracker-url</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">https://github.com/fabric8io/vertx-maven-plugin/issues/</span><span class="delimiter">&quot;</span></span>
+      <span class="key">fabric8.io/issue-tracker-url</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">https://github.com/reactiverse/vertx-maven-plugin/issues/</span><span class="delimiter">&quot;</span></span>
 <span class="head"><span class="head">...</span></span></code></pre>
 </div>
 </div>
@@ -6071,6 +6332,91 @@ label applied, like the following:</p>
 <span class="tag">&lt;/enricher&gt;</span>
 ...</code></pre>
 </div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="fmp-configmap-file">fmp-configmap-file</h5>
+<div class="paragraph">
+<p>This enricher adds ConfigMap defined as <code>resources</code> in plugin configuration and/or resolves file content from an annotation.</p>
+</div>
+<div class="paragraph">
+<p>As XML you can define:</p>
+</div>
+<div class="listingblock">
+<div class="title">pom.xml</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
+  <span class="tag">&lt;resources&gt;</span>
+    <span class="tag">&lt;configMap&gt;</span>
+      <span class="tag">&lt;entries&gt;</span>
+        <span class="tag">&lt;entry&gt;</span>
+          <span class="tag">&lt;name&gt;</span>A<span class="tag">&lt;/name&gt;</span>
+          <span class="tag">&lt;value&gt;</span>B<span class="tag">&lt;/value&gt;</span>
+        <span class="tag">&lt;/entry&gt;</span>
+       <span class="tag">&lt;/entries&gt;</span>
+    <span class="tag">&lt;/configMap&gt;</span>
+  <span class="tag">&lt;/resources&gt;</span>
+<span class="tag">&lt;/configuration&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This creates a ConfigMap data with key <code>A</code> and value <code>B</code>.</p>
+</div>
+<div class="paragraph">
+<p>You can also use <code>file</code> tag to refer to the content of a file.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
+  <span class="tag">&lt;resources&gt;</span>
+    <span class="tag">&lt;configMap&gt;</span>
+      <span class="tag">&lt;entries&gt;</span>
+        <span class="tag">&lt;entry&gt;</span>
+          <span class="tag">&lt;file&gt;</span>src/test/resources/test-application.properties<span class="tag">&lt;/file&gt;</span>
+        <span class="tag">&lt;/entry&gt;</span>
+       <span class="tag">&lt;/entries&gt;</span>
+    <span class="tag">&lt;/configMap&gt;</span>
+  <span class="tag">&lt;/resources&gt;</span>
+<span class="tag">&lt;/configuration&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This creates a ConfigMap with key <code>test-application.properties</code> and value the content of the <code>src/test/resources/test-application.properties</code> file.
+If you set <code>name</code> tag then this is used as key instead of the filename.</p>
+</div>
+<div class="paragraph">
+<p>If you are defining a custom <code>ConfigMap</code> file, you can use an annotation to define a file name as key and its content as the value:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="string"><span class="content">${project.artifactId}</span></span>
+  <span class="key">annotations</span>:
+    <span class="key">maven.fabric8.io/cm/application.properties</span>: <span class="string"><span class="content">src/test/resources/test-application.properties</span></span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This creates a <code>ConfigMap</code> data with key <code>application.properties</code> (part defined after <code>cm</code>) and value the content of <code>src/test/resources/test-application.properties</code> file.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="fmp-secret-file">fmp-secret-file</h5>
+<div class="paragraph">
+<p>This enricher adds Secret defined as file content from an annotation.</p>
+</div>
+<div class="paragraph">
+<p>If you are defining a custom <code>Secret</code> file, you can use an annotation to define a file name as key and its content as the value:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="string"><span class="content">${project.artifactId}</span></span>
+  <span class="key">annotations</span>:
+    <span class="key">maven.fabric8.io/secret/application.properties</span>: <span class="string"><span class="content">src/test/resources/test-application.properties</span></span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This creates a <code>Secret</code> data with the key <code>application.properties</code> (part defined after <code>secret</code>) and value content of <code>src/test/resources/test-application.properties</code> file (base64 encoded).</p>
 </div>
 </div>
 </div>
@@ -6415,26 +6761,31 @@ label applied, like the following:</p>
   <span class="key">enricher</span>:
     <span class="comment"># The order given in &quot;includes&quot; is the order in which enrichers are called</span>
     <span class="key">includes</span>:
+    - <span class="string"><span class="content">fmp-metadata</span></span>
     - <span class="string"><span class="content">fmp-name</span></span>
     - <span class="string"><span class="content">fmp-controller</span></span>
+    - <span class="string"><span class="content">fmp-controller-from-configuration</span></span>
     - <span class="string"><span class="content">fmp-service</span></span>
     - <span class="string"><span class="content">fmp-image</span></span>
     - <span class="string"><span class="content">fmp-portname</span></span>
-    - <span class="string"><span class="content">fmp-ianaservice</span></span>
     - <span class="string"><span class="content">fmp-project</span></span>
     - <span class="string"><span class="content">fmp-dependency</span></span>
     - <span class="string"><span class="content">fmp-pod-annotations</span></span>
     - <span class="string"><span class="content">fmp-git</span></span>
     - <span class="string"><span class="content">fmp-maven-scm</span></span>
+    - <span class="string"><span class="content">fmp-serviceaccount</span></span>
     - <span class="string"><span class="content">fmp-maven-issue-mgmt</span></span>
     <span class="comment"># TODO: Documents and verify enrichers below</span>
     - <span class="string"><span class="content">fmp-debug</span></span>
     - <span class="string"><span class="content">fmp-remove-build-annotations</span></span>
     - <span class="string"><span class="content">fmp-volume-permission</span></span>
+    - <span class="string"><span class="content">fmp-configmap-file</span></span>
+    - <span class="string"><span class="content">fmp-secret-file</span></span>
 
     <span class="comment"># Route exposure</span>
     - <span class="string"><span class="content">fmp-openshift-service-expose</span></span>
     - <span class="string"><span class="content">fmp-openshift-route</span></span>
+    - <span class="string"><span class="content">fmp-openshift-deploymentconfig</span></span>
 
     <span class="comment"># -----------------------------------------</span>
     <span class="comment"># TODO: Document and verify enrichers below</span>
@@ -6445,6 +6796,7 @@ label applied, like the following:</p>
     - <span class="string"><span class="content">f8-healthcheck-karaf</span></span>
     - <span class="string"><span class="content">f8-healthcheck-vertx</span></span>
     - <span class="string"><span class="content">f8-healthcheck-docker</span></span>
+    - <span class="string"><span class="content">f8-healthcheck-webapp</span></span>
     - <span class="string"><span class="content">f8-prometheus</span></span>
     <span class="comment"># Dependencies shouldn't be enriched anymore, therefor it's last in the list</span>
     - <span class="string"><span class="content">fmp-dependency</span></span>
@@ -6850,7 +7202,8 @@ The <code>docker:push</code> and <code>docker:pull</code> goals automatically ex
 <p>You can use any IAM access key with the necessary permissions in any of the locations mentioned above except <code>~/.docker/config.json</code>.
 Use the IAM <strong>Access key ID</strong> as the username and the <strong>Secret access key</strong> as the password.
 In case you&#8217;re using temporary security credentials provided by the AWS Security Token Service (AWS STS), you have to provide the <strong>security token</strong> as well.
-To do so, either specify the <code>docker.authToken</code> system property or provide an <code>&lt;auth&gt;</code> element alongside username &amp; password in the <code>authConfig</code>.</p>
+To do so, either specify the <code>docker.authToken</code> system property or provide an <code>&lt;auth&gt;</code> element alongside username &amp; password in the <code>authConfig</code>.
+Unresolved directive in index.adoc - include::inc/_volumes.adoc[]</p>
 </div>
 </div>
 </div>
@@ -7164,6 +7517,10 @@ mvn fabric8:migrate
 <td class="tableblock halign-left valign-top"><p class="tableblock">Template</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>template</code></p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pod</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>pd</code>, <code>pod</code></p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -7207,7 +7564,7 @@ By default if no environment variable nor system property is set, scan for a fil
 <div id="footer">
 <div id="footer-text">
 Version 3.5.41<br>
-Last updated 2018-10-16 12:41:12 UTC
+Last updated 2019-03-20 14:05:26 UTC
 </div>
 </div>
 </body>
