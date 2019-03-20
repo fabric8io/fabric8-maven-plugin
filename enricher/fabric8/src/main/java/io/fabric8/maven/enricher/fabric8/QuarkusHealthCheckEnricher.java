@@ -20,7 +20,6 @@ import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 
-import static io.fabric8.maven.core.util.Configs.asBoolean;
 import static io.fabric8.maven.core.util.Configs.asInteger;
 
 /**
