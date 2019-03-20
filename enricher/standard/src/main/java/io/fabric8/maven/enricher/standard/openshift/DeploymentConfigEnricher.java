@@ -146,7 +146,7 @@ public class DeploymentConfigEnricher extends BaseEnricher {
                         specBuilder.addNewTrigger()
                                 .withType("ImageChange")
                                 .withNewImageChangeParams()
-                                .withAutomatic(true)
+                                .withAutomatic(enableAutomaticTrigger)
                                 .withNewFrom()
                                 .withKind("ImageStreamTag")
                                 .withName(image.getSimpleName() + ":" + tag)

@@ -61,7 +61,7 @@ public class DefaultMetadataEnricher extends BaseEnricher {
     }
 
     @Override
-    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
+    public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) {
         init();
         // Enrich labels
         enrichLabels(defaultEnricherConfig, builder);
@@ -88,4 +88,3 @@ public class DefaultMetadataEnricher extends BaseEnricher {
     }
 
 }
-

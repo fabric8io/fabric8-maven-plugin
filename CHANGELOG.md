@@ -10,7 +10,11 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
-### 4.0.0-M3
+### 4.1-SNAPSHOT
+* Fix 1578: Fmp is generating ImageChange triggers in the DeploymentConfig
+* Fix 1582: Refactor EnricherManager logic
+
+### 4.0.0 (14-03-2019)
 * Refactor 678: Enricher Workflow to allow direct generation of OpenShift objects.
 * Refactor 802: Remove resource object post processing.
 * Feature 729: Select custom resources depending on environment.
