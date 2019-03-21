@@ -105,7 +105,7 @@ By default S2I is used.
 
 |*forcePull*
 |
-Applicable only for Openshit, S2I build strategy.
+Applicable only for OpenShift, S2I build strategy.
 
 While creating a BuildConfig, By default, if the builder image specified in the
 build configuration is available locally on the node, that image will be used.
