@@ -96,7 +96,10 @@ public class ControllerViaPluginConfigurationEnricher extends BaseEnricher {
                         builder.accept(new TypedVisitor<PodSpecBuilder>() {
                             @Override
                             public void visit(PodSpecBuilder builder) {
-                                KubernetesResourceUtil.mergePodSpec(builder, podSpec, name);
+                                String defaultApplicationContainerName = KubernetesResourceUtil.mergePodSpec(builder, podSpec, name);
+                                if(defaultApplicationContainerName != null) {
+                                    setProcessingInstruction(NEED_IMAGECHANGE_TRIGGERS, Collections.singletonList(defaultApplicationContainerName));
+                                }
                             }
                         });
                     }
@@ -117,7 +120,10 @@ public class ControllerViaPluginConfigurationEnricher extends BaseEnricher {
                         builder.accept(new TypedVisitor<PodSpecBuilder>() {
                             @Override
                             public void visit(PodSpecBuilder builder) {
-                                KubernetesResourceUtil.mergePodSpec(builder, podSpec, name);
+                                String defaultApplicationContainerName = KubernetesResourceUtil.mergePodSpec(builder, podSpec, name);
+                                if(defaultApplicationContainerName != null) {
+                                    setProcessingInstruction(NEED_IMAGECHANGE_TRIGGERS, Collections.singletonList(defaultApplicationContainerName));
+                                }
                             }
                         });
                     }

@@ -31,6 +31,7 @@ import io.fabric8.openshift.api.model.DeploymentConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,6 +46,8 @@ public class BaseEnricher implements Enricher {
     private final EnricherConfig config;
     private final String name;
     protected EnricherContext enricherContext;
+    public static final String FABRIC8_GENERATED_CONTAINERS = "FABRIC8_GENERATED_CONTAINERS";
+    public static final String NEED_IMAGECHANGE_TRIGGERS = "IMAGECHANGE_TRIGGER";
 
     protected Logger log;
 
@@ -114,11 +117,11 @@ public class BaseEnricher implements Enricher {
         return false;
     }
 
-    protected List<String> getFabric8GeneratedContainers() {
+    protected List<String> getProcessingInstructionViaKey(String key) {
         List<String> containers = new ArrayList<>();
         if(enricherContext.getProcessingInstructions() != null) {
-            if(enricherContext.getProcessingInstructions().get("FABRIC8_GENERATED_CONTAINERS") != null) {
-                containers.addAll(Arrays.asList(enricherContext.getProcessingInstructions().get("FABRIC8_GENERATED_CONTAINERS").split(",")));
+            if(enricherContext.getProcessingInstructions().get(key) != null) {
+                containers.addAll(Arrays.asList(enricherContext.getProcessingInstructions().get(key).split(",")));
             }
         }
         return containers;
@@ -176,5 +179,14 @@ public class BaseEnricher implements Enricher {
             return xmlResourceConfig.getReplicas() > 0 ? xmlResourceConfig.getReplicas() : defaultValue;
         }
         return defaultValue;
+    }
+
+    protected void setProcessingInstruction(String key, List<String> containerNames) {
+        Map<String, String> processingInstructionsMap = new HashMap<>();
+        if(enricherContext.getProcessingInstructions() != null) {
+            processingInstructionsMap.putAll(enricherContext.getProcessingInstructions());
+        }
+        processingInstructionsMap.put(key, String.join(",", containerNames));
+        enricherContext.setProcessingInstructions(processingInstructionsMap);
     }
 }

@@ -21,11 +21,13 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.DeploymentConfigSpecBuilder;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +39,13 @@ public class ImageChangeTriggerEnricher extends BaseEnricher {
     private Boolean enableAutomaticTrigger;
     private Boolean enableImageChangeTrigger;
 
+
+    private enum Config implements Configs.Key {
+        containers {{ d = ""; }},
+        enrichAll {{ d = "false"; }};
+
+        public String def() { return d; } protected String d;
+    }
 
     public ImageChangeTriggerEnricher(MavenEnricherContext context) {
         super(context, ENRICHER_NAME);
@@ -66,7 +75,7 @@ public class ImageChangeTriggerEnricher extends BaseEnricher {
                             for (Map.Entry<String, String> entry : containerToImageMap.entrySet()) {
                                 String containerName = entry.getKey();
 
-                                if(!getFabric8GeneratedContainers().contains(containerName))
+                                if(!isImageChangeTriggerNeeded(containerName))
                                     continue;
 
                                 ImageName image = new ImageName(entry.getValue());
@@ -88,5 +97,21 @@ public class ImageChangeTriggerEnricher extends BaseEnricher {
                     }
                 }
             });
+    }
+
+    private Boolean isImageChangeTriggerNeeded(String containerName) {
+        String containersFromConfig = Configs.asString(getConfig(Config.containers));
+        Boolean enrichAll = Configs.asBoolean(getConfig(Config.enrichAll));
+
+        if(enrichAll) {
+            return true;
+        }
+
+        if(!(getProcessingInstructionViaKey(FABRIC8_GENERATED_CONTAINERS).contains(containerName)  ||
+                getProcessingInstructionViaKey(NEED_IMAGECHANGE_TRIGGERS).contains(containerName) ||
+                Arrays.asList(containersFromConfig.split(",")).contains(containerName)))
+            return false;
+
+        return true;
     }
 }
