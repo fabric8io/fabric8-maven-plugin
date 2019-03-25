@@ -36,7 +36,7 @@ import java.util.Properties;
  * @author roland
  * @since 01/04/16
  */
-public abstract class BaseEnricher implements Enricher {
+public class BaseEnricher implements Enricher {
 
     private final EnricherConfig config;
     private final String name;

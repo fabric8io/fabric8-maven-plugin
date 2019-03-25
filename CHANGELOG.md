@@ -15,6 +15,8 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1582: Refactor EnricherManager logic
 * Fix 1409: Update readme for reworked 4.0 version
 * Fix 1038: Do not add ImageChange change triggers for Docker images
+* Fix NullPointerException in ClusterConfiguration when reading from properties
+* Fix 1586: Redundant 'abstract' qualifier in BaseEnricher class removed
 
 ### 4.0.0 (14-03-2019)
 * Refactor 678: Enricher Workflow to allow direct generation of OpenShift objects.
