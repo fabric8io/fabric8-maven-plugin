@@ -133,7 +133,11 @@ public class ClusterConfiguration {
         }
 
         public Builder(ClusterConfiguration clusterConfiguration) {
-            this.clusterConfiguration = clusterConfiguration;
+            if(clusterConfiguration != null) {
+                this.clusterConfiguration = clusterConfiguration;
+            } else {
+                this.clusterConfiguration = new ClusterConfiguration();
+            }
         }
 
         public Builder from(Properties properties) {
