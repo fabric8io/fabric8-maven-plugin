@@ -51,6 +51,7 @@
     # -----------------------------------------
     # TODO: Document and verify enrichers below
     # Health checks
+    - f8-healthcheck-quarkus
     - f8-healthcheck-spring-boot
     - f8-healthcheck-wildfly-swarm
     - f8-healthcheck-thorntail-v2
@@ -69,6 +70,7 @@
   generator:
     # The order given in "includes" is the order in which generators are called
     includes:
+    - quarkus
     - spring-boot
     - wildfly-swarm
     - thorntail-v2

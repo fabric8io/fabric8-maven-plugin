@@ -66,13 +66,15 @@ public class BuildLabelUtil {
 
         try {
             Repository repository = GitUtil.getGitRepository(project.getBasedir());
-            String commitID = GitUtil.getGitCommitId(repository);
-            labels.put(BuildLabelAnnotations.VCS_REF.value(), commitID);
-            String gitRemoteUrl = repository.getConfig().getString("remote", GIT_REMOTE, "url");
-            if (gitRemoteUrl != null) {
-                labels.put(BuildLabelAnnotations.VCS_URL.value(), gitRemoteUrl);
-            } else {
-                log.warn("Could not detect any git remote");
+            if (repository != null) {
+                String commitID = GitUtil.getGitCommitId(repository);
+                labels.put(BuildLabelAnnotations.VCS_REF.value(), commitID);
+                String gitRemoteUrl = repository.getConfig().getString("remote", GIT_REMOTE, "url");
+                if (gitRemoteUrl != null) {
+                    labels.put(BuildLabelAnnotations.VCS_URL.value(), gitRemoteUrl);
+                } else {
+                    log.verbose("Could not detect any git remote");
+                }
             }
         } catch (IOException | GitAPIException | NullPointerException e) {
             log.error("Cannot extract Git information: " + e, e);

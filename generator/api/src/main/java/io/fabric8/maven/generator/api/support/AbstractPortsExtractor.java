@@ -73,7 +73,7 @@ public abstract class AbstractPortsExtractor implements PortsExtractor {
             return null;
         }
         // The system property / Maven property has priority over what is specified in the pom.
-        String configPath = Configs.getPropertyWithSystemAsFallback(project.getProperties(),getConfigPathPropertyName());
+        String configPath = Configs.getSystemPropertyWithMavenPropertyAsFallback(project.getProperties(), getConfigPathPropertyName());
         if (configPath == null) {
             configPath = getConfigPathFromProject(project);
         }

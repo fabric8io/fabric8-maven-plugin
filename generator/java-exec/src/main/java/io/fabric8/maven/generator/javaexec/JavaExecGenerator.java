@@ -37,6 +37,7 @@ import org.apache.maven.plugins.assembly.model.FileSet;
 import org.apache.maven.project.MavenProject;
 
 import static io.fabric8.maven.core.util.BuildLabelUtil.addSchemaLabels;
+import static io.fabric8.maven.core.util.FileUtil.getRelativePath;
 
 /**
  * @author roland
@@ -210,20 +211,11 @@ public class JavaExecGenerator extends BaseGenerator {
     private FileSet getOutputDirectoryFileSet(FatJarDetector.Result fatJar, MavenProject project) {
         FileSet fileSet = new FileSet();
         File buildDir = new File(project.getBuild().getDirectory());
-        fileSet.setDirectory(toRelativePath(buildDir, project.getBasedir()));
-        fileSet.addInclude(toRelativePath(fatJar.getArchiveFile(), buildDir));
+        fileSet.setDirectory(getRelativePath(project.getBasedir(), buildDir).getPath());
+        fileSet.addInclude(getRelativePath(buildDir, fatJar.getArchiveFile()).getPath());
         fileSet.setOutputDirectory(".");
         fileSet.setFileMode("0640");
         return fileSet;
-    }
-
-    private String toRelativePath(File archiveFile, File basedir) {
-        String absolutePath = archiveFile.getAbsolutePath();
-        absolutePath = absolutePath.replace('\\', '/');
-        String basedirPath = basedir.getAbsolutePath().replace('\\', '/');
-        return absolutePath.startsWith(basedirPath) ?
-            absolutePath.substring(basedirPath.length() + 1) :
-            absolutePath;
     }
 
     private FileSet createFileSet(String sourceDir, String outputDir, String fileMode, String directoryMode) {

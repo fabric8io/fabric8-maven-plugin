@@ -121,7 +121,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
             if (!images.isEmpty()) {
                 String type = getConfig(Config.type);
                 if ("deployment".equalsIgnoreCase(type) || "deploymentConfig".equalsIgnoreCase(type)) {
-                    if (platformMode == platformMode.kubernetes) {
+                    if (platformMode == PlatformMode.kubernetes) {
                         log.info("Adding a default Deployment");
                         Deployment deployment = deployHandler.getDeployment(config, images);
                         builder.addToDeploymentItems(deployment);
