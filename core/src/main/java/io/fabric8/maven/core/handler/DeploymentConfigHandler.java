@@ -25,7 +25,6 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -42,11 +41,11 @@ public class DeploymentConfigHandler {
     }
 
     public DeploymentConfig getDeploymentConfig(ResourceConfig config,
-                                                List<ImageConfiguration> images, Long openshiftDeployTimeoutSeconds, Boolean imageChangeTrigger, Boolean enableAutomaticTrigger, Boolean isOpenshiftBuildStrategy) {
+                                                List<ImageConfiguration> images, Long openshiftDeployTimeoutSeconds, Boolean imageChangeTrigger, Boolean enableAutomaticTrigger, Boolean isOpenshiftBuildStrategy, List<String> generatedContainers) {
 
         DeploymentConfig deploymentConfig = new DeploymentConfigBuilder()
                 .withMetadata(createDeploymentConfigMetaData(config))
-                .withSpec(createDeploymentConfigSpec(config, images, openshiftDeployTimeoutSeconds, imageChangeTrigger, enableAutomaticTrigger, isOpenshiftBuildStrategy))
+                .withSpec(createDeploymentConfigSpec(config, images, openshiftDeployTimeoutSeconds, imageChangeTrigger, enableAutomaticTrigger, isOpenshiftBuildStrategy, generatedContainers))
                 .build();
 
         return deploymentConfig;
@@ -60,45 +59,14 @@ public class DeploymentConfigHandler {
                 .build();
     }
 
-    private DeploymentConfigSpec createDeploymentConfigSpec(ResourceConfig config, List<ImageConfiguration> images, Long openshiftDeployTimeoutSeconds, Boolean imageChangeTrigger, Boolean enableAutomaticTrigger, Boolean isOpenshiftBuildStrategy) {
+    private DeploymentConfigSpec createDeploymentConfigSpec(ResourceConfig config, List<ImageConfiguration> images, Long openshiftDeployTimeoutSeconds, Boolean imageChangeTrigger, Boolean enableAutomaticTrigger, Boolean isOpenshiftBuildStrategy, List<String> generatedContainers) {
         DeploymentConfigSpecBuilder specBuilder = new DeploymentConfigSpecBuilder();
 
         PodTemplateSpec podTemplateSpec = podTemplateHandler.getPodTemplate(config,images);
-        PodSpec podSpec = podTemplateSpec.getSpec();
 
         specBuilder.withReplicas(config.getReplicas())
                 .withTemplate(podTemplateSpec)
                 .addNewTrigger().withType("ConfigChange").endTrigger();
-
-        Map<String, String> containerToImageMap = new HashMap<>();
-        Objects.requireNonNull(podSpec, "No PodSpec for PodTemplate:" + podTemplateSpec);
-        List<Container> containers = podSpec.getContainers();
-        Objects.requireNonNull(podSpec, "No containers for PodTemplate.spec: " + podTemplateSpec);
-        for (Container container : containers) {
-            validateContainer(container);
-            containerToImageMap.put(container.getName(), container.getImage());
-        }
-
-        // add a new image change trigger for the build stream
-        if (containerToImageMap.size() != 0 && imageChangeTrigger && isOpenshiftBuildStrategy) {
-            for (Map.Entry<String, String> entry : containerToImageMap.entrySet()) {
-                String containerName = entry.getKey();
-                ImageName image = new ImageName(entry.getValue());
-                String tag = image.getTag() != null ? image.getTag() : "latest";
-                specBuilder.addNewTrigger()
-                        .withType("ImageChange")
-                        .withNewImageChangeParams()
-                        .withAutomatic(enableAutomaticTrigger)
-                        .withNewFrom()
-                        .withKind("ImageStreamTag")
-                        .withName(image.getSimpleName() + ":" + tag)
-                        .withNamespace(image.getUser())
-                        .endFrom()
-                        .withContainerNames(containerName)
-                        .endImageChangeParams()
-                        .endTrigger();
-            }
-        }
 
         if (openshiftDeployTimeoutSeconds != null && openshiftDeployTimeoutSeconds > 0) {
             specBuilder.withNewStrategy().withType("Rolling").

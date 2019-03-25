@@ -25,7 +25,6 @@ import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.EnricherContext;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -108,16 +107,6 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
         } else {
             return defaultValue;
         }
-    }
-
-    private List<String> getFabric8GeneratedContainers() {
-        List<String> containers = new ArrayList<>();
-        if(enricherContext.getProcessingInstructions() != null) {
-            if(enricherContext.getProcessingInstructions().get("FABRIC8_GENERATED_CONTAINERS") != null) {
-                containers.addAll(Arrays.asList(enricherContext.getProcessingInstructions().get("FABRIC8_GENERATED_CONTAINERS").split(",")));
-            }
-        }
-        return containers;
     }
 
     protected List<ContainerBuilder> getContainersToEnrich(KubernetesListBuilder builder) {

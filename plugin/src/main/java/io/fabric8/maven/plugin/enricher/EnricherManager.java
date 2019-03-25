@@ -80,11 +80,7 @@ public class EnricherManager {
     }
 
     public void enrich(PlatformMode platformMode, ProcessorConfig config, KubernetesListBuilder builder) {
-        // Add Metadata labels (
         enrich(platformMode, config, builder, enrichers);
-
-        // Final customization step
-        adapt(platformMode, config, builder);
     }
 
     /**
@@ -94,22 +90,10 @@ public class EnricherManager {
      * @param enricherList list of enrichers
      */
     private void enrich(PlatformMode platformMode, final ProcessorConfig enricherConfig, final KubernetesListBuilder builder, final List<Enricher> enricherList) {
-        loop(enricherConfig, (Enricher enricher) -> {
-                enricher.create(platformMode, builder);
+        loop(enricherConfig, enricher -> {
+                enricher.enrich(platformMode, builder);
                 return null;
             });
-    }
-
-    /**
-     * Allow enricher to do customizations on their own at the end of the enrichment
-     *
-     * @param builder builder to customize
-     */
-    private void adapt(PlatformMode platformMode, final ProcessorConfig enricherConfig, final KubernetesListBuilder builder) {
-        loop(enricherConfig, (Enricher enricher) -> {
-            enricher.enrich(platformMode, builder);
-            return null;
-        });
     }
 
     // =============================================================================================
@@ -125,5 +109,4 @@ public class EnricherManager {
             function.apply(enricher);
         }
     }
-
 }

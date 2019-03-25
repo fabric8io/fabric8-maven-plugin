@@ -65,6 +65,7 @@
     - fmp-revision-history
     - fmp-docker-registry-secret
     - fmp-triggers-annotation
+    - fmp-openshift-imageChangeTrigger
 
   generator:
     # The order given in "includes" is the order in which generators are called
