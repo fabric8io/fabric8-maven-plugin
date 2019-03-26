@@ -102,7 +102,7 @@ abstract public class BaseGenerator implements Generator {
 
     // Get 'from' as configured without any default and image stream tag handling
     protected String getFromAsConfigured() {
-        return getConfigWithSystemFallbackAndDefault(Config.from, "fabric8.generator.from", null);
+        return getConfigWithFallback(Config.from, "fabric8.generator.from", null);
     }
 
     /**
@@ -111,8 +111,8 @@ abstract public class BaseGenerator implements Generator {
      * @param builder for the build image configuration to add the from to.
      */
     protected void addFrom(BuildImageConfiguration.Builder builder) {
-        String fromMode = getConfigWithSystemFallbackAndDefault(Config.fromMode, "fabric8.generator.fromMode", getFromModeDefault(context.getRuntimeMode()));
-        String from = getConfigWithSystemFallbackAndDefault(Config.from, "fabric8.generator.from", null);
+        String fromMode = getConfigWithFallback(Config.fromMode, "fabric8.generator.fromMode", getFromModeDefault(context.getRuntimeMode()));
+        String from = getConfigWithFallback(Config.from, "fabric8.generator.from", null);
         if ("docker".equalsIgnoreCase(fromMode)) {
             String fromImage = from;
             if (fromImage == null) {
@@ -169,9 +169,9 @@ abstract public class BaseGenerator implements Generator {
      */
     protected String getImageName() {
         if (RuntimeMode.isOpenShiftMode(getProject().getProperties())) {
-            return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", "%a:%l");
+            return getConfigWithFallback(Config.name, "fabric8.generator.name", "%a:%l");
         } else {
-            return getConfigWithSystemFallbackAndDefault(Config.name, "fabric8.generator.name", "%g/%a:%l");
+            return getConfigWithFallback(Config.name, "fabric8.generator.name", "%g/%a:%l");
         }
     }
 
@@ -183,7 +183,7 @@ abstract public class BaseGenerator implements Generator {
      */
     protected String getRegistry() {
         if (!RuntimeMode.isOpenShiftMode(getProject().getProperties())) {
-            return getConfigWithSystemFallbackAndDefault(Config.registry, "fabric8.generator.registry", null);
+            return getConfigWithFallback(Config.registry, "fabric8.generator.registry", null);
         }
 
         return null;
@@ -194,17 +194,17 @@ abstract public class BaseGenerator implements Generator {
      * @return an alias which is never null;
      */
     protected String getAlias() {
-        return getConfigWithSystemFallbackAndDefault(Config.alias, "fabric8.generator.alias", getName());
+        return getConfigWithFallback(Config.alias, "fabric8.generator.alias", getName());
     }
 
     protected boolean shouldAddImageConfiguration(List<ImageConfiguration> configs) {
         return !containsBuildConfiguration(configs) || Configs.asBoolean(getConfig(Config.add));
     }
 
-    protected String getConfigWithSystemFallbackAndDefault(Config name, String key, String defaultVal) {
+    protected String getConfigWithFallback(Config name, String key, String defaultVal) {
         String value = getConfig(name);
         if (value == null) {
-            value = Configs.getPropertyWithSystemAsFallback(getProject().getProperties(), key);
+            value = Configs.getSystemPropertyWithMavenPropertyAsFallback(getProject().getProperties(), key);
         }
         return value != null ? value : defaultVal;
     }

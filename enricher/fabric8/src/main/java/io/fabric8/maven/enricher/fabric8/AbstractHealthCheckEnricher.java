@@ -53,22 +53,24 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
 
     @Override
     public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
-        if(!checkIfhealthChecksDisabled(false)) {
-            for(ContainerBuilder container : getContainersToEnrich(builder)) {
-                if (!container.hasReadinessProbe()) {
-                    Probe probe = getReadinessProbe(container);
-                    if (probe != null) {
-                        log.info("Adding readiness " + describe(probe));
-                        container.withReadinessProbe(probe);
-                    }
-                }
+        if (checkIfHealthChecksDisabled(false)) {
+            return;
+        }
 
-                if (!container.hasLivenessProbe()) {
-                    Probe probe = getLivenessProbe(container);
-                    if (probe != null) {
-                        log.info("Adding liveness " + describe(probe));
-                        container.withLivenessProbe(probe);
-                    }
+        for(ContainerBuilder container : getContainersToEnrich(builder)) {
+            if (!container.hasReadinessProbe()) {
+                Probe probe = getReadinessProbe(container);
+                if (probe != null) {
+                    log.info("Adding readiness " + describe(probe));
+                    container.withReadinessProbe(probe);
+                }
+            }
+
+            if (!container.hasLivenessProbe()) {
+                Probe probe = getLivenessProbe(container);
+                if (probe != null) {
+                    log.info("Adding liveness " + describe(probe));
+                    container.withLivenessProbe(probe);
                 }
             }
         }
@@ -99,7 +101,7 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
         return desc.toString();
     }
 
-    protected Boolean checkIfhealthChecksDisabled(Boolean defaultValue) {
+    protected Boolean checkIfHealthChecksDisabled(Boolean defaultValue) {
         if (getContext().getProperty("fabric8.skipHealthCheck") != null) {
             return Boolean.parseBoolean(getContext().getProperty("fabric8.skipHealthCheck").toString());
         } else {
