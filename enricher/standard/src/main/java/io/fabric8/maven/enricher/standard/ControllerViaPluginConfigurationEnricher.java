@@ -68,10 +68,11 @@ public class ControllerViaPluginConfigurationEnricher extends BaseEnricher {
     @Override
     public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         final String name = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getSanitizedArtifactId()));
+        ResourceConfig xmlResourceConfig = getConfiguration().getResource().orElse(null);
         final ResourceConfig config = new ResourceConfig.Builder()
                 .controllerName(name)
                 .imagePullPolicy(getConfig(Config.pullPolicy))
-                .withReplicas(Configs.asInt(getConfig(Config.replicaCount)))
+                .withReplicas(getReplicaCount(builder, xmlResourceConfig, Configs.asInt(getConfig(Config.replicaCount))))
                 .build();
 
         final List<ImageConfiguration> images = getImages().orElse(Collections.emptyList());

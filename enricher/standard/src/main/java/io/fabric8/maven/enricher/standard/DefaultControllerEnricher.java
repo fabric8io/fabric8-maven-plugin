@@ -15,9 +15,7 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ReplicationController;
@@ -42,7 +40,6 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.DeploymentConfig;
-import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -110,7 +107,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
         ResourceConfig config = new ResourceConfig.Builder(xmlResourceConfig)
                 .controllerName(name)
                 .imagePullPolicy(getImagePullPolicy(xmlResourceConfig, getConfig(Config.pullPolicy)))
-                .withReplicas(getReplicaCount(xmlResourceConfig, Configs.asInt(getConfig(Config.replicaCount))))
+                .withReplicas(getReplicaCount(builder, xmlResourceConfig, Configs.asInt(getConfig(Config.replicaCount))))
                 .build();
 
         final List<ImageConfiguration> images = getImages().orElse(Collections.emptyList());
@@ -162,29 +159,6 @@ public class DefaultControllerEnricher extends BaseEnricher {
         }
     }
 
-    @Override
-    public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) {
-        if (platformMode == PlatformMode.kubernetes) {
-            builder.accept(new TypedVisitor<DeploymentBuilder>() {
-                @Override
-                public void visit(DeploymentBuilder deploymentBuilder) {
-                    deploymentBuilder.editSpec().withReplicas(Integer.parseInt(getConfig(Config.replicaCount))).endSpec();
-                }
-            });
-        } else {
-            builder.accept(new TypedVisitor<DeploymentConfigBuilder>() {
-                @Override
-                public void visit(DeploymentConfigBuilder deploymentConfigBuilder) {
-                    deploymentConfigBuilder.editSpec().withReplicas(Integer.parseInt(getConfig(Config.replicaCount))).endSpec();
-
-                    if (isAutomaticTriggerEnabled((MavenEnricherContext)enricherContext, true)) {
-                        deploymentConfigBuilder.editSpec().addNewTrigger().withType("ConfigChange").endTrigger().endSpec();
-                    }
-                }
-            });
-        }
-    }
-
     private void setProcessingInstruction(List<String> containerNames) {
         Map<String, String> processingInstructionsMap = new HashMap<>();
         if(enricherContext.getProcessingInstructions() != null) {
@@ -218,20 +192,6 @@ public class DefaultControllerEnricher extends BaseEnricher {
         KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(byte.class);
     }
 
-    /**
-     * This method just makes sure that the replica count provided in XML config
-     * overrides the default option.
-     *
-     * @param xmlResourceConfig
-     * @param defaultValue
-     * @return
-     */
-    private int getReplicaCount(ResourceConfig xmlResourceConfig, int defaultValue) {
-        if(xmlResourceConfig != null) {
-                return xmlResourceConfig.getReplicas() > 0 ? xmlResourceConfig.getReplicas() : defaultValue;
-        }
-        return defaultValue;
-    }
 
     /**
      * This method overrides the ImagePullPolicy value by the value provided in
