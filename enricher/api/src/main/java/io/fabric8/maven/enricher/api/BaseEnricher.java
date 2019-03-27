@@ -15,14 +15,18 @@
  */
 package io.fabric8.maven.enricher.api;
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.openshift.api.model.DeploymentConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -142,5 +146,35 @@ public class BaseEnricher implements Enricher {
         } else {
             return defaultValue;
         }
+    }
+
+    /**
+     * This method just makes sure that the replica count provided in XML config
+     * overrides the default option; and resource fragments are always given
+     * topmost priority.
+     *
+     * @param builder
+     * @param xmlResourceConfig
+     * @param defaultValue
+     * @return resolved replica count
+     */
+    protected int getReplicaCount(KubernetesListBuilder builder, ResourceConfig xmlResourceConfig, int defaultValue) {
+        if (xmlResourceConfig != null) {
+            List<HasMetadata> items = builder.buildItems();
+            for (HasMetadata item : items) {
+                if (item instanceof Deployment) {
+                    if(((Deployment)item).getSpec().getReplicas() != null) {
+                        return ((Deployment)item).getSpec().getReplicas();
+                    }
+                }
+                if (item instanceof DeploymentConfig) {
+                    if(((DeploymentConfig)item).getSpec().getReplicas() != null) {
+                        return ((DeploymentConfig)item).getSpec().getReplicas();
+                    }
+                }
+            }
+            return xmlResourceConfig.getReplicas() > 0 ? xmlResourceConfig.getReplicas() : defaultValue;
+        }
+        return defaultValue;
     }
 }
