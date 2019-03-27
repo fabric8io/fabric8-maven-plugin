@@ -59,7 +59,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- latest release version of this plugin. Used in the docs.-->
-    <fabric8.maven.plugin.version>3.5.41</fabric8.maven.plugin.version>
+    <fabric8.maven.plugin.version>4.0.0</fabric8.maven.plugin.version>
 
     <jmockit.version>1.43</jmockit.version>
     <version.maven>3.3.1</version.maven>
