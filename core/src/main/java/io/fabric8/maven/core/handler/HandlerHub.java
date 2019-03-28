@@ -25,60 +25,44 @@ import java.util.Properties;
  */
 public class HandlerHub {
 
-    private final ServiceHandler serviceHandler;
-    private final ReplicaSetHandler replicaSetHandler;
-    private final ReplicationControllerHandler replicationControllerHandler;
-    private final DeploymentHandler deploymentHandler;
-    private final DeploymentConfigHandler deploymentConfigHandler;
-    private final StatefulSetHandler statefulSetHandler;
-    private final DaemonSetHandler daemonSetHandler;
-    private final JobHandler jobHandler;
+    private final PodTemplateHandler podTemplateHandler;
 
 
     public HandlerHub(GroupArtifactVersion groupArtifactVersion, Properties configuration) {
         ProbeHandler probeHandler = new ProbeHandler();
         ContainerHandler containerHandler = new ContainerHandler(configuration, groupArtifactVersion, probeHandler);
-        PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
-
-        deploymentHandler = new DeploymentHandler(podTemplateHandler);
-        deploymentConfigHandler = new DeploymentConfigHandler(podTemplateHandler);
-        replicaSetHandler = new ReplicaSetHandler(podTemplateHandler);
-        replicationControllerHandler = new ReplicationControllerHandler(podTemplateHandler);
-        serviceHandler = new ServiceHandler();
-        statefulSetHandler = new StatefulSetHandler(podTemplateHandler);
-        daemonSetHandler = new DaemonSetHandler(podTemplateHandler);
-        jobHandler = new JobHandler(podTemplateHandler);
+        podTemplateHandler = new PodTemplateHandler(containerHandler);       
     }
 
     public ServiceHandler getServiceHandler() {
-        return serviceHandler;
+        return new ServiceHandler();
     }
 
     public DeploymentHandler getDeploymentHandler() {
-        return deploymentHandler;
+        return new DeploymentHandler(podTemplateHandler);
     }
 
     public DeploymentConfigHandler getDeploymentConfigHandler() {
-        return deploymentConfigHandler;
+        return new DeploymentConfigHandler(podTemplateHandler);
     }
 
     public ReplicaSetHandler getReplicaSetHandler() {
-        return replicaSetHandler;
+        return new ReplicaSetHandler(podTemplateHandler);
     }
 
     public ReplicationControllerHandler getReplicationControllerHandler() {
-        return replicationControllerHandler;
+        return new ReplicationControllerHandler(podTemplateHandler);
     }
 
     public StatefulSetHandler getStatefulSetHandler() {
-        return statefulSetHandler;
+        return new StatefulSetHandler(podTemplateHandler);
     }
 
     public DaemonSetHandler getDaemonSetHandler() {
-        return daemonSetHandler;
+        return new DaemonSetHandler(podTemplateHandler);
     }
 
     public JobHandler getJobHandler() {
-        return jobHandler;
+        return new JobHandler(podTemplateHandler);
     }
 }
