@@ -18,6 +18,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix NullPointerException in ClusterConfiguration when reading from properties
 * Fix 1586: Redundant 'abstract' qualifier in BaseEnricher class removed
 * Fix 1600: Replicas fragment not set 
+* Fix 1579: Added documentation for clearing doubts related to sidecars
 
 ### 4.0.0 (14-03-2019)
 * Refactor 678: Enricher Workflow to allow direct generation of OpenShift objects.
