@@ -39,46 +39,45 @@ public class HandlerHub {
         ProbeHandler probeHandler = new ProbeHandler();
         ContainerHandler containerHandler = new ContainerHandler(configuration, groupArtifactVersion, probeHandler);
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
-
-        deploymentHandler = new DeploymentHandler(podTemplateHandler);
-        deploymentConfigHandler = new DeploymentConfigHandler(podTemplateHandler);
-        replicaSetHandler = new ReplicaSetHandler(podTemplateHandler);
-        replicationControllerHandler = new ReplicationControllerHandler(podTemplateHandler);
-        serviceHandler = new ServiceHandler();
-        statefulSetHandler = new StatefulSetHandler(podTemplateHandler);
-        daemonSetHandler = new DaemonSetHandler(podTemplateHandler);
-        jobHandler = new JobHandler(podTemplateHandler);
     }
 
     public ServiceHandler getServiceHandler() {
+        serviceHandler = new ServiceHandler();    	
         return serviceHandler;
     }
 
     public DeploymentHandler getDeploymentHandler() {
+        deploymentHandler = new DeploymentHandler(podTemplateHandler);
         return deploymentHandler;
     }
 
     public DeploymentConfigHandler getDeploymentConfigHandler() {
+        deploymentConfigHandler = new DeploymentConfigHandler(podTemplateHandler);
         return deploymentConfigHandler;
     }
 
     public ReplicaSetHandler getReplicaSetHandler() {
+        replicaSetHandler = new ReplicaSetHandler(podTemplateHandler);
         return replicaSetHandler;
     }
 
     public ReplicationControllerHandler getReplicationControllerHandler() {
+        replicationControllerHandler = new ReplicationControllerHandler(podTemplateHandler);
         return replicationControllerHandler;
     }
 
     public StatefulSetHandler getStatefulSetHandler() {
+        statefulSetHandler = new StatefulSetHandler(podTemplateHandler);
         return statefulSetHandler;
     }
 
     public DaemonSetHandler getDaemonSetHandler() {
+        daemonSetHandler = new DaemonSetHandler(podTemplateHandler);
         return daemonSetHandler;
     }
 
     public JobHandler getJobHandler() {
+        jobHandler = new JobHandler(podTemplateHandler);
         return jobHandler;
     }
 }
