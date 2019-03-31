@@ -41,6 +41,8 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
+import io.fabric8.kubernetes.api.model.rbac.Role;
+import io.fabric8.kubernetes.api.model.rbac.RoleBinding;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -58,8 +60,6 @@ import io.fabric8.openshift.api.model.ImageStreamSpec;
 import io.fabric8.openshift.api.model.OAuthClient;
 import io.fabric8.openshift.api.model.Project;
 import io.fabric8.openshift.api.model.ProjectRequest;
-import io.fabric8.openshift.api.model.Role;
-import io.fabric8.openshift.api.model.RoleBinding;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.TagReference;
 import io.fabric8.openshift.api.model.Template;
@@ -152,7 +152,7 @@ public class ApplyService {
             Role resource = (Role) dto;
             OpenShiftClient openShiftClient = getOpenShiftClient();
             if (openShiftClient != null) {
-                applyResource(resource, sourceName, openShiftClient.roles());
+                applyResource(resource, sourceName, openShiftClient.rbac().roles());
             } else {
                 log.warn("Not connected to OpenShift cluster so cannot apply entity " + dto);
             }
@@ -648,7 +648,7 @@ public class ApplyService {
                 namespace = getNamespace();
             }
             applyNamespace(namespace);
-            RoleBinding old = openShiftClient.roleBindings().inNamespace(namespace).withName(id).get();
+            RoleBinding old = openShiftClient.rbac().roleBindings().inNamespace(namespace).withName(id).get();
             if (isRunning(old)) {
                 if (UserConfigurationCompare.configEqual(entity, old)) {
                     log.info("RoleBinding has not changed so not doing anything");
@@ -664,7 +664,7 @@ public class ApplyService {
                             ObjectMeta metadata = getOrCreateMetadata(entity);
                             metadata.setNamespace(namespace);
                             metadata.setResourceVersion(resourceVersion);
-                            Object answer = openShiftClient.roleBindings().inNamespace(namespace).withName(id).replace(entity);
+                            Object answer = openShiftClient.rbac().roleBindings().inNamespace(namespace).withName(id).replace(entity);
                             logGeneratedEntity("Updated RoleBinding: ", namespace, entity, answer);
                         } catch (Exception e) {
                             onApplyError("Failed to update RoleBinding from " + sourceName + ". " + e + ". " + entity, e);
@@ -685,7 +685,7 @@ public class ApplyService {
         OpenShiftClient openShiftClient = getOpenShiftClient();
         if (openShiftClient != null) {
             try {
-                openShiftClient.roleBindings().inNamespace(namespace).create(entity);
+                openShiftClient.rbac().roleBindings().inNamespace(namespace).create(entity);
             } catch (Exception e) {
                 onApplyError("Failed to create RoleBinding from " + sourceName + ". " + e, e);
             }
