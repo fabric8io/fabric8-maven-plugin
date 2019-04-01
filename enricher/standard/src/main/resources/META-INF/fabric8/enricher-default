@@ -26,7 +26,7 @@ io.fabric8.maven.enricher.standard.DefaultServiceEnricher,103
 io.fabric8.maven.enricher.standard.PortNameEnricher
 
 # Add Maven coordinates as labels
-io.fabric8.maven.enricher.standard.ProjectEnricher
+io.fabric8.maven.enricher.standard.ProjectLabelEnricher
 
 # Copy over annotation from a deployment to its pod spec
 io.fabric8.maven.enricher.standard.PodAnnotationEnricher
@@ -79,6 +79,9 @@ io.fabric8.maven.enricher.standard.openshift.RouteEnricher
 
 # Add a deploymentconfig from deployment when on OpenShift
 io.fabric8.maven.enricher.standard.openshift.DeploymentConfigEnricher
+
+# Add a Project from Namespace when on OpenShift
+io.fabric8.maven.enricher.standard.openshift.ProjectEnricher
 
 # Add an "expose" label to every service (TODO: Combine this with a Route/Ingress enricher)
 io.fabric8.maven.enricher.standard.openshift.ExposeEnricher

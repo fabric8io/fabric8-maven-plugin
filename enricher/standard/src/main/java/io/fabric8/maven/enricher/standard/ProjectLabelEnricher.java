@@ -53,7 +53,7 @@ import java.util.Map;
  * @author roland
  * @since 01/04/16
  */
-public class ProjectEnricher extends BaseEnricher {
+public class ProjectLabelEnricher extends BaseEnricher {
 
     // Available configuration keys
     private enum Config implements Configs.Key {
@@ -65,8 +65,8 @@ public class ProjectEnricher extends BaseEnricher {
         }
     }
 
-    public ProjectEnricher(MavenEnricherContext buildContext) {
-        super(buildContext, "fmp-project");
+    public ProjectLabelEnricher(MavenEnricherContext buildContext) {
+        super(buildContext, "fmp-project-label");
     }
 
     @Override
