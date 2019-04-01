@@ -61,7 +61,7 @@ public class MavenProjectEnricherTest {
 
     @Test
     public void testGeneratedResources() {
-        ProjectEnricher projectEnricher = new ProjectEnricher(context);
+        ProjectLabelEnricher projectEnricher = new ProjectLabelEnricher(context);
 
         KubernetesListBuilder builder = createListWithDeploymentConfig();
         projectEnricher.enrich(PlatformMode.kubernetes, builder);
@@ -96,7 +96,7 @@ public class MavenProjectEnricherTest {
             result = new Configuration.Builder().properties(properties).build();
         }};
 
-        ProjectEnricher projectEnricher = new ProjectEnricher(context);
+        ProjectLabelEnricher projectEnricher = new ProjectLabelEnricher(context);
 
         KubernetesListBuilder builder = createListWithDeploymentConfig();
         projectEnricher.enrich(PlatformMode.kubernetes, builder);

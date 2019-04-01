@@ -29,7 +29,7 @@
     - fmp-service
     - fmp-image
     - fmp-portname
-    - fmp-project
+    - fmp-project-label
     - fmp-dependency
     - fmp-pod-annotations
     - fmp-git
@@ -47,6 +47,7 @@
     - fmp-openshift-service-expose
     - fmp-openshift-route
     - fmp-openshift-deploymentconfig
+    - fmp-openshift-project
 
     # -----------------------------------------
     # TODO: Document and verify enrichers below

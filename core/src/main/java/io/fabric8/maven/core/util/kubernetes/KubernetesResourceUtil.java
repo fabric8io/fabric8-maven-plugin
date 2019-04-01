@@ -285,6 +285,16 @@ public class KubernetesResourceUtil {
         addIfNotExistent(fragment, "kind", kind);
     }
 
+    public static void removeItemFromKubernetesBuilder(KubernetesListBuilder builder, HasMetadata item) {
+        List<HasMetadata> items = builder.buildItems();
+        List<HasMetadata> newListItems = new ArrayList<>();
+        for(HasMetadata listItem : items) {
+            if(!listItem.equals(item)) {
+                newListItems.add(listItem);
+            }
+        }
+        builder.withItems(newListItems);
+    }
     // ===============================================================================================
 
     private static Map<String, Object> getMetadata(Map<String, Object> fragment) {

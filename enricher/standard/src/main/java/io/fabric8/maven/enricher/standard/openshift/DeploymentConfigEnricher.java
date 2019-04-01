@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil.removeItemFromKubernetesBuilder;
+
 public class DeploymentConfigEnricher extends BaseEnricher {
     static final String ENRICHER_NAME = "fmp-openshift-deploymentconfig";
     private Boolean enableAutomaticTrigger;
@@ -52,24 +54,14 @@ public class DeploymentConfigEnricher extends BaseEnricher {
     public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         if(platformMode == PlatformMode.openshift) {
             for(HasMetadata item : builder.buildItems()) {
-                if (item instanceof Deployment) {
+
+                if(item instanceof Deployment) {
                     DeploymentConfig deploymentConfig = convert(item);
-                    removeItemFromBuilder(builder, item);
+                    removeItemFromKubernetesBuilder(builder, item);
                     builder.addToDeploymentConfigItems(deploymentConfig);
                 }
             }
         }
-    }
-
-    private void removeItemFromBuilder(KubernetesListBuilder builder, HasMetadata item) {
-        List<HasMetadata> items = builder.buildItems();
-        List<HasMetadata> newListItems = new ArrayList<>();
-        for(HasMetadata listItem : items) {
-            if(!listItem.equals(item)) {
-                newListItems.add(listItem);
-            }
-        }
-        builder.withItems(newListItems);
     }
 
     private DeploymentConfig convert(HasMetadata item) {
