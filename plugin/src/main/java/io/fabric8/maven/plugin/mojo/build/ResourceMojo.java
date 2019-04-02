@@ -28,7 +28,6 @@ import io.fabric8.maven.core.config.Profile;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.handler.HandlerHub;
-import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.core.util.FileUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.ProfileUtil;
@@ -53,16 +52,6 @@ import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
 import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
 import io.fabric8.openshift.api.model.Template;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import javax.validation.ConstraintViolationException;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -75,6 +64,17 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
+
+import javax.validation.ConstraintViolationException;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import static io.fabric8.maven.core.util.ResourceFileType.yaml;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
@@ -459,7 +459,8 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         if (runtimeMode.equals(RuntimeMode.openshift)) {
             Properties properties = project.getProperties();
             if (!properties.contains(DOCKER_IMAGE_USER)) {
-                String namespace = clusterAccess.getNamespace();
+                String namespace = this.namespace != null && !this.namespace.isEmpty() ?
+                        this.namespace: clusterAccess.getNamespace();
                 log.info("Using docker image name of namespace: " + namespace);
                 properties.setProperty(DOCKER_IMAGE_USER, namespace);
             }
@@ -467,14 +468,14 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                 properties.setProperty(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE, runtimeMode.toString());
             }
         }
-        handlerHub = new HandlerHub(
-            new GroupArtifactVersion(project.getGroupId(), project.getArtifactId(), project.getVersion()),
-            project.getProperties());
     }
 
     private KubernetesList generateResources(PlatformMode platformMode, List<ImageConfiguration> images, File remoteResources)
         throws IOException, MojoExecutionException {
 
+        if (namespace != null && !namespace.isEmpty()) {
+            resources = new ResourceConfig.Builder(resources).withNameSpace(namespace).build();
+        }
         // Manager for calling enrichers.
         MavenEnricherContext.Builder ctxBuilder = new MavenEnricherContext.Builder()
                 .project(project)

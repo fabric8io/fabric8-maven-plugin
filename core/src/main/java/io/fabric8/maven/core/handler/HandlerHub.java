@@ -27,11 +27,10 @@ public class HandlerHub {
 
     private final PodTemplateHandler podTemplateHandler;
 
-
     public HandlerHub(GroupArtifactVersion groupArtifactVersion, Properties configuration) {
         ProbeHandler probeHandler = new ProbeHandler();
         ContainerHandler containerHandler = new ContainerHandler(configuration, groupArtifactVersion, probeHandler);
-        podTemplateHandler = new PodTemplateHandler(containerHandler);       
+        podTemplateHandler = new PodTemplateHandler(containerHandler);
     }
 
     public ServiceHandler getServiceHandler() {
@@ -65,4 +64,8 @@ public class HandlerHub {
     public JobHandler getJobHandler() {
         return new JobHandler(podTemplateHandler);
     }
+
+    public ProjectHandler getProjectHandler() { return new ProjectHandler(); }
+
+    public NamespaceHandler getNamespaceHandler() { return new NamespaceHandler(); }
 }

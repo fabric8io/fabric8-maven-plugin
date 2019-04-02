@@ -1,3 +1,18 @@
+/**
+ * Copyright 2016 Red Hat, Inc.
+ *
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package io.fabric8.maven.enricher.standard.openshift;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -7,7 +22,11 @@ import io.fabric8.kubernetes.api.model.NamespaceSpec;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.openshift.api.model.*;
+import io.fabric8.openshift.api.model.Project;
+import io.fabric8.openshift.api.model.ProjectBuilder;
+import io.fabric8.openshift.api.model.ProjectSpec;
+import io.fabric8.openshift.api.model.ProjectStatus;
+import io.fabric8.openshift.api.model.ProjectStatusBuilder;
 
 import static io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil.removeItemFromKubernetesBuilder;
 
@@ -23,7 +42,7 @@ public class ProjectEnricher extends BaseEnricher {
         if(platformMode == PlatformMode.openshift) {
             for(HasMetadata item : builder.buildItems()) {
                 if(item instanceof Namespace) {
-                    Project project = convert(item);
+                    Project project = convertToProject((Namespace) item);
                     removeItemFromKubernetesBuilder(builder, item);
                     builder.addToProjectItems(project);
                 }
@@ -31,8 +50,8 @@ public class ProjectEnricher extends BaseEnricher {
         }
     }
 
-    private Project convert(HasMetadata item) {
-        Namespace namespace = (Namespace) item;
+    private Project convertToProject(Namespace namespace) {
+
         namespace.getMetadata();
 
         ProjectBuilder builder = new ProjectBuilder();
@@ -46,7 +65,8 @@ public class ProjectEnricher extends BaseEnricher {
                 projectSpec.setFinalizers(namespaceSpec.getFinalizers());
             }
             namespaceSpec.getAdditionalProperties()
-                    .forEach((k, v) -> projectSpec.setAdditionalProperty(k, v));
+                    .forEach((propertyName, propertyValue)
+                            -> projectSpec.setAdditionalProperty(propertyName, propertyValue));
 
             builder.withSpec(projectSpec);
         }
@@ -56,13 +76,15 @@ public class ProjectEnricher extends BaseEnricher {
                     .withPhase(namespace.getStatus().getPhase()).build();
 
             namespace.getStatus().getAdditionalProperties()
-                    .forEach((k, v) -> status.setAdditionalProperty(k, v));
+                    .forEach((propertyName, propertyValue)
+                            -> status.setAdditionalProperty(propertyName, propertyValue));
         }
 
         Project project = builder.build();
 
         namespace.getAdditionalProperties()
-                    .forEach((k,v)-> project.setAdditionalProperty(k,v));
+                    .forEach((propertyName, propertyValue)
+                            -> project.setAdditionalProperty(propertyName, propertyValue));
 
         return project;
     }

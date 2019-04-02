@@ -69,7 +69,7 @@
         <version>4.0-SNAPSHOT</version>
 
         <configuration>
-
+          <namespace>spring-boot-ns</namespace>
           <resources>
             <labels>
               <all>
