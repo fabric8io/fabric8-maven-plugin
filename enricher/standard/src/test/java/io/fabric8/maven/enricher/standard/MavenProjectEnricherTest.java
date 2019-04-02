@@ -90,7 +90,7 @@ public class MavenProjectEnricherTest {
     public void testOldStyleGeneratedResources() {
 
         final Properties properties = new Properties();
-        properties.setProperty("fabric8.enricher.fmp-project.useProjectLabel", "true");
+        properties.setProperty("fabric8.enricher.fmp-project-label.useProjectLabel", "true");
         new Expectations() {{
             context.getConfiguration();
             result = new Configuration.Builder().properties(properties).build();

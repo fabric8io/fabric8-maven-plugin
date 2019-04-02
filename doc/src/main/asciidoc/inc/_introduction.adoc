@@ -34,7 +34,7 @@ This drastically reduces boilerplate code for common scenarios.
 
 == Configuration
 
-As mentioned already there are four levels of configuration:
+As mentioned already there are three levels of configuration:
 
 * *Zero-Config* mode makes some very opinionated decisions based on what is present in the pom.xml like what base image to use or which ports to expose.
 This is great for starting up things and for keeping quickstart applications small and tidy.
@@ -210,6 +210,7 @@ A working example can be found in the  https://github.com/fabric8io/fabric8-mave
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
 <configuration>
+  <namespace>test-ns</namespace>
   <images>  <!--1-->
     <image>
       <name>xml-config-demo:1.0.0</name>

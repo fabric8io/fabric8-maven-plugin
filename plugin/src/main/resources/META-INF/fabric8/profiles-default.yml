@@ -27,6 +27,7 @@
     - fmp-controller
     - fmp-controller-from-configuration
     - fmp-service
+    - fmp-namespace
     - fmp-image
     - fmp-portname
     - fmp-project-label

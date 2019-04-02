@@ -84,7 +84,7 @@ public class EnricherManagerTest {
         new Expectations() {{
             context.getConfiguration();
             result = new Configuration.Builder()
-                .processorConfig(new ProcessorConfig(Arrays.asList("fmp-metadata", "fmp-project"),null,new HashMap<>()))
+                .processorConfig(new ProcessorConfig(Arrays.asList("fmp-metadata", "fmp-project-label"),null,new HashMap<>()))
                 .build();
         }};
         EnricherManager manager = new EnricherManager(null, context, Optional.empty());

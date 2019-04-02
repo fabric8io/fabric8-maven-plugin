@@ -13,6 +13,10 @@ io.fabric8.maven.enricher.standard.NameEnricher
 # Add a default Deployment, ReplicaSet or ReplicationController if none is given
 io.fabric8.maven.enricher.standard.DefaultControllerEnricher
 
+# Add a default Namespace or Project if namespace property is specified as an argument
+# to resource mojo or in the xml configuration
+io.fabric8.maven.enricher.standard.DefaultNamespaceEnricher
+
 # Add image information such as name, image pull policy, environment variables
 # to a container. Controllers (like Deployment, DeploymentConfig, etc.)
 # must be already present

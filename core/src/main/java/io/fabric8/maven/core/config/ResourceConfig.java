@@ -247,11 +247,14 @@ public class ResourceConfig {
             return this;
         }
 
+        public Builder withNameSpace(String s) {
+            config.namespace = s;
+            return this;
+        }
+
         public ResourceConfig build() {
             return config;
         }
-
-
     }
 
     // TODO: SCC
