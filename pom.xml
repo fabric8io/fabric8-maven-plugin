@@ -40,7 +40,6 @@
     <module>enricher/api</module>
     <module>enricher/standard</module>
     <module>enricher/fabric8</module>
-    <module>enricher/osio</module>
     <module>enricher/deprecated</module>
     <module>generator/api</module>
     <module>generator/java-exec</module>

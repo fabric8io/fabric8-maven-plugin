@@ -193,12 +193,6 @@
       </dependency>
 
       <dependency>
-        <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-enricher-osio</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
         <groupId>com.google.code.findbugs</groupId>
         <artifactId>jsr305</artifactId>
         <version>3.0.2</version>
