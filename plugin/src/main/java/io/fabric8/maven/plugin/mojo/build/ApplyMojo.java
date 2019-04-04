@@ -26,14 +26,16 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceSpec;
+import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServicePort;
-import io.fabric8.kubernetes.api.model.ServiceSpec;
+import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPath;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPathBuilder;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressRuleValue;
@@ -45,7 +47,6 @@ import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import io.fabric8.kubernetes.api.model.extensions.IngressSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.service.ApplyService;
 import io.fabric8.maven.core.util.FileUtil;
@@ -56,11 +57,13 @@ import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
+import io.fabric8.openshift.api.model.Project;
+import io.fabric8.openshift.api.model.ProjectRequestBuilder;
 import io.fabric8.openshift.api.model.Route;
-import io.fabric8.openshift.api.model.RouteList;
 import io.fabric8.openshift.api.model.RouteSpec;
 import io.fabric8.openshift.api.model.RouteTargetReference;
 import io.fabric8.openshift.api.model.RouteTargetReferenceBuilder;
+import io.fabric8.openshift.api.model.RouteList;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -252,12 +255,37 @@ public class ApplyMojo extends AbstractFabric8Mojo {
                 disableOpenShiftFeatures(applyService);
             }
 
-            // lets check we have created the namespace
-            String namespace = clusterAccess.getNamespace();
-            applyService.applyNamespace(namespace);
-            applyService.setNamespace(namespace);
-
             Set<HasMetadata> entities = KubernetesResourceUtil.loadResources(manifest);
+
+            String namespace = clusterAccess.getNamespace();
+            boolean namespaceEntityExist = false;
+
+            for (HasMetadata entity: entities) {
+                if (entity instanceof Namespace) {
+                    Namespace ns = (Namespace)entity;
+                    namespace = ns.getMetadata().getName();
+                    applyService.applyNamespace((ns));
+                    namespaceEntityExist = true;
+                    entities.remove(entity);
+                    break;
+                }
+                if (entity instanceof Project) {
+                    Project project = (Project)entity;
+                    namespace = project.getMetadata().getName();
+                    applyService.applyProjectRequest(new ProjectRequestBuilder()
+                            .withDisplayName(project.getMetadata().getName())
+                            .withMetadata(project.getMetadata()).build());
+                    entities.remove(entity);
+                    namespaceEntityExist = true;
+                    break;
+                }
+            }
+
+            if (!namespaceEntityExist) {
+                applyService.applyNamespace(namespace);
+            }
+
+            applyService.setNamespace(namespace);
 
             if (createExternalUrls) {
                 if (applyService.getOpenShiftClient() != null) {

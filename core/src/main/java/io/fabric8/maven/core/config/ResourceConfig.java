@@ -15,11 +15,11 @@
  */
 package io.fabric8.maven.core.config;
 
+import org.apache.maven.plugins.annotations.Parameter;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland
@@ -247,7 +247,7 @@ public class ResourceConfig {
             return this;
         }
 
-        public Builder withNameSpace(String s) {
+        public Builder withNamespace(String s) {
             config.namespace = s;
             return this;
         }

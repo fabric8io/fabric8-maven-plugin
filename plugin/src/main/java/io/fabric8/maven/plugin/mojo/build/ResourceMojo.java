@@ -474,7 +474,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         throws IOException, MojoExecutionException {
 
         if (namespace != null && !namespace.isEmpty()) {
-            resources = new ResourceConfig.Builder(resources).withNameSpace(namespace).build();
+            resources = new ResourceConfig.Builder(resources).withNamespace(namespace).build();
         }
         // Manager for calling enrichers.
         MavenEnricherContext.Builder ctxBuilder = new MavenEnricherContext.Builder()
