@@ -109,9 +109,10 @@ public class ImageChangeTriggerEnricher extends BaseEnricher {
 
         if(!(getProcessingInstructionViaKey(FABRIC8_GENERATED_CONTAINERS).contains(containerName)  ||
                 getProcessingInstructionViaKey(NEED_IMAGECHANGE_TRIGGERS).contains(containerName) ||
-                Arrays.asList(containersFromConfig.split(",")).contains(containerName)))
+                Arrays.asList(containersFromConfig.split(",")).contains(containerName))) {
             return false;
-
+        }
+        
         return true;
     }
 }
