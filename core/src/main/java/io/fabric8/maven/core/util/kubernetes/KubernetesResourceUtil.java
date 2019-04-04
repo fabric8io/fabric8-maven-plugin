@@ -18,7 +18,6 @@ package io.fabric8.maven.core.util.kubernetes;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -30,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -645,7 +643,8 @@ public class KubernetesResourceUtil {
         }
     }
 
-    public static void mergePodSpec(PodSpecBuilder builder, PodSpec defaultPodSpec, String defaultName) {
+    public static String mergePodSpec(PodSpecBuilder builder, PodSpec defaultPodSpec, String defaultName) {
+        String defaultApplicationContainerName = null;
         List<Container> containers = builder.buildContainers();
         List<Container> defaultContainers = defaultPodSpec.getContainers();
         int size = defaultContainers.size();
@@ -658,6 +657,7 @@ public class KubernetesResourceUtil {
                     for (Container fragmentContainer : containers) {
                         if (fragmentContainer.getName() == null || fragmentContainer.getName().equals(defaultContainer.getName())) {
                             container = fragmentContainer;
+                            defaultApplicationContainerName = defaultContainer.getName();
                             break;
                         }
                     }
@@ -701,6 +701,7 @@ public class KubernetesResourceUtil {
             }
             builder.withContainers(containers);
         }
+        return defaultApplicationContainerName; // Return the main application container's name.
     }
 
     private static void ensureHasEnv(Container container, EnvVar envVar) {

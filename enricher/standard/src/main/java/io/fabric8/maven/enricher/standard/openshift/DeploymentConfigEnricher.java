@@ -25,7 +25,6 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
-import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.DeploymentConfig;
@@ -34,7 +33,6 @@ import io.fabric8.openshift.api.model.DeploymentConfigFluent;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -42,13 +40,11 @@ import java.util.Objects;
 public class DeploymentConfigEnricher extends BaseEnricher {
     static final String ENRICHER_NAME = "fmp-openshift-deploymentconfig";
     private Boolean enableAutomaticTrigger;
-    private Boolean enableImageChangeTrigger;
     private Long openshiftDeployTimeoutSeconds;
 
     public DeploymentConfigEnricher(MavenEnricherContext context) {
         super(context, ENRICHER_NAME);
         this.enableAutomaticTrigger = isAutomaticTriggerEnabled(context, true);
-        this.enableImageChangeTrigger = getImageChangeTriggerFlag(true);
         this.openshiftDeployTimeoutSeconds = getOpenshiftDeployTimeoutInSeconds(context, 3600L);
     }
 
@@ -56,8 +52,8 @@ public class DeploymentConfigEnricher extends BaseEnricher {
     public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         if(platformMode == PlatformMode.openshift) {
             for(HasMetadata item : builder.buildItems()) {
-                if(item instanceof Deployment) {
-                    DeploymentConfig deploymentConfig = convert(item, isOpenShiftMode());
+                if (item instanceof Deployment) {
+                    DeploymentConfig deploymentConfig = convert(item);
                     removeItemFromBuilder(builder, item);
                     builder.addToDeploymentConfigItems(deploymentConfig);
                 }
@@ -76,7 +72,7 @@ public class DeploymentConfigEnricher extends BaseEnricher {
         builder.withItems(newListItems);
     }
 
-    private DeploymentConfig convert(HasMetadata item, Boolean isOpenshiftBuildStrategy) {
+    private DeploymentConfig convert(HasMetadata item) {
         Deployment resource = (Deployment) item;
         DeploymentConfigBuilder builder = new DeploymentConfigBuilder();
         builder.withMetadata(resource.getMetadata());
@@ -99,7 +95,6 @@ public class DeploymentConfigEnricher extends BaseEnricher {
                     specBuilder.withSelector(matchLabels);
                 }
             }
-            Map<String, String> containerToImageMap = new HashMap<>();
             PodTemplateSpec template = spec.getTemplate();
             if (template != null) {
                 specBuilder.withTemplate(template);
@@ -107,10 +102,6 @@ public class DeploymentConfigEnricher extends BaseEnricher {
                 Objects.requireNonNull(podSpec, "No PodSpec for PodTemplate:" + template);
                 List<Container> containers = podSpec.getContainers();
                 Objects.requireNonNull(podSpec, "No containers for PodTemplate.spec: " + template);
-                for (Container container : containers) {
-                    validateContainer(container);
-                    containerToImageMap.put(container.getName(), container.getImage());
-                }
             }
             DeploymentStrategy strategy = spec.getStrategy();
             String strategyType = null;
@@ -139,13 +130,5 @@ public class DeploymentConfigEnricher extends BaseEnricher {
             specBuilder.endSpec();
         }
         return builder.build();
-    }
-
-
-    private void validateContainer(Container container) {
-        if (container.getImage() == null) {
-            throw new IllegalArgumentException("Container " + container.getName() + " has no Docker image configured. " +
-                    "Please check your Docker image configuration (including the generators which are supposed to run)");
-        }
     }
 }

@@ -140,7 +140,7 @@ public abstract class AbstractHealthCheckEnricher extends BaseEnricher {
         } else {
             // Multiple unfiltered containers, enrich only the generated ones
             List<ContainerBuilder> generatedContainers = new LinkedList<>();
-            List<String> fabric8GeneratedContainers = getFabric8GeneratedContainers();
+            List<String> fabric8GeneratedContainers = getProcessingInstructionViaKey(FABRIC8_GENERATED_CONTAINERS);
             for (ContainerBuilder container : containerBuilders) {
                 if (container.hasName() && fabric8GeneratedContainers.contains(container.getName())) {
                     generatedContainers.add(container);
