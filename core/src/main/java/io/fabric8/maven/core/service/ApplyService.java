@@ -15,14 +15,6 @@
  */
 package io.fabric8.maven.core.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -60,12 +52,21 @@ import io.fabric8.openshift.api.model.ImageStreamSpec;
 import io.fabric8.openshift.api.model.OAuthClient;
 import io.fabric8.openshift.api.model.Project;
 import io.fabric8.openshift.api.model.ProjectRequest;
+import io.fabric8.openshift.api.model.ProjectRequestBuilder;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.TagReference;
 import io.fabric8.openshift.api.model.Template;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import static io.fabric8.maven.core.util.kubernetes.KubernetesHelper.getKind;
 import static io.fabric8.maven.core.util.kubernetes.KubernetesHelper.getName;
@@ -132,8 +133,6 @@ public class ApplyService {
             applyReplicationController((ReplicationController) dto, sourceName);
         } else if (dto instanceof Service) {
             applyService((Service) dto, sourceName);
-        } else if (dto instanceof Namespace) {
-            applyNamespace((Namespace) dto);
         } else if (dto instanceof Route) {
             applyRoute((Route) dto, sourceName);
         } else if (dto instanceof BuildConfig) {
@@ -970,6 +969,17 @@ public class ApplyService {
             }
         }
         return false;
+    }
+
+    /**
+     * Creates and return a project in openshift
+     * @param project
+     * @return
+     */
+    public boolean applyProject(Project project) {
+        return applyProjectRequest(new ProjectRequestBuilder()
+                .withDisplayName(project.getMetadata().getName())
+                .withMetadata(project.getMetadata()).build());
     }
 
     /**

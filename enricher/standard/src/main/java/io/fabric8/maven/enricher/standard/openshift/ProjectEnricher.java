@@ -52,11 +52,8 @@ public class ProjectEnricher extends BaseEnricher {
 
     private Project convertToProject(Namespace namespace) {
 
-        namespace.getMetadata();
-
         ProjectBuilder builder = new ProjectBuilder();
         builder.withMetadata(namespace.getMetadata());
-
 
         if (namespace.getSpec() != null) {
             NamespaceSpec namespaceSpec = namespace.getSpec();
@@ -64,10 +61,6 @@ public class ProjectEnricher extends BaseEnricher {
             if (namespaceSpec.getFinalizers() != null) {
                 projectSpec.setFinalizers(namespaceSpec.getFinalizers());
             }
-            namespaceSpec.getAdditionalProperties()
-                    .forEach((propertyName, propertyValue)
-                            -> projectSpec.setAdditionalProperty(propertyName, propertyValue));
-
             builder.withSpec(projectSpec);
         }
 
@@ -75,17 +68,9 @@ public class ProjectEnricher extends BaseEnricher {
             ProjectStatus status = new ProjectStatusBuilder()
                     .withPhase(namespace.getStatus().getPhase()).build();
 
-            namespace.getStatus().getAdditionalProperties()
-                    .forEach((propertyName, propertyValue)
-                            -> status.setAdditionalProperty(propertyName, propertyValue));
+            builder.withStatus(status);
         }
 
-        Project project = builder.build();
-
-        namespace.getAdditionalProperties()
-                    .forEach((propertyName, propertyValue)
-                            -> project.setAdditionalProperty(propertyName, propertyValue));
-
-        return project;
+        return builder.build();
     }
 }
