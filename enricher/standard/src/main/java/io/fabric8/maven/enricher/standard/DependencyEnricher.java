@@ -120,6 +120,17 @@ public class DependencyEnricher extends BaseEnricher {
 
     @Override
     public void enrich(PlatformMode platformMode, final KubernetesListBuilder builder) {
+        switch (platformMode) {
+            case kubernetes:
+                enrichKubernetes(builder);
+                break;
+            case openshift:
+                enrichOpenShift(builder);
+                break;
+        }
+    }
+
+    private void enrichKubernetes(final KubernetesListBuilder builder) {
         final List<HasMetadata> kubernetesItems = new ArrayList<>();
         processArtifactSetResources(this.kubernetesDependencyArtifacts, items -> {
             kubernetesItems.addAll(Arrays.asList(items.toArray(new HasMetadata[items.size()])));
@@ -144,6 +155,15 @@ public class DependencyEnricher extends BaseEnricher {
             return null;
         });
         filterAndAddItemsToBuilder(builder, kubernetesItems);
+    }
+
+    private void enrichOpenShift(final KubernetesListBuilder builder) {
+        final List<HasMetadata> openshiftItems = new ArrayList<>();
+        processArtifactSetResources(this.openshiftDependencyArtifacts, items -> {
+            openshiftItems.addAll(Arrays.asList(items.toArray(new HasMetadata[0])));
+            return null;
+        });
+        filterAndAddItemsToBuilder(builder, openshiftItems);
     }
 
     private void removeTemplateObjects(List<HasMetadata> list, List<HasMetadata> objects) {

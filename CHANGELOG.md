@@ -21,6 +21,8 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 1579: Added documentation for clearing doubts related to sidecars
 * Fix 1587: HandlerHub refactored
 * Fix 1579: Add ImageChange triggers to application container when resource fragments are used
+* Fix 1607: Fix YAML aggregation for OpenShift
+* Refactor 1592: Removed Deprecated/Unused Osio specific enrichers.
 
 ### 4.0.0 (14-03-2019)
 * Refactor 678: Enricher Workflow to allow direct generation of OpenShift objects.
