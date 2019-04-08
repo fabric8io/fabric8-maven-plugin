@@ -16,26 +16,16 @@
 package io.fabric8.maven.plugin.mojo.build;
 
 
-import java.io.File;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceSpec;
-import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.kubernetes.api.model.DoneableService;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPath;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPathBuilder;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressRuleValue;
@@ -47,6 +37,7 @@ import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import io.fabric8.kubernetes.api.model.extensions.IngressSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.service.ApplyService;
 import io.fabric8.maven.core.util.FileUtil;
@@ -58,12 +49,11 @@ import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
 import io.fabric8.openshift.api.model.Project;
-import io.fabric8.openshift.api.model.ProjectRequestBuilder;
 import io.fabric8.openshift.api.model.Route;
+import io.fabric8.openshift.api.model.RouteList;
 import io.fabric8.openshift.api.model.RouteSpec;
 import io.fabric8.openshift.api.model.RouteTargetReference;
 import io.fabric8.openshift.api.model.RouteTargetReferenceBuilder;
-import io.fabric8.openshift.api.model.RouteList;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -74,6 +64,15 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+
+import java.io.File;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Base class for goals which deploy the generated artifacts into the Kubernetes cluster
@@ -272,11 +271,9 @@ public class ApplyMojo extends AbstractFabric8Mojo {
                 if (entity instanceof Project) {
                     Project project = (Project)entity;
                     namespace = project.getMetadata().getName();
-                    applyService.applyProjectRequest(new ProjectRequestBuilder()
-                            .withDisplayName(project.getMetadata().getName())
-                            .withMetadata(project.getMetadata()).build());
-                    entities.remove(entity);
+                    applyService.applyProject(project);
                     namespaceEntityExist = true;
+                    entities.remove(entity);
                     break;
                 }
             }
