@@ -18,6 +18,7 @@ package io.fabric8.maven.enricher.standard;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ResourceConfig;
@@ -27,6 +28,9 @@ import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.Project;
+import io.fabric8.openshift.api.model.ProjectBuilder;
+
+import java.util.Arrays;
 
 public class DefaultNamespaceEnricher extends BaseEnricher {
     protected static final String[] NAMESPACE_KINDS = {"Project", "Namespace" };
@@ -95,13 +99,47 @@ public class DefaultNamespaceEnricher extends BaseEnricher {
     public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) {
 
         builder.accept(new TypedVisitor<ObjectMetaBuilder>() {
+            private String getNamespaceName() {
+                String name = null;
+                if (config.getNamespace() != null && !config.getNamespace().isEmpty()) {
+                    name = config.getNamespace();
+                }
+
+                name = builder.getItems().stream()
+                        .filter(item -> Arrays.asList(NAMESPACE_KINDS).contains(item.getKind()))
+                        .findFirst().get().getMetadata().getName();
+
+                return name;
+            }
+
             @Override
-            public void visit(ObjectMetaBuilder builder) {
-                String name = config.getNamespace();
+            public void visit(ObjectMetaBuilder metaBuilder) {
+                if (!KubernetesResourceUtil.checkForKind(builder, NAMESPACE_KINDS)) {
+                    return;
+                }
+
+                String name = getNamespaceName();
                 if (name == null || name.isEmpty()) {
                     return;
                 }
-                builder.withNamespace(name).build();
+
+                metaBuilder.withNamespace(name).build();
+            }
+        });
+
+        // Removing namespace annotation from the namespace and project objects being generated.
+        // to avoid unncessary trouble while applying these resources.
+        builder.accept(new TypedVisitor<NamespaceBuilder>() {
+            @Override
+            public void visit(NamespaceBuilder builder) {
+                builder.withNewStatus("active").editMetadata().withNamespace(null).endMetadata().build();
+            }
+        });
+
+        builder.accept(new TypedVisitor<ProjectBuilder>() {
+            @Override
+            public void visit(ProjectBuilder builder) {
+                builder.withNewStatus("active").editMetadata().withNamespace(null).endMetadata().build();
             }
         });
     }
