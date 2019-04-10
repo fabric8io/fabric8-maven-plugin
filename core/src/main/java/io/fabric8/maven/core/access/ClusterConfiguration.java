@@ -42,7 +42,7 @@ public class ClusterConfiguration {
     private String keyStoreFile;
     private String keyStorePassphrase;
 
-    private ClusterConfiguration() {
+    public ClusterConfiguration() {
         this.namespace = KubernetesHelper.getDefaultNamespace();
     }
 
