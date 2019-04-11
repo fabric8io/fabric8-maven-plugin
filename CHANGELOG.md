@@ -11,6 +11,9 @@ We use semantic versioning in some slight variation until our feature set has st
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
 ### 4.1-SNAPSHOT
+* Update Docker Maven Plugin to 0.29.0
+
+### 4.1.0 (16-02-2019)
 * Fix 1578: Fmp is generating ImageChange triggers in the DeploymentConfig
 * Fix 1582: Refactor EnricherManager logic
 * Fix 1409: Update readme for reworked 4.0 version

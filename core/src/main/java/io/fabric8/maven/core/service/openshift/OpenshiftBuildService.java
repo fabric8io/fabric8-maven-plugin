@@ -74,7 +74,6 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.codehaus.plexus.archiver.tar.TarArchiver;
 
 /**
  * @author nicola
@@ -454,10 +453,9 @@ public class OpenshiftBuildService implements BuildService {
         String fromImage;
         try {
             File fullDockerFilePath = buildConfig.getAbsoluteDockerFilePath(buildContext.getMojoParameters());
-            fromImage = DockerFileUtil.extractBaseImage(
+            fromImage = DockerFileUtil.extractBaseImages(
                     fullDockerFilePath,
-                    DockerFileUtil.createInterpolator(buildContext.getMojoParameters(),
-                    buildConfig.getFilter()));
+                    DockerFileUtil.createInterpolator(buildContext.getMojoParameters(), buildConfig.getFilter())).stream().findFirst().orElse(null);
         } catch (IOException e) {
             // Cant extract base image, so we wont try an auto pull. An error will occur later anyway when
             // building the image, so we are passive here.
