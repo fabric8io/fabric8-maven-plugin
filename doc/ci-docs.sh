@@ -25,7 +25,7 @@ export MAVEN_OPTS="-Xmx3000m"
 mvn -B install -DskipTests=true
 cd doc
 mvn -B -Phtml,pdf package
-git clone -b gh-pages https://fabric8cd:$GH_TOKEN@github.com/fabric8io/fabric8-maven-plugin.git gh-pages
+git clone -b gh-pages https://fabric8ci:$GH_TOKEN@github.com/fabric8io/fabric8-maven-plugin.git gh-pages
 cp -rv target/generated-docs/* gh-pages/
 cd gh-pages
 mv index.pdf fabric8-maven-plugin.pdf

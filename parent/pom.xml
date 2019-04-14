@@ -751,6 +751,11 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
+	    <configuration>
+	       <passphrase>${env.GPG_PASSPHRASE}</passphrase>
+	       <useAgent>true</useAgent>
+	    </configuration>
+
             <executions>
               <execution>
                 <id>sign-artifacts</id>

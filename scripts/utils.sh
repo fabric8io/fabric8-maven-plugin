@@ -26,8 +26,8 @@ function get_project_version() {
 }
 
 function setup_git_ssh() {
-    git config --global user.email fabric8cd@gmail.com
-    git config --global user.name fabric8cd
+    git config --global user.email fabric8ci@gmail.com
+    git config --global user.name fabric8ci
 }
 
 function push_tag() {
@@ -55,7 +55,7 @@ function stage_sonatype_repo() {
 function stage_project() {
     setup_git_ssh
     if [ -z $GH_USER ]; then
-        GH_USER=fabric8cd
+        GH_USER=fabric8ci
         echo $GH_USER
     fi
     git remote set-url origin https://${GH_USER}:${GH_TOKEN}@github.com/${project}.git
