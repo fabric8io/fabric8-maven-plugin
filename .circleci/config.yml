@@ -116,8 +116,13 @@ jobs:
     - checkout
     - run:
         command: |
+          # Release Project
           bash ./scripts/prepare-environment.sh
           bash ./scripts/release.sh
+          # Release Docs
+          bash git config --global user.email "circleci@fabric8.io"
+          bash git config --global user.name "CircleCI"
+          bash ./doc/ci-docs.sh
 
 workflows:
   version: 2
@@ -126,7 +131,7 @@ workflows:
     - doc:
         filters:
           branches:
-            only: release-only
+            only: release-docs
     - build
     - tests
     - license
