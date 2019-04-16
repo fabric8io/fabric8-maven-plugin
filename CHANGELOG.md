@@ -25,6 +25,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Refactor 1592: Removed Deprecated/Unused Osio specific enrichers.
 * Fix 1608: Added Enricher for namespace to project conversion.
 * Feature 1611: Allow creating namespaces from xml configuration
+* Fix 1616: Goals failing with Access Configuration
 
 ### 4.0.0 (14-03-2019)
 * Refactor 678: Enricher Workflow to allow direct generation of OpenShift objects.
