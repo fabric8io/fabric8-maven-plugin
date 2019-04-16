@@ -151,6 +151,14 @@ public class BaseEnricher implements Enricher {
         }
     }
 
+    protected Boolean getTrimImageInContainerSpecFlag(Boolean defaultValue) {
+        if (getContext().getProperty("fabric8.openshift.trimImageInContainerSpec") != null) {
+            return Boolean.parseBoolean(getContext().getProperty("fabric8.openshift.trimImageInContainerSpec").toString());
+        } else {
+            return defaultValue;
+        }
+    }
+
     /**
      * This method just makes sure that the replica count provided in XML config
      * overrides the default option; and resource fragments are always given

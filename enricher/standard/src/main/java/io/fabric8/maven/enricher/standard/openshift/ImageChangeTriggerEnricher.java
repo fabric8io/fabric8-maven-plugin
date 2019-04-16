@@ -38,6 +38,7 @@ public class ImageChangeTriggerEnricher extends BaseEnricher {
     static final String ENRICHER_NAME = "fmp-openshift-imageChangeTrigger";
     private Boolean enableAutomaticTrigger;
     private Boolean enableImageChangeTrigger;
+    private Boolean trimImageInContainerSpecFlag;
 
 
     private enum Config implements Configs.Key {
@@ -51,6 +52,7 @@ public class ImageChangeTriggerEnricher extends BaseEnricher {
         super(context, ENRICHER_NAME);
         this.enableAutomaticTrigger = isAutomaticTriggerEnabled(context, true);
         this.enableImageChangeTrigger = getImageChangeTriggerFlag(true);
+        this.trimImageInContainerSpecFlag = getTrimImageInContainerSpecFlag(false);
     }
 
     @Override
@@ -94,6 +96,10 @@ public class ImageChangeTriggerEnricher extends BaseEnricher {
                                         .endTrigger();
                             }
                         }
+
+                        if(trimImageInContainerSpecFlag) {
+                            builder.editTemplate().editSpec().withContainers(trimImagesInContainers(template)).endSpec().endTemplate();
+                        }
                     }
                 }
             });
@@ -114,5 +120,11 @@ public class ImageChangeTriggerEnricher extends BaseEnricher {
         }
         
         return true;
+    }
+
+    private List<Container> trimImagesInContainers(PodTemplateSpec template) {
+        List<Container> containers = template.getSpec().getContainers();
+        containers.forEach(container -> container.setImage(""));
+        return containers;
     }
 }
