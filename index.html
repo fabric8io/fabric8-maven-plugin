@@ -515,8 +515,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/fabric8-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
-<span id="revnumber">version 4.0.0,</span>
-<span id="revdate">2019-03-26</span>
+<span id="revnumber">version 4.1.0,</span>
+<span id="revdate">2019-04-17</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -615,7 +615,6 @@ table.CodeRay td.code>pre{padding:0}
 <ul class="sectlevel3">
 <li><a href="#enrichers-standard">8.1.1. Standard Enrichers</a></li>
 <li><a href="#enrichers-fabric8">8.1.2. Fabric8 Enrichers</a></li>
-<li><a href="#enrichers-osio">8.1.3. OpenShift.io Enrichers</a></li>
 </ul>
 </li>
 <li><a href="#enricher-api">8.2. Enricher API</a></li>
@@ -719,7 +718,7 @@ This drastically reduces boilerplate code for common scenarios.</p>
 <div class="sect2">
 <h3 id="configuration">1.3. Configuration</h3>
 <div class="paragraph">
-<p>As mentioned already there are four levels of configuration:</p>
+<p>As mentioned already there are three levels of configuration:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -790,7 +789,7 @@ This allows for type-safe configuration with IDE support, but only a subset of p
 
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-sample-zero-config<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.0.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
   <span class="tag">&lt;packaging&gt;</span>jar<span class="tag">&lt;/packaging&gt;</span>
 
   <span class="tag">&lt;parent&gt;</span>
@@ -815,7 +814,7 @@ This allows for type-safe configuration with IDE support, but only a subset of p
       <span class="tag">&lt;plugin&gt;</span>
         <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
         <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span> <i class="conum" data-value="4"></i><b>(4)</b>
-        <span class="tag">&lt;version&gt;</span>4.0.0<span class="tag">&lt;/version&gt;</span>
+        <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
       <span class="tag">&lt;/plugin&gt;</span>
     <span class="tag">&lt;/plugins&gt;</span>
   <span class="tag">&lt;/build&gt;</span>
@@ -978,6 +977,7 @@ XML based configuration is only partially implemented and is not recommended for
 <div class="title">Example for an XML configuration</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
+  <span class="tag">&lt;namespace&gt;</span>test-ns<span class="tag">&lt;/namespace&gt;</span>
   <span class="tag">&lt;images&gt;</span>  <i class="conum" data-value="1"></i><b>(1)</b>
     <span class="tag">&lt;image&gt;</span>
       <span class="tag">&lt;name&gt;</span>xml-config-demo:1.0.0<span class="tag">&lt;/name&gt;</span>
@@ -1126,6 +1126,19 @@ XML based configuration is only partially implemented and is not recommended for
 filename. In this case, the <code>fabric8-maven-plugin</code> will create a <code>Deployment</code> because the file is called <code>deployment.yml</code>. Similar mappings between file names and resource type exist for each supported resource kind, the
 complete list of which (along with associated abbreviations) can be found in the <a href="#appendix-kind-mapping">Appendix</a>.</p>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Now that sidecar containers are supported in this plugin, be careful whenever you&#8217;re supplying container name in the resource fragment. If container specified in resource fragment doesn&#8217;t have a name or it&#8217;s name is equal to default fmp generated application&#8217;s container name; it would not be treated as sidecar and it would be merged into main container. However, You can override plugin&#8217;s default name for main container via <code>fabric8.generator.alias</code> property.
+</td>
+</tr>
+</table>
+</div>
+<hr>
 <div class="paragraph">
 <p>Additionally, if you name your fragment using a name prefix followed by a dash and the mapped file name, the plugin will automatically use that name for your resource. So, for example, if you name your deployment fragment
 <code>myapp-deployment.yml</code>, the plugin will name your resource <code>myapp</code>. In the absence of such provided name for your resource, a name will be automatically derived from your project&#8217;s metadata (in particular, its <code>artifactId</code> as specified in your POM).</p>
@@ -1363,7 +1376,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.0.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1874,7 +1887,7 @@ If you do not want to generate a Route descriptor, you can set the <code>fabric8
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>4.0.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
     <span class="tag">&lt;configuration&gt;</span>
         <span class="tag">&lt;generateRoute&gt;</span>false<span class="tag">&lt;/generateRoute&gt;</span>
     <span class="tag">&lt;/configuration&gt;</span>
@@ -2503,13 +2516,16 @@ linking images together or for specifying it with the global <strong>image</stro
 <div class="ulist">
 <ul>
 <li>
-<p><strong>dockerFileDir</strong> specifies a directory containing a Dockerfile that will be used to create the image. The name of the Dockerfile is <code>Dockerfile</code> by default but can be also set with the option <code>dockerFile</code> (see below).</p>
+<p><strong>contextDir</strong> specifies docker build context if an external dockerfile is located outside of Docker build context. If not specified, Dockerfile&#8217;s parent directory is used as build context.</p>
 </li>
 <li>
-<p><strong>dockerFile</strong> specifies a specific Dockerfile path. The Docker build context directory is set to <code>dockerFileDir</code> if given. If not the directory by default is the directory in which the Dockerfile is stored.</p>
+<p><strong>dockerFile</strong> specifies a specific Dockerfile path.</p>
 </li>
 <li>
 <p><strong>dockerArchive</strong> specifies a previously saved image archive to load directly. Such a tar archive can be created with <code>docker save</code>. If a <code>dockerArchive</code> is provided, no <code>dockerFile</code> or <code>dockerFileDir</code> must be given.</p>
+</li>
+<li>
+<p><strong>dockerFileDir</strong> (<strong>deprecated</strong>, use <strong>contextDir</strong>) specifies a directory containing a Dockerfile that will be used to create the image. The name of the Dockerfile is <code>Dockerfile</code> by default but can be also set with the option <code>dockerFile</code> (see below).</p>
 </li>
 </ul>
 </div>
@@ -2529,17 +2545,54 @@ The files of the assembly are stored in a build context relative directory <code
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="dockerfils">COPY maven/ /my/target/directory</code></pre>
+<pre class="CodeRay highlight"><code data-lang="dockerfile">COPY maven/ /my/target/directory</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>so that the assembly files will end up in <code>/my/target/directory</code> within the container.</p>
 </div>
 <div class="paragraph">
-<p>If this directory contains a <code>.maven-dockerignore</code> (or alternatively, a <code>.maven-dockerexclude</code> file), then it is used for excluding files for the build. Each line in this file is treated as a <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>. It is similar to <code>.dockerignore</code> when using Docker but has a slightly different syntax (hence the different name).</p>
+<p>If this directory contains a <code>.maven-dockerignore</code> (or alternatively, a <code>.maven-dockerexclude</code> file), then it is used for excluding files for the build. Each line in this file is treated as a <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>. It is similar to <code>.dockerignore</code> when using Docker but has a slightly different syntax (hence the different name).
+<a href="#ex-build-dockerexclude">Example <code>.maven-dockerexclude</code> or <code>.maven-dockerignore</code></a> is an  example which excludes all compiled Java classes.</p>
+</div>
+<div id="ex-build-dockerexclude" class="exampleblock">
+<div class="title">Example 1. Example <code>.maven-dockerexclude</code> or <code>.maven-dockerignore</code></div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code>target/classes/**  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Exclude all compiled classes</td>
+</tr>
+</table>
+</div>
+</div>
 </div>
 <div class="paragraph">
-<p>If this directory contains a <code>.maven-dockerinclude</code> file, then it is used for including only those files for the build. Each line in this file is also treated as a <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>.</p>
+<p>If this directory contains a <code>.maven-dockerinclude</code> file, then it is used for including only those files for the build. Each line in this file is also treated as a <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>. <a href="#ex-build-dockerinclude">Example <code>.maven-dockerinclude</code></a> shows how to include only jar file that have build to the Docker build context.</p>
+</div>
+<div id="ex-build-dockerinclude" class="exampleblock">
+<div class="title">Example 2. Example <code>.maven-dockerinclude</code></div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code>target/*.jar  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Only add jar file to you Docker build context.</td>
+</tr>
+</table>
+</div>
+</div>
 </div>
 <div class="paragraph">
 <p>Except for the <a href="#build-assembly">assembly configuration</a> all other configuration options are ignored for now.</p>
@@ -2809,6 +2862,10 @@ In case of an <a href="#build-openshift">S2I Binary build</a> this parameter spe
 <td class="tableblock halign-left valign-top"><p class="tableblock">The exposed ports which is a list of <code>&lt;port&gt;</code> elements, one for each port to expose. Whitespace is trimmed from each element and empty elements are ignored. The format can be either pure numerical ("8080") or with the protocol attached ("8080/tcp").</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>shell</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Shell to be used for the <strong>runCmds</strong>. It contains <strong>arg</strong> elements which are defining the executable and its params.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>runCmds</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Commands to be run during the build process. It contains <strong>run</strong> elements which are passed to the shell. Whitespace is trimmed from each element and empty elements are ignored. The run commands are inserted right after the assembly and after <strong>workdir</strong> into the Dockerfile. This tag is not to be confused with the <code>&lt;run&gt;</code> section for this image which specifies the runtime behaviour when starting containers.</p></td>
 </tr>
@@ -2862,6 +2919,17 @@ remote API.</p>
   <span class="tag">&lt;buildOptions&gt;</span>
     <span class="tag">&lt;shmsize&gt;</span>2147483648<span class="tag">&lt;/shmsize&gt;</span>
   <span class="tag">&lt;/buildOptions&gt;</span>
+
+  <span class="tag">&lt;shell&gt;</span>
+    <span class="tag">&lt;exec&gt;</span>
+      <span class="tag">&lt;arg&gt;</span>/bin/sh<span class="tag">&lt;/arg&gt;</span>
+      <span class="tag">&lt;arg&gt;</span>-c<span class="tag">&lt;/arg&gt;</span>
+    <span class="tag">&lt;/exec&gt;</span>
+  <span class="tag">&lt;/shell&gt;</span>
+  <span class="tag">&lt;runCmds&gt;</span>
+    <span class="tag">&lt;run&gt;</span>groupadd -r appUser<span class="tag">&lt;/run&gt;</span>
+    <span class="tag">&lt;run&gt;</span>useradd -r -g appUser appUser<span class="tag">&lt;/run&gt;</span>
+  <span class="tag">&lt;/runCmds&gt;</span>
 
   <span class="tag">&lt;entryPoint&gt;</span>
     <span class="comment">&lt;!-- exec form for ENTRYPOINT --&gt;</span>
@@ -3446,7 +3514,7 @@ more details.</p></td>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.0.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="comment">&lt;!-- Connect fabric8:resource to the lifecycle phases --&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
@@ -3621,7 +3689,7 @@ This goal is deprecated and might vanish in version 4.0 of this plugin. It&#8217
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.0.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="comment">&lt;!-- Connect fabric8:resource, fabric8:build and fabric8:helm to lifecycle phases --&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
@@ -3659,7 +3727,7 @@ This goal is deprecated and might vanish in version 4.0 of this plugin. It&#8217
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>4.0.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
     <span class="tag">&lt;configuration&gt;</span>
         <span class="tag">&lt;enricher&gt;</span>
             <span class="tag">&lt;excludes&gt;</span>
@@ -4742,9 +4810,6 @@ The API is still a bit in flux and will be documented later. Please refer to the
 </li>
 <li>
 <p><strong>Fabric8 Enrichers</strong> are enrichers which are focused on a certain tech stack that they detect.</p>
-</li>
-<li>
-<p><strong>OpenShift.io Enrichers</strong> are specific to the <a href="https://www.openshift.io">OpenShift.io development environment</a>. These enrichers can add metadata to resources to allow them to better integrate with OpenShift.io.</p>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
@@ -5607,7 +5672,7 @@ However, by default, no health check will be added to your deployment.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.0.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
     <span class="tag">&lt;execution&gt;</span>
       <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
@@ -5667,7 +5732,7 @@ However, by default, no health check will be added to your deployment.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.0.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
     <span class="tag">&lt;execution&gt;</span>
       <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
@@ -5714,7 +5779,7 @@ However, by default, no health check will be added to your deployment.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.0.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
     <span class="tag">&lt;execution&gt;</span>
       <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
@@ -6227,91 +6292,6 @@ For more information read <a href="https://kubernetes.io/docs/concepts/workloads
 </div>
 </div>
 </div>
-</div>
-<div class="sect3">
-<h4 id="enrichers-osio">8.1.3. OpenShift.io Enrichers</h4>
-<div class="paragraph">
-<p>OpenShift.io enrichers add metadata to resources in order to better integrate them into <a href="https://openshift.io">OpenShift.io</a>. They are not enabled by default, but can be activated with the <code>osio</code> profile.</p>
-</div>
-<div class="sect4">
-<h5 id="osio-space-label-enricher">osio-space-label</h5>
-<div class="paragraph">
-<p>This enricher adds a label named <code>space</code> to all resources generated by the <code>fabric8:resource</code> goal.
-The value of this label identifies the OpenShift.io space that this application belongs to. For more information
-about spaces, see the <a href="https://docs.openshift.io/user-guide.html#working_with_spaces">OpenShift.io documentation</a>.</p>
-</div>
-<div class="paragraph">
-<p>To provide the value of the <code>space</code> label to be applied by this enricher, use one of the following:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Set the system property <code>fabric8.enricher.osio-space-label.space</code> when building:</p>
-<div class="literalblock">
-<div class="content">
-<pre>mvn -Dfabric8.enricher.osio-space-label.space=mySpace fabric8:resource</pre>
-</div>
-</div>
-</li>
-<li>
-<p>Define property <code>fabric8.enricher.osio-space-label.space</code> in your project&#8217;s pom.xml:</p>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml">...
-  <span class="tag">&lt;properties&gt;</span>
-    <span class="tag">&lt;fabric8.enricher.osio-space-label.space&gt;</span>
-      mySpace
-    <span class="tag">&lt;/fabric8.enricher.osio-space-label.space&gt;</span>
-  <span class="tag">&lt;/properties&gt;</span>
-...</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Specify in the configuration for <code>fabric8-maven-plugin</code>:</p>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml">...
-  <span class="tag">&lt;plugin&gt;</span>
-    <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
-    <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-    ...
-    <span class="tag">&lt;configuration&gt;</span>
-      <span class="tag">&lt;enricher&gt;</span>
-        <span class="tag">&lt;config&gt;</span>
-          <span class="tag">&lt;osio-space-label&gt;</span>
-            <span class="tag">&lt;space&gt;</span>mySpace<span class="tag">&lt;/space&gt;</span>
-          <span class="tag">&lt;/osio-space-label&gt;</span>
-        <span class="tag">&lt;/config&gt;</span>
-      <span class="tag">&lt;/enricher&gt;</span>
-    <span class="tag">&lt;/configuration&gt;</span>
-  <span class="tag">&lt;/plugin&gt;</span>
-...</code></pre>
-</div>
-</div>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>Regardless of which above method you choose to configure the enricher, the resulting resources will have the <code>space</code>
-label applied, like the following:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="yaml"><span class="key">apiVersion</span>: <span class="string"><span class="content">apps.openshift.io/v1</span></span>
-<span class="key">kind</span>: <span class="string"><span class="content">DeploymentConfig</span></span>
-<span class="key">metadata</span>:
-  <span class="error">...</span>
-  <span class="key">labels</span>:
-    <span class="key">space</span>: <span class="string"><span class="content">mySpace</span></span>
-    <span class="key">app</span>: <span class="string"><span class="content">myproject</span></span>
-    <span class="key">provider</span>: <span class="string"><span class="content">fabric8</span></span>
-    <span class="key">version</span>: <span class="string"><span class="content">1.0.0-SNAPSHOT</span></span>
-    <span class="key">group</span>: <span class="string"><span class="content">com.example</span></span>
-  <span class="error">...</span></code></pre>
-</div>
-</div>
-</div>
 <div class="sect4">
 <h5 id="fmp-triggers-annotation">fmp-triggers-annotation</h5>
 <div class="paragraph">
@@ -6424,7 +6404,7 @@ If you set <code>name</code> tag then this is used as key instead of the filenam
 <div class="sect2">
 <h3 id="enricher-api">8.2. Enricher API</h3>
 <div class="paragraph">
-<p><em>howto write your own enricher and install them</em></p>
+<p><em>how to write your own enricher and install them</em></p>
 </div>
 </div>
 </div>
@@ -6766,9 +6746,10 @@ If you set <code>name</code> tag then this is used as key instead of the filenam
     - <span class="string"><span class="content">fmp-controller</span></span>
     - <span class="string"><span class="content">fmp-controller-from-configuration</span></span>
     - <span class="string"><span class="content">fmp-service</span></span>
+    - <span class="string"><span class="content">fmp-namespace</span></span>
     - <span class="string"><span class="content">fmp-image</span></span>
     - <span class="string"><span class="content">fmp-portname</span></span>
-    - <span class="string"><span class="content">fmp-project</span></span>
+    - <span class="string"><span class="content">fmp-project-label</span></span>
     - <span class="string"><span class="content">fmp-dependency</span></span>
     - <span class="string"><span class="content">fmp-pod-annotations</span></span>
     - <span class="string"><span class="content">fmp-git</span></span>
@@ -6786,6 +6767,7 @@ If you set <code>name</code> tag then this is used as key instead of the filenam
     - <span class="string"><span class="content">fmp-openshift-service-expose</span></span>
     - <span class="string"><span class="content">fmp-openshift-route</span></span>
     - <span class="string"><span class="content">fmp-openshift-deploymentconfig</span></span>
+    - <span class="string"><span class="content">fmp-openshift-project</span></span>
 
     <span class="comment"># -----------------------------------------</span>
     <span class="comment"># TODO: Document and verify enrichers below</span>
@@ -7205,7 +7187,14 @@ The <code>docker:push</code> and <code>docker:pull</code> goals automatically ex
 <p>You can use any IAM access key with the necessary permissions in any of the locations mentioned above except <code>~/.docker/config.json</code>.
 Use the IAM <strong>Access key ID</strong> as the username and the <strong>Secret access key</strong> as the password.
 In case you&#8217;re using temporary security credentials provided by the AWS Security Token Service (AWS STS), you have to provide the <strong>security token</strong> as well.
-To do so, either specify the <code>docker.authToken</code> system property or provide an <code>&lt;auth&gt;</code> element alongside username &amp; password in the <code>authConfig</code>.
+To do so, either specify the <code>docker.authToken</code> system property or provide an <code>&lt;auth&gt;</code> element alongside username &amp; password in the <code>authConfig</code>.</p>
+</div>
+<div class="paragraph">
+<p>In case you are running on an EC2 instance that has an appropriate IAM role assigned
+(e.g. a role that grants the AWS built-in policy <em>AmazonEC2ContainerRegistryPowerUser</em>)
+authentication information doesn&#8217;t need to be provided at all. Instead the instance
+meta-data service is queried for temporary access credentials supplied by the
+assigned role.
 Unresolved directive in index.adoc - include::inc/_volumes.adoc[]</p>
 </div>
 </div>
@@ -7566,8 +7555,8 @@ By default if no environment variable nor system property is set, scan for a fil
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 4.0.0<br>
-Last updated 2019-03-26 09:43:29 UTC
+Version 4.1.0<br>
+Last updated 2019-03-13 14:26:55 UTC
 </div>
 </div>
 </body>
