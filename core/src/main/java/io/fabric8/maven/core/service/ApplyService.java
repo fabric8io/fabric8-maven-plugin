@@ -28,6 +28,7 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apps.DaemonSet;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
@@ -38,8 +39,10 @@ import io.fabric8.kubernetes.api.model.rbac.RoleBinding;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.maven.core.util.FileUtil;
 import io.fabric8.maven.core.util.ResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.core.util.kubernetes.UserConfigurationCompare;
@@ -179,6 +182,8 @@ public class ApplyService {
             applyResource((Ingress) dto, sourceName, kubernetesClient.extensions().ingresses());
         } else if (dto instanceof PersistentVolumeClaim) {
             applyPersistentVolumeClaim((PersistentVolumeClaim) dto, sourceName);
+        }else if (dto instanceof CustomResourceDefinition) {
+            applyCustomResourceDefinition((CustomResourceDefinition) dto, sourceName);
         } else if (dto instanceof HasMetadata) {
             HasMetadata entity = (HasMetadata) dto;
             try {
@@ -397,7 +402,7 @@ public class ApplyService {
                 } else {
                     log.info("Updating a PersistentVolumeClaim from " + sourceName);
                     try {
-                        Object answer = patchService.compareAndPatchEntity(namespace, entity, old);
+                        HasMetadata answer = patchService.compareAndPatchEntity(namespace, entity, old);
                         logGeneratedEntity("Updated PersistentVolumeClaim: ", namespace, entity, answer);
                     } catch (Exception e) {
                         onApplyError("Failed to update PersistentVolumeClaim from " + sourceName + ". " + e + ". " + entity, e);
@@ -413,7 +418,82 @@ public class ApplyService {
         }
     }
 
-     protected boolean isBound(PersistentVolumeClaim claim) {
+    public void applyCustomResourceDefinition(CustomResourceDefinition entity, String sourceName) {
+        String namespace = getNamespace();
+        String id = getName(entity);
+        Objects.requireNonNull(id, "No name for " + entity + " " + sourceName);
+        if (isServicesOnlyMode()) {
+            log.debug("Only processing Services right now so ignoring Custom Resource Definition: " + namespace + ":" + id);
+            return;
+        }
+        CustomResourceDefinition old = kubernetesClient.customResourceDefinitions().withName(id).get();
+        if (isRunning(old)) {
+            if (UserConfigurationCompare.configEqual(entity, old)) {
+                log.info("Custom Resource Definition has not changed so not doing anything");
+            } else {
+                if (isRecreateMode()) {
+                    log.info("Deleting Custom Resource Definition: " + id);
+                    kubernetesClient.customResourceDefinitions().withName(id).delete();
+                    doCreateCustomResourceDefinition(entity, sourceName);
+                } else {
+                    log.info("Updating a Custom Resource Definition from " + sourceName + " name " + getName(entity));
+                    try {
+                        HasMetadata answer = patchService.compareAndPatchEntity(namespace, entity, old);
+                        log.info("Updated Custom Resource Definition result: " + getName(answer));
+                    } catch (Exception e) {
+                        onApplyError("Failed to update Custom Resource Definition from " + sourceName + ". " + e + ". " + entity, e);
+                    }
+                }
+            }
+        } else {
+            if (!isAllowCreate()) {
+                log.warn("Creation disabled so not creating a Custom Resource Definition from " + sourceName + " name " + getName(entity));
+            } else {
+                doCreateCustomResourceDefinition(entity, sourceName);
+            }
+        }
+    }
+
+    private void doCreateCustomResourceDefinition(CustomResourceDefinition entity, String sourceName) {
+        log.info("Creating a Custom Resource Definition from " + sourceName + " name " + getName(entity));
+        try {
+            Object answer = kubernetesClient.customResourceDefinitions().create(entity);
+            log.info("Created Custom Resource Definition result: " + ((CustomResourceDefinition) answer).getMetadata().getName());
+        } catch (Exception e) {
+            onApplyError("Failed to create Custom Resource Definition from " + sourceName + ". " + e + ". " + entity, e);
+        }
+    }
+
+    public void applyCustomResource(File customResourceFile, String namespace, CustomResourceDefinitionContext context) throws Exception {
+        Map<String, Object> cr = KubernetesClientUtil.doReadCustomResourceFile(customResourceFile);
+        Map<String, Object> objectMeta = (Map<String, Object>)cr.get("metadata");
+        String name = objectMeta.get("metadata").toString();
+
+        if (isRecreateMode()) {
+            KubernetesClientUtil.doDeleteCustomResource(kubernetesClient, context, namespace, name);
+            KubernetesClientUtil.doCreateCustomResource(kubernetesClient, context, namespace, customResourceFile);
+            log.info("Created Custom Resource: " + name);
+        } else {
+            cr = KubernetesClientUtil.doGetCustomResource(kubernetesClient, context, namespace, name);
+            if (cr == null) {
+                KubernetesClientUtil.doCreateCustomResource(kubernetesClient, context, namespace, customResourceFile);
+                log.info("Created Custom Resource: " + name);
+            } else {
+                KubernetesClientUtil.doEditCustomResource(kubernetesClient, context, namespace, name, customResourceFile);
+                log.info("Updated Custom Resource: " + name);
+            }
+        }
+    }
+
+    public void deleteCustomResource(File customResourceFile, String namespace, CustomResourceDefinitionContext crdContext) throws Exception {
+        Map<String, Object> customResource = KubernetesClientUtil.doReadCustomResourceFile(customResourceFile);
+        Map<String, Object> objectMeta = (Map<String, Object>)customResource.get("metadata");
+        String name = objectMeta.get("name").toString();
+        log.info("Deleting Custom Resource " + name);
+        KubernetesClientUtil.doDeleteCustomResource(kubernetesClient, crdContext, namespace, name);
+    }
+
+    protected boolean isBound(PersistentVolumeClaim claim) {
         return claim != null &&
                 claim.getStatus() != null &&
                 "Bound".equals(claim.getStatus().getPhase());

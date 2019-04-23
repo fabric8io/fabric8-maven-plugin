@@ -74,6 +74,7 @@ import io.fabric8.kubernetes.api.model.batch.Job;
 import io.fabric8.kubernetes.api.model.batch.JobSpec;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.internal.HasMetadataComparator;
+import io.fabric8.maven.core.util.FileUtil;
 import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.core.util.ResourceVersioning;
@@ -84,6 +85,7 @@ import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.api.model.Template;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.slf4j.LoggerFactory;
@@ -136,6 +138,8 @@ public class KubernetesResourceUtil {
         KubernetesListBuilder builder = new KubernetesListBuilder();
         if (resourceFiles != null) {
             for (File file : resourceFiles) {
+                if(file.getName().endsWith("cr.yml")) // Don't process custom resources
+                    continue;
                 HasMetadata resource = getResource(platformMode, apiVersions, file, defaultName);
                 builder.addToItems(resource);
             }
@@ -169,10 +173,34 @@ public class KubernetesResourceUtil {
         }
     }
 
+    public static File[] listResourceFragments(File localResourceDir, List<String> remotes, Logger log) {
+        File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(localResourceDir);
+
+        if(remotes != null) {
+            File[] remoteResourceFiles = KubernetesResourceUtil.listRemoteResourceFragments(remotes, log);
+            if (remoteResourceFiles.length > 0) {
+                resourceFiles = ArrayUtils.addAll(resourceFiles, remoteResourceFiles);
+            }
+        }
+        return resourceFiles;
+    }
+
     public static File[] listResourceFragments(File resourceDir) {
         final Pattern filenamePattern = Pattern.compile(FILENAME_PATTERN);
         final Pattern exludePattern = Pattern.compile(PROFILES_PATTERN);
         return resourceDir.listFiles((File dir, String name) -> filenamePattern.matcher(name).matches() && !exludePattern.matcher(name).matches());
+    }
+
+    public static File[] listRemoteResourceFragments(List<String> remotes, Logger log) {
+        if (remotes != null && !remotes.isEmpty()) {
+            final File remoteResources = FileUtil.createTempDirectory();
+            FileUtil.downloadRemotes(remoteResources, remotes, log);
+
+            if (remoteResources.isDirectory()) {
+                return remoteResources.listFiles();
+            }
+        }
+        return new File[0];
     }
 
 

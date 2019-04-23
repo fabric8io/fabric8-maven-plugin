@@ -86,6 +86,9 @@ public class ResourceConfig {
     private String serviceAccount;
 
     @Parameter
+    private List<String> customResourceDefinitions;
+
+    @Parameter
     private List<ServiceAccountConfig> serviceAccounts;
 
     public Optional<Map<String, String>> getEnv() {
@@ -161,6 +164,8 @@ public class ResourceConfig {
     public List<String> getRemotes() {
         return remotes;
     }
+
+    public List<String> getCrdContexts() { return customResourceDefinitions; }
 
     // =============================================================================================
 
@@ -249,6 +254,11 @@ public class ResourceConfig {
 
         public Builder withNamespace(String s) {
             config.namespace = s;
+            return this;
+        }
+
+        public Builder withCustomResourceDefinitions(List<String> customResourceDefinitions) {
+            config.customResourceDefinitions = customResourceDefinitions;
             return this;
         }
 

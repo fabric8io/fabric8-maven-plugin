@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.plugin.mojo.develop;
 
+import java.util.List;
 import java.util.Set;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -35,6 +36,11 @@ import static io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil.deleteE
 public class UndeployMojo extends ApplyMojo {
     @Override
     protected void applyEntities(KubernetesClient kubernetes, String namespace, String fileName, Set<HasMetadata> entities) throws Exception {
+        deleteCustomEntities(kubernetes, namespace, resources.getCrdContexts());
         deleteEntities(kubernetes, namespace, entities, s2iBuildNameSuffix, log);
+    }
+
+    private void deleteCustomEntities(KubernetesClient kubernetes, String namespace, List<String> customResourceDefinitions) throws Exception {
+        processCustomEntities(kubernetes, namespace, customResourceDefinitions, true);
     }
 }
