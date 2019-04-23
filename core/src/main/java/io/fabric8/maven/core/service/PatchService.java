@@ -26,6 +26,8 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
+import io.fabric8.kubernetes.api.model.apiextensions.DoneableCustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.core.util.kubernetes.UserConfigurationCompare;
@@ -71,6 +73,7 @@ public class PatchService {
         patchers.put("ImageStream", isPatcher());
         patchers.put("Secret", secretPatcher());
         patchers.put("PersistentVolumeClaim", pvcPatcher());
+        patchers.put("CustomResourceDefinition", crdPatcher());
     }
 
 
@@ -199,6 +202,28 @@ public class PatchService {
 
             if(!UserConfigurationCompare.configEqual(newObj.getSpec(), oldObj.getSpec())) {
                     entity.withSpec(newObj.getSpec());
+            }
+            return entity.done();
+        };
+    }
+
+    private static EntityPatcher<CustomResourceDefinition> crdPatcher() {
+        return (KubernetesClient client, String namespace, CustomResourceDefinition newObj, CustomResourceDefinition oldObj) -> {
+            if (UserConfigurationCompare.configEqual(newObj, oldObj)) {
+                return oldObj;
+            }
+
+            DoneableCustomResourceDefinition entity =
+                    client.customResourceDefinitions()
+                            .withName(oldObj.getMetadata().getName())
+                            .edit();
+
+            if (!UserConfigurationCompare.configEqual(newObj.getMetadata(), oldObj.getMetadata())) {
+                entity.withMetadata(newObj.getMetadata());
+            }
+
+            if (!UserConfigurationCompare.configEqual(newObj.getSpec(), oldObj.getSpec())) {
+                entity.withSpec(newObj.getSpec());
             }
             return entity.done();
         };

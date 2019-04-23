@@ -382,7 +382,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         updateKindFilenameMappings();
         try {
             lateInit();
-            final File remoteResources = resolveRemoteResources();
             // Resolve the Docker image build configuration
             resolvedImages = getResolvedImages(images, log);
             if (!skip && (!isPomProject() || hasFabric8Dir())) {
@@ -392,7 +391,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                     ResourceClassifier resourceClassifier = platformMode == PlatformMode.kubernetes ? ResourceClassifier.KUBERNETES
                             : ResourceClassifier.OPENSHIFT;
 
-                    resources = generateResources(platformMode, resolvedImages, remoteResources);
+                    resources = generateResources(platformMode, resolvedImages);
                     writeResources(resources, resourceClassifier, generateRoute);
                     File resourceDir = new File(this.targetDir, resourceClassifier.getValue());
                     validateIfRequired(resourceDir, resourceClassifier);
@@ -401,18 +400,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to generate fabric8 descriptor", e);
         }
-    }
-
-    private File resolveRemoteResources() {
-        if (this.resources != null) {
-            final List<String> remotes = this.resources.getRemotes();
-            if (remotes != null && !remotes.isEmpty()) {
-                final File tempDirectory = FileUtil.createTempDirectory();
-                FileUtil.downloadRemotes(tempDirectory, remotes, this.log);
-                return tempDirectory;
-            }
-        }
-        return null;
     }
 
     private void updateKindFilenameMappings() {
@@ -470,7 +457,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         }
     }
 
-    private KubernetesList generateResources(PlatformMode platformMode, List<ImageConfiguration> images, File remoteResources)
+    private KubernetesList generateResources(PlatformMode platformMode, List<ImageConfiguration> images)
         throws IOException, MojoExecutionException {
 
         if (namespace != null && !namespace.isEmpty()) {
@@ -491,7 +478,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             MavenUtil.getCompileClasspathElementsIfRequested(project, useProjectClasspath));
 
         // Generate all resources from the main resource directory, configuration and create them accordingly
-        KubernetesListBuilder builder = generateAppResources(platformMode, images, enricherManager, remoteResources);
+        KubernetesListBuilder builder = generateAppResources(platformMode, images, enricherManager);
 
         // Add resources found in subdirectories of resourceDir, with a certain profile
         // applied
@@ -526,11 +513,10 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         }
     }
 
-    private KubernetesListBuilder generateAppResources(PlatformMode platformMode, List<ImageConfiguration> images, EnricherManager enricherManager,
-        File remoteResources)
+    private KubernetesListBuilder generateAppResources(PlatformMode platformMode, List<ImageConfiguration> images, EnricherManager enricherManager)
         throws IOException, MojoExecutionException {
         try {
-            KubernetesListBuilder builder = processResourceFragments(platformMode, remoteResources);
+            KubernetesListBuilder builder = processResourceFragments(platformMode);
 
             // Create default resources for app resources only
             enricherManager.createDefaultResources(platformMode, builder);
@@ -546,12 +532,8 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         }
     }
 
-    private KubernetesListBuilder processResourceFragments(PlatformMode platformMode, File remoteResources) throws IOException, MojoExecutionException {
-        File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(realResourceDir);
-        if (remoteResources != null && remoteResources.isDirectory()) {
-            final File[] remoteFragments = remoteResources.listFiles();
-            resourceFiles = ArrayUtils.addAll(resourceFiles, remoteFragments);
-        }
+    private KubernetesListBuilder processResourceFragments(PlatformMode platformMode) throws IOException, MojoExecutionException {
+        File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(realResourceDir, resources !=null ? resources.getRemotes() : null, log);
         KubernetesListBuilder builder;
 
         // Add resource files found in the fabric8 directory
