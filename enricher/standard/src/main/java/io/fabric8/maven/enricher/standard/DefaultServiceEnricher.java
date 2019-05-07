@@ -39,7 +39,15 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -135,7 +143,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
         }
     }
 
-    private String getAppName(){
+    private String getAppName() {
         try {
             if (getContext().getProjectClassLoaders().isClassInCompileClasspath(true)) {
                 Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getContext().getProjectClassLoaders().getCompileClassLoader());
@@ -147,10 +155,10 @@ public class DefaultServiceEnricher extends BaseEnricher {
         return null;
     }
 
-    private String getServiceName(){
-        if(getAppName() != null){
+    private String getServiceName() {
+        if (getAppName() != null) {
             return getAppName();
-        }else{
+        } else {
             return getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getSanitizedArtifactId()));
         }
     }
