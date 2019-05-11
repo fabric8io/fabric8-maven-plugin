@@ -160,6 +160,21 @@ public class BaseEnricher implements Enricher {
     }
 
     /**
+     * This method overrides the ImagePullPolicy value by the value provided in
+     * XML config.
+     *
+     * @param resourceConfig
+     * @param defaultValue
+     * @return
+     */
+    protected String getImagePullPolicy(ResourceConfig resourceConfig, String defaultValue) {
+        if(resourceConfig != null) {
+            return resourceConfig.getImagePullPolicy() != null ? resourceConfig.getImagePullPolicy() : defaultValue;
+        }
+        return defaultValue;
+    }
+
+    /**
      * This method just makes sure that the replica count provided in XML config
      * overrides the default option; and resource fragments are always given
      * topmost priority.

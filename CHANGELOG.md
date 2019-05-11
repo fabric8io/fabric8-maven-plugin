@@ -12,7 +12,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 
 ### 4.1-SNAPSHOT
 * Update Docker Maven Plugin to 0.29.0
-
+* Fix 1632: imagePullPolicy configuration fixed as per documentation
 ### 4.1.0 (16-02-2019)
 * Fix 1578: Fmp is generating ImageChange triggers in the DeploymentConfig
 * Fix 1582: Refactor EnricherManager logic
