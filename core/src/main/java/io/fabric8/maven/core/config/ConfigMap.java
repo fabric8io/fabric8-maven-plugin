@@ -15,11 +15,15 @@
  */
 package io.fabric8.maven.core.config;
 
+import org.apache.maven.plugins.annotations.Parameter;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class ConfigMap {
 
+    @Parameter
+    private String name;
     private List<ConfigMapEntry> entries = new ArrayList<>();
 
     public void addEntry(ConfigMapEntry configMapEntry) {
@@ -28,5 +32,21 @@ public class ConfigMap {
 
     public List<ConfigMapEntry> getEntries() {
         return entries;
+    }
+
+    /**
+     * Set the name of ConfigMap.
+     * @param name
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Return the name of ConfigMap.
+     * @return
+     */
+    public String getName() {
+        return name;
     }
 }

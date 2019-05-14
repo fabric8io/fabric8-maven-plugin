@@ -23,6 +23,8 @@ import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -91,9 +93,11 @@ public class ConfigMapEnricher extends BaseEnricher {
         final Map<String, String> configMapFromConfiguration;
         try {
             configMapFromConfiguration = createConfigMapFromConfiguration(configMap);
-            if(!configMapFromConfiguration.isEmpty() && !checkIfItemExists(builder, "xmlconfig")) {
+            String configMapName = StringUtils.isEmpty(configMap.getName()) ? "xmlconfig" : configMap.getName();
+
+            if(!configMapFromConfiguration.isEmpty() && !checkIfItemExists(builder, configMapName)) {
                 ConfigMapBuilder element = new ConfigMapBuilder();
-                element.withNewMetadata().withName("xmlconfig").endMetadata();
+                element.withNewMetadata().withName(configMapName).endMetadata();
                 element.addToData(configMapFromConfiguration);
 
                 builder.addToConfigMapItems(element.build());
