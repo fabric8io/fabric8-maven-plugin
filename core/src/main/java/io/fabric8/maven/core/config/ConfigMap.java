@@ -15,14 +15,11 @@
  */
 package io.fabric8.maven.core.config;
 
-import org.apache.maven.plugins.annotations.Parameter;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class ConfigMap {
 
-    @Parameter
     private String name;
     private List<ConfigMapEntry> entries = new ArrayList<>();
 
