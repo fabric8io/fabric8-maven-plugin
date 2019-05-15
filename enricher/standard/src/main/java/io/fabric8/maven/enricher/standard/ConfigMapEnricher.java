@@ -93,6 +93,7 @@ public class ConfigMapEnricher extends BaseEnricher {
         try {
             configMapFromConfiguration = createConfigMapFromConfiguration(configMap);
             String configMapName = (configMap.getName() == null || configMap.getName().trim().isEmpty()) ? "xmlconfig" : configMap.getName();
+            log.debug("configMapName :: ".concat(configMapName));
 
             if(!configMapFromConfiguration.isEmpty() && !checkIfItemExists(builder, configMapName)) {
                 ConfigMapBuilder element = new ConfigMapBuilder();
