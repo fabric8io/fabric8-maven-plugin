@@ -73,7 +73,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -656,12 +655,13 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         Map<File, String> fileToCrdGroupMap = new HashMap<>();
         File resourceDirFinal = ResourceDirCreator.getFinalResourceDir(resourceDir, environment);
         File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDirFinal, resources != null ? resources.getRemotes() : null, log);
-        for (int index = 0; index < resourceFiles.length; index++) {
-            if (resourceFiles[index].getName().endsWith("cr.yml")) {
-                Map<String, Object> customResource = KubernetesClientUtil.doReadCustomResourceFile(resourceFiles[index]);
+
+        for (File file : resourceFiles) {
+            if (file.getName().endsWith("cr.yml")) {
+                Map<String, Object> customResource = KubernetesClientUtil.doReadCustomResourceFile(file);
                 String apiVersion = customResource.get("apiVersion").toString();
                 if (apiVersion.contains("/")) {
-                    fileToCrdGroupMap.put(resourceFiles[index], apiVersion.split("/")[0]);
+                    fileToCrdGroupMap.put(file, apiVersion.split("/")[0]);
                 }
             }
         }
