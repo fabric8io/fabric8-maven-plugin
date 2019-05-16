@@ -16,6 +16,8 @@
 package io.fabric8.maven.core.util.kubernetes;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -26,6 +28,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.LabelSelector;
@@ -35,8 +39,7 @@ import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.LabelSelector;
-import io.fabric8.kubernetes.api.model.LabelSelectorRequirement;
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -47,10 +50,12 @@ import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Scaleable;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.client.OpenShiftClient;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -92,7 +97,8 @@ public class KubernetesClientUtil {
         List<HasMetadata> list = new ArrayList<>(entities);
 
         // For OpenShift cluster, also delete s2i buildconfig
-        OpenShiftClient openshiftClient = OpenshiftHelper.asOpenShiftClient(kubernetes);        if (openshiftClient != null) {
+        OpenShiftClient openshiftClient = OpenshiftHelper.asOpenShiftClient(kubernetes);
+        if (openshiftClient != null) {
             for (HasMetadata entity : list) {
                 if ("ImageStream".equals(KubernetesHelper.getKind(entity))) {
                     ImageName imageName = new ImageName(entity.getMetadata().getName());
@@ -225,4 +231,68 @@ public class KubernetesClientUtil {
         return "";
     }
 
+    public static Map<String, Object> doCreateCustomResource(KubernetesClient kubernetesClient, CustomResourceDefinitionContext crdContext, String namespace, File customResourceFile) throws IOException {
+        if ("Namespaced".equals(crdContext.getScope())) {
+            return kubernetesClient.customResource(crdContext).create(namespace, new FileInputStream(customResourceFile.getAbsolutePath()));
+        } else {
+            return kubernetesClient.customResource(crdContext).create(new FileInputStream(customResourceFile.getAbsolutePath()));
+        }
+    }
+
+    public static Map<String, Object> doEditCustomResource(KubernetesClient kubernetesClient, CustomResourceDefinitionContext crdContext, String namespace, String name, File customResourceFile) throws IOException {
+        if ("Namespaced".equals(crdContext.getScope())) {
+            return kubernetesClient.customResource(crdContext).edit(namespace, name, new FileInputStream(customResourceFile.getAbsolutePath()));
+        } else {
+            return kubernetesClient.customResource(crdContext).edit(name, doGetCustomResourceAsString(customResourceFile));
+        }
+    }
+
+    public static Map<String, Object> doDeleteCustomResource(KubernetesClient kubernetesClient, CustomResourceDefinitionContext crdContext, String namespace, String name) {
+        if ("Namespaced".equals(crdContext.getScope())) {
+            return kubernetesClient.customResource(crdContext).delete(namespace, name);
+        } else {
+            return kubernetesClient.customResource(crdContext).delete(name);
+        }
+    }
+
+    public static Map<String, Object> doGetCustomResource(KubernetesClient kubernetesClient, CustomResourceDefinitionContext crdContext, String namespace, String name) {
+        try {
+            if ("Namespaced".equals(crdContext.getScope())) {
+                return kubernetesClient.customResource(crdContext).get(namespace, name);
+            } else {
+                return kubernetesClient.customResource(crdContext).get(name);
+            }
+        } catch (Exception exception) { // Not found exception
+            return null;
+        }
+    }
+
+    public static Map<String, Object> doReadCustomResourceFile(File customResourceFile) throws IOException {
+        return new ObjectMapper(new YAMLFactory()).readValue(new FileInputStream(customResourceFile), Map.class);
+    }
+
+    public static String doGetCustomResourceAsString(File customResourceFile) throws IOException {
+        String yamlFileAsString = FileUtils.readFileToString(customResourceFile, "UTF-8");
+        Object obj = new ObjectMapper(new YAMLFactory()).readValue(yamlFileAsString, Object.class);
+
+        return new ObjectMapper().writeValueAsString(obj);
+    }
+
+    public static List<CustomResourceDefinitionContext> getCustomResourceDefinitionContext(KubernetesClient client, List<String> customResources) {
+        List<CustomResourceDefinitionContext> crdContexts = new ArrayList<>();
+        for(String customResource : customResources) {
+            CustomResourceDefinition customResourceDefinition = client.customResourceDefinitions()
+                    .withName(customResource).get();
+            if(customResourceDefinition != null) {
+                crdContexts.add(new CustomResourceDefinitionContext.Builder()
+                  .withGroup(customResourceDefinition.getSpec().getGroup())
+                  .withName(customResourceDefinition.getMetadata().getName())
+                  .withPlural(customResourceDefinition.getSpec().getNames().getPlural())
+                  .withVersion(customResourceDefinition.getSpec().getVersion())
+                  .withScope(customResourceDefinition.getSpec().getScope())
+                  .build());
+            }
+        }
+        return crdContexts;
+    }
 }
