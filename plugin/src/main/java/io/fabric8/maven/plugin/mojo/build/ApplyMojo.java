@@ -532,7 +532,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
                 }
             }
         }
-        processCustomEntities(kubernetes, namespace, resources.getCrdContexts(), false);
+        processCustomEntities(kubernetes, namespace, resources != null ? resources.getCrdContexts() : null, false);
     }
 
     protected String getExternalServiceURL(Service service) {
@@ -635,6 +635,9 @@ public class ApplyMojo extends AbstractFabric8Mojo {
     }
 
     protected void processCustomEntities(KubernetesClient client, String namespace, List<String> customResourceDefinitions, boolean isDelete) throws Exception {
+        if(customResourceDefinitions == null)
+            return;
+
         List<CustomResourceDefinitionContext> crdContexts = KubernetesClientUtil.getCustomResourceDefinitionContext(client ,customResourceDefinitions);
         Map<File, String> fileToCrdMap = getCustomResourcesFileToNamemap();
 
