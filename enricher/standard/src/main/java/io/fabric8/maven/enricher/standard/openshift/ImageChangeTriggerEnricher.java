@@ -42,8 +42,7 @@ public class ImageChangeTriggerEnricher extends BaseEnricher {
 
 
     private enum Config implements Configs.Key {
-        containers {{ d = ""; }},
-        enrichAll {{ d = "false"; }};
+        containers {{ d = ""; }};
 
         public String def() { return d; } protected String d;
     }
@@ -95,11 +94,11 @@ public class ImageChangeTriggerEnricher extends BaseEnricher {
                                         .endImageChangeParams()
                                         .endTrigger();
                             }
+                            if(trimImageInContainerSpecFlag) {
+                                builder.editTemplate().editSpec().withContainers(trimImagesInContainers(template)).endSpec().endTemplate();
+                            }
                         }
 
-                        if(trimImageInContainerSpecFlag) {
-                            builder.editTemplate().editSpec().withContainers(trimImagesInContainers(template)).endSpec().endTemplate();
-                        }
                     }
                 }
             });
@@ -107,7 +106,7 @@ public class ImageChangeTriggerEnricher extends BaseEnricher {
 
     private Boolean isImageChangeTriggerNeeded(String containerName) {
         String containersFromConfig = Configs.asString(getConfig(Config.containers));
-        Boolean enrichAll = Configs.asBoolean(getConfig(Config.enrichAll));
+        Boolean enrichAll = enrichAllWithImageChangeTrigger((MavenEnricherContext)enricherContext, false);
 
         if(enrichAll) {
             return true;

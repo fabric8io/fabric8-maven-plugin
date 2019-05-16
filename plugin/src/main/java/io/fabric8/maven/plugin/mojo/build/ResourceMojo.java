@@ -263,6 +263,9 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     @Parameter(property = "fabric8.openshift.imageChangeTrigger", defaultValue = "true")
     private Boolean enableImageChangeTrigger;
 
+    @Parameter(property = "fabric8.openshift.enrichAllWithImageChangeTrigger", defaultValue = "false")
+    private Boolean erichAllWithImageChangeTrigger;
+
     @Parameter(property = "docker.skip.resource", defaultValue = "false")
     protected boolean skipResource;
 

@@ -135,6 +135,14 @@ public class BaseEnricher implements Enricher {
         }
     }
 
+    protected Boolean enrichAllWithImageChangeTrigger(MavenEnricherContext enricherContext, Boolean defaultValue) {
+        if(enricherContext.getProperty("fabric8.openshift.enrichAllWithImageChangeTrigger") != null) {
+            return Boolean.parseBoolean(enricherContext.getProperty("fabric8.openshift.enrichAllWithImageChangeTrigger").toString());
+        } else {
+            return defaultValue;
+        }
+    }
+
     protected Long getOpenshiftDeployTimeoutInSeconds(MavenEnricherContext enricherContext, Long defaultValue) {
         if (enricherContext.getProperty("fabric8.openshift.deployTimeoutSeconds") != null) {
             return Long.parseLong(enricherContext.getProperty("fabric8.openshift.deployTimeoutSeconds").toString());
