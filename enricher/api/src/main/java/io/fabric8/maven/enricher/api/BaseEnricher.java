@@ -167,6 +167,14 @@ public class BaseEnricher implements Enricher {
         }
     }
 
+    protected Boolean getSidecarFlag(Boolean defaultValue) {
+        if (getContext().getProperty("fabric8.sidecar") != null) {
+            return Boolean.parseBoolean(getContext().getProperty("fabric8.sidecar").toString());
+        } else {
+            return defaultValue;
+        }
+    }
+
     /**
      * This method overrides the ImagePullPolicy value by the value provided in
      * XML config.

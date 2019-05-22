@@ -221,6 +221,9 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     @Parameter(property = "fabric8.namespace")
     private String namespace;
 
+    @Parameter(property = "fabric8.sidecar", defaultValue = "false")
+    private Boolean sidecar;
+
     @Parameter(property = "fabric8.skipHealthCheck", defaultValue = "false")
     private Boolean skipHealthCheck;
 
