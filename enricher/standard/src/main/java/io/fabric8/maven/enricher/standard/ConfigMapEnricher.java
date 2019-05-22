@@ -108,7 +108,7 @@ public class ConfigMapEnricher extends BaseEnricher {
     }
 
     private boolean checkIfItemExists(KubernetesListBuilder builder, String name) {
-        return builder.buildItems().stream().anyMatch(item -> item.getMetadata().getName().equals(name));
+        return builder.buildItems().stream().filter(item -> item.getKind().equals("ConfigMap")).anyMatch(item -> item.getMetadata().getName().equals(name));
     }
 
     private io.fabric8.maven.core.config.ConfigMap getConfigMapFromXmlConfiguration() {
