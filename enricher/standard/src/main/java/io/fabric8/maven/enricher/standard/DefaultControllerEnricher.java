@@ -182,21 +182,6 @@ public class DefaultControllerEnricher extends BaseEnricher {
     }
 
 
-    /**
-     * This method overrides the ImagePullPolicy value by the value provided in
-     * XML config.
-     *
-     * @param resourceConfig
-     * @param defaultValue
-     * @return
-     */
-    private String getImagePullPolicy(ResourceConfig resourceConfig, String defaultValue) {
-        if(resourceConfig != null) {
-            return resourceConfig.getImagePullPolicy() != null ? resourceConfig.getImagePullPolicy() : defaultValue;
-        }
-        return defaultValue;
-    }
-
     private Long getOpenshiftDeployTimeoutInSeconds(Long defaultValue) {
         if (getContext().getProperty("fabric8.openshift.deployTimeoutSeconds") != null) {
             return Long.parseLong(getContext().getProperty("fabric8.openshift.deployTimeoutSeconds").toString());

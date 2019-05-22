@@ -38,16 +38,20 @@ import io.fabric8.kubernetes.api.model.extensions.IngressSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.maven.core.access.ClusterAccess;
+import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.service.ApplyService;
 import io.fabric8.maven.core.util.FileUtil;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
+import io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
+import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
 import io.fabric8.openshift.api.model.Project;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteList;
@@ -66,11 +70,14 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -195,6 +202,22 @@ public class ApplyMojo extends AbstractFabric8Mojo {
     @Parameter(property = "fabric8.s2i.buildNameSuffix", defaultValue = "-s2i")
     protected String s2iBuildNameSuffix;
 
+    @Parameter
+    protected ResourceConfig resources;
+
+    /**
+     * Folder where to find project specific files
+     */
+    @Parameter(property = "fabric8.resourceDir", defaultValue = "${basedir}/src/main/fabric8")
+    private File resourceDir;
+
+    /**
+     * Environment name where resources are placed. For example, if you set this property to dev and resourceDir is the default one, Fabric8 will look at src/main/fabric8/dev
+     * Same applies for resourceDirOpenShiftOverride property.
+     */
+    @Parameter(property = "fabric8.environment")
+    private String environment;
+
     @Parameter(property = "fabric8.skip.apply", defaultValue = "false")
     protected boolean skipApply;
 
@@ -292,6 +315,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
                 }
             }
             applyEntities(kubernetes, namespace, manifest.getName(), entities);
+            log.info("[[B]]HINT:[[B]] Use the command `%s get pods -w` to watch your pods start up", clusterAccess.isOpenShiftImageStream(log) ? "oc" : "kubectl");
 
         } catch (KubernetesClientException e) {
             KubernetesResourceUtil.handleKubernetesClientException(e, this.log);
@@ -476,9 +500,6 @@ public class ApplyMojo extends AbstractFabric8Mojo {
             }
         }
 
-        String command = clusterAccess.isOpenShiftImageStream(log) ? "oc" : "kubectl";
-        log.info("[[B]]HINT:[[B]] Use the command `%s get pods -w` to watch your pods start up", command);
-
         Logger serviceLogger = createExternalProcessLogger("[[G]][SVC][[G]] ");
         long serviceUrlWaitTimeSeconds = this.serviceUrlWaitTimeSeconds;
         for (HasMetadata entity : entities) {
@@ -511,6 +532,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
                 }
             }
         }
+        processCustomEntities(kubernetes, namespace, resources != null ? resources.getCrdContexts() : null, false);
     }
 
     protected String getExternalServiceURL(Service service) {
@@ -610,6 +632,43 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         }
         collection.addAll(ingresses);
 
+    }
+
+    protected void processCustomEntities(KubernetesClient client, String namespace, List<String> customResourceDefinitions, boolean isDelete) throws Exception {
+        if(customResourceDefinitions == null)
+            return;
+
+        List<CustomResourceDefinitionContext> crdContexts = KubernetesClientUtil.getCustomResourceDefinitionContext(client ,customResourceDefinitions);
+        Map<File, String> fileToCrdMap = getCustomResourcesFileToNamemap();
+
+        for(CustomResourceDefinitionContext customResourceDefinitionContext : crdContexts) {
+            for(Map.Entry<File, String> entry : fileToCrdMap.entrySet()) {
+                if(entry.getValue().equals(customResourceDefinitionContext.getGroup())) {
+                    if(isDelete) {
+                        applyService.deleteCustomResource(entry.getKey(), namespace, customResourceDefinitionContext);
+                    } else {
+                        applyService.applyCustomResource(entry.getKey(), namespace, customResourceDefinitionContext);
+                    }
+                }
+            }
+        }
+    }
+
+    protected Map<File, String> getCustomResourcesFileToNamemap() throws IOException {
+        Map<File, String> fileToCrdGroupMap = new HashMap<>();
+        File resourceDirFinal = ResourceDirCreator.getFinalResourceDir(resourceDir, environment);
+        File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDirFinal, resources != null ? resources.getRemotes() : null, log);
+
+        for (File file : resourceFiles) {
+            if (file.getName().endsWith("cr.yml")) {
+                Map<String, Object> customResource = KubernetesClientUtil.doReadCustomResourceFile(file);
+                String apiVersion = customResource.get("apiVersion").toString();
+                if (apiVersion.contains("/")) {
+                    fileToCrdGroupMap.put(file, apiVersion.split("/")[0]);
+                }
+            }
+        }
+        return fileToCrdGroupMap;
     }
 
     /**
