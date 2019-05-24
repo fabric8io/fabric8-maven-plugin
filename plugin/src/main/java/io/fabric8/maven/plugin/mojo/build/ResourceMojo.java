@@ -656,14 +656,14 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             writeResourcesIndividualAndComposite(resources, resourceFileBase, this.resourceFileType, log, generateRoute);
         // Resolve template placeholders
         if (classifier == ResourceClassifier.KUBERNETES) {
-            resolveTemplateVariablesIfAny(resources, resourceDir);
+            resolveTemplateVariablesIfAny(resources);
         }
 
         // Attach it to the Maven reactor so that it will also get deployed
         projectHelper.attachArtifact(project, this.resourceFileType.getArtifactType(), classifier.getValue(), file);
     }
 
-    private void resolveTemplateVariablesIfAny(KubernetesList resources, File resourceFileBase) throws MojoExecutionException {
+    private void resolveTemplateVariablesIfAny(KubernetesList resources) throws MojoExecutionException {
         Template template = findTemplate(resources);
         if (template != null) {
             List<io.fabric8.openshift.api.model.Parameter> parameters = template.getParameters();
@@ -672,7 +672,8 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             }
             File kubernetesYaml = new File(this.targetDir, "kubernetes.yml");
             resolveTemplateVariables(parameters, kubernetesYaml);
-            File[] kubernetesResources = resourceFileBase.listFiles((dir, filename) -> filename.endsWith(".yml"));
+            File kubernetesResourceDir = new File(this.targetDir, "kubernetes");
+            File[] kubernetesResources = kubernetesResourceDir.listFiles((dir, filename) -> filename.endsWith(".yml"));
             if (kubernetesResources != null) {
                 for (File kubernetesResource : kubernetesResources) {
                     resolveTemplateVariables(parameters, kubernetesResource);
