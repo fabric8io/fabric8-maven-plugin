@@ -14,6 +14,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Update Docker Maven Plugin to 0.29.0
 * Fix 1632: imagePullPolicy configuration fixed as per documentation
 * Fix #1591: Add support for custom resources creation via resource fragments
+* Fix #1628: Adding back support for templates in kubernetes mode to HelmMojo; Fix for NPE in UndeployMojo
 
 ### 4.1.0 (16-02-2019)
 * Fix 1578: Fmp is generating ImageChange triggers in the DeploymentConfig
