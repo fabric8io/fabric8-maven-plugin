@@ -36,7 +36,7 @@ import static io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil.deleteE
 public class UndeployMojo extends ApplyMojo {
     @Override
     protected void applyEntities(KubernetesClient kubernetes, String namespace, String fileName, Set<HasMetadata> entities) throws Exception {
-        deleteCustomEntities(kubernetes, namespace, resources.getCrdContexts());
+        deleteCustomEntities(kubernetes, namespace, resources != null ? resources.getCrdContexts() : null);
         deleteEntities(kubernetes, namespace, entities, s2iBuildNameSuffix, log);
     }
 

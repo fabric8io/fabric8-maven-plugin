@@ -18,13 +18,13 @@ package io.fabric8.maven.core.util;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.gson.JsonObject;
+import org.apache.commons.io.FilenameUtils;
 
 /**
  * Utility for resource file handling
@@ -64,7 +64,8 @@ public class ResourceUtil {
     }
 
     public static File save(File file, Object data, ResourceFileType type) throws IOException {
-        File output = type.addExtensionIfMissing(file);
+        boolean hasExtension = FilenameUtils.indexOfExtension(file.getAbsolutePath()) != -1;
+        File output = hasExtension ? file : type.addExtensionIfMissing(file);
         ensureDir(file);
         getObjectMapper(type).writeValue(output, data);
         return output;
