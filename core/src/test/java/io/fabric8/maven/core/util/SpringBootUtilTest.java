@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -17,8 +17,6 @@ package io.fabric8.maven.core.util;
 
 import java.util.Properties;
 
-import io.fabric8.utils.PropertiesHelper;
-
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -34,10 +32,10 @@ public class SpringBootUtilTest {
     @Test
     public void testYamlToPropertiesParsing() {
 
-        Properties props = SpringBootUtil.getPropertiesFromYamlResource(SpringBootUtilTest.class.getResource("/util/test-application.yml"));
+        Properties props = YamlUtil.getPropertiesFromYamlResource(SpringBootUtilTest.class.getResource("/util/test-application.yml"));
         assertNotEquals(0, props.size());
 
-        assertEquals(new Integer(8081), PropertiesHelper.getInteger(props, "management.port"));
+        assertEquals("8081", props.getProperty("management.port"));
         assertEquals("jdbc:mysql://127.0.0.1:3306", props.getProperty("spring.datasource.url"));
         assertEquals("value0", props.getProperty("example.nested.items[0].value"));
         assertEquals("value1", props.getProperty("example.nested.items[1].value"));
@@ -46,10 +44,15 @@ public class SpringBootUtilTest {
 
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidFileThrowsException() {
+        YamlUtil.getPropertiesFromYamlResource(SpringBootUtilTest.class.getResource("/util/invalid-application.yml"));
+    }
+
     @Test
     public void testNonExistentYamlToPropertiesParsing() {
 
-        Properties props = SpringBootUtil.getPropertiesFromYamlResource(SpringBootUtilTest.class.getResource("/this-file-does-not-exist"));
+        Properties props = YamlUtil.getPropertiesFromYamlResource(SpringBootUtilTest.class.getResource("/this-file-does-not-exist"));
         assertNotNull(props);
         assertEquals(0, props.size());
 
@@ -61,7 +64,7 @@ public class SpringBootUtilTest {
         Properties props = SpringBootUtil.getPropertiesResource(SpringBootUtilTest.class.getResource("/util/test-application.properties"));
         assertNotEquals(0, props.size());
 
-        assertEquals(new Integer(8081), PropertiesHelper.getInteger(props, "management.port"));
+        assertEquals("8081", props.getProperty("management.port"));
         assertEquals("jdbc:mysql://127.0.0.1:3306", props.getProperty("spring.datasource.url"));
         assertEquals("value0", props.getProperty("example.nested.items[0].value"));
         assertEquals("value1", props.getProperty("example.nested.items[1].value"));

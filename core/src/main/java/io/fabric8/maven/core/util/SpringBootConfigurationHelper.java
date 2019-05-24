@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -15,6 +15,9 @@
  */
 package io.fabric8.maven.core.util;
 
+import java.util.Optional;
+import java.util.Properties;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +31,7 @@ public class SpringBootConfigurationHelper {
     public static final String SPRING_BOOT_GROUP_ID = "org.springframework.boot";
     public static final String SPRING_BOOT_ARTIFACT_ID = "spring-boot";
     public static final String SPRING_BOOT_DEVTOOLS_ARTIFACT_ID = "spring-boot-devtools";
+    public static final String SPRING_BOOT_MAVEN_PLUGIN_ARTIFACT_ID = "spring-boot-maven-plugin";
     public static final String DEV_TOOLS_REMOTE_SECRET = "spring.devtools.remote.secret";
     public static final String DEV_TOOLS_REMOTE_SECRET_ENV = "SPRING_DEVTOOLS_REMOTE_SECRET";
 
@@ -46,7 +50,9 @@ public class SpringBootConfigurationHelper {
 
     private int propertyOffset;
 
-    public SpringBootConfigurationHelper(String springBootVersion) {
+    private static final int DEFAULT_SERVER_PORT = 8080;
+
+    public SpringBootConfigurationHelper(Optional<String> springBootVersion) {
         this.propertyOffset = propertyOffset(springBootVersion);
     }
 
@@ -54,9 +60,20 @@ public class SpringBootConfigurationHelper {
         return lookup(MANAGEMENT_PORT);
     }
 
+    public Integer getManagementPort(Properties properties) {
+        String value = properties.getProperty(getManagementPortPropertyKey());
+        return value != null ? Integer.parseInt(value) : null;
+    }
+
     public String getServerPortPropertyKey() {
         return lookup(SERVER_PORT);
     }
+
+    public Integer getServerPort(Properties properties) {
+        String value = properties.getProperty(getServerPortPropertyKey());
+        return value != null ? Integer.parseInt(value) : DEFAULT_SERVER_PORT;
+    }
+
 
     public String getServerKeystorePropertyKey() {
         return lookup(SERVER_KEYSTORE);
@@ -90,24 +107,23 @@ public class SpringBootConfigurationHelper {
         return keys[propertyOffset];
     }
 
-    private int propertyOffset(String springBootVersion) {
-        Integer majorVersion = majorVersion(springBootVersion);
-        int idx = majorVersion != null ? majorVersion - 1 : 0;
+    private int propertyOffset(Optional<String> springBootVersion) {
+        Optional<Integer> majorVersion = majorVersion(springBootVersion);
+        int idx = majorVersion.map(v -> v - 1).orElse(0);
         idx = Math.min(idx, 1);
         idx = Math.max(idx, 0);
         return idx;
     }
 
-    private Integer majorVersion(String version) {
-        if (version != null) {
+    private Optional<Integer> majorVersion(Optional<String> version) {
+        if (version.isPresent()) {
             try {
-                return Integer.parseInt(version.substring(0, version.indexOf(".")));
+                return Optional.of(Integer.parseInt(version.get().substring(0, version.get().indexOf('.'))));
             } catch (Exception e) {
                 LOG.warn("Cannot spring boot major version from {}", version);
             }
         }
-        return null;
+        return Optional.empty();
     }
-
 
 }

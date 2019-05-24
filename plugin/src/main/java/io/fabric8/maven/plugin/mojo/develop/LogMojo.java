@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,15 +13,12 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.plugin.mojo.develop;
 
 import java.util.Set;
 
-import io.fabric8.kubernetes.api.Controller;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
-
 import io.fabric8.maven.core.service.PodLogService;
 import io.fabric8.maven.plugin.mojo.build.ApplyMojo;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -46,7 +43,7 @@ public class LogMojo extends ApplyMojo {
     private String podName;
 
     @Override
-    protected void applyEntities(Controller controller, final KubernetesClient kubernetes, final String namespace, String fileName, final Set<HasMetadata> entities) throws Exception {
+    protected void applyEntities(final KubernetesClient kubernetes, final String namespace, String fileName, final Set<HasMetadata> entities) throws Exception {
         getLogService().tailAppPodsLogs(kubernetes, namespace, entities, false, null, followLog, null, true);
     }
 

@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.util;
 
 import java.util.Properties;
@@ -38,15 +37,15 @@ public class Configs {
     }
 
     public static boolean asBoolean(String value) {
-        return value != null ? Boolean.parseBoolean(value) : false;
+        return Boolean.parseBoolean(value);
     }
 
     public static String asString(String value) { return value; }
 
-    public static String getPropertyWithSystemAsFallback(Properties properties, String key) {
-        String val = properties.getProperty(key);
-        if (val == null) {
-            val = System.getProperty(key);
+    public static String getSystemPropertyWithMavenPropertyAsFallback(Properties properties, String key) {
+        String val = System.getProperty(key);
+        if (val == null && properties != null) {
+            val = properties.getProperty(key);
         }
         return val;
     }

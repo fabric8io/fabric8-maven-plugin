@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.watcher.api;
 
 import java.util.Properties;
@@ -62,7 +61,7 @@ public class WatcherConfig {
 
         if (val == null) {
             String fullKey = WATCHER_PROP_PREFIX + "." + name + "." + key;
-            val = Configs.getPropertyWithSystemAsFallback(projectProperties, fullKey);
+            val = Configs.getSystemPropertyWithMavenPropertyAsFallback(projectProperties, fullKey);
         }
         return val != null ? val : defaultVal;
     }

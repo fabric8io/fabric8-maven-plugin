@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,8 +13,12 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.handler;
+
+import io.fabric8.maven.core.model.GroupArtifactVersion;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
@@ -22,20 +26,17 @@ import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.VolumeConfig;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.utils.Strings;
 import mockit.Mocked;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class ContainerHandlerTest {
-
-    @Mocked
-    EnvVarHandler envVarHandler;
 
     @Mocked
     ProbeHandler probeHandler;
@@ -88,14 +89,14 @@ public class ContainerHandlerTest {
         tags.add("latest");
         tags.add("test");
 
-        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler handler = new ContainerHandler(project.getProperties(), new GroupArtifactVersion("test-group", "test-artifact", "0"), probeHandler);
 
         //container name with alias
         BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().
                 ports(ports).from("fabric8/maven:latest").cleanup("try").tags(tags).compression("gzip").build();
 
         ImageConfiguration imageConfiguration = new ImageConfiguration.Builder().
-                name("test").alias("test-app").buildConfig(buildImageConfiguration).registry("docker.io").build();
+                name("docker.io/test/test-app:1.2").alias("test-app").buildConfig(buildImageConfiguration).registry("docker-alternate.io").build();
 
         images.clear();
         images.add(imageConfiguration);
@@ -103,9 +104,81 @@ public class ContainerHandlerTest {
         containers = handler.getContainers(config, images);
         assertNotNull(containers);
         assertEquals("test-app", containers.get(0).getName());
-        assertEquals("docker.io/test", containers.get(0).getImage());
+        assertEquals("docker.io/test/test-app:1.2", containers.get(0).getImage());
         assertEquals("IfNotPresent", containers.get(0).getImagePullPolicy());
     }
+
+    @Test
+    public void registryHandling() {
+
+        //container name with alias
+        BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().build();
+
+
+
+        String[] testData = {
+            "docker.io/test/test-app:1.2",
+            "docker-alternate.io",
+            null,
+            null,
+            "docker.io/test/test-app:1.2",
+
+            "test/test-app:1.2",
+            "docker-image-config.io",
+            "docker-pull.io",
+            "docker-default.io",
+            "docker-image-config.io/test/test-app:1.2",
+
+            "test/test-app",
+            null,
+            "docker-pull.io",
+            "docker-default.io",
+            "docker-pull.io/test/test-app:latest",
+
+            "test/test-app",
+            null,
+            null,
+            "docker-default.io",
+            "docker-default.io/test/test-app:latest"
+        };
+
+        for (int i = 0; i < testData.length; i += 5) {
+            MavenProject testProject = new MavenProject();
+            Properties testProps = new Properties();
+            if (testData[i+2] != null) {
+                testProps.put("docker.pull.registry", testData[i + 2]);
+            }
+            if (testData[i+3] != null) {
+                testProps.put("docker.registry", testData[i + 3]);
+            }
+
+            testProject.getModel().setProperties(testProps);
+            ContainerHandler handler = createContainerHandler(testProject);
+
+            //container name with alias
+            ImageConfiguration imageConfiguration =
+                new ImageConfiguration.Builder()
+                    .buildConfig(buildImageConfiguration)
+                    .name(testData[i])
+                    .registry(testData[i+1])
+                    .build();
+
+            images.clear();
+            images.add(imageConfiguration);
+
+            containers = handler.getContainers(config, images);
+            assertNotNull(containers);
+            assertEquals(testData[i+4], containers.get(0).getImage());
+        }
+    }
+
+    private ContainerHandler createContainerHandler(MavenProject testProject) {
+        return new ContainerHandler(
+            testProject.getProperties(),
+            new GroupArtifactVersion("g","a","v"),
+            probeHandler);
+    }
+
 
     @Test
     public void getContainerWithGroupArtifactTest() {
@@ -119,7 +192,7 @@ public class ContainerHandlerTest {
         tags.add("latest");
         tags.add("test");
 
-        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler handler = new ContainerHandler(project.getProperties(), new GroupArtifactVersion("test-group", "test-artifact", "0"), probeHandler);
         //container name with group id and aritact id without alias and user
         BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().
                 ports(ports).from("fabric8/").cleanup("try").tags(tags)
@@ -134,7 +207,7 @@ public class ContainerHandlerTest {
         containers = handler.getContainers(config, images);
         assertNotNull(containers);
         assertEquals("test-group-test-artifact", containers.get(0).getName());
-        assertEquals("docker.io/test", containers.get(0).getImage());
+        assertEquals("docker.io/test:latest", containers.get(0).getImage());
         assertEquals("IfNotPresent", containers.get(0).getImagePullPolicy());
     }
     @Test
@@ -149,7 +222,7 @@ public class ContainerHandlerTest {
         tags.add("test");
 
         //container name with user and image with tag
-        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler handler = new ContainerHandler(project.getProperties(), new GroupArtifactVersion("test-group", "test-artifact", "0"), probeHandler);
 
         BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().
                 ports(ports).from("fabric8/").cleanup("try").tags(tags)
@@ -180,8 +253,8 @@ public class ContainerHandlerTest {
         project2.setVersion("3.5-NEW");
 
         //creating container Handler for all
-        ContainerHandler handler1 = new ContainerHandler(project1, envVarHandler, probeHandler);
-        ContainerHandler handler2 = new ContainerHandler(project2, envVarHandler, probeHandler);
+        ContainerHandler handler1 = new ContainerHandler(project1.getProperties(), new GroupArtifactVersion("g","a","3.5-SNAPSHOT"), probeHandler);
+        ContainerHandler handler2 = new ContainerHandler(project2.getProperties(), new GroupArtifactVersion("g","a", "3.5-NEW"), probeHandler);
 
         images.clear();
         images.add(imageConfiguration1);
@@ -202,11 +275,11 @@ public class ContainerHandlerTest {
         project2.setVersion("3.5-NEW");
 
         //creating container Handler for two
-        ContainerHandler handler1 = new ContainerHandler(project1, envVarHandler, probeHandler);
-        ContainerHandler handler2 = new ContainerHandler(project2, envVarHandler, probeHandler);
+        ContainerHandler handler1 = new ContainerHandler(project1.getProperties(), new GroupArtifactVersion("g", "a", "3.5-SNAPSHOT"), probeHandler);
+        ContainerHandler handler2 = new ContainerHandler(project2.getProperties(), new GroupArtifactVersion("g" , "a", "3.5-NEW"), probeHandler);
 
         //project without version
-        ContainerHandler handler3 = new ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler handler3 = createContainerHandler(project);
 
         images.clear();
         images.add(imageConfiguration1);
@@ -229,7 +302,7 @@ public class ContainerHandlerTest {
     @Test
     public void getImageNameTest(){
 
-        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         //Image Configuration with name and without registry
         ImageConfiguration imageConfiguration2 = new ImageConfiguration.Builder().
@@ -241,7 +314,7 @@ public class ContainerHandlerTest {
 
         //Image Configuration without name and registry
         ImageConfiguration imageConfiguration4 = new ImageConfiguration.Builder().
-                alias("test-app").buildConfig(buildImageConfiguration1).build();
+                alias("test-app").buildConfig(buildImageConfiguration1).registry("docker.io").build();
 
         images.clear();
         images.add(imageConfiguration1);
@@ -251,15 +324,15 @@ public class ContainerHandlerTest {
 
         containers = handler.getContainers(config1, images);
 
-        assertEquals("docker.io/test",containers.get(0).getImage());
-        assertEquals("test",containers.get(1).getImage());
+        assertEquals("docker.io/test:latest",containers.get(0).getImage());
+        assertEquals("test:latest",containers.get(1).getImage());
         assertNull(containers.get(2).getImage());
         assertNull(containers.get(3).getImage());
     }
 
     @Test
     public void getRegistryTest() {
-        ContainerHandler handler = new ContainerHandler(project1, envVarHandler, probeHandler);
+        ContainerHandler handler = createContainerHandler(project1);
 
         ImageConfiguration imageConfig = new ImageConfiguration.Builder().
                 name("test").alias("test-app").buildConfig(buildImageConfiguration1).build();
@@ -271,12 +344,12 @@ public class ContainerHandlerTest {
         containers = handler.getContainers(config1, images);
 
         project1.getProperties().remove("docker.pull.registry");
-        assertEquals("push.me/test", containers.get(0).getImage());
+        assertEquals("push.me/test:latest", containers.get(0).getImage());
     }
 
     @Test
     public void getVolumeMountWithoutMountTest() {
-        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         images.clear();
         images.add(imageConfiguration1);
@@ -292,7 +365,7 @@ public class ContainerHandlerTest {
     @Test
     public void getVolumeMountWithoutNameTest() {
 
-        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         images.clear();
         images.add(imageConfiguration1);
@@ -314,7 +387,7 @@ public class ContainerHandlerTest {
 
     @Test
     public void getVolumeMountWithNameAndMountTest() {
-        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         List<String> mounts = new ArrayList<>();
         mounts.add("/path/etc");
@@ -335,7 +408,7 @@ public class ContainerHandlerTest {
 
     @Test
     public void getVolumeMountWithMultipleMountTest() {
-        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         images.clear();
         images.add(imageConfiguration1);
@@ -358,7 +431,7 @@ public class ContainerHandlerTest {
 
     @Test
     public void getVolumeMountWithEmptyVolumeTest() {
-        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         images.clear();
         images.add(imageConfiguration1);
@@ -371,7 +444,7 @@ public class ContainerHandlerTest {
 
     @Test
     public void containerEmptyPortsTest() {
-        ContainerHandler handler = new ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         images.clear();
         images.add(imageConfiguration1);
@@ -384,7 +457,7 @@ public class ContainerHandlerTest {
     @Test
     public void containerPortsWithoutPortTest() {
 
-        ContainerHandler handler = new ContainerHandler(project,envVarHandler,probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         //without Ports
         BuildImageConfiguration buildImageConfiguration2 = new BuildImageConfiguration.Builder().
@@ -422,14 +495,14 @@ public class ContainerHandlerTest {
         images.clear();
         images.add(imageConfiguration1);
 
-        ContainerHandler handler = new ContainerHandler(project,envVarHandler,probeHandler);
+        ContainerHandler handler = createContainerHandler(project);
 
         containers = handler.getContainers(config, images);
         List<ContainerPort> outputports = containers.get(0).getPorts();
         assertEquals(9,outputports.size());
         int protocolCount=0,tcpCount=0,udpCount=0,containerPortCount=0,hostIPCount=0,hostPortCount=0;
         for(int i=0;i<9;i++){
-            if(!Strings.isNullOrBlank(outputports.get(i).getProtocol())){
+            if(!StringUtils.isBlank(outputports.get(i).getProtocol())){
                 protocolCount++;
                 if(outputports.get(i).getProtocol().equalsIgnoreCase("tcp")){
                     tcpCount++;
@@ -438,7 +511,7 @@ public class ContainerHandlerTest {
                     udpCount++;
                 }
             }
-            if(!Strings.isNullOrBlank(outputports.get(i).getHostIP())){
+            if(!StringUtils.isBlank(outputports.get(i).getHostIP())){
                 hostIPCount++;
             }
             if(outputports.get(i).getContainerPort()!=null){

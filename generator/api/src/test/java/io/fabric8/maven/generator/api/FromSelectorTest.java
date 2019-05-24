@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,32 +13,30 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.generator.api;
 
 import java.util.Map;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.*;
-import static io.fabric8.maven.core.config.PlatformMode.*;
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy;
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.docker;
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.s2i;
+import static io.fabric8.maven.core.config.RuntimeMode.openshift;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author roland
  * @since 12/08/16
  */
-@RunWith(JMockit.class)
 public class FromSelectorTest {
 
     @Mocked
@@ -79,9 +77,8 @@ public class FromSelectorTest {
             GeneratorContext ctx = new GeneratorContext.Builder()
                 .project(project)
                 .config(new ProcessorConfig())
-                .goalName("fabric8:testing")
                 .logger(logger)
-                .mode((PlatformMode) data[i])
+                .runtimeMode((RuntimeMode) data[i])
                 .strategy((OpenShiftBuildStrategy) data[i + 1])
                 .build();
 

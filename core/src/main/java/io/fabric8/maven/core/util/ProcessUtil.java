@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -25,9 +25,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Function;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.utils.Function;
-import io.fabric8.utils.Strings;
+import org.apache.commons.lang3.StringUtils;
 
 import static io.fabric8.maven.docker.util.EnvUtil.isWindows;
 
@@ -50,7 +50,7 @@ public class ProcessUtil {
         if (withShutdownHook) {
             addShutdownHook(log, process, command);
         }
-        List<Thread> threads = startLoggingThreads(process, log, command.getName() + " " + Strings.join(args, " "), useStandardLoggingLevel);
+        List<Thread> threads = startLoggingThreads(process, log, command.getName() + " " + StringUtils.join(args, " "), useStandardLoggingLevel);
         return new ProcessExecutionContext(process, threads, log);
     }
 
@@ -177,8 +177,7 @@ public class ProcessUtil {
                 }
             }
         }
-        if (Strings.isNullOrBlank(pathText)) {
-        } else {
+        if (StringUtils.isNotBlank(pathText)) {
             String[] pathTexts = pathText.split(File.pathSeparator);
             for (String text : pathTexts) {
                 File dir = new File(text);
@@ -230,30 +229,24 @@ public class ProcessUtil {
     }
 
     private static Function<String, Void> createOutputHandler(final Logger log, final boolean useStandardLoggingLevel) {
-        return new Function<String, Void>() {
-            @Override
-            public Void apply(String outputLine) {
-                if (useStandardLoggingLevel) {
-                    log.info("%s", outputLine);
-                } else {
-                    log.debug("%s", outputLine);
-                }
-                return null;
+        return outputLine -> {
+            if (useStandardLoggingLevel) {
+                log.info("%s", outputLine);
+            } else {
+                log.debug("%s", outputLine);
             }
+            return null;
         };
     }
 
     private static Function<String, Void> createErrorHandler(final Logger log,  final boolean useStandardLoggingLevel) {
-        return new Function<String, Void>() {
-            @Override
-            public Void apply(String outputLine) {
-                if (useStandardLoggingLevel) {
-                    log.error("%s", outputLine);
-                } else {
-                    log.warn("%s", outputLine);
-                }
-                return null;
+        return outputLine -> {
+            if (useStandardLoggingLevel) {
+                log.error("%s", outputLine);
+            } else {
+                log.warn("%s", outputLine);
             }
+            return null;
         };
     }
 

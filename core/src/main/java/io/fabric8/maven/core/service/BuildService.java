@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -21,6 +21,7 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.BuildRecreateMode;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.Task;
 
@@ -56,6 +57,8 @@ public interface BuildService {
 
         private OpenShiftBuildStrategy openshiftBuildStrategy;
 
+        private boolean forcePull;
+
         private String s2iBuildNameSuffix;
 
         private String openshiftPullSecret;
@@ -65,6 +68,8 @@ public interface BuildService {
         private String buildDirectory;
 
         private Attacher attacher;
+
+        private ImagePullManager imagePullManager;
 
         private boolean s2iImageStreamLookupPolicyLocal;
 
@@ -107,8 +112,14 @@ public interface BuildService {
             return dockerMojoParameters.getProject().getArtifactId();
         }
 
+        public ImagePullManager getImagePullManager() { return imagePullManager; }
+
         public boolean isS2iImageStreamLookupPolicyLocal() {
             return s2iImageStreamLookupPolicyLocal;
+        }
+
+        public boolean isForcePullEnabled() {
+            return forcePull;
         }
 
         public void attachArtifact(String classifier, File destFile) {
@@ -148,6 +159,11 @@ public interface BuildService {
                 return this;
             }
 
+            public Builder forcePullEnabled(boolean forcePull) {
+                config.forcePull = forcePull;
+                return this;
+            }
+
             public Builder s2iBuildNameSuffix(String s2iBuildNameSuffix) {
                 config.s2iBuildNameSuffix = s2iBuildNameSuffix;
                 return this;
@@ -175,6 +191,11 @@ public interface BuildService {
 
             public Builder attacher(Attacher attacher) {
                 config.attacher = attacher;
+                return this;
+            }
+
+            public Builder imagePullManager(ImagePullManager imagePullManager) {
+                config.imagePullManager = imagePullManager;
                 return this;
             }
 

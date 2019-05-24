@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,16 +13,18 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.handler;
 
 import java.util.List;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.extensions.*;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetSpec;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetSpecBuilder;
 import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 
 /**

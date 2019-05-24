@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.api;
 /**
  * Enum describing the object types which are created
@@ -29,8 +28,11 @@ public enum Kind {
     DEPLOYMENT_CONFIG,
     DAEMON_SET,
     STATEFUL_SET,
+    IMAGESTREAM,
     JOB,
-    POD_SPEC;
+    POD_SPEC,
+    BUILD_CONFIG,
+    BUILD;
 
     /**
      * Returns true if the kind is a controller

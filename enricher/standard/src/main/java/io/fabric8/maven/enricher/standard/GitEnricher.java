@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,18 +13,29 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.standard;
-
-import io.fabric8.kubernetes.api.Annotations;
-import io.fabric8.maven.enricher.api.util.GitUtil;
-import io.fabric8.maven.enricher.api.*;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Repository;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import io.fabric8.kubernetes.api.builder.TypedVisitor;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.apps.DaemonSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
+import io.fabric8.kubernetes.api.model.batch.JobBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.util.GitUtil;
+import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
+import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Repository;
 
 /**
  * Enricher for adding build metadata:
@@ -38,43 +49,113 @@ import java.util.Map;
  */
 public class GitEnricher extends BaseEnricher {
 
-    public GitEnricher(EnricherContext buildContext) {
+    private String GIT_REMOTE = "fabric8.remoteName";
+
+    public GitEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-git");
     }
 
-    @Override
-    public Map<String, String> getAnnotations(Kind kind) {
-        Map<String, String> annotations = new HashMap<>();
-        Repository repository = null;
-        try {
-            if (kind.isController() || kind == Kind.SERVICE) {
+    private Map<String, String> getAnnotations() {
+        final Map<String, String> annotations = new HashMap<>();
+        if (GitUtil.findGitFolder(getContext().getProjectDirectory()) != null) {
+            Repository repository = null;
+            try {
                 // Git annotations (if git is used as SCM)
-                repository = GitUtil.getGitRepository(getProject());
+                repository = GitUtil.getGitRepository(getContext().getProjectDirectory());
                 if (repository != null) {
-                    String result;
                     String branch = repository.getBranch();
                     if (branch != null) {
-                        annotations.put(Annotations.Builds.GIT_BRANCH, branch);
+                        annotations.put(Fabric8Annotations.GIT_BRANCH.value(), branch);
                     }
                     String id = GitUtil.getGitCommitId(repository);
                     if (id != null) {
-                        annotations.put(Annotations.Builds.GIT_COMMIT, id);
+                        annotations.put(Fabric8Annotations.GIT_COMMIT.value(), id);
+                    }
+
+                    String gitRemote = getContext().getConfiguration().getProperties().getProperty(GIT_REMOTE);
+                    gitRemote = gitRemote == null? "origin" : gitRemote;
+                    String gitRemoteUrl = repository.getConfig().getString("remote", gitRemote, "url");
+                    if (gitRemoteUrl != null) {
+                        annotations.put(Fabric8Annotations.GIT_URL.value(), gitRemoteUrl);
+                    } else {
+                        log.warn("Could not detect any git remote");
+                    }
+                }
+                return annotations;
+            } catch (IOException | GitAPIException e) {
+                log.error("Cannot extract Git information for adding to annotations: " + e, e);
+                return null;
+            } finally {
+                if (repository != null) {
+                    try {
+                        repository.close();
+                    } catch (Exception e) {
+                        // ignore
                     }
                 }
             }
-            return annotations;
-        } catch (IOException | GitAPIException e) {
-            log.error("Cannot extract Git information for adding to annotations: " + e, e);
-            return null;
-        } finally {
-            if (repository != null) {
-                try {
-                    repository.close();
-                } catch (Exception e) {
-                    // ignore
-                }
-            }
         }
+
+        return annotations;
+    }
+
+    @Override
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
+        builder.accept(new TypedVisitor<ServiceBuilder>() {
+            @Override
+            public void visit(ServiceBuilder serviceBuilder) {
+                serviceBuilder.editMetadata().addToAnnotations(getAnnotations()).endMetadata();
+            }
+        });
+
+        builder.accept(new TypedVisitor<DeploymentBuilder>() {
+            @Override
+            public void visit(DeploymentBuilder builder) {
+                builder.editMetadata().addToAnnotations(getAnnotations()).endMetadata();
+            }
+        });
+
+        builder.accept(new TypedVisitor<DeploymentConfigBuilder>() {
+            @Override
+            public void visit(DeploymentConfigBuilder builder) {
+                builder.editMetadata().addToAnnotations(getAnnotations()).endMetadata();
+            }
+        });
+
+        builder.accept(new TypedVisitor<ReplicaSetBuilder>() {
+            @Override
+            public void visit(ReplicaSetBuilder builder) {
+                builder.editMetadata().addToAnnotations(getAnnotations()).endMetadata();
+            }
+        });
+
+        builder.accept(new TypedVisitor<ReplicationControllerBuilder>() {
+            @Override
+            public void visit(ReplicationControllerBuilder builder) {
+                builder.editMetadata().addToAnnotations(getAnnotations()).endMetadata();
+            }
+        });
+
+        builder.accept(new TypedVisitor<DaemonSetBuilder>() {
+            @Override
+            public void visit(DaemonSetBuilder builder) {
+                builder.editMetadata().addToAnnotations(getAnnotations()).endMetadata();
+            }
+        });
+
+        builder.accept(new TypedVisitor<StatefulSetBuilder>() {
+            @Override
+            public void visit(StatefulSetBuilder builder) {
+                builder.editMetadata().addToAnnotations(getAnnotations()).endMetadata();
+            }
+        });
+
+        builder.accept(new TypedVisitor<JobBuilder>() {
+            @Override
+            public void visit(JobBuilder builder) {
+                builder.editMetadata().addToAnnotations(getAnnotations()).endMetadata();
+            }
+        });
     }
 }
 

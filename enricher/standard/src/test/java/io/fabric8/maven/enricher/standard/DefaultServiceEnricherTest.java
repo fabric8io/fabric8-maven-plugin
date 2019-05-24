@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.standard;
 
 import java.util.Arrays;
@@ -23,34 +22,40 @@ import java.util.TreeMap;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.model.Configuration;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
+import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import static com.jayway.jsonpath.matchers.JsonPathMatchers.*;
+import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
+import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasNoJsonPath;
+import static com.jayway.jsonpath.matchers.JsonPathMatchers.isJson;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author roland
  * @since 03/06/16
  */
-@RunWith(JMockit.class)
 public class DefaultServiceEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     @Mocked
     ImageConfiguration imageConfiguration;
+
+    @Mocked
+    GroupArtifactVersion groupArtifactVersion;
 
     @Test
     public void checkDefaultConfiguration() throws Exception {
@@ -151,7 +156,7 @@ public class DefaultServiceEnricherTest {
         setupExpectations(false, "headless", "false");
         DefaultServiceEnricher serviceEnricher = new DefaultServiceEnricher(context);
         KubernetesListBuilder builder = new KubernetesListBuilder();
-        serviceEnricher.addMissingResources(builder);
+        serviceEnricher.create(PlatformMode.kubernetes, builder);
 
         // Validate that the generated resource contains
         KubernetesList list = builder.build();
@@ -168,19 +173,52 @@ public class DefaultServiceEnricherTest {
 
     }
 
+    @Test
+    public void serviceImageLabelEnrichment() throws Exception {
+        ImageConfiguration imageConfigurationWithLabels = new ImageConfiguration.Builder()
+                .name("test-label")
+                .alias("test")
+                .build();
+        final TreeMap config = new TreeMap();
+        config.put("type", "LoadBalancer");
+
+        new Expectations() {{
+
+            Configuration configuration = new Configuration.Builder()
+                    .images(Arrays.asList(imageConfigurationWithLabels))
+                    .processorConfig(new ProcessorConfig(null, null, Collections.singletonMap("fmp-service", config)))
+                    .build();
+
+            groupArtifactVersion.getSanitizedArtifactId();
+            result = "fmp-service";
+
+            context.getConfiguration();
+            result = configuration;
+
+            imageConfigurationWithLabels.getBuildConfiguration();
+            result = new BuildImageConfiguration.Builder()
+                    .labels(Collections.singletonMap("fabric8.generator.service.ports", "9090"))
+                    .ports(Arrays.asList("80", "53/UDP"))
+                    .build();
+        }};
+
+        String json = enrich();
+        assertPort(json, 0, 9090, 9090, "http", "TCP");
+    }
+
     // ======================================================================================================
 
     private String enrich() throws com.fasterxml.jackson.core.JsonProcessingException {
         // Enrich
         DefaultServiceEnricher serviceEnricher = new DefaultServiceEnricher(context);
         KubernetesListBuilder builder = new KubernetesListBuilder();
-        serviceEnricher.addMissingResources(builder);
+        serviceEnricher.create(PlatformMode.kubernetes, builder);
 
         // Validate that the generated resource contains
         KubernetesList list = builder.build();
-        assertEquals(list.getItems().size(),1);
+        assertEquals(1, list.getItems().size());
 
-        return KubernetesResourceUtil.toJson(list.getItems().get(0));
+        return ResourceUtil.toJson(list.getItems().get(0));
     }
 
 
@@ -205,14 +243,16 @@ public class DefaultServiceEnricherTest {
 
         new Expectations() {{
 
-            context.getConfig();
-            result = new ProcessorConfig(null, null, Collections.singletonMap("fmp-service", config));
+            Configuration configuration = new Configuration.Builder()
+                .images(Arrays.asList(imageConfiguration))
+                .processorConfig(new ProcessorConfig(null, null, Collections.singletonMap("fmp-service", config)))
+                .build();
+
+            context.getConfiguration();
+            result = configuration;
 
             imageConfiguration.getBuildConfiguration();
             result = getBuildConfig(withPorts);
-
-            context.getImages();
-            result = Arrays.asList(imageConfiguration);
         }};
     }
 

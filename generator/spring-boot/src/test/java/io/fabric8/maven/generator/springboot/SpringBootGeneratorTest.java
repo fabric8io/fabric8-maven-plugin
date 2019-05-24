@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.generator.springboot;
 
 import java.io.IOException;
@@ -25,16 +24,12 @@ import java.util.Map;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
-
+import mockit.Expectations;
+import mockit.Mocked;
 import org.apache.maven.model.Build;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -45,7 +40,6 @@ import static org.junit.Assert.assertNull;
  * @author roland
  * @since 28/11/16
  */
-@RunWith(JMockit.class)
 public class SpringBootGeneratorTest {
 
     @Mocked
@@ -70,7 +64,7 @@ public class SpringBootGeneratorTest {
         assertNotNull(extraOpts);
         assertEquals(0, extraOpts.size());
 
-        List<ImageConfiguration> configs = generator.customize(new ArrayList<ImageConfiguration>(), true);
+        List<ImageConfiguration> configs = generator.customize(new ArrayList<>(), true);
         assertEquals(1, configs.size());
         Map<String, String> env = configs.get(0).getBuildConfiguration().getEnv();
         assertNull(env.get("JAVA_OPTIONS"));
@@ -85,7 +79,8 @@ public class SpringBootGeneratorTest {
             // TODO: Prepare more relastic test setup
             build.getDirectory(); result = tempDir;
             build.getOutputDirectory(); result = tempDir;
-            project.getPlugin(anyString); result = null;
+            project.getPlugin(anyString); result = null; minTimes = 0;
+            project.getBuildPlugins(); result = null;
             project.getVersion(); result = "1.0.0"; minTimes = 0;
         }};
         return context;

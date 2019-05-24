@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -15,34 +15,37 @@
  */
 package io.fabric8.maven.enricher.standard;
 
+import java.util.List;
+
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.MapUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-
-import java.util.List;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.openshift.api.model.DeploymentConfig;
+import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 
 /**
  * Enricher which copies the annotation from a Deployment to the annotations of
  * container Pod spec.
  */
 public class PodAnnotationEnricher extends BaseEnricher {
-    public PodAnnotationEnricher(EnricherContext buildContext) {
+    public PodAnnotationEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-pod-annotations");
     }
 
     @Override
-    public void adapt(KubernetesListBuilder builder) {
-        super.adapt(builder);
+    public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) {
+        super.enrich(platformMode, builder);
 
         List<HasMetadata> items = builder.getItems();
         for (HasMetadata item : items) {
-            if (item instanceof Deployment) {
+            if (platformMode == PlatformMode.kubernetes && item instanceof Deployment) {
                 Deployment deployment = (Deployment) item;
                 ObjectMeta metadata = deployment.getMetadata();
                 DeploymentSpec spec = deployment.getSpec();
@@ -53,6 +56,21 @@ public class PodAnnotationEnricher extends BaseEnricher {
                         if (templateMetadata == null) {
                             templateMetadata = new ObjectMeta();
                             template.setMetadata(templateMetadata);
+                        }
+                        templateMetadata.setAnnotations(MapUtil.mergeMaps(templateMetadata.getAnnotations(), metadata.getAnnotations()));
+                    }
+                }
+            } else if (platformMode == PlatformMode.openshift && item instanceof DeploymentConfig) {
+                DeploymentConfig deploymentConfig = (DeploymentConfig)item;
+                ObjectMeta metadata = deploymentConfig.getMetadata();
+                DeploymentConfigSpec spec = deploymentConfig.getSpec();
+                if (metadata != null && spec != null) {
+                    PodTemplateSpec templateSpec = spec.getTemplate();
+                    if(templateSpec != null) {
+                        ObjectMeta templateMetadata = templateSpec.getMetadata();
+                        if(templateMetadata == null) {
+                            templateMetadata = new ObjectMeta();
+                            templateSpec.setMetadata(templateMetadata);
                         }
                         templateMetadata.setAnnotations(MapUtil.mergeMaps(templateMetadata.getAnnotations(), metadata.getAnnotations()));
                     }

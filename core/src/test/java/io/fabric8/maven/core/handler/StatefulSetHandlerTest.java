@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -15,7 +15,11 @@
  */
 package io.fabric8.maven.core.handler;
 
-import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
+import java.util.ArrayList;
+import java.util.List;
+
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.VolumeConfig;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -25,15 +29,11 @@ import org.apache.maven.project.MavenProject;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 public class StatefulSetHandlerTest {
-
-    @Mocked
-    EnvVarHandler envVarHandler;
 
     @Mocked
     ProbeHandler probeHandler;
@@ -81,8 +81,7 @@ public class StatefulSetHandlerTest {
     @Test
     public void statefulSetHandlerTest() {
 
-        ContainerHandler containerHandler =
-                new ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler containerHandler = getContainerHandler();
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -116,11 +115,14 @@ public class StatefulSetHandlerTest {
 
     }
 
+    private ContainerHandler getContainerHandler() {
+        return new ContainerHandler(project.getProperties(), new GroupArtifactVersion("g","a","v"), probeHandler);
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void statefulSetHandlerWithInvalidNameTest() {
         //invalid controller name
-        ContainerHandler containerHandler =
-                new ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler containerHandler = getContainerHandler();
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -141,8 +143,7 @@ public class StatefulSetHandlerTest {
     @Test(expected = IllegalArgumentException.class)
     public void statefulSetHandlerWithoutControllerTest() {
         //without controller name
-        ContainerHandler containerHandler = new
-                ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler containerHandler = getContainerHandler();
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 

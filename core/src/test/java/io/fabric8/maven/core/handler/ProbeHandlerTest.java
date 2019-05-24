@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -19,7 +19,9 @@ import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.maven.core.config.ProbeConfig;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class ProbeHandlerTest {
     Probe probe;
@@ -82,7 +84,7 @@ public class ProbeHandlerTest {
         assertEquals(null,probe.getHttpGet().getHttpHeaders());
         assertEquals("/healthz",probe.getHttpGet().getPath());
         assertEquals(8080,probe.getHttpGet().getPort().getIntVal().intValue());
-        assertEquals("http",probe.getHttpGet().getScheme());
+        assertEquals("HTTP",probe.getHttpGet().getScheme());
         assertNull(probe.getExec());
         assertNull(probe.getTcpSocket());
     }
@@ -197,7 +199,7 @@ public class ProbeHandlerTest {
         assertEquals(null,probe.getHttpGet().getHttpHeaders());
         assertEquals("/healthz",probe.getHttpGet().getPath());
         assertEquals(8080,probe.getHttpGet().getPort().getIntVal().intValue());
-        assertEquals("http",probe.getHttpGet().getScheme());
+        assertEquals("HTTP",probe.getHttpGet().getScheme());
     }
 
     @Test
@@ -206,6 +208,7 @@ public class ProbeHandlerTest {
         //withport and url but with other request and port as int
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5)
+                .failureThreshold(3).successThreshold(1)
                 .getUrl("tcp://www.healthcheck.com:8080/healthz").tcpPort("80")
                 .build();
 
@@ -219,6 +222,8 @@ public class ProbeHandlerTest {
         assertEquals("www.healthcheck.com",probe.getTcpSocket().getHost());
         assertEquals(5,probe.getInitialDelaySeconds().intValue());
         assertEquals(5,probe.getTimeoutSeconds().intValue());
+        assertEquals(3, probe.getFailureThreshold().intValue());
+        assertEquals(1, probe.getSuccessThreshold().intValue());
     }
 
     @Test
@@ -228,6 +233,8 @@ public class ProbeHandlerTest {
         probeConfig = new ProbeConfig.Builder()
                 .initialDelaySeconds(5).timeoutSeconds(5)
                 .getUrl("tcp://www.healthcheck.com:8080/healthz").tcpPort("httpPort")
+                .successThreshold(1)
+                .failureThreshold(3)
                 .build();
 
         probe = probeHandler.getProbe(probeConfig);
@@ -240,6 +247,8 @@ public class ProbeHandlerTest {
         assertEquals("www.healthcheck.com",probe.getTcpSocket().getHost());
         assertEquals(5,probe.getInitialDelaySeconds().intValue());
         assertEquals(5,probe.getTimeoutSeconds().intValue());
+        assertEquals(3, probe.getFailureThreshold().intValue());
+        assertEquals(1, probe.getSuccessThreshold().intValue());
     }
 
     @Test
@@ -263,7 +272,7 @@ public class ProbeHandlerTest {
         assertEquals(null,probe.getHttpGet().getHttpHeaders());
         assertEquals("/healthz",probe.getHttpGet().getPath());
         assertEquals(8080,probe.getHttpGet().getPort().getIntVal().intValue());
-        assertEquals("http",probe.getHttpGet().getScheme());
+        assertEquals("HTTP",probe.getHttpGet().getScheme());
     }
 
     @Test

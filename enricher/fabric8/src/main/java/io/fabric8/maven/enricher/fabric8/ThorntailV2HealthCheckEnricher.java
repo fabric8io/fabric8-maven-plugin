@@ -1,5 +1,5 @@
-/*
- * Copyright 2018 Red Hat, Inc.
+/**
+ * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
  * 2.0 (the "License"); you may not use this file except in compliance
@@ -18,18 +18,19 @@ package io.fabric8.maven.enricher.fabric8;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-
-import static io.fabric8.maven.core.util.MavenUtil.hasDependency;
+import io.fabric8.maven.core.util.ThorntailUtil;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import java.util.Properties;
 
 /**
  * Enriches thorntail-v2 containers with health checks if the monitoring fraction is present.
  */
 public class ThorntailV2HealthCheckEnricher extends AbstractHealthCheckEnricher {
 
-    public ThorntailV2HealthCheckEnricher(EnricherContext buildContext) {
-        super(buildContext, "thorntail-v2-health-check");
+    public static final String IO_THORNTAIL = "io.thorntail";
+
+    public ThorntailV2HealthCheckEnricher(MavenEnricherContext buildContext) {
+        super(buildContext, "f8-healthcheck-thorntail-v2");
     }
 
     // Available configuration keys
@@ -41,6 +42,8 @@ public class ThorntailV2HealthCheckEnricher extends AbstractHealthCheckEnricher 
         port {{
             d = "8080";
         }},
+        failureThreshold                    {{ d = "3"; }},
+        successThreshold                    {{ d = "1"; }},
         path {{
             d = "/health";
         }};
@@ -54,47 +57,55 @@ public class ThorntailV2HealthCheckEnricher extends AbstractHealthCheckEnricher 
 
     @Override
     protected Probe getReadinessProbe() {
-        Probe probe = discoverThorntailHealthCheck(10);
-        return probe;
+        return discoverThorntailHealthCheck(10);
     }
 
     @Override
     protected Probe getLivenessProbe() {
-        Probe probe = discoverThorntailHealthCheck(180);
-        return probe;
+        return discoverThorntailHealthCheck(180);
     }
 
     private Probe discoverThorntailHealthCheck(int initialDelay) {
-        if (hasDependency(this.getProject(), "io.thorntail", "thorntail-kernel")) {
+        if (getContext().hasDependency(IO_THORNTAIL, "thorntail-kernel")) {
             // if there's thorntail-kernel, it's Thorntail v4
             return null;
         }
 
-        if (hasDependency(this.getProject(), "io.thorntail", "monitor")
-                || hasDependency(this.getProject(), "io.thorntail", "microprofile-health")) {
+        if (getContext().hasDependency(IO_THORNTAIL, "monitor")
+                || getContext().hasDependency(IO_THORNTAIL, "microprofile-health")) {
             Integer port = getPort();
             // scheme must be in upper case in k8s
             String scheme = getScheme().toUpperCase();
             String path = getPath();
 
-            return new ProbeBuilder().
-                    withNewHttpGet().withNewPort(port).withPath(path).withScheme(scheme).endHttpGet().
-                    withInitialDelaySeconds(initialDelay).build();
+            return new ProbeBuilder()
+                     .withNewHttpGet().withNewPort(port).withPath(path).withScheme(scheme).endHttpGet()
+                     .withFailureThreshold(getFailureThreshold())
+                     .withSuccessThreshold(getSuccessThreshold())
+                     .withInitialDelaySeconds(initialDelay).build();
         }
         return null;
     }
+
+    protected int getFailureThreshold() { return Configs.asInteger(getConfig(Config.failureThreshold)); }
+
+    protected int getSuccessThreshold() { return Configs.asInteger(getConfig(Config.successThreshold)); }
 
     protected String getScheme() {
         return Configs.asString(getConfig(Config.scheme));
     }
 
     protected int getPort() {
+        final Properties properties = ThorntailUtil.getThorntailProperties(getContext().getProjectClassLoaders().getCompileClassLoader());
+        properties.putAll(System.getProperties());
+        if (properties.containsKey("thorntail.http.port")) {
+            return Integer.parseInt((String) properties.get("thorntail.http.port"));
+        }
+
         return Configs.asInt(getConfig(Config.port));
     }
 
     protected String getPath() {
         return Configs.asString(getConfig(Config.path));
     }
-
-
 }

@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -27,17 +27,12 @@ import io.fabric8.kubernetes.api.model.WatchEvent;
 import io.fabric8.maven.core.util.ProcessUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.OpenShiftClient;
-
 import io.fabric8.openshift.client.server.mock.OpenShiftMockServer;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
+import org.junit.Before;
+import org.junit.Test;
 
-@RunWith(JMockit.class)
 public class PortForwardServiceTest {
 
     @Mocked
@@ -94,7 +89,7 @@ public class PortForwardServiceTest {
                 .done().always();
 
         OpenShiftClient client = mockServer.createOpenShiftClient();
-        PortForwardService service = new PortForwardService(clientToolsService, logger, client) {
+        PortForwardService service = new PortForwardService(client, logger) {
             @Override
             public ProcessUtil.ProcessExecutionContext forwardPortAsync(Logger externalProcessLogger, String pod, int remotePort, int localPort) throws Fabric8ServiceException {
                 return new ProcessUtil.ProcessExecutionContext(process, Collections.<Thread>emptyList(), logger);

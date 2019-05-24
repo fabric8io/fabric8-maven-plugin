@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,8 +13,10 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.generator.webapp;
+
+import java.io.File;
+import java.io.IOException;
 
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
@@ -23,9 +25,6 @@ import org.apache.maven.project.MavenProject;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import java.io.File;
-import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 

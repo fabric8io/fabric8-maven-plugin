@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,8 +13,12 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.standard;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
@@ -26,21 +30,15 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSetBuilder;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.*;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.JSONUtil;
+import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.ImageChangeTrigger;
 import io.fabric8.openshift.api.model.ImageChangeTriggerBuilder;
-
-import java.util.*;
 
 /**
  * This adds a `image.openshift.io/triggers` tag to all kubernetes resources in order to make them run on Openshift when using ImageStreams.
@@ -66,12 +64,12 @@ public class TriggersAnnotationEnricher extends BaseEnricher {
     }
 
 
-    public TriggersAnnotationEnricher(EnricherContext buildContext) {
+    public TriggersAnnotationEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-triggers-annotation");
     }
 
     @Override
-    public void adapt(KubernetesListBuilder builder) {
+    public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) {
 
         builder.accept(new TypedVisitor<StatefulSetBuilder>() {
             @Override
@@ -151,7 +149,7 @@ public class TriggersAnnotationEnricher extends BaseEnricher {
         });
 
         try {
-            return JSONUtil.mapper().writeValueAsString(triggerList);
+            return ResourceUtil.toJson(triggerList);
         } catch (JsonProcessingException e) {
             getLog().error("Error while creating ImageStreamTag triggers for Kubernetes resources: %s", e);
             return "[]";

@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -15,11 +15,13 @@
  */
 package io.fabric8.maven.core.service.kubernetes;
 
+import java.util.Objects;
+
 import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.utils.Objects;
 
 /**
  * @author nicola
@@ -32,8 +34,8 @@ public class DockerBuildService implements BuildService {
     private BuildServiceConfig config;
 
     public DockerBuildService(ServiceHub dockerServiceHub, BuildServiceConfig config) {
-        Objects.notNull(dockerServiceHub, "dockerServiceHub");
-        Objects.notNull(config, "config");
+        Objects.requireNonNull(dockerServiceHub, "dockerServiceHub");
+        Objects.requireNonNull(config, "config");
 
         this.dockerServiceHub = dockerServiceHub;
         this.config = config;
@@ -44,8 +46,9 @@ public class DockerBuildService implements BuildService {
 
         io.fabric8.maven.docker.service.BuildService dockerBuildService = dockerServiceHub.getBuildService();
         io.fabric8.maven.docker.service.BuildService.BuildContext dockerBuildContext = config.getDockerBuildContext();
+        ImagePullManager imagePullManager = config.getImagePullManager();
         try {
-            dockerBuildService.buildImage(imageConfig, dockerBuildContext);
+            dockerBuildService.buildImage(imageConfig, imagePullManager, dockerBuildContext);
 
             // Assume we always want to tag
             dockerBuildService.tagImage(imageConfig.getName(), imageConfig);

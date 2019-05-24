@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,14 +13,16 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.util;
 
 import java.io.File;
+import java.util.Arrays;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Type of resources supported
@@ -57,9 +59,13 @@ public enum ResourceFileType {
 
     public abstract ObjectMapper getObjectMapper();
 
-    public File addExtension(File file) {
+    public File addExtensionIfMissing(File file) {
         String path = file.getAbsolutePath();
-        return new File(path + "." + extension);
+        if (!path.endsWith("." + extension)) {
+            return new File(path + "." + extension);
+        } else {
+            return file;
+        }
     }
 
     public String getArtifactType() {
@@ -77,6 +83,15 @@ public enum ResourceFileType {
                 }
             }
             throw exp;
+        }
+    }
+
+    public static ResourceFileType fromFile(File file) {
+        String ext = FilenameUtils.getExtension(file.getPath());
+        if (StringUtils.isNotBlank(ext)) {
+            return fromExtension(ext);
+        } else {
+            throw new IllegalArgumentException(String.format("Unsupported extension '%s' for file %s. Must be one of %s", ext, file, Arrays.asList(values())));
         }
     }
 }

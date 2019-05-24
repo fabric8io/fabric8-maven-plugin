@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,25 +13,36 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.handler;
 
-import io.fabric8.kubernetes.api.model.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.ContainerPort;
+import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.Probe;
+import io.fabric8.kubernetes.api.model.SecurityContext;
+import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
+import io.fabric8.kubernetes.api.model.VolumeMount;
+import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.VolumeConfig;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
-import io.fabric8.utils.Strings;
-import org.apache.maven.project.MavenProject;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author roland
@@ -39,14 +50,14 @@ import java.util.List;
  */
 class ContainerHandler {
 
-    private final EnvVarHandler envVarHandler;
     private final ProbeHandler probeHandler;
-    private final MavenProject project;
+    private final Properties configurationProperties;
+    private final GroupArtifactVersion groupArtifactVersion;
 
-    public ContainerHandler(MavenProject project, EnvVarHandler envVarHandler, ProbeHandler probeHandler) {
-        this.envVarHandler = envVarHandler;
+    public ContainerHandler(Properties configurationProperties, GroupArtifactVersion groupArtifactVersion, ProbeHandler probeHandler) {
         this.probeHandler = probeHandler;
-        this.project = project;
+        this.configurationProperties = configurationProperties;
+        this.groupArtifactVersion = groupArtifactVersion;
     }
 
     List<Container> getContainers(ResourceConfig config, List<ImageConfiguration> images)  {
@@ -58,10 +69,10 @@ class ContainerHandler {
                 Probe readinessProbe = probeHandler.getProbe(config.getReadiness());
 
                 Container container = new ContainerBuilder()
-                    .withName(KubernetesResourceUtil.extractContainerName(project, imageConfig))
+                    .withName(KubernetesResourceUtil.extractContainerName(this.groupArtifactVersion, imageConfig))
                     .withImage(getImageName(imageConfig))
                     .withImagePullPolicy(getImagePullPolicy(config))
-                    .withEnv(envVarHandler.getEnvironmentVariables(config.getEnv()))
+                    .withEnv(getEnvVars(config))
                     .withSecurityContext(createSecurityContext(config))
                     .withPorts(getContainerPorts(imageConfig))
                     .withVolumeMounts(getVolumeMounts(config))
@@ -74,12 +85,29 @@ class ContainerHandler {
         return ret;
     }
 
+    private List<EnvVar> getEnvVars(ResourceConfig config) {
+        List<EnvVar> envVars = KubernetesResourceUtil.convertToEnvVarList(config.getEnv().orElse(Collections.emptyMap()));
+
+        // TODO: This should go into an extra enricher so that this behaviour can be switched on / off
+        envVars.removeIf(obj -> obj.getName().equals("KUBERNETES_NAMESPACE"));
+        envVars.add(0,
+            new EnvVarBuilder()
+                .withName("KUBERNETES_NAMESPACE")
+                .withNewValueFrom()
+                  .withNewFieldRef()
+                     .withFieldPath("metadata.namespace")
+                  .endFieldRef()
+                .endValueFrom()
+                .build());
+
+        return envVars;
+    }
+
 
     private String getImagePullPolicy(ResourceConfig config) {
         String pullPolicy = config.getImagePullPolicy();
-        String version = project.getVersion();
-        if (Strings.isNullOrBlank(pullPolicy) &&
-            version != null && version.endsWith("SNAPSHOT")) {
+        if (StringUtils.isBlank(pullPolicy) &&
+            this.groupArtifactVersion.isSnapshot()) {
             // TODO: Is that what we want ?
             return "PullAlways";
         }
@@ -87,21 +115,26 @@ class ContainerHandler {
     }
 
     private String getImageName(ImageConfiguration imageConfiguration) {
-        if (Strings.isNullOrBlank(imageConfiguration.getName())) {
+        if (StringUtils.isBlank(imageConfiguration.getName())) {
             return null;
         }
-        String configuredRegistry = EnvUtil.findRegistry(
-                Strings.isNullOrBlank(imageConfiguration.getName()) ? null : new ImageName(imageConfiguration.getName()).getRegistry(),
-                imageConfiguration.getRegistry(),
-                project.getProperties().getProperty("docker.pull.registry"),
-                project.getProperties().getProperty("docker.registry"));
+        Properties props = getPropertiesWithSystemOverrides(this.configurationProperties);
+        String configuredRegistry = EnvUtil.firstRegistryOf(
+            imageConfiguration.getRegistry(),
+            props.getProperty("docker.pull.registry"),
+            props.getProperty("docker.registry"));
 
-        String prefix = "";
-        if (Strings.isNotBlank(configuredRegistry)) {
-            prefix = configuredRegistry + "/";
+        return new ImageName(imageConfiguration.getName()).getFullName(configuredRegistry);
+    }
+
+    private Properties getPropertiesWithSystemOverrides(Properties configurationProperties) {
+
+        if (configurationProperties == null) {
+            configurationProperties = new Properties();
         }
 
-        return prefix + imageConfiguration.getName();
+        configurationProperties.putAll(System.getProperties());
+        return configurationProperties;
     }
 
     private SecurityContext createSecurityContext(ResourceConfig config) {
@@ -136,10 +169,10 @@ class ContainerHandler {
         List<String> ports = buildConfig.getPorts();
         if (!ports.isEmpty()) {
             List<ContainerPort> ret = new ArrayList<>();
-            PortMapping portMapping = new PortMapping(ports, project.getProperties());
-            JSONArray portSpecs = portMapping.toJson();
-            for (int i = 0; i < portSpecs.length(); i ++) {
-                JSONObject portSpec = portSpecs.getJSONObject(i);
+            PortMapping portMapping = new PortMapping(ports, configurationProperties);
+            JsonArray portSpecs = portMapping.toJson();
+            for (int i = 0; i < portSpecs.size(); i ++) {
+                JsonObject portSpec = portSpecs.get(i).getAsJsonObject();
                 ret.add(extractContainerPort(portSpec));
             }
             return ret;
@@ -148,17 +181,17 @@ class ContainerHandler {
         }
     }
 
-    private ContainerPort extractContainerPort(JSONObject portSpec) {
+    private ContainerPort extractContainerPort(JsonObject portSpec) {
         ContainerPortBuilder portBuilder = new ContainerPortBuilder()
-            .withContainerPort(portSpec.getInt("containerPort"));
+            .withContainerPort(portSpec.get("containerPort").getAsInt());
         if (portSpec.has("hostPort")) {
-            portBuilder.withHostPort(portSpec.getInt("hostPort"));
+            portBuilder.withHostPort(portSpec.get("hostPort").getAsInt());
         }
         if (portSpec.has("protocol")) {
-            portBuilder.withProtocol(portSpec.getString("protocol").toUpperCase());
+            portBuilder.withProtocol(portSpec.get("protocol").getAsString().toUpperCase());
         }
         if (portSpec.has("hostIP")) {
-            portBuilder.withHostIP(portSpec.getString("hostIP"));
+            portBuilder.withHostIP(portSpec.get("hostIP").getAsString());
         }
         return portBuilder.build();
     }

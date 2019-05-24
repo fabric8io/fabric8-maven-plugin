@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.standard;
 
 import java.util.ArrayList;
@@ -24,36 +23,37 @@ import java.util.Map;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecFluent;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ReplicationControllerFluent;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpecFluent;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSetBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSetFluent;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSetSpecFluent;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentFluent;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpecFluent;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetBuilder;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetFluent;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpecFluent;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSetBuilder;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSetFluent;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpecFluent;
+import io.fabric8.kubernetes.api.model.apps.DaemonSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.DaemonSetFluent;
+import io.fabric8.kubernetes.api.model.apps.DaemonSetSpecFluent;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentFluent;
+import io.fabric8.kubernetes.api.model.apps.DeploymentSpecFluent;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetFluent;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetSpecFluent;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetFluent;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetSpecFluent;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfigFluent;
 import io.fabric8.openshift.api.model.DeploymentConfigSpecFluent;
-import io.fabric8.utils.Strings;
+import org.apache.commons.lang3.StringUtils;
 
-import static io.fabric8.maven.core.util.KubernetesResourceUtil.extractContainerName;
+import static io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil.extractContainerName;
 
 /**
  * Merge in image configuration like the image name into ReplicaSet and ReplicationController's
@@ -73,7 +73,7 @@ import static io.fabric8.maven.core.util.KubernetesResourceUtil.extractContainer
  */
 public class ImageEnricher extends BaseEnricher {
 
-    public ImageEnricher(EnricherContext buildContext) {
+    public ImageEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-image");
     }
 
@@ -86,7 +86,7 @@ public class ImageEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(KubernetesListBuilder builder) {
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         if (!hasImageConfiguration()) {
             log.verbose("No images resolved. Skipping ...");
             return;
@@ -212,16 +212,17 @@ public class ImageEnricher extends BaseEnricher {
     // Add missing information to the given containers as found
     // configured
     private void mergeImageConfigurationWithContainerSpec(List<Container> containers) {
-        List<ImageConfiguration> images = getImages();
-        int idx = 0;
-        for (ImageConfiguration imageConfiguration : images) {
-            Container container = getContainer(idx, containers);
-            mergeImagePullPolicy(imageConfiguration, container);
-            mergeImage(imageConfiguration, container);
-            mergeContainerName(imageConfiguration, container);
-            mergeEnvVariables(container);
-            idx++;
-        }
+        getImages().ifPresent(images -> {
+            int idx = 0;
+            for (ImageConfiguration image : images) {
+                Container container = getContainer(idx, containers);
+                mergeImagePullPolicy(image, container);
+                mergeImage(image, container);
+                mergeContainerName(image, container);
+                mergeEnvVariables(container);
+                idx++;
+            }
+        });
     }
 
     private Container getContainer(int idx, List<Container> containers) {
@@ -237,17 +238,17 @@ public class ImageEnricher extends BaseEnricher {
     }
 
     private void mergeContainerName(ImageConfiguration imageConfiguration, Container container) {
-        if (Strings.isNullOrBlank(container.getName())) {
-            String containerName = extractContainerName(getProject(), imageConfiguration);
+        if (StringUtils.isBlank(container.getName())) {
+            String containerName = extractContainerName(getContext().getGav(), imageConfiguration);
             log.verbose("Setting container name %s",containerName);
             container.setName(containerName);
         }
     }
 
     private void mergeImage(ImageConfiguration imageConfiguration, Container container) {
-        if (Strings.isNullOrBlank(container.getImage())) {
+        if (StringUtils.isBlank(container.getImage())) {
             String prefix = "";
-            if (Strings.isNotBlank(imageConfiguration.getRegistry())) {
+            if (StringUtils.isNotBlank(imageConfiguration.getRegistry())) {
                 log.verbose("Using registry %s for the image", imageConfiguration.getRegistry());
                 prefix = imageConfiguration.getRegistry() + "/";
             }
@@ -258,12 +259,12 @@ public class ImageEnricher extends BaseEnricher {
     }
 
     private void mergeImagePullPolicy(ImageConfiguration imageConfiguration, Container container) {
-        if (Strings.isNullOrBlank(container.getImagePullPolicy())) {
+        if (StringUtils.isBlank(container.getImagePullPolicy())) {
             String policy = getConfig(Config.pullPolicy);
             if (policy == null) {
                 policy = "IfNotPresent";
                 String imageName = imageConfiguration.getName();
-                if (Strings.isNotBlank(imageName) && imageName.endsWith(":latest")) {
+                if (StringUtils.isNotBlank(imageName) && imageName.endsWith(":latest")) {
                     policy = "Always";
                 }
             }
@@ -272,25 +273,41 @@ public class ImageEnricher extends BaseEnricher {
     }
 
     private void mergeEnvVariables(Container container) {
-        List<EnvVar> env = container.getEnv();
-        if (env == null) {
-            env = new LinkedList<>();
-            container.setEnv(env);
-        }
+        getConfiguration().getResource().flatMap(ResourceConfig::getEnv).ifPresent(resourceEnv -> {
+            List<EnvVar> containerEnvVars = container.getEnv();
+            if (containerEnvVars == null) {
+                containerEnvVars = new LinkedList<>();
+                container.setEnv(containerEnvVars);
+            }
 
-        ResourceConfig resource = getContext().getResources();
-        Map<String, String> userEnv = resource != null ? resource.getEnv() : null;
-        if (userEnv != null) {
-            for(Map.Entry<String, String> entry : userEnv.entrySet()) {
-                EnvVar existingVariable = KubernetesResourceUtil.setEnvVarNoOverride(env, entry.getKey(), entry.getValue());
-                if (existingVariable != null) {
-                    String actualValue = existingVariable.getValue();
-                    if (actualValue == null) {
-                        actualValue = "retrieved using the downward API";
-                    }
-                    log.warn("Environment variable %s will not be overridden: trying to set the value %s, but its actual value will be %s", entry.getKey(), entry.getValue(), actualValue);
+            for (Map.Entry<String, String> resourceEnvEntry : resourceEnv.entrySet()) {
+                EnvVar newEnvVar =
+                    new EnvVarBuilder()
+                        .withName(resourceEnvEntry.getKey())
+                        .withValue(resourceEnvEntry.getValue())
+                        .build();
+                if (!hasEnvWithName(containerEnvVars, newEnvVar.getName())) {
+                    containerEnvVars.add(newEnvVar);
+                } else {
+                    log.warn(
+                        "Environment variable %s will not be overridden: trying to set the value %s, but its actual value is %s",
+                        newEnvVar.getName(), newEnvVar.getValue(), getEnvValue(containerEnvVars, newEnvVar.getName()));
                 }
             }
-        }
+        });
     }
+
+    private String getEnvValue(List<EnvVar> envVars, String name) {
+        for (EnvVar var : envVars) {
+            if (var.getName().equals(name)) {
+                return var.getValue();
+            }
+        }
+        return "(not found)";
+    }
+
+    private boolean hasEnvWithName(List<EnvVar> envVars, String name) {
+        return envVars.stream().anyMatch(e -> e.getName().equals(name));
+    }
+
 }

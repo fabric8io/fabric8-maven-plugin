@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -15,12 +15,12 @@
  */
 package io.fabric8.maven.core.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
 
-import java.util.List;
-import java.util.ArrayList;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class CommandlineTest {
 

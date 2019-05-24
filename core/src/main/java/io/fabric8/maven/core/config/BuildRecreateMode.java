@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,10 +13,9 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.config;
 
-import static io.fabric8.utils.Strings.isNullOrBlank;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * How to recreate the build config and/or image stream created by the build.
@@ -54,7 +53,7 @@ public enum BuildRecreateMode {
     private boolean isBuildConfig, isImageStream;
 
     public static BuildRecreateMode fromParameter(String param) {
-        if (isNullOrBlank(param)) {
+        if (StringUtils.isBlank(param)) {
             return none;
         } else if (param.equalsIgnoreCase("true")) {
             return all;

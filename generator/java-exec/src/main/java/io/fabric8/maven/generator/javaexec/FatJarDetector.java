@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.generator.javaexec;
 
 import java.io.File;
@@ -47,20 +46,14 @@ public class FatJarDetector {
                 // No directory to check found so we return null here ...
                 return null;
             }
-            String[] jarOrWars = directory.list(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return name.endsWith(".war") || name.endsWith(".jar");
-                }
-            });
+            String[] jarOrWars = directory.list((dir, name) -> name.endsWith(".war") || name.endsWith(".jar"));
             if (jarOrWars == null || jarOrWars.length == 0) {
                 return null;
             }
             long maxSize = 0;
             for (String jarOrWar : jarOrWars) {
                 File archiveFile = new File(directory, jarOrWar);
-                try {
-                    JarFile archive = new JarFile(archiveFile);
+                try (JarFile archive = new JarFile(archiveFile)){
                     Manifest mf = archive.getManifest();
                     Attributes mainAttributes = mf.getMainAttributes();
                     if (mainAttributes != null) {

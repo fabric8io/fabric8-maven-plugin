@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.config;
 
 import org.apache.maven.plugins.annotations.Parameter;
@@ -44,6 +43,12 @@ public class ProbeConfig {
     @Parameter
     String tcpPort;
 
+    @Parameter
+    Integer failureThreshold;
+
+    @Parameter
+    Integer successThreshold;
+
     public Integer getInitialDelaySeconds() {
         return initialDelaySeconds;
     }
@@ -62,6 +67,14 @@ public class ProbeConfig {
 
     public String getTcpPort() {
         return tcpPort;
+    }
+
+    public Integer getFailureThreshold() {
+        return failureThreshold;
+    }
+
+    public Integer getSuccessThreshold() {
+        return successThreshold;
     }
 
     // =============================================================
@@ -91,6 +104,16 @@ public class ProbeConfig {
 
         public Builder getUrl(String getUrl) {
             config.getUrl = getUrl;
+            return this;
+        }
+
+        public Builder failureThreshold(Integer failureThreshold) {
+            config.failureThreshold = failureThreshold;
+            return this;
+        }
+
+        public Builder successThreshold(Integer successThreshold) {
+            config.successThreshold = successThreshold;
             return this;
         }
 

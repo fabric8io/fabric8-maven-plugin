@@ -5,6 +5,24 @@
 This goal is used to monitor the project workspace for changes and automatically trigger a redeploy of the application
 running on Kubernetes.
 
+In order to use fabric8:watch for spring-boot, you need to make sure that `devtools` is included in the repacked
+archive, as shown in the following listing:
+----
+		<plugin>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-maven-plugin</artifactId>
+			<configuration>
+				<excludeDevtools>false</excludeDevtools>
+			</configuration>
+		</plugin>
+----
+
+Then you need to set a `spring.devtools.remote.secret` in application.properties, as shown in the following example:
+
+----
+spring.devtools.remote.secret=mysecret
+----
+
 Before entering the watch mode, this goal must generate the docker image and the Kubernetes resources
 (optionally including some development libraries/configuration),
 and deploy the app on Kubernetes. Lifecycle bindings should be configured as follows to allow

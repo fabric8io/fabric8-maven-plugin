@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -15,33 +15,38 @@
  */
 package io.fabric8.maven.enricher.standard;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
 
-import io.fabric8.kubernetes.api.model.*;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.PodTemplate;
+import io.fabric8.kubernetes.api.model.PodTemplateBuilder;
+import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.maven.enricher.api.util.InitContainerHandler;
-import io.fabric8.utils.Strings;
+import io.fabric8.maven.core.model.Configuration;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-@RunWith(JMockit.class)
 public class VolumePermissionEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     // *******************************
     // Tests
@@ -62,7 +67,7 @@ public class VolumePermissionEnricherTest {
     @Test
     public void alreadyExistingInitContainer(@Mocked final ProcessorConfig config) throws Exception {
         new Expectations() {{
-            context.getConfig(); result = config;
+            context.getConfiguration(); result = new Configuration.Builder().processorConfig(config).build();
         }};
 
         PodTemplateBuilder ptb = createEmptyPodTemplate();
@@ -76,7 +81,7 @@ public class VolumePermissionEnricherTest {
         KubernetesListBuilder klb = new KubernetesListBuilder().addToPodTemplateItems(ptb.build());
 
         VolumePermissionEnricher enricher = new VolumePermissionEnricher(context);
-        enricher.adapt(klb);
+        enricher.enrich(PlatformMode.kubernetes,klb);
 
         List<Container> initS = ((PodTemplate) klb.build().getItems().get(0)).getTemplate().getSpec().getInitContainers();
         assertNotNull(initS);
@@ -99,7 +104,9 @@ public class VolumePermissionEnricherTest {
                             .singletonMap(VolumePermissionEnricher.Config.permission.name(), tc.permission))));
 
             // Setup mock behaviour
-            new Expectations() {{ context.getConfig(); result = config; }};
+            new Expectations() {{
+                context.getConfiguration(); result = new Configuration.Builder().processorConfig(config).build();
+            }};
 
             VolumePermissionEnricher enricher = new VolumePermissionEnricher(context);
 
@@ -111,7 +118,7 @@ public class VolumePermissionEnricherTest {
 
             KubernetesListBuilder klb = new KubernetesListBuilder().addToPodTemplateItems(ptb.build());
 
-            enricher.adapt(klb);
+            enricher.enrich(PlatformMode.kubernetes,klb);
 
             PodTemplate pt = (PodTemplate) klb.buildItem(0);
 
@@ -122,19 +129,20 @@ public class VolumePermissionEnricherTest {
                 continue;
             }
 
-            JSONArray ja = new JSONArray(initContainers);
-            assertEquals(1, ja.length());
+            Gson gson = new Gson();
+            JsonArray ja = new JsonParser().parse(gson.toJson(initContainers, new TypeToken<Collection<Container>>() {}.getType())).getAsJsonArray();
+            assertEquals(1, ja.size());
 
-            JSONObject jo = ja.getJSONObject(0);
-            assertEquals(tc.initContainerName, jo.get("name"));
-            String permission = Strings.isNullOrBlank(tc.permission) ? "777" : tc.permission;
-            JSONArray chmodCmd = new JSONArray();
-            chmodCmd.put("chmod");
-            chmodCmd.put(permission);
+            JsonObject jo = ja.get(0).getAsJsonObject();
+            assertEquals(tc.initContainerName, jo.get("name").getAsString());
+            String permission = StringUtils.isBlank(tc.permission) ? "777" : tc.permission;
+            JsonArray chmodCmd = new JsonArray();
+            chmodCmd.add("chmod");
+            chmodCmd.add(permission);
             for (String vn : tc.volumeNames) {
-              chmodCmd.put("/tmp/" + vn);
+              chmodCmd.add("/tmp/" + vn);
             }
-            assertEquals(chmodCmd.toString(), jo.getJSONArray("command").toString());
+            assertEquals(chmodCmd.toString(), jo.getAsJsonArray("command").toString());
         }
     }
 

@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,10 +13,8 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.standard;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.EnvVar;
@@ -26,22 +24,21 @@ import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetSpec;
+import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigSpec;
-import io.fabric8.utils.Strings;
-import org.apache.maven.project.MavenProject;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
 import static io.fabric8.maven.core.util.DebugConstants.ENV_VAR_JAVA_DEBUG;
 import static io.fabric8.maven.core.util.DebugConstants.ENV_VAR_JAVA_DEBUG_PORT;
 import static io.fabric8.maven.core.util.DebugConstants.ENV_VAR_JAVA_DEBUG_PORT_DEFAULT;
@@ -53,12 +50,12 @@ public class DebugEnricher extends BaseEnricher {
 
     public static final String ENABLE_DEBUG_MAVEN_PROPERTY = "fabric8.debug.enabled";
 
-    public DebugEnricher(EnricherContext buildContext) {
+    public DebugEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-debug");
     }
 
     @Override
-    public void addMissingResources(KubernetesListBuilder builder) {
+    public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         if (debugEnabled()) {
             int count = 0;
             List<HasMetadata> items = builder.getItems();
@@ -72,27 +69,29 @@ public class DebugEnricher extends BaseEnricher {
             if (count > 0) {
                 builder.withItems(items);
             }
-            log.verbose("Enabled debugging on " + count + " resource(s) thanks to the " + ENABLE_DEBUG_MAVEN_PROPERTY + " property");
+            log.verbose("Enabled debugging on "
+                + count
+                + " resource(s) thanks to the "
+                + ENABLE_DEBUG_MAVEN_PROPERTY
+                + " property");
         } else {
-            log.verbose("Debugging not enabled. To enable try setting the " + ENABLE_DEBUG_MAVEN_PROPERTY + " maven or system property to 'true'");
+            log.verbose("Debugging not enabled. To enable try setting the "
+                + ENABLE_DEBUG_MAVEN_PROPERTY
+                + " maven or system property to 'true'");
         }
     }
 
     private boolean debugEnabled() {
-        MavenProject project = getContext().getProject();
-        if (project != null) {
-            String value = project.getProperties().getProperty(ENABLE_DEBUG_MAVEN_PROPERTY);
-            if (isTrueFlag(value)) {
-                return true;
-            };
+        String value = getContext().getConfiguration().getProperties().getProperty(ENABLE_DEBUG_MAVEN_PROPERTY);
+        if (value != null && isTrueFlag(value)) {
+            return true;
         }
         return isTrueFlag(System.getProperty(ENABLE_DEBUG_MAVEN_PROPERTY));
     }
 
     private static boolean isTrueFlag(String value) {
-        return Strings.isNotBlank(value) && value.toString().equals("true");
+        return StringUtils.isNotBlank(value) && value.equals("true");
     }
-
 
     private boolean enableDebug(HasMetadata entity) {
         if (entity instanceof Deployment) {
@@ -134,7 +133,8 @@ public class DebugEnricher extends BaseEnricher {
                     if (env == null) {
                         env = new ArrayList<>();
                     }
-                    String remoteDebugPort = KubernetesResourceUtil.getEnvVar(env, ENV_VAR_JAVA_DEBUG_PORT, ENV_VAR_JAVA_DEBUG_PORT_DEFAULT);
+                    String remoteDebugPort =
+                        KubernetesResourceUtil.getEnvVar(env, ENV_VAR_JAVA_DEBUG_PORT, ENV_VAR_JAVA_DEBUG_PORT_DEFAULT);
                     boolean enabled = false;
                     if (KubernetesResourceUtil.setEnvVar(env, ENV_VAR_JAVA_DEBUG, "true")) {
                         container.setEnv(env);
@@ -149,7 +149,8 @@ public class DebugEnricher extends BaseEnricher {
                         enabled = true;
                     }
                     if (enabled) {
-                        log.info("Enabling debug on " + getKind(entity) + " " + KubernetesHelper.getName(entity) + " due to the property: " + ENABLE_DEBUG_MAVEN_PROPERTY);
+                        log.info("Enabling debug on " + KubernetesHelper.getKind(entity) + " " + KubernetesHelper.getName(
+                            entity) + " due to the property: " + ENABLE_DEBUG_MAVEN_PROPERTY);
                         return true;
                     }
                 }

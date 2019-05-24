@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -15,7 +15,12 @@
  */
 package io.fabric8.maven.core.handler;
 
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
+import java.util.ArrayList;
+import java.util.List;
+
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.VolumeConfig;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -25,15 +30,11 @@ import org.apache.maven.project.MavenProject;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 public class DeploymentHandlerTest {
-
-    @Mocked
-    EnvVarHandler envVarHandler;
 
     @Mocked
     ProbeHandler probeHandler;
@@ -81,8 +82,7 @@ public class DeploymentHandlerTest {
     @Test
     public void deploymentTemplateHandlerTest() {
 
-        ContainerHandler containerHandler =
-                new ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler containerHandler = getContainerHandler();
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -115,11 +115,14 @@ public class DeploymentHandlerTest {
 
     }
 
+    private ContainerHandler getContainerHandler() {
+        return new ContainerHandler(project.getProperties(), new GroupArtifactVersion("g","a","v"), probeHandler);
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void deploymentTemplateHandlerWithInvalidNameTest() {
         //invalid controller name
-        ContainerHandler containerHandler =
-                new ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler containerHandler = getContainerHandler();
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 
@@ -140,8 +143,7 @@ public class DeploymentHandlerTest {
     @Test(expected = IllegalArgumentException.class)
     public void deploymentTemplateHandlerWithoutControllerTest() {
         //without controller name
-        ContainerHandler containerHandler = new
-                ContainerHandler(project, envVarHandler, probeHandler);
+        ContainerHandler containerHandler = getContainerHandler();
 
         PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
 

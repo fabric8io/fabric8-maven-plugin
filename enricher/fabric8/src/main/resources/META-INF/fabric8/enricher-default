@@ -7,18 +7,15 @@
 
 # ----------------------------------------------------------------
 
-io.fabric8.maven.enricher.fabric8.CdEnricher
-io.fabric8.maven.enricher.fabric8.DocLinkEnricher
-io.fabric8.maven.enricher.fabric8.GrafanaLinkEnricher
-io.fabric8.maven.enricher.fabric8.IconEnricher
+# Healthcheck Enrichers
 io.fabric8.maven.enricher.fabric8.SpringBootHealthCheckEnricher
 io.fabric8.maven.enricher.fabric8.WildFlySwarmHealthCheckEnricher
+io.fabric8.maven.enricher.fabric8.QuarkusHealthCheckEnricher
 io.fabric8.maven.enricher.fabric8.ThorntailV2HealthCheckEnricher
 io.fabric8.maven.enricher.fabric8.KarafHealthCheckEnricher
 io.fabric8.maven.enricher.fabric8.VertxHealthCheckEnricher
-io.fabric8.maven.enricher.fabric8.PrometheusEnricher
-io.fabric8.maven.enricher.fabric8.AutoTLSEnricher
-io.fabric8.maven.enricher.fabric8.ExposeEnricher
+io.fabric8.maven.enricher.fabric8.WebAppHealthCheckEnricher
 io.fabric8.maven.enricher.fabric8.DockerHealthCheckEnricher,510
-io.fabric8.maven.enricher.fabric8.OpenShiftRouteEnricher
-io.fabric8.maven.enricher.fabric8.WatchEnricher
+
+# Other enrichers
+io.fabric8.maven.enricher.fabric8.PrometheusEnricher

@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,21 +13,16 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.fabric8;
-
-import java.util.Properties;
 
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.core.util.SpringBootUtil;
-import io.fabric8.maven.enricher.api.AbstractHealthCheckEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.utils.PropertiesHelper;
-import io.fabric8.utils.Strings;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import java.util.Properties;
+import org.apache.commons.lang3.StringUtils;
 
 
 /**
@@ -35,28 +30,30 @@ import io.fabric8.utils.Strings;
  */
 public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
-    public static final String ENRICHER_NAME = "spring-boot-health-check";
+    public static final String ENRICHER_NAME = "f8-healthcheck-spring-boot";
 
-    private static final String[] REQUIRED_CLASSES = {
+    protected static final String[] REQUIRED_CLASSES = {
             "org.springframework.boot.actuate.health.HealthIndicator",
             "org.springframework.web.context.support.GenericWebApplicationContext"
     };
 
-    private static final int DEFAULT_SERVER_PORT = 8080;
     private static final String SCHEME_HTTPS = "HTTPS";
     private static final String SCHEME_HTTP = "HTTP";
 
     private enum Config implements Configs.Key {
         readinessProbeInitialDelaySeconds   {{ d = "10"; }},
         readinessProbePeriodSeconds,
-        livenessProbeInitialDelaySeconds   {{ d = "180"; }},
+        path                                {{ d = "/health"; }},
+        livenessProbeInitialDelaySeconds    {{ d = "180"; }},
         livenessProbePeriodSeconds,
+        failureThreshold                    {{ d = "3"; }},
+        successThreshold                    {{ d = "1"; }},
         timeoutSeconds;
 
         public String def() { return d; } protected String d;
     }
 
-    public SpringBootHealthCheckEnricher(EnricherContext buildContext) {
+    public SpringBootHealthCheckEnricher(MavenEnricherContext buildContext) {
         super(buildContext, ENRICHER_NAME);
     }
 
@@ -65,7 +62,9 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
         Integer initialDelay = Configs.asInteger(getConfig(Config.readinessProbeInitialDelaySeconds));
         Integer period = Configs.asInteger(getConfig(Config.readinessProbePeriodSeconds));
         Integer timeout = Configs.asInteger(getConfig(Config.timeoutSeconds));
-        return discoverSpringBootHealthCheck(initialDelay, period, timeout);
+        Integer failureThreshold = Configs.asInteger(getConfig(Config.failureThreshold));
+        Integer successThreshold = Configs.asInteger(getConfig(Config.successThreshold));
+        return discoverSpringBootHealthCheck(initialDelay, period, timeout, failureThreshold, successThreshold);
     }
 
     @Override
@@ -73,14 +72,16 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
         Integer initialDelay = Configs.asInteger(getConfig(Config.livenessProbeInitialDelaySeconds));
         Integer period = Configs.asInteger(getConfig(Config.livenessProbePeriodSeconds));
         Integer timeout = Configs.asInteger(getConfig(Config.timeoutSeconds));
-        return discoverSpringBootHealthCheck(initialDelay, period, timeout);
+        Integer failureThreshold = Configs.asInteger(getConfig(Config.failureThreshold));
+        Integer successThreshold = Configs.asInteger(getConfig(Config.successThreshold));
+        return discoverSpringBootHealthCheck(initialDelay, period, timeout, failureThreshold, successThreshold);
     }
 
-    protected Probe discoverSpringBootHealthCheck(Integer initialDelay, Integer period, Integer timeout) {
+    protected Probe discoverSpringBootHealthCheck(Integer initialDelay, Integer period, Integer timeout, Integer failureTh, Integer successTh) {
         try {
-            if (MavenUtil.hasAllClasses(this.getProject(), REQUIRED_CLASSES)) {
-                Properties properties = SpringBootUtil.getSpringBootApplicationProperties(this.getProject());
-                return buildProbe(properties, initialDelay, period, timeout);
+            if (getContext().getProjectClassLoaders().isClassInCompileClasspath(true, REQUIRED_CLASSES)) {
+                Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getContext().getProjectClassLoaders().getCompileClassLoader());
+                return buildProbe(properties, initialDelay, period, timeout, failureTh, successTh);
             }
         } catch (Exception ex) {
             log.error("Error while reading the spring-boot configuration", ex);
@@ -88,23 +89,23 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
         return null;
     }
 
-    protected Probe buildProbe(Properties springBootProperties, Integer initialDelay, Integer period, Integer timeout) {
-        SpringBootConfigurationHelper propertyHelper = new SpringBootConfigurationHelper(SpringBootUtil.getSpringBootVersion(getContext().getProject()));
-        Integer managementPort = PropertiesHelper.getInteger(springBootProperties, propertyHelper.getManagementPortPropertyKey());
+    protected Probe buildProbe(Properties springBootProperties, Integer initialDelay, Integer period, Integer timeout, Integer failureTh, Integer successTh) {
+        SpringBootConfigurationHelper propertyHelper = new SpringBootConfigurationHelper(getContext().getDependencyVersion(SpringBootConfigurationHelper.SPRING_BOOT_GROUP_ID, SpringBootConfigurationHelper.SPRING_BOOT_ARTIFACT_ID));
+        Integer managementPort = propertyHelper.getManagementPort(springBootProperties);
         boolean usingManagementPort = managementPort != null;
 
         Integer port = managementPort;
         if (port == null) {
-            port = PropertiesHelper.getInteger(springBootProperties, propertyHelper.getServerPortPropertyKey(), DEFAULT_SERVER_PORT);
+            port = propertyHelper.getServerPort(springBootProperties);
         }
 
         String scheme;
         String prefix;
         if (usingManagementPort) {
-            scheme = Strings.isNotBlank(springBootProperties.getProperty(propertyHelper.getManagementKeystorePropertyKey())) ? SCHEME_HTTPS : SCHEME_HTTP;
+            scheme = StringUtils.isNotBlank(springBootProperties.getProperty(propertyHelper.getManagementKeystorePropertyKey())) ? SCHEME_HTTPS : SCHEME_HTTP;
             prefix = springBootProperties.getProperty(propertyHelper.getManagementContextPathPropertyKey(), "");
         } else {
-            scheme = Strings.isNotBlank(springBootProperties.getProperty(propertyHelper.getServerKeystorePropertyKey())) ? SCHEME_HTTPS : SCHEME_HTTP;
+            scheme = StringUtils.isNotBlank(springBootProperties.getProperty(propertyHelper.getServerKeystorePropertyKey())) ? SCHEME_HTTPS : SCHEME_HTTP;
             prefix = springBootProperties.getProperty(propertyHelper.getServerContextPathPropertyKey(), "");
             prefix += springBootProperties.getProperty(propertyHelper.getServletPathPropertyKey(), "");
             prefix += springBootProperties.getProperty(propertyHelper.getManagementContextPathPropertyKey(), "");
@@ -118,7 +119,7 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
 
         // lets default to adding a spring boot actuator health check
         ProbeBuilder probeBuilder = new ProbeBuilder().
-                withNewHttpGet().withNewPort(port).withPath(prefix + actuatorBasePath + "/health").withScheme(scheme).endHttpGet();
+                withNewHttpGet().withNewPort(port).withPath(prefix + actuatorBasePath + Configs.asString(getConfig(Config.path))).withScheme(scheme).endHttpGet();
 
         if (initialDelay != null) {
             probeBuilder = probeBuilder.withInitialDelaySeconds(initialDelay);
@@ -128,6 +129,12 @@ public class SpringBootHealthCheckEnricher extends AbstractHealthCheckEnricher {
         }
         if (timeout != null) {
             probeBuilder.withTimeoutSeconds(timeout);
+        }
+        if(failureTh != null) {
+            probeBuilder.withFailureThreshold(failureTh);
+        }
+        if(successTh != null) {
+            probeBuilder.withSuccessThreshold(successTh);
         }
 
         return probeBuilder.build();

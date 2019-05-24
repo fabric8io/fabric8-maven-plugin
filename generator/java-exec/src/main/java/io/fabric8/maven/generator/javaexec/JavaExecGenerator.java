@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,8 +13,13 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.generator.javaexec;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
@@ -24,16 +29,15 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
-import io.fabric8.utils.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.assembly.model.Assembly;
-import org.apache.maven.plugin.assembly.model.DependencySet;
-import org.apache.maven.plugin.assembly.model.FileSet;
+import org.apache.maven.plugins.assembly.model.Assembly;
+import org.apache.maven.plugins.assembly.model.DependencySet;
+import org.apache.maven.plugins.assembly.model.FileSet;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.StringUtils;
 
-import java.io.File;
-import java.util.*;
+import static io.fabric8.maven.core.util.BuildLabelUtil.addSchemaLabels;
+import static io.fabric8.maven.core.util.FileUtil.getRelativePath;
 
 /**
  * @author roland
@@ -47,9 +51,9 @@ public class JavaExecGenerator extends BaseGenerator {
     private static final String JAVA_OPTIONS = "JAVA_OPTIONS";
 
     // Plugins indicating a plain java build
-    private static final String[] JAVA_EXEC_MAVEN_PLUGINS = new String[] {
-        "org.codehaus.mojo:exec-maven-plugin",
-        "org.apache.maven.plugins:maven-shade-plugin"
+    private static final String[][] JAVA_EXEC_MAVEN_PLUGINS = new String[][] {
+        new String[] { "org.codehaus.mojo", "exec-maven-plugin" },
+        new String[] { "org.apache.maven.plugins", "maven-shade-plugin" }
     };
 
     private final FatJarDetector fatJarDetector;
@@ -98,8 +102,8 @@ public class JavaExecGenerator extends BaseGenerator {
                 return true;
             }
             // Check for the existing of plugins indicating a plain java exec app
-            for (String plugin : JAVA_EXEC_MAVEN_PLUGINS) {
-                if (MavenUtil.hasPlugin(getProject(), plugin)) {
+            for (String[] plugin : JAVA_EXEC_MAVEN_PLUGINS) {
+                if (MavenUtil.hasPlugin(getProject(), plugin[0], plugin[1])) {
                     return true;
                 }
             }
@@ -113,6 +117,8 @@ public class JavaExecGenerator extends BaseGenerator {
         BuildImageConfiguration.Builder buildBuilder = null;
         buildBuilder = new BuildImageConfiguration.Builder()
             .ports(extractPorts());
+
+        addSchemaLabels(buildBuilder, getContext().getProject(), log);
         addFrom(buildBuilder);
         if (!prePackagePhase) {
             // Only add assembly if not in a pre-package phase where the referenced files
@@ -157,7 +163,7 @@ public class JavaExecGenerator extends BaseGenerator {
         }
         List<String> javaOptions = getExtraJavaOptions();
         if (javaOptions.size() > 0) {
-            ret.put(JAVA_OPTIONS, StringUtils.join(javaOptions.iterator()," "));
+            ret.put(JAVA_OPTIONS, StringUtils.join(javaOptions.iterator(), " "));
         }
         return ret;
     }
@@ -177,39 +183,39 @@ public class JavaExecGenerator extends BaseGenerator {
         if (assemblyRef != null) {
             builder.descriptorRef(assemblyRef);
         } else {
+            Assembly assembly = new Assembly();
+            addAdditionalFiles(assembly);
             if (isFatJar()) {
                 FatJarDetector.Result fatJar = detectFatJar();
-                Assembly assembly = new Assembly();
                 MavenProject project = getProject();
                 if (fatJar == null) {
                     DependencySet dependencySet = new DependencySet();
                     dependencySet.addInclude(project.getGroupId() + ":" + project.getArtifactId());
                     assembly.addDependencySet(dependencySet);
                 } else {
-                    FileSet fileSet = new FileSet();
-                    File buildDir = new File(project.getBuild().getDirectory());
-                    fileSet.setDirectory(toRelativePath(buildDir, project.getBasedir()));
-                    fileSet.addInclude(toRelativePath(fatJar.getArchiveFile(), buildDir));
-                    fileSet.setOutputDirectory(".");
-                    fileSet.setFileMode("0640");
+                    FileSet fileSet = getOutputDirectoryFileSet(fatJar, project);
                     assembly.addFileSet(fileSet);
                 }
-                assembly.addFileSet(createFileSet("src/main/fabric8-includes/bin","bin","0755","0755"));
-                assembly.addFileSet(createFileSet("src/main/fabric8-includes",".","0644","0755"));
-                builder.assemblyDef(assembly);
             } else {
                 builder.descriptorRef("artifact-with-dependencies");
             }
-        };
+            builder.assemblyDef(assembly);
+        }
     }
 
-    private String toRelativePath(File archiveFile, File basedir) {
-        String absolutePath = archiveFile.getAbsolutePath();
-        absolutePath = absolutePath.replace('\\', '/');
-        String basedirPath = basedir.getAbsolutePath().replace('\\', '/');
-        return absolutePath.startsWith(basedirPath) ?
-            absolutePath.substring(basedirPath.length() + 1) :
-            absolutePath;
+    private void addAdditionalFiles(Assembly assembly) {
+        assembly.addFileSet(createFileSet("src/main/fabric8-includes/bin","bin","0755","0755"));
+        assembly.addFileSet(createFileSet("src/main/fabric8-includes",".","0644","0755"));
+    }
+
+    private FileSet getOutputDirectoryFileSet(FatJarDetector.Result fatJar, MavenProject project) {
+        FileSet fileSet = new FileSet();
+        File buildDir = new File(project.getBuild().getDirectory());
+        fileSet.setDirectory(getRelativePath(project.getBasedir(), buildDir).getPath());
+        fileSet.addInclude(getRelativePath(buildDir, fatJar.getArchiveFile()).getPath());
+        fileSet.setOutputDirectory(".");
+        fileSet.setFileMode("0640");
+        return fileSet;
     }
 
     private FileSet createFileSet(String sourceDir, String outputDir, String fileMode, String directoryMode) {
@@ -243,7 +249,7 @@ public class JavaExecGenerator extends BaseGenerator {
     }
 
     protected void addPortIfValid(List<String> list, String port) {
-        if (Strings.isNotBlank(port) && Integer.parseInt(port) > 0) {
+        if (StringUtils.isNotBlank(port) && Integer.parseInt(port) > 0) {
             list.add(port);
         }
     }

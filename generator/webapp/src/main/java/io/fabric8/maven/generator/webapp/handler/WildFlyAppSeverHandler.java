@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,14 +13,13 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.generator.webapp.handler;
-
-import io.fabric8.maven.core.util.MavenUtil;
-import org.apache.maven.project.MavenProject;
 
 import java.util.Arrays;
 import java.util.List;
+
+import io.fabric8.maven.core.util.MavenUtil;
+import org.apache.maven.project.MavenProject;
 
 /**
  * Handler for wildfly
@@ -36,8 +35,8 @@ public class WildFlyAppSeverHandler extends AbstractAppServerHandler {
     @Override
     public boolean isApplicable() {
         return
-            !MavenUtil.hasPlugin(project, "org.wildfly.swarm:wildfly-swarm-plugin") &&
-            !MavenUtil.hasPlugin(project, "io.thorntail:thorntail-maven-plugin") &&
+            !MavenUtil.hasPlugin(project, "org.wildfly.swarm", "wildfly-swarm-plugin") &&
+            !MavenUtil.hasPlugin(project, "io.thorntail", "thorntail-maven-plugin") &&
             (hasOneOf("**/WEB-INF/jboss-deployment-structure.xml",
                      "**/META-INF/jboss-deployment-structure.xml",
                      "**/WEB-INF/jboss-web.xml", "**/WEB-INF/ejb-jar.xml",
@@ -46,8 +45,8 @@ public class WildFlyAppSeverHandler extends AbstractAppServerHandler {
                      "**/META-INF/*-ds.xml", "**/WEB-INF/*-ds.xml",
                      "**/WEB-INF/jboss-ejb-client.xml", "**/META-INF/jbosscmp-jdbc.xml",
                      "**/WEB-INF/jboss-webservices.xml") ||
-            MavenUtil.hasPlugin(project, "org.jboss.as.plugins:jboss-as-maven-plugin") ||
-            MavenUtil.hasPlugin(project, "org.wildfly.plugins:wildfly-maven-plugin"));
+            MavenUtil.hasPlugin(project, "org.jboss.as.plugins", "jboss-as-maven-plugin") ||
+            MavenUtil.hasPlugin(project, "org.wildfly.plugins", "wildfly-maven-plugin"));
     }
 
     @Override

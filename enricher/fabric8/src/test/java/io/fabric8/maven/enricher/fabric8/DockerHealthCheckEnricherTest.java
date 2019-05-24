@@ -1,27 +1,42 @@
+/**
+ * Copyright 2016 Red Hat, Inc.
+ *
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package io.fabric8.maven.enricher.fabric8;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.model.Configuration;
+import io.fabric8.maven.core.util.ResourceUtil;
+import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.HealthCheckConfiguration;
 import io.fabric8.maven.docker.config.HealthCheckMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.enricher.api.EnricherContext;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.jayway.jsonpath.matchers.JsonPathMatchers;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -29,47 +44,47 @@ import static org.junit.Assert.assertThat;
 /**
  * @author nicola
  */
-@RunWith(JMockit.class)
 public class DockerHealthCheckEnricherTest {
 
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     @Test
     public void testEnrichFromSingleImage() throws Exception {
         // Setup mock behaviour
         new Expectations() {{
-            context.getImages();
-            result = Arrays.asList(new ImageConfiguration.Builder()
+            List<ImageConfiguration> images =  Arrays.asList(new ImageConfiguration.Builder()
                             .alias("myImage")
                             .buildConfig(new BuildImageConfiguration.Builder()
                                     .healthCheck(new HealthCheckConfiguration.Builder()
                                             .mode(HealthCheckMode.cmd)
-                                            .cmd("/bin/check")
+                                            .cmd(new Arguments("/bin/check"))
                                             .timeout("1s")
                                             .interval("1h1s")
                                             .retries(3)
                                             .build())
                                     .build())
                             .build(),
-                    new ImageConfiguration.Builder()
+                                                   new ImageConfiguration.Builder()
                             .alias("myImage2")
                             .buildConfig(new BuildImageConfiguration.Builder()
                                     .healthCheck(new HealthCheckConfiguration.Builder()
                                             .mode(HealthCheckMode.cmd)
-                                            .cmd("/xxx/check")
+                                            .cmd(new Arguments("/xxx/check"))
                                             .timeout("3s")
                                             .interval("3h1s")
                                             .retries(9)
                                             .build())
                                     .build())
                             .build());
+            context.getConfiguration();
+            result = new Configuration.Builder().images(images).build();
         }};
 
         KubernetesListBuilder builder = createDeployment("myImage");
 
         DockerHealthCheckEnricher enricher = new DockerHealthCheckEnricher(context);
-        enricher.addMissingResources(builder);
+        enricher.create(PlatformMode.kubernetes, builder);
 
         KubernetesList list = builder.build();
         assertEquals(1, list.getItems().size());
@@ -81,13 +96,12 @@ public class DockerHealthCheckEnricherTest {
     public void testEnrichFromDoubleImage() throws Exception {
         // Setup mock behaviour
         new Expectations() {{
-            context.getImages();
-            result = Arrays.asList(new ImageConfiguration.Builder()
+            List<ImageConfiguration> images = Arrays.asList(new ImageConfiguration.Builder()
                             .alias("myImage")
                             .buildConfig(new BuildImageConfiguration.Builder()
                                     .healthCheck(new HealthCheckConfiguration.Builder()
                                             .mode(HealthCheckMode.cmd)
-                                            .cmd("/bin/check")
+                                            .cmd(new Arguments("/bin/check"))
                                             .timeout("1s")
                                             .interval("1h1s")
                                             .retries(3)
@@ -99,19 +113,24 @@ public class DockerHealthCheckEnricherTest {
                             .buildConfig(new BuildImageConfiguration.Builder()
                                     .healthCheck(new HealthCheckConfiguration.Builder()
                                             .mode(HealthCheckMode.cmd)
-                                            .cmd("/xxx/check")
+                                            .cmd(new Arguments("/xxx/check"))
                                             .timeout("3s")
                                             .interval("3h1s")
                                             .retries(9)
                                             .build())
                                     .build())
                             .build());
+            context.getConfiguration();
+            result = new Configuration.Builder().images(images).build();
+
+            context.getProcessingInstructions();
+            result = Collections.singletonMap("FABRIC8_GENERATED_CONTAINERS", "myImage,myImage2");
         }};
 
         KubernetesListBuilder builder = addDeployment(createDeployment("myImage"), "myImage2");
 
         DockerHealthCheckEnricher enricher = new DockerHealthCheckEnricher(context);
-        enricher.addMissingResources(builder);
+        enricher.create(PlatformMode.kubernetes, builder);
 
         KubernetesList list = builder.build();
         assertEquals(2, list.getItems().size());
@@ -125,8 +144,7 @@ public class DockerHealthCheckEnricherTest {
     public void testInvalidHealthCheck() throws Exception {
         // Setup mock behaviour
         new Expectations() {{
-            context.getImages();
-            result = Arrays.asList(new ImageConfiguration.Builder()
+            List<ImageConfiguration> images = Arrays.asList(new ImageConfiguration.Builder()
                     .alias("myImage")
                     .buildConfig(new BuildImageConfiguration.Builder()
                             .healthCheck(new HealthCheckConfiguration.Builder()
@@ -134,12 +152,14 @@ public class DockerHealthCheckEnricherTest {
                                     .build())
                             .build())
                     .build());
+            context.getConfiguration();
+            result = new Configuration.Builder().images(images).build();
         }};
 
         KubernetesListBuilder builder = createDeployment("myImage");
 
         DockerHealthCheckEnricher enricher = new DockerHealthCheckEnricher(context);
-        enricher.addMissingResources(builder);
+        enricher.create(PlatformMode.kubernetes, builder);
 
         KubernetesList list = builder.build();
         assertEquals(1, list.getItems().size());
@@ -150,25 +170,26 @@ public class DockerHealthCheckEnricherTest {
     public void testUnmatchingHealthCheck() throws Exception {
         // Setup mock behaviour
         new Expectations() {{
-            context.getImages();
-            result = Arrays.asList(new ImageConfiguration.Builder()
+            List<ImageConfiguration> images = Arrays.asList(new ImageConfiguration.Builder()
                     .alias("myImage")
                     .buildConfig(new BuildImageConfiguration.Builder()
                             .healthCheck(new HealthCheckConfiguration.Builder()
                                     .mode(HealthCheckMode.cmd)
-                                    .cmd("/bin/check")
+                                    .cmd(new Arguments("/bin/check"))
                                     .timeout("1s")
                                     .interval("1h1s")
                                     .retries(3)
                                     .build())
                             .build())
                     .build());
+            context.getConfiguration();
+            result = new Configuration.Builder().images(images).build();
         }};
 
         KubernetesListBuilder builder = createDeployment("myUnmatchingImage");
 
         DockerHealthCheckEnricher enricher = new DockerHealthCheckEnricher(context);
-        enricher.addMissingResources(builder);
+        enricher.create(PlatformMode.kubernetes, builder);
 
         KubernetesList list = builder.build();
         assertEquals(1, list.getItems().size());
@@ -197,14 +218,14 @@ public class DockerHealthCheckEnricherTest {
     }
 
     private void assertNoProbes(HasMetadata object) throws JsonProcessingException {
-        String json = KubernetesResourceUtil.toJson(object);
+        String json = ResourceUtil.toJson(object);
         assertThat(json, JsonPathMatchers.isJson());
         assertThat(json, JsonPathMatchers.hasJsonPath("$.spec.template.spec.containers[0]", Matchers.not(Matchers.hasKey("livenessProbe"))));
         assertThat(json, JsonPathMatchers.hasJsonPath("$.spec.template.spec.containers[0]", Matchers.not(Matchers.hasKey("readinessProbe"))));
     }
 
     private void assertHealthCheckMatching(HasMetadata object, String type, String command, Integer timeoutSeconds, Integer periodSeconds, Integer failureThreshold) throws JsonProcessingException {
-        String json = KubernetesResourceUtil.toJson(object);
+        String json = ResourceUtil.toJson(object);
         assertThat(json, JsonPathMatchers.isJson());
         assertThat(json, JsonPathMatchers.hasJsonPath("$.spec.template.spec.containers[0]", Matchers.hasKey(type)));
 

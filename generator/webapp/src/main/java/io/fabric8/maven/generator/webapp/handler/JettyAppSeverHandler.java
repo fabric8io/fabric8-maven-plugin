@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,14 +13,13 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.generator.webapp.handler;
-
-import io.fabric8.maven.core.util.MavenUtil;
-import org.apache.maven.project.MavenProject;
 
 import java.util.Arrays;
 import java.util.List;
+
+import io.fabric8.maven.core.util.MavenUtil;
+import org.apache.maven.project.MavenProject;
 
 /**
  * Jetty handler
@@ -38,8 +37,8 @@ public class JettyAppSeverHandler extends AbstractAppServerHandler {
     public boolean isApplicable() {
         return hasOneOf("**/WEB-INF/jetty-web.xml",
                         "**/META-INF/jetty-logging.properties") ||
-               MavenUtil.hasPlugin(project, "org.mortbay.jetty:jetty-maven-plugin") ||
-               MavenUtil.hasPlugin(project, "org.eclipse.jetty:jetty-maven-plugin");
+               MavenUtil.hasPlugin(project, "org.mortbay.jetty", "jetty-maven-plugin") ||
+               MavenUtil.hasPlugin(project, "org.eclipse.jetty", "jetty-maven-plugin");
     }
 
     @Override

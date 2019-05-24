@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,10 +13,11 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.handler;
 
-import org.apache.maven.project.MavenProject;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
+
+import java.util.Properties;
 
 /**
  * @author roland
@@ -24,54 +25,47 @@ import org.apache.maven.project.MavenProject;
  */
 public class HandlerHub {
 
-    private final ServiceHandler serviceHandler;
-    private final ReplicaSetHandler replicaSetHandler;
-    private final ReplicationControllerHandler replicationControllerHandler;
-    private final DeploymentHandler deploymentHandler;
-    private final StatefulSetHandler statefulSetHandler;
-    private final DaemonSetHandler daemonSetHandler;
-    private final JobHandler jobHandler;
+    private final PodTemplateHandler podTemplateHandler;
 
-    public HandlerHub(MavenProject project) {
+    public HandlerHub(GroupArtifactVersion groupArtifactVersion, Properties configuration) {
         ProbeHandler probeHandler = new ProbeHandler();
-        EnvVarHandler envVarHandler = new EnvVarHandler(project);
-        ContainerHandler containerHandler = new ContainerHandler(project, envVarHandler, probeHandler);
-        PodTemplateHandler podTemplateHandler = new PodTemplateHandler(containerHandler);
-
-        deploymentHandler = new DeploymentHandler(podTemplateHandler);
-        replicaSetHandler = new ReplicaSetHandler(podTemplateHandler);
-        replicationControllerHandler = new ReplicationControllerHandler(podTemplateHandler);
-        serviceHandler = new ServiceHandler();
-        statefulSetHandler = new StatefulSetHandler(podTemplateHandler);
-        daemonSetHandler = new DaemonSetHandler(podTemplateHandler);
-        jobHandler = new JobHandler(podTemplateHandler);
+        ContainerHandler containerHandler = new ContainerHandler(configuration, groupArtifactVersion, probeHandler);
+        podTemplateHandler = new PodTemplateHandler(containerHandler);
     }
 
     public ServiceHandler getServiceHandler() {
-        return serviceHandler;
+        return new ServiceHandler();
     }
 
     public DeploymentHandler getDeploymentHandler() {
-        return deploymentHandler;
+        return new DeploymentHandler(podTemplateHandler);
+    }
+
+    public DeploymentConfigHandler getDeploymentConfigHandler() {
+        return new DeploymentConfigHandler(podTemplateHandler);
     }
 
     public ReplicaSetHandler getReplicaSetHandler() {
-        return replicaSetHandler;
+        return new ReplicaSetHandler(podTemplateHandler);
     }
 
     public ReplicationControllerHandler getReplicationControllerHandler() {
-        return replicationControllerHandler;
+        return new ReplicationControllerHandler(podTemplateHandler);
     }
 
     public StatefulSetHandler getStatefulSetHandler() {
-        return statefulSetHandler;
+        return new StatefulSetHandler(podTemplateHandler);
     }
 
     public DaemonSetHandler getDaemonSetHandler() {
-        return daemonSetHandler;
+        return new DaemonSetHandler(podTemplateHandler);
     }
 
     public JobHandler getJobHandler() {
-        return jobHandler;
+        return new JobHandler(podTemplateHandler);
     }
+
+    public ProjectHandler getProjectHandler() { return new ProjectHandler(); }
+
+    public NamespaceHandler getNamespaceHandler() { return new NamespaceHandler(); }
 }

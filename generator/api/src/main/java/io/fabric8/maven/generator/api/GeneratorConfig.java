@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.generator.api;
 
 import java.util.Properties;
@@ -59,7 +58,7 @@ public class GeneratorConfig {
         String val = config != null ? config.getConfig(name, key.name()) : null;
         if (val == null) {
             String fullKey = GENERATOR_PROP_PREFIX + "." + name + "." + key;
-            val = Configs.getPropertyWithSystemAsFallback(properties, fullKey);
+            val = Configs.getSystemPropertyWithMavenPropertyAsFallback(properties, fullKey);
         }
         return val != null ? val : defaultVal;
     }

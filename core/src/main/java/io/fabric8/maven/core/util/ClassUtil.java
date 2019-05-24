@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,16 +13,27 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.util;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import io.fabric8.maven.docker.util.Logger;
-import javassist.*;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtMethod;
+import javassist.Modifier;
+import javassist.NotFoundException;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.maven.project.MavenProject;
 
@@ -119,19 +130,9 @@ public class ClassUtil {
 
     // ========================================================================
 
-    private static final FileFilter DIR_FILTER = new FileFilter() {
-        @Override
-        public boolean accept(File pathname) {
-            return pathname.isDirectory() && !pathname.getName().startsWith(".");
-        }
-    };
+    private static final FileFilter DIR_FILTER = pathname -> pathname.isDirectory() && !pathname.getName().startsWith(".");
 
-    private static final FileFilter CLASS_FILE_FILTER = new FileFilter() {
-		@Override
-        public boolean accept(File file) {
-            return (file.isFile() && file.getName().endsWith(".class"));
-		}
-	};
+    private static final FileFilter CLASS_FILE_FILTER = file -> (file.isFile() && file.getName().endsWith(".class"));
 
 
     private static void findClasses(List<String> classes, File dir, String prefix) throws IOException {
@@ -169,13 +170,13 @@ public class ClassUtil {
     }
 
 
-    public static URLClassLoader createProjectClassLoader(final MavenProject project, Logger log) {
+    public static URLClassLoader createProjectClassLoader(List<String> elements, Logger log) {
 
         try {
 
             List<URL> compileJars = new ArrayList<>();
 
-            for (String element : project.getCompileClasspathElements()) {
+            for (String element : elements) {
                 compileJars.add(new File(element).toURI().toURL());
             }
 

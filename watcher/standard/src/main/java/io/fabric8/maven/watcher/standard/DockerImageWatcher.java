@@ -1,26 +1,41 @@
+/**
+ * Copyright 2016 Red Hat, Inc.
+ *
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package io.fabric8.maven.watcher.standard;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import io.fabric8.kubernetes.api.Controller;
-import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.PlatformMode;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.BuildService;
@@ -33,11 +48,8 @@ import io.fabric8.maven.watcher.api.WatcherContext;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigSpec;
 import io.fabric8.openshift.client.OpenShiftClient;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-
-import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
 
 /**
  *
@@ -61,17 +73,7 @@ public class DockerImageWatcher extends BaseWatcher {
 
         // add a image customizer
         watchContext = new WatchService.WatchContext.Builder(watchContext)
-                .imageCustomizer(new Task<ImageConfiguration>() {
-                    @Override
-                    public void execute(ImageConfiguration imageConfiguration) throws DockerAccessException, MojoExecutionException, MojoFailureException {
-                        buildImage(imageConfiguration);
-                    }
-                }).containerRestarter(new Task<WatchService.ImageWatcher>() {
-                    @Override
-                    public void execute(WatchService.ImageWatcher imageWatcher) throws DockerAccessException, MojoExecutionException, MojoFailureException {
-                        restartContainer(imageWatcher, resources);
-                    }
-                })
+                .imageCustomizer(imageConfiguration -> buildImage(imageConfiguration)).containerRestarter(imageWatcher -> restartContainer(imageWatcher, resources))
                 .build();
 
         ServiceHub hub = getContext().getServiceHub();
@@ -113,7 +115,7 @@ public class DockerImageWatcher extends BaseWatcher {
         ImageConfiguration imageConfig = watcher.getImageConfiguration();
         String imageName = imageConfig.getName();
         try {
-            ClusterAccess clusterAccess = new ClusterAccess(getContext().getNamespace());
+            ClusterAccess clusterAccess = new ClusterAccess(getContext().getClusterConfiguration());
             KubernetesClient client = clusterAccess.createDefaultClient(log);
 
             String namespace = clusterAccess.getNamespace();
@@ -162,7 +164,7 @@ public class DockerImageWatcher extends BaseWatcher {
             DeploymentConfigSpec spec = resource.getSpec();
             if (spec != null) {
                 if (updateImageName(entity, spec.getTemplate(), imagePrefix, imageName)) {
-                    OpenShiftClient openshiftClient = new Controller(kubernetes).getOpenShiftClientOrNull();
+                    OpenShiftClient openshiftClient = OpenshiftHelper.asOpenShiftClient(kubernetes);
                     if (openshiftClient == null) {
                         log.warn("Ignoring DeploymentConfig %s as not connected to an OpenShift cluster", name);
                     }
@@ -182,7 +184,7 @@ public class DockerImageWatcher extends BaseWatcher {
                     String image = container.getImage();
                     if (image != null && image.startsWith(imagePrefix)) {
                         container.setImage(imageName);
-                        log.info("Updating " + getKind(entity) + " " + KubernetesHelper.getName(entity) + " to use image: " + imageName);
+                        log.info("Updating " + KubernetesHelper.getKind(entity) + " " + KubernetesHelper.getName(entity) + " to use image: " + imageName);
                         answer = true;
                     }
                 }

@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -15,14 +15,14 @@
  */
 package io.fabric8.maven.generator.wildflyswarm;
 
+import java.util.List;
+import java.util.Map;
+
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
 import org.apache.maven.plugin.MojoExecutionException;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by ceposta
@@ -36,7 +36,7 @@ public class WildFlySwarmGenerator extends JavaExecGenerator {
 
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
-        return shouldAddImageConfiguration(configs) && MavenUtil.hasPlugin(getProject(), "org.wildfly.swarm:wildfly-swarm-plugin");
+        return shouldAddImageConfiguration(configs) && MavenUtil.hasPlugin(getProject(), "org.wildfly.swarm", "wildfly-swarm-plugin");
     }
 
     @Override

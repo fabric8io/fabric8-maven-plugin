@@ -1,36 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2016 Red Hat, Inc.
-  ~
-  ~ Red Hat licenses this file to you under the Apache License, version
-  ~ 2.0 (the "License"); you may not use this file except in compliance
-  ~ with the License.  You may obtain a copy of the License at
-  ~
-  ~     http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS,
-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-  ~ implied.  See the License for the specific language governing
-  ~ permissions and limitations under the License.
-  -->
+
+    Copyright 2016 Red Hat, Inc.
+
+    Red Hat licenses this file to you under the Apache License, version
+    2.0 (the "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+    implied.  See the License for the specific language governing
+    permissions and limitations under the License.
+
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.fabric8</groupId>
   <artifactId>fabric8-maven-parent</artifactId>
-  <version>3.5-SNAPSHOT</version>
+  <version>4.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Fabric8 Maven :: Parent</name>
   <description>${project.name}</description>
-
+  
   <url>http://github.com/fabric8io/fabric8-maven-plugin</url>
 
   <licenses>
     <license>
+      <name>Apache License, Version 2.0</name>
       <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
       <comments>A business-friendly OSS license</comments>
+      <distribution>repo</distribution>
     </license>
   </licenses>
 
@@ -53,25 +57,27 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <assertj.core.version>2.4.1</assertj.core.version>
 
     <!-- latest release version of this plugin. Used in the docs.-->
-    <fabric8.maven.plugin.version>3.5.40</fabric8.maven.plugin.version>
+    <fabric8.maven.plugin.version>4.1.0</fabric8.maven.plugin.version>
 
+    <jmockit.version>1.43</jmockit.version>
     <version.maven>3.3.1</version.maven>
-    <version.jacoco>0.7.8</version.jacoco>
-    <version.fabric8>3.0.12</version.fabric8>
-    <version.kubernetes-client>3.2.0</version.kubernetes-client>
+    <version.jacoco>0.8.2</version.jacoco>
+    <version.kubernetes-client>4.2.1</version.kubernetes-client>
+    <version.openshift-client>${version.kubernetes-client}</version.openshift-client>
     <version.mockwebserver>0.0.13</version.mockwebserver>
-    <version.docker-maven-plugin>0.22.1</version.docker-maven-plugin>
+    <version.docker-maven-plugin>0.29.0</version.docker-maven-plugin>
     <version.networknt.validator>0.1.7</version.networknt.validator>
-    <version.jgit>5.0.1.201806211838-r</version.jgit>
+    <version.jgit>5.3.0.201903130848-r</version.jgit>
+    <version.hamcrest-library>1.3</version.hamcrest-library>
+    <version.assertj>3.11.1</version.assertj>
 
     <!-- =======================================================  -->
     <!-- === Java base image versions for docker, s2i (istag == s2i) -->
     <!-- Upstream -->
-    <version.image.java.upstream.docker>1.3</version.image.java.upstream.docker>
-    <version.image.java.upstream.s2i>2.2</version.image.java.upstream.s2i>
+    <version.image.java.upstream.docker>1.5</version.image.java.upstream.docker>
+    <version.image.java.upstream.s2i>2.3</version.image.java.upstream.s2i>
 
     <!-- RedHat -->
     <version.image.java.redhat.docker>2.0</version.image.java.redhat.docker>
@@ -80,7 +86,7 @@
     <!-- =======================================================  -->
     <!-- === Karaf base image versions for docker, s2i (istag == s2i) -->
     <!-- Upstream -->
-    <version.image.karaf.upstream.docker>2.1</version.image.karaf.upstream.docker>
+    <version.image.karaf.upstream.docker>2.3</version.image.karaf.upstream.docker>
     <version.image.karaf.upstream.s2i>${version.image.karaf.upstream.docker}</version.image.karaf.upstream.s2i>
 
     <!-- RedHat  -->
@@ -89,17 +95,17 @@
 
     <!-- =======================================================  -->
     <!-- Servlet container images -->
-    <version.image.tomcat.upstream>1.1.6</version.image.tomcat.upstream>
-    <version.image.jetty.upstream>1.1.10</version.image.jetty.upstream>
+    <version.image.tomcat.upstream>1.2.0</version.image.tomcat.upstream>
+    <version.image.jetty.upstream>1.5.1</version.image.jetty.upstream>
     <version.image.wildfly.upstream>10.1.0.Final</version.image.wildfly.upstream>
 
     <!-- ============================================= -->
-    <!-- Default images used in the defult generators. Please note that the generators make some assumption about
+    <!-- Default images used in the default generators. Please note that the generators make some assumption about
          these images (e.g. where the deployment directory is), so don't change them arbitrarily -->
 
     <!-- java (java-exec, spring-boot, wildfly-swarm) -->
     <image.java.upstream.s2i>fabric8/s2i-java:${version.image.java.upstream.s2i}</image.java.upstream.s2i>
-    <image.java.upstream.docker>fabric8/java-jboss-openjdk8-jdk:${version.image.java.upstream.docker}</image.java.upstream.docker>
+    <image.java.upstream.docker>fabric8/java-centos-openjdk8-jdk:${version.image.java.upstream.docker}</image.java.upstream.docker>
     <image.java.upstream.istag>fabric8-java:${version.image.java.upstream.s2i}</image.java.upstream.istag>
 
     <image.java.redhat.s2i>jboss-fuse-6/fis-java-openshift:${version.image.java.redhat.s2i}</image.java.redhat.s2i>
@@ -116,10 +122,9 @@
     <image.karaf.redhat.istag>fis-karaf-openshift:${version.image.karaf.redhat.s2i}</image.karaf.redhat.istag>
 
     <!-- webapp -->
-    <image.tomcat.upstream>fabric8/tomcat-8:${version.image.tomcat.upstream}</image.tomcat.upstream>
+    <image.tomcat.upstream>fabric8/tomcat-9:${version.image.tomcat.upstream}</image.tomcat.upstream>
     <image.jetty.upstream>fabric8/jetty-9:${version.image.jetty.upstream}</image.jetty.upstream>
     <image.wildfly.upstream>jboss/wildfly:${version.image.wildfly.upstream}</image.wildfly.upstream>
-    <hamcrest-library.version>1.3</hamcrest-library.version>
   </properties>
 
   <repositories>
@@ -188,9 +193,9 @@
       </dependency>
 
       <dependency>
-        <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-enricher-osio</artifactId>
-        <version>${project.version}</version>
+        <groupId>com.google.code.findbugs</groupId>
+        <artifactId>jsr305</artifactId>
+        <version>3.0.2</version>
       </dependency>
 
       <!-- ## Generator -->
@@ -226,6 +231,12 @@
 
       <dependency>
         <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-generator-quarkus</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-generator-wildfly-swarm</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -256,7 +267,34 @@
         <version>${project.version}</version>
       </dependency>
 
-      <!-- == external deps =============================== -->
+      <!-- == fabric8 ===================================== -->
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>kubernetes-client</artifactId>
+        <version>${version.kubernetes-client}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>openshift-client</artifactId>
+        <version>${version.openshift-client}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>ianaservicehelper</artifactId>
+        <version>0.0.1</version>
+      </dependency>
+
+      <!-- == libs ====================================== -->
+
+      <!-- ## fabric8-project, git access #################### -->
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>1.7.25</version>
+      </dependency>
 
       <dependency>
         <groupId>org.eclipse.jgit</groupId>
@@ -264,16 +302,14 @@
         <version>${version.jgit}</version>
       </dependency>
 
-      <!-- == fabric8 ===================================== -->
-
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>kubernetes-api</artifactId>
-        <version>${version.fabric8}</version>
+        <artifactId>gitective-core</artifactId>
+        <version>0.9.20</version>
         <exclusions>
           <exclusion>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-yaml</artifactId>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
           </exclusion>
           <exclusion>
             <groupId>io.fabric8</groupId>
@@ -291,21 +327,71 @@
       </dependency>
 
       <dependency>
+        <groupId>com.jcraft</groupId>
+        <artifactId>jzlib</artifactId>
+        <version>1.1.3</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.cxf</groupId>
+        <artifactId>cxf-rt-rs-client</artifactId>
+        <version>3.1.10</version>
+      </dependency>
+
+      <dependency>
+        <groupId>net.oauth.core</groupId>
+        <artifactId>oauth</artifactId>
+        <version>20100527</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.jaxrs</groupId>
+        <artifactId>jackson-jaxrs-json-provider</artifactId>
+        <version>2.8.7</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>2.8.5</version>
+      </dependency>
+
+      <!-- ################################################# -->
+
+      <dependency>
         <groupId>com.fasterxml.jackson.dataformat</groupId>
         <artifactId>jackson-dataformat-yaml</artifactId>
-        <version>2.8.6</version>
+        <version>2.8.7</version>
       </dependency>
 
       <dependency>
-        <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-project-utils</artifactId>
-        <version>${version.fabric8}</version>
+        <groupId>org.codehaus.plexus</groupId>
+        <artifactId>plexus-interpolation</artifactId>
+        <version>1.25</version>
       </dependency>
 
       <dependency>
-        <groupId>io.fabric8</groupId>
-        <artifactId>ianaservicehelper</artifactId>
-        <version>0.0.1</version>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>3.5</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>21.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+        <version>1.10</version>
+      </dependency>
+
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>2.5</version>
       </dependency>
 
       <!-- == maven ===================================== -->
@@ -343,13 +429,13 @@
       <dependency>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-utils</artifactId>
-        <version>3.0.22</version>
+        <version>3.1.0</version>
       </dependency>
 
       <dependency>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-component-annotations</artifactId>
-        <version>1.5.5</version>
+        <version>1.7.1</version>
       </dependency>
 
       <dependency>
@@ -374,31 +460,37 @@
         <scope>test</scope>
       </dependency>
 
-
-      <dependency>
-        <groupId>org.assertj</groupId>
-        <artifactId>assertj-core</artifactId>
-        <scope>test</scope>
-        <version>${assertj.core.version}</version>
-      </dependency>
-
       <dependency>
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest-all</artifactId>
-        <version>${hamcrest-library.version}</version>
+        <version>${version.hamcrest-library}</version>
         <scope>test</scope>
       </dependency>
 
       <dependency>
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest-library</artifactId>
-        <version>${hamcrest-library.version}</version>
+        <version>${version.hamcrest-library}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>${version.assertj}</version>
+        <scope>test</scope>
       </dependency>
 
       <dependency>
         <groupId>org.jmockit</groupId>
         <artifactId>jmockit</artifactId>
-        <version>1.24</version>
+        <version>${jmockit.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>com.github.stefanbirkner</groupId>
+        <artifactId>system-rules</artifactId>
+        <version>1.18.0</version>
         <scope>test</scope>
       </dependency>
 
@@ -425,20 +517,21 @@
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>kubernetes-client</artifactId>
-        <version>${version.kubernetes-client}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.fabric8</groupId>
-        <artifactId>openshift-client</artifactId>
-        <version>${version.kubernetes-client}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.fabric8</groupId>
         <artifactId>mockwebserver</artifactId>
         <version>${version.mockwebserver}</version>
+        <scope>test</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>com.sun</groupId>
+            <artifactId>tools</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.maven.plugin-testing</groupId>
+        <artifactId>maven-plugin-testing-harness</artifactId>
+        <version>3.3.0</version>
         <scope>test</scope>
       </dependency>
 
@@ -463,11 +556,13 @@
         <artifactId>shrinkwrap-api</artifactId>
         <version>1.2.6</version>
       </dependency>
+
       <dependency>
         <groupId>org.jboss.shrinkwrap</groupId>
         <artifactId>shrinkwrap-spi</artifactId>
         <version>1.2.6</version>
       </dependency>
+
       <dependency>
         <groupId>org.jboss.shrinkwrap</groupId>
         <artifactId>shrinkwrap-impl-base</artifactId>
@@ -478,6 +573,7 @@
         <groupId>com.consol.citrus</groupId>
         <artifactId>citrus-core</artifactId>
         <version>2.6.2</version>
+        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -509,7 +605,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-plugin-plugin</artifactId>
-          <version>3.4</version>
+          <version>3.5</version>
         </plugin>
 
         <plugin>
@@ -545,7 +641,7 @@
         <plugin>
           <groupId>org.codehaus.plexus</groupId>
           <artifactId>plexus-component-metadata</artifactId>
-          <version>1.6</version>
+          <version>1.7.1</version>
         </plugin>
 
         <plugin>
@@ -581,9 +677,12 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.19.1</version>
+          <version>2.22.1</version>
           <configuration>
              <runOrder>alphabetical</runOrder>
+             <argLine>
+              -javaagent:${settings.localRepository}/org/jmockit/jmockit/${jmockit.version}/jmockit-${jmockit.version}.jar
+            </argLine>
           </configuration>
         </plugin>
 
@@ -591,6 +690,32 @@
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
           <version>${version.jacoco}</version>
+        </plugin>
+
+        <plugin>
+          <groupId>com.mycila</groupId>
+          <artifactId>license-maven-plugin</artifactId>
+          <version>2.11</version>
+          <configuration>
+            <aggregate>true</aggregate>
+            <header>header.txt</header>
+            <properties>
+              <owner>Red Hat, Inc.</owner>
+            </properties>
+            <excludes>
+              <exclude>.editorconfig</exclude>
+              <exclude>license.txt</exclude>
+              <exclude>**/test-kubeconfig</exclude>
+              <exclude>**/*-services</exclude>
+              <exclude>**/*-default</exclude>
+              <exclude>**/*.adoc</exclude>
+              <exclude>**/enricher</exclude>
+              <exclude>.lgtm</exclude>
+              <exclude>**/.gitkeep</exclude>
+              <exclude>Jenkinsfile</exclude>
+              <exclude>mvnw</exclude>
+            </excludes>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -601,8 +726,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.1</version>
         <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
+          <source>1.8</source>
+          <target>1.8</target>
           <compilerArgument>-Xlint:deprecation</compilerArgument>
         </configuration>
       </plugin>
@@ -626,6 +751,11 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
+	    <configuration>
+	       <passphrase>${env.GPG_PASSPHRASE}</passphrase>
+	       <useAgent>true</useAgent>
+	    </configuration>
+
             <executions>
               <execution>
                 <id>sign-artifacts</id>
@@ -788,6 +918,20 @@
 
         </plugins>
       </build>
+    </profile>
+
+    <profile>
+      <id>java9-plus</id>
+      <activation>
+        <jdk>[9,)</jdk>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>javax.xml.bind</groupId>
+          <artifactId>jaxb-api</artifactId>
+          <version>2.3.0</version>
+        </dependency>
+      </dependencies>
     </profile>
 
   </profiles>

@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,35 +13,38 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.standard;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.KindAndName;
-import io.fabric8.maven.core.util.KubernetesResourceUtil;
-import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.maven.enricher.api.Kind;
-import io.fabric8.openshift.api.model.Template;
-import io.fabric8.utils.Function;
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.plugin.MojoExecutionException;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
 
-import static io.fabric8.kubernetes.api.KubernetesHelper.getKind;
-import static io.fabric8.utils.Lists.notNullList;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.model.Dependency;
+import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.KindAndName;
+import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.openshift.api.model.Template;
 
 /**
  * Enricher for embedding dependency descriptors to single package.
@@ -75,22 +78,21 @@ public class DependencyEnricher extends BaseEnricher {
         }
     }
 
-    public DependencyEnricher(EnricherContext buildContext) {
+    public DependencyEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-dependency");
 
-        addArtifactsWithYaml(buildContext, kubernetesDependencyArtifacts, DEPENDENCY_KUBERNETES_YAML);
-        addArtifactsWithYaml(buildContext, kubernetesTemplateDependencyArtifacts, DEPENDENCY_KUBERNETES_TEMPLATE_YAML);
-        addArtifactsWithYaml(buildContext, openshiftDependencyArtifacts, DEPENDENCY_OPENSHIFT_YAML);
+        addArtifactsWithYaml(kubernetesDependencyArtifacts, DEPENDENCY_KUBERNETES_YAML);
+        addArtifactsWithYaml(kubernetesTemplateDependencyArtifacts, DEPENDENCY_KUBERNETES_TEMPLATE_YAML);
+        addArtifactsWithYaml(openshiftDependencyArtifacts, DEPENDENCY_OPENSHIFT_YAML);
 
     }
 
-    private void addArtifactsWithYaml(EnricherContext buildContext, Set<URL> artifactSet, String dependencyYaml) {
-        Set<Artifact> artifacts = isIncludeTransitive() ?
-                buildContext.getProject().getArtifacts() : buildContext.getProject().getDependencyArtifacts();
+    private void addArtifactsWithYaml(Set<URL> artifactSet, String dependencyYaml) {
+        final List<Dependency> artifacts = getContext().getDependencies(isIncludeTransitive());
 
-        for (Artifact artifact : artifacts) {
-            if (Artifact.SCOPE_COMPILE.equals(artifact.getScope()) && "jar".equals(artifact.getType())) {
-                File file = artifact.getFile();
+        for (Dependency artifact : artifacts) {
+            if ("compile".equals(artifact.getScope()) && "jar".equals(artifact.getType())) {
+                File file = artifact.getLocation();
                 try {
                     URL url = new URL("jar:" + file.toURI().toURL() + "!/" + dependencyYaml);
                     artifactSet.add(url);
@@ -117,52 +119,51 @@ public class DependencyEnricher extends BaseEnricher {
     }
 
     @Override
-    public void adapt(final KubernetesListBuilder builder) {
-        final List<HasMetadata> kubernetesItems = new ArrayList<>();
-        processArtifactSetResources(this.kubernetesDependencyArtifacts, new Function<List<HasMetadata>, Void>() {
-            @Override
-            public Void apply(List<HasMetadata> items) {
-                kubernetesItems.addAll(Arrays.asList(items.toArray(new HasMetadata[items.size()])));
-                return null;
-            }
-        });
-        processArtifactSetResources(this.kubernetesTemplateDependencyArtifacts, new Function<List<HasMetadata>, Void>() {
-            @Override
-            public Void apply(List<HasMetadata> items) {
-                List<HasMetadata> templates = Arrays.asList(items.toArray(new HasMetadata[items.size()]));
+    public void enrich(PlatformMode platformMode, final KubernetesListBuilder builder) {
+        switch (platformMode) {
+            case kubernetes:
+                enrichKubernetes(builder);
+                break;
+            case openshift:
+                enrichOpenShift(builder);
+                break;
+        }
+    }
 
-                // lets remove all the plain resources (without any ${PARAM} expressions) which match objects
-                // in the Templates found from the k8s-templates.yml files which still contain ${PARAM} expressions
-                // to preserve the parameter expressions for dependent kubernetes resources
-                for (HasMetadata resource : templates) {
-                    if (resource instanceof Template) {
-                        Template template = (Template) resource;
-                        List<HasMetadata> objects = template.getObjects();
-                        if (objects != null) {
-                            removeTemplateObjects(kubernetesItems, objects);
-                            kubernetesItems.addAll(objects);
-                        }
+    private void enrichKubernetes(final KubernetesListBuilder builder) {
+        final List<HasMetadata> kubernetesItems = new ArrayList<>();
+        processArtifactSetResources(this.kubernetesDependencyArtifacts, items -> {
+            kubernetesItems.addAll(Arrays.asList(items.toArray(new HasMetadata[items.size()])));
+            return null;
+        });
+        processArtifactSetResources(this.kubernetesTemplateDependencyArtifacts, items -> {
+            List<HasMetadata> templates = Arrays.asList(items.toArray(new HasMetadata[items.size()]));
+
+            // lets remove all the plain resources (without any ${PARAM} expressions) which match objects
+            // in the Templates found from the k8s-templates.yml files which still contain ${PARAM} expressions
+            // to preserve the parameter expressions for dependent kubernetes resources
+            for (HasMetadata resource : templates) {
+                if (resource instanceof Template) {
+                    Template template = (Template) resource;
+                    List<HasMetadata> objects = template.getObjects();
+                    if (objects != null) {
+                        removeTemplateObjects(kubernetesItems, objects);
+                        kubernetesItems.addAll(objects);
                     }
                 }
-                return null;
             }
+            return null;
         });
         filterAndAddItemsToBuilder(builder, kubernetesItems);
+    }
 
-        processArtifactSetResources(this.openshiftDependencyArtifacts, new Function<List<HasMetadata>, Void>() {
-            @Override
-            public Void apply(List<HasMetadata> items) {
-                // lets store the openshift resources so we can later on use them if need be...
-                boolean isAppCatalog = false;
-                try {
-                    isAppCatalog = getContext().runningWithGoal("fabric8:app-catalog");
-                } catch (MojoExecutionException e) {
-                    log.warn("Caught: %s", e);
-                }
-                getContext().getOpenshiftDependencyResources().addOpenShiftResources(items, isAppCatalog);
-                return null;
-            }
+    private void enrichOpenShift(final KubernetesListBuilder builder) {
+        final List<HasMetadata> openshiftItems = new ArrayList<>();
+        processArtifactSetResources(this.openshiftDependencyArtifacts, items -> {
+            openshiftItems.addAll(Arrays.asList(items.toArray(new HasMetadata[0])));
+            return null;
         });
+        filterAndAddItemsToBuilder(builder, openshiftItems);
     }
 
     private void removeTemplateObjects(List<HasMetadata> list, List<HasMetadata> objects) {
@@ -212,7 +213,7 @@ public class DependencyEnricher extends BaseEnricher {
                     log.debug("Processing Kubernetes YAML in at: %s", url);
 
                     KubernetesList resources = new ObjectMapper(new YAMLFactory()).readValue(is, KubernetesList.class);
-                    List<HasMetadata> items = notNullList(resources.getItems());
+                    List<HasMetadata> items = resources.getItems();
                     if (items.size() == 0 && Objects.equals("Template", resources.getKind())) {
                         is = url.openStream();
                         Template template = new ObjectMapper(new YAMLFactory()).readValue(is, Template.class);
@@ -222,7 +223,7 @@ public class DependencyEnricher extends BaseEnricher {
                     }
                     for (HasMetadata item : items) {
                         KubernetesResourceUtil.setSourceUrlAnnotationIfNotSet(item, url.toString());
-                        log.debug("  found %s  %s", getKind(item), KubernetesHelper.getName(item));
+                        log.debug("  found %s  %s", KubernetesHelper.getKind(item), KubernetesHelper.getName(item));
                     }
                     function.apply(items);
                 }

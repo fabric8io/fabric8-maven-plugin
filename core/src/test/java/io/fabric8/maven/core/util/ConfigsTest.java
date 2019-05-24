@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -15,14 +15,12 @@
  */
 package io.fabric8.maven.core.util;
 
-import mockit.Mocked;
-import org.apache.commons.lang.RandomStringUtils;
-import org.junit.Test;
-import mockit.Expectations;
-
 import java.util.Properties;
 
-import static org.junit.Assert.*;
+import org.apache.commons.lang.RandomStringUtils;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 public class ConfigsTest {
 
@@ -32,8 +30,8 @@ public class ConfigsTest {
 
     String value="value";
 
-    @Mocked
-    Properties properties;
+    //@Mocked can't mock properties anymore in recent jmocckit
+    Properties properties = new Properties();
 
     @Test
     public void getIntValueTest(){
@@ -81,27 +79,11 @@ public class ConfigsTest {
 
     @Test
     public void getPropertyValueTest(){
+        properties.setProperty(KEY_1, value);
+        System.setProperty(KEY_2, value);
 
-        new Expectations() {{
-            properties.getProperty(KEY_1);
-            result = value;
-
-            properties.getProperty(KEY_2);
-            result = null;
-
-            System.getProperty(KEY_2);
-            result = value;
-
-            properties.getProperty(KEY_3);
-            result = null;
-
-            System.getProperty(KEY_3);
-            result = null;
-        }};
-
-
-        assertEquals("value",Configs.getPropertyWithSystemAsFallback(properties, KEY_1));
-        assertEquals("value",Configs.getPropertyWithSystemAsFallback(properties, KEY_2));
-        assertEquals(null,Configs.getPropertyWithSystemAsFallback(properties,KEY_3));
+        assertEquals("value",Configs.getSystemPropertyWithMavenPropertyAsFallback(properties, KEY_1));
+        assertEquals("value",Configs.getSystemPropertyWithMavenPropertyAsFallback(properties, KEY_2));
+        assertEquals(null,Configs.getSystemPropertyWithMavenPropertyAsFallback(properties, KEY_3));
     }
 }

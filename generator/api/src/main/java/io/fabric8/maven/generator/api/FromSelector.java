@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.generator.api;
 
 import java.util.HashMap;
@@ -21,11 +20,13 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 
-import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.*;
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.kind;
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.name;
+import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.namespace;
 
 /**
  * Helper class to encapsulate the selection of a base image
@@ -44,9 +45,9 @@ public abstract class FromSelector {
     }
 
     public String getFrom() {
-        PlatformMode mode = context.getMode();
+        RuntimeMode mode = context.getRuntimeMode();
         OpenShiftBuildStrategy strategy = context.getStrategy();
-        if (mode == PlatformMode.openshift && strategy == OpenShiftBuildStrategy.s2i) {
+        if (mode == RuntimeMode.openshift && strategy == OpenShiftBuildStrategy.s2i) {
             return getS2iBuildFrom();
         } else {
             return getDockerBuildFrom();

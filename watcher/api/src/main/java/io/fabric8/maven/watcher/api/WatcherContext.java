@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,19 +13,18 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.watcher.api;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.maven.core.access.ClusterConfiguration;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.WatchService;
 import io.fabric8.maven.docker.util.Logger;
-
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 
@@ -36,19 +35,16 @@ import org.apache.maven.project.MavenProject;
 public class WatcherContext {
 
     private MavenProject project;
-    private MavenSession session;
     private ProcessorConfig config;
-    private String goalName;
     private Logger logger;
     private Logger newPodLogger;
     private Logger oldPodLogger;
-    private PlatformMode mode;
-    private OpenShiftBuildStrategy strategy;
+    private RuntimeMode mode;
     private boolean useProjectClasspath;
     private ServiceHub serviceHub;
     private WatchService.WatchContext watchContext;
     private BuildService.BuildContext buildContext;
-    private String namespace;
+    private ClusterConfiguration clusterConfiguration;
     private KubernetesClient kubernetesClient;
     private Fabric8ServiceHub fabric8ServiceHub;
 
@@ -59,28 +55,16 @@ public class WatcherContext {
         return project;
     }
 
-    public MavenSession getSession() {
-        return session;
-    }
-
     public ProcessorConfig getConfig() {
         return config;
-    }
-
-    public String getGoalName() {
-        return goalName;
     }
 
     public Logger getLogger() {
         return logger;
     }
 
-    public PlatformMode getMode() {
+    public RuntimeMode getMode() {
         return mode;
-    }
-
-    public OpenShiftBuildStrategy getStrategy() {
-        return strategy;
     }
 
     public boolean isUseProjectClasspath() {
@@ -99,8 +83,8 @@ public class WatcherContext {
         return buildContext;
     }
 
-    public String getNamespace() {
-        return namespace;
+    public ClusterConfiguration getClusterConfiguration() {
+        return clusterConfiguration;
     }
 
     public KubernetesClient getKubernetesClient() {
@@ -130,18 +114,8 @@ public class WatcherContext {
             return this;
         }
 
-        public Builder session(MavenSession session) {
-            ctx.session = session;
-            return this;
-        }
-
         public Builder config(ProcessorConfig config) {
             ctx.config = config;
-            return this;
-        }
-
-        public Builder goalName(String goalName) {
-            ctx.goalName = goalName;
             return this;
         }
 
@@ -160,13 +134,8 @@ public class WatcherContext {
             return this;
         }
 
-        public Builder mode(PlatformMode mode) {
+        public Builder mode(RuntimeMode mode) {
             ctx.mode = mode;
-            return this;
-        }
-
-        public Builder strategy(OpenShiftBuildStrategy strategy) {
-            ctx.strategy = strategy;
             return this;
         }
 
@@ -190,8 +159,8 @@ public class WatcherContext {
             return this;
         }
 
-        public Builder namespace(String namespace) {
-            ctx.namespace = namespace;
+        public Builder clusterConfiguration(ClusterConfiguration clusterConfiguration) {
+            ctx.clusterConfiguration = clusterConfiguration;
             return this;
         }
 

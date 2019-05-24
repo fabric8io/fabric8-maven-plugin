@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,17 +13,24 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.standard;
 
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.util.InitContainerHandler;
-import io.fabric8.utils.Strings;
-import org.json.JSONObject;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
@@ -45,13 +52,13 @@ public class VolumePermissionEnricher extends BaseEnricher {
         public String def() { return d; } protected String d;
     }
 
-    public VolumePermissionEnricher(EnricherContext buildContext) {
+    public VolumePermissionEnricher(MavenEnricherContext buildContext) {
         super(buildContext, ENRICHER_NAME);
         initContainerHandler = new InitContainerHandler(buildContext.getLog());
     }
 
     @Override
-    public void adapt(KubernetesListBuilder builder) {
+    public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) {
 
         builder.accept(new TypedVisitor<PodTemplateSpecBuilder>() {
             @Override
@@ -115,9 +122,9 @@ public class VolumePermissionEnricher extends BaseEnricher {
             private List<VolumeMount> createMounts(Map<String, String> mountPoints) {
                 List<VolumeMount> ret = new ArrayList<>();
                 for (Map.Entry<String, String> entry : mountPoints.entrySet()) {
-                    JSONObject mount = new JSONObject();
-                    mount.put("name", entry.getKey());
-                    mount.put("mountPath", entry.getValue());
+                    JsonObject mount = new JsonObject();
+                    mount.add("name", new JsonPrimitive(entry.getKey()));
+                    mount.add("mountPath", new JsonPrimitive(entry.getValue()));
 
                     VolumeMount volumeMount = new VolumeMountBuilder()
                             .withName(entry.getKey())
@@ -170,7 +177,7 @@ public class VolumePermissionEnricher extends BaseEnricher {
                     pvcBuilder.withNewMetadata().endMetadata();
                 }
                 String storageClass = getConfig(Config.defaultStorageClass);
-                if (Strings.isNotBlank(storageClass) && !pvcBuilder.buildMetadata().getAnnotations().containsKey(VOLUME_STORAGE_CLASS_ANNOTATION)) {
+                if (StringUtils.isNotBlank(storageClass) && !pvcBuilder.buildMetadata().getAnnotations().containsKey(VOLUME_STORAGE_CLASS_ANNOTATION)) {
                     pvcBuilder.editMetadata().addToAnnotations(VOLUME_STORAGE_CLASS_ANNOTATION, storageClass).endMetadata();
                 }
             }

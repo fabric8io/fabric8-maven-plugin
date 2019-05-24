@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.plugin.generator;
 
 import java.util.List;
@@ -21,10 +20,11 @@ import java.util.List;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.PluginServiceFactory;
+import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.Generator;
 import io.fabric8.maven.generator.api.GeneratorContext;
-import io.fabric8.maven.docker.config.ImageConfiguration;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
@@ -41,9 +41,13 @@ public class GeneratorManager {
         List<ImageConfiguration> ret = imageConfigs;
 
         PluginServiceFactory<GeneratorContext> pluginFactory =
-            genCtx.isUseProjectClasspath() ?
-            new PluginServiceFactory<GeneratorContext>(genCtx, ClassUtil.createProjectClassLoader(genCtx.getProject(), genCtx.getLogger())) :
+            null;
+        try {
+            pluginFactory = genCtx.isUseProjectClasspath() ?
+            new PluginServiceFactory<GeneratorContext>(genCtx, ClassUtil.createProjectClassLoader(genCtx.getProject().getCompileClasspathElements(), genCtx.getLogger())) :
             new PluginServiceFactory<GeneratorContext>(genCtx);
+        } catch (DependencyResolutionRequiredException e) {
+        }
 
         List<Generator> generators =
             pluginFactory.createServiceObjects("META-INF/fabric8/generator-default",

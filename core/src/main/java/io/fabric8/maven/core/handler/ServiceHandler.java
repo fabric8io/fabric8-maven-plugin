@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,15 +13,22 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.core.handler;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.ServiceFluent;
+import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.maven.core.config.ServiceConfig;
 import io.fabric8.maven.core.util.MapUtil;
-import io.fabric8.utils.Strings;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author roland
@@ -65,7 +72,7 @@ public class ServiceHandler {
                 serviceSpecBuilder.withClusterIP("None");
             }
 
-            if (!Strings.isNullOrBlank(service.getType())) {
+            if (StringUtils.isNotBlank(service.getType())) {
                 serviceSpecBuilder.withType(service.getType());
             }
             serviceSpecBuilder.endSpec();

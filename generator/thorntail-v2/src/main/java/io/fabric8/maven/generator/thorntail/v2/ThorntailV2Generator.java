@@ -1,5 +1,5 @@
-/*
- * Copyright 2018 Red Hat, Inc.
+/**
+ * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
  * 2.0 (the "License"); you may not use this file except in compliance
@@ -15,14 +15,14 @@
  */
 package io.fabric8.maven.generator.thorntail.v2;
 
+import java.util.List;
+import java.util.Map;
+
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
 import org.apache.maven.plugin.MojoExecutionException;
-
-import java.util.List;
-import java.util.Map;
 
 public class ThorntailV2Generator extends JavaExecGenerator {
 
@@ -33,7 +33,7 @@ public class ThorntailV2Generator extends JavaExecGenerator {
     @Override
     public boolean isApplicable(List<ImageConfiguration> configs) {
         return shouldAddImageConfiguration(configs)
-                && MavenUtil.hasPlugin(getProject(), "io.thorntail:thorntail-maven-plugin")
+                && MavenUtil.hasPlugin(getProject(), "io.thorntail", "thorntail-maven-plugin")
                 // if there's thorntail-kernel, it's Thorntail v4
                 && !MavenUtil.hasDependency(getProject(), "io.thorntail", "thorntail-kernel");
     }

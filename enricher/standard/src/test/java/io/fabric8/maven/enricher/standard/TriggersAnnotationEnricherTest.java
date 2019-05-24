@@ -1,52 +1,54 @@
-/*
- *    Copyright (c) 2016 Red Hat, Inc.
+/**
+ * Copyright 2016 Red Hat, Inc.
  *
- *    Red Hat licenses this file to you under the Apache License, version
- *    2.0 (the "License"); you may not use this file except in compliance
- *    with the License.  You may obtain a copy of the License at
+ * Red Hat licenses this file to you under the Apache License, version
+ * 2.0 (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- *    implied.  See the License for the specific language governing
- *    permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.standard;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
-import io.fabric8.kubernetes.api.model.Job;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
-import io.fabric8.maven.core.util.JSONUtil;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.kubernetes.api.model.apps.DaemonSet;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.api.model.batch.Job;
+import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.model.Configuration;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.ImageChangeTrigger;
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import mockit.Expectations;
+import mockit.Mocked;
+import org.junit.Test;
 
-import static junit.framework.TestCase.*;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertNull;
+import static junit.framework.TestCase.assertTrue;
 
 /**
  * @author nicola
  */
-@RunWith(JMockit.class)
 public class TriggersAnnotationEnricherTest {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     @Mocked
-    private EnricherContext context;
+    private MavenEnricherContext context;
 
     @Test
     public void testStatefulSetEnrichment() throws IOException {
@@ -64,14 +66,14 @@ public class TriggersAnnotationEnricherTest {
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
-        enricher.adapt(builder);
+        enricher.enrich(PlatformMode.kubernetes, builder);
 
 
         StatefulSet res = (StatefulSet) builder.build().getItems().get(0);
         String triggers = res.getMetadata().getAnnotations().get("image.openshift.io/triggers");
         assertNotNull(triggers);
 
-        List<ImageChangeTrigger> triggerList = JSONUtil.mapper().readValue(triggers, JSONUtil.mapper().getTypeFactory().constructCollectionType(List.class, ImageChangeTrigger.class));
+        List<ImageChangeTrigger> triggerList = OBJECT_MAPPER.readValue(triggers, OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, ImageChangeTrigger.class));
         assertEquals(1, triggerList.size());
 
         ImageChangeTrigger trigger = triggerList.get(0);
@@ -100,14 +102,14 @@ public class TriggersAnnotationEnricherTest {
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
-        enricher.adapt(builder);
+        enricher.enrich(PlatformMode.kubernetes, builder);
 
 
         ReplicaSet res = (ReplicaSet) builder.build().getItems().get(0);
         String triggers = res.getMetadata().getAnnotations().get("image.openshift.io/triggers");
         assertNotNull(triggers);
 
-        List<ImageChangeTrigger> triggerList = JSONUtil.mapper().readValue(triggers, JSONUtil.mapper().getTypeFactory().constructCollectionType(List.class, ImageChangeTrigger.class));
+        List<ImageChangeTrigger> triggerList = OBJECT_MAPPER.readValue(triggers, OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, ImageChangeTrigger.class));
         assertEquals(1, triggerList.size());
 
         ImageChangeTrigger trigger = triggerList.get(0);
@@ -138,14 +140,14 @@ public class TriggersAnnotationEnricherTest {
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
-        enricher.adapt(builder);
+        enricher.enrich(PlatformMode.kubernetes, builder);
 
 
         DaemonSet res = (DaemonSet) builder.build().getItems().get(0);
         String triggers = res.getMetadata().getAnnotations().get("image.openshift.io/triggers");
         assertNotNull(triggers);
 
-        List<ImageChangeTrigger> triggerList = JSONUtil.mapper().readValue(triggers, JSONUtil.mapper().getTypeFactory().constructCollectionType(List.class, ImageChangeTrigger.class));
+        List<ImageChangeTrigger> triggerList = OBJECT_MAPPER.readValue(triggers, OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, ImageChangeTrigger.class));
         assertEquals(1, triggerList.size());
 
         ImageChangeTrigger trigger = triggerList.get(0);
@@ -162,8 +164,7 @@ public class TriggersAnnotationEnricherTest {
         final Properties props = new Properties();
         props.put("fabric8.enricher.fmp-triggers-annotation.containers", "c2, c3, anotherc");
         new Expectations() {{
-            context.getProject().getProperties();
-            result = props;
+            context.getConfiguration(); result = new Configuration.Builder().properties(props).build();
         }};
 
         KubernetesListBuilder builder = new KubernetesListBuilder()
@@ -183,14 +184,14 @@ public class TriggersAnnotationEnricherTest {
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
-        enricher.adapt(builder);
+        enricher.enrich(PlatformMode.kubernetes, builder);
 
 
         StatefulSet res = (StatefulSet) builder.build().getItems().get(0);
         String triggers = res.getMetadata().getAnnotations().get("image.openshift.io/triggers");
         assertNotNull(triggers);
 
-        List<ImageChangeTrigger> triggerList = JSONUtil.mapper().readValue(triggers, JSONUtil.mapper().getTypeFactory().constructCollectionType(List.class, ImageChangeTrigger.class));
+        List<ImageChangeTrigger> triggerList = OBJECT_MAPPER.readValue(triggers, OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, ImageChangeTrigger.class));
         assertEquals(2, triggerList.size());
 
         ImageChangeTrigger trigger1 = triggerList.get(0);
@@ -226,7 +227,7 @@ public class TriggersAnnotationEnricherTest {
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
-        enricher.adapt(builder);
+        enricher.enrich(PlatformMode.kubernetes, builder);
 
 
         Job res = (Job) builder.build().getItems().get(0);

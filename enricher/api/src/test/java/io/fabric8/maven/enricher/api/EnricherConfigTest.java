@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,12 +13,15 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package io.fabric8.maven.enricher.api;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
 
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.Configs;
 import org.junit.Test;
 
@@ -42,7 +45,9 @@ public class EnricherConfigTest {
         TreeMap map = new TreeMap();
         map.put("type","LoadBalancer");
         configMap.put("default.service", map);
-        EnricherConfig config = new EnricherConfig(new Properties(), "default.service", new ProcessorConfig(null, null, configMap));
+        EnricherConfig config = new EnricherConfig(
+            "default.service",
+            new Configuration.Builder().processorConfig(new ProcessorConfig(null, null, configMap)).build());
         assertEquals("LoadBalancer",config.get(Config.type));
     }
 }

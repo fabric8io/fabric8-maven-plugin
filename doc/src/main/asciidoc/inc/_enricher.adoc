@@ -10,7 +10,7 @@ There are a lot of similarities to Generators:
 * Enrichers are looked up automatically from the plugin dependencies and there is a set of default enrichers delivered with this plugin.
 * Enrichers are configured the same ways as generators
 
-The <<generator-example,Generator example>> is a good bluebprint, simply replace `<generator>` with `<enricher>`. The configuration is structural identical:
+The <<generator-example,Generator example>> is a good blueprint, simply replace `<generator>` with `<enricher>`. The configuration is structural identical:
 
 .Enricher configuration
 [cols="2,6"]
@@ -35,25 +35,12 @@ This plugin comes with a set of default enrichers. In addition custom enrichers 
 fabric8-maven-plugin comes with a set of enrichers which are enabled by default. There are two categories of default enrichers:
 
 * *Standard Enrichers* are used to add default resource object when they are missing or add common metadata extracted from the given build information
-* *Fabric8 Enrichers* are specific to the https://fabric8.io[fabric8 Microservice's platform]. It adds icon annotations which are visible in the fabric8 console or connections to the Continous Deliverys systems like Jenkins or Gogs.
-* *OpenShift.io Enrichers* are specific to the https://www.openshift.io[OpenShift.io development environment]. These enrichers can add metadata to resources to allow them to better integrate with OpenShift.io.
+* *Fabric8 Enrichers* are enrichers which are focused on a certain tech stack that they detect.
 
 . Default Enrichers Overview
 [cols="2,7"]
 |===
 | Enricher | Description
-
-| <<f8-cd>>
-| Add CD metadata as annotations.
-
-| <<f8-doc-link>>
-| Add URL to documentation configured in the POM as annotation.
-
-| <<f8-grafana-link>>
-| Add a Grafana Dashboard URL as annotation.
-
-| <<f8-icon>>
-| Add an URL to icons for well known application types.
 
 | <<f8-prometheus>>
 | Add Prometheus annotations.
@@ -69,9 +56,6 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 
 | <<fmp-git>>
 | Check local `.git` directory and add build information as annotations.
-
-| <<fmp-ianaservice>>
-| Add a default portname looking up IANA services
 
 | <<fmp-image>>
 | Add the image name into a `PodSpec` of replication controller, replication sets and deployments, if missing.
@@ -99,6 +83,15 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 
 | <<fmp-triggers-annotation>>
 | Add ImageStreamTag change triggers on Kubernetes resources such as StatefulSets, ReplicaSets and DaemonSets using the `image.openshift.io/triggers` annotation.
+
+| <<fmp-configmap-file>>
+| Add ConfigMap elements defined as XML or as annotation.
+
+| <<fmp-secret-file>>
+| Add Secret elements defined as annotation.
+
+| <<fmp-fmp-serviceaccount>>
+| Add a ServiceAccount defined as XML or mentioned in resource fragement.
 |===
 
 [[enrichers-standard]]
@@ -123,9 +116,6 @@ include::enricher/_fmp_service.adoc[]
 [[fmp-pod-annotation]]
 ==== fmp-pod-annotation
 
-[[fmp-ianaservice]]
-==== fmp-ianaservice
-
 [[fmp-project]]
 ==== fmp-project
 
@@ -142,8 +132,24 @@ The `fmp-project` enricher supports the following configuration options:
 | `false`
 |===
 
+The project labels which are already specified in the input fragments are not overridden by the enricher.
+
 [[fmp-git]]
 ==== fmp-git
+
+Enricher that adds info from .git directory as annotations.
+
+The git branch & latest commit on the branch are annotated as fabric8/git-branch & fabric8/git-commit.
+fabrci8/git-url is annotated as the url of your configured remote.
+
+[cols="2,6,3"]
+|===
+| Option | Description | Default
+
+| `gitRemote`
+| Configures the git remote name, whose url you want to annotate as 'git-url'.
+| `origin`
+|===
 
 [[fmp-dependency]]
 ==== fmp-dependency
@@ -154,7 +160,7 @@ The `fmp-project` enricher supports the following configuration options:
 Enricher which fixes the permission of persistent volume mount with the help of an init container.
 
 [[fmp-autotls]]
-==== fmp-autotls
+==== fmp-openshift-autotls
 
 Enricher which adds appropriate annotations and volumes to enable OpenShift's automatic https://docs.openshift.org/latest/dev_guide/secrets.html#service-serving-certificate-secrets[Service Serving Certificate Secrets].
 This enricher adds an init container to convert the service serving certificates from PEM (the format that OpenShift generates them in) to
@@ -178,12 +184,12 @@ This enricher is disabled by default. In order to use it, you must configure the
   <configuration>
     <enricher>
       <includes>
-        <include>fmp-autotls</include>
+        <include>fmp-openshift-autotls</include>
       </includes>
       <config>
-        <fmp-autotls>
+        <fmp-openshift-autotls>
           ...
-        </fmp-autotls>
+        </fmp-openshift-autotls>
       </config>
     </enricher>
   </configuration>
@@ -242,20 +248,8 @@ The auto-TLS enricher supports the following configuration options:
 
 Fabric8 enrichers are used for providing the connection to other components of the fabric8 Microservices platform. They are useful to add icons to to application or links to documentation sites.
 
-[[f8-cd]]
-==== f8-cd
-
-[[f8-doc-link]]
-==== f8-doc-link
-
-[[f8-grafana-link]]
-==== f8-grafana-link
-
-[[f8-icon]]
-==== f8-icon
-
-[[f8-karaf-health-check]]
-==== f8-karaf-health-check
+[[f8-healthcheck-karaf]]
+==== f8-healthcheck-karaf
 
 This enricher adds kubernetes readiness and liveness probes with Apache Karaf. This requires that
  `fabric8-karaf-checks` has been enabled in the Karaf startup features.
@@ -264,6 +258,8 @@ The enricher will use the following settings by default:
 
 - port = `8181`
 - scheme = `HTTP`
+- failureThreshold = `3`
+- successThreshold = `1`
 
 and use paths `/readiness-check` for readiness check and `/health-check` for liveness check.
 
@@ -290,8 +286,54 @@ items:
 By default the enricher inspects the images' BuildConfiguration and add the annotations if the port 9779 is listed.
 You can force the plugin to add annotations by setting enricher's config ```prometheusPort```
 
-[[f8-spring-boot-health-check]]
-==== f8-spring-boot-health-check
+[[f8-healthcheck-webapp]]
+==== f8-healthcheck-webapp
+
+This enricher adds kubernetes readiness and liveness probes with WebApp. This requires that you have `maven-war-plugin` set.
+
+The enricher will use the following settings by default:
+
+- port = `8080`
+- scheme = `HTTP`
+- path = ``
+- initialReadinessDelay = 10
+- initialLivenessDelay = 180
+
+If `path` attribute is not set (default value) then this enricher is disabled.
+
+These values can be configured by the enricher in the `fabric8-maven-plugin` configuration as shown below:
+
+[source,xml]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>fabric8-maven-plugin</artifactId>
+  <version>3.3.0</version>
+  <executions>
+    <execution>
+      <id>fmp</id>
+        <goals>
+          <goal>resource</goal>
+          <goal>helm</goal>
+          <goal>build</goal>
+        </goals>
+    </execution>
+  </executions>
+  <configuration>
+    <enricher>
+      <config>
+        <f8-healthcheck-webapp>
+          <path>/</path>
+        </f8-healthcheck-webapp>
+      </config>
+    </enricher>
+  </configuration>
+    ...
+</plugin>
+----
+
+[[f8-healthcheck-spring-boot]]
+==== f8-healthcheck-spring-boot
 
 This enricher adds kubernetes readiness and liveness probes with Spring Boot. This requires the following dependency
  has been enabled in Spring Boot
@@ -314,6 +356,8 @@ The enricher will use the following settings by default:
 * `livenessProbeInitialDelaySeconds` : `180`
 * `livenessProbePeriodSeconds` : _<kubernetes-default>_
 * `timeoutSeconds` : _<kubernetes-default>_
+* `failureThreshold`: `3`
+* `successThreshold`: `1`
 
 These values can be configured by the enricher in the `fabric8-maven-plugin` configuration as shown below:
 [source,xml]
@@ -334,10 +378,12 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
         <configuration>
           <enricher>
             <config>
-              <spring-boot-health-check>
+              <f8-healthcheck-spring-boot>
                 <timeoutSeconds>5</timeoutSeconds>
                 <readinessProbeInitialDelaySeconds>30</readinessProbeInitialDelaySeconds>
-              </spring-boot-health-check>
+                <failureThreshold>3</failureThreshold>
+                <successThreshold>1</successThreshold>
+              </f8-healthcheck-spring-boot>
             </config>
           </enricher>
         </configuration>
@@ -345,8 +391,8 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
 
 
 
-[[f8-wildfly-swarm-health-check]]
-==== f8-wildfly-swarm-health-check
+[[f8-healthcheck-wildfly-swarm]]
+==== f8-f8-healthcheck-wildfly-swarm
 
 This enricher adds kubernetes readiness and liveness probes with WildFly Swarm. This requires the following fraction
  has been enabled in WildFly Swarm
@@ -362,6 +408,8 @@ The enricher will use the following settings by default:
 - port = `8080`
 - scheme = `HTTP`
 - path = `/health`
+- failureThreshold = `3`
+- successThreshold = `1`
 
 These values can be configured by the enricher in the `fabric8-maven-plugin` configuration as shown below:
 [source,xml]
@@ -382,19 +430,21 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
         <configuration>
           <enricher>
             <config>
-              <wildfly-swarm-health-check>
+              <f8-healthcheck-wildfly-swarm>
                 <port>4444</port>
                 <scheme>HTTPS</scheme>
                 <path>health/myapp</path>
-              </wildfly-swarm-health-check>
+                <failureThreshold>3</failureThreshold>
+                <successThreshold>1</successThreshold>
+              </f8-healthcheck-wildfly-swarm>
             </config>
           </enricher>
         </configuration>
       </plugin>
 
 
-[[f8-thorntail-v2-health-check]]
-==== f8-thorntail-v2-health-check
+[[f8-healthcheck-thorntail-v2]]
+==== f8-healthcheck-thorntail-v2
 
 This enricher adds kubernetes readiness and liveness probes with Thorntail v2. This requires the following fraction
  has been enabled in Thorntail
@@ -410,6 +460,8 @@ The enricher will use the following settings by default:
 - port = `8080`
 - scheme = `HTTP`
 - path = `/health`
+- failureThreshold = `3`
+- successThreshold = `1`
 
 These values can be configured by the enricher in the `fabric8-maven-plugin` configuration as shown below:
 [source,xml]
@@ -430,19 +482,20 @@ These values can be configured by the enricher in the `fabric8-maven-plugin` con
         <configuration>
           <enricher>
             <config>
-              <thorntail-v2-health-check>
+              <f8-healthcheck-thorntail>
                 <port>4444</port>
                 <scheme>HTTPS</scheme>
                 <path>health/myapp</path>
-              </thorntail-v2-health-check>
+                <failureThreshold>3</failureThreshold>
+                <successThreshold>1</successThreshold>
+              </f8-healthcheck-thorntail>
             </config>
           </enricher>
         </configuration>
       </plugin>
 
-
-[[f8-vertx-health-check]]
-==== f8-vertx-health-check
+[[f8-healthcheck-vertx]]
+==== f8-healthcheck-vertx
 
 This enricher adds kubernetes readiness and liveness probes with Eclipse Vert.x applications. The readiness probe lets Kubernetes
 detects when the application is ready, while the liveness probe allows Kubernetes to verify that the application is
@@ -452,7 +505,7 @@ This enricher allows configuring the readiness and liveness probes. Are supporte
 
 By default, this enricher uses the same configuration for liveness and readiness probes. But specific configurations can be provided. The configurations can be overridden using project's properties.
 
-===== Using the f8-vertx-health-check enricher
+===== Using the f8-healthcheck-vertx enricher
 
 The enricher is automatically executed if your project uses the `vertx-maven-plugin` or depends on `io.vertx:vertx-core`.
 However, by default, no health check will be added to your deployment.
@@ -480,9 +533,9 @@ The minimal configuration to add health checks is the following:
         <configuration>
           <enricher>
             <config>
-              <vertx-health-check>
+              <f8-healthcheck-vertx>
                   <path>/health</path>
-              </vertx-health-check>
+              </f8-healthcheck-vertx>
             </config>
           </enricher>
         </configuration>
@@ -527,14 +580,14 @@ You can provide two different configuration for the readiness and liveness check
         <configuration>
           <enricher>
             <config>
-              <vertx-health-check>
+              <f8-healthcheck-vertx>
                   <readiness>
                     <path>/ready</path>
                   </readiness>
                   <liveness>
                     <path>/health</path>
                   </liveness>
-              </vertx-health-check>
+              </f8-healthcheck-vertx>
             </config>
           </enricher>
         </configuration>
@@ -572,7 +625,7 @@ Shared (generic) configuration can be set outside of the specific configuration.
         <configuration>
           <enricher>
             <config>
-              <vertx-health-check>
+              <f8-healthcheck-vertx>
                   <port>8081</port>
                   <readiness>
                     <path>/ready</path>
@@ -580,7 +633,7 @@ Shared (generic) configuration can be set outside of the specific configuration.
                   <liveness>
                     <path>/health</path>
                   </liveness>
-              </vertx-health-check>
+              </f8-healthcheck-vertx>
             </config>
           </enricher>
         </configuration>
@@ -605,7 +658,7 @@ The configuration is structured as follows
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
     <config>
-        <vertx-health-check>
+        <f8-healthcheck-vertx>
             <!-- Generic configuration, applied to both liveness and readiness -->
             <path>/both</path>
             <liveness>
@@ -616,7 +669,7 @@ The configuration is structured as follows
                 <!-- Specific configuration for the readiness probe -->
                 <port-name>ready</port-name>
             </readiness>
-        </vertx-health-check>
+        </f8-healthcheck-vertx>
     </config>
 ----
 
@@ -702,7 +755,7 @@ Here is an example of HTTP probe configuration:
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
     <config>
-        <vertx-health-check>
+        <f8-healthcheck-vertx>
             <initialDelay>3</initialDelay>
             <period>3</period>
             <liveness>
@@ -717,7 +770,7 @@ Here is an example of HTTP probe configuration:
                 <!-- disable the readiness probe -->
                 <port>-1</port>
             </readiness>
-        </vertx-health-check>
+        </f8-healthcheck-vertx>
     </config>
 ----
 
@@ -742,7 +795,7 @@ For example:
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
     <config>
-        <vertx-health-check>
+        <f8-healthcheck-vertx>
             <initialDelay>3</initialDelay>
             <period>3</period>
             <liveness>
@@ -754,7 +807,7 @@ For example:
                 <path>/ping</path>
                 <port>8080</port>
             </readiness>
-        </vertx-health-check>
+        </f8-healthcheck-vertx>
     </config>
 ----
 
@@ -765,7 +818,7 @@ You can also configure the probes to execute a command. If the command succeeds,
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
     <config>
-        <vertx-health-check>
+        <f8-healthcheck-vertx>
             <initialDelay>3</initialDelay>
             <period>3</period>
             <liveness>
@@ -780,7 +833,7 @@ You can also configure the probes to execute a command. If the command succeeds,
                 <path>/ping</path>
                 <port>8080</port>
             </readiness>
-        </vertx-health-check>
+        </f8-healthcheck-vertx>
     </config>
 ----
 
@@ -804,7 +857,7 @@ In the first case, you can use project's properties to disable them:
 For `http` probes, an empty or not set `path` also disable the probe.
 
 [[f8-maven-scm-enricher]]
-==== f8-maven-scm-enricher
+==== fmp-maven-scm-enricher
 
 This enricher adds additional https://maven.apache.org/pom.html#SCM[SCM] related metadata to all objects supporting annotations.
 These metadata will be added only if https://maven.apache.org/pom.html#SCM[SCM] information is present in the maven `pom.xml` of the project.
@@ -860,7 +913,7 @@ This infomation will be enriched as annotations in the generated manifest like,
 ----
 
 [[fmp-maven-issue-mgmt-enricher]]
-==== f8-maven-issue-mgmt
+==== fmp-maven-issue-mgmt
 
 This enricher adds additional https://maven.apache.org/pom.html#Issue_Management[Issue Management] related metadata to all objects supporting annotations.
 These metadata will be added only if the https://maven.apache.org/pom.html#Issue_Management[Issue Management] information in available in maven `pom.xml` of the project.
@@ -888,7 +941,7 @@ Lets say you have a maven pom.xml with the following issue management informatio
 ----
 <issueManagement>
    <system>GitHub</system>
-   <url>https://github.com/fabric8io/vertx-maven-plugin/issues/</url>
+   <url>https://github.com/reactiverse/vertx-maven-plugin/issues/</url>
 </issueManagement>
 ----
 
@@ -901,7 +954,7 @@ This information will be enriched as annotations in the generated manifest like,
   metadata:
     annotations:
       fabric8.io/issue-system: "GitHub"
-      fabric8.io/issue-tracker-url: "https://github.com/fabric8io/vertx-maven-plugin/issues/"
+      fabric8.io/issue-tracker-url: "https://github.com/reactiverse/vertx-maven-plugin/issues/"
 ...
 ----
 
@@ -950,77 +1003,6 @@ spec:
 ...
 ----
 
-[[enrichers-osio]]
-=== OpenShift.io Enrichers
-
-OpenShift.io enrichers add metadata to resources in order to better integrate them into https://openshift.io[OpenShift.io]. They are not enabled by default, but can be activated with the `osio` profile.
-
-[[osio-space-label-enricher]]
-==== osio-space-label
-
-This enricher adds a label named `space` to all resources generated by the `fabric8:resource` goal.
-The value of this label identifies the OpenShift.io space that this application belongs to. For more information
-about spaces, see the https://docs.openshift.io/user-guide.html#working_with_spaces[OpenShift.io documentation].
-
-To provide the value of the `space` label to be applied by this enricher, use one of the following:
-
-. Set the system property `fabric8.enricher.osio-space-label.space` when building:
-
-	mvn -Dfabric8.enricher.osio-space-label.space=mySpace fabric8:resource
-
-
-. Define property `fabric8.enricher.osio-space-label.space` in your project's pom.xml:
-+
-[source,xml]
-----
-...
-  <properties>
-    <fabric8.enricher.osio-space-label.space>
-      mySpace
-    </fabric8.enricher.osio-space-label.space>
-  </properties>
-...
-----
-
-. Specify in the configuration for `fabric8-maven-plugin`:
-+
-[source,xml]
-----
-...
-  <plugin>
-    <groupId>io.fabric8</groupId>
-    <artifactId>fabric8-maven-plugin</artifactId>
-    ...
-    <configuration>
-      <enricher>
-        <config>
-          <osio-space-label>
-            <space>mySpace</space>
-          </osio-space-label>
-        </config>
-      </enricher>
-    </configuration>
-  </plugin>
-...
-----
-
-Regardless of which above method you choose to configure the enricher, the resulting resources will have the `space`
-label applied, like the following:
-[source,yaml]
-----
-apiVersion: apps.openshift.io/v1
-kind: DeploymentConfig
-metadata:
-  ...
-  labels:
-    space: mySpace
-    app: myproject
-    provider: fabric8
-    version: 1.0.0-SNAPSHOT
-    group: com.example
-  ...
-----
-
 [[fmp-triggers-annotation]]
 ==== fmp-triggers-annotation
 
@@ -1041,6 +1023,81 @@ The trigger is added to all containers that apply, but can be restricted to a li
 ...
 ----
 
+[[fmp-configmap-file]]
+==== fmp-configmap-file
+
+This enricher adds ConfigMap defined as `resources` in plugin configuration and/or resolves file content from an annotation.
+
+As XML you can define:
+
+[source, xml]
+.pom.xml
+----
+<configuration>
+  <resources>
+    <configMap>
+      <entries>
+        <entry>
+          <name>A</name>
+          <value>B</value>
+        </entry>
+       </entries>
+    </configMap>
+  </resources>
+</configuration>
+----
+
+This creates a ConfigMap data with key `A` and value `B`.
+
+You can also use `file` tag to refer to the content of a file.
+
+[source, xml]
+----
+<configuration>
+  <resources>
+    <configMap>
+      <entries>
+        <entry>
+          <file>src/test/resources/test-application.properties</file>
+        </entry>
+       </entries>
+    </configMap>
+  </resources>
+</configuration>
+----
+
+This creates a ConfigMap with key `test-application.properties` and value the content of the `src/test/resources/test-application.properties` file.
+If you set `name` tag then this is used as key instead of the filename.
+
+If you are defining a custom `ConfigMap` file, you can use an annotation to define a file name as key and its content as the value:
+
+[source, yaml]
+----
+metadata:
+  name: ${project.artifactId}
+  annotations:
+    maven.fabric8.io/cm/application.properties: src/test/resources/test-application.properties
+----
+
+This creates a `ConfigMap` data with key `application.properties` (part defined after `cm`) and value the content of `src/test/resources/test-application.properties` file.
+
+[[fmp-secret-file]]
+==== fmp-secret-file
+
+This enricher adds Secret defined as file content from an annotation.
+
+If you are defining a custom `Secret` file, you can use an annotation to define a file name as key and its content as the value:
+
+[source, yaml]
+----
+metadata:
+  name: ${project.artifactId}
+  annotations:
+    maven.fabric8.io/secret/application.properties: src/test/resources/test-application.properties
+----
+
+This creates a `Secret` data with the key `application.properties` (part defined after `secret`) and value content of `src/test/resources/test-application.properties` file (base64 encoded).
+
 == Enricher API
 
-_howto write your own enricher and install them_
+_how to write your own enricher and install them_
