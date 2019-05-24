@@ -23,6 +23,7 @@ import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -91,9 +92,12 @@ public class ConfigMapEnricher extends BaseEnricher {
         final Map<String, String> configMapFromConfiguration;
         try {
             configMapFromConfiguration = createConfigMapFromConfiguration(configMap);
-            if(!configMapFromConfiguration.isEmpty() && !checkIfItemExists(builder, "xmlconfig")) {
+            String configMapName = (configMap == null || configMap.getName() == null || configMap.getName().trim().isEmpty()) ? "xmlconfig" : configMap.getName().trim();
+            log.debug("configMapName :: ".concat(configMapName));
+
+            if(!configMapFromConfiguration.isEmpty() && !checkIfItemExists(builder, configMapName)) {
                 ConfigMapBuilder element = new ConfigMapBuilder();
-                element.withNewMetadata().withName("xmlconfig").endMetadata();
+                element.withNewMetadata().withName(configMapName).endMetadata();
                 element.addToData(configMapFromConfiguration);
 
                 builder.addToConfigMapItems(element.build());
@@ -104,7 +108,7 @@ public class ConfigMapEnricher extends BaseEnricher {
     }
 
     private boolean checkIfItemExists(KubernetesListBuilder builder, String name) {
-        return builder.buildItems().stream().anyMatch(item -> item.getMetadata().getName().equals(name));
+        return builder.buildItems().stream().filter(item -> item.getKind().equals("ConfigMap")).anyMatch(item -> item.getMetadata().getName().equals(name));
     }
 
     private io.fabric8.maven.core.config.ConfigMap getConfigMapFromXmlConfiguration() {
