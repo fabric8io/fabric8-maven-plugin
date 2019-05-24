@@ -156,8 +156,10 @@ public class DefaultServiceEnricher extends BaseEnricher {
     }
 
     private String getServiceName() {
-        if (getAppName() != null) {
-            return getAppName();
+
+        String appName = getAppName();
+        if (appName != null) {
+            return appName;
         } else {
             return getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getSanitizedArtifactId()));
         }
