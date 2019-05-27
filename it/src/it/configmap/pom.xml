@@ -60,6 +60,7 @@
         <configuration>
           <resources>
             <configMap>
+              <name>fabric8-maven-sample-config-map</name>
               <entries>
                 <entry>
                   <name>A</name>

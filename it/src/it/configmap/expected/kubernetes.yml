@@ -51,7 +51,7 @@ items:
       provider: fabric8
       version: 3.5-SNAPSHOT
       group: io.fabric8
-    name: xmlconfig
+    name: fabric8-maven-sample-config-map
   data:
     A: B
 - apiVersion: apps/v1

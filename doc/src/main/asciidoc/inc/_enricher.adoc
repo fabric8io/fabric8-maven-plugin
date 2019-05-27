@@ -1036,6 +1036,7 @@ As XML you can define:
 <configuration>
   <resources>
     <configMap>
+      <name>myconfigmap</name>
       <entries>
         <entry>
           <name>A</name>
@@ -1056,6 +1057,7 @@ You can also use `file` tag to refer to the content of a file.
 <configuration>
   <resources>
     <configMap>
+      <name>configmap-test</name>
       <entries>
         <entry>
           <file>src/test/resources/test-application.properties</file>
