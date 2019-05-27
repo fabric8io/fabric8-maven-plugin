@@ -32,6 +32,7 @@ import io.fabric8.maven.core.handler.ServiceHandler;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -45,6 +46,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
@@ -141,6 +143,28 @@ public class DefaultServiceEnricher extends BaseEnricher {
         }
     }
 
+    private String getAppName() {
+        try {
+            if (getContext().getProjectClassLoaders().isClassInCompileClasspath(true)) {
+                Properties properties = SpringBootUtil.getSpringBootApplicationProperties(getContext().getProjectClassLoaders().getCompileClassLoader());
+                return properties.getProperty("spring.application.name");
+            }
+        } catch (Exception ex) {
+            log.error("Error while reading the spring-boot configuration", ex);
+        }
+        return null;
+    }
+
+    private String getServiceName() {
+
+        String appName = getAppName();
+        if (appName != null) {
+            return appName;
+        } else {
+            return getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getSanitizedArtifactId()));
+        }
+    }
+
     private Service getDefaultService() {
 
         // No image config, no service
@@ -148,7 +172,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
             return null;
         }
 
-        String serviceName = getConfig(Config.name, MavenUtil.createDefaultResourceName(getContext().getGav().getSanitizedArtifactId()));
+        String serviceName = getServiceName();
 
         // Create service only for all images which are supposed to live in a single pod
         List<ServicePort> ports = extractPorts(getImages().get());

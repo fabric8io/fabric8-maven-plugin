@@ -12,6 +12,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 
 ### 4.1-SNAPSHOT
 * Update Docker Maven Plugin to 0.29.0
+* Fix 872: Using spring.application.name as service name
 * Fix 1632: imagePullPolicy configuration fixed as per documentation
 * Fix 1591: Add support for custom resources creation via resource fragments
 * Fix 1636: Added support to choose configMap name
