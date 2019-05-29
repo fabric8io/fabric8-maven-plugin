@@ -16,7 +16,6 @@
 package io.fabric8.maven.plugin.mojo.build;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -24,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Matcher;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -34,13 +32,10 @@ import com.google.common.io.Files;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
-import io.fabric8.kubernetes.client.utils.IOHelpers;
 import io.fabric8.maven.core.config.HelmConfig;
-import io.fabric8.maven.core.util.FileUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.ResourceFileType;
 import io.fabric8.maven.core.util.ResourceUtil;
-import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
@@ -80,7 +75,7 @@ public class HelmMojo extends AbstractFabric8Mojo {
     /**
      * The generated kubernetes YAML file
      */
-    @Parameter(property = "fabric8.kubernetesTemplate", defaultValue = "${basedir}/target/classes/META-INF/fabric8/k8s-template.yml")
+    @Parameter(property = "fabric8.kubernetesTemplate", defaultValue = "${basedir}/target/classes/META-INF/fabric8/kubernetes")
     private File kubernetesTemplate;
 
     @Component
@@ -313,6 +308,10 @@ public class HelmMojo extends AbstractFabric8Mojo {
     }
 
     private Template findTemplate() throws MojoExecutionException {
+        if (kubernetesTemplate.isDirectory()) {
+            File[] templates = kubernetesTemplate.listFiles((dir, filename) -> filename.endsWith("-template.yml"));
+            kubernetesTemplate = templates != null && templates.length > 0 ? templates[0] : null;
+        }
         if (kubernetesTemplate != null && kubernetesTemplate.isFile()) {
             Object dto = null;
             try {
@@ -357,10 +356,7 @@ public class HelmMojo extends AbstractFabric8Mojo {
                     continue;
                 }
 
-                String name = file.getName();
-                if (name.endsWith(".yml")) {
-                    name = FileUtil.stripPostfix(name, ".yml") + YAML_EXTENSION;
-                }
+                String name = stripPostfix(file.getName(), ".yml") + YAML_EXTENSION;
                 File targetFile = new File(templatesDir, name);
                 try {
                     // lets escape any {{ or }} characters to avoid creating invalid templates
@@ -374,6 +370,13 @@ public class HelmMojo extends AbstractFabric8Mojo {
             }
         }
         return templatesDir;
+    }
+
+    private String stripPostfix(String text, String postfix) {
+        if (text.endsWith(postfix)) {
+            return text.substring(0, text.length() - postfix.length());
+        }
+        return text;
     }
 
     private void copyTemplateResourcesToTemplatesDir(File templatesDir, Template template) throws MojoExecutionException {

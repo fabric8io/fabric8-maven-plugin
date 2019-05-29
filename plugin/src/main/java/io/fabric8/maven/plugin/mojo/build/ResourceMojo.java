@@ -28,7 +28,6 @@ import io.fabric8.maven.core.config.Profile;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.handler.HandlerHub;
-import io.fabric8.maven.core.util.FileUtil;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.core.util.ResourceClassifier;
@@ -52,7 +51,8 @@ import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
 import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
 import io.fabric8.openshift.api.model.Template;
-import org.apache.commons.lang3.ArrayUtils;
+import java.nio.charset.Charset;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -654,9 +654,61 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
         File file =
             writeResourcesIndividualAndComposite(resources, resourceFileBase, this.resourceFileType, log, generateRoute);
+        // Resolve template placeholders
+        if (classifier == ResourceClassifier.KUBERNETES) {
+            resolveTemplateVariablesIfAny(resources);
+        }
 
         // Attach it to the Maven reactor so that it will also get deployed
         projectHelper.attachArtifact(project, this.resourceFileType.getArtifactType(), classifier.getValue(), file);
+    }
+
+    private void resolveTemplateVariablesIfAny(KubernetesList resources) throws MojoExecutionException {
+        Template template = findTemplate(resources);
+        if (template != null) {
+            List<io.fabric8.openshift.api.model.Parameter> parameters = template.getParameters();
+            if (parameters == null || parameters.isEmpty()) {
+                return;
+            }
+            File kubernetesYaml = new File(this.targetDir, "kubernetes.yml");
+            resolveTemplateVariables(parameters, kubernetesYaml);
+            File kubernetesResourceDir = new File(this.targetDir, "kubernetes");
+            File[] kubernetesResources = kubernetesResourceDir.listFiles((dir, filename) -> filename.endsWith(".yml"));
+            if (kubernetesResources != null) {
+                for (File kubernetesResource : kubernetesResources) {
+                    resolveTemplateVariables(parameters, kubernetesResource);
+                }
+            }
+        }
+    }
+
+    private void resolveTemplateVariables(List<io.fabric8.openshift.api.model.Parameter> parameters, File kubernetesYaml) throws MojoExecutionException {
+        String text;
+        try {
+            text = FileUtils.readFileToString(kubernetesYaml, Charset.defaultCharset());
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to load " + kubernetesYaml + " so we can replace template expressions " +e, e);
+        }
+        String original = text;
+        for (io.fabric8.openshift.api.model.Parameter parameter : parameters) {
+            String from = "${" + parameter.getName() + "}";
+            String to = parameter.getValue();
+            text = text.replace(from, to);
+        }
+        if (!original.equals(text)) {
+            try {
+                FileUtils.writeStringToFile(kubernetesYaml, text, Charset.defaultCharset());
+            } catch (IOException e) {
+                throw new MojoExecutionException("Failed to save " + kubernetesYaml + " after replacing template expressions " +e, e);
+            }
+        }
+    }
+
+    private Template findTemplate(KubernetesList resources) {
+        return (Template) resources.getItems().stream()
+                .filter(template -> template instanceof Template)
+                .findFirst()
+                .orElse(null);
     }
 
     protected ClusterConfiguration getClusterConfiguration() {
