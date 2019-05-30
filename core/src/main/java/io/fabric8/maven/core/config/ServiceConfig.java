@@ -15,10 +15,10 @@
  */
 package io.fabric8.maven.core.config;
 
+import org.apache.maven.plugins.annotations.Parameter;
+
 import java.util.Collections;
 import java.util.List;
-
-import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland
@@ -41,6 +41,10 @@ public class ServiceConfig {
     // If the expose label is added to the service
     @Parameter
     private boolean expose = false;
+
+    // Whether to normalize service port numbering
+    @Parameter
+    private boolean normalizePort = false;
 
     // Service type
     @Parameter
@@ -65,6 +69,8 @@ public class ServiceConfig {
     public String getType() {
         return type;
     }
+
+    public boolean isNormalizePort() { return normalizePort; }
 
     // =============================================================
 
@@ -93,6 +99,11 @@ public class ServiceConfig {
 
         public Builder type(String type) {
             config.type = type;
+            return this;
+        }
+
+        public Builder normalizePort(boolean normalize) {
+            config.normalizePort = normalize;
             return this;
         }
 
