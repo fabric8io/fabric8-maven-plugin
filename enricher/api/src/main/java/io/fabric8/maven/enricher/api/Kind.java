@@ -32,7 +32,8 @@ public enum Kind {
     JOB,
     POD_SPEC,
     BUILD_CONFIG,
-    BUILD;
+    BUILD,
+    INGRESS;
 
     /**
      * Returns true if the kind is a controller

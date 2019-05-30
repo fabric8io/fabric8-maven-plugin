@@ -81,6 +81,9 @@ io.fabric8.maven.enricher.standard.ServiceAccountEnricher
 # Add a route on demand when on OpenShift
 io.fabric8.maven.enricher.standard.openshift.RouteEnricher
 
+# Add an ingress on demand when on Kubernetes
+io.fabric8.maven.enricher.standard.IngressEnricher
+
 # Add a deploymentconfig from deployment when on OpenShift
 io.fabric8.maven.enricher.standard.openshift.DeploymentConfigEnricher
 

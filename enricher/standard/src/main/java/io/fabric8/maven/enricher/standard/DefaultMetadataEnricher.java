@@ -57,6 +57,7 @@ public class DefaultMetadataEnricher extends BaseEnricher {
                 new MetadataVisitor.ImageStreamBuilderVisitor(resourceConfig),
                 new MetadataVisitor.BuildConfigBuilderVisitor(resourceConfig),
                 new MetadataVisitor.BuildBuilderVisitor(resourceConfig),
+                new MetadataVisitor.IngressBuilderVisitor(resourceConfig)
         };
     }
 
