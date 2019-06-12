@@ -27,7 +27,6 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.Profile;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.RuntimeMode;
-import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.core.util.ResourceClassifier;
@@ -51,7 +50,6 @@ import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
 import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
 import io.fabric8.openshift.api.model.Template;
-import java.nio.charset.Charset;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -68,6 +66,7 @@ import org.apache.maven.shared.filtering.MavenFilteringException;
 import javax.validation.ConstraintViolationException;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -215,9 +214,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     // Mapping for kind filenames
     @Parameter
     private List<MappingConfig> mappings;
-
-    // Services
-    private HandlerHub handlerHub;
 
     /**
      * Namespace to use when accessing Kubernetes or OpenShift
@@ -391,7 +387,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                     ResourceClassifier resourceClassifier = platformMode == PlatformMode.kubernetes ? ResourceClassifier.KUBERNETES
                             : ResourceClassifier.OPENSHIFT;
 
-                    resources = generateResources(platformMode, resolvedImages);
+                    resources = generateResources(platformMode);
                     writeResources(resources, resourceClassifier, generateRoute);
                     File resourceDir = new File(this.targetDir, resourceClassifier.getValue());
                     validateIfRequired(resourceDir, resourceClassifier);
@@ -457,7 +453,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         }
     }
 
-    private KubernetesList generateResources(PlatformMode platformMode, List<ImageConfiguration> images)
+    private KubernetesList generateResources(PlatformMode platformMode)
         throws IOException, MojoExecutionException {
 
         if (namespace != null && !namespace.isEmpty()) {
@@ -468,6 +464,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
                 .project(project)
                 .session(session)
                 .config(extractEnricherConfig())
+                .images(resolvedImages)
                 .settings(settings)
                 .properties(project.getProperties())
                 .resources(resources)
@@ -478,7 +475,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             MavenUtil.getCompileClasspathElementsIfRequested(project, useProjectClasspath));
 
         // Generate all resources from the main resource directory, configuration and create them accordingly
-        KubernetesListBuilder builder = generateAppResources(platformMode, images, enricherManager);
+        KubernetesListBuilder builder = generateAppResources(platformMode, enricherManager);
 
         // Add resources found in subdirectories of resourceDir, with a certain profile
         // applied
@@ -513,7 +510,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         }
     }
 
-    private KubernetesListBuilder generateAppResources(PlatformMode platformMode, List<ImageConfiguration> images, EnricherManager enricherManager)
+    private KubernetesListBuilder generateAppResources(PlatformMode platformMode, EnricherManager enricherManager)
         throws IOException, MojoExecutionException {
         try {
             KubernetesListBuilder builder = processResourceFragments(platformMode);
