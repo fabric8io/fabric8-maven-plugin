@@ -64,7 +64,7 @@
     <jmockit.version>1.43</jmockit.version>
     <version.maven>3.3.1</version.maven>
     <version.jacoco>0.8.2</version.jacoco>
-    <version.kubernetes-client>4.2.1</version.kubernetes-client>
+    <version.kubernetes-client>4.3.0</version.kubernetes-client>
     <version.openshift-client>${version.kubernetes-client}</version.openshift-client>
     <version.mockwebserver>0.0.13</version.mockwebserver>
     <version.docker-maven-plugin>0.29.0</version.docker-maven-plugin>
