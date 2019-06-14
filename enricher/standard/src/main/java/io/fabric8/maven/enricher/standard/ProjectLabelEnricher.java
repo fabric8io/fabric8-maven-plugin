@@ -22,7 +22,6 @@ import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.DaemonSetBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
-import io.fabric8.kubernetes.api.model.batch.JobBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MapUtil;
@@ -130,19 +129,6 @@ public class ProjectLabelEnricher extends BaseEnricher {
                 builder.editOrNewSpec().editOrNewSelector().withMatchLabels(selectors).endSelector().endSpec();
             }
         });
-
-        builder.accept(new TypedVisitor<JobBuilder>() {
-            @Override
-            public void visit(JobBuilder builder) {
-                Map<String, String> selectors = new HashMap<>();
-                if(builder.buildSpec() != null && builder.buildSpec().getSelector() != null && builder.buildSpec().getSelector().getMatchLabels() != null) {
-                    selectors.putAll(builder.buildSpec().getSelector().getMatchLabels());
-                }
-                MapUtil.mergeIfAbsent(selectors, createLabels());
-                builder.editOrNewSpec().editOrNewSelector().withMatchLabels(selectors).endSelector().endSpec();
-            }
-        });
-
     }
 
     @Override

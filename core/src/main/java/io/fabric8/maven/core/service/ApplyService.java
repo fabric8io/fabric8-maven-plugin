@@ -33,10 +33,12 @@ import io.fabric8.kubernetes.api.model.apps.DaemonSet;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.api.model.batch.Job;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.rbac.Role;
 import io.fabric8.kubernetes.api.model.rbac.RoleBinding;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
@@ -65,6 +67,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -184,6 +187,8 @@ public class ApplyService {
             applyPersistentVolumeClaim((PersistentVolumeClaim) dto, sourceName);
         }else if (dto instanceof CustomResourceDefinition) {
             applyCustomResourceDefinition((CustomResourceDefinition) dto, sourceName);
+        } else if (dto instanceof Job) {
+            applyJob((Job) dto, sourceName);
         } else if (dto instanceof HasMetadata) {
             HasMetadata entity = (HasMetadata) dto;
             try {
@@ -1209,6 +1214,37 @@ public class ApplyService {
         } catch (Exception e) {
             onApplyError("Failed to create Pod from " + sourceName + ". " + e + ". " + pod, e);
         }
+    }
+
+    protected void applyJob(Job job, String sourceName) {
+        String namespace = getNamespace();
+        String id = getName(job);
+        Objects.requireNonNull(id, "No name for " + job + " " + sourceName);
+        if (isServicesOnlyMode()) {
+            log.debug("Only processing Services right now so ignoring Job: " + namespace + ":" + id);
+            return;
+        }
+        // Not using createOrReplace() here (https://github.com/fabric8io/kubernetes-client/issues/1586)
+        try {
+            doCreateJob(job, namespace, sourceName);
+        } catch (KubernetesClientException exception) {
+            if(exception.getStatus().getCode().equals(HttpURLConnection.HTTP_CONFLICT)) {
+                Job old = kubernetesClient.batch().jobs().inNamespace(namespace).withName(id).get();
+                Job updatedJob = patchService.compareAndPatchEntity(namespace, job, old);
+                log.info("Updated Job: " + old.getMetadata().getName());
+                return;
+            }
+            onApplyError("Failed to apply Job from " + job.getMetadata().getName(), exception);
+        }
+    }
+
+    public void doCreateJob(Job job, String namespace, String sourceName) throws KubernetesClientException {
+        if (StringUtils.isNotBlank(namespace)) {
+            kubernetesClient.batch().jobs().inNamespace(namespace).create(job);
+        } else {
+            kubernetesClient.batch().jobs().inNamespace(getNamespace()).create(job);
+        }
+        log.info("Creating a Job from " + sourceName + " namespace " + namespace + " name " + getName(job));
     }
 
     public String getNamespace() {
