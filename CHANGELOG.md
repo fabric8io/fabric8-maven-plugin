@@ -11,15 +11,18 @@ We use semantic versioning in some slight variation until our feature set has st
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
 ### 4.1-SNAPSHOT
+* Fix #1638: Remove enrichAll parameter from ImageChangeTriggerEnricher
 * Update Docker Maven Plugin to 0.29.0
-* Fix 872: Using spring.application.name as service name
-* Fix 1632: imagePullPolicy configuration fixed as per documentation
+* Fix #872: Using spring.application.name as service name
+* Fix #1632: imagePullPolicy configuration fixed as per documentation
 * Fix #1591: Add support for custom resources creation via resource fragments
 * Fix #1628: Adding back support for templates in kubernetes mode to HelmMojo; Fix for NPE in UndeployMojo
-* Fix 1591: Add support for custom resources creation via resource fragments
-* Fix 1636: Added support to choose configMap name
-* Fix 1630: Fix CronJob Version
+* Fix #1591: Add support for custom resources creation via resource fragments
+* Fix #1636: Added support to choose configMap name
+* Fix #1630: Fix CronJob Version
 * Upgrade Fabric8 kubernetes client to v4.3.0
+* Fix #1591: Add support for custom resources creation via resource fragments
+
 
 ### 4.1.0 (16-02-2019)
 * Fix 1578: Fmp is generating ImageChange triggers in the DeploymentConfig
