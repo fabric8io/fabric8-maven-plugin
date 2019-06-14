@@ -15,33 +15,23 @@
  */
 package io.fabric8.maven.plugin.mojo.build;
 
-import io.fabric8.maven.core.access.ClusterConfiguration;
-import io.fabric8.maven.core.config.RuntimeMode;
-import io.fabric8.maven.core.util.MavenUtil;
-import io.fabric8.maven.enricher.api.EnricherContext;
-import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Objects;
-import java.util.Properties;
-
 import io.fabric8.maven.core.access.ClusterAccess;
+import io.fabric8.maven.core.access.ClusterConfiguration;
 import io.fabric8.maven.core.config.BuildRecreateMode;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
+import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.generator.api.GeneratorContext;
-import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
+import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -51,6 +41,12 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.repository.RepositorySystem;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
+import java.util.Properties;
 
 /**
  * Builds the docker images configured for this project via a Docker or S2I binary build.
@@ -383,28 +379,4 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             throw new IllegalArgumentException("Cannot extract generator config: " + e,e);
         }
     }
-
-    // Get enricher context
-    public EnricherContext getEnricherContext() {
-        return new MavenEnricherContext.Builder()
-                .project(project)
-                .properties(project.getProperties())
-                .session(session)
-                .config(extractEnricherConfig())
-                .images(getResolvedImages())
-                .resources(resources)
-                .log(log)
-                .build();
-    }
-
-    // Get enricher config
-    private ProcessorConfig extractEnricherConfig() {
-        try {
-            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.ENRICHER_CONFIG, profile, ResourceDirCreator.getFinalResourceDir(resourceDir, environment), enricher);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Cannot extract enricher config: " + e,e);
-        }
-    }
-
-
 }
