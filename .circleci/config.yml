@@ -164,7 +164,9 @@ workflows:
           branches:
             only: release-docs
     - build
+    - build-java11
     - tests
+    - tests-java11
     - license
     - sonar-pr
     - sonar:
