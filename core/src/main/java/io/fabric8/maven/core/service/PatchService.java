@@ -28,6 +28,8 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apiextensions.DoneableCustomResourceDefinition;
+import io.fabric8.kubernetes.api.model.batch.DoneableJob;
+import io.fabric8.kubernetes.api.model.batch.Job;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.core.util.kubernetes.UserConfigurationCompare;
@@ -74,6 +76,7 @@ public class PatchService {
         patchers.put("Secret", secretPatcher());
         patchers.put("PersistentVolumeClaim", pvcPatcher());
         patchers.put("CustomResourceDefinition", crdPatcher());
+        patchers.put("Job", jobPatcher());
     }
 
 
@@ -225,6 +228,30 @@ public class PatchService {
             if (!UserConfigurationCompare.configEqual(newObj.getSpec(), oldObj.getSpec())) {
                 entity.withSpec(newObj.getSpec());
             }
+            return entity.done();
+        };
+    }
+
+    private static EntityPatcher<Job> jobPatcher() {
+        return (KubernetesClient client, String namespace, Job newObj, Job oldObj) -> {
+            if (UserConfigurationCompare.configEqual(newObj, oldObj)) {
+                return oldObj;
+            }
+
+            DoneableJob entity = client.batch().jobs().withName(oldObj.getMetadata().getName()).edit();
+
+            if (!UserConfigurationCompare.configEqual(newObj.getMetadata(), oldObj.getMetadata())) {
+                entity.withMetadata(newObj.getMetadata());
+            }
+
+            if (!UserConfigurationCompare.configEqual(newObj.getSpec().getSelector(), oldObj.getSpec().getSelector())) {
+                entity.editSpec().withSelector(newObj.getSpec().getSelector());
+            }
+
+            if (!UserConfigurationCompare.configEqual(newObj.getSpec().getTemplate(), oldObj.getSpec().getSelector())) {
+                entity.editSpec().withTemplate(newObj.getSpec().getTemplate());
+            }
+
             return entity.done();
         };
     }
