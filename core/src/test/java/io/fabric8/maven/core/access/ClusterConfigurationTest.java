@@ -30,6 +30,7 @@ public class ClusterConfigurationTest {
         final Properties properties = new Properties();
         properties.put("fabric8.username", "aaa");
         properties.put("fabric8.password", "bbb");
+        properties.put("fabric8.token", "ccc");
 
         // When
         final ClusterConfiguration clusterConfiguration = clusterConfigurationBuilder.from(properties).build();
@@ -37,6 +38,7 @@ public class ClusterConfigurationTest {
         // Then
         assertThat(clusterConfiguration.getConfig().getUsername()).isEqualTo("aaa");
         assertThat(clusterConfiguration.getConfig().getPassword()).isEqualTo("bbb");
+        assertThat(clusterConfiguration.getConfig().getOauthToken()).isEqualTo("ccc");
     }
 
 }
