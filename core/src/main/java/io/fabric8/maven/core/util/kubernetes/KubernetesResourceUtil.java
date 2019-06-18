@@ -116,12 +116,14 @@ public class KubernetesResourceUtil {
     public static final String API_APPS_VERSION = "apps/v1";
     public static final String JOB_VERSION = "batch/v1";
     public static final String OPENSHIFT_V1_VERSION = "apps.openshift.io/v1";
+    public static final String CRONJOB_VERSION = "batch/v1beta1";
     public static final ResourceVersioning DEFAULT_RESOURCE_VERSIONING = new ResourceVersioning()
             .withCoreVersion(API_VERSION)
             .withExtensionsVersion(API_EXTENSIONS_VERSION)
             .withAppsVersion(API_APPS_VERSION)
             .withOpenshiftV1Version(OPENSHIFT_V1_VERSION)
-            .withJobVersion(JOB_VERSION);
+            .withJobVersion(JOB_VERSION)
+            .withCronJobVersion(CRONJOB_VERSION);
 
     public static final HashSet<Class<?>> SIMPLE_FIELD_TYPES = new HashSet<>();
 
@@ -291,6 +293,8 @@ public class KubernetesResourceUtil {
             apiVersion = apiVersions.getJobVersion();
         } else if (Objects.equals(kind, "DeploymentConfig") && platformMode == PlatformMode.openshift) {
             apiVersion = apiVersions.getOpenshiftV1version();
+        } else if (Objects.equals(kind, "CronJob")){
+            apiVersion = apiVersions.getCronJobVersion();
         }
         addIfNotExistent(fragment, "apiVersion", apiVersion);
 
@@ -690,6 +694,10 @@ public class KubernetesResourceUtil {
     }
 
     public static String mergePodSpec(PodSpecBuilder builder, PodSpec defaultPodSpec, String defaultName) {
+        return mergePodSpec(builder, defaultPodSpec, defaultName, false);
+    }
+
+    public static String mergePodSpec(PodSpecBuilder builder, PodSpec defaultPodSpec, String defaultName, boolean sidecarEnabled) {
         String defaultApplicationContainerName = null;
         List<Container> containers = builder.buildContainers();
         List<Container> defaultContainers = defaultPodSpec.getContainers();
@@ -698,20 +706,30 @@ public class KubernetesResourceUtil {
             if (containers == null || containers.isEmpty()) {
                 builder.addToContainers(defaultContainers.toArray(new Container[size]));
             } else {
+                int idx = 0;
                 for (Container defaultContainer : defaultContainers) {
                     Container container = null;
-                    for (Container fragmentContainer : containers) {
-                        if (fragmentContainer.getName() == null || fragmentContainer.getName().equals(defaultContainer.getName())) {
-                            container = fragmentContainer;
-                            defaultApplicationContainerName = defaultContainer.getName();
-                            break;
+                    if(sidecarEnabled) { // Consider container as sidecar
+                        for (Container fragmentContainer : containers) {
+                            if (fragmentContainer.getName() == null || fragmentContainer.getName().equals(defaultContainer.getName())) {
+                                container = fragmentContainer;
+                                defaultApplicationContainerName = defaultContainer.getName();
+                                break;
+                            }
+                        }
+                        if (container == null) {
+                            container = new Container();
+                            containers.add(container);
+                        }
+                    } else { // Old behavior
+                        if (idx < containers.size()) {
+                            container = containers.get(idx);
+                        } else {
+                            container = new Container();
+                            containers.add(container);
                         }
                     }
 
-                    if (container == null) {
-                        container = new Container();
-                        containers.add(container);
-                    }
                     mergeSimpleFields(container, defaultContainer);
                     List<EnvVar> defaultEnv = defaultContainer.getEnv();
                     if (defaultEnv != null) {
@@ -734,6 +752,7 @@ public class KubernetesResourceUtil {
                     if (container.getSecurityContext() == null) {
                         container.setSecurityContext(defaultContainer.getSecurityContext());
                     }
+                    idx++;
                 }
                 builder.withContainers(containers);
             }
