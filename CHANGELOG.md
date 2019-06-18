@@ -22,6 +22,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix #1630: Fix CronJob Version
 * Upgrade Fabric8 kubernetes client to v4.3.0
 * Fix #1591: Add support for custom resources creation via resource fragments
+* Fix #1648: Job creation fails during fabric8:apply with error: forbidden
 
 
 ### 4.1.0 (16-02-2019)
