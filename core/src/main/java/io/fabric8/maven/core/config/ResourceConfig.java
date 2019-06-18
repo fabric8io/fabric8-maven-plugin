@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.core.config;
 
+import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import java.util.List;
@@ -91,6 +92,8 @@ public class ResourceConfig {
     @Parameter
     private List<ServiceAccountConfig> serviceAccounts;
 
+    private List<IngressRule> ingressRules;
+
     public Optional<Map<String, String>> getEnv() {
         return Optional.ofNullable(env);
     }
@@ -164,9 +167,9 @@ public class ResourceConfig {
     public List<String> getRemotes() {
         return remotes;
     }
-
     public List<String> getCrdContexts() { return customResourceDefinitions; }
 
+    public List<IngressRule> getIngressRules() { return ingressRules; }
     // =============================================================================================
 
     public static class Builder {
@@ -194,6 +197,7 @@ public class ResourceConfig {
                 this.config.metrics = config.getMetrics();
                 this.config.namespace = config.getNamespace();
                 this.config.remotes = config.remotes;
+                this.config.ingressRules = config.getIngressRules();
             }
         }
 
@@ -249,6 +253,11 @@ public class ResourceConfig {
 
         public Builder withRemotes(List<String> remotes) {
             config.remotes = remotes;
+            return this;
+        }
+
+        public Builder withIngressRules(List<IngressRule> ingressRules) {
+            config.ingressRules = ingressRules;
             return this;
         }
 
