@@ -46,6 +46,9 @@
 |ImageStreamTag
 |`istag`, `imagestreamtag`
 
+|Ingress
+|`ingress`
+
 |Job
 |`job`
 

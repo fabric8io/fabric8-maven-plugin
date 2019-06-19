@@ -15,9 +15,9 @@
  */
 package io.fabric8.maven.core.config;
 
-import java.util.Properties;
-
 import org.apache.maven.plugins.annotations.Parameter;
+
+import java.util.Properties;
 
 /**
  * Configuration for labels or annotations
@@ -57,6 +57,12 @@ public class MetaDataConfig {
     @Parameter
     private Properties deployment;
 
+    /**
+     * Labels or annotations for deployment or deployment configs
+     */
+    @Parameter
+    private Properties ingress;
+
     public Properties getPod() {
         return pod;
     }
@@ -75,5 +81,9 @@ public class MetaDataConfig {
 
     public Properties getDeployment() {
         return deployment;
+    }
+
+    public Properties getIngress() {
+        return ingress;
     }
 }
