@@ -39,7 +39,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  */
 public class MergeResourceTest {
-    private Logger log = new AnsiLogger(new SystemStreamLog(), false, false);
+    private Logger log = new AnsiLogger(new SystemStreamLog(), false, "false");
 
     @Test
     public void testMergeDeploymentMetadataAndEnvVars() throws Exception {

@@ -26,6 +26,7 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
@@ -157,7 +158,7 @@ public class JavaExecGenerator extends BaseGenerator {
                 }
             }
             if (mainClass != null) {
-                log.verbose("Detected main class %s", mainClass);
+                log.verbose(Logger.LogVerboseCategory.BUILD, "Detected main class %s", mainClass);
                 ret.put(JAVA_MAIN_CLASS_ENV_VAR, mainClass);
             }
         }

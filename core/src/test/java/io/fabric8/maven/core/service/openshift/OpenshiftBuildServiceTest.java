@@ -270,7 +270,7 @@ public class OpenshiftBuildServiceTest {
                         .name(projectName)
                         .buildConfig(new BuildImageConfiguration.Builder()
                                 .fromExt(fromExt)
-                                .nocache(Boolean.TRUE)
+                                .noCache(Boolean.TRUE)
                                 .build()
                         ).build();
 

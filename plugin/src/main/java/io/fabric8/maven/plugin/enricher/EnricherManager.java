@@ -98,9 +98,9 @@ public class EnricherManager {
 
     // =============================================================================================
     private void logEnrichers(List<Enricher> enrichers) {
-        log.verbose("Enrichers:");
+        log.verbose(Logger.LogVerboseCategory.BUILD, "Enrichers:");
         for (Enricher enricher : enrichers) {
-            log.verbose("- %s", enricher.getName());
+            log.verbose(Logger.LogVerboseCategory.BUILD, "- %s", enricher.getName());
         }
     }
 

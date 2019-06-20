@@ -26,6 +26,7 @@ import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import org.apache.commons.lang3.StringUtils;
@@ -96,7 +97,7 @@ public class PortNameEnricher extends BaseEnricher {
         }
 
         String serviceName = sn.iterator().next();
-        log.verbose("Adding IANA port name %s for port %d", serviceName, port);
+        log.verbose(Logger.LogVerboseCategory.BUILD, "Adding IANA port name %s for port %d", serviceName, port);
         return serviceName;
     }
 
@@ -105,7 +106,7 @@ public class PortNameEnricher extends BaseEnricher {
         if (StringUtils.isBlank(serviceName)) {
             return null;
         }
-        log.verbose("Adding default port name %s for port %d", serviceName, port);
+        log.verbose(Logger.LogVerboseCategory.BUILD, "Adding default port name %s for port %d", serviceName, port);
         return serviceName;
     }
 }

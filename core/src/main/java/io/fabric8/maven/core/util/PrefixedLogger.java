@@ -41,8 +41,8 @@ public class PrefixedLogger implements Logger {
     }
 
     @Override
-    public void verbose(String message, Object... objects) {
-        log.verbose(p(message), objects);
+    public void verbose(Logger.LogVerboseCategory logVerboseCategory, String message, Object... objects) {
+        log.verbose(logVerboseCategory, p(message), objects);
     }
 
     @Override

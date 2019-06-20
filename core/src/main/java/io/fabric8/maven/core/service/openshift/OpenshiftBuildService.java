@@ -610,10 +610,10 @@ public class OpenshiftBuildService implements BuildService {
             public void eventReceived(Action action, Build build) {
                 buildHolder.set(build);
                 String status = KubernetesResourceUtil.getBuildStatusPhase(build);
-                log.verbose("BuildWatch: Received event %s , build status: %s", action, build.getStatus());
+                log.verbose(Logger.LogVerboseCategory.BUILD, "BuildWatch: Received event %s , build status: %s", action, build.getStatus());
                 if (!lastStatus.equals(status)) {
                     lastStatus = status;
-                    log.verbose("Build %s status: %s", buildName, status);
+                    log.verbose(Logger.LogVerboseCategory.BUILD,"Build %s status: %s", buildName, status);
                 }
                 if (OpenshiftHelper.isFinished(status)) {
                     latch.countDown();

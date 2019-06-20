@@ -27,6 +27,7 @@ import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.enricher.api.util.InitContainerHandler;
@@ -77,7 +78,7 @@ public class VolumePermissionEnricher extends BaseEnricher {
                     return;
                 }
 
-                log.verbose("Adding init container for changing persistent volumes access mode to %s",
+                log.verbose(Logger.LogVerboseCategory.BUILD, "Adding init container for changing persistent volumes access mode to %s",
                         getConfig(Config.permission));
                 if (!initContainerHandler.hasInitContainer(builder, ENRICHER_NAME)) {
                     initContainerHandler.appendInitContainer(builder, createPvInitContainer(podSpec));

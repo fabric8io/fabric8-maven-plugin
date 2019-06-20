@@ -238,7 +238,7 @@ public class PortForwardService {
         args.add(localPort + ":" + remotePort);
 
         String commandLine = command + " " + StringUtils.join(args, " ");
-        log.verbose("Executing command " + commandLine);
+        log.verbose(Logger.LogVerboseCategory.BUILD, "Executing command " + commandLine);
         try {
             return ProcessUtil.runAsyncCommand(externalProcessLogger, command, args, true, false);
         } catch (IOException e) {
