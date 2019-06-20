@@ -17,10 +17,12 @@ package io.fabric8.maven.plugin.generator;
 
 import java.util.List;
 
+import com.google.cloud.tools.jib.configuration.BuildConfiguration;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.ClassUtil;
 import io.fabric8.maven.core.util.PluginServiceFactory;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.RegistryAuthConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.Generator;
 import io.fabric8.maven.generator.api.GeneratorContext;
@@ -66,5 +68,43 @@ public class GeneratorManager {
             }
         }
         return ret;
+    }
+
+    public static List<BuildConfiguration> generate(List<BuildConfiguration> imageConfigs,
+                                                                                             GeneratorContext genCtx,
+                                                                                             boolean prePackagePhase,
+                                                                                             RegistryAuthConfiguration authConfig,
+                                                                                             String to) throws MojoExecutionException {
+
+
+        List<BuildConfiguration> ret = imageConfigs;
+
+        PluginServiceFactory<GeneratorContext> pluginFactory =
+                null;
+        try {
+            pluginFactory = genCtx.isUseProjectClasspath() ?
+                    new PluginServiceFactory<GeneratorContext>(genCtx, ClassUtil.createProjectClassLoader(genCtx.getProject().getCompileClasspathElements(), genCtx.getLogger())) :
+                    new PluginServiceFactory<GeneratorContext>(genCtx);
+        } catch (DependencyResolutionRequiredException e) {
+        }
+
+        List<Generator> generators =
+                pluginFactory.createServiceObjects("META-INF/fabric8/generator-default",
+                        "META-INF/fabric8/fabric8-generator-default",
+                        "META-INF/fabric8/generator",
+                        "META-INF/fabric8-generator");
+        ProcessorConfig config = genCtx.getConfig();
+        Logger log = genCtx.getLogger();
+        List<Generator> usableGenerators = config.prepareProcessors(generators, "generator");
+        log.verbose("Generators:");
+        for (Generator generator : usableGenerators) {
+            log.verbose(" - %s",generator.getName());
+            if (generator.isApplicableJib(ret)) {
+                log.info("Running generator %s", generator.getName());
+                ret = generator.customize(ret, prePackagePhase, authConfig, to);
+            }
+        }
+        return ret;
+    }
     }
 }

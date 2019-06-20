@@ -20,6 +20,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.cloud.tools.jib.api.ImageReference;
+import com.google.cloud.tools.jib.api.InvalidImageReferenceException;
+import com.google.cloud.tools.jib.configuration.BuildConfiguration;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.util.Configs;
@@ -153,6 +156,23 @@ abstract public class BaseGenerator implements Generator {
         }
     }
 
+    protected void addFromJib(BuildConfiguration.Builder buildBuilder) {
+        String from = getConfigWithFallback(Config.from, "fabric8.generator.from", null);
+        String fromImage = from;
+        if (fromImage == null) {
+            fromImage = fromSelector != null ? fromSelector.getFrom() : null;
+        }
+
+        com.google.cloud.tools.jib.configuration.ImageConfiguration.Builder imgConf = null;
+        try {
+            imgConf = com.google.cloud.tools.jib.configuration.ImageConfiguration.builder(ImageReference.parse(fromImage));
+            buildBuilder.setBaseImageConfiguration(imgConf.build());
+            log.info("Using Docker image %s as base / builder", fromImage);
+        } catch (InvalidImageReferenceException e) {
+            e.printStackTrace();
+        }
+    }
+
     // Use "istag" as default for "redhat" versions of this plugin
     private String getFromModeDefault(RuntimeMode mode) {
         if (mode == RuntimeMode.openshift && fromSelector != null && fromSelector.isRedHat()) {
@@ -201,6 +221,10 @@ abstract public class BaseGenerator implements Generator {
         return !containsBuildConfiguration(configs) || Configs.asBoolean(getConfig(Config.add));
     }
 
+    protected boolean shouldAddImageConfigurationJib(List<BuildConfiguration> configs) {
+        return !containsBuildConfigurationJib(configs) || Configs.asBoolean(getConfig(Config.add));
+    }
+
     protected String getConfigWithFallback(Config name, String key, String defaultVal) {
         String value = getConfig(name);
         if (value == null) {
@@ -219,6 +243,15 @@ abstract public class BaseGenerator implements Generator {
     private boolean containsBuildConfiguration(List<ImageConfiguration> configs) {
         for (ImageConfiguration config : configs) {
             if (config.getBuildConfiguration() != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean containsBuildConfigurationJib(List<BuildConfiguration> configs) {
+        for (BuildConfiguration config : configs) {
+            if (config.getBaseImageConfiguration() != null || config.getTargetImageConfiguration() != null) {
                 return true;
             }
         }

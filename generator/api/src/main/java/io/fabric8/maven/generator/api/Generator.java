@@ -17,8 +17,10 @@ package io.fabric8.maven.generator.api;
 
 import java.util.List;
 
+import com.google.cloud.tools.jib.configuration.BuildConfiguration;
 import io.fabric8.maven.core.config.Named;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.RegistryAuthConfiguration;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
@@ -36,6 +38,9 @@ public interface Generator extends Named {
      */
     boolean isApplicable(List<ImageConfiguration> configs) throws MojoExecutionException;
 
+    boolean isApplicableJib(List<BuildConfiguration> configs) throws MojoExecutionException;
+
+
     /**
      * Provide additional image configurations.
      *
@@ -44,6 +49,9 @@ public interface Generator extends Named {
      * @return list of image configurations
      */
     List<ImageConfiguration> customize(List<ImageConfiguration> existingConfigs, boolean prePackagePhase) throws MojoExecutionException;
+
+    List<BuildConfiguration> customize(List<BuildConfiguration> existingConfigs, boolean prePackagePhase, RegistryAuthConfiguration authConfig, String to) throws MojoExecutionException;
+
 }
 
 

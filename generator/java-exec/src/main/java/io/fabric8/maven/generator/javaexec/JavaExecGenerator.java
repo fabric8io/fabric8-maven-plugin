@@ -16,16 +16,24 @@
 package io.fabric8.maven.generator.javaexec;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
 
+import com.google.cloud.tools.jib.api.Credential;
+import com.google.cloud.tools.jib.api.ImageReference;
+import com.google.cloud.tools.jib.api.InvalidImageReferenceException;
+import com.google.cloud.tools.jib.configuration.BuildConfiguration;
+import io.fabric8.maven.core.service.kubernetes.JibBuildConfigurationUtil;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.RegistryAuthConfiguration;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
@@ -37,6 +45,7 @@ import org.apache.maven.plugins.assembly.model.FileSet;
 import org.apache.maven.project.MavenProject;
 
 import static io.fabric8.maven.core.util.BuildLabelUtil.addSchemaLabels;
+import static io.fabric8.maven.core.util.FileUtil.createTempDirectory;
 import static io.fabric8.maven.core.util.FileUtil.getRelativePath;
 
 /**
@@ -112,6 +121,23 @@ public class JavaExecGenerator extends BaseGenerator {
     }
 
     @Override
+    public boolean isApplicableJib(List<BuildConfiguration> configs) throws MojoExecutionException {
+        if (shouldAddImageConfigurationJib(configs)) {
+            // If a main class is configured, we always kick in
+            if (getConfig(Config.mainClass) != null) {
+                return true;
+            }
+            // Check for the existing of plugins indicating a plain java exec app
+            for (String[] plugin : JAVA_EXEC_MAVEN_PLUGINS) {
+                if (MavenUtil.hasPlugin(getProject(), plugin[0], plugin[1])) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean prePackagePhase) throws MojoExecutionException {
         ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
         BuildImageConfiguration.Builder buildBuilder = null;
@@ -136,6 +162,41 @@ public class JavaExecGenerator extends BaseGenerator {
             .buildConfig(buildBuilder.build());
         configs.add(imageBuilder.build());
         return configs;
+    }
+
+    @Override
+    public List<BuildConfiguration> customize(List<BuildConfiguration> configs, boolean prePackagePhase, RegistryAuthConfiguration authConfig, String to) throws MojoExecutionException {
+        BuildConfiguration.Builder buildBuilder = BuildConfiguration.builder();
+        addFromJib(buildBuilder);
+
+        Map<String, String> credMap = authConfig.toMap();
+        Map<String, String> envMap = getEnv(prePackagePhase);
+        envMap.put("JAVA_APP_DIR", getConfig(Config.targetDir));
+
+        JibBuildConfigurationUtil.Builder buildConifgurationUtil = new JibBuildConfigurationUtil.Builder();
+        buildConifgurationUtil.credMap(credMap);
+        buildConifgurationUtil.envMap(envMap);
+        buildConifgurationUtil.ports(extractPorts());
+
+        buildBuilder.setExecutorService(Executors.newCachedThreadPool());
+        com.google.cloud.tools.jib.configuration.ImageConfiguration.Builder imgConf = null;
+
+        if(to.length() > 0){
+            try {
+                imgConf = com.google.cloud.tools.jib.configuration.ImageConfiguration.builder(ImageReference.parse(to));
+                buildBuilder.setTargetImageConfiguration(imgConf.build());
+            } catch (InvalidImageReferenceException e) {
+                throw new IllegalArgumentException("Cannot get Target Image: " + e, e);
+            }
+        }
+
+
+        try {
+            configs.add(buildBuilder.build());
+            return configs;
+        } catch(IOException e) {
+            throw new IllegalArgumentException("Cannot get BuildConfiguration: " + e, e);
+        }
     }
 
     /**

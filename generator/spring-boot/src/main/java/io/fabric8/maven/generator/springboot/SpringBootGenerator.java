@@ -32,12 +32,14 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import com.google.cloud.tools.jib.configuration.BuildConfiguration;
 import com.google.common.base.Strings;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.RegistryAuthConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.GeneratorMode;
 import io.fabric8.maven.generator.javaexec.FatJarDetector;
@@ -76,6 +78,12 @@ public class SpringBootGenerator extends JavaExecGenerator {
     }
 
     @Override
+    public boolean isApplicableJib(List<BuildConfiguration> configs) {
+        return shouldAddImageConfigurationJib(configs)
+                && MavenUtil.hasPluginOfAnyGroupId(getProject(), SpringBootConfigurationHelper.SPRING_BOOT_MAVEN_PLUGIN_ARTIFACT_ID);
+    }
+
+    @Override
     public List<ImageConfiguration> customize(List<ImageConfiguration> configs, boolean isPrePackagePhase) throws MojoExecutionException {
         if (getContext().getGeneratorMode() == GeneratorMode.WATCH) {
             ensureSpringDevToolSecretToken();
@@ -84,6 +92,17 @@ public class SpringBootGenerator extends JavaExecGenerator {
             }
         }
         return super.customize(configs, isPrePackagePhase);
+    }
+
+    @Override
+    public List<BuildConfiguration> customize(List<BuildConfiguration> configs, boolean isPrePackagePhase, RegistryAuthConfiguration authConfig, String to) throws MojoExecutionException {
+        if (getContext().getGeneratorMode() == GeneratorMode.WATCH) {
+            ensureSpringDevToolSecretToken();
+            if (!isPrePackagePhase ) {
+                addDevToolsFilesToFatJarJib(configs);
+            }
+        }
+        return super.customize(configs, isPrePackagePhase, authConfig, to);
     }
 
     @Override
@@ -141,6 +160,19 @@ public class SpringBootGenerator extends JavaExecGenerator {
     }
 
     private void addDevToolsFilesToFatJar(List<ImageConfiguration> configs) throws MojoExecutionException {
+        if (isFatJar()) {
+            File target = getFatJarFile();
+            try {
+                File devToolsFile = getSpringBootDevToolsJar();
+                File applicationPropertiesFile = new File(getProject().getBasedir(), "target/classes/application.properties");
+                copyFilesToFatJar(Collections.singletonList(devToolsFile), Collections.singletonList(applicationPropertiesFile), target);
+            } catch (Exception e) {
+                throw new MojoExecutionException("Failed to add devtools files to fat jar " + target + ". " + e, e);
+            }
+        }
+    }
+
+    private void addDevToolsFilesToFatJarJib(List<BuildConfiguration> configs) throws MojoExecutionException {
         if (isFatJar()) {
             File target = getFatJarFile();
             try {

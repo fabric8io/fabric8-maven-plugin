@@ -27,6 +27,7 @@ import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.RegistryAuthConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.generator.api.GeneratorContext;
@@ -70,6 +71,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter
     private ProcessorConfig enricher;
 
+    @Parameter
+    private RegistryAuthConfiguration authConfig;
     /**
      * Resource config for getting annotation and labels to be applied to enriched build objects
      */
@@ -79,6 +82,12 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     // To skip over the execution of the goal
     @Parameter(property = "fabric8.skip", defaultValue = "false")
     protected boolean skip;
+
+    @Parameter(property = "fabric8.isJib", defaultValue = "false")
+    protected boolean isJib;
+
+    @Parameter(property = "fabric8.to", defaultValue = "")
+    protected String to;
 
     /**
      * Profile to use. A profile contains the enrichers and generators to
