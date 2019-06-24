@@ -46,8 +46,8 @@ public class DeploymentConfigEnricher extends BaseEnricher {
 
     public DeploymentConfigEnricher(MavenEnricherContext context) {
         super(context, ENRICHER_NAME);
-        this.enableAutomaticTrigger = isAutomaticTriggerEnabled(context, true);
-        this.openshiftDeployTimeoutSeconds = getOpenshiftDeployTimeoutInSeconds(context, 3600L);
+        this.enableAutomaticTrigger = getValueFromConfig(OPENSHIFT_ENABLE_AUTOMATIC_TRIGGER, true);
+        this.openshiftDeployTimeoutSeconds = getOpenshiftDeployTimeoutInSeconds(3600L);
     }
 
     @Override
