@@ -25,6 +25,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Update docker maven plugin to 0.30.0
 * Fix #1648: Job creation fails during fabric8:apply with error: forbidden
 * Fix #1622: Additions to minimal profile
+* Feature #1661: Added Resource Versioning Support for RBAC
 
 ### 4.1.0 (16-02-2019)
 * Fix 1578: Fmp is generating ImageChange triggers in the DeploymentConfig
