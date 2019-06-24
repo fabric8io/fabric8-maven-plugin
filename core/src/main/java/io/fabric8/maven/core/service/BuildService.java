@@ -16,10 +16,15 @@
 package io.fabric8.maven.core.service;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
+import com.google.cloud.tools.jib.api.InvalidImageReferenceException;
+import com.google.cloud.tools.jib.api.RegistryException;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.BuildRecreateMode;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
+import io.fabric8.maven.core.service.kubernetes.JibBuildConfigurationUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.util.MojoParameters;
@@ -37,6 +42,8 @@ public interface BuildService {
      * @param imageConfig the image to build
      */
     void build(ImageConfiguration imageConfig) throws Fabric8ServiceException;
+
+    void build(JibBuildConfigurationUtil buildConfigurationUtil) throws Fabric8ServiceException, InvalidImageReferenceException, InterruptedException, RegistryException, IOException, ExecutionException;
 
     /**
      * Post processing step called after all images has been build

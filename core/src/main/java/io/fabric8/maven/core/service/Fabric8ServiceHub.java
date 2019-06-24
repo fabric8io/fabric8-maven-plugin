@@ -22,6 +22,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.service.kubernetes.DockerBuildService;
+import io.fabric8.maven.core.service.kubernetes.JibBuildService;
 import io.fabric8.maven.core.service.openshift.OpenshiftBuildService;
 import io.fabric8.maven.core.util.LazyBuilder;
 import io.fabric8.maven.docker.service.ServiceHub;
@@ -47,11 +48,15 @@ public class Fabric8ServiceHub {
 
     private ServiceHub dockerServiceHub;
 
+    private ServiceHub jibServiceHub;
+
     private BuildService.BuildServiceConfig buildServiceConfig;
 
     private RepositorySystem repositorySystem;
 
     private MavenProject mavenProject;
+
+    private boolean isJib;
 
     /**
     /*
@@ -98,7 +103,12 @@ public class Fabric8ServiceHub {
                     buildService = new OpenshiftBuildService((OpenShiftClient) client, log, dockerServiceHub, buildServiceConfig);
                 } else {
                     // Kubernetes services
-                    buildService = new DockerBuildService(dockerServiceHub, buildServiceConfig);
+
+                    if(isJib) {
+                        buildService = new JibBuildService();
+                    } else {
+                        buildService = new DockerBuildService(dockerServiceHub, buildServiceConfig);
+                    }
                 }
                 return buildService;
             }
@@ -145,8 +155,17 @@ public class Fabric8ServiceHub {
             return this;
         }
 
+        public Builder isJibMode(boolean isJib) {
+            hub.isJib = isJib;
+            return this;
+        }
         public Builder dockerServiceHub(ServiceHub dockerServiceHub) {
             hub.dockerServiceHub = dockerServiceHub;
+            return this;
+        }
+
+        public Builder jibServiceHub(ServiceHub jibServiceHub) {
+            hub.jibServiceHub = jibServiceHub;
             return this;
         }
 

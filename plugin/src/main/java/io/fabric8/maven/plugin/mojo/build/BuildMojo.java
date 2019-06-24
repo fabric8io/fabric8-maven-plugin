@@ -24,9 +24,17 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.service.Fabric8ServiceHub;
+import io.fabric8.maven.core.service.kubernetes.JibBuildConfigurationUtil;
+import io.fabric8.maven.core.service.kubernetes.JibBuildServiceUtil;
+import io.fabric8.maven.core.service.kubernetes.JibConfigUtil;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
+import io.fabric8.maven.docker.config.AssemblyConfiguration;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.RegistryAuthConfiguration;
+import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.generator.api.GeneratorContext;
@@ -39,12 +47,14 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.repository.RepositorySystem;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -64,8 +74,15 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter
     private ProcessorConfig generator;
 
+    @Parameter(property = "fabric8.isJib", defaultValue = "false")
+    protected boolean isJib;
+
+    @Parameter(property = "fabric8.to", defaultValue = "")
+    protected String to;
+
     /**
-     * Enrichers used for enricher build objects
+     * Enrichers used for enri @Parameter(property = "fabric8.to", defaultValue = "")
+    protected String to;cher build objects
      */
     @Parameter
     private ProcessorConfig enricher;
@@ -200,6 +217,11 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     private RuntimeMode runtimeMode;
 
 
+    @Parameter
+    private RegistryAuthConfiguration authConfig;
+    private ServiceHub hub;
+
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (skip || skipBuild) {
@@ -237,24 +259,67 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 log.warn("No image build configuration found or detected");
             }
 
-            // Build the fabric8 service hub
-            fabric8ServiceHub = new Fabric8ServiceHub.Builder()
-                    .log(log)
-                    .clusterAccess(clusterAccess)
-                    .platformMode(mode)
-                    .dockerServiceHub(hub)
-                    .buildServiceConfig(getBuildServiceConfig())
-                    .repositorySystem(repositorySystem)
-                    .mavenProject(project)
-                    .build();
+            if(isJib) {
+                hub = serviceHubFactory.createServiceHub(project, session, null, log, null);
 
-            super.executeInternal(hub);
+                List<ImageConfiguration> resolvedImages = getResolvedImages();
 
+                // Build the fabric8 service hub
+                fabric8ServiceHub = new Fabric8ServiceHub.Builder()
+                        .log(log)
+                        .clusterAccess(clusterAccess)
+                        .platformMode(mode)
+                        .dockerServiceHub(null)
+                        .jibServiceHub(hub)
+                        .isJibMode(isJib)
+                        .buildServiceConfig(getBuildServiceConfigJib())
+                        .repositorySystem(repositorySystem)
+                        .mavenProject(project)
+                        .build();
+                buildJibConfigUtil(resolvedImages);
+            } else {
+                // Build the fabric8 service hub
+                fabric8ServiceHub = new Fabric8ServiceHub.Builder()
+                        .log(log)
+                        .clusterAccess(clusterAccess)
+                        .platformMode(mode)
+                        .dockerServiceHub(hub)
+                        .jibServiceHub(null)
+                        .isJibMode(isJib)
+                        .buildServiceConfig(getBuildServiceConfig())
+                        .repositorySystem(repositorySystem)
+                        .mavenProject(project)
+                        .build();
+
+                super.executeInternal(hub);
+            }
             fabric8ServiceHub.getBuildService().postProcess(getBuildServiceConfig());
         } catch(IOException e) {
             throw new MojoExecutionException(e.getMessage());
         }
     }
+
+    private void buildJibConfigUtil(List<ImageConfiguration> imageConfigList) {
+        for(ImageConfiguration imageConfig : imageConfigList) {
+            BuildImageConfiguration buildImgConfig = imageConfig.getBuildConfiguration();
+            JibConfigUtil configUtil = new JibConfigUtil(imageConfig);
+            JibBuildConfigurationUtil buildConfigurationUtil = configUtil.getUtil(buildImgConfig, authConfig, to, project);
+            try {
+                processImageConfig(hub, buildConfigurationUtil);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (MojoExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void processImageConfig(ServiceHub hub, JibBuildConfigurationUtil buildConfigurationUtil) throws IOException, MojoExecutionException {
+
+        if (buildConfigurationUtil != null) {
+                buildAndTagJib(hub, buildConfigurationUtil);
+            }
+        }
 
     private boolean shouldSkipBecauseOfPomPackaging() {
         if (!Objects.equals("pom", project.getPackaging())) {
@@ -273,6 +338,19 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             }
         }
         return true;
+    }
+
+    protected void buildAndTagJib(ServiceHub hub, JibBuildConfigurationUtil buildConfigurationUtil)
+            throws MojoExecutionException {
+
+        try {
+            EnvUtil.storeTimestamp(this.getBuildTimestampFile(), this.getBuildTimestamp());
+
+            fabric8ServiceHub.getBuildService().build(buildConfigurationUtil);
+
+        } catch (Exception ex) {
+            throw new MojoExecutionException("Failed to execute the build", ex);
+        }
     }
 
     @Override
@@ -309,6 +387,28 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 })
                 .build();
     }
+
+    protected io.fabric8.maven.core.service.BuildService.BuildServiceConfig getBuildServiceConfigJib() throws MojoExecutionException {
+        return new io.fabric8.maven.core.service.BuildService.BuildServiceConfig.Builder()
+                .dockerBuildContext(null)
+                .dockerMojoParameters(createMojoParameters())
+                .buildRecreateMode(BuildRecreateMode.fromParameter("none"))
+                .openshiftBuildStrategy(buildStrategy)
+                .openshiftPullSecret(openshiftPullSecret)
+                .s2iBuildNameSuffix(s2iBuildNameSuffix)
+                .s2iImageStreamLookupPolicyLocal(s2iImageStreamLookupPolicyLocal)
+                .forcePullEnabled(false)
+                .imagePullManager(getImagePullManager(imagePullPolicy, autoPull))
+                .buildDirectory(project.getBuild().getDirectory())
+                .attacher((classifier, destFile) -> {
+                    if (destFile.exists()) {
+                        projectHelper.attachArtifact(project, "yml", classifier, destFile);
+                    }
+                })
+                .build();
+    }
+
+
 
 
     /**
