@@ -18,6 +18,7 @@ package io.fabric8.maven.core.service;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.service.kubernetes.DockerBuildService;
+import io.fabric8.maven.core.service.kubernetes.JibBuildService;
 import io.fabric8.maven.core.service.openshift.OpenshiftBuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.Logger;
@@ -54,6 +55,9 @@ public class Fabric8ServiceHubTest {
 
     @Mocked
     private RepositorySystem repositorySystem;
+
+    @Mocked
+    private boolean isJib;
 
     @Before
     public void init() throws Exception {
@@ -100,7 +104,7 @@ public class Fabric8ServiceHubTest {
     }
 
     @Test
-    public void testObtainBuildService() {
+    public void testObtainDockerBuildService() {
         Fabric8ServiceHub hub = new Fabric8ServiceHub.Builder()
                 .clusterAccess(clusterAccess)
                 .log(logger)
@@ -115,6 +119,23 @@ public class Fabric8ServiceHubTest {
         assertTrue(buildService instanceof DockerBuildService);
     }
 
+    @Test
+    public void testObtainJibBuildService() {
+        isJib = true;
+        Fabric8ServiceHub hub = new Fabric8ServiceHub.Builder()
+                .clusterAccess(clusterAccess)
+                .log(logger)
+                .platformMode(RuntimeMode.kubernetes)
+                .dockerServiceHub(dockerServiceHub)
+                .buildServiceConfig(buildServiceConfig)
+                .isJibMode(isJib)
+                .build();
+
+        BuildService buildService = hub.getBuildService();
+
+        assertNotNull(buildService);
+        assertTrue(buildService instanceof JibBuildService);
+    }
     @Test
     public void testObtainOpenshiftBuildService() {
         Fabric8ServiceHub hub = new Fabric8ServiceHub.Builder()

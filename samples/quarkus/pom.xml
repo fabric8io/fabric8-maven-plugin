@@ -95,6 +95,19 @@
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-plugin</artifactId>
         <version>4.3-SNAPSHOT</version>
+        <configuration>
+          <generator>
+            <includes>
+              <include>quarkus</include>
+            </includes>
+            <config>
+              <quarkus>
+                <!-- replace user.name with your registry username -->
+                <!--<name>${user.name}/${project.artifactId}:${project.version}</name>-->
+              </quarkus>
+            </config>
+          </generator>
+        </configuration>
       </plugin>
 
     </plugins>

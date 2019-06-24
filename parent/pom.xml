@@ -289,6 +289,14 @@
         <version>0.0.1</version>
       </dependency>
 
+      <!-- == Java Image Builder Core Module ===================================== -->
+
+      <dependency>
+        <groupId>com.google.cloud.tools</groupId>
+        <artifactId>jib-core</artifactId>
+        <version>0.10.0</version>
+      </dependency>
+
       <!-- == libs ====================================== -->
 
       <!-- ## fabric8-project, git access #################### -->
@@ -381,7 +389,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>21.0</version>
+        <version>27.0.1-jre</version>
       </dependency>
 
       <dependency>

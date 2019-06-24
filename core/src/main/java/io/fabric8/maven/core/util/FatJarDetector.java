@@ -13,10 +13,9 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.generator.javaexec;
+package io.fabric8.maven.core.util;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -35,11 +34,11 @@ public class FatJarDetector {
     private File directory;
     private Result result;
 
-    FatJarDetector(String dir) {
+    public FatJarDetector(String dir) {
         this.directory = new File(dir);
     }
 
-    Result scan() throws MojoExecutionException {
+    public Result scan() throws MojoExecutionException {
         // Scanning is lazy ...
         if (result == null) {
             if (!directory.exists()) {
@@ -58,13 +57,11 @@ public class FatJarDetector {
                     Attributes mainAttributes = mf.getMainAttributes();
                     if (mainAttributes != null) {
                         String mainClass = mainAttributes.getValue("Main-Class");
-                        if (mainClass != null) {
-                            long size = archiveFile.length();
-                            // Take the largest jar / war file found
-                            if (size > maxSize) {
-                                maxSize = size;
-                                result = new Result(archiveFile, mainClass, mainAttributes);
-                            }
+                        long size = archiveFile.length();
+                        // Take the largest jar / war file found
+                        if (size > maxSize) {
+                            maxSize = size;
+                            result = new Result(archiveFile, mainClass, mainAttributes);
                         }
                     }
                 } catch (IOException e) {

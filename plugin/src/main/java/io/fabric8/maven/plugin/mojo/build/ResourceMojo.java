@@ -450,7 +450,7 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             if (!properties.contains(DOCKER_IMAGE_USER)) {
                 String namespace = this.namespace != null && !this.namespace.isEmpty() ?
                         this.namespace: clusterAccess.getNamespace();
-                log.info("Using docker image name of namespace: " + namespace);
+                log.info("Using Container image name of namespace: " + namespace);
                 properties.setProperty(DOCKER_IMAGE_USER, namespace);
             }
             if (!properties.contains(RuntimeMode.FABRIC8_EFFECTIVE_PLATFORM_MODE)) {
