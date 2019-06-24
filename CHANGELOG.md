@@ -13,6 +13,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 ### 4.1-SNAPSHOT
 * Fix #1638: Remove enrichAll parameter from ImageChangeTriggerEnricher
 * Update Docker Maven Plugin to 0.29.0
+* Chore: Refactor BaseEnricher to get rid of duplicated properties
 * Fix #872: Using spring.application.name as service name
 * Fix #1632: imagePullPolicy configuration fixed as per documentation
 * Fix #1591: Add support for custom resources creation via resource fragments

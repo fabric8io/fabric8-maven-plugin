@@ -49,9 +49,9 @@ public class ImageChangeTriggerEnricher extends BaseEnricher {
 
     public ImageChangeTriggerEnricher(MavenEnricherContext context) {
         super(context, ENRICHER_NAME);
-        this.enableAutomaticTrigger = isAutomaticTriggerEnabled(context, true);
-        this.enableImageChangeTrigger = getImageChangeTriggerFlag(true);
-        this.trimImageInContainerSpecFlag = getTrimImageInContainerSpecFlag(false);
+        this.enableAutomaticTrigger = getValueFromConfig(OPENSHIFT_ENABLE_AUTOMATIC_TRIGGER, true);
+        this.enableImageChangeTrigger = getValueFromConfig(IMAGE_CHANGE_TRIGGERS, true);
+        this.trimImageInContainerSpecFlag = getValueFromConfig(OPENSHIFT_TRIM_IMAGE_IN_CONTAINER_SPEC, false);
     }
 
     @Override
@@ -110,7 +110,7 @@ public class ImageChangeTriggerEnricher extends BaseEnricher {
 
     private Boolean isImageChangeTriggerNeeded(String containerName) {
         String containersFromConfig = Configs.asString(getConfig(Config.containers));
-        Boolean enrichAll = enrichAllWithImageChangeTrigger((MavenEnricherContext)enricherContext, false);
+        Boolean enrichAll = getValueFromConfig(ENRICH_ALL_WITH_IMAGE_TRIGGERS, false);
 
         if(enrichAll) {
             return true;

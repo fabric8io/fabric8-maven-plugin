@@ -43,11 +43,17 @@ import java.util.Properties;
  */
 public class BaseEnricher implements Enricher {
 
+    public static final String OPENSHIFT_DEPLOY_TIMEOUT_SECONDS = "fabric8.openshift.deployTimeoutSeconds";
     private final EnricherConfig config;
     private final String name;
     protected EnricherContext enricherContext;
     public static final String FABRIC8_GENERATED_CONTAINERS = "FABRIC8_GENERATED_CONTAINERS";
     public static final String NEED_IMAGECHANGE_TRIGGERS = "IMAGECHANGE_TRIGGER";
+    public static final String IMAGE_CHANGE_TRIGGERS = "fabric8.openshift.imageChangeTriggers";
+    public static final String OPENSHIFT_TRIM_IMAGE_IN_CONTAINER_SPEC = "fabric8.openshift.trimImageInContainerSpec";
+    public static final String OPENSHIFT_ENABLE_AUTOMATIC_TRIGGER = "fabric8.openshift.enableAutomaticTrigger";
+    public static final String SIDECAR = "fabric8.sidecar";
+    public static final String ENRICH_ALL_WITH_IMAGE_TRIGGERS = "fabric8.openshift.enrichAllWithImageChangeTrigger";
 
     protected Logger log;
 
@@ -127,52 +133,8 @@ public class BaseEnricher implements Enricher {
         return containers;
     }
 
-    protected Boolean isAutomaticTriggerEnabled(MavenEnricherContext enricherContext, Boolean defaultValue) {
-        if(enricherContext.getProperty("fabric8.openshift.enableAutomaticTrigger") != null) {
-            return Boolean.parseBoolean(enricherContext.getProperty("fabric8.openshift.enableAutomaticTrigger").toString());
-        } else {
-            return defaultValue;
-        }
-    }
-
-    protected Boolean enrichAllWithImageChangeTrigger(MavenEnricherContext enricherContext, Boolean defaultValue) {
-        if(enricherContext.getProperty("fabric8.openshift.enrichAllWithImageChangeTrigger") != null) {
-            return Boolean.parseBoolean(enricherContext.getProperty("fabric8.openshift.enrichAllWithImageChangeTrigger").toString());
-        } else {
-            return defaultValue;
-        }
-    }
-
-    protected Long getOpenshiftDeployTimeoutInSeconds(MavenEnricherContext enricherContext, Long defaultValue) {
-        if (enricherContext.getProperty("fabric8.openshift.deployTimeoutSeconds") != null) {
-            return Long.parseLong(enricherContext.getProperty("fabric8.openshift.deployTimeoutSeconds").toString());
-        } else {
-            return defaultValue;
-        }
-    }
-
-    protected Boolean getImageChangeTriggerFlag(Boolean defaultValue) {
-        if (getContext().getProperty("fabric8.openshift.imageChangeTriggers") != null) {
-            return Boolean.parseBoolean(getContext().getProperty("fabric8.openshift.imageChangeTriggers").toString());
-        } else {
-            return defaultValue;
-        }
-    }
-
-    protected Boolean getTrimImageInContainerSpecFlag(Boolean defaultValue) {
-        if (getContext().getProperty("fabric8.openshift.trimImageInContainerSpec") != null) {
-            return Boolean.parseBoolean(getContext().getProperty("fabric8.openshift.trimImageInContainerSpec").toString());
-        } else {
-            return defaultValue;
-        }
-    }
-
-    protected Boolean getSidecarFlag(Boolean defaultValue) {
-        if (getContext().getProperty("fabric8.sidecar") != null) {
-            return Boolean.parseBoolean(getContext().getProperty("fabric8.sidecar").toString());
-        } else {
-            return defaultValue;
-        }
+    protected Long getOpenshiftDeployTimeoutInSeconds(Long defaultValue) {
+        return Long.parseLong(getValueFromConfig(OPENSHIFT_DEPLOY_TIMEOUT_SECONDS, defaultValue.toString()));
     }
 
     /**
@@ -227,5 +189,17 @@ public class BaseEnricher implements Enricher {
         }
         processingInstructionsMap.put(key, String.join(",", containerNames));
         enricherContext.setProcessingInstructions(processingInstructionsMap);
+    }
+
+    protected Boolean getValueFromConfig(String propertyName, Boolean defaultValue) {
+        return Boolean.parseBoolean(getValueFromConfig(propertyName, defaultValue.toString()));
+    }
+
+    protected String getValueFromConfig(String propertyName, String defaultValue) {
+        if (getContext().getProperty(propertyName) != null) {
+            return getContext().getProperty(propertyName).toString();
+        } else {
+            return defaultValue;
+        }
     }
 }
