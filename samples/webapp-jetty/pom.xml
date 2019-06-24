@@ -54,6 +54,9 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Use fabric8.build.jib property to perform Jib build, run mvn fabric8:build
+    <fabric8.build.jib>true</fabric8.build.jib>
+    -->
   </properties>
   <profiles>
     <profile>

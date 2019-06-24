@@ -19,13 +19,13 @@ import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.util.kubernetes.OpenshiftHelper;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftAPIGroups;
 import io.fabric8.openshift.client.OpenShiftClient;
+
 import java.net.UnknownHostException;
 
 /**

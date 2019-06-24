@@ -16,7 +16,6 @@
 package io.fabric8.maven.core.service;
 
 import java.io.File;
-
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.BuildRecreateMode;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;

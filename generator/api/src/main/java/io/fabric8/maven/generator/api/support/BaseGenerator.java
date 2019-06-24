@@ -15,13 +15,19 @@
  */
 package io.fabric8.maven.generator.api.support;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.RuntimeMode;
+import io.fabric8.maven.core.model.Dependency;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.PrefixedLogger;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -31,6 +37,7 @@ import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.Generator;
 import io.fabric8.maven.generator.api.GeneratorConfig;
 import io.fabric8.maven.generator.api.GeneratorContext;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
 
@@ -119,7 +126,7 @@ abstract public class BaseGenerator implements Generator {
                 fromImage = fromSelector != null ? fromSelector.getFrom() : null;
             }
             builder.from(fromImage);
-            log.info("Using Docker image %s as base / builder", fromImage);
+            log.info("Using Container image %s as base / builder", fromImage);
         } else if ("istag".equalsIgnoreCase(fromMode)) {
             Map<String, String> fromExt = new HashMap<>();
             if (from != null) {
@@ -224,6 +231,8 @@ abstract public class BaseGenerator implements Generator {
         }
         return false;
     }
+
+
 
 
 }

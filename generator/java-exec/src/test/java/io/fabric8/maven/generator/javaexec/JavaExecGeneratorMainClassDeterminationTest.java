@@ -25,6 +25,7 @@ import java.util.jar.Attributes;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.util.ClassUtil;
+import io.fabric8.maven.core.util.FatJarDetector;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;

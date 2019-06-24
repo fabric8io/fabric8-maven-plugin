@@ -41,7 +41,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.GeneratorMode;
-import io.fabric8.maven.generator.javaexec.FatJarDetector;
+import io.fabric8.maven.core.util.FatJarDetector;
 import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.model.Plugin;
