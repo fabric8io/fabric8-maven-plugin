@@ -38,6 +38,7 @@ import io.fabric8.maven.core.util.ResourceFileType;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
 import io.fabric8.openshift.api.model.Template;
 import org.apache.commons.io.FileUtils;
@@ -100,8 +101,8 @@ public class HelmMojo extends AbstractFabric8Mojo {
             return;
         }
         log.info("Creating Helm Chart \"%s\" for %s", chartName, type.getDescription());
-        log.verbose("SourceDir: %s", sourceDir);
-        log.verbose("OutputDir: %s", outputDir);
+        log.verbose(Logger.LogVerboseCategory.BUILD, "SourceDir: %s", sourceDir);
+        log.verbose(Logger.LogVerboseCategory.BUILD, "OutputDir: %s", outputDir);
 
         // Copy over all resource descriptors into the helm templates dir
         File templatesDir = copyResourceFilesToTemplatesDir(outputDir, sourceDir);

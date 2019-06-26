@@ -45,7 +45,7 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
 
     // For verbose output
     @Parameter(property = "fabric8.verbose", defaultValue = "false")
-    protected boolean verbose;
+    protected String verbose;
 
     // Settings holding authentication info
     @Parameter(defaultValue = "${settings}", readonly = true)

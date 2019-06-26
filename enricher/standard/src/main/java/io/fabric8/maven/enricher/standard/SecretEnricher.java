@@ -30,6 +30,7 @@ import io.fabric8.maven.core.config.SecretConfig;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Base64Util;
 import io.fabric8.maven.core.util.SecretConstants;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import org.apache.commons.lang3.StringUtils;
@@ -73,7 +74,7 @@ public abstract class SecretEnricher extends BaseEnricher {
     }
 
     private void addSecretsFromXmlConfiguration(KubernetesListBuilder builder) {
-        log.verbose("Adding secrets resources from plugin configuration");
+        log.verbose(Logger.LogVerboseCategory.BUILD, "Adding secrets resources from plugin configuration");
         List<SecretConfig> secrets = getSecretsFromXmlConfig();
         Map<String, Integer> secretToIndexMap = new HashMap<>();
         if (secrets == null || secrets.isEmpty()) {

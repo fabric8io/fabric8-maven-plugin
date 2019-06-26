@@ -30,6 +30,7 @@ import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 
@@ -69,7 +70,7 @@ public class ExposeEnricher extends BaseEnricher {
             Map<String, String> labels = KubernetesHelper.getOrCreateLabels(service);
             if (!labels.containsKey(EXPOSE_LABEL)) {
                 labels.put(EXPOSE_LABEL, "true");
-                log.verbose("Adding Service label '%s:true' on service %s" +
+                log.verbose(Logger.LogVerboseCategory.BUILD, "Adding Service label '%s:true' on service %s" +
                             " so that it is exposed by the exposecontroller microservice." +
                             " To disable use the maven argument: '-Dfabric8.profile=internal-microservice'",
                             EXPOSE_LABEL, KubernetesHelper.getName(service));

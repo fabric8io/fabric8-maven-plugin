@@ -146,7 +146,7 @@ public class WatchMojo extends io.fabric8.maven.docker.WatchMojo {
 
     // For verbose output
     @Parameter(property = "fabric8.verbose", defaultValue = "false")
-    protected boolean verbose;
+    protected String verbose;
 
     @Component
     protected RepositorySystem repositorySystem;
