@@ -1,18 +1,26 @@
 package io.fabric8.maven.core.service.kubernetes;
 
+import com.google.cloud.tools.jib.api.Credential;
+import com.google.cloud.tools.jib.api.CredentialRetriever;
+import com.google.cloud.tools.jib.registry.credentials.DockerConfigCredentialRetriever;
 import io.fabric8.maven.core.model.Dependency;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.RegistryAuthConfiguration;
+import io.fabric8.maven.docker.util.ImageName;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class JibConfigUtil {
@@ -26,9 +34,9 @@ public class JibConfigUtil {
         return new JibBuildConfigurationUtil.Builder().
                 from(extractBaseImage(buildImgConfig)).
                 envMap(buildImgConfig.getEnv()).
-                target(to).
+                target(extractTargetImage(to)).
                 ports(buildImgConfig.getPorts()).
-                credMap(authConfig.toMap()).
+                credMap(extractCredential(authConfig, to)).
                 depList(getDependencies(true, project)).
                 build();
     }
@@ -71,5 +79,45 @@ public class JibConfigUtil {
         return dependenciesPath;
     }
 
+    public String extractTargetImage(String to) {
+        String registry = "docker.io";
+        if(to != null) {
+            return to;
+        } else {
+            String imageName = imageconfig.getName();
+            ImageName processedName = new ImageName(imageName);
+            if(processedName.hasRegistry()) {
+                registry = processedName.getRegistry();
+            }
 
+            return registry + "/" + processedName.getRepository() + ":" + processedName.getTag();
+        }
+    }
+
+    public Map<String, String> extractCredential(RegistryAuthConfiguration authConfig, String to)  {
+        if(authConfig != null) {
+            return authConfig.toMap();
+        } else {
+            ImageName targetImage = new ImageName(imageconfig.getName());
+            String registry = targetImage.hasRegistry() ? targetImage.getRegistry() : "docker.io";
+            Map<String, String> credMap = getDockerConfigCredential(registry);
+            return credMap;
+        }
+    }
+
+    public Map<String, String> getDockerConfigCredential(String registry)  {
+        DockerConfigCredentialRetriever credRetiever = new DockerConfigCredentialRetriever(registry);
+        Map<String, String> m = new HashMap<>();
+        try{
+            Optional<Credential> optCred= credRetiever.retrieve(null);
+            Credential credential = optCred.get();
+            if(credential != null) {
+                m.put("username", credential.getUsername());
+                m.put("password", credential.getPassword());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return m;
+    }
 }

@@ -3,16 +3,12 @@ package io.fabric8.maven.core.service.kubernetes;
 import com.google.cloud.tools.jib.api.AbsoluteUnixPath;
 import com.google.cloud.tools.jib.api.CacheDirectoryCreationException;
 import com.google.cloud.tools.jib.api.Containerizer;
-import com.google.cloud.tools.jib.api.Credential;
-import com.google.cloud.tools.jib.api.ImageReference;
 import com.google.cloud.tools.jib.api.InvalidImageReferenceException;
 import com.google.cloud.tools.jib.api.Jib;
 import com.google.cloud.tools.jib.api.JibContainerBuilder;
 import com.google.cloud.tools.jib.api.Port;
 import com.google.cloud.tools.jib.api.RegistryException;
 import com.google.cloud.tools.jib.api.RegistryImage;
-import com.google.cloud.tools.jib.configuration.BuildConfiguration;
-import com.google.cloud.tools.jib.configuration.ImageConfiguration;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
 
 
@@ -21,7 +17,6 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -35,18 +30,18 @@ public class JibBuildServiceUtil {
 
         String fromImage = buildConfigurationUtil.getFrom();
         String targetImage = buildConfigurationUtil.getTo();
-        Map<String, String> credMap = buildConfigurationUtil.getCredMap();;
-        Map<String, String> envMap  = buildConfigurationUtil.getEnvMap();;
+        Map<String, String> credMap = buildConfigurationUtil.getCredMap();
+        Map<String, String> envMap  = buildConfigurationUtil.getEnvMap();
         List<Path> dependencyList = buildConfigurationUtil.getDependencyList();
         List<String> portList = buildConfigurationUtil.getPorts();
-        Set<Port> portSet = getPortSet(portList);;
+        Set<Port> portSet = getPortSet(portList);
 
         buildImage(fromImage, targetImage, envMap, credMap, portSet, dependencyList);
     }
 
     private Set<Port> getPortSet(List<String> ports) {
 
-        Set<Port> portSet = new HashSet<Port>();;
+        Set<Port> portSet = new HashSet<Port>();
         for(String port : ports) {
             portSet.add(Port.tcp(Integer.parseInt(port)));
         }
@@ -58,31 +53,30 @@ public class JibBuildServiceUtil {
 
         JibContainerBuilder contBuild = Jib.from(baseImage);
 
-        if(dependencyList.size() > 0) {
-            contBuild = contBuild.addLayer(dependencyList, AbsoluteUnixPath.get("/path/in/container"));
-        }
-
-        if(envMap.size() > 0) {
+        if(!envMap.isEmpty()) {
             contBuild = contBuild.setEnvironment(envMap);
         }
 
-        if(portSet.size() > 0) {
+        if(!portSet.isEmpty()) {
             contBuild = contBuild.setExposedPorts(portSet);
         }
 
-        if(credMap.size() > 0) {
+        if(!dependencyList.isEmpty()) {
+            contBuild = contBuild.addLayer(dependencyList, AbsoluteUnixPath.get("/path/in/container"));
+        }
+
+        if(!credMap.isEmpty()) {
             String username = credMap.get("username");
             String password = credMap.get("password");
-        }
 
-        try {
-            contBuild.containerize(
-                    Containerizer.to(RegistryImage.named(targetImage)
-                            .addCredential("myusername", "mypassword")));
-        } catch (CacheDirectoryCreationException e) {
-            e.printStackTrace();
+            try {
+                contBuild.containerize(
+                        Containerizer.to(RegistryImage.named(targetImage)
+                                .addCredential(username, password)));
+            } catch (CacheDirectoryCreationException e) {
+                e.printStackTrace();
+            }
         }
-
     }
 
 }

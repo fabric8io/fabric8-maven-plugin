@@ -62,7 +62,7 @@ public class DockerBuildService implements BuildService {
     }
 
     @Override
-    public void build(JibBuildConfigurationUtil buildConfigurationUtil) throws Fabric8ServiceException, InvalidImageReferenceException, InterruptedException, RegistryException, IOException,  ExecutionException {
+    public void build(JibBuildConfigurationUtil buildConfigurationUtil) throws UnsupportedOperationException {
 
     }
 
