@@ -30,7 +30,7 @@ public class JibConfigUtil {
         this.imageconfig = imgConf;
     }
 
-    public JibBuildConfigurationUtil getUtil(BuildImageConfiguration buildImgConfig, RegistryAuthConfiguration authConfig, String to, MavenProject project) {
+    public JibBuildConfigurationUtil getUtil(BuildImageConfiguration buildImgConfig, RegistryAuthConfiguration authConfig, String to, MavenProject project) throws IOException {
         return new JibBuildConfigurationUtil.Builder().
                 from(extractBaseImage(buildImgConfig)).
                 envMap(buildImgConfig.getEnv()).
@@ -94,7 +94,7 @@ public class JibConfigUtil {
         }
     }
 
-    public Map<String, String> extractCredential(RegistryAuthConfiguration authConfig, String to)  {
+    public Map<String, String> extractCredential(RegistryAuthConfiguration authConfig, String to) throws IOException {
         if(authConfig != null) {
             return authConfig.toMap();
         } else {
@@ -105,7 +105,7 @@ public class JibConfigUtil {
         }
     }
 
-    public Map<String, String> getDockerConfigCredential(String registry)  {
+    public Map<String, String> getDockerConfigCredential(String registry) throws IOException {
         DockerConfigCredentialRetriever credRetiever = new DockerConfigCredentialRetriever(registry);
         Map<String, String> m = new HashMap<>();
         try{
@@ -115,8 +115,8 @@ public class JibConfigUtil {
                 m.put("username", credential.getUsername());
                 m.put("password", credential.getPassword());
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new IOException("Not able to retrieve credentials", e);
         }
         return m;
     }

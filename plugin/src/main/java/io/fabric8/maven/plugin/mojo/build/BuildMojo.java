@@ -25,16 +25,12 @@ import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.core.service.kubernetes.JibBuildConfigurationUtil;
-import io.fabric8.maven.core.service.kubernetes.JibBuildServiceUtil;
 import io.fabric8.maven.core.service.kubernetes.JibConfigUtil;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
-import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.RegistryAuthConfiguration;
-import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.generator.api.GeneratorContext;
@@ -47,14 +43,12 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.repository.RepositorySystem;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -299,17 +293,15 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         }
     }
 
-    private void buildJibConfigUtil(List<ImageConfiguration> imageConfigList) {
+    private void buildJibConfigUtil(List<ImageConfiguration> imageConfigList) throws IOException{
         for(ImageConfiguration imageConfig : imageConfigList) {
             BuildImageConfiguration buildImgConfig = imageConfig.getBuildConfiguration();
             JibConfigUtil configUtil = new JibConfigUtil(imageConfig);
             JibBuildConfigurationUtil buildConfigurationUtil = configUtil.getUtil(buildImgConfig, authConfig, to, project);
             try {
                 processImageConfig(hub, buildConfigurationUtil);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (MojoExecutionException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                throw new IOException(e.getMessage());
             }
         }
     }

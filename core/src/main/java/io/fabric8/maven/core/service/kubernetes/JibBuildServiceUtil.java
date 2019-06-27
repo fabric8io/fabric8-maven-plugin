@@ -26,7 +26,7 @@ public class JibBuildServiceUtil {
 
     }
 
-    public void buildImage(JibBuildConfigurationUtil buildConfigurationUtil) throws Fabric8ServiceException, InvalidImageReferenceException , InterruptedException, RegistryException, IOException,  ExecutionException {
+    public void buildImage(JibBuildConfigurationUtil buildConfigurationUtil) throws Fabric8ServiceException, InvalidImageReferenceException, IOException, CacheDirectoryCreationException {
 
         String fromImage = buildConfigurationUtil.getFrom();
         String targetImage = buildConfigurationUtil.getTo();
@@ -49,7 +49,7 @@ public class JibBuildServiceUtil {
         return portSet;
     }
 
-    protected void buildImage(String baseImage, String targetImage, Map<String, String> envMap, Map<String, String> credMap, Set<Port> portSet, List<Path> dependencyList) throws InvalidImageReferenceException , InterruptedException, RegistryException, IOException,  ExecutionException {
+    protected void buildImage(String baseImage, String targetImage, Map<String, String> envMap, Map<String, String> credMap, Set<Port> portSet, List<Path> dependencyList) throws InvalidImageReferenceException , IOException {
 
         JibContainerBuilder contBuild = Jib.from(baseImage);
 
@@ -73,8 +73,8 @@ public class JibBuildServiceUtil {
                 contBuild.containerize(
                         Containerizer.to(RegistryImage.named(targetImage)
                                 .addCredential(username, password)));
-            } catch (CacheDirectoryCreationException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
             }
         }
     }

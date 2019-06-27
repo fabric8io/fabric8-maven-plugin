@@ -91,6 +91,7 @@
               </f8-service>
             </config>
           </enricher>
+          <isJib>true</isJib>
         </configuration>
 
         <executions>
