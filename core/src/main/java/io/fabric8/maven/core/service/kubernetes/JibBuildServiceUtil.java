@@ -86,7 +86,7 @@ public class JibBuildServiceUtil {
         return null;
     }
 
-    public static JibBuildConfiguration getJibBuildConfiguration(BuildService.BuildServiceConfig config, MavenProject project, ImageConfiguration imageConfiguration, String fullImageName) throws MojoExecutionException {
+    public static JibBuildConfiguration getJibBuildConfiguration(BuildService.BuildServiceConfig config, ImageConfiguration imageConfiguration, String fullImageName) throws MojoExecutionException {
         BuildImageConfiguration buildImageConfiguration = imageConfiguration.getBuildConfiguration();
 
         RegistryService.RegistryConfig registryConfig = config.getDockerBuildContext().getRegistryConfig();
@@ -101,12 +101,12 @@ public class JibBuildServiceUtil {
                 .credential(Credential.from(authConfig.getUsername(), authConfig.getPassword()))
                 .targetImage(fullImageName)
                 .pushRegistry(registryConfig.getRegistry())
-                .project(project)
+                .buildDirectory(config.getBuildDirectory())
                 .build();
     }
 
-    public static Path getFatJar(MavenProject project) {
-        FatJarDetector fatJarDetector = new FatJarDetector(project.getBuild().getOutputDirectory());
+    public static Path getFatJar(String buildDir) {
+        FatJarDetector fatJarDetector = new FatJarDetector(buildDir);
         try {
             FatJarDetector.Result result = fatJarDetector.scan();
             return result.getArchiveFile().toPath();

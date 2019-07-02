@@ -99,8 +99,8 @@ public class JibBuildConfiguration {
             return this;
         }
 
-        public Builder project(MavenProject project) {
-            configutil.fatJarPath = JibBuildServiceUtil.getFatJar(project);
+        public Builder buildDirectory(String buildDir) {
+            configutil.fatJarPath = JibBuildServiceUtil.getFatJar(buildDir);
             return this;
         }
 

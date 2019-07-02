@@ -22,16 +22,12 @@ public class JibBuildService implements BuildService {
     // TODO ADD LOGGING
     // TODO CHECK FOR WAR SUPPORT
     private BuildServiceConfig config;
-    private MavenProject project;
 
     private JibBuildService() { }
 
-    public JibBuildService (BuildServiceConfig config, MavenProject project) {
+    public JibBuildService (BuildServiceConfig config) {
         Objects.requireNonNull(config, "config");
-        Objects.requireNonNull(project, "project");
-
         this.config = config;
-        this.project = project;
     }
 
     @Override
@@ -44,7 +40,7 @@ public class JibBuildService implements BuildService {
                for (String tag : tags) {
                    if (tag != null) {
                        String fullName = new ImageName(imageConfiguration.getName(), tag).getFullName();
-                       jibBuildConfiguration = JibBuildServiceUtil.getJibBuildConfiguration(config, project, imageConfiguration, fullName);
+                       jibBuildConfiguration = JibBuildServiceUtil.getJibBuildConfiguration(config, imageConfiguration, fullName);
                        JibBuildServiceUtil.buildImage(jibBuildConfiguration);
                    }
                }

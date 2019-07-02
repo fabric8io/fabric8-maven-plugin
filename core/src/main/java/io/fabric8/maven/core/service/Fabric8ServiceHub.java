@@ -102,7 +102,7 @@ public class Fabric8ServiceHub {
                 } else {
                     // Kubernetes services
                     if(isJib) {
-                        buildService = new JibBuildService(buildServiceConfig, mavenProject);
+                        buildService = new JibBuildService(buildServiceConfig);
                     } else {
                         buildService = new DockerBuildService(dockerServiceHub, buildServiceConfig);
                     }

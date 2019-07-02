@@ -250,7 +250,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                         .platformMode(mode)
                         .dockerServiceHub(hub)
                         .isJibMode(isJib)
-                        .buildServiceConfig(getBuildServiceConfigJib())
+                        .buildServiceConfig(getBuildServiceConfig())
                         .repositorySystem(repositorySystem)
                         .mavenProject(project)
                         .build();
@@ -324,28 +324,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 })
                 .build();
     }
-
-    protected io.fabric8.maven.core.service.BuildService.BuildServiceConfig getBuildServiceConfigJib() throws MojoExecutionException {
-        return new io.fabric8.maven.core.service.BuildService.BuildServiceConfig.Builder()
-                .dockerBuildContext(null)
-                .dockerMojoParameters(createMojoParameters())
-                .buildRecreateMode(BuildRecreateMode.fromParameter("none"))
-                .openshiftBuildStrategy(buildStrategy)
-                .openshiftPullSecret(openshiftPullSecret)
-                .s2iBuildNameSuffix(s2iBuildNameSuffix)
-                .s2iImageStreamLookupPolicyLocal(s2iImageStreamLookupPolicyLocal)
-                .forcePullEnabled(false)
-                .imagePullManager(getImagePullManager(imagePullPolicy, autoPull))
-                .buildDirectory(project.getBuild().getDirectory())
-                .attacher((classifier, destFile) -> {
-                    if (destFile.exists()) {
-                        projectHelper.attachArtifact(project, "yml", classifier, destFile);
-                    }
-                })
-                .build();
-    }
-
-
 
 
     /**
