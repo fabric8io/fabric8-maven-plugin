@@ -25,12 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.google.cloud.tools.jib.api.InvalidImageReferenceException;
-import com.google.cloud.tools.jib.api.RegistryException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import io.fabric8.kubernetes.api.model.KubernetesList;
@@ -46,7 +43,6 @@ import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
-import io.fabric8.maven.core.service.kubernetes.JibBuildConfigurationUtil;
 import io.fabric8.maven.core.util.IoUtil;
 import io.fabric8.maven.core.util.ResourceFileType;
 import io.fabric8.maven.core.util.kubernetes.KubernetesClientUtil;
@@ -146,11 +142,6 @@ public class OpenshiftBuildService implements BuildService {
                 throw new Fabric8ServiceException("Unable to build the image using the OpenShift build service", ex);
             }
         }
-    }
-
-    @Override
-    public void build(JibBuildConfigurationUtil buildConfigurationUtil) throws UnsupportedOperationException {
-
     }
 
     protected File createBuildArchive(ImageConfiguration imageConfig) throws Fabric8ServiceException {

@@ -48,8 +48,6 @@ public class Fabric8ServiceHub {
 
     private ServiceHub dockerServiceHub;
 
-    private ServiceHub jibServiceHub;
-
     private BuildService.BuildServiceConfig buildServiceConfig;
 
     private RepositorySystem repositorySystem;
@@ -103,9 +101,8 @@ public class Fabric8ServiceHub {
                     buildService = new OpenshiftBuildService((OpenShiftClient) client, log, dockerServiceHub, buildServiceConfig);
                 } else {
                     // Kubernetes services
-
                     if(isJib) {
-                        buildService = new JibBuildService();
+                        buildService = new JibBuildService(buildServiceConfig, mavenProject);
                     } else {
                         buildService = new DockerBuildService(dockerServiceHub, buildServiceConfig);
                     }
@@ -161,11 +158,6 @@ public class Fabric8ServiceHub {
         }
         public Builder dockerServiceHub(ServiceHub dockerServiceHub) {
             hub.dockerServiceHub = dockerServiceHub;
-            return this;
-        }
-
-        public Builder jibServiceHub(ServiceHub jibServiceHub) {
-            hub.jibServiceHub = jibServiceHub;
             return this;
         }
 

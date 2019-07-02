@@ -1,45 +1,46 @@
 package io.fabric8.maven.core.service.kubernetes;
 
-import com.google.cloud.tools.jib.api.AbsoluteUnixPath;
-import com.google.cloud.tools.jib.api.CacheDirectoryCreationException;
-import com.google.cloud.tools.jib.api.Containerizer;
-import com.google.cloud.tools.jib.api.InvalidImageReferenceException;
-import com.google.cloud.tools.jib.api.Jib;
-import com.google.cloud.tools.jib.api.JibContainerBuilder;
-import com.google.cloud.tools.jib.api.Port;
-import com.google.cloud.tools.jib.api.RegistryException;
-import com.google.cloud.tools.jib.api.RegistryImage;
+import com.google.cloud.tools.jib.api.*;
+import com.google.cloud.tools.jib.registry.credentials.DockerConfigCredentialRetriever;
+import io.fabric8.maven.core.model.Dependency;
+import io.fabric8.maven.core.model.GroupArtifactVersion;
+import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
+import io.fabric8.maven.core.util.FatJarDetector;
+import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.config.AssemblyConfiguration;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.RegistryAuthConfiguration;
+import io.fabric8.maven.docker.service.RegistryService;
+import io.fabric8.maven.docker.util.ImageName;
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
+import java.util.*;
 
 public class JibBuildServiceUtil {
 
-    public JibBuildServiceUtil() {
+    private JibBuildServiceUtil() {}
 
-    }
+    public static void buildImage(JibBuildConfiguration buildConfiguration) throws InvalidImageReferenceException {
 
-    public void buildImage(JibBuildConfigurationUtil buildConfigurationUtil) throws Fabric8ServiceException, InvalidImageReferenceException, IOException, CacheDirectoryCreationException {
-
-        String fromImage = buildConfigurationUtil.getFrom();
-        String targetImage = buildConfigurationUtil.getTo();
-        Map<String, String> credMap = buildConfigurationUtil.getCredMap();
-        Map<String, String> envMap  = buildConfigurationUtil.getEnvMap();
-        List<Path> dependencyList = buildConfigurationUtil.getDependencyList();
-        List<String> portList = buildConfigurationUtil.getPorts();
+        String fromImage = buildConfiguration.getFrom();
+        String targetImage = buildConfiguration.getTargetImage();
+        Credential credential = buildConfiguration.getCredential();
+        Map<String, String> envMap  = buildConfiguration.getEnvMap();
+        List<String> portList = buildConfiguration.getPorts();
         Set<Port> portSet = getPortSet(portList);
 
-        buildImage(fromImage, targetImage, envMap, credMap, portSet, dependencyList);
+        buildImage(fromImage, targetImage, envMap, credential, portSet, buildConfiguration.getFatJar());
     }
 
-    private Set<Port> getPortSet(List<String> ports) {
+    private static Set<Port> getPortSet(List<String> ports) {
 
         Set<Port> portSet = new HashSet<Port>();
         for(String port : ports) {
@@ -49,34 +50,106 @@ public class JibBuildServiceUtil {
         return portSet;
     }
 
-    protected void buildImage(String baseImage, String targetImage, Map<String, String> envMap, Map<String, String> credMap, Set<Port> portSet, List<Path> dependencyList) throws InvalidImageReferenceException , IOException {
+    protected static JibContainer buildImage(String baseImage, String targetImage, Map<String, String> envMap, Credential credential, Set<Port> portSet, Path fatJar) throws InvalidImageReferenceException {
 
         JibContainerBuilder contBuild = Jib.from(baseImage);
 
-        if(!envMap.isEmpty()) {
+        if (!envMap.isEmpty()) {
             contBuild = contBuild.setEnvironment(envMap);
         }
 
-        if(!portSet.isEmpty()) {
+        if (!portSet.isEmpty()) {
             contBuild = contBuild.setExposedPorts(portSet);
         }
 
-        if(!dependencyList.isEmpty()) {
-            contBuild = contBuild.addLayer(dependencyList, AbsoluteUnixPath.get("/path/in/container"));
+        if (fatJar != null) {
+            // TODO parameterize pathInContainer to targetDir
+            contBuild = contBuild
+                    .addLayer(LayerConfiguration.builder().addEntry(fatJar, AbsoluteUnixPath.get("/app")).build());
+
         }
 
-        if(!credMap.isEmpty()) {
-            String username = credMap.get("username");
-            String password = credMap.get("password");
+        // TODO ADD ENTRYPOINT!!!
 
-            try {
-                contBuild.containerize(
+        if (credential != null) {
+            String username = credential.getUsername();
+            String password = credential.getPassword();
+
+        try {
+                return contBuild.containerize(
                         Containerizer.to(RegistryImage.named(targetImage)
                                 .addCredential(username, password)));
             } catch (Exception e) {
                 throw new IllegalStateException(e);
             }
         }
+        return null;
     }
 
+    public static JibBuildConfiguration getJibBuildConfiguration(BuildService.BuildServiceConfig config, MavenProject project, ImageConfiguration imageConfiguration, String fullImageName) throws MojoExecutionException {
+        BuildImageConfiguration buildImageConfiguration = imageConfiguration.getBuildConfiguration();
+
+        RegistryService.RegistryConfig registryConfig = config.getDockerBuildContext().getRegistryConfig();
+
+        AuthConfig authConfig = registryConfig.getAuthConfigFactory()
+                .createAuthConfig(true, true, registryConfig.getAuthConfig(),
+                        registryConfig.getSettings(), null, registryConfig.getRegistry());
+
+        return  new JibBuildConfiguration.Builder().from(buildImageConfiguration.getFrom())
+                .envMap(buildImageConfiguration.getEnv())
+                .ports(buildImageConfiguration.getPorts())
+                .credential(Credential.from(authConfig.getUsername(), authConfig.getPassword()))
+                .targetImage(fullImageName)
+                .pushRegistry(registryConfig.getRegistry())
+                .project(project)
+                .build();
+    }
+
+    public static Path getFatJar(MavenProject project) {
+        FatJarDetector fatJarDetector = new FatJarDetector(project.getBuild().getOutputDirectory());
+        try {
+            FatJarDetector.Result result = fatJarDetector.scan();
+            return result.getArchiveFile().toPath();
+        } catch (MojoExecutionException e) {
+            // TODO log.err("MOJO EXEC EXCEPTION!")
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private static String extractBaseImage(BuildImageConfiguration buildImgConfig) {
+
+        String fromImage = buildImgConfig.getFrom();
+        if (fromImage == null) {
+            AssemblyConfiguration assemblyConfig = buildImgConfig.getAssemblyConfiguration();
+            if (assemblyConfig == null) {
+                fromImage = "busybox";
+            }
+        }
+        return fromImage;
+    }
+
+    public static List<Path> getDependencies(boolean transitive, MavenProject project) {
+        final Set<Artifact> artifacts = transitive ?
+                project.getArtifacts() : project.getDependencyArtifacts();
+
+        final List<Dependency> dependencies = new ArrayList<>();
+
+        for (Artifact artifact : artifacts) {
+            dependencies.add(
+                    new Dependency(new GroupArtifactVersion(artifact.getGroupId(),
+                            artifact.getArtifactId(),
+                            artifact.getVersion()),
+                            artifact.getType(),
+                            artifact.getScope(),
+                            artifact.getFile()));
+        }
+
+        final List<Path> dependenciesPath = new ArrayList<>();
+        for(Dependency dep : dependencies) {
+            File depLocation = dep.getLocation();
+            Path depPath = depLocation.toPath();
+            dependenciesPath.add(depPath);
+        }
+        return dependenciesPath;
+    }
 }

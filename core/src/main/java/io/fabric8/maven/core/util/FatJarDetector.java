@@ -13,7 +13,7 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.generator.javaexec;
+package io.fabric8.maven.core.util;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -35,11 +35,11 @@ public class FatJarDetector {
     private File directory;
     private Result result;
 
-    FatJarDetector(String dir) {
+    public FatJarDetector(String dir) {
         this.directory = new File(dir);
     }
 
-    Result scan() throws MojoExecutionException {
+    public Result scan() throws MojoExecutionException {
         // Scanning is lazy ...
         if (result == null) {
             if (!directory.exists()) {

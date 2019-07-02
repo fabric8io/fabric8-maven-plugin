@@ -23,14 +23,11 @@ import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.RuntimeMode;
+import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceHub;
-import io.fabric8.maven.core.service.kubernetes.JibBuildConfigurationUtil;
-import io.fabric8.maven.core.service.kubernetes.JibConfigUtil;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.RegistryAuthConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.generator.api.GeneratorContext;
@@ -68,11 +65,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter
     private ProcessorConfig generator;
 
-    @Parameter(property = "fabric8.isJib", defaultValue = "false")
-    protected boolean isJib;
-
-    @Parameter(property = "fabric8.to", defaultValue = "")
-    protected String to;
+    @Parameter(property = "fabric8.build.jib", defaultValue = "false")
+    private boolean isJib;
 
     /**
      * Enrichers used for enri @Parameter(property = "fabric8.to", defaultValue = "")
@@ -210,12 +204,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     // Mode which is resolved, also when 'auto' is set
     private RuntimeMode runtimeMode;
 
-
-    @Parameter
-    private RegistryAuthConfiguration authConfig;
-    private ServiceHub hub;
-
-
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (skip || skipBuild) {
@@ -253,38 +241,26 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 log.warn("No image build configuration found or detected");
             }
 
-            if(isJib) {
-                hub = serviceHubFactory.createServiceHub(project, session, null, log, null);
+            List<ImageConfiguration> resolvedImages = getResolvedImages();
 
-                List<ImageConfiguration> resolvedImages = getResolvedImages();
-
-                // Build the fabric8 service hub
-                fabric8ServiceHub = new Fabric8ServiceHub.Builder()
+            // Build the fabric8 service hub
+            fabric8ServiceHub = new Fabric8ServiceHub.Builder()
                         .log(log)
                         .clusterAccess(clusterAccess)
                         .platformMode(mode)
-                        .dockerServiceHub(null)
-                        .jibServiceHub(hub)
+                        .dockerServiceHub(hub)
                         .isJibMode(isJib)
                         .buildServiceConfig(getBuildServiceConfigJib())
                         .repositorySystem(repositorySystem)
                         .mavenProject(project)
                         .build();
-                buildJibConfigUtil(resolvedImages);
-            } else {
-                // Build the fabric8 service hub
-                fabric8ServiceHub = new Fabric8ServiceHub.Builder()
-                        .log(log)
-                        .clusterAccess(clusterAccess)
-                        .platformMode(mode)
-                        .dockerServiceHub(hub)
-                        .jibServiceHub(null)
-                        .isJibMode(isJib)
-                        .buildServiceConfig(getBuildServiceConfig())
-                        .repositorySystem(repositorySystem)
-                        .mavenProject(project)
-                        .build();
 
+            if (isJib) {
+                //buildJibConfigUtil(resolvedImages);
+                for (ImageConfiguration imageConfig : resolvedImages) {
+                    buildAndTag(null, imageConfig);
+                }
+            } else {
                 super.executeInternal(hub);
             }
             fabric8ServiceHub.getBuildService().postProcess(getBuildServiceConfig());
@@ -293,25 +269,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         }
     }
 
-    private void buildJibConfigUtil(List<ImageConfiguration> imageConfigList) throws IOException{
-        for(ImageConfiguration imageConfig : imageConfigList) {
-            BuildImageConfiguration buildImgConfig = imageConfig.getBuildConfiguration();
-            JibConfigUtil configUtil = new JibConfigUtil(imageConfig);
-            JibBuildConfigurationUtil buildConfigurationUtil = configUtil.getUtil(buildImgConfig, authConfig, to, project);
-            try {
-                processImageConfig(hub, buildConfigurationUtil);
-            } catch (Exception e) {
-                throw new IOException(e.getMessage());
-            }
-        }
-    }
-
-    private void processImageConfig(ServiceHub hub, JibBuildConfigurationUtil buildConfigurationUtil) throws IOException, MojoExecutionException {
-
-        if (buildConfigurationUtil != null) {
-                buildAndTagJib(hub, buildConfigurationUtil);
-            }
-        }
 
     private boolean shouldSkipBecauseOfPomPackaging() {
         if (!Objects.equals("pom", project.getPackaging())) {
@@ -332,18 +289,6 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         return true;
     }
 
-    protected void buildAndTagJib(ServiceHub hub, JibBuildConfigurationUtil buildConfigurationUtil)
-            throws MojoExecutionException {
-
-        try {
-            EnvUtil.storeTimestamp(this.getBuildTimestampFile(), this.getBuildTimestamp());
-
-            fabric8ServiceHub.getBuildService().build(buildConfigurationUtil);
-
-        } catch (Exception ex) {
-            throw new MojoExecutionException("Failed to execute the build", ex);
-        }
-    }
 
     @Override
     protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
@@ -360,7 +305,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         }
     }
 
-    protected io.fabric8.maven.core.service.BuildService.BuildServiceConfig getBuildServiceConfig() throws MojoExecutionException {
+    protected BuildService.BuildServiceConfig getBuildServiceConfig() throws MojoExecutionException {
         return new io.fabric8.maven.core.service.BuildService.BuildServiceConfig.Builder()
                 .dockerBuildContext(getBuildContext())
                 .dockerMojoParameters(createMojoParameters())
