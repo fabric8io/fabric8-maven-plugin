@@ -18,7 +18,6 @@ package io.fabric8.maven.core.util;
 import java.io.File;
 import java.net.URL;
 
-import io.fabric8.maven.core.util.FatJarDetector;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
 
