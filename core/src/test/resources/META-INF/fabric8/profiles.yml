@@ -31,7 +31,7 @@
 - name: merge-1
   enricher:
     includes:
-    - fmp-project
+    - fmp-project-label
 - name: order-test-1
   generator:
     includes: [ i1, i2, i3 ]

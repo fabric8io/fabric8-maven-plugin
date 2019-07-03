@@ -69,7 +69,7 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 | <<fmp-portname>>
 | Add a default portname for commonly known service.
 
-| <<fmp-project>>
+| <<fmp-project-label>>
 | Add Maven coordinates as labels to all objects.
 
 | <<fmp-service>>
@@ -116,12 +116,12 @@ include::enricher/_fmp_service.adoc[]
 [[fmp-pod-annotation]]
 ==== fmp-pod-annotation
 
-[[fmp-project]]
-==== fmp-project
+[[fmp-project-label]]
+==== fmp-project-label
 
 Enricher that adds standard labels and selectors to generated resources (e.g. `app`, `group`, `provider`, `version`).
 
-The `fmp-project` enricher supports the following configuration options:
+The `fmp-project-label` enricher supports the following configuration options:
 
 [cols="2,6,3"]
 |===
