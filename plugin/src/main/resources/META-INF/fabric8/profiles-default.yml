@@ -116,6 +116,14 @@
     - fmp-image
     - fmp-project-label
     - fmp-debug
+    - fmp-namespace
+    - fmp-metadata
+    - fmp-controller-from-configuration
+    - fmp-openshift-deploymentconfig
+    - fmp-openshift-project
+    - fmp-openshift-service-expose
+    - fmp-openshift-route
+
   # Only dependencies, no build, use other resources raw
 - name: aggregate
   generator:
