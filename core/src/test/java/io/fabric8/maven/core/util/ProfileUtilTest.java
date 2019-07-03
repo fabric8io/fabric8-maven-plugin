@@ -104,7 +104,7 @@ public class ProfileUtilTest {
     @Test
     public void mergeProfiles() throws Exception {
         Profile profile = ProfileUtil.findProfile("merge-1", getProfileDir());
-        assertFalse(profile.getEnricherConfig().use("fmp-project"));
+        assertFalse(profile.getEnricherConfig().use("fmp-project-label"));
         assertTrue(profile.getEnricherConfig().use("fmp-image"));
     }
 

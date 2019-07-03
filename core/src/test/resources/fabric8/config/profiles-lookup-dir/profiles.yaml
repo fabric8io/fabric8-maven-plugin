@@ -29,7 +29,7 @@
       - java.app
 - name: merge-1
   enricher:
-    excludes: [ fmp-project ]
+    excludes: [ fmp-project-label ]
     includes: [ fmp-image ]
 - name: minimal
   extends: simple
@@ -39,5 +39,5 @@
       - fmp-controller
       - fmp-service
       - fmp-image
-      - fmp-project
+      - fmp-project-label
       - fmp-debug

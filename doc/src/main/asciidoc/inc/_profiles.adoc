@@ -220,7 +220,7 @@ A profile can also extend another profile to avoid repetition e.g of generators 
      - fmp-controller
      - fmp-service
      - fmp-image
-     - fmp-project
+     - fmp-project-label
      - fmp-debug
 ----
 one then would not need to repeat all generators as they are inherited from the `default` profile.
