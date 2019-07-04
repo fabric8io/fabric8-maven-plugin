@@ -16,6 +16,7 @@
 package io.fabric8.maven.core.util;
 
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.model.DistributionManagement;
 import org.apache.maven.model.Site;
 import org.apache.maven.project.MavenProject;
@@ -73,7 +74,7 @@ public class BuildLabelUtil {
                 if (gitRemoteUrl != null) {
                     labels.put(BuildLabelAnnotations.VCS_URL.value(), gitRemoteUrl);
                 } else {
-                    log.verbose("Could not detect any git remote");
+                    log.verbose(Logger.LogVerboseCategory.BUILD, "Could not detect any git remote");
                 }
             }
         } catch (IOException | GitAPIException | NullPointerException e) {

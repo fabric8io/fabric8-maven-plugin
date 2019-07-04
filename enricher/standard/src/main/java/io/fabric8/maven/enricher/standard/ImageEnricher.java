@@ -46,6 +46,7 @@ import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
@@ -88,7 +89,7 @@ public class ImageEnricher extends BaseEnricher {
     @Override
     public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
         if (!hasImageConfiguration()) {
-            log.verbose("No images resolved. Skipping ...");
+            log.verbose(Logger.LogVerboseCategory.BUILD, "No images resolved. Skipping ...");
             return;
         }
 
@@ -240,7 +241,7 @@ public class ImageEnricher extends BaseEnricher {
     private void mergeContainerName(ImageConfiguration imageConfiguration, Container container) {
         if (StringUtils.isBlank(container.getName())) {
             String containerName = extractContainerName(getContext().getGav(), imageConfiguration);
-            log.verbose("Setting container name %s",containerName);
+            log.verbose(Logger.LogVerboseCategory.BUILD, "Setting container name %s",containerName);
             container.setName(containerName);
         }
     }
@@ -249,11 +250,11 @@ public class ImageEnricher extends BaseEnricher {
         if (StringUtils.isBlank(container.getImage())) {
             String prefix = "";
             if (StringUtils.isNotBlank(imageConfiguration.getRegistry())) {
-                log.verbose("Using registry %s for the image", imageConfiguration.getRegistry());
+                log.verbose(Logger.LogVerboseCategory.BUILD, "Using registry %s for the image", imageConfiguration.getRegistry());
                 prefix = imageConfiguration.getRegistry() + "/";
             }
             String imageFullName = prefix + imageConfiguration.getName();
-            log.verbose("Setting image %s", imageFullName);
+            log.verbose(Logger.LogVerboseCategory.BUILD, "Setting image %s", imageFullName);
             container.setImage(imageFullName);
         }
     }

@@ -42,6 +42,21 @@ jobs:
         paths:
         - ~/.m2
 
+  build-java11:
+    working_directory: ~/fabric8io/fabric8-maven-plugin
+    docker:
+    - image: circleci/openjdk:11.0.1
+    steps:
+    - checkout
+    - restore_cache:
+        key: fmp-{{ checksum "pom.xml" }}
+    - run: mvn -Pjava11 test -B -Pjacoco
+    - run: bash <(curl -s https://codecov.io/bash)
+    - save_cache:
+        key: fmp-{{ checksum "pom.xml" }}
+        paths:
+        - ~/.m2
+
   # Run Tests
   tests:
     working_directory: ~/fabric8io/fabric8-maven-plugin
@@ -54,6 +69,24 @@ jobs:
         command: |
           # Run maven build
           mvn clean install
+    - save_cache:
+        key: fmp-{{ checksum "pom.xml" }}
+        paths:
+        - ~/.m2
+
+  # Run Tests
+  tests-java11:
+    working_directory: ~/fabric8io/fabric8-maven-plugin
+    docker:
+    - image: circleci/openjdk:11.0.1
+    steps:
+    - checkout
+    - restore_cache:
+        key: fmp-{{ checksum "pom.xml" }}
+    - run:
+        command: |
+          # Run maven build
+          mvn -Pjava11 clean install
     - save_cache:
         key: fmp-{{ checksum "pom.xml" }}
         paths:
@@ -133,7 +166,9 @@ workflows:
           branches:
             only: release-docs
     - build
+    - build-java11
     - tests
+    - tests-java11
     - license
     - sonar-pr
     - sonar:

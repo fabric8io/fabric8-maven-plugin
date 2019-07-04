@@ -31,6 +31,7 @@ import io.fabric8.kubernetes.api.model.apps.ReplicaSetSpec;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.DeploymentConfig;
@@ -69,13 +70,13 @@ public class DebugEnricher extends BaseEnricher {
             if (count > 0) {
                 builder.withItems(items);
             }
-            log.verbose("Enabled debugging on "
+            log.verbose(Logger.LogVerboseCategory.BUILD, "Enabled debugging on "
                 + count
                 + " resource(s) thanks to the "
                 + ENABLE_DEBUG_MAVEN_PROPERTY
                 + " property");
         } else {
-            log.verbose("Debugging not enabled. To enable try setting the "
+            log.verbose(Logger.LogVerboseCategory.BUILD, "Debugging not enabled. To enable try setting the "
                 + ENABLE_DEBUG_MAVEN_PROPERTY
                 + " maven or system property to 'true'");
         }

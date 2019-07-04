@@ -30,6 +30,7 @@ import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.FileUtil;
 import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.io.File;
@@ -86,7 +87,7 @@ public class IconEnricher extends BaseEnricher {
         String iconUrl = getIconUrl(extractIconRef());
         if (iconUrl != null) {
             log.info("Adding icon for %s", kind.toLowerCase());
-            log.verbose("Icon URL: %s", iconUrl);
+            log.verbose(Logger.LogVerboseCategory.BUILD, "Icon URL: %s", iconUrl);
             return Collections.singletonMap("fabric8.io/iconUrl", iconUrl);
         } else {
             log.debug("No icon file found for resources of type " + kind);

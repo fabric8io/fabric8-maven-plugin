@@ -38,6 +38,7 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootConfigurationHelper;
 import io.fabric8.maven.core.util.SpringBootUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.GeneratorMode;
 import io.fabric8.maven.generator.javaexec.FatJarDetector;
@@ -245,7 +246,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
 
     private void addSecretTokenToApplicationProperties() throws MojoExecutionException {
         String newToken = UUID.randomUUID().toString();
-        log.verbose("Generating the spring devtools token in property: " + DEV_TOOLS_REMOTE_SECRET);
+        log.verbose(Logger.LogVerboseCategory.BUILD, "Generating the spring devtools token in property: " + DEV_TOOLS_REMOTE_SECRET);
 
         // We always add to application.properties, even when an application.yml exists, since both
         // files are evaluated by Spring Boot.
@@ -277,7 +278,7 @@ public class SpringBootGenerator extends JavaExecGenerator {
                 for (PluginExecution execution : executionsAsMap.values()) {
                     List<String> goals = execution.getGoals();
                     if (goals.contains("repackage")) {
-                        log.verbose("Using fat jar packaging as the spring boot plugin is using `repackage` goal execution");
+                        log.verbose(Logger.LogVerboseCategory.BUILD, "Using fat jar packaging as the spring boot plugin is using `repackage` goal execution");
                         return true;
                     }
                 }

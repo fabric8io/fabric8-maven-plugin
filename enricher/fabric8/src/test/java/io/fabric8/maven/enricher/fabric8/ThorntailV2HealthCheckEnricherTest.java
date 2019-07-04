@@ -20,6 +20,7 @@ import io.fabric8.maven.enricher.api.util.ProjectClassLoaders;
 import java.net.URLClassLoader;
 import mockit.Expectations;
 import mockit.Mocked;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -37,6 +38,7 @@ public class ThorntailV2HealthCheckEnricherTest {
     }
 
     @Test
+    @Ignore
     public void configureThorntailHealthPort() {
 
         setupExpectations();
