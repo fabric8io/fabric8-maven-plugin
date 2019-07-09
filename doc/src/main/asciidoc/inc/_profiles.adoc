@@ -216,12 +216,20 @@ A profile can also extend another profile to avoid repetition e.g of generators 
    extends: default
    enricher:
      includes:
-     - fmp-name
-     - fmp-controller
-     - fmp-service
-     - fmp-image
-     - fmp-project
-     - fmp-debug
+      - fmp-name
+      - fmp-controller
+      - fmp-service
+      - fmp-image
+      - fmp-project-label
+      - fmp-debug
+      - fmp-namespace
+      - fmp-metadata
+      - fmp-controller-from-configuration
+      - fmp-openshift-deploymentconfig
+      - fmp-openshift-project
+      - fmp-openshift-service-expose
+      - fmp-openshift-route
+
 ----
 one then would not need to repeat all generators as they are inherited from the `default` profile.
 

@@ -33,16 +33,19 @@ public class ResourceVersioning {
 
     private String cronjobVersion;
 
+    private String rbacVersion;
+
     public ResourceVersioning() {
     }
 
-    public ResourceVersioning(String coreVersion, String extensionsVersion, String appsVersion, String jobVersion, String openshiftV1version, String cronjobVersion) {
+    public ResourceVersioning(String coreVersion, String extensionsVersion, String appsVersion, String jobVersion, String openshiftV1version, String cronjobVersion, String rbacVersion) {
         this.coreVersion = coreVersion;
         this.extensionsVersion = extensionsVersion;
         this.appsVersion = appsVersion;
         this.jobVersion = jobVersion;
         this.openshiftV1version = openshiftV1version;
         this.cronjobVersion = cronjobVersion;
+        this.rbacVersion = rbacVersion;
     }
 
     public String getCoreVersion() {
@@ -93,6 +96,15 @@ public class ResourceVersioning {
         this.cronjobVersion = cronjobVersion;
     }
 
+    public String getRbacVersion() {
+        return rbacVersion;
+    }
+
+    public void setRbacVersion(String rbacVersion) {
+        this.rbacVersion = rbacVersion;
+    }
+
+
     public ResourceVersioning withCoreVersion(String coreVersion) {
         ResourceVersioning c = copy();
         c.setCoreVersion(coreVersion);
@@ -129,6 +141,12 @@ public class ResourceVersioning {
         return c;
     }
 
+    public ResourceVersioning withRbacVersion(String rbacVersion) {
+        ResourceVersioning c = copy();
+        c.setRbacVersion(rbacVersion);
+        return c;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("ResourceVersioning{");
@@ -138,11 +156,12 @@ public class ResourceVersioning {
         sb.append(", jobVersion='").append(jobVersion).append('\'');
         sb.append(", openshiftV1Version='").append(openshiftV1version).append('\'');
         sb.append(", cronjobVersion='").append(cronjobVersion).append('\'');
+        sb.append(", rbacVersion='").append(rbacVersion).append('\'');
         sb.append('}');
         return sb.toString();
     }
 
     protected ResourceVersioning copy() {
-        return new ResourceVersioning(coreVersion, extensionsVersion, appsVersion, jobVersion, openshiftV1version, cronjobVersion);
+        return new ResourceVersioning(coreVersion, extensionsVersion, appsVersion, jobVersion, openshiftV1version, cronjobVersion, rbacVersion);
     }
 }
