@@ -26,10 +26,11 @@ import io.fabric8.kubernetes.api.model.ServiceFluent;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
+import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.ServiceConfig;
+import io.fabric8.maven.core.handler.HandlerHub;
 import io.fabric8.maven.core.handler.ServiceHandler;
-import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.SpringBootUtil;
@@ -38,6 +39,8 @@ import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import org.apache.maven.shared.utils.StringUtils;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,7 +54,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.maven.shared.utils.StringUtils;
 
 /**
  * An enricher for creating default services when not present.
@@ -69,6 +71,19 @@ public class DefaultServiceEnricher extends BaseEnricher {
     private static final String PORT_IMAGE_LABEL_PREFIX = "fabric8.generator.service.port";
     private static final String PORTS_IMAGE_LABEL_PREFIX = "fabric8.generator.service.ports";
 
+    /**
+     *  Port mapping to refer for normalization of port numbering.
+     *  Key -> TargetPort
+     *  Value -> Port
+     */
+    private static final Map<Integer, Integer> PORT_NORMALIZATION_MAPPING = new HashMap<Integer, Integer>() {{
+                                                                                put(8080, 80);
+                                                                                put(8081, 80);
+                                                                                put(8181, 80);
+                                                                                put(8180, 80);
+                                                                                put(8443, 443);
+                                                                                put(443, 443);
+                                                                            }};
 
     // Available configuration keys
     private enum Config implements Configs.Key {
@@ -92,7 +107,10 @@ public class DefaultServiceEnricher extends BaseEnricher {
         multiPort {{ d = "false"; }},
 
         // protocol to use
-        protocol {{ d = "tcp"; }};
+        protocol {{ d = "tcp"; }},
+
+        // Whether to normalize Service port numbers according to PORT_NORMALIZATION_MAPPING
+        normalizePort {{ d = "false"; }};
 
         public String def() { return d; } protected String d;
     }
@@ -103,29 +121,49 @@ public class DefaultServiceEnricher extends BaseEnricher {
 
     @Override
     public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
-        final Service defaultService = getDefaultService();
+        ResourceConfig xmlConfig = getConfiguration().getResource().orElse(null);
 
-        if (hasServices(builder)) {
-            mergeInDefaultServiceParameters(builder, defaultService);
+        if (xmlConfig != null && xmlConfig.getServices() != null) {
+            // Add Services configured via XML
+            addServices(builder, xmlConfig.getServices());
+
         } else {
-            addDefaultService(builder, defaultService);
-        }
+            final Service defaultService = getDefaultService();
 
-        // Add Services configured via XML
-        addServices(builder);
+            if (hasServices(builder)) {
+                mergeInDefaultServiceParameters(builder, defaultService);
+            } else {
+                addDefaultService(builder, defaultService);
+            }
+
+            if(Configs.asBoolean(getConfig(Config.normalizePort))) {
+                normalizeServicePorts(builder);
+            }
+        }
     }
 
     // =======================================================================================================
 
-    private void addServices(KubernetesListBuilder builder) {
-        ResourceConfig resources = new ResourceConfig();
-
-        if (resources != null && resources.getServices() != null) {
-            List<ServiceConfig> serviceConfig = resources.getServices();
-            ServiceHandler serviceHandler = new ServiceHandler();
-            builder.addToServiceItems(toArray(serviceHandler.getServices(serviceConfig)));
-        }
+    private void normalizeServicePorts(KubernetesListBuilder builder) {
+        builder.accept(new TypedVisitor<ServicePortBuilder>() {
+            @Override
+            public void visit(ServicePortBuilder portBuilder) {
+                PORT_NORMALIZATION_MAPPING.keySet().forEach(key -> {
+                    if (key.intValue() == portBuilder.buildTargetPort().getIntVal()) {
+                        portBuilder.withPort(PORT_NORMALIZATION_MAPPING.get(key));
+                    }
+                });
+            }
+        });
     }
+
+    private void addServices(KubernetesListBuilder builder, List<ServiceConfig> services) {
+        HandlerHub handlerHub = new HandlerHub(getContext().getGav(),
+                getContext().getConfiguration().getProperties());
+            ServiceHandler serviceHandler = handlerHub.getServiceHandler();
+            builder.addToServiceItems(toArray(serviceHandler.getServices(services)));
+    }
+
 
     // convert list to array, never returns null.
     private Service[] toArray(List<Service> services) {
@@ -166,7 +204,6 @@ public class DefaultServiceEnricher extends BaseEnricher {
     }
 
     private Service getDefaultService() {
-
         // No image config, no service
         if (!hasImageConfiguration()) {
             return null;
@@ -392,6 +429,7 @@ public class DefaultServiceEnricher extends BaseEnricher {
         Integer targetPort = Integer.parseInt(targetPortFromImageLabel != null ? targetPortFromImageLabel : portMatcher.group(1));
         String protocol = getProtocol(portMatcher.group(2));
         Integer port = checkForLegacyMapping(targetPort);
+
 
         // With a port override you can override the detected ports
         if (portOverride != null) {

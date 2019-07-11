@@ -73,7 +73,7 @@ fabric8-maven-plugin comes with a set of enrichers which are enabled by default.
 | Add Maven coordinates as labels to all objects.
 
 | <<fmp-service>>
-| Create a default service if missing and extrac ports from the Docker image configuration.
+| Create a default service if missing and extract ports from the Docker image configuration.
 
 | <<fmp-maven-issue-mgmt-enricher>>
 | Add Maven Issue Management information as annotations to the kubernetes/openshift resources
