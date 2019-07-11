@@ -20,7 +20,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.fabric8</groupId>
-  <artifactId>fabric8-maven-parent</artifactId>
+  <artifactId>fabric8-maven-plugin-parent</artifactId>
   <version>4.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -169,26 +169,26 @@
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-core</artifactId>
+        <artifactId>fabric8-maven-plugin-core</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <!-- ## Enricher -->
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-enricher-api</artifactId>
+        <artifactId>fabric8-maven-plugin-enricher-api</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-enricher-standard</artifactId>
+        <artifactId>fabric8-maven-plugin-enricher-standard</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-enricher-fabric8</artifactId>
+        <artifactId>fabric8-maven-plugin-enricher-fabric8</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -201,55 +201,55 @@
       <!-- ## Generator -->
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-api</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-api</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-java-exec</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-java-exec</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-spring-boot</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-spring-boot</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-vertx</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-vertx</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-karaf</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-karaf</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-quarkus</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-quarkus</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-wildfly-swarm</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-wildfly-swarm</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-thorntail-v2</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-thorntail-v2</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-webapp</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-webapp</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -257,13 +257,13 @@
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-watcher-api</artifactId>
+        <artifactId>fabric8-maven-plugin-watcher-api</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-watcher-standard</artifactId>
+        <artifactId>fabric8-maven-plugin-watcher-standard</artifactId>
         <version>${project.version}</version>
       </dependency>
 
