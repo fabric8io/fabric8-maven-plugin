@@ -26,6 +26,7 @@ public class ClusterConfiguration {
 
     private String username;
     private String password;
+    private String token;
     private String masterUrl;
     private String apiVersion;
     private String namespace;
@@ -59,6 +60,10 @@ public class ClusterConfiguration {
 
         if (StringUtils.isNotBlank(this.password)) {
             configBuilder.withPassword(this.password);
+        }
+        
+        if (StringUtils.isNoneBlank(this.token)) {
+        	configBuilder.withOauthToken(this.token);
         }
 
         if (StringUtils.isNotBlank(this.masterUrl)) {
@@ -168,6 +173,11 @@ public class ClusterConfiguration {
         public Builder password(String password) {
             this.clusterConfiguration.password = password;
             return this;
+        }
+
+        public Builder token(String token) {
+          this.clusterConfiguration.token = token;
+          return this;
         }
 
         public Builder masterUrl(String masterUrl) {

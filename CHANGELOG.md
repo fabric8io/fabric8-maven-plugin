@@ -24,6 +24,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix #1591: Add support for custom resources creation via resource fragments
 * Update docker maven plugin to 0.30.0
 * Fix #1648: Job creation fails during fabric8:apply with error: forbidden
+* Fix #1656: Openshift serviceaccount requires OAuth token authentication
 * Fix #1622: Additions to minimal profile
 * Feature #1661: Added Resource Versioning Support for RBAC
 
