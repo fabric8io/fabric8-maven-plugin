@@ -39,7 +39,7 @@
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-enricher-api</artifactId>
+      <artifactId>fabric8-maven-plugin-enricher-api</artifactId>
       <version>${fmp.version}</version>
     </dependency>
 

@@ -20,7 +20,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>io.fabric8</groupId>
-    <artifactId>fabric8-maven-parent</artifactId>
+    <artifactId>fabric8-maven-plugin-parent</artifactId>
     <version>4.2-SNAPSHOT</version>
     <relativePath>../parent/pom.xml</relativePath>
   </parent>
@@ -44,79 +44,79 @@
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-core</artifactId>
+      <artifactId>fabric8-maven-plugin-core</artifactId>
     </dependency>
 
     <!-- == Enricher ===================================== -->
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-enricher-api</artifactId>
+      <artifactId>fabric8-maven-plugin-enricher-api</artifactId>
     </dependency>
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-enricher-standard</artifactId>
+      <artifactId>fabric8-maven-plugin-enricher-standard</artifactId>
     </dependency>
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-enricher-fabric8</artifactId>
+      <artifactId>fabric8-maven-plugin-enricher-fabric8</artifactId>
     </dependency>
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-generator-api</artifactId>
+      <artifactId>fabric8-maven-plugin-generator-api</artifactId>
     </dependency>
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-generator-java-exec</artifactId>
+      <artifactId>fabric8-maven-plugin-generator-java-exec</artifactId>
     </dependency>
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-generator-spring-boot</artifactId>
+      <artifactId>fabric8-maven-plugin-generator-spring-boot</artifactId>
     </dependency>
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-generator-vertx</artifactId>
+      <artifactId>fabric8-maven-plugin-generator-vertx</artifactId>
     </dependency>
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-generator-karaf</artifactId>
+      <artifactId>fabric8-maven-plugin-generator-karaf</artifactId>
     </dependency>
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-generator-wildfly-swarm</artifactId>
+      <artifactId>fabric8-maven-plugin-generator-wildfly-swarm</artifactId>
     </dependency>
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-generator-quarkus</artifactId>
+      <artifactId>fabric8-maven-plugin-generator-quarkus</artifactId>
     </dependency>
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-generator-thorntail-v2</artifactId>
+      <artifactId>fabric8-maven-plugin-generator-thorntail-v2</artifactId>
     </dependency>
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-generator-webapp</artifactId>
+      <artifactId>fabric8-maven-plugin-generator-webapp</artifactId>
     </dependency>
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-watcher-api</artifactId>
+      <artifactId>fabric8-maven-plugin-watcher-api</artifactId>
     </dependency>
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-watcher-standard</artifactId>
+      <artifactId>fabric8-maven-plugin-watcher-standard</artifactId>
     </dependency>
 
     <!-- == Fabric8 ===================================== -->

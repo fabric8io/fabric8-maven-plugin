@@ -21,12 +21,12 @@
 
   <parent>
     <groupId>io.fabric8</groupId>
-    <artifactId>fabric8-maven-parent</artifactId>
+    <artifactId>fabric8-maven-plugin-parent</artifactId>
     <version>4.2-SNAPSHOT</version>
     <relativePath>../../parent/pom.xml</relativePath>
   </parent>
 
-  <artifactId>fabric8-maven-generator-quarkus</artifactId>
+  <artifactId>fabric8-maven-plugin-generator-quarkus</artifactId>
   <version>4.2-SNAPSHOT</version>
 
   <name>Fabric8 Maven :: Generator :: Quarkus</name>
@@ -34,12 +34,12 @@
   <dependencies>
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-generator-api</artifactId>
+      <artifactId>fabric8-maven-plugin-generator-api</artifactId>
     </dependency>
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-generator-java-exec</artifactId>
+      <artifactId>fabric8-maven-plugin-generator-java-exec</artifactId>
     </dependency>
   </dependencies>
 
