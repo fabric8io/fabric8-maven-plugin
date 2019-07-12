@@ -123,7 +123,7 @@ public class DefaultControllerEnricher extends BaseEnricher {
                         setProcessingInstruction(FABRIC8_GENERATED_CONTAINERS, getContainersFromPodSpec(deployment.getSpec().getTemplate()));
                     } else {
                         log.info("Adding a default DeploymentConfig");
-                        DeploymentConfig deploymentConfig = deployConfigHandler.getDeploymentConfig(config, images, getOpenshiftDeployTimeoutInSeconds(3600L), getImageChangeTriggerFlag(true), isAutomaticTriggerEnabled((MavenEnricherContext) enricherContext, true), isOpenShiftMode(), getProcessingInstructionViaKey(FABRIC8_GENERATED_CONTAINERS));
+                        DeploymentConfig deploymentConfig = deployConfigHandler.getDeploymentConfig(config, images, getOpenshiftDeployTimeoutInSeconds(3600L), getValueFromConfig(IMAGE_CHANGE_TRIGGERS, true), getValueFromConfig(OPENSHIFT_ENABLE_AUTOMATIC_TRIGGER, true), isOpenShiftMode(), getProcessingInstructionViaKey(FABRIC8_GENERATED_CONTAINERS));
                         builder.addToDeploymentConfigItems(deploymentConfig);
                         setProcessingInstruction(FABRIC8_GENERATED_CONTAINERS, getContainersFromPodSpec(deploymentConfig.getSpec().getTemplate()));
                     }
@@ -181,12 +181,4 @@ public class DefaultControllerEnricher extends BaseEnricher {
         KubernetesResourceUtil.SIMPLE_FIELD_TYPES.add(byte.class);
     }
 
-
-    private Long getOpenshiftDeployTimeoutInSeconds(Long defaultValue) {
-        if (getContext().getProperty("fabric8.openshift.deployTimeoutSeconds") != null) {
-            return Long.parseLong(getContext().getProperty("fabric8.openshift.deployTimeoutSeconds").toString());
-        } else {
-            return defaultValue;
-        }
-    }
 }
