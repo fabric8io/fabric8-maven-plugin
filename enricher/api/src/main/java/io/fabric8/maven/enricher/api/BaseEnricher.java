@@ -47,13 +47,14 @@ public class BaseEnricher implements Enricher {
     private final EnricherConfig config;
     private final String name;
     protected EnricherContext enricherContext;
-    public static final String FABRIC8_GENERATED_CONTAINERS = "FABRIC8_GENERATED_CONTAINERS";
-    public static final String NEED_IMAGECHANGE_TRIGGERS = "IMAGECHANGE_TRIGGER";
-    public static final String IMAGE_CHANGE_TRIGGERS = "fabric8.openshift.imageChangeTriggers";
-    public static final String OPENSHIFT_TRIM_IMAGE_IN_CONTAINER_SPEC = "fabric8.openshift.trimImageInContainerSpec";
-    public static final String OPENSHIFT_ENABLE_AUTOMATIC_TRIGGER = "fabric8.openshift.enableAutomaticTrigger";
-    public static final String SIDECAR = "fabric8.sidecar";
-    public static final String ENRICH_ALL_WITH_IMAGE_TRIGGERS = "fabric8.openshift.enrichAllWithImageChangeTrigger";
+    protected static final String FABRIC8_GENERATED_CONTAINERS = "FABRIC8_GENERATED_CONTAINERS";
+    protected static final String NEED_IMAGECHANGE_TRIGGERS = "IMAGECHANGE_TRIGGER";
+    protected static final String IMAGE_CHANGE_TRIGGERS = "fabric8.openshift.imageChangeTriggers";
+    protected static final String OPENSHIFT_TRIM_IMAGE_IN_CONTAINER_SPEC = "fabric8.openshift.trimImageInContainerSpec";
+    protected static final String OPENSHIFT_ENABLE_AUTOMATIC_TRIGGER = "fabric8.openshift.enableAutomaticTrigger";
+    protected static final String SIDECAR = "fabric8.sidecar";
+    protected static final String ENRICH_ALL_WITH_IMAGE_TRIGGERS = "fabric8.openshift.enrichAllWithImageChangeTrigger";
+    private static final String SWITCH_TO_DEPLOYMENT = "fabric8.build.switchToDeployment";
 
     protected Logger log;
 
@@ -189,6 +190,10 @@ public class BaseEnricher implements Enricher {
         }
         processingInstructionsMap.put(key, String.join(",", containerNames));
         enricherContext.setProcessingInstructions(processingInstructionsMap);
+    }
+
+    protected boolean useDeploymentforOpenShift() {
+        return getValueFromConfig(SWITCH_TO_DEPLOYMENT, false);
     }
 
     protected Boolean getValueFromConfig(String propertyName, Boolean defaultValue) {

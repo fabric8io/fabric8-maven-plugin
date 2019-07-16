@@ -25,6 +25,7 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStrategy;
 import io.fabric8.maven.core.config.PlatformMode;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.DeploymentConfig;
@@ -52,10 +53,13 @@ public class DeploymentConfigEnricher extends BaseEnricher {
 
     @Override
     public void create(PlatformMode platformMode, KubernetesListBuilder builder) {
-        if(platformMode == PlatformMode.openshift) {
-            for(HasMetadata item : builder.buildItems()) {
 
-                if(item instanceof Deployment) {
+        if(platformMode == PlatformMode.openshift) {
+
+            boolean switchToDeployment = false;
+
+            for(HasMetadata item : builder.buildItems()) {
+                if(item instanceof Deployment && !useDeploymentforOpenShift()) {
                     DeploymentConfig deploymentConfig = convert(item);
                     removeItemFromKubernetesBuilder(builder, item);
                     builder.addToDeploymentConfigItems(deploymentConfig);
