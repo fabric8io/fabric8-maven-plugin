@@ -19,10 +19,8 @@ apiVersion: v1
 kind: List
 items:
 - apiVersion: v1
-  kind: Service
   metadata:
     labels:
-      expose: "true"
       provider: fabric8
       app: fabric8-maven-sample-remote-resources
       version: "@ignore@"

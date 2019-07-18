@@ -26,7 +26,6 @@ items:
       app: volume-enricher-storage-class-835
       version: 3.5-SNAPSHOT
       group: io.fabric8.devops.apps
-      expose: "true"
     name: fabric8-docker-registry
   spec:
     ports:

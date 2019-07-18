@@ -25,7 +25,6 @@ metadata:
     app: "${project.artifactId}"
     version: "${project.version}"
     group: "io.fabric8.devops.apps"
-    expose: "true"
   name: "fabric8-docker-registry"
 spec:
   ports:

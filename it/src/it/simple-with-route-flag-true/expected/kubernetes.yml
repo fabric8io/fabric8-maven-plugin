@@ -29,7 +29,6 @@ items:
       prometheus.io/scrape: "true"
       fabric8.io/scm-tag: HEAD
     labels:
-      expose: "true"
       app: fabric8-maven-sample-zero-config
       provider: fabric8
       version: 3.5-SNAPSHOT

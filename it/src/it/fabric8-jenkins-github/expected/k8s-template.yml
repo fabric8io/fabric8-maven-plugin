@@ -198,7 +198,6 @@ objects:
       fabric8.io/scm-devcon-url: scm:git:git@github.com:fabric8-apps/nexus-app.git
       fabric8.io/scm-tag: nexus-app-1.0.0
     labels:
-      expose: "true"
       provider: fabric8
       project: nexus-app
       version: 1.0.1
@@ -229,7 +228,6 @@ objects:
       project: fabric8-docker-registry
       version: 2.2.335
       group: io.fabric8.devops.apps
-      expose: "true"
     name: fabric8-docker-registry
   spec:
     ports:
@@ -255,7 +253,6 @@ objects:
     labels:
       app: jenkins
       provider: fabric8
-      expose: "true"
       version: 4.0.42
       group: io.fabric8.tenant.apps
     name: jenkins
@@ -309,7 +306,6 @@ objects:
       fabric8.io/scm-tag: keycloak-app-1.0.0
       fabric8.io/scm-url: http://github.com/fabric8-apps/keycloak-app/keycloak
     labels:
-      expose: "true"
       provider: fabric8
       project: keycloak
       version: 1.0.2

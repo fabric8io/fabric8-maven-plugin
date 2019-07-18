@@ -29,7 +29,6 @@ items:
       fabric8.io/issue-system: "GitHub"
       fabric8.io/issue-tracker-url: "https://github.com/reactiverse/vertx-maven-plugin/issues/"
     labels:
-      expose: "true"
       provider: fabric8
       app: fabric8-maven-sample-zero-config
       version: "@ignore@"

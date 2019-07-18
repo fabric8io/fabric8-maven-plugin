@@ -27,7 +27,6 @@ items:
       fabric8.io/git-branch: "@ignore@"
       prometheus.io/port: "9779"
     labels:
-      expose: "true"
       provider: fabric8
       app: fabric8-maven-sample-env-metadata
       version: "@ignore@"

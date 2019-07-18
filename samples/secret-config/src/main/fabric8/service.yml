@@ -19,7 +19,6 @@ kind: Service
 metadata:
   name: ${project.artifactId}
   labels:
-    expose: "true"
 spec:
   ports:
   - port: 80

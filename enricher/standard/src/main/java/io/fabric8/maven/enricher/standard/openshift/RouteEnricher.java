@@ -16,22 +16,16 @@
 
 package io.fabric8.maven.enricher.standard.openshift;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
-import io.fabric8.kubernetes.api.model.IntOrString;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.ServicePort;
-import io.fabric8.kubernetes.api.model.ServiceSpec;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.util.kubernetes.Fabric8Annotations;
+import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
+import io.fabric8.maven.enricher.api.Kind;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteBuilder;
@@ -42,16 +36,17 @@ import io.fabric8.openshift.api.model.RoutePort;
  */
 public class RouteEnricher extends BaseEnricher {
 
+    private Set<Integer> webPorts = new HashSet<>(Arrays.asList(80, 443, 8080, 9090));
+
     public RouteEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-openshift-route");
     }
 
     @Override
     public void create(PlatformMode platformMode, final KubernetesListBuilder listBuilder) {
-        if(platformMode == PlatformMode.openshift) {
+        if(platformMode == PlatformMode.openshift && !KubernetesResourceUtil.checkForKind(listBuilder, "Route")) {
             final List<Route> routes = new ArrayList<>();
             listBuilder.accept(new TypedVisitor<ServiceBuilder>() {
-
                 @Override
                 public void visit(ServiceBuilder serviceBuilder) {
                     addRoute(listBuilder, serviceBuilder, routes);
@@ -68,9 +63,9 @@ public class RouteEnricher extends BaseEnricher {
 
     private void addRoute(KubernetesListBuilder listBuilder, ServiceBuilder serviceBuilder, List<Route> routes) {
         ObjectMeta metadata = serviceBuilder.getMetadata();
-        if (metadata != null && isExposedService(serviceBuilder)) {
+        if (metadata != null) {
             String name = metadata.getName();
-            if (!hasRoute(listBuilder, name)) {
+            //if (!hasRoute(listBuilder, name)) {
                 RoutePort routePort = createRoutePort(serviceBuilder);
                 if (routePort != null) {
                     // TODO one day lets support multiple ports on a Route when the model supports it
@@ -82,7 +77,7 @@ public class RouteEnricher extends BaseEnricher {
                             endSpec().
                             build());
                 }
-            }
+            //}
         }
     }
 
@@ -91,7 +86,7 @@ public class RouteEnricher extends BaseEnricher {
         ServiceSpec spec = serviceBuilder.getSpec();
         if (spec != null) {
             List<ServicePort> ports = spec.getPorts();
-            if (ports != null && ports.size() > 0) {
+            if (ports != null && ports.size() > 0 && hasWebPort(ports)) {
                 ServicePort servicePort = ports.get(0);
                 if (servicePort != null) {
                     IntOrString targetPort = servicePort.getTargetPort();
@@ -103,6 +98,18 @@ public class RouteEnricher extends BaseEnricher {
             }
         }
         return routePort;
+    }
+
+    private boolean hasWebPort(List<ServicePort> ports) {
+        for (ServicePort port : ports) {
+            Integer portNumber = port.getPort();
+            if (portNumber != null) {
+                if (webPorts.contains(portNumber)) {
+                            return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -123,23 +130,4 @@ public class RouteEnricher extends BaseEnricher {
         return answer.get();
     }
 
-    protected boolean isExposedService(ServiceBuilder serviceBuilder) {
-        Service service = serviceBuilder.build();
-        return isExposedService(service);
-    }
-
-    protected boolean isExposedService(Service service) {
-        ObjectMeta metadata = service.getMetadata();
-        if (metadata != null) {
-            Map<String, String> labels = metadata.getLabels();
-            if (labels != null) {
-                if ("true".equals(labels.get("expose")) || "true".equals(labels.get(Fabric8Annotations.SERVICE_EXPOSE_URL.value()))) {
-                    return true;
-                }
-            }
-        } else {
-            log.info("No Metadata for service! " + service);
-        }
-        return false;
-    }
 }

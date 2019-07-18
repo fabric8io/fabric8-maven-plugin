@@ -90,9 +90,6 @@ io.fabric8.maven.enricher.standard.openshift.DeploymentConfigEnricher
 # Add a Project from Namespace when on OpenShift
 io.fabric8.maven.enricher.standard.openshift.ProjectEnricher
 
-# Add an "expose" label to every service (TODO: Combine this with a Route/Ingress enricher)
-io.fabric8.maven.enricher.standard.openshift.ExposeEnricher
-
 # Enhance a given controller with the configuration information presented in the plugin configuration.
 io.fabric8.maven.enricher.standard.ControllerViaPluginConfigurationEnricher
 

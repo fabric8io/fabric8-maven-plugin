@@ -22,7 +22,6 @@ items:
   kind: Service
   metadata:
     labels:
-      expose: "true"
       provider: fabric8
       app: fabric8-maven-sample-custom-environment
       version: "@ignore@"

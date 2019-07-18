@@ -227,7 +227,6 @@ A profile can also extend another profile to avoid repetition e.g of generators 
       - fmp-controller-from-configuration
       - fmp-openshift-deploymentconfig
       - fmp-openshift-project
-      - fmp-openshift-service-expose
       - fmp-openshift-route
 
 ----
