@@ -53,6 +53,8 @@
     <module>watcher/api</module>
     <module>watcher/standard</module>
     <module>it</module>
+    <module>servicecatalog-model</module>
+    <module>servicecatalog-client</module>
   </modules>
 
   <scm>
