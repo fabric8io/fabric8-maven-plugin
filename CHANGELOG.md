@@ -31,6 +31,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 73: Added Service Port normalization
 * Bumped version to 4.2-SNAPSHOT
 * Fix 1666: switchToDeployment does not work
+* removed redundant profiles java11 and java9-plus
 
 ### 4.1.0 (16-02-2019)
 * Fix 1578: Fmp is generating ImageChange triggers in the DeploymentConfig
