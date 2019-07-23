@@ -76,7 +76,8 @@
     <!-- =======================================================  -->
     <!-- === Java base image versions for docker, s2i (istag == s2i) -->
     <!-- Upstream -->
-    <version.image.java.upstream.docker>1.5</version.image.java.upstream.docker>
+    <version.image.java.8.upstream.docker>1.5</version.image.java.8.upstream.docker>
+    <version.image.java.11.upstream.docker>1.6.3</version.image.java.11.upstream.docker>
     <version.image.java.upstream.s2i>2.3</version.image.java.upstream.s2i>
 
     <!-- RedHat -->
@@ -105,7 +106,8 @@
 
     <!-- java (java-exec, spring-boot, wildfly-swarm) -->
     <image.java.upstream.s2i>fabric8/s2i-java:${version.image.java.upstream.s2i}</image.java.upstream.s2i>
-    <image.java.upstream.docker>fabric8/java-centos-openjdk8-jdk:${version.image.java.upstream.docker}</image.java.upstream.docker>
+    <image.java.8.upstream.docker>fabric8/java-centos-openjdk8-jdk:${version.image.java.8.upstream.docker}</image.java.8.upstream.docker>
+    <image.java.11.upstream.docker>fabric8/java-centos-openjdk11-jdk:${version.image.java.11.upstream.docker}</image.java.11.upstream.docker>
     <image.java.upstream.istag>fabric8-java:${version.image.java.upstream.s2i}</image.java.upstream.istag>
 
     <image.java.redhat.s2i>jboss-fuse-6/fis-java-openshift:${version.image.java.redhat.s2i}</image.java.redhat.s2i>
@@ -919,7 +921,6 @@
               </systemPropertyVariables>
             </configuration>
           </plugin>
-
         </plugins>
       </build>
     </profile>

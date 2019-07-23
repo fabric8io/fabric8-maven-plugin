@@ -15,17 +15,19 @@
  */
 package io.fabric8.maven.generator.api;
 
-import java.util.Map;
-
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.RuntimeMode;
-import io.fabric8.maven.core.config.ProcessorConfig;
-import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy;
 import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.docker;
@@ -43,10 +45,7 @@ public class FromSelectorTest {
     MavenProject project;
 
     @Mocked
-    Plugin plugin;
-
-    @Mocked
-    Logger logger;
+    GeneratorContext ctx;
 
     @Test
     public void simple() {
@@ -56,37 +55,25 @@ public class FromSelectorTest {
             openshift, s2i, "1.2.3.fuse-00009", "redhat-s2i-prop", "redhat-istag-prop",
             openshift, docker, "1.2.3.fuse-00009", "redhat-docker-prop", "redhat-istag-prop",
             openshift, s2i, "1.2.3.foo-00009", "s2i-prop", "istag-prop",
-            openshift, docker, "1.2.3.foo-00009", "docker-prop", "istag-prop",
+            openshift, docker, "1.2.3.foo-00009", "docker-prop-8", "istag-prop",
             openshift, s2i, "1.2.3", "s2i-prop", "istag-prop",
-            openshift, docker, "1.2.3", "docker-prop", "istag-prop",
+            openshift, docker, "1.2.3", "docker-prop-8", "istag-prop",
             null, s2i, "1.2.3.redhat-00009", "redhat-docker-prop", "redhat-istag-prop",
             null, docker, "1.2.3.redhat-00009", "redhat-docker-prop", "redhat-istag-prop",
             null, s2i, "1.2.3.fuse-00009", "redhat-docker-prop", "redhat-istag-prop",
             null, docker, "1.2.3.fuse-00009", "redhat-docker-prop", "redhat-istag-prop",
-            null, s2i, "1.2.3.foo-00009", "docker-prop", "istag-prop",
-            null, docker, "1.2.3.foo-00009", "docker-prop", "istag-prop",
-            null, s2i, "1.2.3", "docker-prop", "istag-prop",
-            null, docker, "1.2.3", "docker-prop", "istag-prop",
+            null, s2i, "1.2.3.foo-00009", "docker-prop-8", "istag-prop",
+            null, docker, "1.2.3.foo-00009", "docker-prop-8", "istag-prop",
+            null, s2i, "1.2.3", "docker-prop-8", "istag-prop",
+            null, docker, "1.2.3", "docker-prop-8", "istag-prop",
             openshift, null, "1.2.3.redhat-00009", "redhat-docker-prop", "redhat-istag-prop",
             openshift, null, "1.2.3.fuse-00009", "redhat-docker-prop", "redhat-istag-prop",
-            openshift, null, "1.2.3.foo-00009", "docker-prop", "istag-prop",
-            openshift, null, "1.2.3", "docker-prop", "istag-prop"
+            openshift, null, "1.2.3.foo-00009", "docker-prop-8", "istag-prop",
+            openshift, null, "1.2.3", "docker-prop-8", "istag-prop"
         };
 
         for (int i = 0; i < data.length; i += 5) {
-            GeneratorContext ctx = new GeneratorContext.Builder()
-                .project(project)
-                .config(new ProcessorConfig())
-                .logger(logger)
-                .runtimeMode((RuntimeMode) data[i])
-                .strategy((OpenShiftBuildStrategy) data[i + 1])
-                .build();
-
-            final String version = (String) data[i + 2];
-            new Expectations() {{
-               plugin.getVersion(); result = version;
-            }};
-
+            prepareExpectionJava8((String) data[i + 2], (RuntimeMode) data[i], (OpenShiftBuildStrategy) data[i + 1]);
             FromSelector selector = new FromSelector.Default(ctx, "test");
 
             assertEquals(data[i + 3], selector.getFrom());
@@ -98,4 +85,64 @@ public class FromSelectorTest {
         }
     }
 
+    @Test
+    public void simpleJava11() {
+        final Object[] data = new Object[] {
+                openshift, docker, "1.2.3.foo-00009", "docker-prop-11",
+                openshift, docker, "1.2.3", "docker-prop-11",
+                null, s2i, "1.2.3.foo-00009", "docker-prop-11",
+                null, docker, "1.2.3.foo-00009", "docker-prop-11",
+                openshift, null, "1.2.3.foo-00009", "docker-prop-11",
+                openshift, null, "1.2.3", "docker-prop-11",
+        };
+
+        for (int i = 0; i < data.length; i += 4) {
+            prepareExpectionJava11((String) data[i + 2], (RuntimeMode) data[i], (OpenShiftBuildStrategy) data[i + 1]);
+            FromSelector selector = new FromSelector.Default(ctx, "test");
+
+            assertEquals(data[i + 3], selector.getFrom());
+        }
+    }
+
+    private Expectations prepareExpectionJava8(final String version, final RuntimeMode mode, final OpenShiftBuildStrategy strategy) {
+        return prepareExpectation(version, mode, strategy, String.valueOf(8));
+    }
+
+    private Expectations prepareExpectionJava11(final String version, final RuntimeMode mode, final OpenShiftBuildStrategy strategy) {
+        return prepareExpectation(version, mode, strategy, String.valueOf(11));
+    }
+
+    private Expectations prepareExpectation(final String version, final RuntimeMode mode, final OpenShiftBuildStrategy strategy, final String javaVersion) {
+        return new Expectations() {{
+            ctx.getProject(); result = project;
+
+            Xpp3Dom child = new Xpp3Dom("release");
+            child.setValue(javaVersion);
+            Xpp3Dom dom = new Xpp3Dom("configuration");
+            dom.addChild(child);
+
+            Plugin plugin1 = new Plugin();
+            plugin1.setArtifactId("maven-compiler-plugin");
+            plugin1.setGroupId("org.apache.maven.plugins");
+            plugin1.setConfiguration(dom);
+
+            Plugin plugin2 = new Plugin();
+            plugin2.setArtifactId("fabric8-maven-plugin");
+            plugin2.setGroupId("io.fabric8");
+            plugin2.setVersion(version);
+
+            List<Plugin> plugins = new ArrayList<>();
+            plugins.add(plugin1);
+            plugins.add(plugin2);
+
+            project.getBuildPlugins();
+            result = plugins;
+
+            project.getProperties();
+            result = new Properties();
+
+            ctx.getRuntimeMode();result = mode;
+            ctx.getStrategy(); result = strategy;
+        }};
+    }
 }

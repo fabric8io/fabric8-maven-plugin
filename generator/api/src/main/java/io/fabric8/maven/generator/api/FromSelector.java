@@ -15,14 +15,19 @@
  */
 package io.fabric8.maven.generator.api;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Pattern;
-
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.RuntimeMode;
+import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.MavenUtil;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Properties;
+import java.util.regex.Pattern;
 
 import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.kind;
 import static io.fabric8.maven.core.config.OpenShiftBuildStrategy.SourceStrategy.name;
@@ -40,6 +45,8 @@ public abstract class FromSelector {
 
     private final Pattern REDHAT_VERSION_PATTERN = Pattern.compile("^.*\\.(redhat|fuse)-.*$");
 
+    private Plugin plugin;
+    private Plugin compilerPlugin;
     public FromSelector(GeneratorContext context) {
         this.context = context;
     }
@@ -68,7 +75,8 @@ public abstract class FromSelector {
 
     public boolean isRedHat() {
         MavenProject project = context.getProject();
-        Plugin plugin = project.getPlugin("io.fabric8:fabric8-maven-plugin");
+
+        plugin = MavenUtil.getPlugin(project, "io.fabric8", "fabric8-maven-plugin");
         if (plugin == null) {
             // This plugin might be repackaged.
             plugin = project.getPlugin("org.jboss.redhat-fuse:fabric8-maven-plugin");
@@ -79,6 +87,46 @@ public abstract class FromSelector {
         }
         String version = plugin.getVersion();
         return REDHAT_VERSION_PATTERN.matcher(version).matches();
+    }
+
+    public boolean isJava11() {
+        MavenProject project = context.getProject();
+        compilerPlugin = MavenUtil.getPlugin(project, "org.apache.maven.plugins", "maven-compiler-plugin");
+
+        if (compilerPlugin == null) {
+            return false;
+        }
+
+        Xpp3Dom dom = (Xpp3Dom)compilerPlugin.getConfiguration();
+
+        String releaseVersion = "8";
+        if (dom != null && dom.getChild("release") != null) {
+            releaseVersion = dom.getChild("release").getValue();
+        }
+
+        Properties properties = project.getProperties();
+
+        if (isEleven(releaseVersion)) {
+            return true;
+        }
+
+        try {
+            releaseVersion = (String) properties.entrySet()
+                    .stream().filter(entry -> entry.getKey().equals("maven.compiler.release")).findFirst()
+                    .get().getValue();
+        } catch (NoSuchElementException e) {
+            return false;
+        }
+
+        if (isEleven(releaseVersion)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean isEleven(String s) {
+        return Configs.asInt(s) == 11;
     }
 
     public static class Default extends FromSelector {
@@ -94,7 +142,10 @@ public abstract class FromSelector {
             super(context);
             DefaultImageLookup lookup = new DefaultImageLookup(Default.class);
 
-            this.upstreamDocker = lookup.getImageName(prefix + ".upstream.docker");
+            this.upstreamDocker = prefix.equals("java") || prefix.equals("test")?
+                    isJava11()? lookup.getImageName(prefix + ".11.upstream.docker"):
+                    lookup.getImageName(prefix + ".8.upstream.docker"):
+                    lookup.getImageName(prefix + ".upstream.docker");
             this.upstreamS2i = lookup.getImageName(prefix + ".upstream.s2i");
             this.upstreamIstag = lookup.getImageName(prefix + ".upstream.istag");
 
