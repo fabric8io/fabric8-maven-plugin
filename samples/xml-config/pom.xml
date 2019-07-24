@@ -182,8 +182,9 @@
               <resources>
                 <!-- Labels that are applied to all created objects -->
                 <labels>
-                  <group>quickstarts</group>
-                </labels>
+                    <all>
+                        <group>quickstarts</group>
+                    </all>
                 <!-- Definition of the ReplicationController / ReplicaSet. Any better name than "containers" ? -->
                 <deployment>
                   <!-- Name of the replication controller, which will have a sane default (container alisa, mvn coords, ..) -->
@@ -211,6 +212,7 @@
                   <volumes>
                   </volumes>
                 </deployment>
+                </labels>
                 <!-- Dedicated section for (multiple) services to define -->
                 <services>
                   <service>
