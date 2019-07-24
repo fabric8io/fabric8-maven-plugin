@@ -12,6 +12,27 @@ If the mode is set to `kubernetes` then a normal Docker build is performed. The 
 
 In order to make the generated images available to the Kubernetes cluster the generated images need to be pushed to a registry with the goal <<fabric8:push>>. This is not necessary for single node clusters, though as there is no need to distribute images.
 
+Currently, Apart from Java 8, base images for Java 11 are supported for Kubernetes build. To enable Java 11 base images,
+user needs to specift release version 11 in their `maven-compiler-plugin` configuration in their project pom.
+
+.Example for Enabling Java 11 base image.
+[source,xml]
+----
+<plugins>
+  ....
+    <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.1</version>
+        <configuration>
+            <release>11</release>
+       </configuration>
+     </plugin>
+</plugins>
+----
+
+Refer to the https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/spring-boot-with-yaml[spring-boot-with-yaml] sample for a demo.
+
 [[build-openshift]]
 === OpenShift Build
 
