@@ -30,6 +30,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Feature #1661: Added Resource Versioning Support for RBAC
 * Fix 73: Added Service Port normalization
 * Bumped version to 4.2-SNAPSHOT
+* Fix 1678: Fix breaking xml-config sample build
 
 ### 4.1.0 (16-02-2019)
 * Fix 1578: Fmp is generating ImageChange triggers in the DeploymentConfig
