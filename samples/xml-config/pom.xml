@@ -243,7 +243,7 @@
 		  <name>${image.user}/${project.artifactId}:${project.version}</name>
 		  <alias>camel-service</alias>
 		  <build>
-		    <from>fabric8/s2i-java</from>
+		    <from>fabric8/s2i-java@sha256:a6ba8a6e76ebd75f99f2431fe0ec39a82985bc21c0f9bd56021deca1ffde520c</from>
 		    <assembly>
 		      <basedir>/deployments</basedir>
 		      <descriptorRef>artifact-with-dependencies</descriptorRef>
