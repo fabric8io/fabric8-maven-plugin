@@ -182,8 +182,9 @@
               <resources>
                 <!-- Labels that are applied to all created objects -->
                 <labels>
-                  <group>quickstarts</group>
-                </labels>
+                    <all>
+                        <group>quickstarts</group>
+                    </all>
                 <!-- Definition of the ReplicationController / ReplicaSet. Any better name than "containers" ? -->
                 <deployment>
                   <!-- Name of the replication controller, which will have a sane default (container alisa, mvn coords, ..) -->
@@ -211,6 +212,7 @@
                   <volumes>
                   </volumes>
                 </deployment>
+                </labels>
                 <!-- Dedicated section for (multiple) services to define -->
                 <services>
                   <service>
@@ -241,7 +243,7 @@
 		  <name>${image.user}/${project.artifactId}:${project.version}</name>
 		  <alias>camel-service</alias>
 		  <build>
-		    <from>fabric8/s2i-java@@sha256:a6ba8a6e76ebd75f99f2431fe0ec39a82985bc21c0f9bd56021deca1ffde520c</from>
+		    <from>fabric8/s2i-java@sha256:a6ba8a6e76ebd75f99f2431fe0ec39a82985bc21c0f9bd56021deca1ffde520c</from>
 		    <assembly>
 		      <basedir>/deployments</basedir>
 		      <descriptorRef>artifact-with-dependencies</descriptorRef>

@@ -30,6 +30,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Feature #1661: Added Resource Versioning Support for RBAC
 * Fix 73: Added Service Port normalization
 * Bumped version to 4.2-SNAPSHOT
+* Fix 1678: Fix breaking xml-config sample build
 * Fix 1666: switchToDeployment does not work
 * removed redundant profiles java11 and java9-plus
 * Upgrade Fabric8 kubernetes client to v4.3.1
