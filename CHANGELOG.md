@@ -10,7 +10,7 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
-### 4.1-SNAPSHOT
+### 4.2-SNAPSHOT
 * Fix #1638: Remove enrichAll parameter from ImageChangeTriggerEnricher
 * Update Docker Maven Plugin to 0.29.0
 * Chore: Refactor BaseEnricher to get rid of duplicated properties
@@ -31,6 +31,10 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix 73: Added Service Port normalization
 * Bumped version to 4.2-SNAPSHOT
 * Fix 1678: Fix breaking xml-config sample build
+* Fix 1666: switchToDeployment does not work
+* removed redundant profiles java11 and java9-plus
+* Upgrade Fabric8 kubernetes client to v4.3.1
+* Feature #1647: Added Base Image support for Java 11
 
 ### 4.1.0 (16-02-2019)
 * Fix 1578: Fmp is generating ImageChange triggers in the DeploymentConfig

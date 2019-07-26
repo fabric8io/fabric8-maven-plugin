@@ -21,12 +21,12 @@
 
   <parent>
     <groupId>io.fabric8</groupId>
-    <artifactId>fabric8-maven-parent</artifactId>
+    <artifactId>fabric8-maven-plugin-parent</artifactId>
     <version>4.2-SNAPSHOT</version>
     <relativePath>../../parent/pom.xml</relativePath>
   </parent>
 
-  <artifactId>fabric8-maven-watcher-api</artifactId>
+  <artifactId>fabric8-maven-plugin-watcher-api</artifactId>
   <version>4.2-SNAPSHOT</version>
 
   <name>Fabric8 Maven :: Watcher :: API</name>
@@ -49,7 +49,7 @@
 
     <dependency>
       <groupId>io.fabric8</groupId>
-      <artifactId>fabric8-maven-core</artifactId>
+      <artifactId>fabric8-maven-plugin-core</artifactId>
     </dependency>
 
     <dependency>

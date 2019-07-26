@@ -18,6 +18,7 @@ package io.fabric8.maven.core.access;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.fabric8.kubernetes.api.model.APIGroupListBuilder;
 import io.fabric8.kubernetes.api.model.RootPaths;
 import io.fabric8.kubernetes.client.Client;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -28,7 +29,6 @@ import io.fabric8.openshift.client.server.mock.OpenShiftMockServer;
 import mockit.Mocked;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -56,6 +56,16 @@ public class ClusterAccessTest {
         rootpaths.setPaths(paths);
 
         mockServer.expect().get().withPath("/" ).andReturn(200, rootpaths).always();
+        mockServer.expect().withPath("/apis").andReturn(200, new APIGroupListBuilder()
+                .addNewGroup()
+                .withApiVersion("v1")
+                .withName("autoscaling.k8s.io")
+                .endGroup()
+                .addNewGroup()
+                .withApiVersion("v1")
+                .withName("security.openshift.io")
+                .endGroup()
+                .build()).always();
 
         ClusterAccess clusterAccess = new ClusterAccess(null, client);
 

@@ -45,12 +45,12 @@ for running a single test.
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>io.fabric8</groupId>
-    <artifactId>fabric8-maven-parent</artifactId>
+    <artifactId>fabric8-maven-plugin-parent</artifactId>
     <version>4.2-SNAPSHOT</version>
     <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
-  <artifactId>fabric8-maven-it</artifactId>
+  <artifactId>fabric8-maven-plugin-it</artifactId>
   <version>4.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 

@@ -20,7 +20,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.fabric8</groupId>
-  <artifactId>fabric8-maven-parent</artifactId>
+  <artifactId>fabric8-maven-plugin-parent</artifactId>
   <version>4.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -64,7 +64,7 @@
     <jmockit.version>1.43</jmockit.version>
     <version.maven>3.3.1</version.maven>
     <version.jacoco>0.8.2</version.jacoco>
-    <version.kubernetes-client>4.3.0</version.kubernetes-client>
+    <version.kubernetes-client>4.3.1</version.kubernetes-client>
     <version.openshift-client>${version.kubernetes-client}</version.openshift-client>
     <version.mockwebserver>0.0.13</version.mockwebserver>
     <version.docker-maven-plugin>0.30.0</version.docker-maven-plugin>
@@ -76,7 +76,8 @@
     <!-- =======================================================  -->
     <!-- === Java base image versions for docker, s2i (istag == s2i) -->
     <!-- Upstream -->
-    <version.image.java.upstream.docker>1.5</version.image.java.upstream.docker>
+    <version.image.java.8.upstream.docker>1.5</version.image.java.8.upstream.docker>
+    <version.image.java.11.upstream.docker>1.6.3</version.image.java.11.upstream.docker>
     <version.image.java.upstream.s2i>2.3</version.image.java.upstream.s2i>
 
     <!-- RedHat -->
@@ -105,7 +106,8 @@
 
     <!-- java (java-exec, spring-boot, wildfly-swarm) -->
     <image.java.upstream.s2i>fabric8/s2i-java:${version.image.java.upstream.s2i}</image.java.upstream.s2i>
-    <image.java.upstream.docker>fabric8/java-centos-openjdk8-jdk:${version.image.java.upstream.docker}</image.java.upstream.docker>
+    <image.java.8.upstream.docker>fabric8/java-centos-openjdk8-jdk:${version.image.java.8.upstream.docker}</image.java.8.upstream.docker>
+    <image.java.11.upstream.docker>fabric8/java-centos-openjdk11-jdk:${version.image.java.11.upstream.docker}</image.java.11.upstream.docker>
     <image.java.upstream.istag>fabric8-java:${version.image.java.upstream.s2i}</image.java.upstream.istag>
 
     <image.java.redhat.s2i>jboss-fuse-6/fis-java-openshift:${version.image.java.redhat.s2i}</image.java.redhat.s2i>
@@ -169,26 +171,26 @@
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-core</artifactId>
+        <artifactId>fabric8-maven-plugin-core</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <!-- ## Enricher -->
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-enricher-api</artifactId>
+        <artifactId>fabric8-maven-plugin-enricher-api</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-enricher-standard</artifactId>
+        <artifactId>fabric8-maven-plugin-enricher-standard</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-enricher-fabric8</artifactId>
+        <artifactId>fabric8-maven-plugin-enricher-fabric8</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -201,55 +203,55 @@
       <!-- ## Generator -->
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-api</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-api</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-java-exec</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-java-exec</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-spring-boot</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-spring-boot</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-vertx</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-vertx</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-karaf</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-karaf</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-quarkus</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-quarkus</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-wildfly-swarm</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-wildfly-swarm</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-thorntail-v2</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-thorntail-v2</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-generator-webapp</artifactId>
+        <artifactId>fabric8-maven-plugin-generator-webapp</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -257,13 +259,13 @@
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-watcher-api</artifactId>
+        <artifactId>fabric8-maven-plugin-watcher-api</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-watcher-standard</artifactId>
+        <artifactId>fabric8-maven-plugin-watcher-standard</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -919,72 +921,8 @@
               </systemPropertyVariables>
             </configuration>
           </plugin>
-
         </plugins>
       </build>
     </profile>
-
-    <profile>
-      <id>java9-plus</id>
-      <activation>
-        <jdk>[9,)</jdk>
-      </activation>
-      <dependencies>
-        <dependency>
-          <groupId>javax.xml.bind</groupId>
-          <artifactId>jaxb-api</artifactId>
-          <version>2.3.0</version>
-        </dependency>
-      </dependencies>
-    </profile>
-
-    <profile>
-      <id>java11</id>
-      <activation>
-        <jdk>[11,)</jdk>
-      </activation>
-      <dependencies>
-        <dependency>
-          <groupId>com.sun.xml.bind</groupId>
-          <artifactId>jaxb-impl</artifactId>
-          <version>2.3.0</version>
-        </dependency>
-        <dependency>
-          <groupId>javax.annotation</groupId>
-          <artifactId>javax.annotation-api</artifactId>
-          <version>1.3.1</version>
-        </dependency>
-      </dependencies>
-      <build>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.0</version>
-          <configuration>
-            <release>11</release>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-failsafe-plugin</artifactId>
-          <version>2.22.0</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.22.1</version>
-          <configuration>
-            <runOrder>alphabetical</runOrder>
-            <argLine>
-              -javaagent:${settings.localRepository}/org/jmockit/jmockit/${jmockit.version}/jmockit-${jmockit.version}.jar
-            </argLine>
-          </configuration>
-        </plugin>
-      </plugins>
-      </build>
-    </profile>
   </profiles>
-
 </project>
