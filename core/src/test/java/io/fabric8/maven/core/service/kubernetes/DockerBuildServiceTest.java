@@ -39,11 +39,6 @@ public class DockerBuildServiceTest {
     @Test
     public void testSuccessfulBuild() throws Exception {
 
-        new Expectations() {{
-            hub.getBuildService();
-            result = buildService;
-        }};
-
         final BuildService.BuildContext context = new BuildService.BuildContext.Builder()
                 .build();
 
