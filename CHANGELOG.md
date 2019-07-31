@@ -35,6 +35,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * removed redundant profiles java11 and java9-plus
 * Upgrade Fabric8 kubernetes client to v4.3.1
 * Feature #1647: Added Base Image support for Java 11
+* Fix #1680: DockerBuildServiceTest Refactored
 
 ### 4.1.0 (16-02-2019)
 * Fix 1578: Fmp is generating ImageChange triggers in the DeploymentConfig
