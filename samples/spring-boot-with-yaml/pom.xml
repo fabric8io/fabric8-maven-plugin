@@ -67,6 +67,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.8.1</version>
         <configuration>
+          <!-- Won't work for OpenShift Mode -->
+          <!-- For openshift, switch back to Java 8 -->
         <release>11</release>
        </configuration>
       </plugin>
