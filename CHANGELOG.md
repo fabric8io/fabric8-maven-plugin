@@ -10,7 +10,7 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
-### 4.2-SNAPSHOT
+### 4.2.0 (01-02-2019)
 * Fix #1638: Remove enrichAll parameter from ImageChangeTriggerEnricher
 * Update Docker Maven Plugin to 0.29.0
 * Chore: Refactor BaseEnricher to get rid of duplicated properties
