@@ -515,8 +515,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/fabric8-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
-<span id="revnumber">version 4.1.0,</span>
-<span id="revdate">2019-04-17</span>
+<span id="revnumber">version 4.2.0,</span>
+<span id="revdate">2019-08-02</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -789,7 +789,7 @@ This allows for type-safe configuration with IDE support, but only a subset of p
 
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-sample-zero-config<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.2.0<span class="tag">&lt;/version&gt;</span>
   <span class="tag">&lt;packaging&gt;</span>jar<span class="tag">&lt;/packaging&gt;</span>
 
   <span class="tag">&lt;parent&gt;</span>
@@ -814,7 +814,7 @@ This allows for type-safe configuration with IDE support, but only a subset of p
       <span class="tag">&lt;plugin&gt;</span>
         <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
         <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span> <i class="conum" data-value="4"></i><b>(4)</b>
-        <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
+        <span class="tag">&lt;version&gt;</span>4.2.0<span class="tag">&lt;/version&gt;</span>
       <span class="tag">&lt;/plugin&gt;</span>
     <span class="tag">&lt;/plugins&gt;</span>
   <span class="tag">&lt;/build&gt;</span>
@@ -1175,89 +1175,7 @@ For building images there is also an alternative mode using external Dockerfiles
 <div class="sect2">
 <h3 id="openshift-compatibility">2.1. OpenShift Compatibility</h3>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 2. OpenShift Comptatibility</caption>
-<colgroup>
-<col style="width: 16.6666%;">
-<col style="width: 16.6666%;">
-<col style="width: 16.6666%;">
-<col style="width: 16.6666%;">
-<col style="width: 16.6666%;">
-<col style="width: 16.667%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">FMP</th>
-<th class="tableblock halign-left valign-top">OpenShift 3.9.0</th>
-<th class="tableblock halign-left valign-top">OpenShift 3.7.0</th>
-<th class="tableblock halign-left valign-top">OpenShift 3.6.0</th>
-<th class="tableblock halign-left valign-top">OpenShift 3.5.0</th>
-<th class="tableblock halign-left valign-top">OpenShift 1.4.1</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.38</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">x</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.37</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">x</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.36</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">x</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.35</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">x</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.34</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">x</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.33</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">x</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.32</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="sect2">
-<h3 id="kubernetes-compatibility">2.2. Kubernetes Compatibility</h3>
-<table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 3. Kubernetes Compatibility</caption>
+<caption class="title">Table 2. OpenShift Compatibility</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 14.2857%;">
@@ -1270,6 +1188,184 @@ For building images there is also an alternative mode using external Dockerfiles
 <thead>
 <tr>
 <th class="tableblock halign-left valign-top">FMP</th>
+<th class="tableblock halign-left valign-top">OpenShift 3.11.0</th>
+<th class="tableblock halign-left valign-top">OpenShift 3.10.0</th>
+<th class="tableblock halign-left valign-top">OpenShift 3.9.0</th>
+<th class="tableblock halign-left valign-top">OpenShift 3.7.0</th>
+<th class="tableblock halign-left valign-top">OpenShift 3.6.0</th>
+<th class="tableblock halign-left valign-top"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.2.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.1.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.0.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.0.0-M2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.0.0-M1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.42</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.41</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.40</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.39</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.38</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.37</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.36</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.35</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.34</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.33</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.32</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="kubernetes-compatibility">2.2. Kubernetes Compatibility</h3>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 3. Kubernetes Compatibility</caption>
+<colgroup>
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">FMP</th>
+<th class="tableblock halign-left valign-top">Kubernetes 1.12.0</th>
+<th class="tableblock halign-left valign-top">Kubernetes 1.11.0</th>
+<th class="tableblock halign-left valign-top">Kubernetes 1.10.0</th>
 <th class="tableblock halign-left valign-top">Kubernetes 1.9.0</th>
 <th class="tableblock halign-left valign-top">Kubernetes 1.8.0</th>
 <th class="tableblock halign-left valign-top">Kubernetes 1.7.0</th>
@@ -1280,8 +1376,119 @@ For building images there is also an alternative mode using external Dockerfiles
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.38</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.2.0</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.1.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.0.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.0.0-M2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.0.0-M1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.42</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.41</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.40</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.39</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.38</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
@@ -1290,7 +1497,10 @@ For building images there is also an alternative mode using external Dockerfiles
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.37</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
@@ -1299,7 +1509,10 @@ For building images there is also an alternative mode using external Dockerfiles
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.36</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
@@ -1308,7 +1521,10 @@ For building images there is also an alternative mode using external Dockerfiles
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.35</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
@@ -1317,7 +1533,10 @@ For building images there is also an alternative mode using external Dockerfiles
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.34</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
@@ -1326,7 +1545,10 @@ For building images there is also an alternative mode using external Dockerfiles
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.33</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
@@ -1335,7 +1557,10 @@ For building images there is also an alternative mode using external Dockerfiles
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.32</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
@@ -1376,7 +1601,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.2.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1887,7 +2112,7 @@ If you do not want to generate a Route descriptor, you can set the <code>fabric8
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>4.2.0<span class="tag">&lt;/version&gt;</span>
     <span class="tag">&lt;configuration&gt;</span>
         <span class="tag">&lt;generateRoute&gt;</span>false<span class="tag">&lt;/generateRoute&gt;</span>
     <span class="tag">&lt;/configuration&gt;</span>
@@ -1967,6 +2192,29 @@ By default the mode is set to <code>auto</code>. In this case the plugin tries t
 </div>
 <div class="paragraph">
 <p>In order to make the generated images available to the Kubernetes cluster the generated images need to be pushed to a registry with the goal <a href="#fabric8:push"><strong>fabric8:push</strong></a>. This is not necessary for single node clusters, though as there is no need to distribute images.</p>
+</div>
+<div class="paragraph">
+<p>Currently, Apart from Java 8, base images for Java 11 are supported for Kubernetes build. To enable Java 11 base images,
+user needs to specift release version 11 in their <code>maven-compiler-plugin</code> configuration in their project pom.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example for Enabling Java 11 base image.</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugins&gt;</span>
+  ....
+    <span class="tag">&lt;plugin&gt;</span>
+        <span class="tag">&lt;groupId&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/groupId&gt;</span>
+        <span class="tag">&lt;artifactId&gt;</span>maven-compiler-plugin<span class="tag">&lt;/artifactId&gt;</span>
+        <span class="tag">&lt;version&gt;</span>3.8.1<span class="tag">&lt;/version&gt;</span>
+        <span class="tag">&lt;configuration&gt;</span>
+            <span class="tag">&lt;release&gt;</span>11<span class="tag">&lt;/release&gt;</span>
+       <span class="tag">&lt;/configuration&gt;</span>
+     <span class="tag">&lt;/plugin&gt;</span>
+<span class="tag">&lt;/plugins&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Refer to the <a href="https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/spring-boot-with-yaml">spring-boot-with-yaml</a> sample for a demo.</p>
 </div>
 </div>
 <div class="sect3">
@@ -2519,13 +2767,13 @@ linking images together or for specifying it with the global <strong>image</stro
 <p><strong>contextDir</strong> specifies docker build context if an external dockerfile is located outside of Docker build context. If not specified, Dockerfile&#8217;s parent directory is used as build context.</p>
 </li>
 <li>
-<p><strong>dockerFile</strong> specifies a specific Dockerfile path.</p>
+<p><strong>dockerFile</strong> specifies a specific Dockerfile path. The Docker build context directory is set to <code>contextDir</code> if given. If not the directory by default is the directory in which the Dockerfile is stored.</p>
 </li>
 <li>
-<p><strong>dockerArchive</strong> specifies a previously saved image archive to load directly. Such a tar archive can be created with <code>docker save</code>. If a <code>dockerArchive</code> is provided, no <code>dockerFile</code> or <code>dockerFileDir</code> must be given.</p>
+<p><strong>dockerArchive</strong> specifies a previously saved image archive to load directly. Such a tar archive can be created with <code>docker save</code> or the <a href="#fabric8:save">[fabric8:save]</a> goal. If a <code>dockerArchive</code> is provided, no <code>dockerFile</code> or <code>dockerFileDir</code> must be given.</p>
 </li>
 <li>
-<p><strong>dockerFileDir</strong> (<strong>deprecated</strong>, use <strong>contextDir</strong>) specifies a directory containing a Dockerfile that will be used to create the image. The name of the Dockerfile is <code>Dockerfile</code> by default but can be also set with the option <code>dockerFile</code> (see below).</p>
+<p><strong>dockerFileDir</strong> (<em>deprecated</em>, use <strong>contextDir</strong>) specifies a directory containing a Dockerfile that will be used to create the image. The name of the Dockerfile is <code>Dockerfile</code> by default but can be also set with the option <code>dockerFile</code> (see below).</p>
 </li>
 </ul>
 </div>
@@ -2768,11 +3016,15 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>buildOptions</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Map specifying the build options to provide to the docker daemon when building the image. These options map to the ones listed as query parameters in the
 <a href="https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-image-from-a-dockerfile">Docker Remote API</a> and are restricted to simple options
-(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. <code>nocache</code>, <code>cleanup=remove</code> for buildoption <code>forcerm=1</code> and <code>args</code> for build args) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
+(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. <code>noCache</code>, <code>cleanup=remove</code> for buildoption <code>forcerm=1</code> and <code>args</code> for build args) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cleanup</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Cleanup dangling (untagged) images after each build (including any containers created from them). Default is <code>try</code> which tries to remove the old image, but doesn&#8217;t fail the build if this is not possible because e.g. the image is still used by a running container. Use <code>remove</code> if you want to fail the build and <code>none</code> if no cleanup is requested.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="context-dir"></a><strong>contextDir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to a directory used for the build&#8217;s context. You can specify the <code>Dockerfile</code> to use with <strong>dockerFile</strong>, which by default is the Dockerfile found in the <code>contextDir</code>. The Dockerfile can be also located outside of the <code>contextDir</code>, if provided with an absolute file path. See <a href="#external-dockerfile">External Dockerfile</a> for details.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#misc-startup"><strong>cmd</strong></a></p></td>
@@ -2787,8 +3039,8 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Path to a <code>Dockerfile</code> which also triggers <em>Dockerfile mode</em>. See <a href="#external-dockerfile">External Dockerfile</a> for details.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerFileDir</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Path to a directory holding a <code>Dockerfile</code> and switch on <em>Dockerfile mode</em>. See <a href="#external-dockerfile">External Dockerfile</a> for details.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerFileDir</strong> (<em>deprecated</em> in favor of <strong><a href="#context-dir">contextDir</a></strong>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to a directory holding a <code>Dockerfile</code> and switch on <em>Dockerfile mode</em>. See <a href="#external-dockerfile">External Dockerfile</a> for details. <em>This option is deprecated in favor of _contextDir</em> and will be removed for the next major release_.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerArchive</strong></p></td>
@@ -2842,6 +3094,34 @@ In case of an <a href="#build-openshift">S2I Binary build</a> this parameter spe
 <td class="tableblock halign-left valign-top"><p class="tableblock">Specific pull policy for the base image. This overwrites any global pull policy. See the globale configuration option <a href="#image-pull-policy">imagePullPolicy</a> for the possible values and the default.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>loadNamePattern</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Scan the images in the archive specified in <code>dockerArchive</code> and match the associated repository and tag information against this pattern. When a matching repository and tag is found, create a tag linking the <code>name</code> for this image to the repository and tag that matched the pattern.</p>
+</div>
+<div class="paragraph">
+<p>The wildcards are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>?</code> matches a single character</p>
+</li>
+<li>
+<p><code>*</code> matches within one component, where components are separated by slashes, or the final colon that separates the repository from the tag</p>
+</li>
+<li>
+<p><code>**</code> matches multiple components, stopping at the final colon</p>
+</li>
+<li>
+<p><code>**/</code> matches multiple components, but must stop at a slash, or the final colon</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>When matching multiple components, <code>**/</code> is likely to be more useful than <code>**</code>. The pattern <code>**image-name:*</code> will match <code>my-group/my-image-name:some-tag</code>, whereas <code>**/image-name:*</code> will not, because the wildcard has to stop at a slash. Note that <code>**/image-name:*</code> will also match 'image-name:some-tag', since the <code>**/</code> wildcard can be empty.</p>
+</div></div></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#misc-env"><strong>labels</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Labels  as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
 </tr>
@@ -2850,8 +3130,12 @@ In case of an <a href="#build-openshift">S2I Binary build</a> this parameter spe
 <td class="tableblock halign-left valign-top"><p class="tableblock">The author (<code>MAINTAINER</code>) field for the generated image</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>nocache</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Don&#8217;t use Docker&#8217;s build cache. This can be overwritten by setting a system property <code>docker.nocache</code> when running Maven.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>noCache</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Don&#8217;t use Docker&#8217;s build cache. This can be overwritten by setting a system property <code>docker.noCache</code> when running Maven.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cacheFrom</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A list of <code>&lt;image&gt;</code> elements specifying image names to use as cache sources.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>optimise</strong></p></td>
@@ -3514,7 +3798,7 @@ more details.</p></td>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.2.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="comment">&lt;!-- Connect fabric8:resource to the lifecycle phases --&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
@@ -3689,7 +3973,7 @@ This goal is deprecated and might vanish in version 4.0 of this plugin. It&#8217
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.2.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="comment">&lt;!-- Connect fabric8:resource, fabric8:build and fabric8:helm to lifecycle phases --&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
@@ -3727,7 +4011,7 @@ This goal is deprecated and might vanish in version 4.0 of this plugin. It&#8217
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>4.2.0<span class="tag">&lt;/version&gt;</span>
     <span class="tag">&lt;configuration&gt;</span>
         <span class="tag">&lt;enricher&gt;</span>
             <span class="tag">&lt;excludes&gt;</span>
@@ -4869,12 +5153,12 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add a default portname for commonly known service.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-project">fmp-project</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-project-label">fmp-project-label</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Add Maven coordinates as labels to all objects.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-service">fmp-service</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Create a default service if missing and extrac ports from the Docker image configuration.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Create a default service if missing and extract ports from the Docker image configuration.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#fmp-maven-issue-mgmt-enricher">fmp-maven-issue-mgmt</a></p></td>
@@ -4970,6 +5254,50 @@ An explicit configuration always takes precedence over auto detection. For enric
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>protocol</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Default protocol to use for the services. Must be <code>tcp</code> or <code>udp</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>tcp</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>normalizePort</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Normalize the port numbering of the service to common and conventional port numbers.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Following is the Port mapping that comes in effect, when normalizePort option is set true.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Original Port</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Normalized Port</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8080</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">80</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8081</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">80</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8181</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">80</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8180</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">80</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8443</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">443</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">443</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">443</p></td>
 </tr>
 </tbody>
 </table>
@@ -5109,12 +5437,12 @@ Assuming that the image exposes ports <code>8080</code> and <code>8778</code> (e
 
 </div>
 <div class="sect4">
-<h5 id="fmp-project">fmp-project</h5>
+<h5 id="fmp-project-label">fmp-project-label</h5>
 <div class="paragraph">
 <p>Enricher that adds standard labels and selectors to generated resources (e.g. <code>app</code>, <code>group</code>, <code>provider</code>, <code>version</code>).</p>
 </div>
 <div class="paragraph">
-<p>The <code>fmp-project</code> enricher supports the following configuration options:</p>
+<p>The <code>fmp-project-label</code> enricher supports the following configuration options:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
@@ -5672,7 +6000,7 @@ However, by default, no health check will be added to your deployment.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.2.0<span class="tag">&lt;/version&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
     <span class="tag">&lt;execution&gt;</span>
       <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
@@ -5732,7 +6060,7 @@ However, by default, no health check will be added to your deployment.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.2.0<span class="tag">&lt;/version&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
     <span class="tag">&lt;execution&gt;</span>
       <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
@@ -5779,7 +6107,7 @@ However, by default, no health check will be added to your deployment.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.1.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.2.0<span class="tag">&lt;/version&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
     <span class="tag">&lt;execution&gt;</span>
       <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
@@ -6328,6 +6656,7 @@ For more information read <a href="https://kubernetes.io/docs/concepts/workloads
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
   <span class="tag">&lt;resources&gt;</span>
     <span class="tag">&lt;configMap&gt;</span>
+      <span class="tag">&lt;name&gt;</span>myconfigmap<span class="tag">&lt;/name&gt;</span>
       <span class="tag">&lt;entries&gt;</span>
         <span class="tag">&lt;entry&gt;</span>
           <span class="tag">&lt;name&gt;</span>A<span class="tag">&lt;/name&gt;</span>
@@ -6350,6 +6679,7 @@ For more information read <a href="https://kubernetes.io/docs/concepts/workloads
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
   <span class="tag">&lt;resources&gt;</span>
     <span class="tag">&lt;configMap&gt;</span>
+      <span class="tag">&lt;name&gt;</span>configmap-test<span class="tag">&lt;/name&gt;</span>
       <span class="tag">&lt;entries&gt;</span>
         <span class="tag">&lt;entry&gt;</span>
           <span class="tag">&lt;file&gt;</span>src/test/resources/test-application.properties<span class="tag">&lt;/file&gt;</span>
@@ -6722,12 +7052,19 @@ If you set <code>name</code> tag then this is used as key instead of the filenam
    extends: default
    enricher:
      includes:
-     - fmp-name
-     - fmp-controller
-     - fmp-service
-     - fmp-image
-     - fmp-project
-     - fmp-debug</span></span></code></pre>
+      - fmp-name
+      - fmp-controller
+      - fmp-service
+      - fmp-image
+      - fmp-project-label
+      - fmp-debug
+      - fmp-namespace
+      - fmp-metadata
+      - fmp-controller-from-configuration
+      - fmp-openshift-deploymentconfig
+      - fmp-openshift-project
+      - fmp-openshift-service-expose
+      - fmp-openshift-route</span></span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7426,6 +7763,10 @@ mvn fabric8:migrate
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>istag</code>, <code>imagestreamtag</code></p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ingress</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ingress</code></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Job</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>job</code></p></td>
 </tr>
@@ -7555,8 +7896,8 @@ By default if no environment variable nor system property is set, scan for a fil
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 4.1.0<br>
-Last updated 2019-04-17 14:39:25 UTC
+Version 4.2.0<br>
+Last updated 2019-07-11 20:07:35 IST
 </div>
 </div>
 </body>
