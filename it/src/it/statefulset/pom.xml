@@ -23,7 +23,7 @@
 
   <artifactId>fabric8-maven-sample-statefulset</artifactId>
   <groupId>io.fabric8</groupId>
-  <version>4.2-SNAPSHOT</version>
+  <version>4.3-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>

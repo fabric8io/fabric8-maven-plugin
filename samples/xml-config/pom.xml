@@ -23,12 +23,12 @@
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>fabric8-maven-plugin-parent</artifactId>
-    <version>4.2-SNAPSHOT</version>
+    <version>4.3-SNAPSHOT</version>
     <relativePath>../../parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>fabric8-maven-sample-xml-config</artifactId>
-  <version>4.2-SNAPSHOT</version>
+  <version>4.3-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>Fabric8 Maven :: Samples :: XML configuration</name>

@@ -28,7 +28,7 @@
 
   <artifactId>fabric8-maven-sample-external-resources</artifactId>
   <groupId>io.fabric8</groupId>
-  <version>4.2-SNAPSHOT</version>
+  <version>4.3-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>Fabric8 Maven :: Sample :: External Reources</name>
 
@@ -83,7 +83,7 @@
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-plugin</artifactId>
-        <version>4.2-SNAPSHOT</version>
+        <version>4.3-SNAPSHOT</version>
         <executions>
           <execution>
             <goals>

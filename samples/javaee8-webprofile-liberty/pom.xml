@@ -20,7 +20,7 @@
 
     <groupId>io.fabric8</groupId>
     <artifactId>javaee8-webprofile-liberty</artifactId>
-    <version>4.2-SNAPSHOT</version>
+    <version>4.3-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Fabric8 Maven :: Sample :: JavaEE 8 WebProfile</name>
@@ -49,7 +49,7 @@
             <dependency>
                 <groupId>io.fabric8</groupId>
                 <artifactId>javaee8-webprofile-liberty-app</artifactId>
-                <version>4.2-SNAPSHOT</version>
+                <version>4.3-SNAPSHOT</version>
                 <type>war</type>
             </dependency>
             <dependency>

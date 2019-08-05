@@ -22,12 +22,12 @@
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>fabric8-maven-plugin-parent</artifactId>
-    <version>4.2-SNAPSHOT</version>
+    <version>4.3-SNAPSHOT</version>
     <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>fabric8-maven-plugin-core</artifactId>
-  <version>4.2-SNAPSHOT</version>
+  <version>4.3-SNAPSHOT</version>
 
   <name>Fabric8 Maven :: Core</name>
 

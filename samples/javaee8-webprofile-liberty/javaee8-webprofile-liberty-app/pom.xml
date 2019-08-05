@@ -22,7 +22,7 @@
 
     <groupId>io.fabric8</groupId>
     <artifactId>javaee8-webprofile-liberty-app</artifactId>
-    <version>4.2-SNAPSHOT</version>
+    <version>4.3-SNAPSHOT</version>
     <packaging>war</packaging>
 
     <name>Fabric8 Maven :: Sample :: JavaEE 8 WebProfile :: Application</name>
@@ -30,7 +30,7 @@
     <parent>
         <groupId>io.fabric8</groupId>
         <artifactId>javaee8-webprofile-liberty</artifactId>
-        <version>4.2-SNAPSHOT</version>
+        <version>4.3-SNAPSHOT</version>
     </parent>
 
     <properties>
