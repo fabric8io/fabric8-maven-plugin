@@ -101,7 +101,7 @@
           <dependencies>
             <dependency>
               <groupId>io.fabric8</groupId>
-              <artifactId>fabric8-maven-doc</artifactId>
+              <artifactId>fabric8-maven-plugin-doc</artifactId>
               <version>${project.version}</version>
             </dependency>
           </dependencies>
