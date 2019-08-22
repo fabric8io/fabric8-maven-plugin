@@ -19,10 +19,14 @@ import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
 import org.apache.maven.plugin.MojoExecutionException;
+
+import static io.fabric8.maven.core.util.BuildLabelUtil.addSchemaLabels;
 
 public class ThorntailV2Generator extends JavaExecGenerator {
 
@@ -46,7 +50,7 @@ public class ThorntailV2Generator extends JavaExecGenerator {
         // - https://github.com/fabric8io/fabric8-maven-plugin/issues/1173
         // - https://issues.jboss.org/browse/THORN-1859
         ret.put("AB_PROMETHEUS_OFF", "true");
+        ret.put("AB_OFF", "true");
         return ret;
     }
-
 }
