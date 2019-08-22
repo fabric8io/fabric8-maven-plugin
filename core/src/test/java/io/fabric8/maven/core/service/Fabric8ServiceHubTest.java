@@ -17,6 +17,7 @@ package io.fabric8.maven.core.service;
 
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.RuntimeMode;
+import io.fabric8.maven.core.service.kubernetes.BuildahIntegration.BuildahBuildService;
 import io.fabric8.maven.core.service.kubernetes.DockerBuildService;
 import io.fabric8.maven.core.service.openshift.OpenshiftBuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
@@ -54,6 +55,9 @@ public class Fabric8ServiceHubTest {
 
     @Mocked
     private RepositorySystem repositorySystem;
+
+    @Mocked
+    private boolean isBuildah;
 
     @Before
     public void init() throws Exception {
@@ -100,7 +104,7 @@ public class Fabric8ServiceHubTest {
     }
 
     @Test
-    public void testObtainBuildService() {
+    public void testObtainDockerBuildService() {
         Fabric8ServiceHub hub = new Fabric8ServiceHub.Builder()
                 .clusterAccess(clusterAccess)
                 .log(logger)
@@ -113,6 +117,24 @@ public class Fabric8ServiceHubTest {
 
         assertNotNull(buildService);
         assertTrue(buildService instanceof DockerBuildService);
+    }
+
+    @Test
+    public void testObtainBuildahBuildService() {
+        isBuildah = true;
+        Fabric8ServiceHub hub = new Fabric8ServiceHub.Builder()
+                .clusterAccess(clusterAccess)
+                .log(logger)
+                .platformMode(RuntimeMode.kubernetes)
+                .dockerServiceHub(dockerServiceHub)
+                .isBuildahMode(isBuildah)
+                .buildServiceConfig(buildServiceConfig)
+                .build();
+
+        BuildService buildService = hub.getBuildService();
+
+        assertNotNull(buildService);
+        assertTrue(buildService instanceof BuildahBuildService);
     }
 
     @Test

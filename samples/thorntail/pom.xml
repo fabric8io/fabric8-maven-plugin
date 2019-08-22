@@ -41,6 +41,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- commented until https://github.com/fabric8io/fabric8-maven-plugin/issues/1693 is resolved -->
     <!--<fabric8.generator.name>%a/%g:%l</fabric8.generator.name>-->
+<!--    <fabric8.build.buildah>true</fabric8.build.buildah>-->
   </properties>
 
   <dependencyManagement>

@@ -24,6 +24,7 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.service.Fabric8ServiceHub;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -63,6 +64,9 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      */
     @Parameter
     private ProcessorConfig generator;
+
+    @Parameter(property = "fabric8.build.buildah", defaultValue = "false")
+    private boolean isBuildah;
 
     /**
      * Enrichers used for enricher build objects
@@ -219,8 +223,9 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     @Override
     protected boolean isDockerAccessRequired() {
-        return runtimeMode == RuntimeMode.kubernetes;
+        return runtimeMode == RuntimeMode.kubernetes && !isBuildahMode();
     }
+
 
     @Override
     protected void executeInternal(ServiceHub hub) throws MojoExecutionException {
@@ -237,18 +242,27 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 log.warn("No image build configuration found or detected");
             }
 
+            List<ImageConfiguration> resolvedImages = getResolvedImages();
+
             // Build the fabric8 service hub
             fabric8ServiceHub = new Fabric8ServiceHub.Builder()
                     .log(log)
                     .clusterAccess(clusterAccess)
                     .platformMode(mode)
                     .dockerServiceHub(hub)
+                    .isBuildahMode(isBuildah)
                     .buildServiceConfig(getBuildServiceConfig())
                     .repositorySystem(repositorySystem)
                     .mavenProject(project)
                     .build();
 
-            super.executeInternal(hub);
+            if (isBuildah) {
+                for (ImageConfiguration imageConfig : resolvedImages) {
+                    buildAndTag(null, imageConfig);
+                }
+            } else {
+                super.executeInternal(hub);
+            }
 
             fabric8ServiceHub.getBuildService().postProcess(getBuildServiceConfig());
         } catch(IOException e) {
@@ -339,6 +353,18 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         } catch (MojoExecutionException e) {
             throw new IllegalArgumentException("Cannot extract generator config: " + e, e);
         }
+    }
+
+    protected boolean isBuildahMode() {
+        return isBuildah || Configs.asBoolean(getProperty("fabric8.build.buildah"));
+    }
+
+    private String getProperty(String key) {
+        String value = System.getProperty(key);
+        if (value == null) {
+            value = project.getProperties().getProperty(key);
+        }
+        return value;
     }
 
     @Override

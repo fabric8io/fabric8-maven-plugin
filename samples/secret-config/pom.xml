@@ -34,6 +34,9 @@
     <properties>
         <!-- replace it with your private docker registry url -->
         <docker.registry>docker.io</docker.registry>
+        <!-- Perform buildah build mvn fabric8:build
+        <fabric8.build.buildah>true</fabric8.build.buildah>
+        -->
     </properties>
 
     <dependencies>

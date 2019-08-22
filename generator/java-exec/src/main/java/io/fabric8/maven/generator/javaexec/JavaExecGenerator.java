@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.FatJarDetector;
+import io.fabric8.maven.core.util.MainClassDetector;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;

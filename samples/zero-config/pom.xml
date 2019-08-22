@@ -31,6 +31,12 @@
     <version>1.3.6.RELEASE</version>
   </parent>
 
+  <properties>
+    <!-- Use farbric8.build.buildah property to perform Buildah build, run mvn fabric8:build
+    <fabric8.build.buildah>true</fabric8.build.buildah>
+    -->
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.springframework.boot</groupId>

@@ -140,6 +140,16 @@
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-interpolation</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>io.jshift</groupId>
+      <artifactId>buildah-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.jshift</groupId>
+      <artifactId>buildah-binary</artifactId>
+    </dependency>
   </dependencies>
 
   <build>

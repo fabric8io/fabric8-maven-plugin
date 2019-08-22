@@ -54,6 +54,9 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Use farbric8.build.buildah property to perform Buildah build, run mvn fabric8:build
+    <fabric8.build.buildah>true</fabric8.build.buildah>
+    -->
   </properties>
   <profiles>
     <profile>

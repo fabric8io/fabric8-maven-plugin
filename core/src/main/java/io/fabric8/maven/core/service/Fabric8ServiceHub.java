@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.RuntimeMode;
+import io.fabric8.maven.core.service.kubernetes.BuildahIntegration.BuildahBuildService;
 import io.fabric8.maven.core.service.kubernetes.DockerBuildService;
 import io.fabric8.maven.core.service.openshift.OpenshiftBuildService;
 import io.fabric8.maven.core.util.LazyBuilder;
@@ -52,6 +53,8 @@ public class Fabric8ServiceHub {
     private RepositorySystem repositorySystem;
 
     private MavenProject mavenProject;
+
+    private boolean isBuildah;
 
     /**
     /*
@@ -98,7 +101,11 @@ public class Fabric8ServiceHub {
                     buildService = new OpenshiftBuildService((OpenShiftClient) client, log, dockerServiceHub, buildServiceConfig);
                 } else {
                     // Kubernetes services
-                    buildService = new DockerBuildService(dockerServiceHub, buildServiceConfig);
+                    if(isBuildah) {
+                        buildService = new BuildahBuildService(buildServiceConfig, log);
+                    } else {
+                        buildService = new DockerBuildService(dockerServiceHub, buildServiceConfig);
+                    }
                 }
                 return buildService;
             }
@@ -147,6 +154,11 @@ public class Fabric8ServiceHub {
 
         public Builder dockerServiceHub(ServiceHub dockerServiceHub) {
             hub.dockerServiceHub = dockerServiceHub;
+            return this;
+        }
+
+        public Builder isBuildahMode(boolean isBuildah) {
+            hub.isBuildah = isBuildah;
             return this;
         }
 

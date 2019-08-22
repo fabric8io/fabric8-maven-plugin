@@ -159,6 +159,22 @@
   <dependencyManagement>
     <dependencies>
 
+      <!-- == buildah-java-core ======================================= -->
+
+      <dependency>
+        <groupId>io.jshift</groupId>
+        <artifactId>buildah-core</artifactId>
+        <version>1.0-SNAPSHOT</version>
+      </dependency>
+
+      <!-- == buildah-java-binary ===================================== -->
+
+      <dependency>
+        <groupId>io.jshift</groupId>
+        <artifactId>buildah-binary</artifactId>
+        <version>1.0-SNAPSHOT</version>
+      </dependency>
+
       <!-- == docker-maven-plugin ===================================== -->
 
       <dependency>

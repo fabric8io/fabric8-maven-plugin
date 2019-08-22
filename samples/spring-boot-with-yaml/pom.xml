@@ -55,65 +55,113 @@
 
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.1</version>
-        <configuration>
-          <!-- Won't work for OpenShift Mode -->
-          <!-- For openshift, switch back to Java 8 -->
-        <release>11</release>
-       </configuration>
-      </plugin>
+  <profiles>
+  <!-- Use mvn fabric8:build -PBuildah to perform Buildah build -->
+  <profile>
+    <id>Buildah</id>
+    <build>
+      <plugins>
+        <plugin>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+        </plugin>
 
 
-      <plugin>
-        <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-plugin</artifactId>
-        <version>4.3-SNAPSHOT</version>
+        <plugin>
+          <groupId>io.fabric8</groupId>
+          <artifactId>fabric8-maven-plugin</artifactId>
+          <version>4.2-SNAPSHOT</version>
 
-        <configuration>
-          <namespace>spring-boot-ns</namespace>
-          <resources>
-            <labels>
-              <all>
-                <testProject>spring-boot-sample</testProject>
-              </all>
-            </labels>
-          </resources>
+          <configuration>
+            <isBuildah>true</isBuildah>
+            <namespace>spring-boot-ns</namespace>
+            <resources>
+              <labels>
+                <all>
+                  <testProject>spring-boot-sample</testProject>
+                </all>
+              </labels>
+            </resources>
+            <enricher>
+              <includes>
+                <include>fmp-portname</include>
+              </includes>
+              <excludes>
+                <exclude>build</exclude>
+              </excludes>
+              <config>
+                <f8-service>
+                  <type>NodePort</type>
+                </f8-service>
+              </config>
+            </enricher>
+          </configuration>
 
-          <enricher>
-            <includes>
-              <include>fmp-portname</include>
-            </includes>
-            <excludes>
-              <exclude>build</exclude>
-            </excludes>
-            <config>
-              <f8-service>
-                <type>NodePort</type>
-              </f8-service>
-            </config>
-          </enricher>
-        </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>resource</goal>
+                <goal>build</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
 
-        <executions>
-          <execution>
-            <goals>
-              <goal>resource</goal>
-              <goal>build</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+      </plugins>
+    </build>
+  </profile>
+  <!-- Profile to perform docker build, to execute use mvn fabric8:build -PDocker -->
+  <profile>
+    <id>Docker</id>
+    <build>
+      <plugins>
+        <plugin>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+        </plugin>
 
-    </plugins>
-  </build>
+
+        <plugin>
+          <groupId>io.fabric8</groupId>
+          <artifactId>fabric8-maven-plugin</artifactId>
+          <version>4.2-SNAPSHOT</version>
+
+          <configuration>
+            <namespace>spring-boot-ns</namespace>
+            <resources>
+              <labels>
+                <all>
+                  <testProject>spring-boot-sample</testProject>
+                </all>
+              </labels>
+            </resources>
+            <enricher>
+              <includes>
+                <include>fmp-portname</include>
+              </includes>
+              <excludes>
+                <exclude>build</exclude>
+              </excludes>
+              <config>
+                <f8-service>
+                  <type>NodePort</type>
+                </f8-service>
+              </config>
+            </enricher>
+          </configuration>
+
+          <executions>
+            <execution>
+              <goals>
+                <goal>resource</goal>
+                <goal>build</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+      </plugins>
+    </build>
+  </profile>
+  </profiles>
 </project>

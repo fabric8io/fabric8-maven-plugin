@@ -13,13 +13,13 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.generator.javaexec;
-
-import java.io.File;
-import java.net.URL;
+package io.fabric8.maven.core.util;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
+
+import java.io.File;
+import java.net.URL;
 
 import static io.fabric8.maven.core.util.FileUtil.getAbsolutePath;
 import static org.junit.Assert.assertEquals;
