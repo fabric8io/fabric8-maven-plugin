@@ -25,9 +25,10 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.enricher.api.BaseEnricher;
-import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
+import io.fabric8.maven.core.config.PlatformMode;
 
 /**
  * @author roland
@@ -35,7 +36,7 @@ import org.apache.commons.io.IOUtils;
  */
 public class SecretEnricher extends BaseEnricher {
 
-    public SecretEnricher(EnricherContext buildContext) {
+    public SecretEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "secret-enricher");
     }
 
@@ -51,7 +52,7 @@ public class SecretEnricher extends BaseEnricher {
     }
 
     @Override
-    public void addMissingResources(KubernetesListBuilder builder) {
+    public void enrich(PlatformMode platformMode, KubernetesListBuilder builder) {
         Map<String, String> config = getRawConfig();
         SecretBuilder secretBuilder = createSecretBuilder();
         for (Map.Entry<String, String> entry : config.entrySet()) {
@@ -73,7 +74,7 @@ public class SecretEnricher extends BaseEnricher {
 
     private String getSecretName() {
         return getConfig(Config.name,
-                         MavenUtil.createDefaultResourceName(getProject()));
+                         MavenUtil.createDefaultResourceName("custom-enricher"));
     }
 
     private void addToSecretBuilder(SecretBuilder builder, String name, String secretRef) {

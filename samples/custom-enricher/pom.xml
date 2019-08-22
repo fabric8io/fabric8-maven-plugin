@@ -23,7 +23,7 @@
 
   <artifactId>fabric8-maven-sample-custom-enricher-parent</artifactId>
   <groupId>io.fabric8.samples.custom-enricher</groupId>
-  <version>4.2-SNAPSHOT</version>
+  <version>4.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <parent>
@@ -36,7 +36,7 @@
   <description>Spring Boot example with a custom enricher</description>
 
   <properties>
-    <fmp.version>4.2-SNAPSHOT</fmp.version>
+    <fmp.version>4.3-SNAPSHOT</fmp.version>
   </properties>
 
   <modules>
