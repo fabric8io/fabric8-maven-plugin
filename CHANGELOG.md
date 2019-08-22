@@ -11,6 +11,8 @@ We use semantic versioning in some slight variation until our feature set has st
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
 ### 4.3-SNAPSHOT
+* Updated custom-enricher sample
+* Fixed image config in thorntail sample
 
 ### 4.2.0 (01-08-2019)
 * Fix #1638: Remove enrichAll parameter from ImageChangeTriggerEnricher

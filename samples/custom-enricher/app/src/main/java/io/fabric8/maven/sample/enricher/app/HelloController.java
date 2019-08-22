@@ -19,6 +19,9 @@ import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.FileReader;
+import java.io.IOException;
+
 
 /**
  * @author roland
