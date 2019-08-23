@@ -3,14 +3,49 @@
 == *fabric8:build*
 
 This goal is for building Docker images. Images can be built in two different ways depending on the `mode` configuration (controlled by the `fabric8.mode` property).
-By default the mode is set to `auto`. In this case the plugin tries to detect which kind of build should be performed by contacting the API server. If this fails or if no cluster access is configured e.g. with `oc login` then the mode is set to `kubernetes` in which case a standard Docker build is performed. It can also be forced to `openshift` to perform an OpenShift build.
+By default the mode is set to `auto`. In this case the plugin tries to detect which kind of build should be performed by contacting the API server. If this fails or if no cluster access is configured e.g. with `oc login` then the mode is set to `kubernetes` in which case a standard Docker build or dockerless https://github.com/containers/buildah[Buildah] build is performed. Buildah integration in fmp is supported by https://github.com/jshiftio/buildah-java[buildah-java] wrapper. It can also be forced to `openshift` to perform an OpenShift build.
 
 [[build-kubernetes]]
 === Kubernetes Build
 
 If the mode is set to `kubernetes` then a normal Docker build is performed. The connection configuration to access the Docker daemon is described in <<access-configuration, Access Configuration>>.
 
-In order to make the generated images available to the Kubernetes cluster the generated images need to be pushed to a registry with the goal <<fabric8:push>>. This is not necessary for single node clusters, though as there is no need to distribute images.
+.Build Options
+[cols="1,6"]
+|===
+| `Build Options` | Description
+
+ | `docker`
+| In order to make the generated images available to the Kubernetes cluster the generated images need to be pushed to a registry with the goal <<fabric8:push>> when a standard Docker build is performed.This is not necessary for single node clusters, though as there is no need to distribute images.
+
+| `Buildah`
+| A Dockerless https://github.com/containers/buildah[Buildah] is performed when `fabric8.build.buildah` property is set to true or `isBuildah` flag is set to true in pom.xml.Docker daemon is not required to perform a Buildah build. A buildah container is build from a base image, the additional configuration is added to the container and committed to target image.For Config options check https://github.com/jshiftio/buildah-java[buildah-java].
+|===
+
+.Example for Enabling Buildah Build.
+[source,xml]
+----
+<plugins>
+  ....
+    <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-plugin</artifactId>
+        <version>4.2</version>
+        <configuration>
+            <isBuildah>true</isBuildah>
+       </configuration>
+     </plugin>
+</plugins>
+----  
+
+.Example for Enabling Buildah Build in case of zero-Config.
+[source,xml]
+----
+<properties>
+  ....
+    <fabric8.build.buildah>true</fabric8.build.buildah>
+</properties>
+----  
 
 Currently, Apart from Java 8, base images for Java 11 are supported for Kubernetes build. To enable Java 11 base images,
 user needs to specift release version 11 in their `maven-compiler-plugin` configuration in their project pom.
@@ -123,6 +158,10 @@ a| If the effective <<build-mode,mode>> is `openshift` then this option sets the
 
 By default S2I is used.
 | `fabric8.build.strategy`
+
+| *isBuildah*
+a| If the effective <<build-mode,mode>> is `kubernetes` then this option sets the build mode to Buildah to perform a dockerless Buildah build.
+| `fabric8.build.jib`
 
 |*forcePull*
 |
