@@ -472,7 +472,7 @@ public class ApplyService {
     public void applyCustomResource(File customResourceFile, String namespace, CustomResourceDefinitionContext context) throws Exception {
         Map<String, Object> cr = KubernetesClientUtil.doReadCustomResourceFile(customResourceFile);
         Map<String, Object> objectMeta = (Map<String, Object>)cr.get("metadata");
-        String name = objectMeta.get("metadata").toString();
+        String name = objectMeta.get("name").toString();
 
         if (isRecreateMode()) {
             KubernetesClientUtil.doDeleteCustomResource(kubernetesClient, context, namespace, name);

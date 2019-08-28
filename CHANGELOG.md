@@ -13,6 +13,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 ### 4.3-SNAPSHOT
 * Updated custom-enricher sample
 * Fixed image config in thorntail sample
+* Fix #1697: NullpointerException when trying to apply custom resources
 
 ### 4.2.0 (01-08-2019)
 * Fix #1638: Remove enrichAll parameter from ImageChangeTriggerEnricher

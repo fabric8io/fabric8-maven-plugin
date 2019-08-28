@@ -660,7 +660,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
         File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDirFinal, resources != null ? resources.getRemotes() : null, log);
 
         for (File file : resourceFiles) {
-            if (file.getName().endsWith("cr.yml")) {
+            if (file.getName().endsWith("cr.yml") || file.getName().endsWith("cr.yaml")) {
                 Map<String, Object> customResource = KubernetesClientUtil.doReadCustomResourceFile(file);
                 String apiVersion = customResource.get("apiVersion").toString();
                 if (apiVersion.contains("/")) {
