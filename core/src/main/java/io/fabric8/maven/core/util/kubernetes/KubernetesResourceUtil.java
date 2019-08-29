@@ -150,7 +150,7 @@ public class KubernetesResourceUtil {
         KubernetesListBuilder builder = new KubernetesListBuilder();
         if (resourceFiles != null) {
             for (File file : resourceFiles) {
-                if(file.getName().endsWith("cr.yml")) // Don't process custom resources
+                if(file.getName().endsWith("cr.yml") || file.getName().endsWith("cr.yaml")) // Don't process custom resources
                     continue;
                 HasMetadata resource = getResource(platformMode, apiVersions, file, defaultName);
                 builder.addToItems(resource);
