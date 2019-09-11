@@ -21,6 +21,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -239,11 +241,15 @@ public class KubernetesClientUtil {
         }
     }
 
-    public static Map<String, Object> doEditCustomResource(KubernetesClient kubernetesClient, CustomResourceDefinitionContext crdContext, String namespace, String name, File customResourceFile) throws IOException {
+    public static Map<String, Object> doLoadCustomResource(KubernetesClient kubernetesClient, CustomResourceDefinitionContext crdContext, File customResourceFile) throws IOException {
+        return kubernetesClient.customResource(crdContext).load(new FileInputStream(customResourceFile));
+    }
+
+    public static Map<String, Object> doEditCustomResource(KubernetesClient kubernetesClient, CustomResourceDefinitionContext crdContext, String namespace, String name, Map<String, Object> customResource) throws IOException {
         if ("Namespaced".equals(crdContext.getScope())) {
-            return kubernetesClient.customResource(crdContext).edit(namespace, name, new FileInputStream(customResourceFile.getAbsolutePath()));
+            return kubernetesClient.customResource(crdContext).edit(namespace, name, customResource);
         } else {
-            return kubernetesClient.customResource(crdContext).edit(name, doGetCustomResourceAsString(customResourceFile));
+            return kubernetesClient.customResource(crdContext).edit(name, customResource);
         }
     }
 
