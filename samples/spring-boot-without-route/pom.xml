@@ -49,7 +49,6 @@
     </distributionManagement>
 
     <dependencies>
-
         <!-- Boot generator  -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -65,62 +64,123 @@
             <groupId>org.jolokia</groupId>
             <artifactId>jolokia-core</artifactId>
         </dependency>
-
     </dependencies>
 
     <build>
         <plugins>
-
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-
-            <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>fabric8-maven-plugin</artifactId>
-                <version>4.3-SNAPSHOT</version>
-
-                <configuration>
-                    <generateRoute>false</generateRoute>
-                    <resources>
-                        <labels>
-                            <all>
-                                <testProject>spring-boot-sample</testProject>
-                            </all>
-                        </labels>
-                    </resources>
-
-                    <generator>
-                        <includes>
-                            <include>spring-boot</include>
-                        </includes>
-                        <config>
-                            <spring-boot>
-                                <color>always</color>
-                            </spring-boot>
-                        </config>
-                    </generator>
-                    <enricher>
-                        <config>
-                            <fmp-service>
-                                <type>NodePort</type>
-                            </fmp-service>
-                        </config>
-                    </enricher>
-                </configuration>
-
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>resource</goal>
-                            <goal>build</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>Docker</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.fabric8</groupId>
+                        <artifactId>fabric8-maven-plugin</artifactId>
+                        <version>4.3-SNAPSHOT</version>
+
+                        <configuration>
+                            <generateRoute>false</generateRoute>
+                            <resources>
+                                <labels>
+                                    <all>
+                                        <testProject>spring-boot-sample</testProject>
+                                    </all>
+                                </labels>
+                            </resources>
+
+                            <generator>
+                                <includes>
+                                    <include>spring-boot</include>
+                                </includes>
+                                <config>
+                                    <spring-boot>
+                                        <color>always</color>
+                                    </spring-boot>
+                                </config>
+                            </generator>
+                            <enricher>
+                                <config>
+                                    <fmp-service>
+                                        <type>NodePort</type>
+                                    </fmp-service>
+                                </config>
+                            </enricher>
+                        </configuration>
+
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>resource</goal>
+                                    <goal>build</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>Jib</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.fabric8</groupId>
+                        <artifactId>fabric8-maven-plugin</artifactId>
+                        <version>4.3-SNAPSHOT</version>
+                        <configuration>
+                            <isJib>true</isJib>
+                            <generateRoute>false</generateRoute>
+                            <resources>
+                                <labels>
+                                    <all>
+                                        <testProject>spring-boot-sample</testProject>
+                                    </all>
+                                </labels>
+                            </resources>
+
+                            <generator>
+                                <includes>
+                                    <include>spring-boot</include>
+                                </includes>
+                                <config>
+                                    <spring-boot>
+                                        <!-- authentic username of registry to be used for automatic push to registry-->
+                                        <!--<name>${image.user}/${project.artifactId}:${project.version}</name>-->
+                                        <color>always</color>
+                                    </spring-boot>
+                                </config>
+                            </generator>
+                            <enricher>
+                                <config>
+                                    <fmp-service>
+                                        <type>NodePort</type>
+                                    </fmp-service>
+                                </config>
+                            </enricher>
+                        </configuration>
+
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>resource</goal>
+                                    <goal>build</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

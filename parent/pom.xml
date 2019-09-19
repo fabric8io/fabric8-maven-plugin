@@ -64,7 +64,7 @@
     <jmockit.version>1.43</jmockit.version>
     <version.maven>3.3.1</version.maven>
     <version.jacoco>0.8.2</version.jacoco>
-    <version.kubernetes-client>4.4.2</version.kubernetes-client>
+    <version.kubernetes-client>4.5.2</version.kubernetes-client>
     <version.openshift-client>${version.kubernetes-client}</version.openshift-client>
     <version.mockwebserver>0.0.13</version.mockwebserver>
     <version.docker-maven-plugin>0.31.0</version.docker-maven-plugin>
@@ -289,6 +289,14 @@
         <version>0.0.1</version>
       </dependency>
 
+      <!-- == Java Image Builder Core Module ===================================== -->
+
+      <dependency>
+        <groupId>com.google.cloud.tools</groupId>
+        <artifactId>jib-core</artifactId>
+        <version>0.10.0</version>
+      </dependency>
+
       <!-- == libs ====================================== -->
 
       <!-- ## fabric8-project, git access #################### -->
@@ -358,6 +366,12 @@
         <version>2.8.5</version>
       </dependency>
 
+      <dependency>
+        <groupId>javax.validation</groupId>
+        <artifactId>validation-api</artifactId>
+        <version>2.0.1.Final</version>
+      </dependency>
+
       <!-- ################################################# -->
 
       <dependency>
@@ -381,7 +395,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>21.0</version>
+        <version>27.0.1-jre</version>
       </dependency>
 
       <dependency>

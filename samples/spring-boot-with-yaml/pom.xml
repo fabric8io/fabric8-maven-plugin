@@ -72,48 +72,116 @@
         <release>11</release>
        </configuration>
       </plugin>
-
-
-      <plugin>
-        <groupId>io.fabric8</groupId>
-        <artifactId>fabric8-maven-plugin</artifactId>
-        <version>4.3-SNAPSHOT</version>
-
-        <configuration>
-          <namespace>spring-boot-ns</namespace>
-          <resources>
-            <labels>
-              <all>
-                <testProject>spring-boot-sample</testProject>
-              </all>
-            </labels>
-          </resources>
-
-          <enricher>
-            <includes>
-              <include>fmp-portname</include>
-            </includes>
-            <excludes>
-              <exclude>build</exclude>
-            </excludes>
-            <config>
-              <f8-service>
-                <type>NodePort</type>
-              </f8-service>
-            </config>
-          </enricher>
-        </configuration>
-
-        <executions>
-          <execution>
-            <goals>
-              <goal>resource</goal>
-              <goal>build</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
     </plugins>
   </build>
+  <profiles>
+    <!-- Profile to perform docker build, to execute use mvn fabric8:build -PDocker -->
+    <profile>
+      <id>Docker</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.fabric8</groupId>
+            <artifactId>fabric8-maven-plugin</artifactId>
+            <version>4.3-SNAPSHOT</version>
+            <configuration>
+              <namespace>spring-boot-ns</namespace>
+              <resources>
+                <labels>
+                  <all>
+                    <testProject>spring-boot-sample</testProject>
+                  </all>
+                </labels>
+              </resources>
+              <enricher>
+                <includes>
+                  <include>fmp-portname</include>
+                </includes>
+                <excludes>
+                  <exclude>build</exclude>
+                </excludes>
+                <config>
+                  <f8-service>
+                    <type>NodePort</type>
+                  </f8-service>
+                </config>
+              </enricher>
+            </configuration>
+
+            <executions>
+              <execution>
+                <goals>
+                  <goal>resource</goal>
+                  <goal>build</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+
+        </plugins>
+      </build>
+    </profile>
+
+    <!-- Profile to perform JIB build, to execute use mvn fabric8:build -PJib-->
+    <profile>
+      <id>Jib</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.fabric8</groupId>
+            <artifactId>fabric8-maven-plugin</artifactId>
+            <version>4.3-SNAPSHOT</version>
+            <configuration>
+              <!-- fabric8.build.jib enabled for Jib Build execution -->
+              <isJib>true</isJib>
+              <namespace>spring-boot-ns</namespace>
+              <resources>
+                <labels>
+                  <all>
+                    <testProject>spring-boot-sample</testProject>
+                  </all>
+                </labels>
+              </resources>
+              <!-- Generator configuration to include a generator and  default build image configuration-->
+              <generator>
+                <includes>
+                  <include>spring-boot</include>
+                </includes>
+                <config>
+                  <spring-boot>
+                    <!-- Target Image name to which Jib Container will build to. Change ${image.user} with registry username -->
+                    <!--<name>${image.user}/${project.artifactId}:${project.version}</name>-->
+                  </spring-boot>
+                </config>
+              </generator>
+              <enricher>
+                <includes>
+                  <include>fmp-portname</include>
+                </includes>
+                <excludes>
+                  <exclude>build</exclude>
+                </excludes>
+                <config>
+                  <f8-service>
+                    <type>NodePort</type>
+                  </f8-service>
+                </config>
+              </enricher>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>resource</goal>
+                  <goal>build</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

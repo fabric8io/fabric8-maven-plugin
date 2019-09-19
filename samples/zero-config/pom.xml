@@ -31,6 +31,12 @@
     <version>1.3.6.RELEASE</version>
   </parent>
 
+  <!-- fabric8.build.jib set to true to perform jib build
+  <properties>
+    <fabric8.build.jib>true</fabric8.build.jib>
+  </properties>
+  -->
+
   <dependencies>
     <dependency>
       <groupId>org.springframework.boot</groupId>

@@ -196,7 +196,7 @@ public class ResourceConfig {
                 this.config.services = config.getServices();
                 this.config.metrics = config.getMetrics();
                 this.config.namespace = config.getNamespace();
-                this.config.remotes = config.remotes;
+                this.config.remotes = config.getRemotes();
                 this.config.ingressRules = config.getIngressRules();
             }
         }

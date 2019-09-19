@@ -70,61 +70,128 @@
 
     <build>
         <plugins>
-
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-
-            <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>fabric8-maven-plugin</artifactId>
-                <version>4.3-SNAPSHOT</version>
-
-                <configuration>
-
-                    <resources>
-                        <labels>
-                            <all>
-                                <testProject>spring-boot-sample</testProject>
-                            </all>
-                        </labels>
-                    </resources>
-
-                    <generator>
-                        <includes>
-                            <include>spring-boot</include>
-                        </includes>
-                        <config>
-                            <spring-boot>
-                                <color>always</color>
-                            </spring-boot>
-                        </config>
-                    </generator>
-                    <enricher>
-                        <excludes>
-                            <exclude>f8-expose</exclude>
-                        </excludes>
-                        <config>
-                            <fmp-service>
-                                <type>NodePort</type>
-                            </fmp-service>
-                        </config>
-                    </enricher>
-                </configuration>
-
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>resource</goal>
-                            <goal>build</goal>
-                            <goal>helm</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
         </plugins>
     </build>
 
+    <!-- Use mvn fabric8:build -PDocker to perform normal docker build -->
+    <profiles>
+        <profile>
+            <id>Docker</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.fabric8</groupId>
+                        <artifactId>fabric8-maven-plugin</artifactId>
+                        <version>4.3-SNAPSHOT</version>
+                        <configuration>
+
+                            <resources>
+                                <labels>
+                                    <all>
+                                        <testProject>spring-boot-sample</testProject>
+                                    </all>
+                                </labels>
+                            </resources>
+
+                            <generator>
+                                <includes>
+                                    <include>spring-boot</include>
+                                </includes>
+                                <config>
+                                    <spring-boot>
+                                        <color>always</color>
+                                    </spring-boot>
+                                </config>
+                            </generator>
+                            <enricher>
+                                <excludes>
+                                    <exclude>f8-expose</exclude>
+                                </excludes>
+                                <config>
+                                    <fmp-service>
+                                        <type>NodePort</type>
+                                    </fmp-service>
+                                </config>
+                            </enricher>
+                        </configuration>
+
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>resource</goal>
+                                    <goal>build</goal>
+                                    <goal>helm</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Use mvn fabric8:build -PJib to perform Jib Build -->
+        <profile>
+            <id>Jib</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.fabric8</groupId>
+                        <artifactId>fabric8-maven-plugin</artifactId>
+                        <version>4.3-SNAPSHOT</version>
+                        <configuration>
+                            <isJib>true</isJib>
+                            <resources>
+                                <labels>
+                                    <all>
+                                        <testProject>spring-boot-sample</testProject>
+                                    </all>
+                                </labels>
+                            </resources>
+
+                            <generator>
+                                <includes>
+                                    <include>spring-boot</include>
+                                </includes>
+                                <config>
+                                    <spring-boot>
+                                        <!-- authentic username of registry to be used for automatic push to registry-->
+                                        <!--<name>${image.user}/${project.artifactId}:${project.version}</name>-->
+                                        <color>always</color>
+                                    </spring-boot>
+                                </config>
+                            </generator>
+                            <enricher>
+                                <excludes>
+                                    <exclude>f8-expose</exclude>
+                                </excludes>
+                                <config>
+                                    <fmp-service>
+                                        <type>NodePort</type>
+                                    </fmp-service>
+                                </config>
+                            </enricher>
+                        </configuration>
+
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>resource</goal>
+                                    <goal>build</goal>
+                                    <goal>helm</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

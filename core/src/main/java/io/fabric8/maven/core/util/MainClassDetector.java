@@ -13,7 +13,7 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.generator.javaexec;
+package io.fabric8.maven.core.util;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,19 +27,19 @@ import org.apache.maven.plugin.MojoExecutionException;
  * @author roland
  * @since 11/11/16
  */
-class MainClassDetector {
+public class MainClassDetector {
 
     private String mainClass = null;
     private final File classesDir;
     private final Logger log;
 
-    MainClassDetector(String mainClass, File classesDir, Logger log) {
+    public MainClassDetector(String mainClass, File classesDir, Logger log) {
         this.mainClass = mainClass;
         this.classesDir = classesDir;
         this.log = log;
     }
 
-    String getMainClass() throws MojoExecutionException {
+    public String getMainClass() throws MojoExecutionException {
         if (mainClass != null) {
             return mainClass;
         }
