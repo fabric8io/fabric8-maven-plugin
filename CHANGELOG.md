@@ -17,6 +17,8 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix #1696: fmp not setting imagestreams resourceVersion properly.
 * Fix #1676: Support for latest kubernetes client
 * Feature #1536: Java Image Builder Support
+* Fix #1704: fabric8-build failing on openshift
+* Feature #1706: Prometheus Enricher; Configuration support for Prometheus path
 
 ### 4.2.0 (01-08-2019)
 * Fix #1638: Remove enrichAll parameter from ImageChangeTriggerEnricher
