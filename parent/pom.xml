@@ -250,6 +250,12 @@
       </dependency>
 
       <dependency>
+          <groupId>io.fabric8</groupId>
+          <artifactId>fabric8-maven-plugin-generator-openliberty</artifactId>
+          <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>io.fabric8</groupId>
         <artifactId>fabric8-maven-plugin-generator-webapp</artifactId>
         <version>${project.version}</version>

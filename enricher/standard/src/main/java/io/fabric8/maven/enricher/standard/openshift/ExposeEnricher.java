@@ -43,7 +43,7 @@ public class ExposeEnricher extends BaseEnricher {
         super(buildContext, "fmp-openshift-service-expose");
     }
 
-    private Set<Integer> webPorts = new HashSet<>(Arrays.asList(80, 443, 8080, 9090));
+    private Set<Integer> webPorts = new HashSet<>(Arrays.asList(80, 443, 8080, 9080, 9090, 9443));
 
     public static final String EXPOSE_LABEL = "expose";
 

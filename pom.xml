@@ -47,6 +47,7 @@
     <module>generator/wildfly-swarm</module>
     <module>generator/quarkus</module>
     <module>generator/thorntail-v2</module>
+    <module>generator/openliberty</module>
     <module>generator/karaf</module>
     <module>generator/webapp</module>
     <module>generator/vertx</module>

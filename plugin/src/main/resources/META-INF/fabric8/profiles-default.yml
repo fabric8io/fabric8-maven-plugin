@@ -76,6 +76,7 @@
     - spring-boot
     - wildfly-swarm
     - thorntail-v2
+    - openliberty
     - karaf
     - vertx
     - java-exec
