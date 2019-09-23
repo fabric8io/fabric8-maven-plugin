@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.maven.model.Plugin;
-import org.apache.maven.model.PluginExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.assembly.model.Assembly;
 import org.apache.maven.plugins.assembly.model.DependencySet;
@@ -39,8 +37,8 @@ import io.fabric8.maven.generator.javaexec.JavaExecGenerator;
 
 public class OpenLibertyGenerator extends JavaExecGenerator {
 
-    private static final Object LIBERTY_SELF_EXTRACTOR = "wlp.lib.extract.SelfExtractRun";
-	private static final String LIBERTY_RUNNABLE_JAR = "LIBERTY_RUNNABLE_JAR";
+	protected static final String LIBERTY_SELF_EXTRACTOR = "wlp.lib.extract.SelfExtractRun";
+	protected static final String LIBERTY_RUNNABLE_JAR = "LIBERTY_RUNNABLE_JAR";
 	private String runnableJarName = null;
 
 	public OpenLibertyGenerator(GeneratorContext context) {
