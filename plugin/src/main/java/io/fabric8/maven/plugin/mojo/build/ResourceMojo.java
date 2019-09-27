@@ -696,6 +696,9 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         for (io.fabric8.openshift.api.model.Parameter parameter : parameters) {
             String from = "${" + parameter.getName() + "}";
             String to = parameter.getValue();
+            if (to == null) {
+                throw new MojoExecutionException("Missing value for HELM template parameter " + from + " in " + kubernetesYaml);
+            }
             text = text.replace(from, to);
         }
         if (!original.equals(text)) {
