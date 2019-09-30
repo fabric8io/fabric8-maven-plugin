@@ -1,0 +1,12 @@
+<server description="Open Liberty Fabric8 Example Server">
+
+  <featureManager>
+      <feature>jaxrs-2.1</feature>    
+  </featureManager>
+
+  <httpEndpoint httpPort="${default.http.port}" httpsPort="${default.https.port}"
+                id="defaultHttpEndpoint" host="*" />
+
+  <webApplication location="openliberty-sample.war" contextRoot="${app.context.root}"/>
+   
+</server>

@@ -63,6 +63,8 @@ public class OpenLibertyGeneratorTest {
 		generator.addAssembly(new AssemblyConfiguration.Builder());
 		assertTrue("The LIBERTY_RUNNABLE_JAR env var should be set",
 				generator.getEnv(false).containsKey(OpenLibertyGenerator.LIBERTY_RUNNABLE_JAR));
+		assertTrue("The JAVA_APP_DIR env var should be set",
+				generator.getEnv(false).containsKey(OpenLibertyGenerator.JAVA_APP_JAR));
 
 	}
 

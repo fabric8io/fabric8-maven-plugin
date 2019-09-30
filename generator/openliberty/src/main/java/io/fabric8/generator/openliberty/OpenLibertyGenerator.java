@@ -39,6 +39,8 @@ public class OpenLibertyGenerator extends JavaExecGenerator {
 
 	protected static final String LIBERTY_SELF_EXTRACTOR = "wlp.lib.extract.SelfExtractRun";
 	protected static final String LIBERTY_RUNNABLE_JAR = "LIBERTY_RUNNABLE_JAR";
+	protected static final String JAVA_APP_JAR = "JAVA_APP_JAR";
+	
 	private String runnableJarName = null;
 
 	public OpenLibertyGenerator(GeneratorContext context) {
@@ -69,6 +71,7 @@ public class OpenLibertyGenerator extends JavaExecGenerator {
     	Map<String,String> ret = super.getEnv(prePackagePhase);
     	if ( runnableJarName != null) {
     		ret.put(LIBERTY_RUNNABLE_JAR, runnableJarName);
+    		ret.put(JAVA_APP_JAR, runnableJarName);
     	}
     	return ret;
     }
