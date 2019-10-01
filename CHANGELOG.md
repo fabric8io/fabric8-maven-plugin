@@ -24,6 +24,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix #1704: fabric8-build failing on openshift
 * Fix #1714: resource-goal converts types of kubernetes YAML annotations in fragment
 * Feature #1706: Prometheus Enricher; Configuration support for Prometheus path
+* Fix #1715: ApplyService#applyProjectRequest should be (truly) idempotent
 * Added generator support for Open Liberty
 
 ### 4.2.0 (01-08-2019)
