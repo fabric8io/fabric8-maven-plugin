@@ -41,6 +41,10 @@ All default generators examine the build information for certain aspects and gen
 | <<generator-webapp,Web applications>>
 | `webapps`
 | Generator for WAR based applications supporting Tomcat, Jetty and Wildfly base images
+
+| <<generator-openliberty,Open Liberty>>
+| `webapps`
+| Generator for Open Liberty applications
 |===
 
 include::generator/_options_common.adoc[]
@@ -52,5 +56,6 @@ include::generator/_thorntail_v2.adoc[]
 include::generator/_vertx.adoc[]
 include::generator/_karaf.adoc[]
 include::generator/_webapp.adoc[]
+include::generator/_openliberty.adoc[]
 
 include::generator/_api.adoc[]
