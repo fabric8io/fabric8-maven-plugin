@@ -19,6 +19,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Feature #1536: Java Image Builder Support
 * Fix #1704: fabric8-build failing on openshift
 * Feature #1706: Prometheus Enricher; Configuration support for Prometheus path
+* Fix #1715: ApplyService#applyProjectRequest should be (truly) idempotent
 * Added generator support for Open Liberty
 
 ### 4.2.0 (01-08-2019)

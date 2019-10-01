@@ -70,9 +70,11 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import static io.fabric8.maven.core.util.kubernetes.KubernetesHelper.getKind;
 import static io.fabric8.maven.core.util.kubernetes.KubernetesHelper.getName;
@@ -102,6 +104,8 @@ public class ApplyService {
     private boolean rollingUpgradePreserveScale = true;
     private boolean recreateMode;
     private PatchService patchService;
+    // This map is to track projects created.
+    private static Set<String> projectsCreated = new HashSet<>();
 
     public ApplyService(KubernetesClient kubernetesClient, Logger log) {
         this.kubernetesClient = kubernetesClient;
@@ -1071,6 +1075,10 @@ public class ApplyService {
      * Returns true if the ProjectRequest is created
      */
     public boolean applyProjectRequest(ProjectRequest entity) {
+        // Check whether project creation attempted before
+        if (projectsCreated.contains(getName(entity))) {
+            return false;
+        }
         String namespace = getOrCreateMetadata(entity).getName();
         log.info("Using project: " + namespace);
         String name = getName(entity);
@@ -1081,10 +1089,11 @@ public class ApplyService {
             return false;
         }
         boolean exists = checkNamespace(name);
-        // We may want to be more fine-grained on the phase of the project
         if (!exists) {
             try {
                 Object answer = openshiftClient.projectrequests().create(entity);
+                // Add project to created projects
+                projectsCreated.add(name);
                 logGeneratedEntity("Created ProjectRequest: ", namespace, entity, answer);
                 return true;
             } catch (Exception e) {
