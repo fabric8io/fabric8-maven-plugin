@@ -20,6 +20,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix #1699: Ability to specify object namespace in fragments 
 * Feature #1536: Java Image Builder Support
 * Fix #1704: fabric8-build failing on openshift
+* Fix #1714: resource-goal converts types of kubernetes YAML annotations in fragment
 * Feature #1706: Prometheus Enricher; Configuration support for Prometheus path
 * Added generator support for Open Liberty
 
