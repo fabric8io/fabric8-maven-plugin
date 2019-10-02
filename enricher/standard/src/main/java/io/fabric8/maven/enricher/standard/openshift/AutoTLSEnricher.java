@@ -132,6 +132,21 @@ public class AutoTLSEnricher extends BaseEnricher {
                 return false;
             }
         });
+
+        builder.accept(new TypedVisitor<ServiceBuilder>() {
+            @Override
+            public void visit(ServiceBuilder service) {
+                /*
+                 * Set the service.alpha.openshift.io/serving-cert-secret-name annotation on your
+                 * service with the value set to the name you want to use for your secret.
+                 *
+                 * https://docs.openshift.com/online/dev_guide/secrets.html#service-serving-certificate-secrets
+                 */
+                service.editOrNewMetadata()
+                        .addToAnnotations(AUTOTLS_ANNOTATION_KEY, secretName)
+                        .endMetadata();
+            }
+        });
     }
 
     @Override
