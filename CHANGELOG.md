@@ -26,6 +26,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Feature #1706: Prometheus Enricher; Configuration support for Prometheus path
 * Fix #1715: ApplyService#applyProjectRequest should be (truly) idempotent
 * Added generator support for Open Liberty
+* Fix #1718: Support for binary files in fmp-configmap-file
 
 ### 4.2.0 (01-08-2019)
 * Fix #1638: Remove enrichAll parameter from ImageChangeTriggerEnricher
