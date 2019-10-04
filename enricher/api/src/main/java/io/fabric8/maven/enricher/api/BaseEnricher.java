@@ -55,6 +55,7 @@ public class BaseEnricher implements Enricher {
     protected static final String SIDECAR = "fabric8.sidecar";
     protected static final String ENRICH_ALL_WITH_IMAGE_TRIGGERS = "fabric8.openshift.enrichAllWithImageChangeTrigger";
     private static final String SWITCH_TO_DEPLOYMENT = "fabric8.build.switchToDeployment";
+    protected static final String GENERATE_ROUTE = "fabric8.openshift.generateRoute";
 
     protected Logger log;
 

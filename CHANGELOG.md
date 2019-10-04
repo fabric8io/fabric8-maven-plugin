@@ -15,6 +15,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fixed image config in thorntail sample
 * Fix Autotls enricher in order to add service serving certificate secrets annotations
 * Fix #1697: NullpointerException when trying to apply custom resources
+* Fix #1720: Should be able to add custom route, even if fabric8.openshift.generateRoute=false
 * Fix #1696: fmp not setting imagestreams resourceVersion properly.
 * Fix #1689: HELM mode does not support parameters without value
 * Fix #1676: Support for latest kubernetes client

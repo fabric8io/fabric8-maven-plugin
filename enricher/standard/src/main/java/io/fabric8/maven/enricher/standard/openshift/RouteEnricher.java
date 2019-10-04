@@ -41,14 +41,16 @@ import io.fabric8.openshift.api.model.RoutePort;
  * Enricher which generates a Route for each exposed Service
  */
 public class RouteEnricher extends BaseEnricher {
+    private Boolean generateRoute;
 
     public RouteEnricher(MavenEnricherContext buildContext) {
         super(buildContext, "fmp-openshift-route");
+        this.generateRoute = getValueFromConfig(GENERATE_ROUTE, true);
     }
 
     @Override
     public void create(PlatformMode platformMode, final KubernetesListBuilder listBuilder) {
-        if(platformMode == PlatformMode.openshift) {
+        if(platformMode == PlatformMode.openshift && generateRoute.equals(Boolean.TRUE)) {
             final List<Route> routes = new ArrayList<>();
             listBuilder.accept(new TypedVisitor<ServiceBuilder>() {
 
