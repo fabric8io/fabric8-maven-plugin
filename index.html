@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 4.2.0,</span>
-<span id="revdate">2019-08-02</span>
+<span id="revdate">2019-10-04</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -604,6 +604,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#generator-vertx">7.1.5. Vert.x</a></li>
 <li><a href="#generator-karaf">7.1.6. Karaf</a></li>
 <li><a href="#generator-webapp">7.1.7. Web Applications</a></li>
+<li><a href="#generator-openliberty">7.1.8. Open Liberty</a></li>
 </ul>
 </li>
 <li><a href="#generators-api">7.2. Generator API</a></li>
@@ -1198,24 +1199,6 @@ For building images there is also an alternative mode using external Dockerfiles
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.2.0</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.1.0</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.0.0</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
@@ -1375,30 +1358,6 @@ For building images there is also an alternative mode using external Dockerfiles
 </tr>
 </thead>
 <tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.2.0</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.1.0</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-</tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.0.0</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
@@ -2183,15 +2142,94 @@ spec:
 <h3 id="fabric8:build">5.2. <strong>fabric8:build</strong></h3>
 <div class="paragraph">
 <p>This goal is for building Docker images. Images can be built in two different ways depending on the <code>mode</code> configuration (controlled by the <code>fabric8.mode</code> property).
-By default the mode is set to <code>auto</code>. In this case the plugin tries to detect which kind of build should be performed by contacting the API server. If this fails or if no cluster access is configured e.g. with <code>oc login</code> then the mode is set to <code>kubernetes</code> in which case a standard Docker build is performed. It can also be forced to <code>openshift</code> to perform an OpenShift build.</p>
+By default the mode is set to <code>auto</code>. In this case the plugin tries to detect which kind of build should be performed by contacting the API server. If this fails or if no cluster access is configured e.g. with <code>oc login</code> then the mode is set to <code>kubernetes</code> in which case a standard Docker build or dockerless <a href="https://github.com/GoogleContainerTools/jib">Java Image Builder</a> build is performed. It can also be forced to <code>openshift</code> to perform an OpenShift build.</p>
 </div>
 <div class="sect3">
 <h4 id="build-kubernetes">5.2.1. Kubernetes Build</h4>
 <div class="paragraph">
-<p>If the mode is set to <code>kubernetes</code> then a normal Docker build is performed. The connection configuration to access the Docker daemon is described in <a href="#access-configuration">Access Configuration</a>.</p>
+<p>If the mode is set to <code>kubernetes</code> then a normal Docker build or Dockerless JIB is performed. The connection configuration to access the Docker daemon is described in <a href="#access-configuration">Access Configuration</a>.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 11. Build Options</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 85.7143%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"><code>Build Options</code></th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">In order to make the generated images available to the Kubernetes cluster the generated images need to be pushed to a registry with the goal <a href="#fabric8:push"><strong>fabric8:push</strong></a> when a standard Docker build is performed.This is not necessary for single node clusters, though as there is no need to distribute images.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>JIB</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A Dockerless <a href="https://github.com/GoogleContainerTools/jib">JIB Build</a> is performed when <code>fabric8.build.jib</code> property is set to true or <code>isJib</code> flag is set to true in pom.xml.Docker daemon is not required to perform a JIB build. The generated image can be automatically pushed to the authorized registry if the credentials are correctly configured. More about <a href="https://maven.fabric8.io/#authentication">authentication</a> here.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 12. Jib Image Types</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 85.7143%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"><code>Type</code></th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>RegistryImage</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">RegistryImage is build and pushed to the registry if the registry is correctly authenticated. Defaut registry used is <a href="https://hub.docker.com/">Dockerhub</a>. More about <a href="https://static.javadoc.io/com.google.cloud.tools/jib-core/0.10.1/com/google/cloud/tools/jib/api/RegistryImage.html">RegistryImage</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>TarImage</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TarImage archive is build if the registry is not authenticated correcty. The tar archive is build and can be found in <code>outputDirectory</code>, the default value is <code>target/docker</code>. More about <a href="https://static.javadoc.io/com.google.cloud.tools/jib-core/0.10.1/com/google/cloud/tools/jib/api/TarImage.html">TarImage</a>.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="listingblock">
+<div class="title">Example for Enabling JIB Build.</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugins&gt;</span>
+  ....
+    <span class="tag">&lt;plugin&gt;</span>
+        <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+        <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+        <span class="tag">&lt;version&gt;</span>4.2<span class="tag">&lt;/version&gt;</span>
+        <span class="tag">&lt;configuration&gt;</span>
+            <span class="tag">&lt;isJib&gt;</span>true<span class="tag">&lt;/isJib&gt;</span>
+       <span class="tag">&lt;/configuration&gt;</span>
+     <span class="tag">&lt;/plugin&gt;</span>
+<span class="tag">&lt;/plugins&gt;</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Example for Enabling JIB Build in case of zero-Config.</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;properties&gt;</span>
+  ....
+    <span class="tag">&lt;fabric8.build.jib&gt;</span>true<span class="tag">&lt;/fabric8.build.jib&gt;</span>
+<span class="tag">&lt;/properties&gt;</span></code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p>In order to make the generated images available to the Kubernetes cluster the generated images need to be pushed to a registry with the goal <a href="#fabric8:push"><strong>fabric8:push</strong></a>. This is not necessary for single node clusters, though as there is no need to distribute images.</p>
+<p>For automatic push to registry, conventions for target image configuration should be followed:-</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;name&gt;</span>${image.user}/${project.artifactId}:${project.version}<span class="tag">&lt;/name&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>where <code>${image.user}</code> should be replaced with registry username.</p>
 </div>
 <div class="paragraph">
 <p>Currently, Apart from Java 8, base images for Java 11 are supported for Kubernetes build. To enable Java 11 base images,
@@ -2226,7 +2264,7 @@ user needs to specift release version 11 in their <code>maven-compiler-plugin</c
 <p>There are two kind of binary builds supported by this plugin, which can be selected with the <code>buildStrategy</code> configuration option (<code>fabric8.build.strategy</code> property)</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 11. Build Strategies</caption>
+<caption class="title">Table 13. Build Strategies</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -2289,7 +2327,7 @@ This behavior can be turned off by setting the <code>fabric8.s2i.imageStreamLook
 <p>Global configuration parameters specify overall behavior common for all images to build. Some of the configuration options are shared with other goals.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 12. Global configuration</caption>
+<caption class="title">Table 14. Global configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2381,6 +2419,13 @@ This behavior can be turned off by setting the <code>fabric8.s2i.imageStreamLook
 <p>By default S2I is used.</p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.build.strategy</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>isJib</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>If the effective <a href="#build-mode">mode</a> is <code>kubernetes</code> then this option sets the build mode to JIB to perform a dockerless JIB build.</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.build.jib</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>forcePull</strong></p></td>
@@ -2670,7 +2715,7 @@ the URL is:</p>
 <p>The <code>&lt;image&gt;</code> element can contain the following sub elements:</p>
 </div>
 <table id="config-image" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 13. Image Configuration</caption>
+<caption class="title">Table 15. Image Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2700,6 +2745,16 @@ linking images together or for specifying it with the global <strong>image</stro
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#config-image-build"><strong>build</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Element which contains all the configuration aspects when doing a <a href="#fabric8:build"><strong>fabric8:build</strong></a>. This element can be omitted if the image is only pulled from a registry e.g. as support for integration tests like database images.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>removeNamePattern</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When this image is to be removed by <a href="#fabric8:remove">[fabric8:remove]</a>, use this <a href="#name-patterns">pattern list</a> to find images to
+remove rather than just using the name.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>stopNamePattern</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When containers associated with this image will be stopped by <a href="#fabric8:stop">[fabric8:stop]</a>, use this <a href="#name-patterns">pattern list</a>
+to find containers to remove rather than just using the associated container name.</p></td>
 </tr>
 </tbody>
 </table>
@@ -2989,7 +3044,7 @@ Also, no interface needs to be implemented to keep the coupling low.</p>
 of an image configuration. The following configuration options are supported:</p>
 </div>
 <table id="config-image-build" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 14. Build configuration (<a href="#config-image">&lt;image&gt;</a>)</caption>
+<caption class="title">Table 16. Build configuration (<a href="#config-image">&lt;image&gt;</a>)</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3094,31 +3149,9 @@ In case of an <a href="#build-openshift">S2I Binary build</a> this parameter spe
 <td class="tableblock halign-left valign-top"><p class="tableblock">Specific pull policy for the base image. This overwrites any global pull policy. See the globale configuration option <a href="#image-pull-policy">imagePullPolicy</a> for the possible values and the default.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>loadNamePattern</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="build-config-load-name-pattern"></a><strong>loadNamePattern</strong></p></td>
 <td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p>Scan the images in the archive specified in <code>dockerArchive</code> and match the associated repository and tag information against this pattern. When a matching repository and tag is found, create a tag linking the <code>name</code> for this image to the repository and tag that matched the pattern.</p>
-</div>
-<div class="paragraph">
-<p>The wildcards are:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>?</code> matches a single character</p>
-</li>
-<li>
-<p><code>*</code> matches within one component, where components are separated by slashes, or the final colon that separates the repository from the tag</p>
-</li>
-<li>
-<p><code>**</code> matches multiple components, stopping at the final colon</p>
-</li>
-<li>
-<p><code>**/</code> matches multiple components, but must stop at a slash, or the final colon</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>When matching multiple components, <code>**/</code> is likely to be more useful than <code>**</code>. The pattern <code>**image-name:*</code> will match <code>my-group/my-image-name:some-tag</code>, whereas <code>**/image-name:*</code> will not, because the wildcard has to stop at a slash. Note that <code>**/image-name:*</code> will also match 'image-name:some-tag', since the <code>**/</code> wildcard can be empty.</p>
+<p>Scan the archive specified in <code>dockerArchive</code> and find the actual repository and tag in the archive that matches this <a href="#name-patterns">name pattern</a>. After loading the archive, link the <a href="#config-image">image name</a> configured in the POM to the repository and tag matched in the archive.</p>
 </div></div></td>
 </tr>
 <tr>
@@ -3242,7 +3275,7 @@ remote API.</p>
 <p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
 </div>
 <table id="config-image-build-assembly" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 15. Assembly Configuration (<a href="#config-image">&lt;image&gt;</a> : <a href="#config-image-build">&lt;build&gt;</a>)</caption>
+<caption class="title">Table 17. Assembly Configuration (<a href="#config-image">&lt;image&gt;</a> : <a href="#config-image-build">&lt;build&gt;</a>)</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3387,7 +3420,7 @@ predefined assembly descriptor. The following symbolic names can be
 used for <code>descriptorRef</code>:</p>
 </div>
 <table id="build-assembly-descriptor-refs" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 16. Predefined Assembly Descriptors</caption>
+<caption class="title">Table 18. Predefined Assembly Descriptors</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -3579,7 +3612,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <p>An entry point or command can be specified in two alternative formats:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 17. Entrypoint and Command Configuration</caption>
+<caption class="title">Table 19. Entrypoint and Command Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3712,7 +3745,7 @@ the global option <code>filter</code> (see <a href="#global-configuration">Globa
 <p>By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option <code>-B</code>). A very simplified progress meter is provided when using no color output (i.e. with <code>-Ddocker.useColor=false</code>).</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 18. Push options</caption>
+<caption class="title">Table 20. Push options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -3862,7 +3895,7 @@ This goal is deprecated and might vanish in version 4.0 of this plugin. It&#8217
 <p>This configuration section know the following subelements in order to configure your Helm chart.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 19. Helm configuration</caption>
+<caption class="title">Table 21. Helm configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -4392,7 +4425,7 @@ then start a redeploy of the Kubernetes pod.</p>
 <p>The following sub-elements are supported:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 20. Generator configuration</caption>
+<caption class="title">Table 22. Generator configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -4462,7 +4495,7 @@ then start a redeploy of the Kubernetes pod.</p>
 <p>All default generators examine the build information for certain aspects and generate a Docker build configuration on the fly. They can be configured to a certain degree, where the configuration is generator specific.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 21. Default Generators</caption>
+<caption class="title">Table 23. Default Generators</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 16.6666%;">
@@ -4511,13 +4544,18 @@ then start a redeploy of the Kubernetes pod.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>webapps</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Generator for WAR based applications supporting Tomcat, Jetty and Wildfly base images</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#generator-openliberty">Open Liberty</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>webapps</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Generator for Open Liberty applications</p></td>
+</tr>
 </tbody>
 </table>
 <div class="paragraph">
 <p>There are some configuration options which are shared by all generators:</p>
 </div>
 <table id="generator-options-common" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 22. Common generator options</caption>
+<caption class="title">Table 24. Common generator options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4587,7 +4625,7 @@ If no main class is configured as well as no fat jar being detected, then this <
 <p>It will use the following base image by default, but as explained <a href="#generator-options-common">above</a> and can be changed with the <code>from</code> configuration.</p>
 </div>
 <table id="generator-java-exec-from" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 23. Java Base Images</caption>
+<caption class="title">Table 25. Java Base Images</caption>
 <colgroup>
 <col style="width: 7.6923%;">
 <col style="width: 30.7692%;">
@@ -4627,7 +4665,7 @@ If no main class is configured as well as no fat jar being detected, then this <
 <p>Beside the common configuration parameters described in the table <a href="#generator-options-common">common generator options</a> the following additional configuration options are recognized:</p>
 </div>
 <table id="generator-java-exec-options" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 24. Java Application configuration options</caption>
+<caption class="title">Table 26. Java Application configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4692,7 +4730,7 @@ If no main class is configured as well as no fat jar being detected, then this <
 <p>Beside the  <a href="#generator-options-common">common generator options</a> and the <a href="#generator-java-exec-options">java-exec options</a> the following additional configuration is recognized:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 25. Spring-Boot configuration options</caption>
+<caption class="title">Table 27. Spring-Boot configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4816,7 +4854,7 @@ Since the released version are typically generated with a CI system which does a
 <p>This generator named <code>karaf</code> kicks in when the build uses a <code>karaf-maven-plugin</code>. By default the following base images are used:</p>
 </div>
 <table id="generator-karaf-from" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 26. Karaf Base Images</caption>
+<caption class="title">Table 28. Karaf Base Images</caption>
 <colgroup>
 <col style="width: 11.1111%;">
 <col style="width: 44.4444%;">
@@ -4849,7 +4887,7 @@ Since the released version are typically generated with a CI system which does a
 <p>In addition to the  <a href="#generator-options-common">common generator options</a> this generator can be configured with the following options:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 27. Karaf configuration options</caption>
+<caption class="title">Table 29. Karaf configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -4913,7 +4951,7 @@ Since the released version are typically generated with a CI system which does a
 <p>The base images chosen are:</p>
 </div>
 <table id="generator-webapp-from" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 28. Webapp Base Images</caption>
+<caption class="title">Table 30. Webapp Base Images</caption>
 <colgroup>
 <col style="width: 11.1111%;">
 <col style="width: 44.4444%;">
@@ -4962,7 +5000,7 @@ Since the released version are typically generated with a CI system which does a
 <p>In addition to the  <a href="#generator-options-common">common generator options</a> this generator can be configured with the following options:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 29. Webapp configuration options</caption>
+<caption class="title">Table 31. Webapp configuration options</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -5009,6 +5047,18 @@ Since the released version are typically generated with a CI system which does a
 </tbody>
 </table>
 </div>
+<div class="sect3">
+<h4 id="generator-openliberty">7.1.8. Open Liberty</h4>
+<div class="paragraph">
+<p>The Open Liberty generator runs when the Open Liberty plugin is enabled in the maven build.</p>
+</div>
+<div class="paragraph">
+<p>The generator is similar to the <a href="#generator-java-exec">java-exec generator</a>. It supports the  <a href="#generator-options-common">common generator options</a> and the <a href="#generator-java-exec-options"><code>java-exec</code> options</a>.</p>
+</div>
+<div class="paragraph">
+<p>For Open Liberty, the default value of webPort is 9080.</p>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="generators-api">7.2. Generator API</h3>
@@ -5053,7 +5103,7 @@ The API is still a bit in flux and will be documented later. Please refer to the
 <p>The <a href="#generator-example">Generator example</a> is a good blueprint, simply replace <code>&lt;generator&gt;</code> with <code>&lt;enricher&gt;</code>. The configuration is structural identical:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 30. Enricher configuration</caption>
+<caption class="title">Table 32. Enricher configuration</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -5206,7 +5256,7 @@ An explicit configuration always takes precedence over auto detection. For enric
 <p>The following configuration parameters can be used to influence the behaviour of this enricher:</p>
 </div>
 <table id="enricher-fmp-service" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 31. Default service enricher</caption>
+<caption class="title">Table 33. Default service enricher</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 75%;">
@@ -6196,7 +6246,7 @@ However, by default, no health check will be added to your deployment.</p>
 <p>You can configure the different aspect of the probes. These attributes can be configured for both the readiness and liveness probes or be specific to one.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 32. Probe configuration</caption>
+<caption class="title">Table 34. Probe configuration</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -6244,7 +6294,7 @@ However, by default, no health check will be added to your deployment.</p>
 <p>When using HTTP <code>GET</code> requests to determine readiness or liveness, several aspects can be configured. HTTP probes are used by default. To be more specific set the <code>type</code> attribute to <code>http</code>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 33. HTTP probes configuration</caption>
+<caption class="title">Table 35. HTTP probes configuration</caption>
 <colgroup>
 <col style="width: 33.3333%;">
 <col style="width: 33.3333%;">
@@ -6317,7 +6367,7 @@ However, by default, no health check will be added to your deployment.</p>
 <p>You can also configure the probes to just open a socket on a specific port. The <code>type</code> attribute must be set to <code>tcp</code>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 34. TCP probes configuration</caption>
+<caption class="title">Table 36. TCP probes configuration</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -6432,7 +6482,7 @@ These metadata will be added only if <a href="https://maven.apache.org/pom.html#
 <p>The following annotations will be added to the objects that supports annotations,</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 35. Maven SCM Enrichers Annotation Mapping</caption>
+<caption class="title">Table 37. Maven SCM Enrichers Annotation Mapping</caption>
 <colgroup>
 <col style="width: 28.5714%;">
 <col style="width: 28.5714%;">
@@ -6507,7 +6557,7 @@ These metadata will be added only if the <a href="https://maven.apache.org/pom.h
 <p>The following annotations will be added to the objects that supports annotations,</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 36. Maven Issue Tracker Enrichers Annotation Mapping</caption>
+<caption class="title">Table 38. Maven Issue Tracker Enrichers Annotation Mapping</caption>
 <colgroup>
 <col style="width: 28.5714%;">
 <col style="width: 28.5714%;">
@@ -6570,7 +6620,7 @@ For more information read <a href="https://kubernetes.io/docs/concepts/workloads
 <p>The following configuration parameters can be used to influence the behaviour of this enricher:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 37. Default revision history enricher</caption>
+<caption class="title">Table 39. Default revision history enricher</caption>
 <colgroup>
 <col style="width: 28.5714%;">
 <col style="width: 28.5714%;">
@@ -6808,7 +6858,7 @@ If you set <code>name</code> tag then this is used as key instead of the filenam
 <p>Each <code>profiles.yml</code> has a list of profiles which are defined with these elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 38. Profile elements</caption>
+<caption class="title">Table 40. Profile elements</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -6844,7 +6894,7 @@ If you set <code>name</code> tag then this is used as key instead of the filenam
 <p>The definition of generators and enrichers in the profile follow the same format:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 39. Generator and Enericher definition</caption>
+<caption class="title">Table 41. Generator and Enericher definition</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -7002,7 +7052,7 @@ If you set <code>name</code> tag then this is used as key instead of the filenam
 <p>This plugin comes with a list of the following predefined profiles:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 40. Predefined Profiles</caption>
+<caption class="title">Table 42. Predefined Profiles</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 85.7143%;">
@@ -7132,6 +7182,7 @@ If you set <code>name</code> tag then this is used as key instead of the filenam
     - <span class="string"><span class="content">spring-boot</span></span>
     - <span class="string"><span class="content">wildfly-swarm</span></span>
     - <span class="string"><span class="content">thorntail-v2</span></span>
+    - <span class="string"><span class="content">openliberty</span></span>
     - <span class="string"><span class="content">karaf</span></span>
     - <span class="string"><span class="content">vertx</span></span>
     - <span class="string"><span class="content">java-exec</span></span>
@@ -7310,12 +7361,15 @@ because Docker can only push registry-named images.</p>
 might be necessary to authenticate against a Docker registry.</p>
 </div>
 <div class="paragraph">
-<p>There are five different locations searched for credentials.  In order, these are:</p>
+<p>There are six different locations searched for credentials.  In order, these are:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
 <p>Providing system properties <code>docker.username</code> and <code>docker.password</code> from the outside.</p>
+</li>
+<li>
+<p>Providing system properties <code>registry.username</code> and <code>registry.password</code> from the outside.</p>
 </li>
 <li>
 <p>Using a <code>&lt;authConfig&gt;</code> section in the plugin configuration with <code>&lt;username&gt;</code> and <code>&lt;password&gt;</code> elements.</p>
@@ -7527,10 +7581,10 @@ In case you&#8217;re using temporary security credentials provided by the AWS Se
 To do so, either specify the <code>docker.authToken</code> system property or provide an <code>&lt;auth&gt;</code> element alongside username &amp; password in the <code>authConfig</code>.</p>
 </div>
 <div class="paragraph">
-<p>In case you are running on an EC2 instance that has an appropriate IAM role assigned
+<p>In case you are running on an EC2 instance OR ECS with fargate deployment (OR ECS with EC2 with ECS_AWSVPC_BLOCK_IMDS as "true") that has an appropriate IAM role assigned
 (e.g. a role that grants the AWS built-in policy <em>AmazonEC2ContainerRegistryPowerUser</em>)
 authentication information doesn&#8217;t need to be provided at all. Instead the instance
-meta-data service is queried for temporary access credentials supplied by the
+meta-data service or task metadata endpoint in case of ECS is queried for temporary access credentials supplied by the
 assigned role.
 Unresolved directive in index.adoc - include::inc/_volumes.adoc[]</p>
 </div>
