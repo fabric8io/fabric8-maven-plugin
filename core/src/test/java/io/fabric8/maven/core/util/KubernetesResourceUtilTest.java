@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.core.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
 import java.io.File;
@@ -176,6 +177,16 @@ public class KubernetesResourceUtilTest {
             assertTrue("Service".equals(item.getKind()) || "ReplicationController".equals(item.getKind()));
             assertEquals("pong",item.getMetadata().getName());
             assertEquals("v2",item.getApiVersion());
+        }
+    }
+
+    @Test
+    public void invalidContentShouldShowFilename() throws Exception {
+        try {
+            getResource(PlatformMode.kubernetes, DEFAULT_RESOURCE_VERSIONING, new File(fabric8Dir, "invalid-config-svc.yaml"), "app");
+            fail();
+        } catch (JsonProcessingException exp) {
+            assertTrue(exp.getMessage().contains("invalid-config-svc.yaml"));
         }
     }
 }

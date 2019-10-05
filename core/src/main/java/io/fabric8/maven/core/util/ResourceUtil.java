@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -86,9 +87,10 @@ public class ResourceUtil {
 
     private static ObjectMapper getObjectMapper(ResourceFileType resourceFileType) {
         return resourceFileType.getObjectMapper()
-                               .enable(SerializationFeature.INDENT_OUTPUT)
-                               .disable(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS)
-                               .disable(SerializationFeature.WRITE_NULL_MAP_VALUES);
+                .enable(SerializationFeature.INDENT_OUTPUT)
+                // TODO: Deprecated feature, but no valid replacement. See https://github.com/FasterXML/jackson-databind/issues/1547
+                .disable(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS)
+                .setDefaultPropertyInclusion(JsonInclude.Value.construct(JsonInclude.Include.ALWAYS, JsonInclude.Include.NON_NULL));
     }
 
     private static void ensureDir(File file) throws IOException {
