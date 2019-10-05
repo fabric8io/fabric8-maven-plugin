@@ -23,8 +23,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.google.gson.JsonObject;
 import org.apache.commons.io.FilenameUtils;
 
@@ -87,17 +85,10 @@ public class ResourceUtil {
     }
 
     private static ObjectMapper getObjectMapper(ResourceFileType resourceFileType) {
-        if (resourceFileType == ResourceFileType.yaml) {
-            return new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.MINIMIZE_QUOTES))
-                    .enable(SerializationFeature.INDENT_OUTPUT)
-                    .disable(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS)
-                    .disable(SerializationFeature.WRITE_NULL_MAP_VALUES);
-        } else {
-            return resourceFileType.getObjectMapper()
-                    .enable(SerializationFeature.INDENT_OUTPUT)
-                    .disable(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS)
-                    .disable(SerializationFeature.WRITE_NULL_MAP_VALUES);
-        }
+        return resourceFileType.getObjectMapper()
+                               .enable(SerializationFeature.INDENT_OUTPUT)
+                               .disable(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS)
+                               .disable(SerializationFeature.WRITE_NULL_MAP_VALUES);
     }
 
     private static void ensureDir(File file) throws IOException {
