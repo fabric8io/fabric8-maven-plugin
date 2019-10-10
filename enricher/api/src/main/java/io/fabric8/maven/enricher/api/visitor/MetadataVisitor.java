@@ -354,7 +354,7 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected Kind getKind() {
-            return Kind.BUILD;
+            return Kind.INGRESS;
         }
 
         @Override
