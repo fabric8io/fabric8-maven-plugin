@@ -13,6 +13,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 ### 4.3-SNAPSHOT
 * Fix #1725: Update jackson to 2.10.0
 * Fix #1710: Docker build args not working
+* Fix #1728: Ingress enricher is using Ingress kind
 
 ### 4.3.0 (04-10-2019)
 * Updated custom-enricher sample
