@@ -10,7 +10,9 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
-### 4.3-SNAPSHOT
+### 4.4-SNAPSHOT
+
+### 4.3.1 (18-10-2019)
 * Updated Kubernetes client to 4.6.1
 * Fix #1725: Update jackson to 2.10.0
 * Fix #1710: Docker build args not working
