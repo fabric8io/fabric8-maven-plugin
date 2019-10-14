@@ -171,18 +171,7 @@ public class JibBuildServiceUtil {
             if (offline) {
                 logger.info("Trying to build the image tarball in the offline mode.");
             }
-            return jibContainerBuilder.containerize(Containerizer.to(image).setOfflineMode(offline)
-                    .addEventHandler(LogEvent.class, JibBuildServiceUtil::log)
-                    .addEventHandler(
-                            TimerEvent.class,
-                            new TimerEventHandler(message -> consoleLogger.log(LogEvent.Level.DEBUG, message)))
-                    .addEventHandler(
-                            ProgressEvent.class,
-                            new ProgressEventHandler(
-                                    update ->
-                                            consoleLogger.setFooter(
-                                                    ProgressDisplayGenerator.generateProgressDisplay(
-                                                            update.getProgress(), update.getUnfinishedLeafTasks())))));
+            return jibContainerBuilder.containerize(Containerizer.to(image).setOfflineMode(offline));
         } catch (CacheDirectoryCreationException | IOException | InterruptedException | ExecutionException | RegistryException ex) {
             logger.error("Unable to build the image tarball: %s", ex.getMessage());
             throw new IllegalStateException(ex);
