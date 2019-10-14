@@ -25,10 +25,19 @@ import com.google.cloud.tools.jib.api.Jib;
 import com.google.cloud.tools.jib.api.JibContainer;
 import com.google.cloud.tools.jib.api.JibContainerBuilder;
 import com.google.cloud.tools.jib.api.LayerConfiguration;
+import com.google.cloud.tools.jib.api.LogEvent;
 import com.google.cloud.tools.jib.api.Port;
 import com.google.cloud.tools.jib.api.RegistryException;
 import com.google.cloud.tools.jib.api.RegistryImage;
 import com.google.cloud.tools.jib.api.TarImage;
+import com.google.cloud.tools.jib.event.events.ProgressEvent;
+import com.google.cloud.tools.jib.event.events.TimerEvent;
+import com.google.cloud.tools.jib.event.progress.ProgressEventHandler;
+import com.google.cloud.tools.jib.plugins.common.TimerEventHandler;
+import com.google.cloud.tools.jib.plugins.common.logging.ConsoleLogger;
+import com.google.cloud.tools.jib.plugins.common.logging.ConsoleLoggerBuilder;
+import com.google.cloud.tools.jib.plugins.common.logging.ProgressDisplayGenerator;
+import com.google.cloud.tools.jib.plugins.common.logging.SingleThreadedExecutor;
 import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.kubernetes.JibBuildService;
 import io.fabric8.maven.docker.access.AuthConfig;
@@ -57,6 +66,7 @@ public class JibBuildServiceUtil {
 
     private static final String DEFAULT_JAR_NAME = "/app.jar";
     private static final String DEFAULT_USER_NAME = "fabric8/";
+    private static ConsoleLogger consoleLogger;
 
     /**
      * Builds a container image using JIB
@@ -142,7 +152,7 @@ public class JibBuildServiceUtil {
             log.info("Image %s successfully built and pushed.", targetImage);
             return jibContainer;
         } catch (RegistryException re) {
-            log.warn("Registry Exception occureed : %s", re.getMessage());
+            log.warn("Registry Exception occurred : %s", re.getMessage());
             log.warn("Credentials are probably either not configured or are incorrect.");
             log.info("Building Image Tarball at %s.", imageTarName);
             JibContainer jibContainer =  buildContainer(contBuild, tarImage, log, false);
@@ -161,7 +171,18 @@ public class JibBuildServiceUtil {
             if (offline) {
                 logger.info("Trying to build the image tarball in the offline mode.");
             }
-            return jibContainerBuilder.containerize(Containerizer.to(image).setOfflineMode(offline));
+            return jibContainerBuilder.containerize(Containerizer.to(image).setOfflineMode(offline)
+                    .addEventHandler(LogEvent.class, JibBuildServiceUtil::log)
+                    .addEventHandler(
+                            TimerEvent.class,
+                            new TimerEventHandler(message -> consoleLogger.log(LogEvent.Level.DEBUG, message)))
+                    .addEventHandler(
+                            ProgressEvent.class,
+                            new ProgressEventHandler(
+                                    update ->
+                                            consoleLogger.setFooter(
+                                                    ProgressDisplayGenerator.generateProgressDisplay(
+                                                            update.getProgress(), update.getUnfinishedLeafTasks())))));
         } catch (CacheDirectoryCreationException | IOException | InterruptedException | ExecutionException | RegistryException ex) {
             logger.error("Unable to build the image tarball: %s", ex.getMessage());
             throw new IllegalStateException(ex);
@@ -169,11 +190,40 @@ public class JibBuildServiceUtil {
     }
     public static JibContainer buildContainer(JibContainerBuilder jibContainerBuilder, RegistryImage image,Logger logger) throws RegistryException, ExecutionException {
         try {
-            return jibContainerBuilder.containerize(Containerizer.to(image));
+            consoleLogger = getConsoleLogger(logger);
+            return jibContainerBuilder.containerize(Containerizer.to(image)
+                    .addEventHandler(LogEvent.class, JibBuildServiceUtil::log)
+                    .addEventHandler(
+                            TimerEvent.class,
+                            new TimerEventHandler(message -> consoleLogger.log(LogEvent.Level.DEBUG, message)))
+                    .addEventHandler(
+                            ProgressEvent.class,
+                            new ProgressEventHandler(
+                                    update ->
+                                            consoleLogger.setFooter(
+                                                    ProgressDisplayGenerator.generateProgressDisplay(
+                                                            update.getProgress(), update.getUnfinishedLeafTasks())))));
+
         } catch (CacheDirectoryCreationException | IOException | InterruptedException e) {
             logger.error("Unable to build the image in the offline mode: %s", e.getMessage());
             throw new IllegalStateException(e);
         }
+    }
+
+    public static void log(LogEvent event) {
+        consoleLogger.log(event.getLevel(), event.getMessage());
+    }
+
+    public static ConsoleLogger getConsoleLogger(Logger logger) {
+        ConsoleLoggerBuilder consoleLoggerBuilder = ConsoleLoggerBuilder
+                .rich(new SingleThreadedExecutor(), true)
+                .lifecycle(logger::info);
+        if (logger.isDebugEnabled()) {
+            consoleLoggerBuilder
+                    .debug(logger::debug)
+                    .info(logger::info);
+        }
+        return consoleLoggerBuilder.build();
     }
 
     public static JibBuildService.JibBuildConfiguration getJibBuildConfiguration(BuildService.BuildServiceConfig config, BuildImageConfiguration buildImageConfiguration, String fullImageName, Logger log) throws MojoExecutionException {

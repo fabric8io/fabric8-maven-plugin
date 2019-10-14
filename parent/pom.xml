@@ -305,6 +305,12 @@
         <version>0.10.0</version>
       </dependency>
 
+      <dependency>
+        <groupId>com.google.cloud.tools</groupId>
+        <artifactId>jib-maven-plugin</artifactId>
+        <version>1.6.1</version>
+      </dependency>
+
       <!-- == libs ====================================== -->
 
       <!-- ## fabric8-project, git access #################### -->
