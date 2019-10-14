@@ -656,13 +656,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
             }
             File kubernetesYaml = new File(this.targetDir, "kubernetes.yml");
             resolveTemplateVariables(parameters, kubernetesYaml);
-            File kubernetesResourceDir = new File(this.targetDir, "kubernetes");
-            File[] kubernetesResources = kubernetesResourceDir.listFiles((dir, filename) -> filename.endsWith(".yml"));
-            if (kubernetesResources != null) {
-                for (File kubernetesResource : kubernetesResources) {
-                    resolveTemplateVariables(parameters, kubernetesResource);
-                }
-            }
         }
     }
 
