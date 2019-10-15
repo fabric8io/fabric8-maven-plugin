@@ -61,7 +61,7 @@ public class JibBuildService implements BuildService {
            } else {
                fullName = new ImageName(imageConfiguration.getName(), null).getFullName();
            }
-           log.info("Image tagging successfull!");
+           log.info("Image tagging successful!");
            jibBuildConfiguration = JibBuildServiceUtil.getJibBuildConfiguration(config, buildImageConfiguration, fullName, log);
            JibBuildServiceUtil.buildImage(jibBuildConfiguration, log);
        } catch (Exception ex) {
