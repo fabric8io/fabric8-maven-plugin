@@ -16,6 +16,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix #1728: Ingress enricher is using Ingress kind
 * Fix #1732: Correctly replacing template placeholders in helm chart
 * Fix #1734: Add logging during jib builds
+* Fix #1696: Fix put operations for ImageStreams in ApplyService
 
 ### 4.3.0 (04-10-2019)
 * Updated custom-enricher sample
