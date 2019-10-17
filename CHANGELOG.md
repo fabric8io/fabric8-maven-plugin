@@ -18,6 +18,8 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix #1732: Correctly replacing template placeholders in helm chart
 * Fix #1734: Add logging during jib builds
 * Fix #1696: Fix put operations for ImageStreams in ApplyService
+* Fix #1738: JibBuildConfiguration ignores BuildImageConfiguration.registry
+* Fix #1737: Wrong Jib output directory in Maven multi-module build
 
 ### 4.3.0 (04-10-2019)
 * Updated custom-enricher sample
