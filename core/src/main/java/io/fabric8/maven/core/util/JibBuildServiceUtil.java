@@ -43,8 +43,8 @@ import io.fabric8.maven.core.service.kubernetes.JibBuildService;
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.service.RegistryService;
+import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import java.io.IOException;
@@ -222,8 +222,7 @@ public class JibBuildServiceUtil {
 
         String targetDir = buildImageConfiguration.getAssemblyConfiguration().getTargetDir();
 
-        MojoParameters mojoParameters = config.getDockerMojoParameters();
-        String outputDir = mojoParameters.getOutputDirectory();
+        String outputDir = EnvUtil.prepareAbsoluteOutputDirPath(config.getDockerMojoParameters(), "", "").getAbsolutePath();
 
         if(targetDir == null) {
             targetDir = "/deployments";

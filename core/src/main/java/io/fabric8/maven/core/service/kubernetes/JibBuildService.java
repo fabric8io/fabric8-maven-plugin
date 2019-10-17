@@ -15,19 +15,18 @@
  */
 package io.fabric8.maven.core.service.kubernetes;
 
+import com.google.cloud.tools.jib.api.Credential;
 import io.fabric8.maven.core.service.BuildService;
+import io.fabric8.maven.core.util.JibBuildServiceUtil;
+import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.util.DeepCopy;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 
-import java.util.List;
-import com.google.cloud.tools.jib.api.Credential;
-import io.fabric8.maven.core.util.JibBuildServiceUtil;
-import io.fabric8.maven.docker.config.Arguments;
-import io.fabric8.maven.docker.util.DeepCopy;
-
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -65,7 +64,7 @@ public class JibBuildService implements BuildService {
            jibBuildConfiguration = JibBuildServiceUtil.getJibBuildConfiguration(config, buildImageConfiguration, fullName, log);
            JibBuildServiceUtil.buildImage(jibBuildConfiguration, log);
        } catch (Exception ex) {
-           throw new UnsupportedOperationException();
+           throw new UnsupportedOperationException(ex);
        }
     }
 

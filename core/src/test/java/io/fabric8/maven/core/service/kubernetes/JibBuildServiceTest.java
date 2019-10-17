@@ -27,6 +27,7 @@ import io.fabric8.maven.docker.util.MojoParameters;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.Tested;
+import org.apache.maven.project.MavenProject;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -57,7 +58,7 @@ public class JibBuildServiceTest {
 
         //Preparation Code For Testing The Class
 
-        MojoParameters mojoParameters = new MojoParameters(null, null, null, null, null, null, null, "target/docker", null);
+        MojoParameters mojoParameters = new MojoParameters(null, new MavenProject(), null, null, null, null, null, "target/docker", null);
         final String imageName = "image-name";
 
         AssemblyConfiguration assemblyConfiguration = new AssemblyConfiguration.Builder()
