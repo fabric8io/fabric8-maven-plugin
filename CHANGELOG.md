@@ -11,6 +11,7 @@ We use semantic versioning in some slight variation until our feature set has st
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
 ### 4.3-SNAPSHOT
+* Updated Kubernetes client to 4.6.1
 * Fix #1725: Update jackson to 2.10.0
 * Fix #1710: Docker build args not working
 * Fix #1728: Ingress enricher is using Ingress kind
