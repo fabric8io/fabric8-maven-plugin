@@ -515,8 +515,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/fabric8-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
-<span id="revnumber">version 4.3.0,</span>
-<span id="revdate">2019-10-04</span>
+<span id="revnumber">version 4.3.1,</span>
+<span id="revdate">2019-10-19</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -790,7 +790,7 @@ This allows for type-safe configuration with IDE support, but only a subset of p
 
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-sample-zero-config<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.3.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.3.1<span class="tag">&lt;/version&gt;</span>
   <span class="tag">&lt;packaging&gt;</span>jar<span class="tag">&lt;/packaging&gt;</span>
 
   <span class="tag">&lt;parent&gt;</span>
@@ -815,7 +815,7 @@ This allows for type-safe configuration with IDE support, but only a subset of p
       <span class="tag">&lt;plugin&gt;</span>
         <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
         <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span> <i class="conum" data-value="4"></i><b>(4)</b>
-        <span class="tag">&lt;version&gt;</span>4.3.0<span class="tag">&lt;/version&gt;</span>
+        <span class="tag">&lt;version&gt;</span>4.3.1<span class="tag">&lt;/version&gt;</span>
       <span class="tag">&lt;/plugin&gt;</span>
     <span class="tag">&lt;/plugins&gt;</span>
   <span class="tag">&lt;/build&gt;</span>
@@ -1199,6 +1199,15 @@ For building images there is also an alternative mode using external Dockerfiles
 </thead>
 <tbody>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.3.1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.3.0</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
@@ -1380,6 +1389,20 @@ For building images there is also an alternative mode using external Dockerfiles
 </tr>
 </thead>
 <tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.3.1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+</tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.3.0</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
@@ -1652,7 +1675,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.3.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.3.1<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -2163,7 +2186,7 @@ If you do not want to generate a Route descriptor, you can set the <code>fabric8
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>4.3.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>4.3.1<span class="tag">&lt;/version&gt;</span>
     <span class="tag">&lt;configuration&gt;</span>
         <span class="tag">&lt;generateRoute&gt;</span>false<span class="tag">&lt;/generateRoute&gt;</span>
     <span class="tag">&lt;/configuration&gt;</span>
@@ -3923,7 +3946,7 @@ more details.</p></td>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.3.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.3.1<span class="tag">&lt;/version&gt;</span>
 
   <span class="comment">&lt;!-- Connect fabric8:resource to the lifecycle phases --&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
@@ -4098,7 +4121,7 @@ This goal is deprecated and might vanish in version 4.0 of this plugin. It&#8217
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.3.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.3.1<span class="tag">&lt;/version&gt;</span>
 
   <span class="comment">&lt;!-- Connect fabric8:resource, fabric8:build and fabric8:helm to lifecycle phases --&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
@@ -4136,7 +4159,7 @@ This goal is deprecated and might vanish in version 4.0 of this plugin. It&#8217
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>4.3.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>4.3.1<span class="tag">&lt;/version&gt;</span>
     <span class="tag">&lt;configuration&gt;</span>
         <span class="tag">&lt;enricher&gt;</span>
             <span class="tag">&lt;excludes&gt;</span>
@@ -6142,7 +6165,7 @@ However, by default, no health check will be added to your deployment.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.3.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.3.1<span class="tag">&lt;/version&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
     <span class="tag">&lt;execution&gt;</span>
       <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
@@ -6202,7 +6225,7 @@ However, by default, no health check will be added to your deployment.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.3.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.3.1<span class="tag">&lt;/version&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
     <span class="tag">&lt;execution&gt;</span>
       <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
@@ -6249,7 +6272,7 @@ However, by default, no health check will be added to your deployment.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>fabric8-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>4.3.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>4.3.1<span class="tag">&lt;/version&gt;</span>
   <span class="tag">&lt;executions&gt;</span>
     <span class="tag">&lt;execution&gt;</span>
       <span class="tag">&lt;id&gt;</span>fmp<span class="tag">&lt;/id&gt;</span>
@@ -8042,7 +8065,7 @@ By default if no environment variable nor system property is set, scan for a fil
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 4.3.0<br>
+Version 4.3.1<br>
 Last updated 2019-07-11 20:07:35 IST
 </div>
 </div>
