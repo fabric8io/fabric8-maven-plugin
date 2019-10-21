@@ -17,6 +17,7 @@ package io.fabric8.maven.plugin.mojo;
 
 import io.fabric8.maven.core.access.ClusterConfiguration;
 import io.fabric8.maven.docker.util.AnsiLogger;
+import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -26,6 +27,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
+import org.apache.maven.shared.utils.logging.MessageUtils;
 
 public abstract class AbstractFabric8Mojo extends AbstractMojo {
 
@@ -80,8 +82,18 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
     }
 
     protected Logger createLogger(String prefix) {
-        return new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), "F8:" + prefix);
+        return new AnsiLogger(getLog(), useColorForLogging(), verbose, !settings.getInteractiveMode(), "F8:" + prefix);
     }
+
+    /**
+     * Determine whether to enable colorized log messages
+     * @return true if log statements should be colorized
+     */
+    private boolean useColorForLogging() {
+        return useColor && MessageUtils.isColorEnabled()
+            && !(EnvUtil.isWindows() && !EnvUtil.isMaven350OrLater(session));
+    }
+
 
     protected ClusterConfiguration getClusterConfiguration() {
         final ClusterConfiguration.Builder clusterConfigurationBuilder = new ClusterConfiguration.Builder(access);
