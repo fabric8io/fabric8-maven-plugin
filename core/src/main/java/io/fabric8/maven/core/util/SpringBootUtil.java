@@ -41,15 +41,34 @@ public class SpringBootUtil {
 
     /**
      * Returns the spring boot configuration (supports `application.properties` and `application.yml`)
-     * or an empty properties object if not found
+     * or an empty properties object if not found, it assumes first profile as default profile.
+     *
+     * @param compileClassLoader compile class loader
+     * @return properties object
      */
     public static Properties getSpringBootApplicationProperties(URLClassLoader compileClassLoader) {
+        return getSpringBootApplicationProperties(null, compileClassLoader);
+    }
+
+    /**
+     * Returns the spring boot configuration (supports `application.properties` and `application.yml`)
+     * or an empty properties object if not found
+     *
+     * @param springActiveProfile currently active spring-boot profile
+     * @param compileClassLoader compile class loader
+     * @return properties object
+     */
+    public static Properties getSpringBootApplicationProperties(String springActiveProfile, URLClassLoader compileClassLoader) {
         URL ymlResource = compileClassLoader.findResource("application.yml");
         URL propertiesResource = compileClassLoader.findResource("application.properties");
 
-        Properties props = YamlUtil.getPropertiesFromYamlResource(ymlResource);
+        Properties props = getPropertiesFromApplicationYamlResource(springActiveProfile, ymlResource);
         props.putAll(getPropertiesResource(propertiesResource));
         return props;
+    }
+
+    public static Properties getPropertiesFromApplicationYamlResource(String springActiveProfile, URL ymlResource) {
+        return YamlUtil.getPropertiesFromYamlResource(springActiveProfile, ymlResource);
     }
 
     /**
@@ -81,6 +100,13 @@ public class SpringBootUtil {
         return Optional.ofNullable(MavenUtil.getDependencyVersion(mavenProject, SpringBootConfigurationHelper.SPRING_BOOT_GROUP_ID, SpringBootConfigurationHelper.SPRING_BOOT_ARTIFACT_ID));
     }
 
-
+    public static String getSpringBootActiveProfile(MavenProject mavenProject) {
+        if (mavenProject != null && mavenProject.getProperties() != null) {
+            if (mavenProject.getProperties().get("spring.profiles.active") != null) {
+                return mavenProject.getProperties().get("spring.profiles.active").toString();
+            }
+        }
+        return null;
+    }
 
 }
