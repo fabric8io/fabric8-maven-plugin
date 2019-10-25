@@ -47,7 +47,7 @@ The full documentation can be found in the [User Manual](http://maven.fabric8.io
 
 * Includes [docker-maven-plugin](https://github.com/fabric8io/docker-maven-plugin) for dealing with Docker images and hence inherits its flexible and powerful configuration.
 * Supports both Kubernetes and OpenShift descriptors
-* OpenShift Docker builds with a binary source (as an alternative to a direct image build agains a Docker daemon)
+* OpenShift Docker builds with a binary source (as an alternative to a direct image build against a Docker daemon)
 * Various configuration styles:
   * **Zero Configuration** for a quick ramp-up where opinionated defaults will be pre-selected.
   * **Inline Configuration** within the plugin configuration in an XML syntax.
