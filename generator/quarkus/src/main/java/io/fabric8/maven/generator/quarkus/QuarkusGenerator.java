@@ -15,10 +15,14 @@
  */
 package io.fabric8.maven.generator.quarkus;
 
+import static io.fabric8.maven.core.util.BuildLabelUtil.addSchemaLabels;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
-
+import java.util.Optional;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.assembly.model.Assembly;
+import org.apache.maven.plugins.assembly.model.FileSet;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.FileUtil;
 import io.fabric8.maven.core.util.MavenUtil;
@@ -28,11 +32,6 @@ import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.generator.api.support.BaseGenerator;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.assembly.model.Assembly;
-import org.apache.maven.plugins.assembly.model.FileSet;
-
-import static io.fabric8.maven.core.util.BuildLabelUtil.addSchemaLabels;
 
 public class QuarkusGenerator extends BaseGenerator {
 
@@ -41,6 +40,7 @@ public class QuarkusGenerator extends BaseGenerator {
     }
 
     public enum Config implements Configs.Key {
+
         // Webport to expose. Set to 0 if no port should be exposed
         webPort {{
             d = "8080";
@@ -85,8 +85,9 @@ public class QuarkusGenerator extends BaseGenerator {
 
         boolean isNative = Boolean.parseBoolean(getConfig(Config.nativeImage, "false"));
 
+        Optional<String> fromConfigured = Optional.ofNullable(getFromAsConfigured());
         if (isNative) {
-            buildBuilder.from("registry.fedoraproject.org/fedora-minimal")
+            buildBuilder.from(fromConfigured.orElse("registry.fedoraproject.org/fedora-minimal"))
                         .entryPoint(new Arguments.Builder()
                                         .withParam("./" + findSingleFileThatEndsWith("-runner"))
                                         .withParam("-Dquarkus.http.host=0.0.0.0")
@@ -99,7 +100,7 @@ public class QuarkusGenerator extends BaseGenerator {
                         "/", this::getNativeFileToInclude));
             }
         } else {
-            buildBuilder.from("openjdk:11")
+            buildBuilder.from(fromConfigured.orElse("openjdk:11"))
                         .entryPoint(new Arguments.Builder()
                                         .withParam("java")
                                         .withParam("-Dquarkus.http.host=0.0.0.0")
