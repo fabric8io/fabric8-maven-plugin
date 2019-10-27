@@ -12,6 +12,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 
 ### 4.4-SNAPSHOT
 * Fix #1572: Support maven --batch-mode option
+* Fix #1695: IllegalArgumentException when Spring Boot application.yaml contains integer keys
 
 ### 4.3.1 (18-10-2019)
 * Updated Kubernetes client to 4.6.1
