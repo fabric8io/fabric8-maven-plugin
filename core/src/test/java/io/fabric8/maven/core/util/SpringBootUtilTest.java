@@ -41,7 +41,7 @@ public class SpringBootUtilTest {
         assertEquals("value1", props.getProperty("example.nested.items[1].value"));
         assertEquals("sub0", props.getProperty("example.nested.items[2].elements[0].element[0].subelement"));
         assertEquals("sub1", props.getProperty("example.nested.items[2].elements[0].element[1].subelement"));
-
+        assertEquals("integerKeyElement", props.getProperty("example.1"));
     }
 
     @Test(expected = IllegalArgumentException.class)
