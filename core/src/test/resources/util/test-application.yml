@@ -36,5 +36,6 @@ example:
         - element:
           - subelement: sub0
           - subelement: sub1
+  1: integerKeyElement
 
 

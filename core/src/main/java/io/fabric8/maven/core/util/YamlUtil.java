@@ -26,13 +26,12 @@ import java.util.Properties;
 import java.util.SortedMap;
 import org.yaml.snakeyaml.Yaml;
 
-public class YamlUtil {
-    protected static Properties getPropertiesFromYamlResource(URL resource) {
+class YamlUtil {
+    static Properties getPropertiesFromYamlResource(URL resource) {
         if (resource != null) {
             try (InputStream yamlStream = resource.openStream()) {
                 Yaml yaml = new Yaml();
-                @SuppressWarnings("unchecked")
-                SortedMap<String, Object> source = yaml.loadAs(yamlStream, SortedMap.class);
+                SortedMap<?, ?> source = yaml.loadAs(yamlStream, SortedMap.class);
                 Properties properties = new Properties();
                 if (source != null) {
                     try {
@@ -53,24 +52,26 @@ public class YamlUtil {
     /**
      * Build a flattened representation of the Yaml tree. The conversion is compliant with the thorntail spring-boot rules.
      */
-    private static Map<String, Object> getFlattenedMap(Map<String, Object> source) {
+    private static Map<String, Object> getFlattenedMap(Map<?, ?> source) {
         Map<String, Object> result = new LinkedHashMap<>();
         buildFlattenedMap(result, source, null);
         return result;
     }
 
-    @SuppressWarnings("unchecked")
-    private static void buildFlattenedMap(Map<String, Object> result, Map<String, Object> source, String path) {
-        for (Map.Entry<String, Object> entry : source.entrySet()) {
+    private static void buildFlattenedMap(Map<String, Object> result, Map<?, ?> source, String path) {
+        for (Map.Entry<?, ?> entry : source.entrySet()) {
             Object keyObject = entry.getKey();
 
-            // If user creates a wrong application.yml then we get a runtime classcastexception
-            if (!(keyObject instanceof String)) {
+            String key;
+            if (keyObject instanceof String) {
+                key = (String) keyObject;
+            } else if (keyObject instanceof Number) {
+                key = String.valueOf(keyObject);
+            } else {
+                // If user creates a wrong application.yml then we get a runtime classcastexception
                 throw new IllegalArgumentException(String.format("Expected to find a key of type String but %s with content %s found.",
                     keyObject.getClass(), keyObject.toString()));
             }
-
-            String key = (String) keyObject;
 
             if (path !=null && path.trim().length()>0) {
                 if (key.startsWith("[")) {
@@ -83,11 +84,11 @@ public class YamlUtil {
             Object value = entry.getValue();
             if (value instanceof Map) {
 
-                Map<String, Object> map = (Map<String, Object>) value;
+                Map<?, ?> map = (Map<?, ?>) value;
                 buildFlattenedMap(result, map, key);
             }
             else if (value instanceof Collection) {
-                Collection<Object> collection = (Collection<Object>) value;
+                Collection<?> collection = (Collection<?>) value;
                 int count = 0;
                 for (Object object : collection) {
                     buildFlattenedMap(result,
