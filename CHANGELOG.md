@@ -14,6 +14,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix #1572: Support maven --batch-mode option
 * Feature #1748: Quarkus generator: Extract base image from configuration.
 * Fix #1695: IllegalArgumentException when Spring Boot application.yaml contains integer keys
+* Fix #797: spring-boot generator can not handle multi-profile configuration
 
 ### 4.3.1 (18-10-2019)
 * Updated Kubernetes client to 4.6.1
