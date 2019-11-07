@@ -127,7 +127,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
      * The S2I binary builder BuildConfig name suffix appended to the image name to avoid
      * clashing with the underlying BuildConfig for the Jenkins pipeline
      */
-    @Parameter(property = "fabric8.s2i.buildNameSuffix", defaultValue = "-s2i")
+    @Parameter(property = "fabric8.s2i.buildNameSuffix", defaultValue = "")
     private String s2iBuildNameSuffix;
 
     /**
