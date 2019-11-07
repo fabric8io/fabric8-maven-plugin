@@ -550,49 +550,49 @@ public class OpenshiftBuildServiceTest {
                 .build();
 
         if (!buildConfigExists) {
-            mockServer.expect().get().withPath("/oapi/v1/namespaces/test/buildconfigs/" + projectName + config.getS2iBuildNameSuffix()).andReply(collector.record("build-config-check").andReturn
+            mockServer.expect().get().withPath("/apis/build.openshift.io/v1/namespaces/test/buildconfigs/" + projectName + config.getS2iBuildNameSuffix()).andReply(collector.record("build-config-check").andReturn
                     (404, "")).once();
-            mockServer.expect().get().withPath("/oapi/v1/namespaces/test/buildconfigs/" + projectName + config.getS2iBuildNameSuffix() + "pullSecret").andReply(collector.record("build-config-check").andReturn
+            mockServer.expect().get().withPath("/apis/build.openshift.io/v1/namespaces/test/buildconfigs/" + projectName + config.getS2iBuildNameSuffix() + "pullSecret").andReply(collector.record("build-config-check").andReturn
                     (404, "")).once();
-            mockServer.expect().post().withPath("/oapi/v1/namespaces/test/buildconfigs").andReply(collector.record("new-build-config").andReturn(201, bc)).once();
+            mockServer.expect().post().withPath("/apis/build.openshift.io/v1/namespaces/test/buildconfigs").andReply(collector.record("new-build-config").andReturn(201, bc)).once();
             if (bcSecret != null) {
-                mockServer.expect().post().withPath("/oapi/v1/namespaces/test/buildconfigs").andReply(collector.record("new-build-config").andReturn(201, bcSecret)).once();
+                mockServer.expect().post().withPath("/apis/build.openshift.io/v1/namespaces/test/buildconfigs").andReply(collector.record("new-build-config").andReturn(201, bcSecret)).once();
             }
         } else {
-            mockServer.expect().patch().withPath("/oapi/v1/namespaces/test/buildconfigs/" + projectName + config.getS2iBuildNameSuffix()).andReply(collector.record("patch-build-config").andReturn
+            mockServer.expect().patch().withPath("/apis/build.openshift.io/v1/namespaces/test/buildconfigs/" + projectName + config.getS2iBuildNameSuffix()).andReply(collector.record("patch-build-config").andReturn
                     (200, bc)).once();
             if (bcSecret != null) {
-                mockServer.expect().patch().withPath("/oapi/v1/namespaces/test/buildconfigs/" + projectName + config.getS2iBuildNameSuffix() + "pullSecret").andReply(collector.record("patch-build-config").andReturn
+                mockServer.expect().patch().withPath("/apis/build.openshift.io/v1/namespaces/test/buildconfigs/" + projectName + config.getS2iBuildNameSuffix() + "pullSecret").andReply(collector.record("patch-build-config").andReturn
                         (200, bcSecret)).once();
             }
         }
-        mockServer.expect().get().withPath("/oapi/v1/namespaces/test/buildconfigs/" + projectName + config.getS2iBuildNameSuffix()).andReply(collector.record("build-config-check").andReturn(200,
+        mockServer.expect().get().withPath("/apis/build.openshift.io/v1/namespaces/test/buildconfigs/" + projectName + config.getS2iBuildNameSuffix()).andReply(collector.record("build-config-check").andReturn(200,
                 bc)).always();
         if (bcSecret != null) {
-            mockServer.expect().get().withPath("/oapi/v1/namespaces/test/buildconfigs/" + projectName + config.getS2iBuildNameSuffix() + "pullSecret").andReply(collector.record("build-config-check").andReturn(200,
+            mockServer.expect().get().withPath("/apis/build.openshift.io/v1/namespaces/test/buildconfigs/" + projectName + config.getS2iBuildNameSuffix() + "pullSecret").andReply(collector.record("build-config-check").andReturn(200,
                     bcSecret)).always();
         }
 
 
         if (!imageStreamExists) {
-            mockServer.expect().get().withPath("/oapi/v1/namespaces/test/imagestreams/" + projectName).andReturn(404, "").once();
+            mockServer.expect().get().withPath("/apis/image.openshift.io/v1/namespaces/test/imagestreams/" + projectName).andReturn(404, "").once();
         }
-        mockServer.expect().get().withPath("/oapi/v1/namespaces/test/imagestreams/" + projectName).andReturn(200, imageStream).always();
+        mockServer.expect().get().withPath("/apis/image.openshift.io/v1/namespaces/test/imagestreams/" + projectName).andReturn(200, imageStream).always();
 
-        mockServer.expect().post().withPath("/oapi/v1/namespaces/test/imagestreams").andReturn(201, imageStream).once();
+        mockServer.expect().post().withPath("/apis/image.openshift.io/v1/namespaces/test/imagestreams").andReturn(201, imageStream).once();
 
-        mockServer.expect().post().withPath("/oapi/v1/namespaces/test/buildconfigs/" + projectName + config.getS2iBuildNameSuffix() + "/instantiatebinary?commit=")
+        mockServer.expect().post().withPath("/apis/build.openshift.io/v1/namespaces/test/buildconfigs/" + projectName + config.getS2iBuildNameSuffix() + "/instantiatebinary?commit=")
                 .andReply(
                         collector.record("pushed")
                                 .andReturn(201, imageStream))
                 .once();
 
-        mockServer.expect().get().withPath("/oapi/v1/namespaces/test/builds").andReply(collector.record("check-build").andReturn(200, builds)).always();
-        mockServer.expect().get().withPath("/oapi/v1/namespaces/test/builds?labelSelector=openshift.io/build-config.name%3D" + projectName + config.getS2iBuildNameSuffix()).andReturn(200, builds)
+        mockServer.expect().get().withPath("/apis/build.openshift.io/v1/namespaces/test/builds").andReply(collector.record("check-build").andReturn(200, builds)).always();
+        mockServer.expect().get().withPath("/apis/build.openshift.io/v1/namespaces/test/builds?labelSelector=openshift.io/build-config.name%3D" + projectName + config.getS2iBuildNameSuffix()).andReturn(200, builds)
                 .always();
 
-        mockServer.expect().withPath("/oapi/v1/namespaces/test/builds/" + projectName).andReturn(200, build).always();
-        mockServer.expect().withPath("/oapi/v1/namespaces/test/builds?fieldSelector=metadata.name%3D" + projectName + "&watch=true")
+        mockServer.expect().withPath("/apis/build.openshift.io/v1/namespaces/test/builds/" + projectName).andReturn(200, build).always();
+        mockServer.expect().withPath("/apis/build.openshift.io/v1/namespaces/test/builds?fieldSelector=metadata.name%3D" + projectName + "&watch=true")
                 .andUpgradeToWebSocket().open()
                 .waitFor(buildDelay)
                 .andEmit(new WatchEvent(build, "MODIFIED"))
