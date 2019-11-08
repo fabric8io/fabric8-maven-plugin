@@ -60,7 +60,6 @@ public class EnricherManager {
                 "META-INF/fabric8/enricher");
 
         logEnrichers(filterEnrichers(defaultEnricherConfig, enrichers));
-
     }
 
     public void createDefaultResources(PlatformMode platformMode, final KubernetesListBuilder builder) {
@@ -79,17 +78,13 @@ public class EnricherManager {
         enrich(platformMode, defaultEnricherConfig, builder);
     }
 
-    public void enrich(PlatformMode platformMode, ProcessorConfig config, KubernetesListBuilder builder) {
-        enrich(platformMode, config, builder, enrichers);
-    }
-
     /**
      * Allow enricher to add Metadata to the resources.
-     *
+     * @param platformMode
+     * @param enricherConfig
      * @param builder builder to customize
-     * @param enricherList list of enrichers
      */
-    private void enrich(PlatformMode platformMode, final ProcessorConfig enricherConfig, final KubernetesListBuilder builder, final List<Enricher> enricherList) {
+    public void enrich(PlatformMode platformMode, final ProcessorConfig enricherConfig, final KubernetesListBuilder builder) {
         loop(enricherConfig, enricher -> {
                 enricher.enrich(platformMode, builder);
                 return null;

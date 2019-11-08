@@ -27,7 +27,6 @@
     - fmp-controller
     - fmp-controller-from-configuration
     - fmp-service
-    - fmp-namespace
     - fmp-image
     - fmp-portname
     - fmp-project-label
@@ -44,8 +43,8 @@
     - fmp-configmap-file
     - fmp-secret-file
 
-    # Route exposure
     - fmp-openshift-service-expose
+    - fmp-ingress
     - fmp-openshift-route
     - fmp-openshift-deploymentconfig
     - fmp-openshift-project
@@ -68,6 +67,7 @@
     - fmp-docker-registry-secret
     - fmp-triggers-annotation
     - fmp-openshift-imageChangeTrigger
+    - fmp-namespace
 
   generator:
     # The order given in "includes" is the order in which generators are called
@@ -117,14 +117,14 @@
     - fmp-image
     - fmp-project-label
     - fmp-debug
-    - fmp-namespace
     - fmp-metadata
     - fmp-controller-from-configuration
     - fmp-openshift-deploymentconfig
     - fmp-openshift-project
     - fmp-openshift-service-expose
     - fmp-openshift-route
-
+    - fmp-ingress
+    - fmp-namespace
   # Only dependencies, no build, use other resources raw
 - name: aggregate
   generator:

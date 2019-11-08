@@ -92,7 +92,10 @@ public class ResourceConfig {
     @Parameter
     private List<ServiceAccountConfig> serviceAccounts;
 
-    private List<IngressRule> ingressRules;
+    /**
+     * Host/domain for Route/Ingress.
+     */
+    private String routeDomain;
 
     public Optional<Map<String, String>> getEnv() {
         return Optional.ofNullable(env);
@@ -167,9 +170,11 @@ public class ResourceConfig {
     public List<String> getRemotes() {
         return remotes;
     }
+
     public List<String> getCrdContexts() { return customResourceDefinitions; }
 
-    public List<IngressRule> getIngressRules() { return ingressRules; }
+    public String getRouteDomain() { return routeDomain; }
+
     // =============================================================================================
 
     public static class Builder {
@@ -197,7 +202,7 @@ public class ResourceConfig {
                 this.config.metrics = config.getMetrics();
                 this.config.namespace = config.getNamespace();
                 this.config.remotes = config.getRemotes();
-                this.config.ingressRules = config.getIngressRules();
+                this.config.routeDomain= config.getRouteDomain();
             }
         }
 
@@ -256,11 +261,6 @@ public class ResourceConfig {
             return this;
         }
 
-        public Builder withIngressRules(List<IngressRule> ingressRules) {
-            config.ingressRules = ingressRules;
-            return this;
-        }
-
         public Builder withNamespace(String s) {
             config.namespace = s;
             return this;
@@ -268,6 +268,11 @@ public class ResourceConfig {
 
         public Builder withCustomResourceDefinitions(List<String> customResourceDefinitions) {
             config.customResourceDefinitions = customResourceDefinitions;
+            return this;
+        }
+
+        public Builder withRouteDomain(String routeDomain) {
+            config.routeDomain = routeDomain;
             return this;
         }
 
