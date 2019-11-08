@@ -400,7 +400,7 @@ public class ApplyMojo extends AbstractFabric8Mojo {
                 return ingress;
             }
             ingress = new IngressBuilder().
-                    withNewMetadata().withName(ingressId).withNamespace(namespace).endMetadata().
+                    withNewMetadata().withName(serviceName).withNamespace(namespace).endMetadata().
                     withNewSpec().
                     addNewRule().
                     withHost(host).
