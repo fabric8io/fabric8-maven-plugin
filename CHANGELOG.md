@@ -15,6 +15,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Feature #1748: Quarkus generator: Extract base image from configuration.
 * Fix #1695: IllegalArgumentException when Spring Boot application.yaml contains integer keys
 * Fix #797: spring-boot generator can not handle multi-profile configuration
+* Fix #1751: Build Names are suffixed with -*s2i regardless of build strategy
 
 ### 4.3.1 (18-10-2019)
 * Updated Kubernetes client to 4.6.1

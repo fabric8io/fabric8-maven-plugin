@@ -83,6 +83,8 @@ import org.apache.maven.plugin.MojoExecutionException;
  */
 public class OpenshiftBuildService implements BuildService {
 
+    private static final String DEFAULT_S2I_BUILD_SUFFIX = "-s2i";
+
     private final OpenShiftClient client;
     private final Logger log;
     private ServiceHub dockerServiceHub;
@@ -309,7 +311,7 @@ public class OpenshiftBuildService implements BuildService {
                     .withNoCache(checkForNocache(imageConfig))
                     .withEnv(checkForEnv(imageConfig))
                     .endDockerStrategy().build();
-            
+
             if (openshiftPullSecret != null) {
                 buildStrategy.getDockerStrategy().setPullSecret(new LocalObjectReferenceBuilder()
                 .withName(openshiftPullSecret)
@@ -698,7 +700,13 @@ public class OpenshiftBuildService implements BuildService {
     // == Utility methods ==========================
 
     private String getS2IBuildName(BuildServiceConfig config, ImageName imageName) {
-        return imageName.getSimpleName() + config.getS2iBuildNameSuffix();
+        final StringBuilder s2IBuildName = new StringBuilder(imageName.getSimpleName());
+        if (!StringUtils.isEmpty(config.getS2iBuildNameSuffix())) {
+            s2IBuildName.append(config.getS2iBuildNameSuffix());
+        } else if (config.getOpenshiftBuildStrategy() == OpenShiftBuildStrategy.s2i) {
+            s2IBuildName.append(DEFAULT_S2I_BUILD_SUFFIX);
+        }
+        return s2IBuildName.toString();
     }
 
     private String getImageStreamName(ImageName name) {
