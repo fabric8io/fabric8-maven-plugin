@@ -35,6 +35,11 @@
   <name>Fabric8 Maven :: Sample :: Spring Boot Web</name>
   <description>Minimal Example with Spring Boot</description>
 
+
+  <properties>
+    <java.version>11</java.version>
+  </properties>
+
   <dependencies>
 
     <!-- Boot generator  -->
@@ -60,17 +65,6 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.1</version>
-        <configuration>
-          <!-- Won't work for OpenShift Mode -->
-          <!-- For openshift, switch back to Java 8 -->
-        <release>11</release>
-       </configuration>
       </plugin>
     </plugins>
   </build>

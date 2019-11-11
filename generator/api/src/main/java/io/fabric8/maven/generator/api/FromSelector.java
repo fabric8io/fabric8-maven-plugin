@@ -102,6 +102,8 @@ public abstract class FromSelector {
         String releaseVersion = "8";
         if (dom != null && dom.getChild("release") != null) {
             releaseVersion = dom.getChild("release").getValue();
+        } else if (dom != null && dom.getChild("target") != null) {
+            releaseVersion = dom.getChild("target").getValue();
         }
 
         Properties properties = project.getProperties();
@@ -112,7 +114,8 @@ public abstract class FromSelector {
 
         try {
             releaseVersion = (String) properties.entrySet()
-                    .stream().filter(entry -> entry.getKey().equals("maven.compiler.release")).findFirst()
+                    .stream().filter(entry -> entry.getKey().equals("maven.compiler.release")
+                            || entry.getKey().equals("maven.compiler.target")).findFirst()
                     .get().getValue();
         } catch (NoSuchElementException e) {
             return false;
@@ -126,7 +129,13 @@ public abstract class FromSelector {
     }
 
     private boolean isEleven(String s) {
-        return Configs.asInt(s) == 11;
+        boolean result = false;
+        try {
+            result = Configs.asInt(s) == 11;
+        } catch (NumberFormatException e) {
+        } finally {
+            return result;
+        }
     }
 
     public static class Default extends FromSelector {

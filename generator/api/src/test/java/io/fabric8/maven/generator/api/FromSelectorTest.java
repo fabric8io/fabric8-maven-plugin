@@ -48,7 +48,7 @@ public class FromSelectorTest {
     GeneratorContext ctx;
 
     @Test
-    public void simple() {
+    public void Java8BaseImage() {
         final Object[] data = new Object[] {
             openshift, s2i, "1.2.3.redhat-00009", "redhat-s2i-prop", "redhat-istag-prop",
             openshift, docker, "1.2.3.redhat-00009", "redhat-docker-prop", "redhat-istag-prop",
@@ -73,20 +73,29 @@ public class FromSelectorTest {
         };
 
         for (int i = 0; i < data.length; i += 5) {
-            prepareExpectionJava8((String) data[i + 2], (RuntimeMode) data[i], (OpenShiftBuildStrategy) data[i + 1]);
-            FromSelector selector = new FromSelector.Default(ctx, "test");
+            prepareExpectionJava8Release((String) data[i + 2], (RuntimeMode) data[i], (OpenShiftBuildStrategy) data[i + 1]);
+            doAssertJava8(i, data, ctx);
+        }
 
-            assertEquals(data[i + 3], selector.getFrom());
-            Map<String, String> fromExt = selector.getImageStreamTagFromExt();
-            assertEquals(fromExt.size(),3);
-            assertEquals(fromExt.get(SourceStrategy.kind.key()), "ImageStreamTag");
-            assertEquals(fromExt.get(SourceStrategy.namespace.key()), "openshift");
-            assertEquals(fromExt.get(SourceStrategy.name.key()), data[i + 4]);
+        for (int i = 0; i < data.length; i += 5) {
+            prepareExpectionJava8Target((String) data[i + 2], (RuntimeMode) data[i], (OpenShiftBuildStrategy) data[i + 1]);
+            doAssertJava8(i, data, ctx);
         }
     }
 
+    private static void doAssertJava8(int i, Object[] data, GeneratorContext ctx) {
+        FromSelector selector = new FromSelector.Default(ctx, "test");
+
+        assertEquals(data[i + 3], selector.getFrom());
+        Map<String, String> fromExt = selector.getImageStreamTagFromExt();
+        assertEquals(fromExt.size(),3);
+        assertEquals(fromExt.get(SourceStrategy.kind.key()), "ImageStreamTag");
+        assertEquals(fromExt.get(SourceStrategy.namespace.key()), "openshift");
+        assertEquals(fromExt.get(SourceStrategy.name.key()), data[i + 4]);
+    }
+
     @Test
-    public void simpleJava11() {
+    public void Java11BaseImage() {
         final Object[] data = new Object[] {
                 openshift, docker, "1.2.3.foo-00009", "docker-prop-11",
                 openshift, docker, "1.2.3", "docker-prop-11",
@@ -97,26 +106,42 @@ public class FromSelectorTest {
         };
 
         for (int i = 0; i < data.length; i += 4) {
-            prepareExpectionJava11((String) data[i + 2], (RuntimeMode) data[i], (OpenShiftBuildStrategy) data[i + 1]);
-            FromSelector selector = new FromSelector.Default(ctx, "test");
+            prepareExpectionJava11Release((String) data[i + 2], (RuntimeMode) data[i], (OpenShiftBuildStrategy) data[i + 1]);
+            doAssertJava11(i, data, ctx);
+        }
 
-            assertEquals(data[i + 3], selector.getFrom());
+        for (int i = 0; i < data.length; i += 4) {
+            prepareExpectionJava11Target((String) data[i + 2], (RuntimeMode) data[i], (OpenShiftBuildStrategy) data[i + 1]);
+            doAssertJava11(i, data, ctx);
         }
     }
 
-    private Expectations prepareExpectionJava8(final String version, final RuntimeMode mode, final OpenShiftBuildStrategy strategy) {
-        return prepareExpectation(version, mode, strategy, String.valueOf(8));
+    private static void doAssertJava11(int i, Object[] data, GeneratorContext ctx) {
+        FromSelector selector = new FromSelector.Default(ctx, "test");
+        assertEquals(data[i + 3], selector.getFrom());
     }
 
-    private Expectations prepareExpectionJava11(final String version, final RuntimeMode mode, final OpenShiftBuildStrategy strategy) {
-        return prepareExpectation(version, mode, strategy, String.valueOf(11));
+    private Expectations prepareExpectionJava8Release(final String version, final RuntimeMode mode, final OpenShiftBuildStrategy strategy) {
+        return prepareExpectation(version, mode, strategy, String.valueOf(8), "release");
     }
 
-    private Expectations prepareExpectation(final String version, final RuntimeMode mode, final OpenShiftBuildStrategy strategy, final String javaVersion) {
+    private Expectations prepareExpectionJava8Target(final String version, final RuntimeMode mode, final OpenShiftBuildStrategy strategy) {
+        return prepareExpectation(version, mode, strategy, String.valueOf(8), "target");
+    }
+
+    private Expectations prepareExpectionJava11Release(final String version, final RuntimeMode mode, final OpenShiftBuildStrategy strategy) {
+        return prepareExpectation(version, mode, strategy, String.valueOf(11), "release");
+    }
+
+    private Expectations prepareExpectionJava11Target(final String version, final RuntimeMode mode, final OpenShiftBuildStrategy strategy) {
+        return prepareExpectation(version, mode, strategy, String.valueOf(11), "target");
+    }
+
+    private Expectations prepareExpectation(final String version, final RuntimeMode mode, final OpenShiftBuildStrategy strategy, final String javaVersion, String property) {
         return new Expectations() {{
             ctx.getProject(); result = project;
 
-            Xpp3Dom child = new Xpp3Dom("release");
+            Xpp3Dom child = new Xpp3Dom(property);
             child.setValue(javaVersion);
             Xpp3Dom dom = new Xpp3Dom("configuration");
             dom.addChild(child);
