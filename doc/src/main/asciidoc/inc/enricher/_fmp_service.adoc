@@ -142,5 +142,3 @@ This example show also the mapping rules:
 * You can map ports which are _not_ exposed by the images by specifying them as target ports.
 
 Multiple ports are **only** mapped when _multiPort_ mode is enabled (which is switched off by default). If _multiPort_ mode is disabled, only the first port from the list of mapped ports as calculated like above is taken.
-
-When you set `legacyPortMapping` to true than ports 8080 to 9090 are mapped to port 80 automatically if not explicitly mapped via `_port_`. I.e. when an image exposes port 8080 with a legacy mapping this mapped to a service port 80, not 8080. You _should not_ switch this on for any good reason. In fact it might be that this option can vanish anytime.
