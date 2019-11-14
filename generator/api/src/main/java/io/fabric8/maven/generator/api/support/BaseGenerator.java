@@ -45,12 +45,14 @@ abstract public class BaseGenerator implements Generator {
     public static final String FABRIC8_GENERATOR_ALIAS = "fabric8.generator.alias";
     public static final String FABRIC8_GENERATOR_FROM = "fabric8.generator.from";
     public static final String FABRIC8_GENERATOR_FROM_MODE = "fabric8.generator.fromMode";
+
+    private static final String BASE_IMAGE_LOOKUP_PREFIX = "java";
+
     private final GeneratorContext context;
     private final String name;
     private final GeneratorConfig config;
     protected final PrefixedLogger log;
     private final FromSelector fromSelector;
-
 
     private enum Config implements Configs.Key {
         // The image name
@@ -73,16 +75,21 @@ abstract public class BaseGenerator implements Generator {
 
         public String def() { return d; } protected String d;
     }
-    public BaseGenerator(GeneratorContext context, String name) {
-        this(context, name, null);
-    }
 
-    public BaseGenerator(GeneratorContext context, String name, FromSelector fromSelector) {
+    public BaseGenerator(GeneratorContext context, String name) {
         this.context = context;
         this.name = name;
-        this.fromSelector = fromSelector;
         this.config = new GeneratorConfig(context.getProject().getProperties(), getName(), context.getConfig());
         this.log = new PrefixedLogger(name, context.getLogger());
+        this.fromSelector = new FromSelector.Default(context, BASE_IMAGE_LOOKUP_PREFIX, log);
+    }
+
+    public BaseGenerator(GeneratorContext context, String name, FromSelector selector) {
+        this.context = context;
+        this.name = name;
+        this.config = new GeneratorConfig(context.getProject().getProperties(), getName(), context.getConfig());
+        this.log = new PrefixedLogger(name, context.getLogger());
+        this.fromSelector = selector;
     }
 
     protected MavenProject getProject() {

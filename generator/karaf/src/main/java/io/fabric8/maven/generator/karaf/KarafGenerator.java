@@ -36,7 +36,7 @@ public class KarafGenerator extends BaseGenerator {
     private static final String KARAF_MAVEN_PLUGIN_ARTIFACT_ID = "karaf-maven-plugin";
 
     public KarafGenerator(GeneratorContext context) {
-        super(context, "karaf", new FromSelector.Default(context,"karaf"));
+        super(context, "karaf");
     }
 
     private enum Config implements Configs.Key {

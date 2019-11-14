@@ -17,6 +17,7 @@ package io.fabric8.maven.generator.api;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.RuntimeMode;
+import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
 import org.apache.maven.model.Plugin;
@@ -47,6 +48,9 @@ public class FromSelectorTest {
     @Mocked
     GeneratorContext ctx;
 
+    @Mocked
+    Logger logger;
+
     @Test
     public void Java8BaseImage() {
         final Object[] data = new Object[] {
@@ -74,17 +78,17 @@ public class FromSelectorTest {
 
         for (int i = 0; i < data.length; i += 5) {
             prepareExpectionJava8Release((String) data[i + 2], (RuntimeMode) data[i], (OpenShiftBuildStrategy) data[i + 1]);
-            doAssertJava8(i, data, ctx);
+            doAssertJava8(i, data, ctx, logger);
         }
 
         for (int i = 0; i < data.length; i += 5) {
             prepareExpectionJava8Target((String) data[i + 2], (RuntimeMode) data[i], (OpenShiftBuildStrategy) data[i + 1]);
-            doAssertJava8(i, data, ctx);
+            doAssertJava8(i, data, ctx, logger);
         }
     }
 
-    private static void doAssertJava8(int i, Object[] data, GeneratorContext ctx) {
-        FromSelector selector = new FromSelector.Default(ctx, "test");
+    private static void doAssertJava8(int i, Object[] data, GeneratorContext ctx, Logger logger) {
+        FromSelector selector = new FromSelector.Default(ctx, "test", logger);
 
         assertEquals(data[i + 3], selector.getFrom());
         Map<String, String> fromExt = selector.getImageStreamTagFromExt();
@@ -107,17 +111,17 @@ public class FromSelectorTest {
 
         for (int i = 0; i < data.length; i += 4) {
             prepareExpectionJava11Release((String) data[i + 2], (RuntimeMode) data[i], (OpenShiftBuildStrategy) data[i + 1]);
-            doAssertJava11(i, data, ctx);
+            doAssertJava11(i, data, ctx, logger);
         }
 
         for (int i = 0; i < data.length; i += 4) {
             prepareExpectionJava11Target((String) data[i + 2], (RuntimeMode) data[i], (OpenShiftBuildStrategy) data[i + 1]);
-            doAssertJava11(i, data, ctx);
+            doAssertJava11(i, data, ctx, logger);
         }
     }
 
-    private static void doAssertJava11(int i, Object[] data, GeneratorContext ctx) {
-        FromSelector selector = new FromSelector.Default(ctx, "test");
+    private static void doAssertJava11(int i, Object[] data, GeneratorContext ctx, Logger logger) {
+        FromSelector selector = new FromSelector.Default(ctx, "test", logger);
         assertEquals(data[i + 3], selector.getFrom());
     }
 

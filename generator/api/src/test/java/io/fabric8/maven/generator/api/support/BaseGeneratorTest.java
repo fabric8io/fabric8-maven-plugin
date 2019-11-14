@@ -26,6 +26,7 @@ import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import mockit.Expectations;
@@ -58,6 +59,9 @@ public class BaseGeneratorTest {
     @Mocked
     private ProcessorConfig config;
 
+    @Mocked
+    private Logger logger;
+
     @Test
     public void fromAsConfigured() {
         final Properties projectProps = new Properties();
@@ -83,7 +87,7 @@ public class BaseGeneratorTest {
         Properties props = new Properties();
         for (boolean isOpenShift : new Boolean[]{false, true}) {
             for (boolean isRedHat : new Boolean[]{false, true}) {
-                for (TestFromSelector selector : new TestFromSelector[]{null, new TestFromSelector(ctx, isRedHat)}) {
+                for (TestFromSelector selector : new TestFromSelector[]{null, new TestFromSelector(ctx, isRedHat, logger)}) {
                     for (String from : new String[]{null, "openshift/testfrom"}) {
                         setupContext(props, isOpenShift, from, null);
 
@@ -136,7 +140,7 @@ public class BaseGeneratorTest {
             setupContext(props, false, from, null);
 
             BuildImageConfiguration.Builder builder = new BuildImageConfiguration.Builder();
-            BaseGenerator generator = createGenerator(new TestFromSelector(ctx, false));
+            BaseGenerator generator = createGenerator(new TestFromSelector(ctx, false, logger));
             generator.addFrom(builder);
             BuildImageConfiguration config = builder.build();
             assertEquals(from == null ? "selectorIstagFromUpstream" : "test_image:2.0", config.getFrom());
@@ -315,7 +319,7 @@ public class BaseGeneratorTest {
 
     private class TestBaseGenerator extends BaseGenerator {
         public TestBaseGenerator(GeneratorContext context, String name) {
-            super(context, name);
+            super(context, name, null);
         }
 
         public TestBaseGenerator(GeneratorContext context, String name, FromSelector fromSelector) {
@@ -337,8 +341,8 @@ public class BaseGeneratorTest {
 
         private boolean isRedHat;
 
-        public TestFromSelector(GeneratorContext context, boolean isRedHat) {
-            super(context);
+        public TestFromSelector(GeneratorContext context, boolean isRedHat, Logger logger) {
+            super(context, logger);
             this.isRedHat = isRedHat;
         }
 

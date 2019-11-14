@@ -28,6 +28,8 @@ public class Configs {
         String def();
     }
 
+    public static float asFloat(String value) { return value != null ? Float.parseFloat(value): 0f; }
+
     public static int asInt(String value) {
         return value != null ? Integer.parseInt(value) : 0;
     }

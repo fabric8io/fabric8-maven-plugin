@@ -17,6 +17,7 @@ package io.fabric8.maven.generator.javaexec;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.RuntimeMode;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.FromSelector;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import mockit.Expectations;
@@ -47,6 +48,9 @@ public class JavaRunGeneratorTest {
     @Mocked
     MavenProject project;
 
+    @Mocked
+    Logger logger;
+
     @Test
     public void fromSelector() throws IOException {
         Object[] data = {
@@ -63,7 +67,7 @@ public class JavaRunGeneratorTest {
         for (int i = 0; i < data.length; i += 4) {
             prepareExpectionJava8((String) data[i], (RuntimeMode) data[i+1], (OpenShiftBuildStrategy) data[i+2]);
             final GeneratorContext context = ctx;
-            FromSelector selector = new FromSelector.Default(context, "java");
+            FromSelector selector = new FromSelector.Default(context, "java", logger);
             String from = selector.getFrom();
             assertEquals(imageProps.getProperty((String) data[i+3]), from);
         }
@@ -81,7 +85,7 @@ public class JavaRunGeneratorTest {
         for (int i = 0; i < data.length; i += 4) {
             prepareExpectionJava11((String) data[i], (RuntimeMode) data[i+1], (OpenShiftBuildStrategy) data[i+2]);
             final GeneratorContext context = ctx;
-            FromSelector selector = new FromSelector.Default(context, "java");
+            FromSelector selector = new FromSelector.Default(context, "java", logger);
             String from = selector.getFrom();
             assertEquals(imageProps.getProperty((String) data[i+3]), from);
         }

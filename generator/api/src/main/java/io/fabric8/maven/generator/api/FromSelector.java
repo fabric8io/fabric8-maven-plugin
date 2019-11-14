@@ -19,9 +19,11 @@ import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import sun.rmi.runtime.Log;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,12 +45,15 @@ public abstract class FromSelector {
 
     private final GeneratorContext context;
 
+    private final Logger logger;
+
     private final Pattern REDHAT_VERSION_PATTERN = Pattern.compile("^.*\\.(redhat|fuse)-.*$");
 
     private Plugin plugin;
     private Plugin compilerPlugin;
-    public FromSelector(GeneratorContext context) {
+    public FromSelector(GeneratorContext context, Logger logger) {
         this.context = context;
+        this.logger = logger;
     }
 
     public String getFrom() {
@@ -133,6 +138,8 @@ public abstract class FromSelector {
         try {
             result = Configs.asInt(s) == 11;
         } catch (NumberFormatException e) {
+            // The user has set a 1.x (eg, 1.8) value as target/release java version.
+            logger.debug("%.1f target Java version detected", Configs.asFloat(s));
         } finally {
             return result;
         }
@@ -147,8 +154,8 @@ public abstract class FromSelector {
         private final String redhatIstag;
         private final String upstreamIstag;
 
-        public Default(GeneratorContext context, String prefix) {
-            super(context);
+        public Default(GeneratorContext context, String prefix, Logger logger) {
+            super(context, logger);
             DefaultImageLookup lookup = new DefaultImageLookup(Default.class);
 
             this.upstreamDocker = prefix.equals("java") || prefix.equals("test")?
