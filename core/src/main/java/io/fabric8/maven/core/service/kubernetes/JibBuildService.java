@@ -16,20 +16,19 @@
 package io.fabric8.maven.core.service.kubernetes;
 
 import com.google.cloud.tools.jib.api.Credential;
-import com.google.cloud.tools.jib.api.ImageFormat;
-import com.google.cloud.tools.jib.api.InvalidImageReferenceException;
-import com.google.cloud.tools.jib.api.JibContainer;
-import com.google.cloud.tools.jib.api.RegistryException;
 import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.util.JibBuildServiceUtil;
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.DeepCopy;
+import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
 
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 
 public class JibBuildService implements BuildService {
 
@@ -47,7 +46,23 @@ public class JibBuildService implements BuildService {
     @Override
     public void build(ImageConfiguration imageConfiguration) {
        try {
-           doJibBuild(JibBuildServiceUtil.getJibBuildConfiguration(config, imageConfiguration, log));
+           BuildImageConfiguration buildImageConfiguration = imageConfiguration.getBuildConfiguration();
+           List<String> tags = buildImageConfiguration.getTags();
+
+           JibBuildService.JibBuildConfiguration jibBuildConfiguration;
+           String fullName = "";
+           if (tags.size() > 0) {
+               for (String tag : tags) {
+                   if (tag != null) {
+                        fullName = new ImageName(imageConfiguration.getName(), tag).getFullName();
+                   }
+               }
+           } else {
+               fullName = new ImageName(imageConfiguration.getName(), null).getFullName();
+           }
+           log.info("Image tagging successful!");
+           jibBuildConfiguration = JibBuildServiceUtil.getJibBuildConfiguration(config, buildImageConfiguration, fullName, log);
+           JibBuildServiceUtil.buildImage(jibBuildConfiguration, log);
        } catch (Exception ex) {
            throw new UnsupportedOperationException(ex);
        }
@@ -58,32 +73,31 @@ public class JibBuildService implements BuildService {
 
     }
 
-    public JibContainer doJibBuild(JibBuildService.JibBuildConfiguration jibBuildConfiguration) throws InvalidImageReferenceException, RegistryException, ExecutionException {
-        return JibBuildServiceUtil.buildImage(jibBuildConfiguration, log);
-    }
-
-    public JibContainer doJibBuild(JibBuildService.JibBuildConfiguration jibBuildConfiguration, boolean isOfflineMode) throws InvalidImageReferenceException, RegistryException, ExecutionException {
-        return JibBuildServiceUtil.buildImage(jibBuildConfiguration, log, isOfflineMode);
-    }
-
     public static class JibBuildConfiguration {
-        private ImageConfiguration imageConfiguration;
 
-        private ImageFormat imageFormat;
+        private Map<String, String> envMap;
 
         private Credential credential;
 
+        private List<String> ports;
+
+        private String from;
+
+        private String target;
+
         private Path fatJarPath;
+
+        private Arguments entrypoint;
 
         private String targetDir;
 
         private String outputDir;
 
-        private MojoParameters mojoParameters;
-
         private JibBuildConfiguration() {}
 
-        public ImageConfiguration getImageConfiguration() { return imageConfiguration; }
+        public Arguments getEntryPoint() {
+            return entrypoint;
+        }
 
         public String getTargetDir() {
             return targetDir;
@@ -93,19 +107,29 @@ public class JibBuildService implements BuildService {
             return outputDir;
         }
 
+        public Map<String, String> getEnvMap() {
+            return envMap;
+        }
+
         public Credential getCredential() {
             return credential;
+        }
+
+        public List<String> getPorts() {
+            return ports;
+        }
+
+        public String getFrom() {
+            return from;
+        }
+
+        public String getTargetImage() {
+            return target;
         }
 
         public Path getFatJar() {
             return fatJarPath;
         }
-
-        public ImageFormat getImageFormat() {
-            return imageFormat;
-        }
-
-        public MojoParameters getMojoParameters() { return mojoParameters; }
 
         public static class Builder {
             private final JibBuildConfiguration configutil;
@@ -124,23 +148,33 @@ public class JibBuildService implements BuildService {
                 }
             }
 
-            public Builder mojoParameters(MojoParameters mojoParameters) {
-                configutil.mojoParameters = mojoParameters;
-                return this;
-            }
-
-            public Builder imageConfiguration(ImageConfiguration imageConfiguration) {
-                configutil.imageConfiguration = imageConfiguration;
-                return this;
-            }
-
-            public Builder imageFormat(ImageFormat imageFormat) {
-                configutil.imageFormat = imageFormat;
+            public Builder envMap(Map<String, String> envMap) {
+                configutil.envMap = envMap;
                 return this;
             }
 
             public Builder credential(Credential credential) {
                 configutil.credential = credential;
+                return this;
+            }
+
+            public Builder ports(List<String> ports) {
+                configutil.ports = ports;
+                return this;
+            }
+
+            public Builder from(String from) {
+                configutil.from = from;
+                return this;
+            }
+
+            public Builder targetImage(String imageName) {
+                configutil.target = imageName;
+                return this;
+            }
+
+            public Builder entrypoint(Arguments entrypoint) {
+                configutil.entrypoint = entrypoint;
                 return this;
             }
 

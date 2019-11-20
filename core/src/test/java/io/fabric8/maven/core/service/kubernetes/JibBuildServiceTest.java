@@ -15,8 +15,6 @@
  */
 package io.fabric8.maven.core.service.kubernetes;
 
-import com.google.cloud.tools.jib.api.JibContainer;
-import com.google.cloud.tools.jib.api.RegistryException;
 import io.fabric8.maven.core.util.JibBuildServiceUtil;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -35,8 +33,6 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static org.junit.Assert.assertNotNull;
-
 public class JibBuildServiceTest {
 
     @Tested
@@ -51,74 +47,38 @@ public class JibBuildServiceTest {
     @Mocked
     private io.fabric8.maven.core.service.BuildService.BuildServiceConfig config;
 
+    @Mocked
+    private ImageConfiguration imageConfiguration;
 
     @Mocked
     private AuthConfigFactory authConfigFactory;
 
-    MojoParameters mojoParameters = new MojoParameters(null, new MavenProject(), null, null, null, null, null, "target/docker", null);
-    final String imageName = "image-name";
-
-    AssemblyConfiguration assemblyConfiguration = new AssemblyConfiguration.Builder()
-            .targetDir("/deployments")
-            .build();
-
-    BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder()
-            .from("fabric8/java-centos-openjdk8-jdk:1.5")
-            .env(new HashMap<String, String>() {{
-                put("john", "doe");
-                put("foo", "bar");
-            }})
-            .ports(new ArrayList<String>() {{
-                add("80");
-                add("443");
-            }})
-            .entryPoint(null)
-            .assembly(assemblyConfiguration)
-            .build();
-
-    ImageConfiguration imageConfiguration = new ImageConfiguration.Builder()
-            .name(imageName)
-            .registry("quay.io")
-            .buildConfig(buildImageConfiguration)
-            .build();
-
     @Test
-    public void testSuccessfulBuildOffline() throws Exception {
-
-        final BuildService.BuildContext dockerBuildContext = new BuildService.BuildContext.Builder()
-                .registryConfig(new RegistryService.RegistryConfig.Builder()
-                        .authConfigFactory(authConfigFactory)
-                        .build())
-                .build();
-
-        new Expectations() {{
-            imageConfiguration.getBuildConfiguration();
-            result = buildImageConfiguration;
-
-            imageConfiguration.getName();
-            result = imageName;
-
-            config.getDockerBuildContext();
-            result = dockerBuildContext;
-
-            config.getDockerMojoParameters();
-            result = mojoParameters;
-
-            config.getBuildDirectory();
-            result = "target/test-files/jib-build-service";
-
-        }};
-
-        //Code To Be Tested
-        jibBuildService = new JibBuildService(config, logger);
-        JibContainer jibContainer = jibBuildService.doJibBuild(JibBuildServiceUtil.getJibBuildConfiguration(config, imageConfiguration, logger), true);
-
-        assertNotNull(jibContainer);
-        assertNotNull(jibContainer.getImageId());
-    }
-
-    @Test(expected = RegistryException.class)
     public void testSuccessfulBuild() throws Exception {
+
+        //Preparation Code For Testing The Class
+
+        MojoParameters mojoParameters = new MojoParameters(null, new MavenProject(), null, null, null, null, null, "target/docker", null);
+        final String imageName = "image-name";
+
+        AssemblyConfiguration assemblyConfiguration = new AssemblyConfiguration.Builder()
+                .targetDir("/deployments")
+                .build();
+
+        BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder()
+                .from("fabric8/java-centos-openjdk8-jdk:1.5")
+                .env(new HashMap<String, String>() {{
+                    put("john", "doe");
+                    put("foo", "bar");
+                }})
+                .ports(new ArrayList<String>() {{
+                    add("80");
+                    add("443");
+                }})
+                .entryPoint(null)
+                .assembly(assemblyConfiguration)
+                .build();
+
         final BuildService.BuildContext dockerBuildContext = new BuildService.BuildContext.Builder()
                 .registryConfig(new RegistryService.RegistryConfig.Builder()
                         .authConfigFactory(authConfigFactory)
@@ -145,9 +105,6 @@ public class JibBuildServiceTest {
 
         //Code To Be Tested
         jibBuildService = new JibBuildService(config, logger);
-        JibContainer jibContainer = jibBuildService.doJibBuild(JibBuildServiceUtil.getJibBuildConfiguration(config, imageConfiguration, logger), false);
-
-        assertNotNull(jibContainer);
-        assertNotNull(jibContainer.getImageId());
+        jibBuildService.build(imageConfiguration);
     }
 }
