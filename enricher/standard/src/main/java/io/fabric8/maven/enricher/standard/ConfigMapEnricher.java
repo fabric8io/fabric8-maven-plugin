@@ -30,7 +30,7 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Base64;
 import java.util.Iterator;
 import java.util.Map;
@@ -74,14 +74,14 @@ public class ConfigMapEnricher extends BaseEnricher {
             final String key = entry.getKey();
 
             if (key.startsWith(PREFIX_ANNOTATION)) {
-                addConfigMapEntryFromFile(configMapBuilder, getOutput(key), entry.getValue());
+                addConfigMapEntryFromFile(configMapBuilder, getOutput(key), resolvePath(entry.getValue()));
                 it.remove();
             }
         }
     }
 
-    private void addConfigMapEntryFromFile(final ConfigMapBuilder configMapBuilder, final String key, final String filePath) throws IOException {
-        final byte[] bytes = Files.readAllBytes(Paths.get(filePath));
+    private void addConfigMapEntryFromFile(final ConfigMapBuilder configMapBuilder, final String key, Path path) throws IOException {
+        final byte[] bytes = Files.readAllBytes(path);
         try {
             StandardCharsets.UTF_8.newDecoder()
                 .onMalformedInput(CodingErrorAction.REPORT)
@@ -93,6 +93,10 @@ public class ConfigMapEnricher extends BaseEnricher {
             final String value = Base64.getEncoder().encodeToString(bytes);
             configMapBuilder.addToBinaryData(singletonMap(key, value));
         }
+    }
+
+    private Path resolvePath(String file) {
+        return getContext().getProjectDirectory().toPath().resolve(file);
     }
 
     private String getOutput(String key) {
@@ -121,10 +125,11 @@ public class ConfigMapEnricher extends BaseEnricher {
                 } else {
                     final String file = configMapEntry.getFile();
                     if (file != null) {
+                        Path path = resolvePath(file);
                         if (name == null) {
-                            name = Paths.get(file).getFileName().toString();
+                            name = path.getFileName().toString();
                         }
-                        addConfigMapEntryFromFile(configMapBuilder, name, file);
+                        addConfigMapEntryFromFile(configMapBuilder, name, path);
                     }
                 }
             }

@@ -26,6 +26,7 @@ import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -34,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -41,6 +43,16 @@ public class ConfigMapEnricherTest {
 
     @Mocked
     private MavenEnricherContext context;
+
+    @Before
+    public void setupExpectations() {
+        new Expectations() {
+            {{
+                context.getProjectDirectory();
+                result = Paths.get("").toFile();
+            }}
+        };
+    }
 
     @Test
     public void should_materialize_file_content_from_annotation() throws Exception {
