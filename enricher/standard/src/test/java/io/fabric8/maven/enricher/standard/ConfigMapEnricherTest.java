@@ -27,73 +27,64 @@ import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import mockit.Expectations;
 import mockit.Mocked;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@RunWith(Parameterized.class)
 public class ConfigMapEnricherTest {
 
-    private static final Path TEXT_FILE = Paths.get("src/test/resources/test-application.properties");
-    private static final Path BINARY_FILE = Paths.get("src/test/resources/test.bin");
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                { "src/test/resources/test-application.properties", false },
+                { "src/test/resources/test.bin", true }
+        });
+    }
 
     @Mocked
     private MavenEnricherContext context;
+
+    private final Path file;
+    private final boolean binary;
+
+    public ConfigMapEnricherTest(String file, boolean binary) {
+        this.file = Paths.get(file);
+        this.binary = binary;
+    }
 
     @Test
     public void should_materialize_file_content_from_annotation() throws Exception {
         new Expectations() {
             {{
-                context.resolvePath(TEXT_FILE.toString());
-                result = TEXT_FILE;
+                context.resolvePath(file.toString());
+                result = file;
             }}
         };
 
-        final ConfigMap baseConfigMap = createAnnotationConfigMap("test-application.properties", TEXT_FILE);
+        final ConfigMap baseConfigMap = createAnnotationConfigMap("my-file", file);
         final KubernetesListBuilder builder = new KubernetesListBuilder()
             .addToConfigMapItems(baseConfigMap);
         new ConfigMapEnricher(context).create(PlatformMode.kubernetes, builder);
 
         final ConfigMap configMap = (ConfigMap) builder.buildFirstItem();
 
-        final Map<String, String> data = configMap.getData();
-        assertThat(data)
-            .containsEntry("test-application.properties", readFileContentsAsString(TEXT_FILE));
-
-        final Map<String, String> annotations = configMap.getMetadata().getAnnotations();
-        assertThat(annotations)
-            .isEmpty();
-    }
-
-    @Test
-    public void should_materialize_binary_file_content_from_annotation() throws Exception {
-        new Expectations() {
-            {{
-                context.resolvePath(BINARY_FILE.toString());
-                result = BINARY_FILE;
-            }}
-        };
-
-        final ConfigMap baseConfigMap = createAnnotationConfigMap("test.bin", BINARY_FILE);
-        final KubernetesListBuilder builder = new KubernetesListBuilder()
-            .addToConfigMapItems(baseConfigMap);
-        new ConfigMapEnricher(context).create(PlatformMode.kubernetes, builder);
-
-        final ConfigMap configMap = (ConfigMap) builder.buildFirstItem();
-
-        final Map<String, String> data = configMap.getData();
-        assertThat(data)
-            .isEmpty();
-
-        final Map<String, String> binaryData = configMap.getBinaryData();
-        assertThat(binaryData)
-            .containsEntry("test.bin", Base64.getEncoder().encodeToString(readFileContentAsBytes(BINARY_FILE)));
+        if (binary) {
+            final Map<String, String> binaryData = configMap.getBinaryData();
+            assertThat(binaryData)
+                    .containsEntry("my-file", Base64.getEncoder().encodeToString(readFileContentAsBytes(file)));
+        } else {
+            final Map<String, String> data = configMap.getData();
+            assertThat(data)
+                    .containsEntry("my-file", readFileContentsAsString(file));
+        }
 
         final Map<String, String> annotations = configMap.getMetadata().getAnnotations();
         assertThat(annotations)
@@ -102,7 +93,7 @@ public class ConfigMapEnricherTest {
 
     @Test
     public void should_materialize_file_content_from_xml() throws Exception {
-        final io.fabric8.maven.core.config.ConfigMap baseConfigMap = createXmlConfigMap(TEXT_FILE);
+        final io.fabric8.maven.core.config.ConfigMap baseConfigMap = createXmlConfigMap(file);
         final ResourceConfig config = new ResourceConfig.Builder()
             .withConfigMap(baseConfigMap)
             .build();
@@ -110,8 +101,8 @@ public class ConfigMapEnricherTest {
             context.getConfiguration();
             result = new Configuration.Builder().resource(config).build();
 
-            context.resolvePath(TEXT_FILE.toString());
-            result = TEXT_FILE;
+            context.resolvePath(file.toString());
+            result = file;
         }};
 
         final KubernetesListBuilder builder = new KubernetesListBuilder();
@@ -119,37 +110,15 @@ public class ConfigMapEnricherTest {
 
         final ConfigMap configMap = (ConfigMap) builder.buildFirstItem();
 
-        final Map<String, String> data = configMap.getData();
-        assertThat(data)
-            .containsEntry(TEXT_FILE.getFileName().toString(), readFileContentsAsString(TEXT_FILE));
-    }
-
-    @Test
-    public void should_materialize_binary_file_content_from_xml() throws Exception {
-        final io.fabric8.maven.core.config.ConfigMap baseConfigMap = createXmlConfigMap(BINARY_FILE);
-        final ResourceConfig config = new ResourceConfig.Builder()
-            .withConfigMap(baseConfigMap)
-            .build();
-        new Expectations() {{
-            context.getConfiguration();
-            result = new Configuration.Builder().resource(config).build();
-
-            context.resolvePath(BINARY_FILE.toString());
-            result = BINARY_FILE;
-        }};
-
-        final KubernetesListBuilder builder = new KubernetesListBuilder();
-        new ConfigMapEnricher(context).create(PlatformMode.kubernetes, builder);
-
-        final ConfigMap configMap = (ConfigMap) builder.buildFirstItem();
-
-        final Map<String, String> data = configMap.getData();
-        assertThat(data)
-            .isEmpty();
-
-        final Map<String, String> binaryData = configMap.getBinaryData();
-        assertThat(binaryData)
-            .containsEntry(BINARY_FILE.getFileName().toString(), Base64.getEncoder().encodeToString(readFileContentAsBytes(BINARY_FILE)));
+        if (binary) {
+            final Map<String, String> binaryData = configMap.getBinaryData();
+            assertThat(binaryData)
+                    .containsEntry(file.getFileName().toString(), Base64.getEncoder().encodeToString(readFileContentAsBytes(file)));
+        } else {
+            final Map<String, String> data = configMap.getData();
+            assertThat(data)
+                    .containsEntry(file.getFileName().toString(), readFileContentsAsString(file));
+        }
     }
 
     private io.fabric8.maven.core.config.ConfigMap createXmlConfigMap(final Path file) {
