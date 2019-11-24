@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -92,7 +93,7 @@ public class ConfigMapEnricherTest {
 
         final Map<String, String> binaryData = configMap.getBinaryData();
         assertThat(binaryData)
-            .containsEntry("test.bin", "wA==");
+            .containsEntry("test.bin", Base64.getEncoder().encodeToString(readFileContentAsBytes(BINARY_FILE)));
 
         final Map<String, String> annotations = configMap.getMetadata().getAnnotations();
         assertThat(annotations)
@@ -148,7 +149,7 @@ public class ConfigMapEnricherTest {
 
         final Map<String, String> binaryData = configMap.getBinaryData();
         assertThat(binaryData)
-            .containsEntry(BINARY_FILE.getFileName().toString(), "wA==");
+            .containsEntry(BINARY_FILE.getFileName().toString(), Base64.getEncoder().encodeToString(readFileContentAsBytes(BINARY_FILE)));
     }
 
     private io.fabric8.maven.core.config.ConfigMap createXmlConfigMap(final Path file) {
