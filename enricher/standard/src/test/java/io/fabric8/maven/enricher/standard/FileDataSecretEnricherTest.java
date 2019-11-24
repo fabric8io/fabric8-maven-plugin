@@ -20,8 +20,6 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
-import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.Base64Util;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 
@@ -47,13 +45,10 @@ public class FileDataSecretEnricherTest {
     public void shouldMaterializeFileContentFromAnnotation() throws IOException {
 
         // Given
-
         new Expectations() {
             {{
-                context.getConfiguration();
-                result = new Configuration.Builder()
-                        .resource(new ResourceConfig())
-                        .build();
+                context.resolvePath(TEST_APPLICATION_PROPERTIES_PATH);
+                result = Paths.get(TEST_APPLICATION_PROPERTIES_PATH);
             }}
 
         };

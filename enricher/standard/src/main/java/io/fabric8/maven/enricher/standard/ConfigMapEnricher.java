@@ -74,7 +74,7 @@ public class ConfigMapEnricher extends BaseEnricher {
             final String key = entry.getKey();
 
             if (key.startsWith(PREFIX_ANNOTATION)) {
-                addConfigMapEntryFromFile(configMapBuilder, getOutput(key), resolvePath(entry.getValue()));
+                addConfigMapEntryFromFile(configMapBuilder, getOutput(key), getContext().resolvePath(entry.getValue()));
                 it.remove();
             }
         }
@@ -93,10 +93,6 @@ public class ConfigMapEnricher extends BaseEnricher {
             final String value = Base64.getEncoder().encodeToString(bytes);
             configMapBuilder.addToBinaryData(singletonMap(key, value));
         }
-    }
-
-    private Path resolvePath(String file) {
-        return getContext().getProjectDirectory().toPath().resolve(file);
     }
 
     private String getOutput(String key) {
@@ -125,7 +121,7 @@ public class ConfigMapEnricher extends BaseEnricher {
                 } else {
                     final String file = configMapEntry.getFile();
                     if (file != null) {
-                        Path path = resolvePath(file);
+                        Path path = getContext().resolvePath(file);
                         if (name == null) {
                             name = path.getFileName().toString();
                         }
