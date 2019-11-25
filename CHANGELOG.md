@@ -14,6 +14,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix #1572: Support maven --batch-mode option
 * Feature #1748: Quarkus generator: Extract base image from configuration.
 * Fix #1695: IllegalArgumentException when Spring Boot application.yaml contains integer keys
+* Fix #1763: JIB Unauthorized registry exception for "from" registry
 * Fix #797: spring-boot generator can not handle multi-profile configuration
 * Fix #1751: Build Names are suffixed with -s2i regardless of build strategy
 * Fix #1755: Spring boot enricher does not produce a proper heath check and liveness check path when "/" is used.

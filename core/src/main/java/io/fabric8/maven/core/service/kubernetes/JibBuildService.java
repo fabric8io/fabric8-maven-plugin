@@ -71,7 +71,9 @@ public class JibBuildService implements BuildService {
 
         private ImageFormat imageFormat;
 
-        private Credential credential;
+        private Credential pullCredential;
+
+        private Credential pushCredential;
 
         private Path fatJarPath;
 
@@ -93,8 +95,12 @@ public class JibBuildService implements BuildService {
             return outputDir;
         }
 
-        public Credential getCredential() {
-            return credential;
+        public Credential getPushCredential() {
+            return pushCredential;
+        }
+
+        public Credential getPullCredential() {
+            return pullCredential;
         }
 
         public Path getFatJar() {
@@ -108,7 +114,7 @@ public class JibBuildService implements BuildService {
         public MojoParameters getMojoParameters() { return mojoParameters; }
 
         public static class Builder {
-            private final JibBuildConfiguration configutil;
+            private final JibBuildConfiguration jibBuildConfiguration;
             private final Logger logger;
 
             public Builder(Logger logger) {
@@ -118,49 +124,54 @@ public class JibBuildService implements BuildService {
             public Builder(JibBuildConfiguration that, Logger logger) {
                 this.logger = logger;
                 if (that == null) {
-                    this.configutil = new JibBuildConfiguration();
+                    this.jibBuildConfiguration = new JibBuildConfiguration();
                 } else {
-                    this.configutil = DeepCopy.copy(that);
+                    this.jibBuildConfiguration = DeepCopy.copy(that);
                 }
             }
 
             public Builder mojoParameters(MojoParameters mojoParameters) {
-                configutil.mojoParameters = mojoParameters;
+                jibBuildConfiguration.mojoParameters = mojoParameters;
                 return this;
             }
 
             public Builder imageConfiguration(ImageConfiguration imageConfiguration) {
-                configutil.imageConfiguration = imageConfiguration;
+                jibBuildConfiguration.imageConfiguration = imageConfiguration;
                 return this;
             }
 
             public Builder imageFormat(ImageFormat imageFormat) {
-                configutil.imageFormat = imageFormat;
+                jibBuildConfiguration.imageFormat = imageFormat;
                 return this;
             }
 
-            public Builder credential(Credential credential) {
-                configutil.credential = credential;
+            public Builder pushCredential(Credential pushCredential) {
+                jibBuildConfiguration.pushCredential = pushCredential;
+                return this;
+            }
+
+            public Builder pullCredential(Credential pullCredential) {
+                jibBuildConfiguration.pullCredential = pullCredential;
                 return this;
             }
 
             public Builder buildDirectory(String buildDir) {
-                configutil.fatJarPath = JibBuildServiceUtil.getFatJar(buildDir, logger);
+                jibBuildConfiguration.fatJarPath = JibBuildServiceUtil.getFatJar(buildDir, logger);
                 return this;
             }
 
             public Builder targetDir(String targetDir) {
-                configutil.targetDir = targetDir;
+                jibBuildConfiguration.targetDir = targetDir;
                 return this;
             }
 
             public Builder outputDir(String outputDir) {
-                configutil.outputDir = outputDir;
+                jibBuildConfiguration.outputDir = outputDir;
                 return this;
             }
 
             public JibBuildConfiguration build() {
-                return configutil;
+                return jibBuildConfiguration;
             }
         }
     }

@@ -57,6 +57,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -72,6 +73,9 @@ public class JibBuildServiceUtil {
     private static final String DEFAULT_USER_NAME = "fabric8/";
     public static final String FABRIC8_GENERATOR_NAME = "fabric8.generator.name";
     public static final String FABRIC8_GENERATOR_REGISTRY = "fabric8.generator.registry";
+    public static final String DOCKER_PULL_REGISTRY_PROPERTY = "docker.pull.registry";
+    public static final String DOCKER_PUSH_REGISTRY_PROPERTY = "docker.push.registry";
+    public static final String DOCKER_REGISTRY_PROPERTY = "docker.registry";
     public static final String FABRIC8_GENERATOR_FROM = "fabric8.generator.from";
     private static ConsoleLogger consoleLogger;
 
@@ -79,7 +83,7 @@ public class JibBuildServiceUtil {
      * Builds a container image using JIB
      * @param buildConfiguration Jib build configuration
      * @param log logger object
-     * @throws InvalidImageReferenceException
+     * @throws InvalidImageReferenceException if invalid image name passed
      */
     public static JibContainer buildImage(JibBuildService.JibBuildConfiguration buildConfiguration, Logger log) throws InvalidImageReferenceException, RegistryException, ExecutionException {
         return buildImage(buildConfiguration, log, false);
@@ -87,13 +91,14 @@ public class JibBuildServiceUtil {
 
     public static JibContainer buildImage(JibBuildService.JibBuildConfiguration buildConfiguration, Logger log, boolean isOfflineMode) throws InvalidImageReferenceException, RegistryException, ExecutionException {
         ImageConfiguration imageConfiguration = buildConfiguration.getImageConfiguration();
-        Credential credential = buildConfiguration.getCredential();
+        Credential pushCredential = buildConfiguration.getPushCredential();
+        Credential pullCredential = buildConfiguration.getPullCredential();
         String outputDir = buildConfiguration.getOutputDir();
         String targetDir = buildConfiguration.getTargetDir();
         Path fatJar = buildConfiguration.getFatJar();
         ImageFormat imageFormat = buildConfiguration.getImageFormat() != null ? buildConfiguration.getImageFormat() : ImageFormat.Docker;
 
-        return buildImage(imageConfiguration, buildConfiguration.getMojoParameters(), imageFormat, credential, fatJar, targetDir, outputDir, log, isOfflineMode);
+        return buildImage(imageConfiguration, buildConfiguration.getMojoParameters(), imageFormat, pushCredential, pullCredential, fatJar, targetDir, outputDir, log, isOfflineMode);
     }
 
     /**
@@ -101,7 +106,8 @@ public class JibBuildServiceUtil {
      *
      * @param imageConfiguration Image Configuration
      * @param mojoParameters Mojo parameters
-     * @param credential login credentials
+     * @param pushCredential login credentials for push registry
+     * @param pullCredential login credentials for pull registry
      * @param fatJar path to fat jar
      * @param targetDir target directory
      * @param outputDir output directory
@@ -109,19 +115,19 @@ public class JibBuildServiceUtil {
      * @param isOfflineMode whether to build in offline mode or not.
      * @return returns jib container
      *
-     * @throws InvalidImageReferenceException
+     * @throws InvalidImageReferenceException if invalid image reference passed
      */
-    protected static JibContainer buildImage(ImageConfiguration imageConfiguration, MojoParameters mojoParameters, ImageFormat imageFormat, Credential credential, Path fatJar, String targetDir, String outputDir, Logger log, boolean isOfflineMode) throws InvalidImageReferenceException, RegistryException, ExecutionException {
+    protected static JibContainer buildImage(ImageConfiguration imageConfiguration, MojoParameters mojoParameters, ImageFormat imageFormat, Credential pushCredential, Credential pullCredential, Path fatJar, String targetDir, String outputDir, Logger log, boolean isOfflineMode) throws InvalidImageReferenceException, RegistryException, ExecutionException {
         String targetImage = getPropertyFromMojoParameter(mojoParameters, FABRIC8_GENERATOR_NAME) != null ?
                 getPropertyFromMojoParameter(mojoParameters, FABRIC8_GENERATOR_NAME) : imageConfiguration.getName();
 
-        JibContainerBuilder containerBuilder = getContainerBuilderFromImageConfiguration(imageConfiguration, mojoParameters);
+        JibContainerBuilder containerBuilder = getContainerBuilderFromImageConfiguration(imageConfiguration, pullCredential, mojoParameters);
         containerBuilder = getJibContainerBuilderFromFatJarPath(fatJar, targetDir, containerBuilder);
         containerBuilder.setFormat(imageFormat);
 
         String imageTarName = ImageReference.parse(targetImage).getRepository().concat(".tar");
         TarImage tarImage = TarImage.named(targetImage).saveTo(Paths.get(outputDir + "/" + imageTarName));
-        RegistryImage registryImage = getRegistryImage(imageConfiguration, mojoParameters, credential);
+        RegistryImage registryImage = getTargetRegistryImage(imageConfiguration, mojoParameters, pushCredential);
 
         try {
             JibContainer jibContainer;
@@ -209,9 +215,6 @@ public class JibBuildServiceUtil {
             targetDir = "/deployments";
         }
 
-        AuthConfig authConfig = registryConfig.getAuthConfigFactory()
-                .createAuthConfig(true, true, registryConfig.getAuthConfig(),
-                        registryConfig.getSettings(), null, registryConfig.getRegistry());
 
         JibBuildService.JibBuildConfiguration.Builder jibBuildConfigurationBuilder = new JibBuildService.JibBuildConfiguration.Builder(log)
                 .imageConfiguration(imageConfiguration)
@@ -220,21 +223,39 @@ public class JibBuildServiceUtil {
                 .targetDir(targetDir)
                 .outputDir(outputDir)
                 .buildDirectory(config.getBuildDirectory());
-        if(authConfig != null) {
-            jibBuildConfigurationBuilder.credential(Credential.from(authConfig.getUsername(), authConfig.getPassword()));
+        String pushRegistry = getPushRegistry(imageConfiguration, config.getDockerMojoParameters());
+        Credential pushCredentials = getRegistryCredentials(pushRegistry, config);
+        if(pushCredentials != null) {
+            jibBuildConfigurationBuilder.pushCredential(pushCredentials);
+        }
+
+        String pullRegistry = getPullRegistry(imageConfiguration, config.getDockerMojoParameters());
+        Credential pullCredentials = getRegistryCredentials(pullRegistry, config);
+        if (pullCredentials != null) {
+            jibBuildConfigurationBuilder.pullCredential(pullCredentials);
         }
 
         return jibBuildConfigurationBuilder.build();
     }
 
-    private static JibContainerBuilder getContainerBuilderFromImageConfiguration(ImageConfiguration imageConfiguration, MojoParameters mojoParameters) throws InvalidImageReferenceException {
+    private static JibContainerBuilder getContainerBuilderFromImageConfiguration(ImageConfiguration imageConfiguration, Credential credential, MojoParameters mojoParameters) throws InvalidImageReferenceException {
         if (imageConfiguration.getBuildConfiguration() == null) {
             return null;
         }
 
         BuildImageConfiguration buildImageConfiguration = imageConfiguration.getBuildConfiguration();
-        JibContainerBuilder jibContainerBuilder = Jib.from(getPropertyFromMojoParameter(mojoParameters, FABRIC8_GENERATOR_FROM) != null ?
-                getPropertyFromMojoParameter(mojoParameters, FABRIC8_GENERATOR_FROM) : buildImageConfiguration.getFrom());
+        String fromImageName = getFromImageName(imageConfiguration, mojoParameters);
+
+        JibContainerBuilder jibContainerBuilder = null;
+        if (fromImageName != null) {
+            if (credential == null) {
+                jibContainerBuilder = Jib.from(fromImageName);
+            } else {
+                jibContainerBuilder = Jib.from(getRegistryImageOf(ImageReference.parse(fromImageName), credential.getUsername(), credential.getPassword()));
+            }
+        } else {
+            throw new InvalidImageReferenceException("Invalid from ImageReference provided: " + fromImageName);
+        }
         if (buildImageConfiguration.getEnv() != null && !buildImageConfiguration.getEnv().isEmpty()) {
             jibContainerBuilder.setEnvironment(buildImageConfiguration.getEnv());
         }
@@ -244,7 +265,11 @@ public class JibBuildServiceUtil {
         }
 
         if (buildImageConfiguration.getLabels() != null && !buildImageConfiguration.getLabels().isEmpty()) {
-            jibContainerBuilder.setLabels(buildImageConfiguration.getLabels());
+            for (Map.Entry<String, String> label : buildImageConfiguration.getLabels().entrySet()) {
+                if (label.getValue() != null && label.getKey() != null) {
+                    jibContainerBuilder.addLabel(label.getKey(), label.getValue());
+                }
+            }
         }
 
         if (buildImageConfiguration.getEntryPoint() != null) {
@@ -260,8 +285,9 @@ public class JibBuildServiceUtil {
         }
 
         if (buildImageConfiguration.getVolumes() != null) {
-            buildImageConfiguration.getVolumes()
-                    .forEach(volumePath -> jibContainerBuilder.addVolume(AbsoluteUnixPath.get(volumePath)));
+            for (String volumePath : buildImageConfiguration.getVolumes()) {
+                jibContainerBuilder.addVolume(AbsoluteUnixPath.get(volumePath));
+            }
         }
 
         jibContainerBuilder.setCreationTime(Instant.now());
@@ -278,7 +304,7 @@ public class JibBuildServiceUtil {
         return containerBuilder;
     }
 
-    private static RegistryImage getRegistryImage(ImageConfiguration imageConfiguration, MojoParameters mojoParameters, Credential credential) throws InvalidImageReferenceException {
+    private static RegistryImage getTargetRegistryImage(ImageConfiguration imageConfiguration, MojoParameters mojoParameters, Credential credential) throws InvalidImageReferenceException {
         String username = "", password = "";
         String targetImage = imageConfiguration.getName();
         ImageReference imageReference = ImageReference.parse(targetImage);
@@ -304,13 +330,36 @@ public class JibBuildServiceUtil {
             }
         }
 
-        String registry = getPropertyFromMojoParameter(mojoParameters, FABRIC8_GENERATOR_REGISTRY) != null ?
-                getPropertyFromMojoParameter(mojoParameters, FABRIC8_GENERATOR_REGISTRY) : imageConfiguration.getRegistry();
+        String registry = getPushRegistry(imageConfiguration, mojoParameters);
         if (registry != null) {
             imageReference = ImageReference.parse(new ImageName(targetImage).getFullName(registry));
         }
 
-        return RegistryImage.named(imageReference).addCredential(username, password);
+        return getRegistryImageOf(imageReference, username, password);
+    }
+
+    private static RegistryImage getRegistryImageOf(ImageReference imageReference, String username, String password) {
+        if (imageReference != null) {
+            return RegistryImage.named(imageReference).addCredential(username, password);
+        }
+        return null;
+    }
+
+    private static Credential getRegistryCredentials(String registry, BuildService.BuildServiceConfig dockerConfig) throws MojoExecutionException {
+        if (registry == null) {
+            registry = "docker.io"; // Let's assume docker is default registry.
+        }
+        io.fabric8.maven.docker.service.BuildService.BuildContext dockerBuildContext = dockerConfig.getDockerBuildContext();
+        RegistryService.RegistryConfig registryConfig = dockerBuildContext.getRegistryConfig();
+
+        AuthConfig authConfig = registryConfig.getAuthConfigFactory()
+                .createAuthConfig(true, true, registryConfig.getAuthConfig(),
+                        registryConfig.getSettings(), null, registry);
+
+        if (authConfig != null) {
+            return Credential.from(authConfig.getUsername(), authConfig.getPassword());
+        }
+        return null;
     }
 
     private static Set<Port> getPortSet(List<String> ports) {
@@ -330,6 +379,30 @@ public class JibBuildServiceUtil {
                 return properties.get(propertyName).toString();
         }
         return null;
+    }
+
+    private static String getPushRegistry(ImageConfiguration imageConfiguration, MojoParameters mojoParameters) {
+        return EnvUtil.firstRegistryOf(imageConfiguration.getRegistry(),
+                getPropertyFromMojoParameter(mojoParameters, FABRIC8_GENERATOR_REGISTRY),
+                getPropertyFromMojoParameter(mojoParameters, DOCKER_PUSH_REGISTRY_PROPERTY),
+                getPropertyFromMojoParameter(mojoParameters, DOCKER_REGISTRY_PROPERTY));
+    }
+
+    private static String getPullRegistry(ImageConfiguration imageConfiguration, MojoParameters mojoParameters) {
+        String fromImagePullRegistry = null;
+        if (imageConfiguration.getBuildConfiguration() != null
+            && imageConfiguration.getBuildConfiguration().getFrom() != null) {
+            fromImagePullRegistry = new ImageName(imageConfiguration.getBuildConfiguration().getFrom()).getRegistry();
+        }
+        return EnvUtil.firstRegistryOf(fromImagePullRegistry, getPropertyFromMojoParameter(mojoParameters, DOCKER_PULL_REGISTRY_PROPERTY));
+    }
+
+    private static String getFromImageName(ImageConfiguration imageConfiguration, MojoParameters mojoParameters) {
+        BuildImageConfiguration buildImageConfiguration = imageConfiguration.getBuildConfiguration();
+        String fromImageName = getPropertyFromMojoParameter(mojoParameters, FABRIC8_GENERATOR_FROM) != null ?
+                getPropertyFromMojoParameter(mojoParameters, FABRIC8_GENERATOR_FROM) : buildImageConfiguration.getFrom();
+        String pullRegistry = getPullRegistry(imageConfiguration, mojoParameters);
+        return pullRegistry != null ? new ImageName(fromImageName).getFullName(pullRegistry) : fromImageName;
     }
 
     public static Path getFatJar(String buildDir, Logger log) {
