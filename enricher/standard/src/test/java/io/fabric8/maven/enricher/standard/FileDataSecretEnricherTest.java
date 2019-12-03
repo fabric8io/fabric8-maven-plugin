@@ -54,6 +54,9 @@ public class FileDataSecretEnricherTest {
                 result = new Configuration.Builder()
                         .resource(new ResourceConfig())
                         .build();
+
+                context.resolvePath(TEST_APPLICATION_PROPERTIES_PATH);
+                result = Paths.get(TEST_APPLICATION_PROPERTIES_PATH);
             }}
 
         };

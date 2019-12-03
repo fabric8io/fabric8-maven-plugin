@@ -25,7 +25,6 @@ import io.fabric8.maven.enricher.api.MavenEnricherContext;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -79,7 +78,7 @@ public class FileDataSecretEnricher extends BaseEnricher {
     }
 
     private byte[] readContent(String location) throws IOException {
-        return Files.readAllBytes(Paths.get(location));
+        return Files.readAllBytes(getContext().resolvePath(location));
     }
 
     private String getOutput(String key) {

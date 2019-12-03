@@ -16,6 +16,7 @@
 package io.fabric8.maven.enricher.api;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -58,6 +59,15 @@ public interface EnricherContext {
      * @return the projects based directory
      */
     File getProjectDirectory();
+
+    /**
+     *  Resolves the path string against the project directory
+     *
+     * @param path the path string to resolve
+     * @return the resulting path
+     * @see Path#resolve(String)
+     */
+    Path resolvePath(String path);
 
     /**
      * Get various class loaders used in the projects

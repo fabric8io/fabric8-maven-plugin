@@ -16,6 +16,7 @@
 package io.fabric8.maven.enricher.api;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -103,6 +104,11 @@ public class MavenEnricherContext implements EnricherContext {
     @Override
     public File getProjectDirectory() {
         return getProject().getBasedir();
+    }
+
+    @Override
+    public Path resolvePath(String path) {
+        return getProjectDirectory().toPath().resolve(path);
     }
 
     @Override
