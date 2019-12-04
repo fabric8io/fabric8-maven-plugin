@@ -18,4 +18,5 @@ io.fabric8.maven.enricher.fabric8.WebAppHealthCheckEnricher
 io.fabric8.maven.enricher.fabric8.DockerHealthCheckEnricher,510
 
 # Other enrichers
+io.fabric8.maven.enricher.fabric8.DekorateEnricher
 io.fabric8.maven.enricher.fabric8.PrometheusEnricher
