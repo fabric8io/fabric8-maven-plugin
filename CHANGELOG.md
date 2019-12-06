@@ -40,6 +40,7 @@ Usage:
 * Feature #1483: Dekorate integration
 * Fix #1769: Display root cause of failure if available
 * Fix #1776: fat jar wrongly detected on simple jar
+* Refator #1766: Jib Refactor
 
 ### 4.3.1 (18-10-2019)
 * Updated Kubernetes client to 4.6.1

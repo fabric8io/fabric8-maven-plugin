@@ -15,14 +15,12 @@
  */
 package io.fabric8.maven.core.service.kubernetes;
 
-import com.google.cloud.tools.jib.api.Credential;
+import com.google.cloud.tools.jib.api.RegistryImage;
 import io.fabric8.maven.core.service.BuildService;
-import io.fabric8.maven.core.util.JibBuildServiceUtil;
+import io.fabric8.maven.core.util.JibServiceUtil;
 import io.fabric8.maven.docker.config.Arguments;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.DeepCopy;
-import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 
 import java.nio.file.Path;
@@ -46,23 +44,8 @@ public class JibBuildService implements BuildService {
     @Override
     public void build(ImageConfiguration imageConfiguration) {
        try {
-           BuildImageConfiguration buildImageConfiguration = imageConfiguration.getBuildConfiguration();
-           List<String> tags = buildImageConfiguration.getTags();
-
-           JibBuildService.JibBuildConfiguration jibBuildConfiguration;
-           String fullName = "";
-           if (tags.size() > 0) {
-               for (String tag : tags) {
-                   if (tag != null) {
-                        fullName = new ImageName(imageConfiguration.getName(), tag).getFullName();
-                   }
-               }
-           } else {
-               fullName = new ImageName(imageConfiguration.getName(), null).getFullName();
-           }
-           log.info("Image tagging successful!");
-           jibBuildConfiguration = JibBuildServiceUtil.getJibBuildConfiguration(config, buildImageConfiguration, fullName, log);
-           JibBuildServiceUtil.buildImage(jibBuildConfiguration, log);
+           JibBuildService.JibBuildConfiguration jibBuildConfiguration = JibServiceUtil.getJibBuildConfiguration(config, imageConfiguration, log);
+           JibServiceUtil.buildImage(jibBuildConfiguration, log);
        } catch (Exception ex) {
            throw new UnsupportedOperationException(ex);
        }
@@ -73,15 +56,22 @@ public class JibBuildService implements BuildService {
 
     }
 
+    @Override
+    public BuildServiceConfig getBuildServiceConfig() {
+        return config;
+    }
+
     public static class JibBuildConfiguration {
 
         private Map<String, String> envMap;
 
-        private Credential credential;
+        private Map<String, String> labels;
+
+        private List<String> volumes;
 
         private List<String> ports;
 
-        private String from;
+        private RegistryImage from;
 
         private String target;
 
@@ -92,6 +82,8 @@ public class JibBuildService implements BuildService {
         private String targetDir;
 
         private String outputDir;
+
+        private String workDir;
 
         private JibBuildConfiguration() {}
 
@@ -111,15 +103,15 @@ public class JibBuildService implements BuildService {
             return envMap;
         }
 
-        public Credential getCredential() {
-            return credential;
-        }
+        public Map<String, String> getLabels() { return labels; }
+
+        public List<String> getVolumes() {  return volumes; }
 
         public List<String> getPorts() {
             return ports;
         }
 
-        public String getFrom() {
+        public RegistryImage getFrom() {
             return from;
         }
 
@@ -131,8 +123,10 @@ public class JibBuildService implements BuildService {
             return fatJarPath;
         }
 
+        public String getWorkDir() { return workDir; }
+
         public static class Builder {
-            private final JibBuildConfiguration configutil;
+            private final JibBuildConfiguration jibBuildConfiguration;
             private final Logger logger;
 
             public Builder(Logger logger) {
@@ -142,59 +136,68 @@ public class JibBuildService implements BuildService {
             public Builder(JibBuildConfiguration that, Logger logger) {
                 this.logger = logger;
                 if (that == null) {
-                    this.configutil = new JibBuildConfiguration();
+                    this.jibBuildConfiguration = new JibBuildConfiguration();
                 } else {
-                    this.configutil = DeepCopy.copy(that);
+                    this.jibBuildConfiguration = DeepCopy.copy(that);
                 }
             }
 
             public Builder envMap(Map<String, String> envMap) {
-                configutil.envMap = envMap;
+                jibBuildConfiguration.envMap = envMap;
                 return this;
             }
 
-            public Builder credential(Credential credential) {
-                configutil.credential = credential;
+            public Builder labels(Map<String, String> labels) {
+                jibBuildConfiguration.labels = labels;
                 return this;
             }
 
+            public Builder volumes(List<String> volumes) {
+                jibBuildConfiguration.volumes = volumes;
+                return this;
+            }
             public Builder ports(List<String> ports) {
-                configutil.ports = ports;
+                jibBuildConfiguration.ports = ports;
                 return this;
             }
 
-            public Builder from(String from) {
-                configutil.from = from;
+            public Builder from(RegistryImage from) {
+                jibBuildConfiguration.from = from;
                 return this;
             }
 
             public Builder targetImage(String imageName) {
-                configutil.target = imageName;
+                jibBuildConfiguration.target = imageName;
                 return this;
             }
 
             public Builder entrypoint(Arguments entrypoint) {
-                configutil.entrypoint = entrypoint;
+                jibBuildConfiguration.entrypoint = entrypoint;
                 return this;
             }
 
             public Builder buildDirectory(String buildDir) {
-                configutil.fatJarPath = JibBuildServiceUtil.getFatJar(buildDir, logger);
+                jibBuildConfiguration.fatJarPath = JibServiceUtil.getFatJar(buildDir, logger);
+                return this;
+            }
+
+            public Builder workingDirectory(String workDir) {
+                jibBuildConfiguration.workDir = workDir;
                 return this;
             }
 
             public Builder targetDir(String targetDir) {
-                configutil.targetDir = targetDir;
+                jibBuildConfiguration.targetDir = targetDir;
                 return this;
             }
 
             public Builder outputDir(String outputDir) {
-                configutil.outputDir = outputDir;
+                jibBuildConfiguration.outputDir = outputDir;
                 return this;
             }
 
             public JibBuildConfiguration build() {
-                return configutil;
+                return jibBuildConfiguration;
             }
         }
     }

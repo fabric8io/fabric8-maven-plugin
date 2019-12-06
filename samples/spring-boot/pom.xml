@@ -107,6 +107,7 @@
                                 <config>
                                     <spring-boot>
                                         <color>always</color>
+					<name>devanggaur7/${project.artifactId}:${project.version}</name>
                                     </spring-boot>
                                 </config>
                             </generator>
@@ -163,7 +164,7 @@
                                 <config>
                                     <spring-boot>
                                         <!-- authentic username of registry to be used for automatic push to registry-->
-                                        <!--<name>${image.user}/${project.artifactId}:${project.version}</name>-->
+                                        <name>devanggaur7/${project.artifactId}:${project.version}</name>
                                         <color>always</color>
                                     </spring-boot>
                                 </config>

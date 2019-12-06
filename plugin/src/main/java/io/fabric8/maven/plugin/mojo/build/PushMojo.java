@@ -16,8 +16,24 @@
 package io.fabric8.maven.plugin.mojo.build;
 
 
+import com.google.cloud.tools.jib.api.Credential;
+import com.google.cloud.tools.jib.api.ImageReference;
+import com.google.cloud.tools.jib.api.InvalidImageReferenceException;
+import com.google.cloud.tools.jib.api.TarImage;
+import com.google.cloud.tools.jib.plugins.common.logging.SingleThreadedExecutor;
+import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.util.JibServiceUtil;
+import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.service.RegistryService;
+import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
+
 import java.io.File;
+import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.List;
 
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
@@ -93,11 +109,42 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     private OpenShiftBuildStrategy buildStrategy = OpenShiftBuildStrategy.s2i;
 
     @Parameter(property = "docker.skip.push", defaultValue = "false")
-    protected boolean skipPush;
+    private boolean skipPush;
+
+    @Parameter(property = "docker.push.registry")
+    private String pushRegistry;
+
+    @Parameter(property = "docker.source.dir", defaultValue="src/main/docker")
+    private String sourceDirectory;
+
+    @Parameter(property = "docker.target.dir", defaultValue="target/docker")
+    private String outputDirectory;
+
+    @Parameter(property = "fabric8.build.jib", defaultValue = "false")
+    private boolean isJib;
+
+    @Parameter(property = "fabric8.push.jib.timeout", defaultValue = "60")
+    private long pushTimeout;
+
+    private static String EMPTY_STRING = "";
+
+    private static String TAR_POSTFIX = ".tar";
 
     @Override
     protected String getLogPrefix() {
         return "F8> ";
+    }
+
+    protected boolean isJibMode() {
+        return isJib || Configs.asBoolean(getProperty("fabric8.build.jib"));
+    }
+
+    private String getProperty(String key) {
+        String value = System.getProperty(key);
+        if (value == null) {
+            value = project.getProperties().getProperty(key);
+        }
+        return value;
     }
 
     @Override
@@ -105,7 +152,76 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
         if (skip || skipPush) {
             return;
         }
+
         super.execute();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
+        if (skipPush) {
+            return;
+        }
+
+        if (isJibMode()) {
+            for (ImageConfiguration imageConfiguration : getResolvedImages()) {
+                jibPush(imageConfiguration);
+            }
+        } else {
+            super.executeInternal(hub);
+        }
+    }
+
+    private void jibPush(ImageConfiguration imageConfiguration) throws MojoExecutionException {
+        BuildImageConfiguration buildImageConfiguration = imageConfiguration.getBuildConfiguration();
+
+        String outputDir = preapareAbsoluteOutputDirPath(EMPTY_STRING).getAbsolutePath();
+
+        ImageName tarImage = new ImageName(imageConfiguration.getName());
+        String tarImageRepo = tarImage.getRepository();
+        String targetImage = EMPTY_STRING;
+        SingleThreadedExecutor singleThreadedExecutor = new SingleThreadedExecutor();
+        try {
+            String imageTarName = ImageReference.parse(tarImageRepo).toString().concat(TAR_POSTFIX);
+            TarImage baseImage = TarImage.at(Paths.get(outputDir, imageTarName));
+
+            RegistryService.RegistryConfig registryConfig = getRegistryConfig(this.pushRegistry);
+            String configuredRegistry = EnvUtil.firstRegistryOf(new String[]{(new ImageName(imageConfiguration.getName())).getRegistry(), imageConfiguration.getRegistry(), registryConfig.getRegistry()});
+
+            Credential pushCredential = JibServiceUtil.getRegistryCredentials(configuredRegistry, registryConfig);
+            List<String> tags = buildImageConfiguration.getTags();
+            if (tags.size() > 0) {
+                for (String tag : tags) {
+                    if (tag != null) {
+                        targetImage = new ImageName(imageConfiguration.getName(), tag).getFullName();
+                        JibServiceUtil.pushImage(baseImage, targetImage, pushCredential, singleThreadedExecutor, log, pushTimeout);
+                    }
+                }
+            } else {
+                targetImage = new ImageName(imageConfiguration.getName()).getFullName();
+                JibServiceUtil.pushImage(baseImage, targetImage, pushCredential, singleThreadedExecutor, log, pushTimeout);
+            }
+
+            singleThreadedExecutor.shutDownAndAwaitTermination(Duration.ofSeconds(pushTimeout));
+        } catch (InvalidImageReferenceException e) {
+
+            log.error("Exception occured while pushing the image: %s", targetImage);
+            throw new MojoExecutionException(e.getMessage(), e);
+
+        } catch (IllegalStateException e) {
+
+            singleThreadedExecutor.shutDownAndAwaitTermination(Duration.ofSeconds(pushTimeout));
+
+            log.error("Exception occured while pushing the image: %s", targetImage);
+            throw new MojoExecutionException(e.getMessage(), e);
+        }
+    }
+
+    public File preapareAbsoluteOutputDirPath(String path) {
+        File file = new File(path);
+        return file.isAbsolute() ? file : new File(new File(project.getBasedir(), (new File(outputDirectory)).toString()), path);
     }
 
     /**

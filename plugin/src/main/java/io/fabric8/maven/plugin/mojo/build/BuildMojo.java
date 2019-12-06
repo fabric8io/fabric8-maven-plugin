@@ -271,6 +271,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             // No pom packaging
             return false;
         }
+
         if (skipBuildPom != null) {
             // If configured take the config option
             return skipBuildPom;
@@ -287,7 +288,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     @Override
     protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
-        throws MojoExecutionException, DockerAccessException {
+        throws MojoExecutionException {
 
         try {
             // TODO need to refactor d-m-p to avoid this call
