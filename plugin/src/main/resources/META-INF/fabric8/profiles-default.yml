@@ -62,7 +62,6 @@
     - f8-healthcheck-docker
     - f8-healthcheck-webapp
     - f8-prometheus
-    - f8-dekorate
     # Dependencies shouldn't be enriched anymore, therefor it's last in the list
     - fmp-dependency
     - fmp-revision-history

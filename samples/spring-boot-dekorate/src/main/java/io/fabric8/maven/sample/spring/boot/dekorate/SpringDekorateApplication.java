@@ -15,13 +15,17 @@
  */
 package io.fabric8.maven.sample.spring.boot.dekorate;
 
+import io.dekorate.kubernetes.annotation.KubernetesApplication;
 import io.dekorate.kubernetes.annotation.Label;
 import io.dekorate.openshift.annotation.OpenshiftApplication;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @OpenshiftApplication(labels = {
-    @Label(key = "decorated-by", value = "dekorate")
+    @Label(key = "decorated-by", value = "dekorate-openshift")
+})
+@KubernetesApplication(labels = {
+    @Label(key = "decorated-by", value = "dekorate-kubernetes")
 })
 @SpringBootApplication
 public class SpringDekorateApplication {

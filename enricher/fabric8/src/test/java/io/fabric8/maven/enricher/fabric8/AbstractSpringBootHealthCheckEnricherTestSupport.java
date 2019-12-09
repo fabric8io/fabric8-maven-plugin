@@ -16,7 +16,7 @@
 package io.fabric8.maven.enricher.fabric8;
 
 import io.fabric8.maven.core.model.Configuration;
-import io.fabric8.maven.enricher.api.util.ProjectClassLoaders;
+import io.fabric8.maven.core.util.ProjectClassLoaders;
 
 import java.net.URL;
 import java.net.URLClassLoader;
