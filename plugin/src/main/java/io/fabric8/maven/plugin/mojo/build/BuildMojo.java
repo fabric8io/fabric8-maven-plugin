@@ -296,7 +296,11 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             fabric8ServiceHub.getBuildService().build(imageConfig);
 
         } catch (Exception ex) {
-            throw new MojoExecutionException("Failed to execute the build: " + ex);
+            if (ex.getCause() != null) {
+                throw new MojoExecutionException("Failed to execute the build: " + ex.getCause());
+            } else {
+                throw new MojoExecutionException("Failed to execute the build: " + ex);
+            }
         }
     }
 
