@@ -33,7 +33,7 @@
   </parent>
 
   <properties>
-    <dekorate.version>0.10-SNAPSHOT</dekorate.version>
+    <dekorate.version>0.10.3</dekorate.version>
   </properties>
 
   <name>Fabric8 Maven :: Sample :: Spring Boot - Dekorate</name>
