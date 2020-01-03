@@ -15,7 +15,6 @@
  */
 package io.fabric8.maven.core.config;
 
-import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import java.util.List;
@@ -97,6 +96,9 @@ public class ResourceConfig {
      */
     private String routeDomain;
 
+    @Parameter
+    private OpenshiftBuildConfig openshiftBuildConfig;
+
     public Optional<Map<String, String>> getEnv() {
         return Optional.ofNullable(env);
     }
@@ -175,6 +177,9 @@ public class ResourceConfig {
 
     public String getRouteDomain() { return routeDomain; }
 
+    public OpenshiftBuildConfig getOpenshiftBuildConfig() {
+        return openshiftBuildConfig;
+    }
     // =============================================================================================
 
     public static class Builder {
@@ -273,6 +278,11 @@ public class ResourceConfig {
 
         public Builder withRouteDomain(String routeDomain) {
             config.routeDomain = routeDomain;
+            return this;
+        }
+
+        public Builder withOpenshiftBuildConfig(OpenshiftBuildConfig openshiftBuildConfig) {
+            config.openshiftBuildConfig = openshiftBuildConfig;
             return this;
         }
 

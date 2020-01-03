@@ -110,6 +110,25 @@ Both build strategies update an https://docs.openshift.com/enterprise/latest/arc
 
 The https://docs.openshift.com/enterprise/latest/dev_guide/builds.html#defining-a-buildconfig[Build Config] and https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#image-streams[Image streams] can be managed by this plugin. If they do not exist, they will be automatically created by `fabric8:build`. If they do already exist, they are reused, except when the `buildRecreate` configuration option (property `fabric8.build.recreate`) is set to a value as described in <<build-goal-configuration, Configuration>>. Also if the provided build strategy is different than the one defined in the existing build configuration, the Build Config is edited to reflect the new type (which in turn removes all build associated with the previous build).
 
+If you want to configure memory/cpu requests and limits related to `BuildConfig`, you can either provide them as in plugin configuration or as a resource fragment in `src/main/fabric8` directory. for XML configuration it needs to be done like this:
+```
+    <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-plugin</artifactId>
+        <version>${plugin.version}</version>
+        <configuration>
+          <resources>
+            <openshiftBuildConfig>
+              <limits>
+                <cpu>100m</cpu>
+                <memory>256Mi</memory>
+              </limits>
+            </openshiftBuildConfig>
+          </resources>
+        </configuration>
+    </plugin>
+```
+
 This image stream created can then be directly referenced from https://docs.openshift.com/enterprise/latest/architecture/core_concepts/deployments.html#deployments-and-deployment-configurations[Deployment Configuration] objects created by <<fabric8:resource>>.
 By default, image streams are created with a local lookup policy, so that they can be used also by other resources such as Deployments or StatefulSets.
 This behavior can be turned off by setting the `fabric8.s2i.imageStreamLookupPolicyLocal` property to `false` when building the project.

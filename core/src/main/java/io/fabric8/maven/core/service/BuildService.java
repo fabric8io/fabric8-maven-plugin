@@ -19,6 +19,7 @@ import java.io.File;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.config.BuildRecreateMode;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
+import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.util.MojoParameters;
@@ -72,6 +73,10 @@ public interface BuildService {
 
         private boolean s2iImageStreamLookupPolicyLocal;
 
+        private ResourceConfig resourceConfig;
+
+        private File resourceDir;
+
         public BuildServiceConfig() {
         }
 
@@ -119,6 +124,14 @@ public interface BuildService {
 
         public boolean isForcePullEnabled() {
             return forcePull;
+        }
+
+        public ResourceConfig getResourceConfig() {
+            return resourceConfig;
+        }
+
+        public File getResourceDir() {
+            return resourceDir;
         }
 
         public void attachArtifact(String classifier, File destFile) {
@@ -195,6 +208,16 @@ public interface BuildService {
 
             public Builder imagePullManager(ImagePullManager imagePullManager) {
                 config.imagePullManager = imagePullManager;
+                return this;
+            }
+
+            public Builder resourceConfig(ResourceConfig resourceConfig) {
+                config.resourceConfig = resourceConfig;
+                return this;
+            }
+
+            public Builder resourceDir(File resourceDir) {
+                config.resourceDir = resourceDir;
                 return this;
             }
 

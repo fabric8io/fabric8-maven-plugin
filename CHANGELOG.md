@@ -16,6 +16,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix #1695: IllegalArgumentException when Spring Boot application.yaml contains integer keys
 * Fix #797: spring-boot generator can not handle multi-profile configuration
 * Fix #1751: Build Names are suffixed with -s2i regardless of build strategy
+* Fix #1770: Support for setting BuildConfig memory/cpu request and limits
 * Fix #1755: Spring boot enricher does not produce a proper heath check and liveness check path when "/" is used.
 * Feature: Check maven.compiler.target property for base image detection.
 * Fix: Enrichers should resolve relative paths against project directory, not working directory

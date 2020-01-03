@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,8 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.WatchEvent;
 import io.fabric8.maven.core.config.BuildRecreateMode;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
+import io.fabric8.maven.core.config.OpenshiftBuildConfig;
+import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.core.util.WebServerEventCollector;
@@ -65,6 +68,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -454,6 +458,39 @@ public class OpenshiftBuildServiceTest {
             }
             assertTrue(lines.contains("FOO=BAR"));
         });
+    }
+
+    @Test
+    public void testBuildConfigResourceConfig() throws Exception {
+        retryInMockServer(() -> {
+            Map<String, String> limitsMap = new HashMap<>();
+            limitsMap.put("cpu", "100m");
+            limitsMap.put("memory", "256Mi");
+
+            BuildService.BuildServiceConfig config = defaultConfig
+                    .resourceConfig(new ResourceConfig.Builder()
+                    .withOpenshiftBuildConfig(new OpenshiftBuildConfig(limitsMap, null)).build()).build();
+            OpenShiftMockServer mockServer = new OpenShiftMockServer();
+
+            OpenShiftClient client = mockServer.createOpenShiftClient();
+            final OpenshiftBuildService service = new OpenshiftBuildService(client, logger, dockerServiceHub, config);
+
+            ImageConfiguration imageWithEnv = new ImageConfiguration.Builder(image)
+                    .buildConfig(new BuildImageConfiguration.Builder(image.getBuildConfiguration())
+                            .env(Collections.singletonMap("FOO", "BAR"))
+                            .build()
+                    ).build();
+
+            KubernetesListBuilder builder = new KubernetesListBuilder();
+            service.createBuildArchive(imageWithEnv);
+            service.updateOrCreateBuildConfig(config, client, builder, imageWithEnv, null);
+            BuildConfig buildConfig = (BuildConfig) builder.buildFirstItem();
+            assertNotNull(buildConfig);
+            assertNotNull(buildConfig.getSpec().getResources());
+            assertEquals("256Mi", buildConfig.getSpec().getResources().getLimits().get("memory").getAmount());
+            assertEquals("100m", buildConfig.getSpec().getResources().getLimits().get("cpu").getAmount());
+        });
+
     }
 
     @FunctionalInterface
