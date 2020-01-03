@@ -312,6 +312,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .forcePullEnabled(forcePull)
                 .imagePullManager(getImagePullManager(imagePullPolicy, autoPull))
                 .buildDirectory(project.getBuild().getDirectory())
+                .resourceDir(ResourceDirCreator.getFinalResourceDir(resourceDir, environment))
+                .resourceConfig(resources)
                 .attacher((classifier, destFile) -> {
                     if (destFile.exists()) {
                         projectHelper.attachArtifact(project, "yml", classifier, destFile);
