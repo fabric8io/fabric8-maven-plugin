@@ -67,25 +67,25 @@ The full documentation can be found in the [User Manual](http://maven.fabric8.io
 
 ##### OpenShift
 
-|     FMP      | OpenShift 3.11.0 | OpenShift 3.10.0 | OpenShift 3.9.0  | OpenShift 3.7.0  | OpenShift 3.6.0  |
-|--------------|------------------|------------------|------------------|------------------|------------------|
-| FMP 4.3.1    |       :heavy_check_mark:          |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
-| FMP 4.3.0    |       :heavy_check_mark:          |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
-| FMP 4.2.0    |       :heavy_check_mark:          |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
-| FMP 4.1.0    |       :heavy_check_mark:          |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
-| FMP 4.0.0    |       :heavy_check_mark:          |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
-| FMP 4.0.0-M1 |       :large_blue_circle:          |        :large_blue_circle:         |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
-| FMP 4.0.0-M2 |       :large_blue_circle:          |        :large_blue_circle:         |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
-| FMP 3.5.42   |       :x:          |        :x:         |        :large_blue_circle:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
-| FMP 3.5.41   |       :x:          |        :x:         |        :large_blue_circle:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
-| FMP 3.5.40   |       :x:          |        :x:         |        :large_blue_circle:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
-| FMP 3.5.39   |       :x:          |        :x:         |        :x:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
-| FMP 3.5.38   |       :x:          |        :x:         |        :x:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
-| FMP 3.5.37   |       :x:          |        :x:         |        :x:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
-| FMP 3.5.35   |       :x:          |        :x:         |        :x:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
-| FMP 3.5.34   |       :x:          |        :x:         |        :x:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
-| FMP 3.5.33   |       :x:          |        :x:         |        :x:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
-| FMP 3.5.32   |       :x:          |        :x:         |        :x:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
+|     FMP      | Openshift 4.2.0  | Openshift 4.1.0  | OpenShift 3.11.0 | OpenShift 3.10.0 | OpenShift 3.9.0  | OpenShift 3.7.0  | OpenShift 3.6.0  |
+|--------------|------------------|------------------|------------------|------------------|------------------|------------------|------------------|
+| FMP 4.3.1    |       :heavy_check_mark:          |        :heavy_check_mark:         |       :heavy_check_mark:          |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
+| FMP 4.3.0    |       :heavy_check_mark:          |        :heavy_check_mark:         |       :heavy_check_mark:          |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
+| FMP 4.2.0    |       :heavy_check_mark:          |        :heavy_check_mark:         |       :heavy_check_mark:          |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
+| FMP 4.1.0    |       :heavy_check_mark:          |        :heavy_check_mark:         |       :heavy_check_mark:          |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
+| FMP 4.0.0    |       :large_blue_circle:          |        :large_blue_circle:         |       :heavy_check_mark:          |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
+| FMP 4.0.0-M1 |       :large_blue_circle:          |        :large_blue_circle:         |       :large_blue_circle:          |        :large_blue_circle:         |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
+| FMP 4.0.0-M2 |        :large_blue_circle:          |        :large_blue_circle:         |      :large_blue_circle:          |        :large_blue_circle:         |        :heavy_check_mark:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
+| FMP 3.5.42   |       :x:          |       :x:          |        :x:         |        :large_blue_circle:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
+| FMP 3.5.41   |       :x:          |       :x:          |        :x:         |        :large_blue_circle:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
+| FMP 3.5.40   |       :x:          |       :x:          |        :x:         |        :large_blue_circle:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
+| FMP 3.5.39   |       :x:          |       :x:          |        :x:         |        :x:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
+| FMP 3.5.38   |       :x:          |       :x:          |        :x:         |        :x:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
+| FMP 3.5.37   |       :x:          |       :x:          |        :x:         |        :x:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
+| FMP 3.5.35   |       :x:          |       :x:          |        :x:         |        :x:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
+| FMP 3.5.34   |       :x:          |       :x:          |        :x:         |        :x:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
+| FMP 3.5.33   |       :x:          |       :x:          |        :x:         |        :x:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
+| FMP 3.5.32   |       :x:          |       :x:          |        :x:         |        :x:         |        :heavy_check_mark:         |        :heavy_check_mark:         |
 
 ##### Kubernetes
 

@@ -229,6 +229,7 @@ A profile can also extend another profile to avoid repetition e.g of generators 
       - fmp-openshift-project
       - fmp-openshift-service-expose
       - fmp-openshift-route
+      - fmp-ingress
 
 ----
 one then would not need to repeat all generators as they are inherited from the `default` profile.

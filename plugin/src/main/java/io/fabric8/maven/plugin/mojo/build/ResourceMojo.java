@@ -197,6 +197,13 @@ public class ResourceMojo extends AbstractFabric8Mojo {
     @Parameter(property = "fabric8.gitRemote")
     private String gitRemote;
 
+
+    /**
+     * The domain added to the service ID when creating OpenShift routes
+     */
+    @Parameter(property = "fabric8.domain")
+    private String routeDomain;
+
     @Parameter
     private ProcessorConfig enricher;
 
@@ -421,6 +428,10 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
         if (namespace != null && !namespace.isEmpty()) {
             resources = new ResourceConfig.Builder(resources).withNamespace(namespace).build();
+        }
+
+        if (routeDomain != null && !routeDomain.isEmpty() ) {
+            resources = new ResourceConfig.Builder(resources).withRouteDomain(routeDomain).build();
         }
         // Manager for calling enrichers.
         MavenEnricherContext.Builder ctxBuilder = new MavenEnricherContext.Builder()
