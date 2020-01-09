@@ -149,7 +149,7 @@ public class PrometheusEnricherTest {
         enricher.create(PlatformMode.kubernetes, builder);
         Map<String, String> annotations = builder.buildFirstItem().getMetadata().getAnnotations();
 
-        assertEquals(Collections.emptyMap(), annotations);
+        assertNull(annotations);
     }
 
     @Test

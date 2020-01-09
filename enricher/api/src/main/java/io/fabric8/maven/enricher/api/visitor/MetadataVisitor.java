@@ -36,6 +36,7 @@ import io.fabric8.openshift.api.model.BuildConfigBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import io.fabric8.openshift.api.model.ImageStreamBuilder;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -91,7 +92,7 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
     }
 
     private void updateLabels(ObjectMeta metadata) {
-        overlayMap(metadata.getLabels(),labelsFromConfig);
+        overlayMap(metadata.getLabels(), labelsFromConfig);
     }
 
     private void updateAnnotations(ObjectMeta metadata) {
@@ -166,7 +167,20 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(PodTemplateSpecBuilder item) {
-            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+            if (Boolean.TRUE.equals(item.hasMetadata())) {
+                if (item.buildMetadata().getLabels() == null) {
+                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
+                }
+                if (item.buildMetadata().getAnnotations() == null) {
+                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
+                }
+                return item.buildMetadata();
+            } else {
+                return item.withNewMetadata()
+                        .withLabels(Collections.emptyMap())
+                        .withAnnotations(Collections.emptyMap())
+                        .endMetadata().buildMetadata();
+            }
         }
     }
 
@@ -183,7 +197,20 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(ServiceBuilder item) {
-            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+            if (Boolean.TRUE.equals(item.hasMetadata())) {
+                if (item.buildMetadata().getLabels() == null) {
+                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
+                }
+                if (item.buildMetadata().getAnnotations() == null) {
+                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
+                }
+                return item.buildMetadata();
+            } else {
+                return item.withNewMetadata()
+                        .withLabels(Collections.emptyMap())
+                        .withAnnotations(Collections.emptyMap())
+                        .endMetadata().buildMetadata();
+            }
         }
     }
 
@@ -199,7 +226,20 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(ReplicaSetBuilder item) {
-            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+            if (Boolean.TRUE.equals(item.hasMetadata())) {
+                if (item.buildMetadata().getLabels() == null) {
+                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
+                }
+                if (item.buildMetadata().getAnnotations() == null) {
+                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
+                }
+                return item.buildMetadata();
+            } else {
+                return item.withNewMetadata()
+                        .withLabels(Collections.emptyMap())
+                        .withAnnotations(Collections.emptyMap())
+                        .endMetadata().buildMetadata();
+            }
         }
     }
 
@@ -215,7 +255,20 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(ReplicationControllerBuilder item) {
-            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+            if (Boolean.TRUE.equals(item.hasMetadata())) {
+                if (item.buildMetadata().getLabels() == null) {
+                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
+                }
+                if (item.buildMetadata().getAnnotations() == null) {
+                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
+                }
+                return item.buildMetadata();
+            } else {
+                return item.withNewMetadata()
+                        .withLabels(Collections.emptyMap())
+                        .withAnnotations(Collections.emptyMap())
+                        .endMetadata().buildMetadata();
+            }
         }
     }
 
@@ -231,7 +284,20 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(DeploymentBuilder item) {
-            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+            if (Boolean.TRUE.equals(item.hasMetadata())) {
+                if (item.buildMetadata().getLabels() == null) {
+                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
+                }
+                if (item.buildMetadata().getAnnotations() == null) {
+                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
+                }
+                return item.buildMetadata();
+            } else {
+                return item.withNewMetadata()
+                        .withLabels(Collections.emptyMap())
+                        .withAnnotations(Collections.emptyMap())
+                        .endMetadata().buildMetadata();
+            }
         }
     }
 
@@ -247,7 +313,20 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(DeploymentConfigBuilder item) {
-            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+            if (Boolean.TRUE.equals(item.hasMetadata())) {
+                if (item.buildMetadata().getLabels() == null) {
+                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
+                }
+                if (item.buildMetadata().getAnnotations() == null) {
+                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
+                }
+                return item.buildMetadata();
+            } else {
+                return item.withNewMetadata()
+                        .withLabels(Collections.emptyMap())
+                        .withAnnotations(Collections.emptyMap())
+                        .endMetadata().buildMetadata();
+            }
         }
     }
 
@@ -263,7 +342,20 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(DaemonSetBuilder item) {
-            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+            if (Boolean.TRUE.equals(item.hasMetadata())) {
+                if (item.buildMetadata().getLabels() == null) {
+                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
+                }
+                if (item.buildMetadata().getAnnotations() == null) {
+                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
+                }
+                return item.buildMetadata();
+            } else {
+                return item.withNewMetadata()
+                        .withLabels(Collections.emptyMap())
+                        .withAnnotations(Collections.emptyMap())
+                        .endMetadata().buildMetadata();
+            }
         }
     }
 
@@ -279,7 +371,20 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(StatefulSetBuilder item) {
-            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+            if (Boolean.TRUE.equals(item.hasMetadata())) {
+                if (item.buildMetadata().getLabels() == null) {
+                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
+                }
+                if (item.buildMetadata().getAnnotations() == null) {
+                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
+                }
+                return item.buildMetadata();
+            } else {
+                return item.withNewMetadata()
+                        .withLabels(Collections.emptyMap())
+                        .withAnnotations(Collections.emptyMap())
+                        .endMetadata().buildMetadata();
+            }
         }
     }
 
@@ -295,7 +400,20 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(JobBuilder item) {
-            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+            if (Boolean.TRUE.equals(item.hasMetadata())) {
+                if (item.buildMetadata().getLabels() == null) {
+                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
+                }
+                if (item.buildMetadata().getAnnotations() == null) {
+                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
+                }
+                return item.buildMetadata();
+            } else {
+                return item.withNewMetadata()
+                        .withLabels(Collections.emptyMap())
+                        .withAnnotations(Collections.emptyMap())
+                        .endMetadata().buildMetadata();
+            }
         }
     }
 
@@ -311,7 +429,20 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(ImageStreamBuilder item) {
-            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+            if (Boolean.TRUE.equals(item.hasMetadata())) {
+                if (item.buildMetadata().getLabels() == null) {
+                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
+                }
+                if (item.buildMetadata().getAnnotations() == null) {
+                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
+                }
+                return item.buildMetadata();
+            } else {
+                return item.withNewMetadata()
+                        .withLabels(Collections.emptyMap())
+                        .withAnnotations(Collections.emptyMap())
+                        .endMetadata().buildMetadata();
+            }
         }
     }
 
@@ -327,7 +458,20 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(BuildConfigBuilder item) {
-            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+            if (Boolean.TRUE.equals(item.hasMetadata())) {
+                if (item.buildMetadata().getLabels() == null) {
+                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
+                }
+                if (item.buildMetadata().getAnnotations() == null) {
+                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
+                }
+                return item.buildMetadata();
+            } else {
+                return item.withNewMetadata()
+                        .withLabels(Collections.emptyMap())
+                        .withAnnotations(Collections.emptyMap())
+                        .endMetadata().buildMetadata();
+            }
         }
     }
 
@@ -343,7 +487,20 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(BuildBuilder item) {
-            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+            if (Boolean.TRUE.equals(item.hasMetadata())) {
+                if (item.buildMetadata().getLabels() == null) {
+                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
+                }
+                if (item.buildMetadata().getAnnotations() == null) {
+                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
+                }
+                return item.buildMetadata();
+            } else {
+                return item.withNewMetadata()
+                        .withLabels(Collections.emptyMap())
+                        .withAnnotations(Collections.emptyMap())
+                        .endMetadata().buildMetadata();
+            }
         }
     }
 
@@ -359,7 +516,20 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(IngressBuilder item) {
-            return item.hasMetadata() ? item.buildMetadata() : item.withNewMetadata().endMetadata().buildMetadata();
+            if (Boolean.TRUE.equals(item.hasMetadata())) {
+                if (item.buildMetadata().getLabels() == null) {
+                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
+                }
+                if (item.buildMetadata().getAnnotations() == null) {
+                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
+                }
+                return item.buildMetadata();
+            } else {
+                return item.withNewMetadata()
+                        .withLabels(Collections.emptyMap())
+                        .withAnnotations(Collections.emptyMap())
+                        .endMetadata().buildMetadata();
+            }
         }
     }
 }

@@ -81,9 +81,10 @@ public class PatchServiceTest {
                 .build();
         Secret newSecret = new SecretBuilder()
                 .withNewMetadata().withName("secret").endMetadata()
-                .addToStringData("test", "test")
+                .withData(Collections.singletonMap("test", "test"))
                 .build();
         WebServerEventCollector<OpenShiftMockServer> collector = new WebServerEventCollector<>(mockServer);
+        OpenShiftMockServer mockServer = collector.getMockServer();
         mockServer.expect().get().withPath("/api/v1/namespaces/test/secrets/secret")
                 .andReply(collector.record("get-secret").andReturn(200, oldSecret)).always();
         mockServer.expect().patch().withPath("/api/v1/namespaces/test/secrets/secret")
@@ -92,13 +93,11 @@ public class PatchServiceTest {
                                 .addToStringData(oldSecret.getData()).build())).once();
 
         OpenShiftClient client = mockServer.createOpenShiftClient();
-
         PatchService patchService = new PatchService(client, log);
 
         patchService.compareAndPatchEntity("test", newSecret, oldSecret);
         collector.assertEventsRecordedInOrder("get-secret", "get-secret", "patch-secret");
-        assertEquals("[{\"op\":\"remove\",\"path\":\"/data\"},{\"op\":\"add\",\"path\":\"/stringData\",\"value\":{\"test\":\"test\"}}]", collector.getBodies().get(2));
-
+        assertEquals("[{\"op\":\"replace\",\"path\":\"/data/test\",\"value\":\"test\"}]", collector.getBodies().get(2));
     }
 
     @Test(expected = IllegalArgumentException.class)

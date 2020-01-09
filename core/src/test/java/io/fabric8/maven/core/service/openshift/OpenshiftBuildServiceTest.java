@@ -180,7 +180,7 @@ public class OpenshiftBuildServiceTest {
             // we should Foadd a better way to assert that a certain call has been made
             assertTrue(mockServer.getRequestCount() > 8);
             collector.assertEventsRecordedInOrder("build-config-check", "new-build-config", "pushed");
-            assertEquals("{\"apiVersion\":\"build.openshift.io/v1\",\"kind\":\"BuildConfig\",\"metadata\":{\"annotations\":{},\"labels\":{},\"name\":\"myapp-s2i-suffix2\"},\"spec\":{\"nodeSelector\":{},\"output\":{\"to\":{\"kind\":\"ImageStreamTag\",\"name\":\"myapp:latest\"}},\"source\":{\"type\":\"Binary\"},\"strategy\":{\"sourceStrategy\":{\"forcePull\":false,\"from\":{\"kind\":\"DockerImage\",\"name\":\"myapp\"}},\"type\":\"Source\"},\"triggers\":[]}}", collector.getBodies().get(1));
+            assertEquals("{\"apiVersion\":\"build.openshift.io/v1\",\"kind\":\"BuildConfig\",\"metadata\":{\"name\":\"myapp-s2i-suffix2\"},\"spec\":{\"output\":{\"to\":{\"kind\":\"ImageStreamTag\",\"name\":\"myapp:latest\"}},\"source\":{\"type\":\"Binary\"},\"strategy\":{\"sourceStrategy\":{\"forcePull\":false,\"from\":{\"kind\":\"DockerImage\",\"name\":\"myapp\"}},\"type\":\"Source\"},\"triggers\":[]}}", collector.getBodies().get(1));
             collector.assertEventsNotRecorded("patch-build-config");
         });
     }
@@ -204,7 +204,7 @@ public class OpenshiftBuildServiceTest {
             // we should Foadd a better way to assert that a certain call has been made
             assertTrue(mockServer.getRequestCount() > 8);
             collector.assertEventsRecordedInOrder("build-config-check", "new-build-config", "pushed");
-            assertEquals("{\"apiVersion\":\"build.openshift.io/v1\",\"kind\":\"BuildConfig\",\"metadata\":{\"annotations\":{},\"labels\":{},\"name\":\"myapp-s2i\"},\"spec\":{\"nodeSelector\":{},\"output\":{\"to\":{\"kind\":\"ImageStreamTag\",\"name\":\"myapp:latest\"}},\"source\":{\"type\":\"Binary\"},\"strategy\":{\"sourceStrategy\":{\"forcePull\":false,\"from\":{\"kind\":\"DockerImage\",\"name\":\"myapp\"}},\"type\":\"Source\"},\"triggers\":[]}}", collector.getBodies().get(1));
+            assertEquals("{\"apiVersion\":\"build.openshift.io/v1\",\"kind\":\"BuildConfig\",\"metadata\":{\"name\":\"myapp-s2i\"},\"spec\":{\"output\":{\"to\":{\"kind\":\"ImageStreamTag\",\"name\":\"myapp:latest\"}},\"source\":{\"type\":\"Binary\"},\"strategy\":{\"sourceStrategy\":{\"forcePull\":false,\"from\":{\"kind\":\"DockerImage\",\"name\":\"myapp\"}},\"type\":\"Source\"},\"triggers\":[]}}", collector.getBodies().get(1));
             collector.assertEventsNotRecorded("patch-build-config");
         });
     }
@@ -236,7 +236,7 @@ public class OpenshiftBuildServiceTest {
 
             assertTrue(mockServer.getRequestCount() > 8);
             collector.assertEventsRecordedInOrder("build-config-check", "new-build-config", "pushed");
-            assertEquals("{\"apiVersion\":\"build.openshift.io/v1\",\"kind\":\"BuildConfig\",\"metadata\":{\"annotations\":{},\"labels\":{},\"name\":\"myapp-docker\"},\"spec\":{\"nodeSelector\":{},\"output\":{\"to\":{\"kind\":\"ImageStreamTag\",\"name\":\"myapp:latest\"}},\"source\":{\"type\":\"Binary\"},\"strategy\":{\"dockerStrategy\":{\"from\":{\"kind\":\"DockerImage\",\"name\":\"myapp\"}},\"type\":\"Docker\"},\"triggers\":[]}}", collector.getBodies().get(1));
+            assertEquals("{\"apiVersion\":\"build.openshift.io/v1\",\"kind\":\"BuildConfig\",\"metadata\":{\"name\":\"myapp-docker\"},\"spec\":{\"output\":{\"to\":{\"kind\":\"ImageStreamTag\",\"name\":\"myapp:latest\"}},\"source\":{\"type\":\"Binary\"},\"strategy\":{\"dockerStrategy\":{\"from\":{\"kind\":\"DockerImage\",\"name\":\"myapp\"}},\"type\":\"Docker\"},\"triggers\":[]}}", collector.getBodies().get(1));
             collector.assertEventsNotRecorded("patch-build-config");
         });
     }
@@ -264,7 +264,7 @@ public class OpenshiftBuildServiceTest {
 
             assertTrue(mockServer.getRequestCount() > 8);
             collector.assertEventsRecordedInOrder("build-config-check", "new-build-config", "pushed");
-            assertEquals("{\"apiVersion\":\"build.openshift.io/v1\",\"kind\":\"BuildConfig\",\"metadata\":{\"annotations\":{},\"labels\":{},\"name\":\"myapp\"},\"spec\":{\"nodeSelector\":{},\"output\":{\"to\":{\"kind\":\"ImageStreamTag\",\"name\":\"myapp:latest\"}},\"source\":{\"type\":\"Binary\"},\"strategy\":{\"dockerStrategy\":{\"from\":{\"kind\":\"DockerImage\",\"name\":\"myapp\"}},\"type\":\"Docker\"},\"triggers\":[]}}", collector.getBodies().get(1));
+            assertEquals("{\"apiVersion\":\"build.openshift.io/v1\",\"kind\":\"BuildConfig\",\"metadata\":{\"name\":\"myapp\"},\"spec\":{\"output\":{\"to\":{\"kind\":\"ImageStreamTag\",\"name\":\"myapp:latest\"}},\"source\":{\"type\":\"Binary\"},\"strategy\":{\"dockerStrategy\":{\"from\":{\"kind\":\"DockerImage\",\"name\":\"myapp\"}},\"type\":\"Docker\"},\"triggers\":[]}}", collector.getBodies().get(1));
             collector.assertEventsNotRecorded("patch-build-config");
         });
     }
@@ -307,7 +307,7 @@ public class OpenshiftBuildServiceTest {
 
             assertTrue(mockServer.getRequestCount() > 8);
             collector.assertEventsRecordedInOrder("build-config-check", "new-build-config", "pushed");
-            assertEquals("{\"apiVersion\":\"build.openshift.io/v1\",\"kind\":\"BuildConfig\",\"metadata\":{\"annotations\":{},\"labels\":{},\"name\":\"myapp-docker\"},\"spec\":{\"nodeSelector\":{},\"output\":{\"to\":{\"kind\":\"ImageStreamTag\",\"name\":\"myapp:latest\"}},\"source\":{\"type\":\"Binary\"},\"strategy\":{\"dockerStrategy\":{\"from\":{\"kind\":\"ImageStreamTag\",\"name\":\"app:1.2-1\",\"namespace\":\"my-project\"},\"noCache\":true},\"type\":\"Docker\"},\"triggers\":[]}}", collector.getBodies().get(1));
+            assertEquals("{\"apiVersion\":\"build.openshift.io/v1\",\"kind\":\"BuildConfig\",\"metadata\":{\"name\":\"myapp-docker\"},\"spec\":{\"output\":{\"to\":{\"kind\":\"ImageStreamTag\",\"name\":\"myapp:latest\"}},\"source\":{\"type\":\"Binary\"},\"strategy\":{\"dockerStrategy\":{\"from\":{\"kind\":\"ImageStreamTag\",\"name\":\"app:1.2-1\",\"namespace\":\"my-project\"},\"noCache\":true},\"type\":\"Docker\"},\"triggers\":[]}}", collector.getBodies().get(1));
             collector.assertEventsNotRecorded("patch-build-config");
         });
     }
