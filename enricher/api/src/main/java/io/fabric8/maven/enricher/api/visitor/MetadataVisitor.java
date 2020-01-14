@@ -17,6 +17,7 @@ package io.fabric8.maven.enricher.api.visitor;
 
 import io.fabric8.kubernetes.api.builder.TypedVisitor;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.ObjectMetaFluent;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
@@ -29,7 +30,6 @@ import io.fabric8.kubernetes.api.model.extensions.IngressBuilder;
 import io.fabric8.maven.core.config.MetaDataConfig;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.ResourceConfig;
-import io.fabric8.maven.enricher.api.Enricher;
 import io.fabric8.maven.enricher.api.Kind;
 import io.fabric8.openshift.api.model.BuildBuilder;
 import io.fabric8.openshift.api.model.BuildConfigBuilder;
@@ -38,9 +38,9 @@ import io.fabric8.openshift.api.model.ImageStreamBuilder;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Supplier;
 
 /**
  * Visitor which adds labels and annotations
@@ -50,11 +50,9 @@ import java.util.Properties;
  */
 public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
-
     private static ThreadLocal<ProcessorConfig> configHolder = new ThreadLocal<>();
     private final Map<String, String> labelsFromConfig;
     private final Map<String, String> annotationFromConfig;
-    private List<Enricher> enrichers = null;
 
     private MetadataVisitor(ResourceConfig resourceConfig) {
         if (resourceConfig != null) {
@@ -64,8 +62,6 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
             labelsFromConfig = new HashMap<>();
             annotationFromConfig = new HashMap<>();
         }
-
-        this.enrichers = enrichers;
     }
 
     public static void setProcessorConfig(ProcessorConfig config) {
@@ -148,7 +144,7 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
     protected abstract ObjectMeta getOrCreateMetadata(T item);
 
     private Map<String, String> ensureMap(Map<String, String> labels) {
-        return labels != null ? labels : new HashMap<String, String>();
+        return labels != null ? labels : new HashMap<>();
     }
 
 
@@ -167,20 +163,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(PodTemplateSpecBuilder item) {
-            if (Boolean.TRUE.equals(item.hasMetadata())) {
-                if (item.buildMetadata().getLabels() == null) {
-                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
-                }
-                if (item.buildMetadata().getAnnotations() == null) {
-                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
-                }
-                return item.buildMetadata();
-            } else {
-                return item.withNewMetadata()
-                        .withLabels(Collections.emptyMap())
-                        .withAnnotations(Collections.emptyMap())
-                        .endMetadata().buildMetadata();
-            }
+            return addEmptyLabelsAndAnnotations(item::hasMetadata, item::withNewMetadata, item::editMetadata, item::buildMetadata)
+                    .endMetadata().buildMetadata();
         }
     }
 
@@ -197,20 +181,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(ServiceBuilder item) {
-            if (Boolean.TRUE.equals(item.hasMetadata())) {
-                if (item.buildMetadata().getLabels() == null) {
-                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
-                }
-                if (item.buildMetadata().getAnnotations() == null) {
-                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
-                }
-                return item.buildMetadata();
-            } else {
-                return item.withNewMetadata()
-                        .withLabels(Collections.emptyMap())
-                        .withAnnotations(Collections.emptyMap())
-                        .endMetadata().buildMetadata();
-            }
+            return addEmptyLabelsAndAnnotations(item::hasMetadata, item::withNewMetadata, item::editMetadata, item::buildMetadata)
+                    .endMetadata().buildMetadata();
         }
     }
 
@@ -226,20 +198,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(ReplicaSetBuilder item) {
-            if (Boolean.TRUE.equals(item.hasMetadata())) {
-                if (item.buildMetadata().getLabels() == null) {
-                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
-                }
-                if (item.buildMetadata().getAnnotations() == null) {
-                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
-                }
-                return item.buildMetadata();
-            } else {
-                return item.withNewMetadata()
-                        .withLabels(Collections.emptyMap())
-                        .withAnnotations(Collections.emptyMap())
-                        .endMetadata().buildMetadata();
-            }
+            return addEmptyLabelsAndAnnotations(item::hasMetadata, item::withNewMetadata, item::editMetadata, item::buildMetadata)
+                    .endMetadata().buildMetadata();
         }
     }
 
@@ -255,20 +215,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(ReplicationControllerBuilder item) {
-            if (Boolean.TRUE.equals(item.hasMetadata())) {
-                if (item.buildMetadata().getLabels() == null) {
-                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
-                }
-                if (item.buildMetadata().getAnnotations() == null) {
-                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
-                }
-                return item.buildMetadata();
-            } else {
-                return item.withNewMetadata()
-                        .withLabels(Collections.emptyMap())
-                        .withAnnotations(Collections.emptyMap())
-                        .endMetadata().buildMetadata();
-            }
+            return addEmptyLabelsAndAnnotations(item::hasMetadata, item::withNewMetadata, item::editMetadata, item::buildMetadata)
+                    .endMetadata().buildMetadata();
         }
     }
 
@@ -284,20 +232,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(DeploymentBuilder item) {
-            if (Boolean.TRUE.equals(item.hasMetadata())) {
-                if (item.buildMetadata().getLabels() == null) {
-                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
-                }
-                if (item.buildMetadata().getAnnotations() == null) {
-                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
-                }
-                return item.buildMetadata();
-            } else {
-                return item.withNewMetadata()
-                        .withLabels(Collections.emptyMap())
-                        .withAnnotations(Collections.emptyMap())
-                        .endMetadata().buildMetadata();
-            }
+            return addEmptyLabelsAndAnnotations(item::hasMetadata, item::withNewMetadata, item::editMetadata, item::buildMetadata)
+                    .endMetadata().buildMetadata();
         }
     }
 
@@ -313,20 +249,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(DeploymentConfigBuilder item) {
-            if (Boolean.TRUE.equals(item.hasMetadata())) {
-                if (item.buildMetadata().getLabels() == null) {
-                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
-                }
-                if (item.buildMetadata().getAnnotations() == null) {
-                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
-                }
-                return item.buildMetadata();
-            } else {
-                return item.withNewMetadata()
-                        .withLabels(Collections.emptyMap())
-                        .withAnnotations(Collections.emptyMap())
-                        .endMetadata().buildMetadata();
-            }
+            return addEmptyLabelsAndAnnotations(item::hasMetadata, item::withNewMetadata, item::editMetadata, item::buildMetadata)
+                    .endMetadata().buildMetadata();
         }
     }
 
@@ -342,20 +266,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(DaemonSetBuilder item) {
-            if (Boolean.TRUE.equals(item.hasMetadata())) {
-                if (item.buildMetadata().getLabels() == null) {
-                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
-                }
-                if (item.buildMetadata().getAnnotations() == null) {
-                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
-                }
-                return item.buildMetadata();
-            } else {
-                return item.withNewMetadata()
-                        .withLabels(Collections.emptyMap())
-                        .withAnnotations(Collections.emptyMap())
-                        .endMetadata().buildMetadata();
-            }
+            return addEmptyLabelsAndAnnotations(item::hasMetadata, item::withNewMetadata, item::editMetadata, item::buildMetadata)
+                    .endMetadata().buildMetadata();
         }
     }
 
@@ -371,20 +283,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(StatefulSetBuilder item) {
-            if (Boolean.TRUE.equals(item.hasMetadata())) {
-                if (item.buildMetadata().getLabels() == null) {
-                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
-                }
-                if (item.buildMetadata().getAnnotations() == null) {
-                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
-                }
-                return item.buildMetadata();
-            } else {
-                return item.withNewMetadata()
-                        .withLabels(Collections.emptyMap())
-                        .withAnnotations(Collections.emptyMap())
-                        .endMetadata().buildMetadata();
-            }
+            return addEmptyLabelsAndAnnotations(item::hasMetadata, item::withNewMetadata, item::editMetadata, item::buildMetadata)
+                    .endMetadata().buildMetadata();
         }
     }
 
@@ -400,20 +300,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(JobBuilder item) {
-            if (Boolean.TRUE.equals(item.hasMetadata())) {
-                if (item.buildMetadata().getLabels() == null) {
-                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
-                }
-                if (item.buildMetadata().getAnnotations() == null) {
-                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
-                }
-                return item.buildMetadata();
-            } else {
-                return item.withNewMetadata()
-                        .withLabels(Collections.emptyMap())
-                        .withAnnotations(Collections.emptyMap())
-                        .endMetadata().buildMetadata();
-            }
+            return addEmptyLabelsAndAnnotations(item::hasMetadata, item::withNewMetadata, item::editMetadata, item::buildMetadata)
+                    .endMetadata().buildMetadata();
         }
     }
 
@@ -429,20 +317,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(ImageStreamBuilder item) {
-            if (Boolean.TRUE.equals(item.hasMetadata())) {
-                if (item.buildMetadata().getLabels() == null) {
-                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
-                }
-                if (item.buildMetadata().getAnnotations() == null) {
-                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
-                }
-                return item.buildMetadata();
-            } else {
-                return item.withNewMetadata()
-                        .withLabels(Collections.emptyMap())
-                        .withAnnotations(Collections.emptyMap())
-                        .endMetadata().buildMetadata();
-            }
+            return addEmptyLabelsAndAnnotations(item::hasMetadata, item::withNewMetadata, item::editMetadata, item::buildMetadata)
+                    .endMetadata().buildMetadata();
         }
     }
 
@@ -458,20 +334,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(BuildConfigBuilder item) {
-            if (Boolean.TRUE.equals(item.hasMetadata())) {
-                if (item.buildMetadata().getLabels() == null) {
-                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
-                }
-                if (item.buildMetadata().getAnnotations() == null) {
-                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
-                }
-                return item.buildMetadata();
-            } else {
-                return item.withNewMetadata()
-                        .withLabels(Collections.emptyMap())
-                        .withAnnotations(Collections.emptyMap())
-                        .endMetadata().buildMetadata();
-            }
+            return addEmptyLabelsAndAnnotations(item::hasMetadata, item::withNewMetadata, item::editMetadata, item::buildMetadata)
+                    .endMetadata().buildMetadata();
         }
     }
 
@@ -487,20 +351,8 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(BuildBuilder item) {
-            if (Boolean.TRUE.equals(item.hasMetadata())) {
-                if (item.buildMetadata().getLabels() == null) {
-                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
-                }
-                if (item.buildMetadata().getAnnotations() == null) {
-                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
-                }
-                return item.buildMetadata();
-            } else {
-                return item.withNewMetadata()
-                        .withLabels(Collections.emptyMap())
-                        .withAnnotations(Collections.emptyMap())
-                        .endMetadata().buildMetadata();
-            }
+            return addEmptyLabelsAndAnnotations(item::hasMetadata, item::withNewMetadata, item::editMetadata, item::buildMetadata)
+                    .endMetadata().buildMetadata();
         }
     }
 
@@ -516,20 +368,26 @@ public abstract class MetadataVisitor<T> extends TypedVisitor<T> {
 
         @Override
         protected ObjectMeta getOrCreateMetadata(IngressBuilder item) {
-            if (Boolean.TRUE.equals(item.hasMetadata())) {
-                if (item.buildMetadata().getLabels() == null) {
-                    item.editMetadata().withLabels(Collections.EMPTY_MAP).endMetadata();
-                }
-                if (item.buildMetadata().getAnnotations() == null) {
-                    item.editMetadata().withAnnotations(Collections.EMPTY_MAP).endMetadata();
-                }
-                return item.buildMetadata();
-            } else {
-                return item.withNewMetadata()
-                        .withLabels(Collections.emptyMap())
-                        .withAnnotations(Collections.emptyMap())
-                        .endMetadata().buildMetadata();
-            }
+            return addEmptyLabelsAndAnnotations(item::hasMetadata, item::withNewMetadata, item::editMetadata, item::buildMetadata)
+                    .endMetadata().buildMetadata();
         }
+    }
+
+    private static <T extends ObjectMetaFluent<?>> T addEmptyLabelsAndAnnotations(
+            Supplier<Boolean> hasMetadata, Supplier<T> withNewMetadata, Supplier<T> editMetadata, Supplier<ObjectMeta> buildMetadata) {
+        final T ret;
+        if (Boolean.TRUE.equals(hasMetadata.get())) {
+            ret = editMetadata.get();
+            if (buildMetadata.get().getLabels() == null) {
+                ret.withLabels(Collections.emptyMap());
+            }
+            if (buildMetadata.get().getAnnotations() == null) {
+                ret.withAnnotations(Collections.emptyMap());
+            }
+        } else {
+            ret = withNewMetadata.get();
+            ret.withLabels(Collections.emptyMap()).withAnnotations(Collections.emptyMap());
+        }
+        return ret;
     }
 }
