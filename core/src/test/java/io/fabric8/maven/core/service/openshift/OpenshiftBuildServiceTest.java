@@ -487,8 +487,10 @@ public class OpenshiftBuildServiceTest {
             BuildConfig buildConfig = (BuildConfig) builder.buildFirstItem();
             assertNotNull(buildConfig);
             assertNotNull(buildConfig.getSpec().getResources());
-            assertEquals("256Mi", buildConfig.getSpec().getResources().getLimits().get("memory").getAmount());
-            assertEquals("100m", buildConfig.getSpec().getResources().getLimits().get("cpu").getAmount());
+            assertEquals("256", buildConfig.getSpec().getResources().getLimits().get("memory").getAmount());
+            assertEquals("Mi", buildConfig.getSpec().getResources().getLimits().get("memory").getFormat());
+            assertEquals("100", buildConfig.getSpec().getResources().getLimits().get("cpu").getAmount());
+            assertEquals("m", buildConfig.getSpec().getResources().getLimits().get("cpu").getFormat());
         });
 
     }
