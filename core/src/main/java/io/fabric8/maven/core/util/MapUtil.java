@@ -28,7 +28,7 @@ public class MapUtil {
      * Adds the given key and value pair into the map if the map does not already contain a value for that key
      */
     public static void putIfAbsent(Map<String, String> map, String name, String value) {
-        if (!map.containsKey(name)) {
+        if (map != null && !map.containsKey(name)) {
             map.put(name, value);
         }
     }

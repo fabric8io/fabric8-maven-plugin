@@ -37,6 +37,7 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.LocalObjectReferenceBuilder;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Status;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
@@ -67,6 +68,7 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.BuildConfigSpec;
+import io.fabric8.openshift.api.model.BuildConfigSpecBuilder;
 import io.fabric8.openshift.api.model.BuildOutput;
 import io.fabric8.openshift.api.model.BuildOutputBuilder;
 import io.fabric8.openshift.api.model.BuildSource;
@@ -84,6 +86,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 public class OpenshiftBuildService implements BuildService {
 
     private static final String DEFAULT_S2I_BUILD_SUFFIX = "-s2i";
+    public static final String DEFAULT_S2I_SOURCE_TYPE = "Binary";
 
     private final OpenShiftClient client;
     private final Logger log;
@@ -199,7 +202,7 @@ public class OpenshiftBuildService implements BuildService {
         config.attachArtifact("is", getImageStreamFile(config));
     }
 
-    private String updateOrCreateBuildConfig(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder, ImageConfiguration imageConfig, String openshiftPullSecret) {
+    protected String updateOrCreateBuildConfig(BuildServiceConfig config, OpenShiftClient client, KubernetesListBuilder builder, ImageConfiguration imageConfig, String openshiftPullSecret) {
         ImageName imageName = new ImageName(imageConfig.getName());
         String buildName = getS2IBuildName(config, imageName);
         String imageStreamName = getImageStreamName(imageName);
@@ -236,8 +239,8 @@ public class OpenshiftBuildService implements BuildService {
         BuildSource source = spec.getSource();
         if (source != null) {
             String sourceType = source.getType();
-            if (!Objects.equals("Binary", sourceType)) {
-                log.warn("BuildServiceConfig %s is not of type: 'Binary' but is '%s' !", buildName, sourceType);
+            if (!Objects.equals(DEFAULT_S2I_SOURCE_TYPE, sourceType)) {
+                log.warn("BuildServiceConfig %s is not of type: '" + DEFAULT_S2I_SOURCE_TYPE + "' but is '%s' !", buildName, sourceType);
             }
         }
     }
@@ -257,15 +260,48 @@ public class OpenshiftBuildService implements BuildService {
                 .withNewMetadata()
                 .withName(buildName)
                 .endMetadata()
-                .withNewSpec()
-                .withNewSource()
-                .withType("Binary")
-                .endSource()
-                .withStrategy(buildStrategyResource)
-                .withOutput(buildOutput)
-                .endSpec()
+                .withSpec(getBuildConfigSpec(buildStrategyResource, buildOutput))
                 .endBuildConfigItem();
         return buildName;
+    }
+
+    private BuildConfigSpec getBuildConfigSpec(BuildStrategy buildStrategyResource, BuildOutput buildOutput) {
+        BuildConfigSpecBuilder specBuilder = null;
+
+        // Check for BuildConfig resource fragment
+        File buildConfigResourceFragment = KubernetesResourceUtil.getResourceFragmentFromSource(config.getResourceDir(), config.getResourceConfig(), "buildconfig.yml", log);
+        if (buildConfigResourceFragment != null) {
+            BuildConfig buildConfigFragment = client.buildConfigs().load(buildConfigResourceFragment).get();
+            specBuilder = new BuildConfigSpecBuilder(buildConfigFragment.getSpec());
+        } else {
+            specBuilder = new BuildConfigSpecBuilder();
+        }
+
+        if (specBuilder.buildSource() == null) {
+            specBuilder.withNewSource()
+                    .withType(DEFAULT_S2I_SOURCE_TYPE)
+                    .endSource();
+        }
+
+        if (specBuilder.buildStrategy() == null) {
+            specBuilder.withStrategy(buildStrategyResource);
+        }
+
+        if (specBuilder.buildOutput() == null) {
+            specBuilder.withOutput(buildOutput);
+        }
+
+        if (config.getResourceConfig() != null && config.getResourceConfig().getOpenshiftBuildConfig() != null) {
+            Map<String, Quantity> limits = KubernetesResourceUtil.getQuantityFromString(config.getResourceConfig().getOpenshiftBuildConfig().getLimits());
+            if (limits != null && !limits.isEmpty()) {
+                specBuilder.editOrNewResources().addToLimits(limits).endResources();
+            }
+            Map<String, Quantity> requests = KubernetesResourceUtil.getQuantityFromString(config.getResourceConfig().getOpenshiftBuildConfig().getRequests());
+            if (limits != null && !limits.isEmpty()) {
+                specBuilder.editOrNewResources().addToRequests(requests).endResources() ;
+            }
+        }
+        return specBuilder.build();
     }
 
     private String updateBuildConfig(OpenShiftClient client, String buildName, BuildStrategy buildStrategy,

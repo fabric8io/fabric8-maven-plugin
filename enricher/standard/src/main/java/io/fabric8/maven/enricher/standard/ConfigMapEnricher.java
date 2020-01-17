@@ -130,7 +130,7 @@ public class ConfigMapEnricher extends BaseEnricher {
                 }
             }
 
-            if (!configMapBuilder.getData().isEmpty() || !configMapBuilder.getBinaryData().isEmpty()) {
+            if (configMapBuilder.getData() != null && !configMapBuilder.getData().isEmpty() || !configMapBuilder.getBinaryData().isEmpty()) {
                 builder.addToConfigMapItems(configMapBuilder.build());
             }
         } catch (IOException e) {

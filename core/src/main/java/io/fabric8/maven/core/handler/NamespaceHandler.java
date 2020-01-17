@@ -17,6 +17,7 @@ package io.fabric8.maven.core.handler;
 
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceStatus;
+import io.fabric8.kubernetes.api.model.NamespaceStatusBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
@@ -26,7 +27,7 @@ public class NamespaceHandler {
     public Namespace getNamespace(String ns) {
         Namespace namespace = new Namespace();
         namespace.setMetadata(createProjectMetaData(ns));
-        namespace.setStatus(new NamespaceStatus("active"));
+        namespace.setStatus(new NamespaceStatusBuilder().withPhase("Active").build());
         return namespace;
     }
 

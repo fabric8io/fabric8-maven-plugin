@@ -30,6 +30,7 @@ import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.openshift.api.model.Project;
 import io.fabric8.openshift.api.model.ProjectBuilder;
 import io.fabric8.openshift.api.model.ProjectStatus;
+import io.fabric8.openshift.api.model.ProjectStatusBuilder;
 
 import java.util.Arrays;
 
@@ -142,7 +143,7 @@ public class DefaultNamespaceEnricher extends BaseEnricher {
         builder.accept(new TypedVisitor<ProjectBuilder>() {
             @Override
             public void visit(ProjectBuilder builder) {
-                if (builder.getStatus().equals(new ProjectStatus("active"))) {
+                if (builder.getStatus().equals(new ProjectStatusBuilder().withPhase("Active").build())) {
                     builder.editOrNewStatus().endStatus().build();
                 }
             }

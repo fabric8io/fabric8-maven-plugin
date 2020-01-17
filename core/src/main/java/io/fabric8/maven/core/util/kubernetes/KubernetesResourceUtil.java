@@ -40,6 +40,7 @@ import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.apps.DaemonSet;
@@ -55,6 +56,7 @@ import io.fabric8.kubernetes.api.model.batch.Job;
 import io.fabric8.kubernetes.api.model.batch.JobSpec;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.internal.HasMetadataComparator;
+import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.util.FileUtil;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
@@ -1061,16 +1063,19 @@ public class KubernetesResourceUtil {
      * when overriding
      */
     private static Map<String, String> mergeMapsAndRemoveEmptyStrings(Map<String, String> overrideMap, Map<String, String> originalMap) {
-        Map<String, String> answer = MapUtil.mergeMaps(overrideMap, originalMap);
-        Set<Map.Entry<String, String>> entries = overrideMap.entrySet();
-        for (Map.Entry<String, String> entry : entries) {
-            String value = entry.getValue();
-            if (value == null || value.isEmpty()) {
-                String key = entry.getKey();
-                answer.remove(key);
+        if (overrideMap != null) {
+            Map<String, String> answer = MapUtil.mergeMaps(overrideMap, originalMap);
+            Set<Map.Entry<String, String>> entries = overrideMap.entrySet();
+            for (Map.Entry<String, String> entry : entries) {
+                String value = entry.getValue();
+                if (value == null || value.isEmpty()) {
+                    String key = entry.getKey();
+                    answer.remove(key);
+                }
             }
+            return answer;
         }
-        return answer;
+        return null;
     }
 
     // lets use presence of an image name as a clue that we are just enriching things a little
@@ -1084,5 +1089,45 @@ public class KubernetesResourceUtil {
             }
         }
         return true;
+    }
+
+    /**
+     * Get a specific resource fragment ending with some suffix
+     *
+     * @param resourceDirFinal resource directory
+     * @param resourceConfig resource config in case remote fragments are provided
+     * @param resourceNameSuffix resource name suffix
+     * @param log log object
+     * @return file if present or null
+     */
+    public static File getResourceFragmentFromSource(File resourceDirFinal, ResourceConfig resourceConfig, String resourceNameSuffix, Logger log) {
+        if (resourceDirFinal != null) {
+            File[] resourceFiles = KubernetesResourceUtil.listResourceFragments(resourceDirFinal, resourceConfig != null ? resourceConfig.getRemotes() : null, log);
+
+            if (resourceFiles != null) {
+                for (File file : resourceFiles) {
+                    if (file.getName().endsWith(resourceNameSuffix)) {
+                        return file;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get requests or limit objects from string hashmaps
+     *
+     * @param quantity hashmap of strings
+     * @return hashmap of string to quantity
+     */
+    public static Map<String, Quantity> getQuantityFromString(Map<String, String> quantity) {
+        Map<String, Quantity> stringQuantityMap = new HashMap<>();
+        if (quantity != null && !quantity.isEmpty()) {
+            for (Map.Entry<String, String> entry : quantity.entrySet()) {
+                stringQuantityMap.put(entry.getKey(), new Quantity(entry.getValue()));
+            }
+        }
+        return stringQuantityMap;
     }
 }
