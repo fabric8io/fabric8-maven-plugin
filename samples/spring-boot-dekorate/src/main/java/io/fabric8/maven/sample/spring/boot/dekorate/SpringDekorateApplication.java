@@ -15,18 +15,35 @@
  */
 package io.fabric8.maven.sample.spring.boot.dekorate;
 
+import io.dekorate.docker.annotation.DockerBuild;
 import io.dekorate.kubernetes.annotation.KubernetesApplication;
 import io.dekorate.kubernetes.annotation.Label;
+import io.dekorate.kubernetes.annotation.ServiceType;
 import io.dekorate.openshift.annotation.OpenshiftApplication;
+import io.dekorate.s2i.annotation.S2iBuild;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@OpenshiftApplication(labels = {
-    @Label(key = "decorated-by", value = "dekorate-openshift")
-})
-@KubernetesApplication(labels = {
-    @Label(key = "decorated-by", value = "dekorate-kubernetes")
-})
+@OpenshiftApplication(
+    labels = @Label(key = "decorated-by", value = "dekorate"),
+    group = "fabric8",
+    serviceType = ServiceType.NodePort
+)
+@KubernetesApplication(
+    labels = @Label(key = "decorated-by", value = "dekorate"),
+    group = "fabric8",
+    serviceType = ServiceType.NodePort
+)
+@DockerBuild(
+    group = "fabric8",
+    version = "latest",
+    name = "fabric8-maven-sample-spring-boot-dekorate"
+)
+@S2iBuild(
+    group = "fabric8",
+    version = "latest",
+    name = "fabric8-maven-sample-spring-boot-dekorate"
+)
 @SpringBootApplication
 public class SpringDekorateApplication {
 
