@@ -20,7 +20,8 @@ jobs:
   # Build Website
   doc:
     working_directory: ~/fabric8io/fmp-docs
-    machine: true
+    docker:
+    - image: circleci/openjdk:8u222-jdk
     steps:
     - checkout
     - run: git config --global user.email "circleci@fabric8.io"
@@ -30,7 +31,8 @@ jobs:
   # Run build with jacoco enabled
   build:
     working_directory: ~/fabric8io/fabric8-maven-plugin
-    machine: true
+    docker:
+    - image: circleci/openjdk:8u222-jdk
     steps:
     - checkout
     - restore_cache:
@@ -60,13 +62,37 @@ jobs:
   # Run Tests
   tests:
     working_directory: ~/fabric8io/fabric8-maven-plugin
-    machine: true
+    docker:
+    - image: circleci/openjdk:8u222-jdk
     steps:
     - checkout
     - restore_cache:
         key: fmp-{{ checksum "pom.xml" }}
     - run:
         command: |
+          # Run maven build
+          mvn clean install
+    - save_cache:
+        key: fmp-{{ checksum "pom.xml" }}
+        paths:
+        - ~/.m2
+
+  rebased-on-master-tests:
+    working_directory: ~/fabric8io/fabric8-maven-plugin
+    docker:
+    - image: circleci/openjdk:8u222-jdk
+    steps:
+    - checkout
+    - restore_cache:
+        key: fmp-{{ checksum "pom.xml" }}
+    - run:
+        command: |
+          git config user.name fabric8cd
+          git config user.email fabric8cd@fabric8.org
+          git remote add fabric8io https://github.com/fabric8io/fabric8-maven-plugin.git
+          git checkout master && git pull fabric8io master && git reset --hard fabric8io/master
+          git checkout -
+          git rebase master
           # Run maven build
           mvn clean install
     - save_cache:
@@ -94,7 +120,8 @@ jobs:
 
   license:
     working_directory: ~/fabric8io/fabric8-maven-plugin
-    machine: true
+    docker:
+    - image: circleci/openjdk:8u222-jdk
     steps:
     - checkout
     - restore_cache:
@@ -107,7 +134,8 @@ jobs:
 
   sonar-pr:
     working_directory: ~/fabric8io/fmp-sonar-pr
-    machine: true
+    docker:
+    - image: circleci/openjdk:8u222-jdk
     steps:
     - checkout
     - restore_cache:
@@ -134,7 +162,8 @@ jobs:
 
   sonar:
     working_directory: ~/fabric8io/fmp-sonar
-    machine: true
+    docker:
+    - image: circleci/openjdk:8u222-jdk
     steps:
     - checkout
     - restore_cache:
@@ -148,7 +177,8 @@ jobs:
         paths:
         - ~/.m2
   RELEASE:
-    machine: true
+    docker:
+    - image: circleci/openjdk:8u222-jdk
     steps:
     - checkout
     - run:
@@ -172,6 +202,7 @@ workflows:
     - build
     - build-java11
     - tests
+    - rebased-on-master-tests
     - tests-java11
     - license
     - sonar-pr
