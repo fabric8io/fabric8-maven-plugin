@@ -34,14 +34,13 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.BaseEnricher;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
 import java.util.Collections;
 import java.util.Map;
 
-import io.fabric8.maven.enricher.api.util.ProjectClassLoaders;
+import io.fabric8.maven.core.util.ProjectClassLoaders;
 import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;

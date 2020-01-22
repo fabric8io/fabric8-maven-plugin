@@ -23,7 +23,6 @@ import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import sun.rmi.runtime.Log;
 
 import java.util.HashMap;
 import java.util.Map;

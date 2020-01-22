@@ -52,3 +52,4 @@ Fabric8 maven plugin supports volume configuration in XML format in pom.xml. The
 | vsphereVolume | Used to mount a vSphere VMDK volume into your Pod.
 
 | downwardAPI | A downwardAPI volume is used to make downward API data available to applications. It mounts a directory and writes the requested data in plain text files.
+|===

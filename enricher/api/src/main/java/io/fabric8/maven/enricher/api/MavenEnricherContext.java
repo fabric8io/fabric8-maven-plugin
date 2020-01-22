@@ -15,15 +15,6 @@
  */
 package io.fabric8.maven.enricher.api;
 
-import java.io.File;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
-
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import io.fabric8.maven.core.config.ProcessorConfig;
@@ -32,10 +23,10 @@ import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.model.Dependency;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.core.util.MavenUtil;
+import io.fabric8.maven.core.util.ProjectClassLoaders;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.util.MavenConfigurationExtractor;
-import io.fabric8.maven.enricher.api.util.ProjectClassLoaders;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
@@ -44,6 +35,15 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+
+import java.io.File;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * The context given to each enricher from where it can extract build specific information.

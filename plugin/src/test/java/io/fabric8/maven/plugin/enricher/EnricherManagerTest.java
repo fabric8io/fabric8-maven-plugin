@@ -24,8 +24,7 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
-import io.fabric8.maven.enricher.api.util.ProjectClassLoaders;
-import java.net.URLClassLoader;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;

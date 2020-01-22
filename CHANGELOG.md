@@ -20,6 +20,7 @@ After this we will switch probably to real [Semantic Versioning 2.0.0](http://se
 * Fix #1755: Spring boot enricher does not produce a proper heath check and liveness check path when "/" is used.
 * Feature: Check maven.compiler.target property for base image detection.
 * Fix: Enrichers should resolve relative paths against project directory, not working directory
+* Feature #1483: Dekorate integration
 * Fix #1769: Display root cause of failure if available
 
 ### 4.3.1 (18-10-2019)

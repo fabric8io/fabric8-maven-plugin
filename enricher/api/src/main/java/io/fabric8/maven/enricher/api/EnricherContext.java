@@ -24,7 +24,7 @@ import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.model.Dependency;
 import io.fabric8.maven.core.model.GroupArtifactVersion;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.enricher.api.util.ProjectClassLoaders;
+import io.fabric8.maven.core.util.ProjectClassLoaders;
 
 public interface EnricherContext {
 

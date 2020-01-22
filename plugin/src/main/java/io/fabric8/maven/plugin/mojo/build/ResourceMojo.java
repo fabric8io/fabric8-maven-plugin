@@ -31,9 +31,7 @@ import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.core.util.ResourceClassifier;
 import io.fabric8.maven.core.util.ResourceFileType;
-import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.core.util.ValidationUtil;
-import io.fabric8.maven.core.util.kubernetes.KubernetesHelper;
 import io.fabric8.maven.core.util.kubernetes.KubernetesResourceUtil;
 import io.fabric8.maven.core.util.validator.ResourceValidator;
 import io.fabric8.maven.docker.AbstractDockerMojo;
@@ -50,8 +48,8 @@ import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.maven.plugin.mojo.AbstractFabric8Mojo;
 import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
 import io.fabric8.openshift.api.model.Template;
+import javax.validation.ConstraintViolationException;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -63,7 +61,6 @@ import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 
-import javax.validation.ConstraintViolationException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -77,6 +74,11 @@ import java.util.Properties;
 
 import static io.fabric8.maven.core.util.ResourceFileType.yaml;
 import static io.fabric8.maven.plugin.mojo.build.ApplyMojo.DEFAULT_OPENSHIFT_MANIFEST;
+import static io.fabric8.maven.plugin.mojo.build.ResourceMojoUtil.DEFAULT_RESOURCE_LOCATION;
+import static io.fabric8.maven.plugin.mojo.build.ResourceMojoUtil.getSingletonTemplate;
+import static io.fabric8.maven.plugin.mojo.build.ResourceMojoUtil.useDekorate;
+import static io.fabric8.maven.plugin.mojo.build.ResourceMojoUtil.writeIndividualResources;
+import static io.fabric8.maven.plugin.mojo.build.ResourceMojoUtil.writeResource;
 
 /**
  * Generates or copies the Kubernetes JSON file and attaches it to the build so its
@@ -285,6 +287,11 @@ public class ResourceMojo extends AbstractFabric8Mojo {
      */
     @Parameter(property = "fabric8.resourceType")
     private ResourceFileType resourceFileType = yaml;
+
+    // When resource generation is delegated to Dekorate, should fabric8 resources be merged with Dekorate's
+    @Parameter(property = "fabric8.mergeWithDekorate", defaultValue = "false")
+    private Boolean mergeWithDekorate;
+
     @Component
     private MavenProjectHelper projectHelper;
 
@@ -293,23 +300,6 @@ public class ResourceMojo extends AbstractFabric8Mojo {
 
     // resourceDirOpenShiftOverride when environment has been applied
     private File realResourceDirOpenShiftOverride;
-
-    /**
-     * Returns the Template if the list contains a single Template only otherwise returns null
-     */
-    protected static Template getSingletonTemplate(KubernetesList resources) {
-        // if the list contains a single Template lets unwrap it
-        if (resources != null) {
-            List<HasMetadata> items = resources.getItems();
-            if (items != null && items.size() == 1) {
-                HasMetadata singleEntity = items.get(0);
-                if (singleEntity instanceof Template) {
-                    return (Template) singleEntity;
-                }
-            }
-        }
-        return null;
-    }
 
     public static File writeResourcesIndividualAndComposite(KubernetesList resources, File resourceFileBase,
         ResourceFileType resourceFileType, Logger log) throws MojoExecutionException {
@@ -338,32 +328,18 @@ public class ResourceMojo extends AbstractFabric8Mojo {
         return file;
     }
 
-    private static void writeIndividualResources(KubernetesList resources, File targetDir,
-        ResourceFileType resourceFileType, Logger log) throws MojoExecutionException {
-        for (HasMetadata item : resources.getItems()) {
-            String name = KubernetesHelper.getName(item);
-            if (StringUtils.isBlank(name)) {
-                log.error("No name for generated item %s", item);
-                continue;
-            }
-            String itemFile = KubernetesResourceUtil.getNameWithSuffix(name, item.getKind());
-
-            File itemTarget = new File(targetDir, itemFile);
-            writeResource(itemTarget, item, resourceFileType);
-        }
-    }
-
-    private static File writeResource(File resourceFileBase, Object entity, ResourceFileType resourceFileType)
-        throws MojoExecutionException {
-        try {
-            return ResourceUtil.save(resourceFileBase, entity, resourceFileType);
-        } catch (IOException e) {
-            throw new MojoExecutionException("Failed to write resource to " + resourceFileBase + ". " + e, e);
-        }
-    }
-
+    @Override
     public void executeInternal() throws MojoExecutionException, MojoFailureException {
         if (skipResource) {
+            return;
+        }
+        if (useDekorate(project) && mergeWithDekorate) {
+            log.info("Dekorate detected, merging fabric8 and Dekorate resources");
+            System.setProperty("dekorate.input.dir", DEFAULT_RESOURCE_LOCATION);
+            System.setProperty("dekorate.output.dir", DEFAULT_RESOURCE_LOCATION);
+        } else if (useDekorate(project)) {
+            log.info("Dekorate detected, delegating resource build");
+            System.setProperty("dekorate.output.dir", DEFAULT_RESOURCE_LOCATION);
             return;
         }
 
