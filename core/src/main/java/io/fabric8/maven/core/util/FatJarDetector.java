@@ -57,11 +57,13 @@ public class FatJarDetector {
                     Attributes mainAttributes = mf.getMainAttributes();
                     if (mainAttributes != null) {
                         String mainClass = mainAttributes.getValue("Main-Class");
-                        long size = archiveFile.length();
-                        // Take the largest jar / war file found
-                        if (size > maxSize) {
-                            maxSize = size;
-                            result = new Result(archiveFile, mainClass, mainAttributes);
+                        if (mainClass != null) {
+                            long size = archiveFile.length();
+                            // Take the largest jar / war file found
+                            if (size > maxSize) {
+                                maxSize = size;
+                                result = new Result(archiveFile, mainClass, mainAttributes);
+                            }
                         }
                     }
                 } catch (IOException e) {
