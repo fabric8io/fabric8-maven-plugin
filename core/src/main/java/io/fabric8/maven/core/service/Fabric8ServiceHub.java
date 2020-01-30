@@ -24,17 +24,21 @@ import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.service.kubernetes.DockerBuildService;
 import io.fabric8.maven.core.service.kubernetes.JibBuildService;
 import io.fabric8.maven.core.service.openshift.OpenshiftBuildService;
+import io.fabric8.maven.core.util.JibAssemblyManager;
 import io.fabric8.maven.core.util.LazyBuilder;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.repository.RepositorySystem;
+import org.codehaus.plexus.component.annotations.Component;
+import org.codehaus.plexus.component.annotations.Requirement;
 
 /**
  * @author nicola
  * @since 17/02/2017
  */
+@Component(role = Fabric8ServiceHub.class, instantiationStrategy = "singleton")
 public class Fabric8ServiceHub {
 
     /*
@@ -64,6 +68,8 @@ public class Fabric8ServiceHub {
     private RuntimeMode resolvedMode;
 
     private KubernetesClient client;
+
+    private JibAssemblyManager jibAssemblyManager;
 
     private ConcurrentHashMap<Class<?>, LazyBuilder<?>> services = new ConcurrentHashMap<>();
 
@@ -102,7 +108,7 @@ public class Fabric8ServiceHub {
                 } else {
                     // Kubernetes services
                     if(isJib) {
-                        buildService = new JibBuildService(buildServiceConfig, log);
+                        buildService = new JibBuildService(buildServiceConfig, jibAssemblyManager, log);
                     } else {
                         buildService = new DockerBuildService(dockerServiceHub, buildServiceConfig);
                     }
@@ -173,6 +179,11 @@ public class Fabric8ServiceHub {
 
         public Builder mavenProject(MavenProject mavenProject) {
             hub.mavenProject = mavenProject;
+            return this;
+        }
+
+        public Builder assemblyManager(JibAssemblyManager jibAssemblyManager) {
+            hub.jibAssemblyManager= jibAssemblyManager;
             return this;
         }
 

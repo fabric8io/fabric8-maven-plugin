@@ -44,9 +44,6 @@ public interface BuildService {
      */
     void postProcess(BuildServiceConfig config);
 
-    default BuildServiceConfig getBuildServiceConfig() {
-        return null;
-    }
     /**
      * Class to hold configuration parameters for the building service.
      */
