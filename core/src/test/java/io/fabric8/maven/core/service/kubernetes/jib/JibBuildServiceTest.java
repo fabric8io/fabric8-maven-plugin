@@ -13,9 +13,8 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.core.service.kubernetes;
+package io.fabric8.maven.core.service.kubernetes.jib;
 
-import io.fabric8.maven.core.util.JibServiceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.Logger;

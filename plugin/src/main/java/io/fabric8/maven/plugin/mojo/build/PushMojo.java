@@ -22,7 +22,8 @@ import com.google.cloud.tools.jib.api.InvalidImageReferenceException;
 import com.google.cloud.tools.jib.api.TarImage;
 import com.google.cloud.tools.jib.plugins.common.logging.SingleThreadedExecutor;
 import io.fabric8.maven.core.util.Configs;
-import io.fabric8.maven.core.util.JibServiceUtil;
+import io.fabric8.maven.core.service.kubernetes.jib.JibServiceUtil;
+import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.service.RegistryService;
@@ -126,6 +127,8 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     @Parameter(property = "fabric8.push.jib.timeout", defaultValue = "60")
     private long pushTimeout;
 
+    private static final String DOCKER_REGISTRY = "docker.io";
+
     private static String EMPTY_STRING = "";
 
     private static String TAR_POSTFIX = ".tar";
@@ -196,12 +199,12 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
                 for (String tag : tags) {
                     if (tag != null) {
                         targetImage = new ImageName(imageConfiguration.getName(), tag).getFullName();
-                        JibServiceUtil.pushImage(baseImage, targetImage, pushCredential, singleThreadedExecutor, log, pushTimeout);
+                        JibServiceUtil.pushImage(baseImage, targetImage, pushCredential, singleThreadedExecutor, log);
                     }
                 }
             } else {
                 targetImage = new ImageName(imageConfiguration.getName()).getFullName();
-                JibServiceUtil.pushImage(baseImage, targetImage, pushCredential, singleThreadedExecutor, log, pushTimeout);
+                JibServiceUtil.pushImage(baseImage, targetImage, pushCredential, singleThreadedExecutor, log);
             }
 
             singleThreadedExecutor.shutDownAndAwaitTermination(Duration.ofSeconds(pushTimeout));
@@ -248,4 +251,5 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
             throw new IllegalArgumentException("Cannot extract generator config: " + e,e);
         }
     }
+
 }

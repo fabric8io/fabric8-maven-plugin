@@ -13,7 +13,7 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.core.util;
+package io.fabric8.maven.core.service.kubernetes.jib;
 
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
@@ -35,6 +35,7 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 
 public class JibAssemblyConfigurationSource implements AssemblerConfigurationSource {
@@ -58,25 +59,18 @@ public class JibAssemblyConfigurationSource implements AssemblerConfigurationSou
 
     @Override
     public String[] getDescriptors() {
-        if (assemblyConfig != null) {
-            String descriptor = assemblyConfig.getDescriptor();
-
-            if (descriptor != null) {
-                return new String[] {EnvUtil.prepareAbsoluteSourceDirPath(params, descriptor).getAbsolutePath() };
-            }
-        }
-        return new String[0];
+        return Optional.ofNullable(assemblyConfig)
+                .map(AssemblyConfiguration::getDescriptor)
+                .map(descriptor -> new String[] {EnvUtil.prepareAbsoluteSourceDirPath(params, descriptor).getAbsolutePath() })
+                .orElse(new String[0]);
     }
 
     @Override
     public String[] getDescriptorReferences() {
-        if (assemblyConfig != null) {
-            String descriptorRef = assemblyConfig.getDescriptorRef();
-            if (descriptorRef != null) {
-                return new String[]{descriptorRef};
-            }
-        }
-        return null;
+        return Optional.ofNullable(assemblyConfig)
+                .map(AssemblyConfiguration::getDescriptorRef)
+                .map(descripterRef -> new String[] {descripterRef})
+                .orElse(null);
     }
 
     // ============================================================================================
@@ -91,7 +85,6 @@ public class JibAssemblyConfigurationSource implements AssemblerConfigurationSou
         return buildDirs.getWorkingDirectory();
     }
 
-    // X
     @Override
     public File getTemporaryRootDirectory() {
         return buildDirs.getTemporaryRootDirectory();
@@ -99,7 +92,6 @@ public class JibAssemblyConfigurationSource implements AssemblerConfigurationSou
 
     @Override
     public String getFinalName() {
-        //return params.getProject().getBuild().getFinalName();
         return ".";
     }
 
@@ -134,13 +126,11 @@ public class JibAssemblyConfigurationSource implements AssemblerConfigurationSou
         return params.getArchiveConfiguration();
     }
 
-    // X
     @Override
     public String getEncoding() {
         return params.getProject().getProperties().getProperty("project.build.sourceEncoding");
     }
 
-    // X
     @Override
     public String getEscapeString() {
         return null;
@@ -188,31 +178,29 @@ public class JibAssemblyConfigurationSource implements AssemblerConfigurationSou
         return mainProjectInterpolator;
     }
 
-    // X
     @Override
     public MavenProject getProject() {
         return params.getProject();
     }
 
-    // X
     @Override
     public File getBasedir() {
         return params.getProject().getBasedir();
     }
 
-    // X
+
     @Override
     public boolean isIgnoreDirFormatExtensions() {
         return true;
     }
 
-    // X
+
     @Override
     public boolean isDryRun() {
         return false;
     }
 
-    // X
+
     @Override
     public List<String> getFilters() {
         return Collections.emptyList();
@@ -223,43 +211,42 @@ public class JibAssemblyConfigurationSource implements AssemblerConfigurationSou
         return true;
     }
 
-    // X
+
     @Override
     public File getDescriptorSourceDirectory() {
         return null;
     }
 
-    // X
+
     @Override
     public File getArchiveBaseDirectory() {
         return null;
     }
 
-    // X
+
     @Override
     public String getTarLongFileMode() {
         return assemblyConfig.getTarLongFileMode() == null ? "warn" : assemblyConfig.getTarLongFileMode();
     }
 
-    // X
+
     @Override
     public File getSiteDirectory() {
         return null;
     }
 
-    // X
+
     @Override
     public boolean isAssemblyIdAppended() {
         return false;
     }
 
-    // X
+
     @Override
     public boolean isIgnoreMissingDescriptor() {
         return false;
     }
 
-    // X: (maybe inject MavenArchiveConfiguration)
     @Override
     public String getArchiverConfig() {
         return null;

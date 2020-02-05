@@ -13,7 +13,7 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.core.util;
+package io.fabric8.maven.core.service.kubernetes.jib;
 
 import com.google.cloud.tools.jib.api.AbsoluteUnixPath;
 import com.google.cloud.tools.jib.api.CacheDirectoryCreationException;
@@ -38,7 +38,6 @@ import com.google.cloud.tools.jib.plugins.common.logging.ConsoleLoggerBuilder;
 import com.google.cloud.tools.jib.plugins.common.logging.ProgressDisplayGenerator;
 import com.google.cloud.tools.jib.plugins.common.logging.SingleThreadedExecutor;
 import io.fabric8.maven.core.service.BuildService;
-import io.fabric8.maven.core.service.kubernetes.JibBuildService;
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -52,7 +51,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
@@ -64,7 +62,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Class with the static utility methods consumed by io.fabric8.maven.core.service.kubernetes.JibBuildService.
+ * Class with the static utility methods consumed by JibBuildService.
  */
 public class JibServiceUtil {
 
@@ -81,7 +79,7 @@ public class JibServiceUtil {
      * @param log
      * @throws InvalidImageReferenceException
      */
-    public static void buildImage(JibBuildService.JibBuildConfiguration jibBuildConfiguration, JibAssemblyManager jibAssemblyManager, Logger log)
+    static void buildImage(JibBuildService.JibBuildConfiguration jibBuildConfiguration, JibAssemblyManager jibAssemblyManager, Logger log)
             throws InvalidImageReferenceException, MojoExecutionException, IOException {
 
         RegistryImage baseImage = jibBuildConfiguration.getFrom();
@@ -218,7 +216,7 @@ public class JibServiceUtil {
 
 
 
-    public static void buildContainer(JibContainerBuilder jibContainerBuilder, TarImage image, Logger logger) {
+    static void buildContainer(JibContainerBuilder jibContainerBuilder, TarImage image, Logger logger) {
         SingleThreadedExecutor singleThreadedExecutor = new SingleThreadedExecutor();
         try {
 
@@ -245,11 +243,11 @@ public class JibServiceUtil {
         }
     }
 
-    public static void log(LogEvent event) {
+    private static void log(LogEvent event) {
         consoleLogger.log(event.getLevel(), event.getMessage());
     }
 
-    public static ConsoleLogger getConsoleLogger(Logger logger, SingleThreadedExecutor executor) {
+    private static ConsoleLogger getConsoleLogger(Logger logger, SingleThreadedExecutor executor) {
         ConsoleLoggerBuilder consoleLoggerBuilder = ConsoleLoggerBuilder
                 .rich(executor, true)
                 .progress(logger::info)
@@ -262,7 +260,7 @@ public class JibServiceUtil {
         return consoleLoggerBuilder.build();
     }
 
-    public static JibBuildService.JibBuildConfiguration getJibBuildConfiguration(BuildService.BuildServiceConfig config, ImageConfiguration imageConfiguration, Logger log) throws MojoExecutionException, InvalidImageReferenceException {
+    static JibBuildService.JibBuildConfiguration getJibBuildConfiguration(BuildService.BuildServiceConfig config, ImageConfiguration imageConfiguration, Logger log) throws MojoExecutionException, InvalidImageReferenceException {
         BuildImageConfiguration buildImageConfiguration = imageConfiguration.getBuildConfiguration();
 
 
@@ -275,28 +273,27 @@ public class JibServiceUtil {
         RegistryImage baseRegistryImage = RegistryImage.named(baseImage);
         if (pullCredential!= null && !pullCredential.getUsername().isEmpty() && !pullCredential.getPassword().isEmpty()) {
             baseRegistryImage.addCredential(pullCredential.getUsername(), pullCredential.getPassword());
-
         }
         MojoParameters mojoParameters = config.getDockerMojoParameters();
         String outputDir = EnvUtil.prepareAbsoluteOutputDirPath(mojoParameters, "", "").getAbsolutePath();
 
 
-        JibBuildService.JibBuildConfiguration.Builder jibBuildConfigurationBuilder = new JibBuildService.JibBuildConfiguration
-                .Builder()
-                .from(baseRegistryImage)
-                .envMap(buildImageConfiguration.getEnv())
-                .ports(buildImageConfiguration.getPorts())
-                .entrypoint(buildImageConfiguration.getEntryPoint())
-                .targetImage(new ImageName(imageConfiguration.getName()).getRepository())
-                .outputDir(outputDir)
-                .labels(buildImageConfiguration.getLabels())
-                .volumes(buildImageConfiguration.getVolumes())
-                .workingDirectory(buildImageConfiguration.getWorkdir())
-                .assemblyConfiguration(buildImageConfiguration.getAssemblyConfiguration())
-                .mojoParameters(config.getDockerMojoParameters())
-                .user(buildImageConfiguration.getUser())
-                .cmd(buildImageConfiguration.getCmd());
-        return jibBuildConfigurationBuilder.build();
+        JibBuildService.JibBuildConfiguration jibBuildConfiguration = new JibBuildService.JibBuildConfiguration();
+
+        jibBuildConfiguration.setFrom(baseRegistryImage);
+        jibBuildConfiguration.setEnvMap(buildImageConfiguration.getEnv());
+        jibBuildConfiguration.setPorts(buildImageConfiguration.getPorts());
+        jibBuildConfiguration.setEntrypoint(buildImageConfiguration.getEntryPoint());
+        jibBuildConfiguration.setTarget(new ImageName(imageConfiguration.getName()).getRepository());
+        jibBuildConfiguration.setOutputDir(outputDir);
+        jibBuildConfiguration.setLabels(buildImageConfiguration.getLabels());
+        jibBuildConfiguration.setVolumes(buildImageConfiguration.getVolumes());
+        jibBuildConfiguration.setWorkDir(buildImageConfiguration.getWorkdir());
+        jibBuildConfiguration.setAssemblyConfiguration(buildImageConfiguration.getAssemblyConfiguration());
+        jibBuildConfiguration.setMojoParameters(config.getDockerMojoParameters());
+        jibBuildConfiguration.setUser(buildImageConfiguration.getUser());
+        jibBuildConfiguration.setCmd(buildImageConfiguration.getCmd());
+        return jibBuildConfiguration;
     }
 
     /**
@@ -307,7 +304,7 @@ public class JibServiceUtil {
      * @param logger
      * @throws InvalidImageReferenceException
      */
-    public static void pushImage(TarImage baseImage, String targetImageName, Credential credential, SingleThreadedExecutor executor, Logger logger, long timeout) throws IllegalStateException {
+    public static void pushImage(TarImage baseImage, String targetImageName, Credential credential, SingleThreadedExecutor executor, Logger logger) throws IllegalStateException {
         try {
             RegistryImage targetImage = RegistryImage.named(targetImageName);
             consoleLogger = getConsoleLogger(logger, executor);

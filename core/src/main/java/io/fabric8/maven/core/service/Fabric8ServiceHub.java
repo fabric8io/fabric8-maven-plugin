@@ -22,9 +22,9 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.service.kubernetes.DockerBuildService;
-import io.fabric8.maven.core.service.kubernetes.JibBuildService;
+import io.fabric8.maven.core.service.kubernetes.jib.JibBuildService;
 import io.fabric8.maven.core.service.openshift.OpenshiftBuildService;
-import io.fabric8.maven.core.util.JibAssemblyManager;
+import io.fabric8.maven.core.service.kubernetes.jib.JibAssemblyManager;
 import io.fabric8.maven.core.util.LazyBuilder;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.Logger;
@@ -32,7 +32,6 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.repository.RepositorySystem;
 import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 
 /**
  * @author nicola
