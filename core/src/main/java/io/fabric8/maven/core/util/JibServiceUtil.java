@@ -272,13 +272,18 @@ public class JibServiceUtil {
         String pullRegistry = EnvUtil.firstRegistryOf(new ImageName(baseImage).getRegistry(), config.getDockerBuildContext().getRegistryConfig().getRegistry(), imageConfiguration.getRegistry());
         Credential pullCredential = getRegistryCredentials(pullRegistry, config.getDockerBuildContext().getRegistryConfig());
 
+        RegistryImage baseRegistryImage = RegistryImage.named(baseImage);
+        if (pullCredential != null) {
+            baseRegistryImage.addCredential(pullCredential.getUsername(), pullCredential.getPassword());
+
+        }
         MojoParameters mojoParameters = config.getDockerMojoParameters();
         String outputDir = EnvUtil.prepareAbsoluteOutputDirPath(mojoParameters, "", "").getAbsolutePath();
 
 
         JibBuildService.JibBuildConfiguration.Builder jibBuildConfigurationBuilder = new JibBuildService.JibBuildConfiguration
                 .Builder()
-                .from(RegistryImage.named(baseImage).addCredential(pullCredential.getUsername(), pullCredential.getPassword()))
+                .from(baseRegistryImage)
                 .envMap(buildImageConfiguration.getEnv())
                 .ports(buildImageConfiguration.getPorts())
                 .entrypoint(buildImageConfiguration.getEntryPoint())
