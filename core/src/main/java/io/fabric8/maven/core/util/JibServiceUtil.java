@@ -273,7 +273,7 @@ public class JibServiceUtil {
         Credential pullCredential = getRegistryCredentials(pullRegistry, config.getDockerBuildContext().getRegistryConfig());
 
         RegistryImage baseRegistryImage = RegistryImage.named(baseImage);
-        if (pullCredential != null) {
+        if (pullCredential!= null && !pullCredential.getUsername().isEmpty() && !pullCredential.getPassword().isEmpty()) {
             baseRegistryImage.addCredential(pullCredential.getUsername(), pullCredential.getPassword());
 
         }
@@ -331,8 +331,6 @@ public class JibServiceUtil {
         }
     }
 
-
-
     private static Set<Port> getPortSet(List<String> ports) {
         Set<Port> portSet = new HashSet<>();
         for(String port : ports) {
@@ -340,21 +338,6 @@ public class JibServiceUtil {
         }
 
         return portSet;
-    }
-
-    public static Path getFatJar(String buildDir, Logger log) {
-        FatJarDetector fatJarDetector = new FatJarDetector(buildDir);
-        try {
-            FatJarDetector.Result result = fatJarDetector.scan();
-            if(result != null) {
-                return result.getArchiveFile().toPath();
-            }
-
-        } catch (MojoExecutionException e) {
-            log.error("MOJO Execution exception occurred: %s", e);
-            throw new UnsupportedOperationException();
-        }
-        return null;
     }
 
     public static Credential getRegistryCredentials(String registry, RegistryService.RegistryConfig registryConfig) throws MojoExecutionException {

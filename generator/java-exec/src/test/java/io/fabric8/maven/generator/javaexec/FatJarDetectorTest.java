@@ -1,4 +1,4 @@
-/**
+package io.fabric8.maven.generator.javaexec; /**
  * Copyright 2016 Red Hat, Inc.
  *
  * Red Hat licenses this file to you under the Apache License, version
@@ -13,7 +13,6 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.core.util;
 
 import java.io.File;
 import java.net.URL;

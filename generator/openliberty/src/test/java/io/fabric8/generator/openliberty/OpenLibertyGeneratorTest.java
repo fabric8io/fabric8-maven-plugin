@@ -29,7 +29,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
 
-import io.fabric8.maven.core.util.FatJarDetector;
+import io.fabric8.maven.generator.javaexec.FatJarDetector;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.generator.api.GeneratorContext;
