@@ -40,7 +40,8 @@ Usage:
 * Feature #1483: Dekorate integration
 * Fix #1769: Display root cause of failure if available
 * Fix #1776: fat jar wrongly detected on simple jar
-* Refator #1766: Jib Refactor
+* Revert #1738 #1737: Revert fixes
+* Refactor #1766: Jib Refactor
 
 ### 4.3.1 (18-10-2019)
 * Updated Kubernetes client to 4.6.1
@@ -50,6 +51,8 @@ Usage:
 * Fix #1732: Correctly replacing template placeholders in helm chart
 * Fix #1734: Add logging during jib builds
 * Fix #1696: Fix put operations for ImageStreams in ApplyService
+* Fix #1738: JibBuildConfiguration ignores BuildImageConfiguration.registry
+* Fix #1737: Wrong Jib output directory in Maven multi-module build
 
 ### 4.3.0 (04-10-2019)
 * Updated custom-enricher sample
