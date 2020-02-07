@@ -37,8 +37,8 @@ import com.google.cloud.tools.jib.plugins.common.logging.ConsoleLogger;
 import com.google.cloud.tools.jib.plugins.common.logging.ConsoleLoggerBuilder;
 import com.google.cloud.tools.jib.plugins.common.logging.ProgressDisplayGenerator;
 import com.google.cloud.tools.jib.plugins.common.logging.SingleThreadedExecutor;
-import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -54,12 +54,13 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Class with the static utility methods consumed by JibBuildService.
@@ -75,83 +76,17 @@ public class JibServiceUtil {
     private static final String BUSYBOX = "busybox:latest";
     /**
      * Builds a container image using JIB
-     * @param jibBuildConfiguration
-     * @param log
-     * @throws InvalidImageReferenceException
      */
-    static void buildImage(JibBuildService.JibBuildConfiguration jibBuildConfiguration, JibAssemblyManager jibAssemblyManager, Logger log)
+    static void buildImage(
+      MojoParameters mojoParameters, ImageConfiguration imageConfiguration, JibAssemblyManager jibAssemblyManager, Logger log)
             throws InvalidImageReferenceException, MojoExecutionException, IOException {
 
-        RegistryImage baseImage = jibBuildConfiguration.getFrom();
-        String targetImage = jibBuildConfiguration.getTargetImage();
-        Map<String, String> envMap  = jibBuildConfiguration.getEnvMap();
-        List<String> portList = jibBuildConfiguration.getPorts();
-        Set<Port> portSet = getPortSet(portList);
-        List<String> volumes = jibBuildConfiguration.getVolumes();
-        String  outputDir = jibBuildConfiguration.getOutputDir();
-        String workDir = jibBuildConfiguration.getWorkDir();
-        Map<String, String> labels = jibBuildConfiguration.getLabels();
-        List<String> entrypointList = new ArrayList<>();
-        List<String> cmdList = new ArrayList<>();
-
-        if(jibBuildConfiguration.getEntryPoint() != null) {
-            entrypointList = jibBuildConfiguration.getEntryPoint().asStrings();
-        }
-
-        if(jibBuildConfiguration.getCmd() != null) {
-            cmdList = jibBuildConfiguration.getCmd().asStrings();
-        }
-
-        final JibContainerBuilder containerBuilder = Jib.from(baseImage).setFormat(ImageFormat.OCI);
-
-        if (envMap != null) {
-            containerBuilder.setEnvironment(envMap);
-        }
-
-        if (portSet != null) {
-            containerBuilder.setExposedPorts(portSet);
-        }
-
-        if (labels != null) {
-            labels.entrySet().stream().forEach(entry -> {
-                containerBuilder.addLabel(entry.getKey(), entry.getValue());
-            });
-        }
-
-        if(!entrypointList.isEmpty()) {
-            containerBuilder.setEntrypoint(entrypointList);
-        }
-
-        if (!cmdList.isEmpty()) {
-            containerBuilder.setProgramArguments(cmdList);
-        }
-
-        if (workDir!= null && !workDir.isEmpty()) {
-            containerBuilder.setWorkingDirectory(AbsoluteUnixPath.get(workDir));
-        }
-
-        final Set<AbsoluteUnixPath> volumePaths = new HashSet<>();
-        volumes.forEach(volume -> volumePaths.add(AbsoluteUnixPath.get(volume)));
-        containerBuilder.setVolumes(volumePaths);
-
-        addAssemblyFiles(containerBuilder, jibAssemblyManager, jibBuildConfiguration.getAssemblyConfiguration(),
-                jibBuildConfiguration.getMojoParameters(), targetImage, log);
-
-        if (workDir!= null && !workDir.isEmpty()) {
-            containerBuilder.setWorkingDirectory(AbsoluteUnixPath.get(workDir));
-        }
-
-        if (jibBuildConfiguration.getUser() != null) {
-            containerBuilder.setUser(jibBuildConfiguration.getUser());
-        }
-
-        if(!entrypointList.isEmpty()) {
-            containerBuilder.setEntrypoint(entrypointList);
-        }
-
-        if (!cmdList.isEmpty()) {
-            containerBuilder.setProgramArguments(cmdList);
-        }
+        final JibContainerBuilder containerBuilder = containerFromImageConfiguration(imageConfiguration);
+        final String targetImage = imageNameFromImageConfiguration(imageConfiguration);
+        final String outputDir = EnvUtil.prepareAbsoluteOutputDirPath(mojoParameters, "", "").getAbsolutePath();
+        addAssemblyFiles(containerBuilder, jibAssemblyManager,
+          imageConfiguration.getBuildConfiguration().getAssemblyConfiguration(),
+          mojoParameters, targetImage, log);
 
         String imageTarName = ImageReference.parse(targetImage).toString().concat(TAR_SUFFIX);
         TarImage tarImage = TarImage.at(Paths.get(outputDir, imageTarName)).named(targetImage);
@@ -260,40 +195,43 @@ public class JibServiceUtil {
         return consoleLoggerBuilder.build();
     }
 
-    static JibBuildService.JibBuildConfiguration getJibBuildConfiguration(BuildService.BuildServiceConfig config, ImageConfiguration imageConfiguration, Logger log) throws MojoExecutionException, InvalidImageReferenceException {
-        BuildImageConfiguration buildImageConfiguration = imageConfiguration.getBuildConfiguration();
+    static JibContainerBuilder containerFromImageConfiguration(ImageConfiguration imageConfiguration)
+    throws InvalidImageReferenceException {
 
+        final Optional<BuildImageConfiguration> bic =
+          Optional.ofNullable(Objects.requireNonNull(imageConfiguration).getBuildConfiguration());
+        final JibContainerBuilder containerBuilder = Jib.from(getBaseImage(imageConfiguration))
+          .setFormat(ImageFormat.OCI);
+        bic.map(BuildImageConfiguration::getEntryPoint)
+          .map(Arguments::asStrings)
+          .ifPresent(containerBuilder::setEntrypoint);
+        bic.map(BuildImageConfiguration::getEnv)
+          .ifPresent(containerBuilder::setEnvironment);
+        bic.map(BuildImageConfiguration::getPorts).map(List::stream)
+          .map(s -> s.map(Integer::parseInt).map(Port::tcp))
+          .map(s -> s.collect(Collectors.toSet()))
+          .ifPresent(containerBuilder::setExposedPorts);
+        bic.map(BuildImageConfiguration::getLabels)
+          .map(Map::entrySet)
+          .ifPresent(labels -> labels.forEach(l -> containerBuilder.addLabel(l.getKey(), l.getValue())));
+        bic.map(BuildImageConfiguration::getCmd)
+          .map(Arguments::asStrings)
+          .ifPresent(containerBuilder::setProgramArguments);
+        bic.map(BuildImageConfiguration::getUser)
+          .ifPresent(containerBuilder::setUser);
+        bic.map(BuildImageConfiguration::getVolumes).map(List::stream)
+          .map(s -> s.map(AbsoluteUnixPath::get))
+          .map(s -> s.collect(Collectors.toSet()))
+          .ifPresent(containerBuilder::setVolumes);
+        bic.map(BuildImageConfiguration::getWorkdir)
+          .filter(((Predicate<String>)String::isEmpty).negate())
+          .map(AbsoluteUnixPath::get)
+          .ifPresent(containerBuilder::setWorkingDirectory);
+        return containerBuilder;
+    }
 
-        String baseImage = buildImageConfiguration.getFrom();
-        baseImage = baseImage == null || baseImage.isEmpty() ? BUSYBOX : baseImage;
-
-        String pullRegistry = EnvUtil.firstRegistryOf(new ImageName(baseImage).getRegistry(), config.getDockerBuildContext().getRegistryConfig().getRegistry(), imageConfiguration.getRegistry());
-        Credential pullCredential = getRegistryCredentials(pullRegistry, config.getDockerBuildContext().getRegistryConfig());
-
-        RegistryImage baseRegistryImage = RegistryImage.named(baseImage);
-        if (pullCredential!= null && !pullCredential.getUsername().isEmpty() && !pullCredential.getPassword().isEmpty()) {
-            baseRegistryImage.addCredential(pullCredential.getUsername(), pullCredential.getPassword());
-        }
-        MojoParameters mojoParameters = config.getDockerMojoParameters();
-        String outputDir = EnvUtil.prepareAbsoluteOutputDirPath(mojoParameters, "", "").getAbsolutePath();
-
-
-        JibBuildService.JibBuildConfiguration jibBuildConfiguration = new JibBuildService.JibBuildConfiguration();
-
-        jibBuildConfiguration.setFrom(baseRegistryImage);
-        jibBuildConfiguration.setEnvMap(buildImageConfiguration.getEnv());
-        jibBuildConfiguration.setPorts(buildImageConfiguration.getPorts());
-        jibBuildConfiguration.setEntrypoint(buildImageConfiguration.getEntryPoint());
-        jibBuildConfiguration.setTarget(new ImageName(imageConfiguration.getName()).getRepository());
-        jibBuildConfiguration.setOutputDir(outputDir);
-        jibBuildConfiguration.setLabels(buildImageConfiguration.getLabels());
-        jibBuildConfiguration.setVolumes(buildImageConfiguration.getVolumes());
-        jibBuildConfiguration.setWorkDir(buildImageConfiguration.getWorkdir());
-        jibBuildConfiguration.setAssemblyConfiguration(buildImageConfiguration.getAssemblyConfiguration());
-        jibBuildConfiguration.setMojoParameters(config.getDockerMojoParameters());
-        jibBuildConfiguration.setUser(buildImageConfiguration.getUser());
-        jibBuildConfiguration.setCmd(buildImageConfiguration.getCmd());
-        return jibBuildConfiguration;
+    static String imageNameFromImageConfiguration(ImageConfiguration imageConfiguration) {
+        return new ImageName(imageConfiguration.getName()).getRepository();
     }
 
     /**
@@ -328,15 +266,6 @@ public class JibServiceUtil {
         }
     }
 
-    private static Set<Port> getPortSet(List<String> ports) {
-        Set<Port> portSet = new HashSet<>();
-        for(String port : ports) {
-            portSet.add(Port.tcp(Integer.parseInt(port)));
-        }
-
-        return portSet;
-    }
-
     public static Credential getRegistryCredentials(String registry, RegistryService.RegistryConfig registryConfig) throws MojoExecutionException {
         if (registry == null) {
             registry = DOCKER_REGISTRY; // Let's assume docker is default registry.
@@ -350,5 +279,13 @@ public class JibServiceUtil {
             return Credential.from(authConfig.getUsername(), authConfig.getPassword());
         }
         return null;
+    }
+
+    static String getBaseImage(ImageConfiguration imageConfiguration) {
+        return Optional.ofNullable(imageConfiguration)
+          .map(ImageConfiguration::getBuildConfiguration)
+          .map(BuildImageConfiguration::getFrom)
+          .filter(((Predicate<String>)String::isEmpty).negate())
+          .orElse(BUSYBOX);
     }
 }

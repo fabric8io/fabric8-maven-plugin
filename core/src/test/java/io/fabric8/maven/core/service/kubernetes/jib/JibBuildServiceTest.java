@@ -16,83 +16,46 @@
 package io.fabric8.maven.core.service.kubernetes.jib;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.util.AuthConfigFactory;
-import io.fabric8.maven.docker.util.Logger;
+import mockit.Expectations;
 import mockit.Mocked;
-import mockit.Tested;
+import org.junit.Test;
+
+import static io.fabric8.maven.core.service.kubernetes.jib.JibServiceUtil.getBaseImage;
+import static org.junit.Assert.assertEquals;
 
 public class JibBuildServiceTest {
 
-    @Tested
-    private JibBuildService jibBuildService;
-
-    @Tested
-    private JibServiceUtil jibServiceUtil;
-
-    @Mocked
-    private Logger logger;
-
-    @Mocked
-    private io.fabric8.maven.core.service.BuildService.BuildServiceConfig config;
-
-    @Mocked
-    private ImageConfiguration imageConfiguration;
-
-    @Mocked
-    private AuthConfigFactory authConfigFactory;
-/*
     @Test
-    public void testSuccessfulBuild() throws Exception {
+    public void getBaseImageNullImageConfigurationShouldReturnBusybox() {
+        // When
+        final String result = getBaseImage(null);
+        // Then
+        assertEquals(result, "busybox:latest");
+    }
 
-        //Preparation Code For Testing The Class
-
-        MojoParameters mojoParameters = new MojoParameters(null, new MavenProject(), null, null, null, null, null, "target/docker", null);
-        final String imageName = "image-name";
-
-        AssemblyConfiguration assemblyConfiguration = new AssemblyConfiguration.Builder()
-                .targetDir("/deployments")
-                .build();
-
-        BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder()
-                .from("fabric8/java-centos-openjdk8-jdk:1.5")
-                .env(new HashMap<String, String>() {{
-                    put("john", "doe");
-                    put("foo", "bar");
-                }})
-                .ports(new ArrayList<String>() {{
-                    add("80");
-                    add("443");
-                }})
-                .entryPoint(null)
-                .assembly(assemblyConfiguration)
-                .build();
-
-        final BuildService.BuildContext dockerBuildContext = new BuildService.BuildContext.Builder()
-                .registryConfig(new RegistryService.RegistryConfig.Builder()
-                        .authConfigFactory(authConfigFactory)
-                        .build())
-                .build();
-
-        new Expectations() {{
-            imageConfiguration.getBuildConfiguration();
-            result = buildImageConfiguration;
-
-            imageConfiguration.getName();
-            result = imageName;
-
-            config.getDockerBuildContext();
-            result = dockerBuildContext;
-
-            config.getDockerMojoParameters();
-            result = mojoParameters;
-
-            config.getBuildDirectory();
-            result = "target/test-files/jib-build-service";
-
+    @Test
+    public void getBaseImageEmptyImageNameShouldReturnBusybox(@Mocked ImageConfiguration configuration) {
+        // Given
+        new Expectations(){{
+           configuration.getBuildConfiguration().getFrom();
+           result = "";
         }};
+        // When
+        final String result = getBaseImage(configuration);
+        // Then
+        assertEquals(result, "busybox:latest");
+    }
 
-        //Code To Be Tested
-        jibBuildService = new JibBuildService(config, logger);
-        jibBuildService.build(imageConfiguration);
-    }*/
+    @Test
+    public void getBaseImageValidImageNameShouldReturnImageName(@Mocked ImageConfiguration configuration) {
+        // Given
+        new Expectations(){{
+            configuration.getBuildConfiguration().getFrom();
+            result = "repository/image";
+        }};
+        // When
+        final String result = getBaseImage(configuration);
+        // Then
+        assertEquals(result, "repository/image");
+    }
 }
