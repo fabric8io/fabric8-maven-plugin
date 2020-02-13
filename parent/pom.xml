@@ -21,7 +21,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>fabric8-maven-plugin-parent</artifactId>
-  <version>4.4-SNAPSHOT</version>
+  <version>4.5-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Fabric8 Maven :: Parent</name>
