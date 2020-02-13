@@ -10,7 +10,9 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
-### 4.4-SNAPSHOT
+### 4.5-SNAPSHOT
+
+### 4.4.0 (2020-02-13)
 * Fix #1572: Support maven --batch-mode option
 * Feature #1748: Quarkus generator: Extract base image from configuration.
 * Fix #1695: IllegalArgumentException when Spring Boot application.yaml contains integer keys
