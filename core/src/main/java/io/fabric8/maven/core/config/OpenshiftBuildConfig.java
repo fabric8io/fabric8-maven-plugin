@@ -21,11 +21,6 @@ public class OpenshiftBuildConfig {
     private Map<String, String> limits;
     private Map<String, String> requests;
 
-    public OpenshiftBuildConfig(Map<String, String> limits, Map<String, String> requests) {
-        this.limits = limits;
-        this.requests = requests;
-    }
-
     public Map<String, String> getRequests() {
         return requests;
     }
@@ -40,5 +35,34 @@ public class OpenshiftBuildConfig {
 
     public void setLimits(Map<String, String> resourceLimits) {
         this.limits = resourceLimits;
+    }
+
+    public static class Builder {
+        private OpenshiftBuildConfig openshiftBuildConfig;
+
+        public Builder() {
+            this.openshiftBuildConfig = new OpenshiftBuildConfig();
+        }
+
+        public Builder(OpenshiftBuildConfig openshiftBuildConfig) {
+            if (openshiftBuildConfig != null) {
+                this.openshiftBuildConfig.limits = openshiftBuildConfig.limits;
+                this.openshiftBuildConfig.requests = openshiftBuildConfig.requests;
+            }
+        }
+
+        public Builder limits(Map<String, String> limits) {
+            this.openshiftBuildConfig.limits = limits;
+            return this;
+        }
+
+        public Builder requests(Map<String, String> requests) {
+            this.openshiftBuildConfig.requests = requests;
+            return this;
+        }
+
+        public OpenshiftBuildConfig build() {
+            return this.openshiftBuildConfig;
+        }
     }
 }

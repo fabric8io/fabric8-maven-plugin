@@ -67,6 +67,7 @@ import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.BuildConfig;
+import io.fabric8.openshift.api.model.BuildConfigFluent;
 import io.fabric8.openshift.api.model.BuildConfigSpec;
 import io.fabric8.openshift.api.model.BuildConfigSpecBuilder;
 import io.fabric8.openshift.api.model.BuildOutput;
@@ -74,6 +75,7 @@ import io.fabric8.openshift.api.model.BuildOutputBuilder;
 import io.fabric8.openshift.api.model.BuildSource;
 import io.fabric8.openshift.api.model.BuildStrategy;
 import io.fabric8.openshift.api.model.BuildStrategyBuilder;
+import io.fabric8.openshift.api.model.DoneableBuildConfig;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
@@ -291,15 +293,12 @@ public class OpenshiftBuildService implements BuildService {
             specBuilder.withOutput(buildOutput);
         }
 
-        if (config.getResourceConfig() != null && config.getResourceConfig().getOpenshiftBuildConfig() != null) {
-            Map<String, Quantity> limits = KubernetesResourceUtil.getQuantityFromString(config.getResourceConfig().getOpenshiftBuildConfig().getLimits());
-            if (limits != null && !limits.isEmpty()) {
-                specBuilder.editOrNewResources().addToLimits(limits).endResources();
-            }
-            Map<String, Quantity> requests = KubernetesResourceUtil.getQuantityFromString(config.getResourceConfig().getOpenshiftBuildConfig().getRequests());
-            if (limits != null && !limits.isEmpty()) {
-                specBuilder.editOrNewResources().addToRequests(requests).endResources() ;
-            }
+        Map<String, Map<String, Quantity>> requestsLimitsMap = getRequestsAndLimits();
+        if (requestsLimitsMap.containsKey("requests")) {
+            specBuilder.editOrNewResources().addToRequests(requestsLimitsMap.get("requests")).endResources();
+        }
+        if (requestsLimitsMap.containsKey("limits")) {
+            specBuilder.editOrNewResources().addToLimits(requestsLimitsMap.get("limits")).endResources();
         }
         return specBuilder.build();
     }
@@ -309,12 +308,19 @@ public class OpenshiftBuildService implements BuildService {
         // lets check if the strategy or output has changed and if so lets update the BC
         // e.g. the S2I builder image or the output tag and
         if (!Objects.equals(buildStrategy, spec.getStrategy()) || !Objects.equals(buildOutput, spec.getOutput())) {
-            client.buildConfigs().withName(buildName).edit()
-                    .editSpec()
-                    .withStrategy(buildStrategy)
-                    .withOutput(buildOutput)
-                    .endSpec()
-                    .done();
+            BuildConfigFluent.SpecNested<DoneableBuildConfig> doneableBuildConfig = client.buildConfigs().withName(buildName).edit().editSpec();
+            doneableBuildConfig.withStrategy(buildStrategy)
+                    .withOutput(buildOutput);
+
+            Map<String, Map<String, Quantity>> requestsLimitsMap = getRequestsAndLimits();
+            if (requestsLimitsMap.containsKey("requests")) {
+                doneableBuildConfig.editOrNewResources().addToRequests(requestsLimitsMap.get("requests")).endResources();
+            }
+            if (requestsLimitsMap.containsKey("limits")) {
+                doneableBuildConfig.editOrNewResources().addToLimits(requestsLimitsMap.get("limits")).endResources();
+            }
+
+            doneableBuildConfig.endSpec().done();
             log.info("Updating BuildServiceConfig %s for %s strategy", buildName, buildStrategy.getType());
         } else {
             log.info("Using BuildServiceConfig %s for %s strategy", buildName, buildStrategy.getType());
@@ -759,6 +765,21 @@ public class OpenshiftBuildService implements BuildService {
         }
         String value = map.get(field);
         return value != null ? value : defaultValue;
+    }
+
+    private Map<String, Map<String, Quantity>> getRequestsAndLimits() {
+        Map<String, Map<String, Quantity>> keyToQuantityMap = new HashMap<>();
+        if (config.getResourceConfig() != null && config.getResourceConfig().getOpenshiftBuildConfig() != null) {
+            Map<String, Quantity> limits = KubernetesResourceUtil.getQuantityFromString(config.getResourceConfig().getOpenshiftBuildConfig().getLimits());
+            if (!limits.isEmpty()) {
+                keyToQuantityMap.put("limits", limits);
+            }
+            Map<String, Quantity> requests = KubernetesResourceUtil.getQuantityFromString(config.getResourceConfig().getOpenshiftBuildConfig().getRequests());
+            if (!requests.isEmpty()) {
+                keyToQuantityMap.put("requests", requests);
+            }
+        }
+        return keyToQuantityMap;
     }
 
 }
