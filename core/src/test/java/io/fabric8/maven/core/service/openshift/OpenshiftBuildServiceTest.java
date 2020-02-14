@@ -469,7 +469,7 @@ public class OpenshiftBuildServiceTest {
 
             BuildService.BuildServiceConfig config = defaultConfig
                     .resourceConfig(new ResourceConfig.Builder()
-                    .withOpenshiftBuildConfig(new OpenshiftBuildConfig(limitsMap, null)).build()).build();
+                    .withOpenshiftBuildConfig(new OpenshiftBuildConfig.Builder().limits(limitsMap).build()).build()).build();
             OpenShiftMockServer mockServer = new OpenShiftMockServer();
 
             OpenShiftClient client = mockServer.createOpenShiftClient();
