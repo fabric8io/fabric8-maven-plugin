@@ -10,7 +10,20 @@ We use semantic versioning in some slight variation until our feature set has st
 
 After this we will switch probably to real [Semantic Versioning 2.0.0](http://semver.org/)
 
+## Extracting changelog portions
+
+We provide a script to extract changelog portions and automatic link building to send notifications
+(i.e. e-mail) about new releases
+([scripts/extract-changelog-for-version.sh](https://github.com/fabric8io/fabric8-maven-plugin/blob/master/scripts/extract-changelog-for-version.sh))
+
+Usage:
+```
+# ./scripts/extract-changelog-for-version.sh semanticVersionNumber [linkLabelStartNumber]
+./scripts/extract-changelog-for-version.sh 1.3.37 5
+```
+
 ### 4.5-SNAPSHOT
+* Fix #1789: script to extract changelog information for notifications
 
 ### 4.4.0 (2020-02-13)
 * Fix #1572: Support maven --batch-mode option
