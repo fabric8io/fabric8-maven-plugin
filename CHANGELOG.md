@@ -23,6 +23,9 @@ Usage:
 ```
 
 ### 4.5-SNAPSHOT
+* Refactor #1766: Jib Refactor
+* Revert #1737 : Reverted "Wrong Jib output directory in Maven multi-module build"
+* Revert #1738 : Reverted "JibBuildConfiguration ignores BuildImageConfiguration.registry"
 * Fix #1789: script to extract changelog information for notifications
 * Fix #1770: Fixed my mistake, remove constructors from OpenshiftBuildConfig which were causing PluginConfigurationException
 * Fix #1791: Fix NullPointerException in FileDataSecretEnricher (due to recent change in Kubernetes Client Builder null to LinkedHashMap conversion)
@@ -40,8 +43,6 @@ Usage:
 * Feature #1483: Dekorate integration
 * Fix #1769: Display root cause of failure if available
 * Fix #1776: fat jar wrongly detected on simple jar
-* Revert #1738 #1737: Revert fixes
-* Refactor #1766: Jib Refactor
 
 ### 4.3.1 (18-10-2019)
 * Updated Kubernetes client to 4.6.1

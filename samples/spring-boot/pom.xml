@@ -107,7 +107,7 @@
                                 <config>
                                     <spring-boot>
                                         <color>always</color>
-					<name>devanggaur7/${project.artifactId}:${project.version}</name>
+					                    <!--<name>${image.user}/${project.artifactId}:${project.version}</name>-->
                                     </spring-boot>
                                 </config>
                             </generator>
@@ -164,7 +164,7 @@
                                 <config>
                                     <spring-boot>
                                         <!-- authentic username of registry to be used for automatic push to registry-->
-                                        <name>devanggaur7/${project.artifactId}:${project.version}</name>
+                                        <!--<name>${image.user}/${project.artifactId}:${project.version}</name>-->
                                         <color>always</color>
                                     </spring-boot>
                                 </config>
@@ -179,6 +179,39 @@
                                     </fmp-service>
                                 </config>
                             </enricher>
+                            <!-- sample assembly configuration. make sure all the directories configured exist. -->
+                            <!--<images>
+                                <image>
+                                    <name>${image.user}/spring-boot-sample</name>
+                                    <build>
+                                        <from>java</from>
+                                        <assembly>
+                                            <mode>zip</mode>
+                                            <basedir>/opt/application</basedir>
+                                            <inline>
+                                                <id>add-files</id>
+                                                <fileSets>
+                                                    <fileSet>
+                                                        <directory>${project.basedir}/src/main/resources/addJars</directory>
+                                                        <includes>
+                                                            <include>*.jar</include>
+                                                        </includes>
+                                                        <outputDirectory>lib</outputDirectory>
+                                                    </fileSet>
+                                                    <fileSet>
+                                                        <directory>${project.basedir}/src/main/resources/conf</directory>
+                                                        <includes>
+                                                            <include>**.*</include>
+                                                        </includes>
+                                                        <outputDirectory>etc/conf</outputDirectory>
+                                                    </fileSet>
+                                                </fileSets>
+                                            </inline>
+                                        </assembly>
+                                    </build>
+                                </image>
+                            </images>-->
+
                         </configuration>
 
                         <executions>

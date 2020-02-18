@@ -31,13 +31,11 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.repository.RepositorySystem;
-import org.codehaus.plexus.component.annotations.Component;
 
 /**
  * @author nicola
  * @since 17/02/2017
  */
-@Component(role = Fabric8ServiceHub.class, instantiationStrategy = "singleton")
 public class Fabric8ServiceHub {
 
     /*

@@ -121,11 +121,6 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     @Parameter(property = "fabric8.build.jib", defaultValue = "false")
     private boolean isJib;
 
-    @Parameter(property = "fabric8.push.jib.timeout", defaultValue = "60")
-    private long pushTimeout;
-
-    private static final String DOCKER_REGISTRY = "docker.io";
-
     private static String EMPTY_STRING = "";
 
     private static String TAR_POSTFIX = ".tar";
@@ -177,7 +172,7 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     private void jibPush(ImageConfiguration imageConfiguration) throws MojoExecutionException {
         BuildImageConfiguration buildImageConfiguration = imageConfiguration.getBuildConfiguration();
 
-        String outputDir = preapareAbsoluteOutputDirPath(EMPTY_STRING).getAbsolutePath();
+        String outputDir = prepareAbsoluteOutputDirPath(EMPTY_STRING).getAbsolutePath();
 
         ImageName tarImage = new ImageName(imageConfiguration.getName());
         String tarImageRepo = tarImage.getRepository();
@@ -206,7 +201,7 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
         }
     }
 
-    public File preapareAbsoluteOutputDirPath(String path) {
+    private File prepareAbsoluteOutputDirPath(String path) {
         File file = new File(path);
         return file.isAbsolute() ? file : new File(new File(project.getBasedir(), (new File(outputDirectory)).toString()), path);
     }

@@ -63,6 +63,8 @@ public class JibAssemblyManager {
     @Requirement
     private AssemblyArchiver assemblyArchiver;
 
+    private File tempDirectory;
+
     public Assembly getAssemblyConfig(AssemblyConfiguration assemblyConfiguration, JibAssemblyConfigurationSource source)
             throws MojoExecutionException {
         Assembly assembly = assemblyConfiguration.getInline();
@@ -157,6 +159,85 @@ public class JibAssemblyManager {
         }
     }
 
+
+    private static org.codehaus.plexus.logging.Logger getLogger(Logger log) {
+        return new AbstractLogger(1, "fmp-logger") {
+            @Override
+            public void debug(String message, Throwable throwable) {
+                log.debug(message, throwable);
+            }
+
+            @Override
+            public void info(String message, Throwable throwable) {
+                log.info(message, throwable);
+            }
+
+            @Override
+            public void warn(String message, Throwable throwable) {
+                log.warn(message, throwable);
+            }
+
+            @Override
+            public void error(String message, Throwable throwable) {
+                log.error(message, throwable);
+            }
+
+            @Override
+            public void fatalError(String message, Throwable throwable) {
+                log.error(message, throwable);
+            }
+
+            @Override
+            public org.codehaus.plexus.logging.Logger getChildLogger(String name) {
+                return null;
+            }
+        };
+    }
+
+    void addAssemblyFiles(JibContainerBuilder jibContainerBuilder, AssemblyConfiguration assemblyConfiguration,
+                                 MojoParameters mojoParameters, String imageName, Logger log) throws MojoExecutionException, IOException {
+
+        if (hasAssemblyConfiguration(assemblyConfiguration)) {
+            JibAssemblyManager.BuildDirs buildDirs = createBuildDirs(imageName, mojoParameters);
+            JibAssemblyConfigurationSource source =
+                    new JibAssemblyConfigurationSource(mojoParameters, buildDirs, assemblyConfiguration);
+            createAssemblyArchive(assemblyConfiguration, source, mojoParameters);
+
+            String ext = assemblyConfiguration.getMode().getExtension().equals("dir") ?
+                    "" : ".".concat(assemblyConfiguration.getMode().getExtension());
+
+            File assemblyArchive = new File(source.getOutputDirectory().getPath(), assemblyConfiguration.getName().concat(ext));
+
+            tempDirectory = extractOrCopy(assemblyConfiguration.getMode(),
+                    assemblyArchive, source.getWorkingDirectory(), assemblyConfiguration.getName(), log);
+
+            if (!assemblyConfiguration.getMode().isArchive()) {
+                tempDirectory = new File(tempDirectory, assemblyConfiguration.getName());
+            }
+
+            AssemblyConfiguration.PermissionMode mode = assemblyConfiguration.getPermissions();
+            if (mode == AssemblyConfiguration.PermissionMode.exec ||
+                    mode == AssemblyConfiguration.PermissionMode.auto && EnvUtil.isWindows()) {
+                makeAllFilesExecutable(tempDirectory);
+            }
+
+            copyToContainer(jibContainerBuilder, tempDirectory, assemblyConfiguration.getTargetDir());
+        }
+    }
+
+    private static JibAssemblyManager.BuildDirs createBuildDirs(String imageName, MojoParameters params) {
+        JibAssemblyManager.BuildDirs buildDirs = new JibAssemblyManager.BuildDirs(imageName, params);
+        buildDirs.createDirs();
+
+        return buildDirs;
+    }
+
+    private static boolean hasAssemblyConfiguration(AssemblyConfiguration assemblyConfig) {
+        return assemblyConfig != null &&
+                (assemblyConfig.getInline() != null ||
+                        assemblyConfig.getDescriptor() != null ||
+                        assemblyConfig.getDescriptorRef() != null);
+    }
 
     public File extractOrCopy(AssemblyMode mode, File source, File destinationDir, String assemblyName, Logger log) throws IOException {
 
@@ -274,39 +355,34 @@ public class JibAssemblyManager {
         });
     }
 
-    private static org.codehaus.plexus.logging.Logger getLogger(Logger log) {
-        return new AbstractLogger(1, "fmp-logger") {
-            @Override
-            public void debug(String message, Throwable throwable) {
-                log.debug(message, throwable);
-            }
+    public void cleanUpDir() throws IOException {
+        if (tempDirectory != null && tempDirectory.isDirectory()) {
+            Files.walkFileTree(tempDirectory.toPath(), new FileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                    return FileVisitResult.CONTINUE;
+                }
 
-            @Override
-            public void info(String message, Throwable throwable) {
-                log.info(message, throwable);
-            }
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                    file.toFile().delete();
+                    return FileVisitResult.CONTINUE;
+                }
 
-            @Override
-            public void warn(String message, Throwable throwable) {
-                log.warn(message, throwable);
-            }
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) {
+                    return FileVisitResult.TERMINATE;
+                }
 
-            @Override
-            public void error(String message, Throwable throwable) {
-                log.error(message, throwable);
-            }
-
-            @Override
-            public void fatalError(String message, Throwable throwable) {
-                log.error(message, throwable);
-            }
-
-            @Override
-            public org.codehaus.plexus.logging.Logger getChildLogger(String name) {
-                return null;
-            }
-        };
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
+                    dir.toFile().delete();
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        }
     }
+
 
     static class BuildDirs {
 

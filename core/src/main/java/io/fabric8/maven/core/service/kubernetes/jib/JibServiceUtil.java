@@ -35,17 +35,13 @@ import com.google.cloud.tools.jib.plugins.common.TimerEventHandler;
 import com.google.cloud.tools.jib.plugins.common.logging.ProgressDisplayGenerator;
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.config.Arguments;
-import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.RegistryService;
-import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.plugin.MojoExecutionException;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
@@ -67,51 +63,6 @@ public class JibServiceUtil {
 
     private static final String DOCKER_REGISTRY = "docker.io";
     private static final String BUSYBOX = "busybox:latest";
-
-    static void addAssemblyFiles(JibContainerBuilder jibContainerBuilder, JibAssemblyManager jibAssemblyManager, AssemblyConfiguration assemblyConfiguration,
-                                         MojoParameters mojoParameters, String imageName, Logger log) throws MojoExecutionException, IOException {
-
-        if (hasAssemblyConfiguration(assemblyConfiguration)) {
-            JibAssemblyManager.BuildDirs buildDirs = createBuildDirs(imageName, mojoParameters);
-            JibAssemblyConfigurationSource source =
-                    new JibAssemblyConfigurationSource(mojoParameters, buildDirs, assemblyConfiguration);
-            jibAssemblyManager.createAssemblyArchive(assemblyConfiguration, source, mojoParameters);
-
-            String ext = assemblyConfiguration.getMode().getExtension().equals("dir") ?
-                    "" : ".".concat(assemblyConfiguration.getMode().getExtension());
-
-            File assemblyArchive = new File(source.getOutputDirectory().getPath(), assemblyConfiguration.getName().concat(ext));
-
-            File destination = jibAssemblyManager.extractOrCopy(assemblyConfiguration.getMode(),
-                    assemblyArchive, source.getWorkingDirectory(), assemblyConfiguration.getName(), log);
-
-            if (!assemblyConfiguration.getMode().isArchive()) {
-                destination = new File(destination, assemblyConfiguration.getName());
-            }
-
-            AssemblyConfiguration.PermissionMode mode = assemblyConfiguration.getPermissions();
-            if (mode == AssemblyConfiguration.PermissionMode.exec ||
-                    mode == AssemblyConfiguration.PermissionMode.auto && EnvUtil.isWindows()) {
-                jibAssemblyManager.makeAllFilesExecutable(destination);
-            }
-
-            jibAssemblyManager.copyToContainer(jibContainerBuilder, destination, assemblyConfiguration.getTargetDir());
-        }
-    }
-
-    private static JibAssemblyManager.BuildDirs createBuildDirs(String imageName, MojoParameters params) {
-        JibAssemblyManager.BuildDirs buildDirs = new JibAssemblyManager.BuildDirs(imageName, params);
-        buildDirs.createDirs();
-
-        return buildDirs;
-    }
-
-    private static boolean hasAssemblyConfiguration(AssemblyConfiguration assemblyConfig) {
-        return assemblyConfig != null &&
-                (assemblyConfig.getInline() != null ||
-                        assemblyConfig.getDescriptor() != null ||
-                        assemblyConfig.getDescriptorRef() != null);
-    }
 
     static void buildContainer(JibContainerBuilder jibContainerBuilder, TarImage image, Logger logger) {
         try {
@@ -184,7 +135,7 @@ public class JibServiceUtil {
 
             Jib.from(baseImage).containerize(Containerizer.to(targetImage)
                     .addEventHandler(LogEvent.class, log(logger))
-                    .addEventHandler(TimerEvent.class, new TimerEventHandler(logger::error))
+                    .addEventHandler(TimerEvent.class, new TimerEventHandler(logger::debug))
                     .addEventHandler(ProgressEvent.class, new ProgressEventHandler(logUpdate(logger))));
         } catch (RegistryException | CacheDirectoryCreationException | InvalidImageReferenceException | IOException | ExecutionException | InterruptedException e) {
             logger.error("Exception occured while pushing the image: %s", targetImageName);

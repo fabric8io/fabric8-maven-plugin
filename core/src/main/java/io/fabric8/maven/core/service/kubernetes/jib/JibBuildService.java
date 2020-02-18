@@ -24,14 +24,12 @@ import io.fabric8.maven.core.service.Fabric8ServiceException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Objects;
 
-import static io.fabric8.maven.core.service.kubernetes.jib.JibServiceUtil.addAssemblyFiles;
 import static io.fabric8.maven.core.service.kubernetes.jib.JibServiceUtil.buildContainer;
 import static io.fabric8.maven.core.service.kubernetes.jib.JibServiceUtil.containerFromImageConfiguration;
 import static io.fabric8.maven.core.service.kubernetes.jib.JibServiceUtil.imageNameFromImageConfiguration;
@@ -59,31 +57,34 @@ public class JibBuildService implements BuildService {
            log.info("JIB image build started");
            final JibContainerBuilder containerBuilder = containerFromImageConfiguration(imageConfiguration);
            log.info("Preparing assembly files");
-           final TarImage tarImage = prepareAssembly(imageConfiguration, containerBuilder);
+           final String targetImage = imageNameFromImageConfiguration(imageConfiguration);
+           final String outputDir = EnvUtil.prepareAbsoluteOutputDirPath(config.getDockerMojoParameters(), "", "").getAbsolutePath();
+           final TarImage tarImage = prepareAssembly(imageConfiguration, containerBuilder, outputDir, targetImage);
            buildContainer(containerBuilder, tarImage, log);
-           log.info(" %s successfully built", imageNameFromImageConfiguration(imageConfiguration));
+           log.info(" %s successfully built",
+                   Paths.get(outputDir, ImageReference.parse(targetImage).toString().concat(TAR_SUFFIX)).toString());
+
+           cleanUp();
        } catch (Exception ex) {
            throw new Fabric8ServiceException("Error when building JIB image", ex);
        }
     }
 
-    private TarImage prepareAssembly(ImageConfiguration imageConfiguration, JibContainerBuilder containerBuilder)
+    private TarImage prepareAssembly(ImageConfiguration imageConfiguration, JibContainerBuilder containerBuilder, String outputDir, String targetImage)
       throws InvalidImageReferenceException, MojoExecutionException, IOException {
 
-        final String targetImage = imageNameFromImageConfiguration(imageConfiguration);
-        final MojoParameters mojoParameters = config.getDockerMojoParameters();
-        final String outputDir = EnvUtil.prepareAbsoluteOutputDirPath(mojoParameters, "", "").getAbsolutePath();
-        addAssemblyFiles(containerBuilder, jibAssemblyManager,
+        jibAssemblyManager.addAssemblyFiles(containerBuilder,
           imageConfiguration.getBuildConfiguration().getAssemblyConfiguration(),
-          mojoParameters, targetImage, log);
+          config.getDockerMojoParameters(), targetImage, log);
 
         final String imageTarName = ImageReference.parse(targetImage).toString().concat(TAR_SUFFIX);
         log.info("Building Image Tarball at %s ...", imageTarName);
         return TarImage.at(Paths.get(outputDir, imageTarName)).named(targetImage);
     }
 
-    @Override
-    public void postProcess(BuildServiceConfig config) {
-
+    private void cleanUp() throws IOException {
+        jibAssemblyManager.cleanUpDir();
     }
+    @Override
+    public void postProcess(BuildServiceConfig config) { }
 }
