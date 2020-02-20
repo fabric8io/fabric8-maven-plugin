@@ -25,6 +25,7 @@ Usage:
 ### 4.5-SNAPSHOT
 * Fix #1789: script to extract changelog information for notifications
 * Fix #1770: Fixed my mistake, remove constructors from OpenshiftBuildConfig which were causing PluginConfigurationException
+* Fix #1791: Fix NullPointerException in FileDataSecretEnricher (due to recent change in Kubernetes Client Builder null to LinkedHashMap conversion)
 
 ### 4.4.0 (2020-02-13)
 * Fix #1572: Support maven --batch-mode option
