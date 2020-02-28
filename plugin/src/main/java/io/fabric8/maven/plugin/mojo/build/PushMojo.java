@@ -16,23 +16,14 @@
 package io.fabric8.maven.plugin.mojo.build;
 
 
-import com.google.cloud.tools.jib.api.Credential;
-import com.google.cloud.tools.jib.api.ImageReference;
-import com.google.cloud.tools.jib.api.InvalidImageReferenceException;
-import com.google.cloud.tools.jib.api.TarImage;
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.RuntimeMode;
-import io.fabric8.maven.core.service.kubernetes.jib.JibServiceUtil;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
@@ -44,9 +35,9 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
 import java.io.File;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.Objects;
+
+import static io.fabric8.maven.core.service.kubernetes.jib.JibServiceUtil.jibPush;
 
 /**
  * Uploads the built Docker images to a Docker registry
@@ -162,48 +153,11 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
 
         if (isJibMode()) {
             for (ImageConfiguration imageConfiguration : getResolvedImages()) {
-                jibPush(imageConfiguration);
+                jibPush(imageConfiguration, project, getRegistryConfig(pushRegistry), outputDirectory, log);
             }
         } else {
             super.executeInternal(hub);
         }
-    }
-
-    private void jibPush(ImageConfiguration imageConfiguration) throws MojoExecutionException {
-        BuildImageConfiguration buildImageConfiguration = imageConfiguration.getBuildConfiguration();
-
-        String outputDir = prepareAbsoluteOutputDirPath(EMPTY_STRING).getAbsolutePath();
-
-        ImageName tarImage = new ImageName(imageConfiguration.getName());
-        String tarImageRepo = tarImage.getRepository();
-        try {
-            String imageTarName = ImageReference.parse(tarImageRepo).toString().concat(TAR_POSTFIX);
-            TarImage baseImage = TarImage.at(Paths.get(outputDir, imageTarName));
-
-            RegistryService.RegistryConfig registryConfig = getRegistryConfig(this.pushRegistry);
-            String configuredRegistry = EnvUtil.firstRegistryOf((new ImageName(imageConfiguration.getName())).getRegistry(), imageConfiguration.getRegistry(), registryConfig.getRegistry());
-
-            Credential pushCredential = JibServiceUtil.getRegistryCredentials(configuredRegistry, registryConfig);
-            final List<String> tags = buildImageConfiguration.getTags();
-            if (tags.isEmpty()) {
-                final String targetImage = new ImageName(imageConfiguration.getName()).getFullName();
-                JibServiceUtil.pushImage(baseImage, targetImage, pushCredential, log);
-            } else {
-                tags.stream().filter(Objects::nonNull).forEach(tag -> {
-                    final String targetImage = new ImageName(imageConfiguration.getName(), tag).getFullName();
-                    JibServiceUtil.pushImage(baseImage, targetImage, pushCredential, log);
-                });
-            }
-        } catch (InvalidImageReferenceException | IllegalStateException e) {
-            log.error("Exception occurred while pushing the image: %s", imageConfiguration.getName());
-            throw new MojoExecutionException(e.getMessage(), e);
-
-        }
-    }
-
-    private File prepareAbsoluteOutputDirPath(String path) {
-        File file = new File(path);
-        return file.isAbsolute() ? file : new File(new File(project.getBasedir(), (new File(outputDirectory)).toString()), path);
     }
 
     /**

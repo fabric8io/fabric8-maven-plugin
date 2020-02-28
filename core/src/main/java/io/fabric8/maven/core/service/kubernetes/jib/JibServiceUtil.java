@@ -15,19 +15,7 @@
  */
 package io.fabric8.maven.core.service.kubernetes.jib;
 
-import com.google.cloud.tools.jib.api.AbsoluteUnixPath;
-import com.google.cloud.tools.jib.api.CacheDirectoryCreationException;
-import com.google.cloud.tools.jib.api.Containerizer;
-import com.google.cloud.tools.jib.api.Credential;
-import com.google.cloud.tools.jib.api.ImageFormat;
-import com.google.cloud.tools.jib.api.InvalidImageReferenceException;
-import com.google.cloud.tools.jib.api.Jib;
-import com.google.cloud.tools.jib.api.JibContainerBuilder;
-import com.google.cloud.tools.jib.api.LogEvent;
-import com.google.cloud.tools.jib.api.Port;
-import com.google.cloud.tools.jib.api.RegistryException;
-import com.google.cloud.tools.jib.api.RegistryImage;
-import com.google.cloud.tools.jib.api.TarImage;
+import com.google.cloud.tools.jib.api.*;
 import com.google.cloud.tools.jib.event.events.ProgressEvent;
 import com.google.cloud.tools.jib.event.events.TimerEvent;
 import com.google.cloud.tools.jib.event.progress.ProgressEventHandler;
@@ -38,11 +26,15 @@ import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.RegistryService;
+import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +55,8 @@ public class JibServiceUtil {
 
     private static final String DOCKER_REGISTRY = "docker.io";
     private static final String BUSYBOX = "busybox:latest";
+    private static String EMPTY_STRING = "";
+    private static String TAR_POSTFIX = ".tar";
 
     static void buildContainer(JibContainerBuilder jibContainerBuilder, TarImage image, Logger logger) {
         try {
@@ -121,12 +115,53 @@ public class JibServiceUtil {
 
     /**
      *
+     * @param imageConfiguration ImageConfiguration
+     * @param project MavenProject
+     * @param registryConfig  RegistryService.RegistryConfig
+     * @param outputDirectory Target Output Directory
+     * @param log Logger
+     * @throws MojoExecutionException
+     */
+    public static void jibPush(ImageConfiguration imageConfiguration, MavenProject project, RegistryService.RegistryConfig registryConfig,
+                                 String outputDirectory, Logger log) throws MojoExecutionException {
+        BuildImageConfiguration buildImageConfiguration = imageConfiguration.getBuildConfiguration();
+
+        String outputDir = prepareAbsoluteOutputDirPath(EMPTY_STRING, project, outputDirectory).getAbsolutePath();
+
+        ImageName tarImage = new ImageName(imageConfiguration.getName());
+        String tarImageRepo = tarImage.getRepository();
+        try {
+            String imageTarName = ImageReference.parse(tarImageRepo).toString().concat(TAR_POSTFIX);
+            TarImage baseImage = TarImage.at(Paths.get(outputDir, imageTarName));
+
+            String configuredRegistry = EnvUtil.firstRegistryOf((new ImageName(imageConfiguration.getName())).getRegistry(), imageConfiguration.getRegistry(), registryConfig.getRegistry());
+
+            Credential pushCredential = getRegistryCredentials(configuredRegistry, registryConfig);
+            final List<String> tags = buildImageConfiguration.getTags();
+            if (tags.isEmpty()) {
+                final String targetImage = new ImageName(imageConfiguration.getName()).getFullName();
+                pushImage(baseImage, targetImage, pushCredential, log);
+            } else {
+                tags.stream().filter(Objects::nonNull).forEach(tag -> {
+                    final String targetImage = new ImageName(imageConfiguration.getName(), tag).getFullName();
+                    pushImage(baseImage, targetImage, pushCredential, log);
+                });
+            }
+        } catch (InvalidImageReferenceException | IllegalStateException e) {
+            log.error("Exception occurred while pushing the image: %s", imageConfiguration.getName());
+            throw new MojoExecutionException(e.getMessage(), e);
+
+        }
+    }
+
+    /**
+     *
      * @param baseImage Base TarImage from where the image will be built.
      * @param targetImageName Full name of the target Image to be pushed to the registry
      * @param credential
      * @param logger
      */
-    public static void pushImage(TarImage baseImage, String targetImageName, Credential credential, Logger logger) {
+    private static void pushImage(TarImage baseImage, String targetImageName, Credential credential, Logger logger) {
         try {
             RegistryImage targetImage = RegistryImage.named(targetImageName);
             if (credential!= null && !credential.getUsername().isEmpty() && !credential.getPassword().isEmpty()) {
@@ -143,7 +178,7 @@ public class JibServiceUtil {
         }
     }
 
-    public static Credential getRegistryCredentials(String registry, RegistryService.RegistryConfig registryConfig) throws MojoExecutionException {
+    private static Credential getRegistryCredentials(String registry, RegistryService.RegistryConfig registryConfig) throws MojoExecutionException {
         if (registry == null) {
             registry = DOCKER_REGISTRY; // Let's assume docker is default registry.
         }
@@ -186,4 +221,10 @@ public class JibServiceUtil {
           .filter(((Predicate<String>)String::isEmpty).negate())
           .orElse(BUSYBOX);
     }
+
+    private static File prepareAbsoluteOutputDirPath(String path, MavenProject project, String outputDirectory) {
+        File file = new File(path);
+        return file.isAbsolute() ? file : new File(new File(project.getBasedir(), (new File(outputDirectory)).toString()), path);
+    }
+
 }
