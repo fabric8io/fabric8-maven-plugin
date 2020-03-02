@@ -13,7 +13,7 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.fabric8.maven.core.util;
+package io.fabric8.maven.generator.javaexec;
 
 import java.io.File;
 import java.io.IOException;

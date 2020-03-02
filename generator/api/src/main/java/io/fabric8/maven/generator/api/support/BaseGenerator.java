@@ -39,14 +39,13 @@ import org.apache.maven.shared.utils.StringUtils;
  * @since 15/05/16
  */
 abstract public class BaseGenerator implements Generator {
-
-    public static final String FABRIC8_GENERATOR_NAME = "fabric8.generator.name";
-    public static final String FABRIC8_GENERATOR_REGISTRY = "fabric8.generator.registry";
-    public static final String FABRIC8_GENERATOR_ALIAS = "fabric8.generator.alias";
-    public static final String FABRIC8_GENERATOR_FROM = "fabric8.generator.from";
-    public static final String FABRIC8_GENERATOR_FROM_MODE = "fabric8.generator.fromMode";
-
     private static final String BASE_IMAGE_LOOKUP_PREFIX = "java";
+
+    protected static final String FABRIC8_GENERATOR_NAME = "fabric8.generator.name";
+    protected static final String FABRIC8_GENERATOR_REGISTRY = "fabric8.generator.registry";
+    protected static final String FABRIC8_GENERATOR_ALIAS = "fabric8.generator.alias";
+    protected static final String FABRIC8_GENERATOR_FROM = "fabric8.generator.from";
+    protected static final String FABRIC8_GENERATOR_FROM_MODE = "fabric8.generator.fromMode";
 
     private final GeneratorContext context;
     private final String name;

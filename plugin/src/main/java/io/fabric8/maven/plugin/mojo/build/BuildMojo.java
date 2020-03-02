@@ -26,8 +26,8 @@ import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.core.util.Configs;
+import io.fabric8.maven.core.service.kubernetes.jib.JibAssemblyManager;
 import io.fabric8.maven.core.util.ProfileUtil;
-import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
@@ -189,6 +189,9 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Component
     protected RepositorySystem repositorySystem;
 
+    @Component
+    protected JibAssemblyManager jibAssemblyManager;
+
     @Parameter
     protected ClusterConfiguration access;
 
@@ -251,6 +254,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                         .buildServiceConfig(getBuildServiceConfig())
                         .repositorySystem(repositorySystem)
                         .mavenProject(project)
+                        .assemblyManager(jibAssemblyManager)
                         .build();
 
             if (isJib) {
@@ -271,6 +275,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
             // No pom packaging
             return false;
         }
+
         if (skipBuildPom != null) {
             // If configured take the config option
             return skipBuildPom;
@@ -287,7 +292,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
 
     @Override
     protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
-        throws MojoExecutionException, DockerAccessException {
+        throws MojoExecutionException {
 
         try {
             // TODO need to refactor d-m-p to avoid this call

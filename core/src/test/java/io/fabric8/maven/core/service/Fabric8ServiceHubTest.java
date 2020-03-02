@@ -18,7 +18,7 @@ package io.fabric8.maven.core.service;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.service.kubernetes.DockerBuildService;
-import io.fabric8.maven.core.service.kubernetes.JibBuildService;
+import io.fabric8.maven.core.service.kubernetes.jib.JibBuildService;
 import io.fabric8.maven.core.service.openshift.OpenshiftBuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.Logger;

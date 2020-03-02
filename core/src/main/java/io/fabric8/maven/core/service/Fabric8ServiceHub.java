@@ -22,8 +22,9 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.service.kubernetes.DockerBuildService;
-import io.fabric8.maven.core.service.kubernetes.JibBuildService;
+import io.fabric8.maven.core.service.kubernetes.jib.JibBuildService;
 import io.fabric8.maven.core.service.openshift.OpenshiftBuildService;
+import io.fabric8.maven.core.service.kubernetes.jib.JibAssemblyManager;
 import io.fabric8.maven.core.util.LazyBuilder;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.Logger;
@@ -65,6 +66,8 @@ public class Fabric8ServiceHub {
 
     private KubernetesClient client;
 
+    private JibAssemblyManager jibAssemblyManager;
+
     private ConcurrentHashMap<Class<?>, LazyBuilder<?>> services = new ConcurrentHashMap<>();
 
     private Fabric8ServiceHub() {
@@ -102,7 +105,7 @@ public class Fabric8ServiceHub {
                 } else {
                     // Kubernetes services
                     if(isJib) {
-                        buildService = new JibBuildService(buildServiceConfig, log);
+                        buildService = new JibBuildService(buildServiceConfig, jibAssemblyManager, log);
                     } else {
                         buildService = new DockerBuildService(dockerServiceHub, buildServiceConfig);
                     }
@@ -173,6 +176,11 @@ public class Fabric8ServiceHub {
 
         public Builder mavenProject(MavenProject mavenProject) {
             hub.mavenProject = mavenProject;
+            return this;
+        }
+
+        public Builder assemblyManager(JibAssemblyManager jibAssemblyManager) {
+            hub.jibAssemblyManager= jibAssemblyManager;
             return this;
         }
 

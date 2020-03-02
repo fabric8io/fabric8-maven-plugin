@@ -16,23 +16,28 @@
 package io.fabric8.maven.plugin.mojo.build;
 
 
-import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
-import java.io.File;
-import java.util.List;
-
 import io.fabric8.maven.core.config.OpenShiftBuildStrategy;
-import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
+import io.fabric8.maven.core.config.RuntimeMode;
+import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.ProfileUtil;
+import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.generator.api.GeneratorContext;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
+import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+
+import java.io.File;
+import java.util.List;
+
+import static io.fabric8.maven.core.service.kubernetes.jib.JibServiceUtil.jibPush;
 
 /**
  * Uploads the built Docker images to a Docker registry
@@ -93,11 +98,39 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     private OpenShiftBuildStrategy buildStrategy = OpenShiftBuildStrategy.s2i;
 
     @Parameter(property = "docker.skip.push", defaultValue = "false")
-    protected boolean skipPush;
+    private boolean skipPush;
+
+    @Parameter(property = "docker.push.registry")
+    private String pushRegistry;
+
+    @Parameter(property = "docker.source.dir", defaultValue="src/main/docker")
+    private String sourceDirectory;
+
+    @Parameter(property = "docker.target.dir", defaultValue="target/docker")
+    private String outputDirectory;
+
+    @Parameter(property = "fabric8.build.jib", defaultValue = "false")
+    private boolean isJib;
+
+    private static String EMPTY_STRING = "";
+
+    private static String TAR_POSTFIX = ".tar";
 
     @Override
     protected String getLogPrefix() {
         return "F8> ";
+    }
+
+    protected boolean isJibMode() {
+        return isJib || Configs.asBoolean(getProperty("fabric8.build.jib"));
+    }
+
+    private String getProperty(String key) {
+        String value = System.getProperty(key);
+        if (value == null) {
+            value = project.getProperties().getProperty(key);
+        }
+        return value;
     }
 
     @Override
@@ -105,7 +138,26 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
         if (skip || skipPush) {
             return;
         }
+
         super.execute();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
+        if (skipPush) {
+            return;
+        }
+
+        if (isJibMode()) {
+            for (ImageConfiguration imageConfiguration : getResolvedImages()) {
+                jibPush(imageConfiguration, project, getRegistryConfig(pushRegistry), outputDirectory, log);
+            }
+        } else {
+            super.executeInternal(hub);
+        }
     }
 
     /**
@@ -132,4 +184,5 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
             throw new IllegalArgumentException("Cannot extract generator config: " + e,e);
         }
     }
+
 }
