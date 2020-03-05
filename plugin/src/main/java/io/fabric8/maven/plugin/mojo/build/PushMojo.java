@@ -112,10 +112,6 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     @Parameter(property = "fabric8.build.jib", defaultValue = "false")
     private boolean isJib;
 
-    private static String EMPTY_STRING = "";
-
-    private static String TAR_POSTFIX = ".tar";
-
     @Override
     protected String getLogPrefix() {
         return "F8> ";
@@ -123,6 +119,11 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
 
     protected boolean isJibMode() {
         return isJib || Configs.asBoolean(getProperty("fabric8.build.jib"));
+    }
+
+    @Override
+    protected boolean isDockerAccessRequired() {
+        return mode == RuntimeMode.kubernetes && !isJibMode();
     }
 
     private String getProperty(String key) {
