@@ -69,6 +69,8 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter(property = "fabric8.build.jib", defaultValue = "false")
     private boolean isJib;
 
+    @Parameter(property = "fabric8.build.jib.timeOut", defaultValue = "60")
+    private int jibTimeOut;
     @Parameter
     private ProcessorConfig enricher;
 

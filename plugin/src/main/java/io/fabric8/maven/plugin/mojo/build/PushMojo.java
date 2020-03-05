@@ -112,6 +112,9 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     @Parameter(property = "fabric8.build.jib", defaultValue = "false")
     private boolean isJib;
 
+    @Parameter(property = "fabric8.build.jib.timeOut", defaultValue = "60")
+    private int jibTimeOut;
+
     @Override
     protected String getLogPrefix() {
         return "F8> ";

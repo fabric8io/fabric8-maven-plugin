@@ -198,8 +198,12 @@ By default S2I is used.
 | `fabric8.build.strategy`
 
 | *isJib*
-a| If the effective <<build-mode,mode>> is `kubernetes` then this option sets the build mode to JIB to perform a dockerless JIB build.
+| If the effective <<build-mode,mode>> is `kubernetes` then this option sets the build mode to JIB to perform a dockerless JIB build.
 | `fabric8.build.jib`
+
+| *jibTimeOut*
+| Number of seconds to provide a Jib Image Build or Push before it times out. Default is 60.
+| `fabric8.build.jib.timeOut`
 
 |*forcePull*
 |
