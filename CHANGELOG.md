@@ -23,6 +23,7 @@ Usage:
 ```
 
 ### 4.5-SNAPSHOT
+* Fix: Jib Push fails when docker daemon is disabled
 * Refactor #1766: Jib Refactor
 * Revert #1737 : Reverted "Wrong Jib output directory in Maven multi-module build"
 * Revert #1738 : Reverted "JibBuildConfiguration ignores BuildImageConfiguration.registry"
