@@ -15,7 +15,20 @@
  */
 package io.fabric8.maven.core.service.kubernetes.jib;
 
-import com.google.cloud.tools.jib.api.*;
+import com.google.cloud.tools.jib.api.AbsoluteUnixPath;
+import com.google.cloud.tools.jib.api.CacheDirectoryCreationException;
+import com.google.cloud.tools.jib.api.Containerizer;
+import com.google.cloud.tools.jib.api.Credential;
+import com.google.cloud.tools.jib.api.ImageFormat;
+import com.google.cloud.tools.jib.api.ImageReference;
+import com.google.cloud.tools.jib.api.InvalidImageReferenceException;
+import com.google.cloud.tools.jib.api.Jib;
+import com.google.cloud.tools.jib.api.JibContainerBuilder;
+import com.google.cloud.tools.jib.api.LogEvent;
+import com.google.cloud.tools.jib.api.Port;
+import com.google.cloud.tools.jib.api.RegistryException;
+import com.google.cloud.tools.jib.api.RegistryImage;
+import com.google.cloud.tools.jib.api.TarImage;
 import com.google.cloud.tools.jib.event.events.ProgressEvent;
 import com.google.cloud.tools.jib.event.events.TimerEvent;
 import com.google.cloud.tools.jib.event.progress.ProgressEventHandler;
@@ -31,6 +44,7 @@ import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,10 +55,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static org.fusesource.jansi.Ansi.ansi;
 
 /**
  * Class with the static utility methods consumed by JibBuildService.
@@ -53,29 +71,38 @@ public class JibServiceUtil {
 
     private JibServiceUtil() {}
 
+    private static final long JIB_EXECUTOR_SHUTDOWN_TIMEOUT_SECONDS = 10L;
     private static final String DOCKER_REGISTRY = "docker.io";
     private static final String BUSYBOX = "busybox:latest";
     private static String EMPTY_STRING = "";
     private static String TAR_POSTFIX = ".tar";
 
-    static void buildContainer(JibContainerBuilder jibContainerBuilder, TarImage image, Logger logger) {
+    static void buildContainer(JibContainerBuilder jibContainerBuilder, TarImage image, Logger logger)
+        throws InterruptedException {
+
+        final ExecutorService jibBuildExecutor = Executors.newCachedThreadPool();
         try {
             jibContainerBuilder.setCreationTime(Instant.now());
             jibContainerBuilder.containerize(Containerizer.to(image)
+              .setExecutorService(jibBuildExecutor)
               .addEventHandler(LogEvent.class, log(logger))
               .addEventHandler(TimerEvent.class, new TimerEventHandler(logger::debug))
-              .addEventHandler(ProgressEvent.class, new ProgressEventHandler(logUpdate(logger))));
+              .addEventHandler(ProgressEvent.class, new ProgressEventHandler(logUpdate())));
+            logUpdateFinished();
         } catch (CacheDirectoryCreationException | IOException | ExecutionException | RegistryException ex) {
             logger.error("Unable to build the image tarball: ", ex);
             throw new IllegalStateException(ex);
         } catch (InterruptedException ex) {
             logger.error("Thread interrupted", ex);
-            Thread.currentThread().interrupt();
+            throw ex;
+        } finally {
+            jibBuildExecutor.shutdown();
+            jibBuildExecutor.awaitTermination(JIB_EXECUTOR_SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         }
     }
 
     static JibContainerBuilder containerFromImageConfiguration(ImageConfiguration imageConfiguration)
-    throws InvalidImageReferenceException {
+        throws InvalidImageReferenceException {
 
         final Optional<BuildImageConfiguration> bic =
           Optional.ofNullable(Objects.requireNonNull(imageConfiguration).getBuildConfiguration());
@@ -124,6 +151,7 @@ public class JibServiceUtil {
      */
     public static void jibPush(ImageConfiguration imageConfiguration, MavenProject project, RegistryService.RegistryConfig registryConfig,
                                  String outputDirectory, Logger log) throws MojoExecutionException {
+
         BuildImageConfiguration buildImageConfiguration = imageConfiguration.getBuildConfiguration();
 
         String outputDir = prepareAbsoluteOutputDirPath(EMPTY_STRING, project, outputDirectory).getAbsolutePath();
@@ -142,15 +170,17 @@ public class JibServiceUtil {
                 final String targetImage = new ImageName(imageConfiguration.getName()).getFullName();
                 pushImage(baseImage, targetImage, pushCredential, log);
             } else {
-                tags.stream().filter(Objects::nonNull).forEach(tag -> {
+                for (String tag : tags.stream().filter(Objects::nonNull).collect(Collectors.toList())) {
                     final String targetImage = new ImageName(imageConfiguration.getName(), tag).getFullName();
                     pushImage(baseImage, targetImage, pushCredential, log);
-                });
+                }
             }
         } catch (InvalidImageReferenceException | IllegalStateException e) {
             log.error("Exception occurred while pushing the image: %s", imageConfiguration.getName());
             throw new MojoExecutionException(e.getMessage(), e);
-
+        } catch (InterruptedException ex) {
+            log.error("Thread interrupted", ex);
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -161,7 +191,10 @@ public class JibServiceUtil {
      * @param credential
      * @param logger
      */
-    private static void pushImage(TarImage baseImage, String targetImageName, Credential credential, Logger logger) {
+    private static void pushImage(TarImage baseImage, String targetImageName, Credential credential, Logger logger)
+        throws InterruptedException {
+
+        final ExecutorService jibBuildExecutor = Executors.newCachedThreadPool();
         try {
             RegistryImage targetImage = RegistryImage.named(targetImageName);
             if (credential!= null && !credential.getUsername().isEmpty() && !credential.getPassword().isEmpty()) {
@@ -169,12 +202,20 @@ public class JibServiceUtil {
             }
 
             Jib.from(baseImage).containerize(Containerizer.to(targetImage)
-                    .addEventHandler(LogEvent.class, log(logger))
-                    .addEventHandler(TimerEvent.class, new TimerEventHandler(logger::debug))
-                    .addEventHandler(ProgressEvent.class, new ProgressEventHandler(logUpdate(logger))));
-        } catch (RegistryException | CacheDirectoryCreationException | InvalidImageReferenceException | IOException | ExecutionException | InterruptedException e) {
-            logger.error("Exception occured while pushing the image: %s", targetImageName);
+              .setExecutorService(jibBuildExecutor)
+              .addEventHandler(LogEvent.class, log(logger))
+              .addEventHandler(TimerEvent.class, new TimerEventHandler(logger::debug))
+              .addEventHandler(ProgressEvent.class, new ProgressEventHandler(logUpdate())));
+            logUpdateFinished();
+        } catch (RegistryException | CacheDirectoryCreationException | InvalidImageReferenceException | IOException | ExecutionException e) {
+            logger.error("Exception occurred while pushing the image: %s", targetImageName);
             throw new IllegalStateException(e.getMessage(), e);
+        } catch (InterruptedException ex) {
+            logger.error("Thread interrupted", ex);
+            throw ex;
+        } finally {
+            jibBuildExecutor.shutdown();
+            jibBuildExecutor.awaitTermination(JIB_EXECUTOR_SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         }
     }
 
@@ -194,24 +235,29 @@ public class JibServiceUtil {
     }
 
     private static Consumer<LogEvent> log(Logger logger) {
-        return logEvent -> ((Function<LogEvent, Consumer<String>>)(le -> {
-            switch(le.getLevel()) {
-                case ERROR:
-                    return logger::error;
-                case WARN:
-                    return logger::warn;
-                case INFO:
-                    return logger::info;
-                default:
-                    return logger::debug;
+        return le -> {
+            if (le.getLevel() != LogEvent.Level.DEBUG || logger.isVerboseEnabled() || logger.isDebugEnabled()) {
+                System.out.println(ansi().cursorUpLine(1).eraseLine().a("JIB> ")
+                  .a(StringUtils.rightPad(le.getMessage(), 120)).a("\n"));
             }
-        })).apply(logEvent).accept(logEvent.getMessage());
+        };
     }
 
-    private static Consumer<ProgressEventHandler.Update> logUpdate(Logger logger) {
-        return update ->
-            ProgressDisplayGenerator.generateProgressDisplay(update.getProgress(), update.getUnfinishedLeafTasks())
-              .forEach(logger::info);
+    private static Consumer<ProgressEventHandler.Update> logUpdate() {
+        return update -> {
+            final List<String> progressDisplay =
+              ProgressDisplayGenerator.generateProgressDisplay(update.getProgress(), update.getUnfinishedLeafTasks());
+            if (progressDisplay.size() > 2 && progressDisplay.stream().allMatch(Objects::nonNull)) {
+                final String progressBar = progressDisplay.get(1);
+                final String task = progressDisplay.get(2);
+                System.out.println(ansi().cursorUpLine(1).eraseLine().a("JIB> ").a(progressBar).a(" ").a(task));
+            }
+        };
+    }
+
+    private static void logUpdateFinished() {
+        System.out.println(ansi().cursorUpLine(1).eraseLine().a("JIB> ")
+          .a(StringUtils.rightPad("[==============================] 100.0% complete", 120)));
     }
 
     static String getBaseImage(ImageConfiguration imageConfiguration) {
