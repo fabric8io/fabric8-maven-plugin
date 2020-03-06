@@ -23,7 +23,7 @@
 
     <artifactId>fabric8-maven-sample-spring-boot</artifactId>
     <groupId>io.fabric8</groupId>
-    <version>4.4-SNAPSHOT</version>
+    <version>4.5-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <parent>
@@ -89,7 +89,7 @@
                     <plugin>
                         <groupId>io.fabric8</groupId>
                         <artifactId>fabric8-maven-plugin</artifactId>
-                        <version>4.4-SNAPSHOT</version>
+                        <version>${project.version}</version>
                         <configuration>
 
                             <resources>
@@ -146,7 +146,7 @@
                     <plugin>
                         <groupId>io.fabric8</groupId>
                         <artifactId>fabric8-maven-plugin</artifactId>
-                        <version>4.4-SNAPSHOT</version>
+                        <version>${project.version}</version>
                         <configuration>
                             <isJib>true</isJib>
                             <resources>
