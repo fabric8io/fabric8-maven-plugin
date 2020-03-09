@@ -50,10 +50,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -137,7 +139,7 @@ public class JibServiceUtil {
     }
 
     static String imageNameFromImageConfiguration(ImageConfiguration imageConfiguration) {
-        return new ImageName(imageConfiguration.getName()).getRepository();
+        return new ImageName(imageConfiguration.getName()).getFullName();
     }
 
     /**
@@ -156,32 +158,36 @@ public class JibServiceUtil {
 
         String outputDir = prepareAbsoluteOutputDirPath(EMPTY_STRING, project, outputDirectory).getAbsolutePath();
 
-        ImageName tarImage = new ImageName(imageConfiguration.getName());
-        String tarImageRepo = tarImage.getRepository();
+        String imageName = imageNameFromImageConfiguration(imageConfiguration);
         try {
-            String imageTarName = ImageReference.parse(tarImageRepo).toString().concat(TAR_POSTFIX);
+            String imageTarName = ImageReference.parse(imageName).toString().concat(TAR_POSTFIX);
             TarImage baseImage = TarImage.at(Paths.get(outputDir, imageTarName));
 
             String configuredRegistry = EnvUtil.firstRegistryOf((new ImageName(imageConfiguration.getName())).getRegistry(), imageConfiguration.getRegistry(), registryConfig.getRegistry());
 
             Credential pushCredential = getRegistryCredentials(configuredRegistry, registryConfig);
             final List<String> tags = buildImageConfiguration.getTags();
-            if (tags.isEmpty()) {
-                final String targetImage = new ImageName(imageConfiguration.getName()).getFullName();
+
+            for (String tag : appendOriginalImageNameTagIfApplicable(tags, imageName)) {
+                final String targetImage = new ImageName(imageConfiguration.getName(), tag).getFullName();
                 pushImage(baseImage, targetImage, pushCredential, log);
-            } else {
-                for (String tag : tags.stream().filter(Objects::nonNull).collect(Collectors.toList())) {
-                    final String targetImage = new ImageName(imageConfiguration.getName(), tag).getFullName();
-                    pushImage(baseImage, targetImage, pushCredential, log);
-                }
             }
         } catch (InvalidImageReferenceException | IllegalStateException e) {
             log.error("Exception occurred while pushing the image: %s", imageConfiguration.getName());
             throw new MojoExecutionException(e.getMessage(), e);
-        } catch (InterruptedException ex) {
-            log.error("Thread interrupted", ex);
+        } catch (InterruptedException e) {
+            log.error("Thread interrupted", e);
             Thread.currentThread().interrupt();
         }
+    }
+
+    private static Set<String> appendOriginalImageNameTagIfApplicable(List<String> tags, String imageName) {
+        ImageName tempImage = new ImageName(imageName);
+        Set<String> tagSet = tags.stream().filter(Objects::nonNull).collect(Collectors.toSet());
+        if (!tempImage.getTag().isEmpty()) {
+            tagSet.add(tempImage.getTag());
+        }
+        return tagSet;
     }
 
     /**

@@ -23,6 +23,7 @@ Usage:
 ```
 
 ### 4.5-SNAPSHOT
+* Fix: Jib push fails to push configured tag
 * Fix: Jib Push fails when docker daemon is disabled
 * Refactor #1766: Jib Refactor
 * Revert #1737 : Reverted "Wrong Jib output directory in Maven multi-module build"
