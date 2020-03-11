@@ -239,19 +239,18 @@ public class JibAssemblyManager {
                         assemblyConfig.getDescriptorRef() != null);
     }
 
-    public File extractOrCopy(AssemblyMode mode, File source, File destinationDir, String assemblyName, Logger log) throws IOException {
+    public File extractOrCopy(AssemblyMode mode, File source, File workingDirectory, String assemblyName, Logger log) throws IOException {
 
         if (source.isDirectory() && mode.getExtension().equals("dir")) {
-
-            FileUtils.copyDirectoryToDirectory(source, destinationDir);
-            return destinationDir;
+            FileUtils.copyDirectoryToDirectory(source, workingDirectory);
+            return workingDirectory;
 
         } else {
 
-            File destination = new File(destinationDir, assemblyName);
+            File destDirectory = new File(workingDirectory, assemblyName);
 
-            if (!destination.exists()) {
-                destination.mkdir();
+            if (!destDirectory.exists()) {
+                destDirectory.mkdir();
             }
 
             AbstractUnArchiver unArchiver = null;
@@ -269,11 +268,11 @@ public class JibAssemblyManager {
 
             if (unArchiver != null) {
                 unArchiver.setSourceFile(source);
-                unArchiver.setDestDirectory(destination);
+                unArchiver.setDestDirectory(destDirectory);
                 unArchiver.enableLogging(getLogger(log));
                 unArchiver.extract();
 
-                return destination;
+                return destDirectory;
             }
 
             return null;
