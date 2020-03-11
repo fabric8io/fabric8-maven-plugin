@@ -269,7 +269,7 @@ public class JibAssemblyManager {
 
             if (unArchiver != null) {
                 unArchiver.setSourceFile(source);
-                unArchiver.setDestDirectory(destinationDir);
+                unArchiver.setDestDirectory(destination);
                 unArchiver.enableLogging(getLogger(log));
                 unArchiver.extract();
 
