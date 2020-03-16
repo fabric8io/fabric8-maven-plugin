@@ -15,6 +15,7 @@
  */
 package io.fabric8.maven.plugin.mojo.build;
 
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.maven.core.access.ClusterAccess;
 import io.fabric8.maven.core.access.ClusterConfiguration;
 import io.fabric8.maven.core.config.BuildRecreateMode;
@@ -27,11 +28,16 @@ import io.fabric8.maven.core.service.BuildService;
 import io.fabric8.maven.core.service.Fabric8ServiceHub;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.service.kubernetes.jib.JibAssemblyManager;
+import io.fabric8.maven.core.util.MavenUtil;
 import io.fabric8.maven.core.util.ProfileUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.Task;
+import io.fabric8.maven.enricher.api.EnricherContext;
+import io.fabric8.maven.enricher.api.MavenEnricherContext;
 import io.fabric8.maven.generator.api.GeneratorContext;
+import io.fabric8.maven.plugin.enricher.EnricherManager;
 import io.fabric8.maven.plugin.generator.GeneratorManager;
 import io.fabric8.maven.plugin.mojo.ResourceDirCreator;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -328,6 +334,14 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                         projectHelper.attachArtifact(project, "yml", classifier, destFile);
                     }
                 })
+                .enricherTask(new Task<KubernetesListBuilder>() {
+                    @Override
+                    public void execute(KubernetesListBuilder builder) throws Exception {
+                        EnricherManager enricherManager = new EnricherManager(resources, getEnricherContext(), MavenUtil.getCompileClasspathElementsIfRequested(project, useProjectClasspath));
+                        enricherManager.enrich(PlatformMode.kubernetes, builder);
+                        enricherManager.enrich(PlatformMode.openshift, builder);
+                    }
+                })
                 .build();
     }
 
@@ -394,6 +408,27 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 .useProjectClasspath(useProjectClasspath)
                 .artifactResolver(getFabric8ServiceHub().getArtifactResolverService())
                 .build();
+    }
+
+    // Get enricher context
+    public EnricherContext getEnricherContext() {
+        return new MavenEnricherContext.Builder()
+                .project(project)
+                .session(session)
+                .config(extractEnricherConfig())
+                .images(getResolvedImages())
+                .resources(resources)
+                .log(log)
+                .build();
+    }
+
+    // Get enricher config
+    private ProcessorConfig extractEnricherConfig() {
+        try {
+            return ProfileUtil.blendProfileWithConfiguration(ProfileUtil.ENRICHER_CONFIG, profile, resourceDir, enricher);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot extract enricher config: " + e,e);
+        }
     }
 
     private Fabric8ServiceHub getFabric8ServiceHub() {
