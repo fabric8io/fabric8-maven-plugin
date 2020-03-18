@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß, James Strachan</span><br>
 <span id="revnumber">version 4.3.1,</span>
-<span id="revdate">2019-10-19</span>
+<span id="revdate">2020-03-18</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">fabric8-maven-plugin</div>
@@ -645,23 +645,29 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#extended-authentication">12.4. Extended Authentication</a></li>
 </ul>
 </li>
-<li><a href="#migration">13. Migration from version 2</a></li>
-<li><a href="#faq">14. FAQ</a>
+<li><a href="#volume-configuration">13. Volume Configuration</a></li>
+<li><a href="#integrations">14. Integrations</a>
 <ul class="sectlevel2">
-<li><a href="#general-questions">14.1. General questions</a>
+<li><a href="#integrations.dekorate">14.1. Dekorate</a></li>
+</ul>
+</li>
+<li><a href="#migration">15. Migration from version 2</a></li>
+<li><a href="#faq">16. FAQ</a>
+<ul class="sectlevel2">
+<li><a href="#general-questions">16.1. General questions</a>
 <ul class="sectlevel3">
-<li><a href="#how-do-i-define-an-environment-variable">14.1.1. How do I define an environment variable?</a></li>
-<li><a href="#how-do-i-define-a-system-property">14.1.2. How do I define a system property?</a></li>
-<li><a href="#how-do-i-mount-a-config-file-from-a-configmap">14.1.3. How do I mount a config file from a ConfigMap?</a></li>
-<li><a href="#how-do-i-use-a-persistent-volume">14.1.4. How do I use a Persistent Volume?</a></li>
+<li><a href="#how-do-i-define-an-environment-variable">16.1.1. How do I define an environment variable?</a></li>
+<li><a href="#how-do-i-define-a-system-property">16.1.2. How do I define a system property?</a></li>
+<li><a href="#how-do-i-mount-a-config-file-from-a-configmap">16.1.3. How do I mount a config file from a ConfigMap?</a></li>
+<li><a href="#how-do-i-use-a-persistent-volume">16.1.4. How do I use a Persistent Volume?</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#appendix">15. Appendix</a>
+<li><a href="#appendix">17. Appendix</a>
 <ul class="sectlevel2">
-<li><a href="#kind-filename-type-mapping">15.1. Kind/Filename Type Mapping</a></li>
-<li><a href="#custom-kind-filename-mapping">15.2. Custom Kind/Filename Mapping</a></li>
+<li><a href="#kind-filename-type-mapping">17.1. Kind/Filename Type Mapping</a></li>
+<li><a href="#custom-kind-filename-mapping">17.2. Custom Kind/Filename Mapping</a></li>
 </ul>
 </li>
 </ul>
@@ -1178,17 +1184,21 @@ For building images there is also an alternative mode using external Dockerfiles
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 2. OpenShift Compatibility</caption>
 <colgroup>
-<col style="width: 14.2857%;">
-<col style="width: 14.2857%;">
-<col style="width: 14.2857%;">
-<col style="width: 14.2857%;">
-<col style="width: 14.2857%;">
-<col style="width: 14.2857%;">
-<col style="width: 14.2858%;">
+<col style="width: 11.1111%;">
+<col style="width: 11.1111%;">
+<col style="width: 11.1111%;">
+<col style="width: 11.1111%;">
+<col style="width: 11.1111%;">
+<col style="width: 11.1111%;">
+<col style="width: 11.1111%;">
+<col style="width: 11.1111%;">
+<col style="width: 11.1112%;">
 </colgroup>
 <thead>
 <tr>
 <th class="tableblock halign-left valign-top">FMP</th>
+<th class="tableblock halign-left valign-top">Openshift 4.2.0</th>
+<th class="tableblock halign-left valign-top">Openshift 4.1.0</th>
 <th class="tableblock halign-left valign-top">OpenShift 3.11.0</th>
 <th class="tableblock halign-left valign-top">OpenShift 3.10.0</th>
 <th class="tableblock halign-left valign-top">OpenShift 3.9.0</th>
@@ -1205,10 +1215,14 @@ For building images there is also an alternative mode using external Dockerfiles
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.3.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
@@ -1223,10 +1237,14 @@ For building images there is also an alternative mode using external Dockerfiles
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.1.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
@@ -1238,6 +1256,8 @@ For building images there is also an alternative mode using external Dockerfiles
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.0.0-M2</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
@@ -1245,6 +1265,8 @@ For building images there is also an alternative mode using external Dockerfiles
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 4.0.0-M1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
@@ -1256,6 +1278,8 @@ For building images there is also an alternative mode using external Dockerfiles
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.42</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
@@ -1265,6 +1289,8 @@ For building images there is also an alternative mode using external Dockerfiles
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.41</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
@@ -1272,6 +1298,8 @@ For building images there is also an alternative mode using external Dockerfiles
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.40</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">○</p></td>
@@ -1284,12 +1312,16 @@ For building images there is also an alternative mode using external Dockerfiles
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.38</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
@@ -1302,12 +1334,16 @@ For building images there is also an alternative mode using external Dockerfiles
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.36</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
@@ -1320,12 +1356,16 @@ For building images there is also an alternative mode using external Dockerfiles
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.34</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
@@ -1338,12 +1378,16 @@ For building images there is also an alternative mode using external Dockerfiles
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FMP 3.5.32</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
@@ -2406,6 +2450,28 @@ user needs to specift release version 11 in their <code>maven-compiler-plugin</c
 </div>
 <div class="paragraph">
 <p>The <a href="https://docs.openshift.com/enterprise/latest/dev_guide/builds.html#defining-a-buildconfig">Build Config</a> and <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html#image-streams">Image streams</a> can be managed by this plugin. If they do not exist, they will be automatically created by <code>fabric8:build</code>. If they do already exist, they are reused, except when the <code>buildRecreate</code> configuration option (property <code>fabric8.build.recreate</code>) is set to a value as described in <a href="#build-goal-configuration">Configuration</a>. Also if the provided build strategy is different than the one defined in the existing build configuration, the Build Config is edited to reflect the new type (which in turn removes all build associated with the previous build).</p>
+</div>
+<div class="paragraph">
+<p>If you want to configure memory/cpu requests and limits related to <code>BuildConfig</code>, you can either provide them as in plugin configuration or as a resource fragment in <code>src/main/fabric8</code> directory. for XML configuration it needs to be done like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code>    &lt;plugin&gt;
+        &lt;groupId&gt;io.fabric8&lt;/groupId&gt;
+        &lt;artifactId&gt;fabric8-maven-plugin&lt;/artifactId&gt;
+        &lt;version&gt;${plugin.version}&lt;/version&gt;
+        &lt;configuration&gt;
+          &lt;resources&gt;
+            &lt;openshiftBuildConfig&gt;
+              &lt;limits&gt;
+                &lt;cpu&gt;100m&lt;/cpu&gt;
+                &lt;memory&gt;256Mi&lt;/memory&gt;
+              &lt;/limits&gt;
+            &lt;/openshiftBuildConfig&gt;
+          &lt;/resources&gt;
+        &lt;/configuration&gt;
+    &lt;/plugin&gt;</code></pre>
+</div>
 </div>
 <div class="paragraph">
 <p>This image stream created can then be directly referenced from <a href="https://docs.openshift.com/enterprise/latest/architecture/core_concepts/deployments.html#deployments-and-deployment-configurations">Deployment Configuration</a> objects created by <a href="#fabric8:resource"><strong>fabric8:resource</strong></a>.
@@ -5581,9 +5647,6 @@ Assuming that the image exposes ports <code>8080</code> and <code>8778</code> (e
 <div class="paragraph">
 <p>Multiple ports are <strong>only</strong> mapped when <em>multiPort</em> mode is enabled (which is switched off by default). If <em>multiPort</em> mode is disabled, only the first port from the list of mapped ports as calculated like above is taken.</p>
 </div>
-<div class="paragraph">
-<p>When you set <code>legacyPortMapping</code> to true than ports 8080 to 9090 are mapped to port 80 automatically if not explicitly mapped via <code><em>port</em></code>. I.e. when an image exposes port 8080 with a legacy mapping this mapped to a service port 80, not 8080. You <em>should not</em> switch this on for any good reason. In fact it might be that this option can vanish anytime.</p>
-</div>
 </div>
 <div class="sect4">
 <h5 id="fmp-image">fmp-image</h5>
@@ -7229,7 +7292,8 @@ If you set <code>name</code> tag then this is used as key instead of the filenam
       - fmp-openshift-deploymentconfig
       - fmp-openshift-project
       - fmp-openshift-service-expose
-      - fmp-openshift-route</span></span></code></pre>
+      - fmp-openshift-route
+      - fmp-ingress</span></span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7248,7 +7312,6 @@ If you set <code>name</code> tag then this is used as key instead of the filenam
     - <span class="string"><span class="content">fmp-controller</span></span>
     - <span class="string"><span class="content">fmp-controller-from-configuration</span></span>
     - <span class="string"><span class="content">fmp-service</span></span>
-    - <span class="string"><span class="content">fmp-namespace</span></span>
     - <span class="string"><span class="content">fmp-image</span></span>
     - <span class="string"><span class="content">fmp-portname</span></span>
     - <span class="string"><span class="content">fmp-project-label</span></span>
@@ -7265,8 +7328,8 @@ If you set <code>name</code> tag then this is used as key instead of the filenam
     - <span class="string"><span class="content">fmp-configmap-file</span></span>
     - <span class="string"><span class="content">fmp-secret-file</span></span>
 
-    <span class="comment"># Route exposure</span>
     - <span class="string"><span class="content">fmp-openshift-service-expose</span></span>
+    - <span class="string"><span class="content">fmp-ingress</span></span>
     - <span class="string"><span class="content">fmp-openshift-route</span></span>
     - <span class="string"><span class="content">fmp-openshift-deploymentconfig</span></span>
     - <span class="string"><span class="content">fmp-openshift-project</span></span>
@@ -7289,6 +7352,7 @@ If you set <code>name</code> tag then this is used as key instead of the filenam
     - <span class="string"><span class="content">fmp-docker-registry-secret</span></span>
     - <span class="string"><span class="content">fmp-triggers-annotation</span></span>
     - <span class="string"><span class="content">fmp-openshift-imageChangeTrigger</span></span>
+    - <span class="string"><span class="content">fmp-namespace</span></span>
 
   <span class="key">generator</span>:
     <span class="comment"># The order given in &quot;includes&quot; is the order in which generators are called</span>
@@ -7700,14 +7764,176 @@ To do so, either specify the <code>docker.authToken</code> system property or pr
 (e.g. a role that grants the AWS built-in policy <em>AmazonEC2ContainerRegistryPowerUser</em>)
 authentication information doesn&#8217;t need to be provided at all. Instead the instance
 meta-data service or task metadata endpoint in case of ECS is queried for temporary access credentials supplied by the
-assigned role.
-Unresolved directive in index.adoc - include::inc/_volumes.adoc[]</p>
+assigned role.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="migration">13. Migration from version 2</h2>
+<h2 id="volume-configuration">13. Volume Configuration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Fabric8 maven plugin supports volume configuration in XML format in pom.xml. These are the volume types which are supported:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 43. Supported Volume Types</caption>
+<colgroup>
+<col style="width: 4.3478%;">
+<col style="width: 95.6522%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Volume Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">hostPath</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mounts a file or directory from the host node&#8217;s filesystem into your pod</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">emptyDir</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Containers in the Pod can all read and write the same files in the emptyDir volume, though that volume can be mounted at the same or different paths in each Container. When a Pod is removed from a node for any reason, the data in the emptyDir is deleted forever.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">gitRepo</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">It mounts an empty directory and clones a git repository into it for your Pod to use.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">secret</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">It is used to pass sensitive information, such as passwords, to Pods.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">nfsPath</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Allows an existing NFS(Network File System) share to be mounted into your Pod.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">gcePdName</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mounts a Google Compute Engine(GCE) into your Pod. You must create PD using <code>gcloud</code> or GCE API or UI before you can use it.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">glusterFsPath</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Allows a Glusterfs (an open source networked filesystem) volume to be mounted into your Pod.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">persistentVolumeClaim</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Used to mount a PersistentVolume into a Pod.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">awsElasticBlockStore</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mounts an Amazon Web Services(AWS) EBS Volume into your Pod.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">azureDisk</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mounts a Microsoft Azure Data Disk into a Pod</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">azureFile</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mounts a Microsoft Azure File Volume(SMB 2.1 and 3.0 into a Pod.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">cephfs</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Allows an existing CephFS volume to be mounted into your Pod. You must have your own Ceph server running with the share exported before you can use it.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fc</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Allows existing fibre channel volume to be mounted in a Pod. You must configure FC SAN Zoning to allocate and mask those LUNs (volumes) to the target WWNs beforehand so that Kubernetes hosts can access them.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">flocker</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Flocker is an open source clustered Container data volume manager. A <code>flocker</code> volume allows a Flocker dataset to be mounted into a Pod. You must have your own Flocker installation running before you can use it.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">iscsi</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Allows an existing ISCSI(SCSI over IP) volume to be mounted into your Pod.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">portworxVolume</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A portworxVolume is an elastic block storage layer that runs hyperconverged with Kubernetes.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">quobyte</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Allows existing <code>Quobyte</code> volume to be mounted into your Pod. You must have your own Quobyte setup running the volumes created.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">rbd</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Allows a Rados Block Device volume to be mounted into your Pod.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">scaleIO</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ScaleIO is a software-based storage platform that can use existing hardware to create clusters of scalable shared block networked storage. The scaleIO volume plugin allows deployed Pods to access existing ScaleIO volumes.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">storageOS</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A storageos volume allows an existing StorageOS volume to be mounted into your Pod. You must run the StorageOS container on each node that wants to access StorageOS volumes</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vsphereVolume</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Used to mount a vSphere VMDK volume into your Pod.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">downwardAPI</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A downwardAPI volume is used to make downward API data available to applications. It mounts a directory and writes the requested data in plain text files.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="integrations">14. Integrations</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="integrations.dekorate">14.1. Dekorate</h3>
+<div class="paragraph">
+<p><strong>fabric8-maven-plugin</strong> provides a Zero Configuration approach to delegate deployment manifests
+generation to <a href="https://github.com/dekorateio/dekorate">Dekorate</a>.</p>
+</div>
+<div class="paragraph">
+<p>Just by adding a dependency to Dekorate library in the <code>pom.xml</code> file, all manifest
+generation will be delegated to Dekorate.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml">  <span class="tag">&lt;dependencies&gt;</span>
+    <span class="comment">&lt;!-- ... --&gt;</span>
+    <span class="tag">&lt;dependency&gt;</span>
+        <span class="tag">&lt;groupId&gt;</span>io.dekorate<span class="tag">&lt;/groupId&gt;</span>
+        <span class="tag">&lt;artifactId&gt;</span>option-annotations<span class="tag">&lt;/artifactId&gt;</span>
+        <span class="tag">&lt;version&gt;</span>${dekorate.version}<span class="tag">&lt;/version&gt;</span>
+      <span class="tag">&lt;/dependency&gt;</span>
+      <span class="tag">&lt;dependency&gt;</span>
+        <span class="tag">&lt;groupId&gt;</span>io.dekorate<span class="tag">&lt;/groupId&gt;</span>
+        <span class="tag">&lt;artifactId&gt;</span>openshift-annotations<span class="tag">&lt;/artifactId&gt;</span>
+        <span class="tag">&lt;version&gt;</span>${dekorate.version}<span class="tag">&lt;/version&gt;</span>
+      <span class="tag">&lt;/dependency&gt;</span>
+      <span class="tag">&lt;dependency&gt;</span>
+        <span class="tag">&lt;groupId&gt;</span>io.dekorate<span class="tag">&lt;/groupId&gt;</span>
+        <span class="tag">&lt;artifactId&gt;</span>kubernetes-annotations<span class="tag">&lt;/artifactId&gt;</span>
+        <span class="tag">&lt;version&gt;</span>${dekorate.version}<span class="tag">&lt;/version&gt;</span>
+      <span class="tag">&lt;/dependency&gt;</span>
+      <span class="tag">&lt;dependency&gt;</span>
+        <span class="tag">&lt;groupId&gt;</span>io.dekorate<span class="tag">&lt;/groupId&gt;</span>
+        <span class="tag">&lt;artifactId&gt;</span>dekorate-spring-boot<span class="tag">&lt;/artifactId&gt;</span>
+        <span class="tag">&lt;version&gt;</span>${dekorate.version}<span class="tag">&lt;/version&gt;</span>
+      <span class="tag">&lt;/dependency&gt;</span>
+  <span class="tag">&lt;/dependencies&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A full example of the integration can be found in the directory
+<a href="https://github.com/fabric8io/fabric8-maven-plugin/tree/master/samples/spring-boot-dekorate">samples/spring-boot-dekorate</a>.</p>
+</div>
+<div class="paragraph">
+<p>An <strong>experimental</strong> feature is also provided to merge resources generated both by <strong>fabric8-maven-plugin</strong>
+and Dekorate. Yoy can activate this feature by using the following flag <code>-Dfabric8.mergeWithDekorate</code>
+in the command-line, or setting it up as a property (<code>&lt;fabric8.mergeWithDekorate&gt;true&lt;/fabric8.mergeWithDekorate&gt;</code>).</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="migration">15. Migration from version 2</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>This version 3 of f8-m-p is using a completely new configuration syntax compared to version 2.</p>
@@ -7728,12 +7954,12 @@ mvn fabric8:migrate
 </div>
 </div>
 <div class="sect1">
-<h2 id="faq">14. FAQ</h2>
+<h2 id="faq">16. FAQ</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="general-questions">14.1. General questions</h3>
+<h3 id="general-questions">16.1. General questions</h3>
 <div class="sect3">
-<h4 id="how-do-i-define-an-environment-variable">14.1.1. How do I define an environment variable?</h4>
+<h4 id="how-do-i-define-an-environment-variable">16.1.1. How do I define an environment variable?</h4>
 <div class="paragraph">
 <p>The easiest way is to add a <code>src/main/fabric8/deployment.yml</code> file to your project containing something like:</p>
 </div>
@@ -7756,7 +7982,7 @@ mvn fabric8:migrate
 </div>
 </div>
 <div class="sect3">
-<h4 id="how-do-i-define-a-system-property">14.1.2. How do I define a system property?</h4>
+<h4 id="how-do-i-define-a-system-property">16.1.2. How do I define a system property?</h4>
 <div class="paragraph">
 <p>The simplest way is to add system properties to the <code>JAVA_OPTIONS</code> environment variable.</p>
 </div>
@@ -7782,7 +8008,7 @@ mvn fabric8:migrate
 </div>
 </div>
 <div class="sect3">
-<h4 id="how-do-i-mount-a-config-file-from-a-configmap">14.1.3. How do I mount a config file from a ConfigMap?</h4>
+<h4 id="how-do-i-mount-a-config-file-from-a-configmap">16.1.3. How do I mount a config file from a ConfigMap?</h4>
 <div class="paragraph">
 <p>First you need to create your <code>ConfigMap</code> resource via a file <code>src/main/fabric8/configmap.yml</code></p>
 </div>
@@ -7828,7 +8054,7 @@ mvn fabric8:migrate
 </div>
 </div>
 <div class="sect3">
-<h4 id="how-do-i-use-a-persistent-volume">14.1.4. How do I use a Persistent Volume?</h4>
+<h4 id="how-do-i-use-a-persistent-volume">16.1.4. How do I use a Persistent Volume?</h4>
 <div class="paragraph">
 <p>First you need to create your <code>PersistentVolumeClaim</code> resource via a file <code>src/main/fabric8/foo-pvc.yml</code> where <code>foo</code> is the name of the <code>PersistentVolumeClaim</code>. It might be your app requires multiple vpersistent volumes so you will need multiple <code>PersistentVolumeClaim</code> resources.</p>
 </div>
@@ -7871,10 +8097,10 @@ mvn fabric8:migrate
 </div>
 </div>
 <div class="sect1">
-<h2 id="appendix">15. Appendix</h2>
+<h2 id="appendix">17. Appendix</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="kind-filename-type-mapping">15.1. Kind/Filename Type Mapping</h3>
+<h3 id="kind-filename-type-mapping">17.1. Kind/Filename Type Mapping</h3>
 <table id="appendix-kind-mapping" class="tableblock frame-all grid-all spread">
 <colgroup>
 <col style="width: 50%;">
@@ -8027,7 +8253,7 @@ mvn fabric8:migrate
 </table>
 </div>
 <div class="sect2">
-<h3 id="custom-kind-filename-mapping">15.2. Custom Kind/Filename Mapping</h3>
+<h3 id="custom-kind-filename-mapping">17.2. Custom Kind/Filename Mapping</h3>
 <div class="paragraph">
 <p>You can add your custom <code>Kind/Filename</code> mappings.
 To do it you have two approaches:</p>
@@ -8066,7 +8292,7 @@ By default if no environment variable nor system property is set, scan for a fil
 <div id="footer">
 <div id="footer-text">
 Version 4.3.1<br>
-Last updated 2019-07-11 20:07:35 IST
+Last updated 2020-02-07 09:40:43 CET
 </div>
 </div>
 </body>
