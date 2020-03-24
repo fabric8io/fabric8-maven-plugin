@@ -1,6 +1,9 @@
-## fabric8-maven-plugin
 
-> Deprecation Note: This project has been moved to https://github.com/eclipse/jkube . All new features would be implemented there and support for FMP would be eventually dropped.
+# Deprecation Note: 
+
+This project has been moved to https://github.com/eclipse/jkube . All new features would be implemented there and support for FMP would be eventually dropped.
+
+## fabric8-maven-plugin
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.fabric8/fabric8-maven-plugin/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/io.fabric8/fabric8-maven-plugin/)
 [![Circle CI](https://circleci.com/gh/fabric8io/fabric8-maven-plugin/tree/master.svg?style=shield)](https://circleci.com/gh/fabric8io/fabric8-maven-plugin/tree/master)
