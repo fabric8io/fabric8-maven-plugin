@@ -58,10 +58,12 @@ public class ConfigMapEnricher extends BaseEnricher {
             @Override
             public void visit(ConfigMapBuilder element) {
                 final Map<String, String> annotations = element.buildMetadata().getAnnotations();
-                try {
-                    addConfigMapFromAnnotations(annotations, element);
-                } catch (IOException e) {
-                    throw new IllegalArgumentException(e);
+                if (annotations != null) {
+                    try {
+                        addConfigMapFromAnnotations(annotations, element);
+                    } catch (IOException e) {
+                        throw new IllegalArgumentException(e);
+                    }
                 }
             }
         });
