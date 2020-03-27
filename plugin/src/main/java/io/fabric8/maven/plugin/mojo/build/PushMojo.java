@@ -21,6 +21,7 @@ import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.config.RuntimeMode;
 import io.fabric8.maven.core.util.Configs;
 import io.fabric8.maven.core.util.ProfileUtil;
+import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
@@ -46,7 +47,7 @@ import static io.fabric8.maven.core.service.kubernetes.jib.JibServiceUtil.jibPus
  * @since 16/03/16
  */
 @Mojo(name = "push", defaultPhase = LifecyclePhase.INSTALL, requiresDependencyResolution = ResolutionScope.COMPILE)
-public class PushMojo extends io.fabric8.maven.docker.PushMojo {
+public class PushMojo extends AbstractDockerMojo {
 
     /**
      * Generator specific options. This is a generic prefix where the keys have the form
@@ -97,20 +98,29 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
     @Parameter(property = "fabric8.build.strategy" )
     private OpenShiftBuildStrategy buildStrategy = OpenShiftBuildStrategy.s2i;
 
-    @Parameter(property = "docker.skip.push", defaultValue = "false")
-    private boolean skipPush;
-
-    @Parameter(property = "docker.push.registry")
-    private String pushRegistry;
-
     @Parameter(property = "docker.source.dir", defaultValue="src/main/docker")
     private String sourceDirectory;
 
-    @Parameter(property = "docker.target.dir", defaultValue="target/docker")
-    private String outputDirectory;
-
     @Parameter(property = "fabric8.build.jib", defaultValue = "false")
     private boolean isJib;
+
+    @Parameter(property = "docker.push.retries", defaultValue = "0")
+    private int retries;
+
+    @Parameter(property = "docker.skip.push", defaultValue = "false")
+    private boolean fabric8SkipPush;
+
+    @Parameter(alias = "pushRegistry", property = "docker.push.registry")
+    private String fabric8PushRegistry;
+
+    @Parameter(alias = "outputDirectory", property = "docker.target.dir", defaultValue="target/docker")
+    private String fabric8OutputDirectory;
+
+    /**
+     * Skip building tags
+     */
+    @Parameter(property = "docker.skip.tag", defaultValue = "false")
+    private boolean skipTag;
 
     @Override
     protected String getLogPrefix() {
@@ -123,7 +133,7 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
 
     @Override
     protected boolean isDockerAccessRequired() {
-        return mode == RuntimeMode.kubernetes && !isJibMode();
+        return !isJibMode();
     }
 
     private String getProperty(String key) {
@@ -136,7 +146,7 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        if (skip || skipPush) {
+        if (skip || fabric8SkipPush) {
             return;
         }
 
@@ -148,16 +158,16 @@ public class PushMojo extends io.fabric8.maven.docker.PushMojo {
      */
     @Override
     public void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-        if (skipPush) {
+        if (fabric8SkipPush) {
             return;
         }
 
         if (isJibMode()) {
             for (ImageConfiguration imageConfiguration : getResolvedImages()) {
-                jibPush(imageConfiguration, project, getRegistryConfig(pushRegistry), outputDirectory, log);
+                jibPush(imageConfiguration, project, getRegistryConfig(fabric8PushRegistry), fabric8OutputDirectory, log);
             }
         } else {
-            super.executeInternal(hub);
+            hub.getRegistryService().pushImages(getResolvedImages(), retries, getRegistryConfig(fabric8PushRegistry), skipTag);
         }
     }
 
