@@ -24,6 +24,7 @@ Usage:
 
 ### 4.5-SNAPSHOT
 * Fix NullPointerException in ConfigMapEnricher
+* PushMojo should have docker access disabled only when JIB=true
 
 ### 4.4.1 (2020-03-18)
 * Fix: JIB Assembly config doesn't work with any Archive mode
