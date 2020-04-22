@@ -78,8 +78,8 @@
     <!-- =======================================================  -->
     <!-- === Java base image versions for docker, s2i (istag == s2i) -->
     <!-- Upstream -->
-    <version.image.java.8.upstream.docker>1.7</version.image.java.8.upstream.docker>
-    <version.image.java.11.upstream.docker>1.7</version.image.java.11.upstream.docker>
+    <version.image.java.8.upstream.docker>1.5.6</version.image.java.8.upstream.docker>
+    <version.image.java.11.upstream.docker>1.6.3</version.image.java.11.upstream.docker>
     <version.image.java.upstream.s2i>3.0-java8</version.image.java.upstream.s2i>
 
     <!-- RedHat -->
