@@ -107,7 +107,7 @@ public class PushMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.push.retries", defaultValue = "0")
     private int retries;
 
-    @Parameter(property = "docker.skip.push", defaultValue = "false")
+    @Parameter(property = "fabric8.skip.push", defaultValue = "false")
     private boolean fabric8SkipPush;
 
     @Parameter(alias = "pushRegistry", property = "docker.push.registry")
