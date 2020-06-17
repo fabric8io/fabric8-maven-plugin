@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.model.Configuration;
@@ -44,9 +45,7 @@ public class RevisionHistoryEnricherTest {
     @Test
     public void testDefaultRevisionHistoryLimit() throws JsonProcessingException {
         // Given
-        KubernetesListBuilder builder = new KubernetesListBuilder()
-                .addNewDeploymentItem()
-                .endDeploymentItem();
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new DeploymentBuilder().build());
 
         RevisionHistoryEnricher enricher = new RevisionHistoryEnricher(context);
 
@@ -68,9 +67,7 @@ public class RevisionHistoryEnricherTest {
         }};
 
         // Given
-        KubernetesListBuilder builder = new KubernetesListBuilder()
-                .addNewDeploymentItem()
-                .endDeploymentItem();
+        KubernetesListBuilder builder = new KubernetesListBuilder().withItems(new DeploymentBuilder().build());
 
         RevisionHistoryEnricher enricher = new RevisionHistoryEnricher(context);
 

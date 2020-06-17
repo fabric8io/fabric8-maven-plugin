@@ -21,12 +21,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.apps.DaemonSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetBuilder;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ResourceConfig;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.ResourceUtil;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
+import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
 import mockit.Expectations;
 import mockit.Mocked;
 import org.hamcrest.Matchers;
@@ -73,8 +78,7 @@ public class ImageEnricherTest {
     @Test
     public void checkEnrichDeployment() throws Exception {
         KubernetesListBuilder builder = new KubernetesListBuilder()
-                .addNewDeploymentItem()
-                .endDeploymentItem();
+                .addToItems(new DeploymentBuilder().build());
 
         imageEnricher.create(PlatformMode.kubernetes, builder);
         assertCorrectlyGeneratedResources(builder.build(), "Deployment");
@@ -83,8 +87,7 @@ public class ImageEnricherTest {
     @Test
     public void checkEnrichReplicaSet() throws Exception {
         KubernetesListBuilder builder = new KubernetesListBuilder()
-                .addNewReplicaSetItem()
-                .endReplicaSetItem();
+                .addToItems(new ReplicaSetBuilder().build());
 
         imageEnricher.create(PlatformMode.kubernetes, builder);
         assertCorrectlyGeneratedResources(builder.build(), "ReplicaSet");
@@ -103,8 +106,7 @@ public class ImageEnricherTest {
     @Test
     public void checkEnrichDaemonSet() throws Exception {
         KubernetesListBuilder builder = new KubernetesListBuilder()
-                .addNewDaemonSetItem()
-                .endDaemonSetItem();
+                .addToItems(new DaemonSetBuilder().build());
 
         imageEnricher.create(PlatformMode.kubernetes, builder);
         assertCorrectlyGeneratedResources(builder.build(), "DaemonSet");
@@ -113,8 +115,7 @@ public class ImageEnricherTest {
     @Test
     public void checkEnrichStatefulSet() throws Exception {
         KubernetesListBuilder builder = new KubernetesListBuilder()
-                .addNewStatefulSetItem()
-                .endStatefulSetItem();
+                .addToItems(new StatefulSetBuilder().build());
 
         imageEnricher.create(PlatformMode.kubernetes, builder);
         assertCorrectlyGeneratedResources(builder.build(), "StatefulSet");
@@ -123,8 +124,7 @@ public class ImageEnricherTest {
     @Test
     public void checkEnrichDeploymentConfig() throws Exception {
         KubernetesListBuilder builder = new KubernetesListBuilder()
-                .addNewDeploymentConfigItem()
-                .endDeploymentConfigItem();
+                .addToItems(new DeploymentConfigBuilder().build());
 
         imageEnricher.create(PlatformMode.kubernetes, builder);
         assertCorrectlyGeneratedResources(builder.build(), "DeploymentConfig");

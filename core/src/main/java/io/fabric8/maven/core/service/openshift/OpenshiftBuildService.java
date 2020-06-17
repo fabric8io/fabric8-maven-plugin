@@ -67,6 +67,7 @@ import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.BuildConfig;
+import io.fabric8.openshift.api.model.BuildConfigBuilder;
 import io.fabric8.openshift.api.model.BuildConfigFluent;
 import io.fabric8.openshift.api.model.BuildConfigSpec;
 import io.fabric8.openshift.api.model.BuildConfigSpecBuilder;
@@ -76,6 +77,7 @@ import io.fabric8.openshift.api.model.BuildSource;
 import io.fabric8.openshift.api.model.BuildStrategy;
 import io.fabric8.openshift.api.model.BuildStrategyBuilder;
 import io.fabric8.openshift.api.model.DoneableBuildConfig;
+import io.fabric8.openshift.api.model.ImageStreamBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
@@ -258,12 +260,12 @@ public class OpenshiftBuildService implements BuildService {
 
     private String createBuildConfig(KubernetesListBuilder builder, String buildName, BuildStrategy buildStrategyResource, BuildOutput buildOutput) {
         log.info("Creating BuildServiceConfig %s for %s build", buildName, buildStrategyResource.getType());
-        builder.addNewBuildConfigItem()
+        builder.addToItems(new BuildConfigBuilder()
                 .withNewMetadata()
                 .withName(buildName)
                 .endMetadata()
                 .withSpec(getBuildConfigSpec(buildStrategyResource, buildOutput))
-                .endBuildConfigItem();
+                .build());
         return buildName;
     }
 
@@ -528,7 +530,7 @@ public class OpenshiftBuildService implements BuildService {
         }
         if (!hasImageStream) {
             log.info("Creating ImageStream %s", imageStreamName);
-            builder.addNewImageStreamItem()
+            builder.addToItems(new ImageStreamBuilder()
                     .withNewMetadata()
                         .withName(imageStreamName)
                     .endMetadata()
@@ -537,7 +539,7 @@ public class OpenshiftBuildService implements BuildService {
                             .withLocal(config.isS2iImageStreamLookupPolicyLocal())
                         .endLookupPolicy()
                     .endSpec()
-                    .endImageStreamItem();
+                    .build());
         } else {
             log.info("Adding to ImageStream %s", imageStreamName);
         }

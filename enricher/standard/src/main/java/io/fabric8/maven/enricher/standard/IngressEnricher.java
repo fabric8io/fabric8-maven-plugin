@@ -109,7 +109,7 @@ public class IngressEnricher extends BaseEnricher {
                                 .build()).build());
                     }
 
-                    listBuilder.addToIngressItems(ingressBuilder.build());
+                    listBuilder.addToItems(ingressBuilder.build());
                 }
             }
         }

@@ -208,4 +208,8 @@ public class BaseEnricher implements Enricher {
             return defaultValue;
         }
     }
+
+    protected boolean useDeploymentForOpenShift() {
+        return getValueFromConfig(SWITCH_TO_DEPLOYMENT, false);
+    }
 }

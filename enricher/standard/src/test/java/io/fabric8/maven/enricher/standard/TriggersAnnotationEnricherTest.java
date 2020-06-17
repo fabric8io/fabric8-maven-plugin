@@ -20,9 +20,13 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.apps.DaemonSet;
+import io.fabric8.kubernetes.api.model.apps.DaemonSetBuilder;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetBuilder;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
 import io.fabric8.kubernetes.api.model.batch.Job;
+import io.fabric8.kubernetes.api.model.batch.JobBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.enricher.api.MavenEnricherContext;
@@ -54,7 +58,7 @@ public class TriggersAnnotationEnricherTest {
     public void testStatefulSetEnrichment() throws IOException {
 
         KubernetesListBuilder builder = new KubernetesListBuilder()
-                .addNewStatefulSetItem()
+                .addToItems(new StatefulSetBuilder()
                     .withNewSpec()
                         .withNewTemplate()
                             .withNewSpec()
@@ -62,7 +66,7 @@ public class TriggersAnnotationEnricherTest {
                             .endSpec()
                         .endTemplate()
                     .endSpec()
-                .endStatefulSetItem();
+                .build());
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
@@ -87,7 +91,7 @@ public class TriggersAnnotationEnricherTest {
     public void testReplicaSetEnrichment() throws IOException {
 
         KubernetesListBuilder builder = new KubernetesListBuilder()
-                .addNewReplicaSetItem()
+                .addToItems(new ReplicaSetBuilder()
                     .withNewSpec()
                         .withNewTemplate()
                             .withNewSpec()
@@ -98,7 +102,7 @@ public class TriggersAnnotationEnricherTest {
                             .endSpec()
                         .endTemplate()
                     .endSpec()
-                .endReplicaSetItem();
+                .build());
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
@@ -122,7 +126,7 @@ public class TriggersAnnotationEnricherTest {
     public void testDaemonSetEnrichment() throws IOException {
 
         KubernetesListBuilder builder = new KubernetesListBuilder()
-                .addNewDaemonSetItem()
+                .addToItems(new DaemonSetBuilder()
                     .withNewMetadata()
                         .addToAnnotations("annkey", "annvalue")
                     .endMetadata()
@@ -136,7 +140,7 @@ public class TriggersAnnotationEnricherTest {
                             .endSpec()
                         .endTemplate()
                     .endSpec()
-                .endDaemonSetItem();
+                .build());
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
@@ -168,7 +172,7 @@ public class TriggersAnnotationEnricherTest {
         }};
 
         KubernetesListBuilder builder = new KubernetesListBuilder()
-                .addNewStatefulSetItem()
+                .addToItems(new StatefulSetBuilder()
                     .withNewSpec()
                         .withNewTemplate()
                             .withNewSpec()
@@ -180,7 +184,7 @@ public class TriggersAnnotationEnricherTest {
                             .endSpec()
                         .endTemplate()
                     .endSpec()
-                .endStatefulSetItem();
+                .build());
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);
@@ -209,7 +213,7 @@ public class TriggersAnnotationEnricherTest {
     public void testNoEnrichment() {
 
         KubernetesListBuilder builder = new KubernetesListBuilder()
-                .addNewJobItem()
+                .addToItems(new JobBuilder()
                     .withNewMetadata()
                         .addToAnnotations("dummy", "annotation")
                     .endMetadata()
@@ -223,7 +227,7 @@ public class TriggersAnnotationEnricherTest {
                             .endSpec()
                         .endTemplate()
                     .endSpec()
-                .endJobItem();
+                .build());
 
 
         TriggersAnnotationEnricher enricher = new TriggersAnnotationEnricher(context);

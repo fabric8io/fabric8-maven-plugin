@@ -178,7 +178,7 @@ public class ApplyService {
         } else if (dto instanceof ConfigMap) {
             applyResource((ConfigMap) dto, sourceName, kubernetesClient.configMaps());
         } else if (dto instanceof DaemonSet) {
-            applyResource((DaemonSet) dto, sourceName, kubernetesClient.extensions().daemonSets());
+            applyResource((DaemonSet) dto, sourceName, kubernetesClient.apps().daemonSets());
         } else if (dto instanceof Deployment) {
             applyResource((Deployment) dto, sourceName, kubernetesClient.extensions().deployments());
         } else if (dto instanceof ReplicaSet) {

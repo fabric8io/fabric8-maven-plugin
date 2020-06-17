@@ -20,6 +20,7 @@ import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.enricher.api.EnricherContext;
@@ -48,7 +49,7 @@ public class AbstractHealthCheckEnricherTest {
     @Test
     public void enrichSingleContainer() {
         KubernetesListBuilder list = new KubernetesListBuilder()
-                .addNewDeploymentItem()
+                .addToItems(new DeploymentBuilder()
                 .withNewSpec()
                 .withNewTemplate()
                 .withNewSpec()
@@ -59,7 +60,7 @@ public class AbstractHealthCheckEnricherTest {
                 .endSpec()
                 .endTemplate()
                 .endSpec()
-                .endDeploymentItem();
+                .build());
         
         createEnricher(new Properties(), Collections.emptyMap()).create(PlatformMode.kubernetes, list);
 
@@ -79,7 +80,7 @@ public class AbstractHealthCheckEnricherTest {
     @Test
     public void enrichContainerWithSidecar() {
         KubernetesListBuilder list = new KubernetesListBuilder()
-                .addNewDeploymentItem()
+                .addToItems(new DeploymentBuilder()
                     .withNewSpec()
                         .withNewTemplate()
                             .withNewSpec()
@@ -94,7 +95,7 @@ public class AbstractHealthCheckEnricherTest {
                             .endSpec()
                         .endTemplate()
                     .endSpec()
-                .endDeploymentItem();
+                .build());
 
         createEnricher(new Properties(), Collections.singletonMap("FABRIC8_GENERATED_CONTAINERS", "app")).create(PlatformMode.kubernetes, list);
 
@@ -123,7 +124,7 @@ public class AbstractHealthCheckEnricherTest {
         properties.put(AbstractHealthCheckEnricher.ENRICH_CONTAINERS, "app2,app3");
 
         KubernetesListBuilder list = new KubernetesListBuilder()
-                .addNewDeploymentItem()
+                .addToItems(new DeploymentBuilder()
                     .withNewSpec()
                         .withNewTemplate()
                             .withNewSpec()
@@ -142,7 +143,7 @@ public class AbstractHealthCheckEnricherTest {
                             .endSpec()
                         .endTemplate()
                     .endSpec()
-                .endDeploymentItem();
+                .build());
 
         createEnricher(properties, Collections.emptyMap()).create(PlatformMode.kubernetes,list);
 
@@ -175,7 +176,7 @@ public class AbstractHealthCheckEnricherTest {
         properties.put(AbstractHealthCheckEnricher.ENRICH_ALL_CONTAINERS, "true");
 
         KubernetesListBuilder list = new KubernetesListBuilder()
-                .addNewDeploymentItem()
+                .addToItems(new DeploymentBuilder()
                     .withNewSpec()
                         .withNewTemplate()
                             .withNewSpec()
@@ -190,7 +191,7 @@ public class AbstractHealthCheckEnricherTest {
                             .endSpec()
                         .endTemplate()
                     .endSpec()
-                .endDeploymentItem();
+                .build());
 
         createEnricher(properties, Collections.emptyMap()).create(PlatformMode.kubernetes,list);
 
