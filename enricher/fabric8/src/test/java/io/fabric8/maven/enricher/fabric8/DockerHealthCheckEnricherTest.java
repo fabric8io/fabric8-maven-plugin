@@ -24,6 +24,7 @@ import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.model.Configuration;
 import io.fabric8.maven.core.util.ResourceUtil;
@@ -201,7 +202,7 @@ public class DockerHealthCheckEnricherTest {
     }
 
     private KubernetesListBuilder addDeployment(KubernetesListBuilder list, String name) {
-        return list.addNewDeploymentItem()
+        return list.addToItems(new DeploymentBuilder()
                 .withNewMetadata()
                 .withName(name)
                 .endMetadata()
@@ -214,7 +215,7 @@ public class DockerHealthCheckEnricherTest {
                 .endSpec()
                 .endTemplate()
                 .endSpec()
-                .endDeploymentItem();
+                .build());
     }
 
     private void assertNoProbes(HasMetadata object) throws JsonProcessingException {

@@ -253,7 +253,7 @@ public class KubernetesClientUtil {
         }
     }
 
-    public static Map<String, Object> doDeleteCustomResource(KubernetesClient kubernetesClient, CustomResourceDefinitionContext crdContext, String namespace, String name) {
+    public static Map<String, Object> doDeleteCustomResource(KubernetesClient kubernetesClient, CustomResourceDefinitionContext crdContext, String namespace, String name) throws IOException {
         if ("Namespaced".equals(crdContext.getScope())) {
             return kubernetesClient.customResource(crdContext).delete(namespace, name);
         } else {

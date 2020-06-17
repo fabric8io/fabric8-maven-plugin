@@ -19,6 +19,7 @@ import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetBuilder;
 import io.fabric8.maven.core.config.PlatformMode;
 import io.fabric8.maven.core.config.ProcessorConfig;
 import io.fabric8.maven.core.model.Configuration;
@@ -89,7 +90,7 @@ public class EnricherManagerTest {
         EnricherManager manager = new EnricherManager(null, context, Optional.empty());
 
         KubernetesListBuilder builder = new KubernetesListBuilder();
-        builder.addNewReplicaSetItem()
+        builder.addToItems(new ReplicaSetBuilder()
                .withNewSpec()
                  .withNewTemplate()
                    .withNewSpec()
@@ -100,7 +101,7 @@ public class EnricherManagerTest {
                    .endSpec()
                  .endTemplate()
                .endSpec()
-               .endReplicaSetItem();
+               .build());
         manager.enrich(PlatformMode.kubernetes, builder);
         KubernetesList list = builder.build();
         assertEquals(1, list.getItems().size());
