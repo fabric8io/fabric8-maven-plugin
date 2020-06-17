@@ -35,7 +35,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 @Mojo(name = "deploy", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.VALIDATE)
 @Execute(phase = LifecyclePhase.INSTALL)
 public class DeployMojo extends ApplyMojo {
-    @Parameter(property = "docker.skip.deploy", defaultValue = "false")
+    @Parameter(property = "fabric8.skip.deploy", defaultValue = "false")
     protected boolean skipDeploy;
 
     @Override

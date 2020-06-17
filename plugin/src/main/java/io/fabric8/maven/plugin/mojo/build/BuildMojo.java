@@ -186,7 +186,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter(property = "fabric8.build.recreate", defaultValue = "none")
     private String buildRecreate;
 
-    @Parameter(property = "docker.skip.build", defaultValue = "false")
+    @Parameter(property = "fabric8.skip.build", defaultValue = "false")
     protected boolean skipBuild;
 
     @Component
