@@ -16,10 +16,10 @@ If the mode is set to `kubernetes` then a normal Docker build or Dockerless JIB 
 | `Build Options` | Description
 
  | `docker`
-| In order to make the generated images available to the Kubernetes cluster the generated images need to be pushed to a registry with the goal <<fabric8:push>> when a standard Docker build is performed.This is not necessary for single node clusters, though as there is no need to distribute images.
+| In order to make the generated images available to the Kubernetes cluster the generated images need to be pushed to a registry with the goal <<fabric8:push>> when a standard Docker build is performed. This is not necessary for single node clusters, though as there is no need to distribute images.
 
 | `JIB`
-| A Dockerless https://github.com/GoogleContainerTools/jib[JIB Build] is performed when `fabric8.build.jib` property is set to true or `isJib` flag is set to true in pom.xml.Docker daemon is not required to perform a JIB build. The generated image can be automatically pushed to the authorized registry if the credentials are correctly configured. More about https://maven.fabric8.io/#authentication[authentication] here.
+| A Dockerless https://github.com/GoogleContainerTools/jib[JIB Build] is performed when `fabric8.build.jib` property is set to true or `isJib` flag is set to true in pom.xml. Docker daemon is not required to perform a JIB build. The generated image can be automatically pushed to the authorized registry if the credentials are correctly configured. More about https://maven.fabric8.io/#authentication[authentication] here.
 |===
 
 .Jib Image Types
@@ -28,10 +28,10 @@ If the mode is set to `kubernetes` then a normal Docker build or Dockerless JIB 
 | `Type` | Description
 
  | `RegistryImage`
-| RegistryImage is build and pushed to the registry if the registry is correctly authenticated. Defaut registry used is https://hub.docker.com/[Dockerhub]. More about https://static.javadoc.io/com.google.cloud.tools/jib-core/0.10.1/com/google/cloud/tools/jib/api/RegistryImage.html[RegistryImage].
+| RegistryImage is built and pushed to the registry if the registry is correctly authenticated. Default registry used is https://hub.docker.com/[Dockerhub]. More about https://static.javadoc.io/com.google.cloud.tools/jib-core/0.10.1/com/google/cloud/tools/jib/api/RegistryImage.html[RegistryImage].
 
 | `TarImage`
-| TarImage archive is build if the registry is not authenticated correcty. The tar archive is build and can be found in `outputDirectory`, the default value is `target/docker`. More about https://static.javadoc.io/com.google.cloud.tools/jib-core/0.10.1/com/google/cloud/tools/jib/api/TarImage.html[TarImage].
+| TarImage archive is built if the registry is not authenticated correctly. The tar archive is built and can be found in `outputDirectory`, the default value is `target/docker`. More about https://static.javadoc.io/com.google.cloud.tools/jib-core/0.10.1/com/google/cloud/tools/jib/api/TarImage.html[TarImage].
 |===
   
 .Example for Enabling JIB Build.
@@ -67,7 +67,7 @@ For automatic push to registry, conventions for target image configuration shoul
 where `${image.user}` should be replaced with registry username.
 
 Currently, Apart from Java 8, base images for Java 11 are supported for Kubernetes build. To enable Java 11 base images,
-user needs to specift release version 11 in their `maven-compiler-plugin` configuration in their project pom.
+user needs to specify release version 11 in their `maven-compiler-plugin` configuration in their project pom.
 
 .Example for Enabling Java 11 base image.
 [source,xml]
@@ -90,7 +90,7 @@ Refer to the https://github.com/fabric8io/fabric8-maven-plugin/tree/master/sampl
 [[build-openshift]]
 === OpenShift Build
 
-For the `openshift` mode, OpenShift specific https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html[builds] will be performed. These are so called https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html[Binary Source] builds ("binary builds" in short), where the data specified with the <<build-configuration, build configuration>>  is sent directly to OpenShift as a binary archive.
+For the `openshift` mode, OpenShift specific https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html[builds] will be performed. These are so called https://docs.openshift.com/enterprise/latest/architecture/core_concepts/builds_and_image_streams.html[Binary Source] builds ("binary builds" in short), where the data specified with the <<build-configuration, build configuration>> is sent directly to OpenShift as a binary archive.
 
 There are two kind of binary builds supported by this plugin, which can be selected with the `buildStrategy` configuration option (`fabric8.build.strategy` property)
 
