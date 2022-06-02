@@ -56,6 +56,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 
+import static io.fabric8.maven.core.util.Fabric8MavenPluginDeprecationUtil.logFabric8MavenPluginDeprecation;
+
 /**
  * Builds the docker images configured for this project via a Docker or S2I binary build.
  *
@@ -189,6 +191,9 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
     @Parameter(property = "docker.skip.build", defaultValue = "false")
     protected boolean skipBuild;
 
+    @Parameter(property = "fabric8.logDeprecationWarning", defaultValue = "true")
+    protected boolean logDeprecationWarning;
+
     @Component
     private MavenProjectHelper projectHelper;
 
@@ -240,6 +245,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
         }
 
         try {
+            logFabric8MavenPluginDeprecation(log, logDeprecationWarning);
             if (shouldSkipBecauseOfPomPackaging()) {
                 getLog().info("Disabling docker build for pom packaging");
                 return;
@@ -271,6 +277,7 @@ public class BuildMojo extends io.fabric8.maven.docker.BuildMojo {
                 super.executeInternal(hub);
             }
             fabric8ServiceHub.getBuildService().postProcess(getBuildServiceConfig());
+            logFabric8MavenPluginDeprecation(log, logDeprecationWarning);
         } catch(IOException e) {
             throw new MojoExecutionException(e.getMessage());
         }

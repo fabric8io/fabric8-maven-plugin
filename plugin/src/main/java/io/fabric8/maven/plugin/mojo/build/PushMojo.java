@@ -39,6 +39,7 @@ import java.io.File;
 import java.util.List;
 
 import static io.fabric8.maven.core.service.kubernetes.jib.JibServiceUtil.jibPush;
+import static io.fabric8.maven.core.util.Fabric8MavenPluginDeprecationUtil.logFabric8MavenPluginDeprecation;
 
 /**
  * Uploads the built Docker images to a Docker registry
@@ -122,6 +123,9 @@ public class PushMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.skip.tag", defaultValue = "false")
     private boolean skipTag;
 
+    @Parameter(property = "fabric8.logDeprecationWarning", defaultValue = "true")
+    protected boolean logDeprecationWarning;
+
     @Override
     protected String getLogPrefix() {
         return "F8> ";
@@ -150,7 +154,9 @@ public class PushMojo extends AbstractDockerMojo {
             return;
         }
 
+        logFabric8MavenPluginDeprecation(log, logDeprecationWarning);
         super.execute();
+        logFabric8MavenPluginDeprecation(log, logDeprecationWarning);
     }
 
     /**

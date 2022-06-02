@@ -316,6 +316,12 @@ a| The build mode which can be
 | *verbose*
 | Boolean attribute for switching on verbose output like the build steps when doing a Docker build. Default is `false`
 | `docker.verbose`
+
+| *logDeprecationWarning*
+| Whether to log Fabric8 Maven Plugin deprecation warning or not.
+
+Defaults to `true`.
+| `fabric8.logDeprecationWarning`
 |===
 
 === Access Configuration

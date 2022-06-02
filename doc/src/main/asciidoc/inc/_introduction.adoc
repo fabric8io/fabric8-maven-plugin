@@ -2,6 +2,11 @@
 [[introduction]]
 = Introduction
 
+IMPORTANT: *Fabric8 Maven Plugin is deprecated and is no longer supported.
+Please consider migrating to https://github.com/eclipse/jkube[Eclipse JKube] plugins:
+https://www.eclipse.org/jkube/docs/kubernetes-maven-plugin[Kubernetes Maven Plugin] or https://www.eclipse.org/jkube/docs/openshift-maven-plugin[OpenShift Maven Plugin]
+. You can read the https://www.eclipse.org/jkube/docs/migration-guide/[Migration Guide] for more details.*
+
 The *fabric8-maven-plugin* (f8-m-p) brings your Java applications on to http://kubernetes.io/[Kubernetes] and https://www.openshift.com/[OpenShift].
 It provides a tight integration into http://maven.apache.org[Maven] and benefits from the build configuration already provided.
 This plugin focus on two tasks: _Building Docker images_ and _creating Kubernetes and OpenShift resource descriptors_.
