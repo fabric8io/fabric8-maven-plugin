@@ -29,6 +29,8 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
 import org.apache.maven.shared.utils.logging.MessageUtils;
 
+import static io.fabric8.maven.core.util.Fabric8MavenPluginDeprecationUtil.logFabric8MavenPluginDeprecation;
+
 public abstract class AbstractFabric8Mojo extends AbstractMojo {
 
     @Parameter(defaultValue = "${project}", readonly = true)
@@ -53,6 +55,9 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
     @Parameter(defaultValue = "${settings}", readonly = true)
     protected Settings settings;
 
+    @Parameter(property = "fabric8.logDeprecationWarning", defaultValue = "true")
+    protected boolean logDeprecationWarning;
+
     @Parameter
     protected ClusterConfiguration access;
 
@@ -64,7 +69,9 @@ public abstract class AbstractFabric8Mojo extends AbstractMojo {
             return;
         }
         log = createLogger(" ");
+        logFabric8MavenPluginDeprecation(log, logDeprecationWarning);
         executeInternal();
+        logFabric8MavenPluginDeprecation(log, logDeprecationWarning);
     }
 
     public abstract void executeInternal() throws MojoExecutionException, MojoFailureException;
