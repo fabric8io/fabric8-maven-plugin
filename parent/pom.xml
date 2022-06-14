@@ -72,8 +72,8 @@
     <version.jgit>5.3.0.201903130848-r</version.jgit>
     <version.hamcrest-library>1.3</version.hamcrest-library>
     <version.assertj>3.11.1</version.assertj>
-    <version.jackson>2.10.0</version.jackson>
-    <version.snakeyaml>1.25</version.snakeyaml>
+    <version.jackson>2.10.5</version.jackson>
+    <version.snakeyaml>1.30</version.snakeyaml>
 
     <!-- =======================================================  -->
     <!-- === Java base image versions for docker, s2i (istag == s2i) -->
@@ -384,7 +384,7 @@
       <dependency>
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
-        <version>2.8.5</version>
+        <version>2.8.9</version>
       </dependency>
 
       <dependency>
@@ -422,7 +422,7 @@
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
-        <version>2.5</version>
+        <version>2.11.0</version>
       </dependency>
 
       <!-- == maven ===================================== -->
