@@ -24,7 +24,7 @@ Usage:
 ### 4.5-SNAPSHOT
 * Fix NullPointerException in ConfigMapEnricher
 * Update Fabric8 Images to latest versions
-* 
+
 ### 4.4.2 (2022-07-21)
 * Fix #1806: PushMojo should have docker access disabled only when JIB=true
 * Fix #1833: Add Fabric8 Maven Plugin deprecation log message before & after goal executions
