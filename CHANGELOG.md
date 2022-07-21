@@ -21,11 +21,13 @@ Usage:
 # ./scripts/extract-changelog-for-version.sh semanticVersionNumber [linkLabelStartNumber]
 ./scripts/extract-changelog-for-version.sh 1.3.37 5
 ```
-
 ### 4.5-SNAPSHOT
 * Fix NullPointerException in ConfigMapEnricher
-* PushMojo should have docker access disabled only when JIB=true
 * Update Fabric8 Images to latest versions
+* 
+### 4.4.2
+* Fix #1806: PushMojo should have docker access disabled only when JIB=true
+* Fix #1833: Add Fabric8 Maven Plugin deprecation log message before & after goal executions
 
 ### 4.4.1 (2020-03-18)
 * Fix: JIB Assembly config doesn't work with any Archive mode
