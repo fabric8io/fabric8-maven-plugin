@@ -23,7 +23,8 @@ Usage:
 ```
 
 ### 4.4.2
-* PushMojo should have docker access disabled only when JIB=true
+* Fix #1806: PushMojo should have docker access disabled only when JIB=true
+* Fix #1833: Add Fabric8 Maven Plugin deprecation log message before & after goal executions
 
 ### 4.4.1 (2020-03-18)
 * Fix: JIB Assembly config doesn't work with any Archive mode
