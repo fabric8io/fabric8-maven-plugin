@@ -302,7 +302,7 @@
       <dependency>
         <groupId>com.google.cloud.tools</groupId>
         <artifactId>jib-core</artifactId>
-        <version>0.12.0</version>
+        <version>0.22.0</version>
       </dependency>
 
       <dependency>
