@@ -62,7 +62,7 @@
     <fabric8.maven.plugin.version>4.4.2</fabric8.maven.plugin.version>
 
     <jmockit.version>1.43</jmockit.version>
-    <version.maven>3.3.1</version.maven>
+    <version.maven>3.8.1</version.maven>
     <version.jacoco>0.8.2</version.jacoco>
     <version.kubernetes-client>4.10.2</version.kubernetes-client>
     <version.openshift-client>${version.kubernetes-client}</version.openshift-client>
