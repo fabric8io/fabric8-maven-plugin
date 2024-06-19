@@ -1,15 +1,16 @@
 
-# Deprecation Note: 
+# Deprecation Note
 
 > [!IMPORTANT]
 > This project has been deprecated and is no longer under active development.
 > 
 > Use [Eclipse JKube](https://github.com/eclipse-jkube/jkube) instead.
-
-This project has been rebranded to https://github.com/eclipse-jkube/jkube.
-
-The Fabric8 Maven Plugin is no longer supported.
-All new features and support can be requested in the [Eclipse JKube](https://github.com/eclipse-jkube/jkube) project which is the successor of the Fabric8 Maven Plugin.
+>
+> This project has been rebranded to https://github.com/eclipse-jkube/jkube.
+>
+> The Fabric8 Maven Plugin is no longer supported.
+>
+> All new features and support can be requested in the [Eclipse JKube](https://github.com/eclipse-jkube/jkube) project.
 
 ## fabric8-maven-plugin
 
