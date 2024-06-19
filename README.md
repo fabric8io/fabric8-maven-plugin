@@ -1,7 +1,15 @@
 
 # Deprecation Note: 
 
-This project has been moved to https://github.com/eclipse/jkube . All new features would be implemented there and support for FMP would be eventually dropped.
+> [!IMPORTANT]
+> This project has been deprecated and is no longer under active development.
+> 
+> Use [Eclipse JKube](https://github.com/eclipse-jkube/jkube) instead.
+
+This project has been rebranded to https://github.com/eclipse-jkube/jkube.
+
+The Fabric8 Maven Plugin is no longer supported.
+All new features and support can be requested in the [Eclipse JKube](https://github.com/eclipse-jkube/jkube) project which is the successor of the Fabric8 Maven Plugin.
 
 ## fabric8-maven-plugin
 
